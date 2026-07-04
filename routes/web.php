@@ -18,15 +18,7 @@ Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', fn () => view('modules.command-center', [
-        'stats' => [
-            'events' => Event::count(),
-            'projects' => Project::where('status', 'active')->count(),
-            'budget' => Event::sum('budget_cents'),
-            'openTasks' => Task::whereNot('status', 'completed')->count(),
-            'atRisk' => Event::whereIn('status', ['at_risk', 'behind'])->count(),
-        ],
-    ]))->name('home');
+    Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
 
     Route::get('/events', fn () => view('modules.events', [
         'events' => Event::with('venue')->withCount('tasks')->orderBy('starts_at')->get(),

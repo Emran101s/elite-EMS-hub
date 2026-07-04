@@ -29,6 +29,19 @@ class Event extends Model
         ];
     }
 
+    /**
+     * Collapse the six statuses into the three health colors
+     * used across the Command Center (track / warn / risk).
+     */
+    public function healthGroup(): string
+    {
+        return match ($this->status) {
+            'at_risk', 'behind' => 'risk',
+            'in_progress', 'planning' => 'warn',
+            default => 'track',
+        };
+    }
+
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);
