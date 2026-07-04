@@ -22,5 +22,7 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password', // change after first login
             ],
         );
+
+        $this->call(DemoDataSeeder::class);
     }
 }

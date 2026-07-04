@@ -2,24 +2,28 @@
     :title="'Welcome back, ' . str(auth()->user()->name)->before(' ') . ' 👋'"
     subtitle="Here's what's happening across your events and projects.">
 
-    {{-- KPI row (placeholder until the data layer lands in Phase 1–2) --}}
+    {{-- KPI row --}}
     <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         @foreach ([
-            ['label' => 'Total Events', 'icon' => 'calendar'],
-            ['label' => 'Active Projects', 'icon' => 'folder'],
-            ['label' => 'Total Revenue', 'icon' => 'currency'],
-            ['label' => 'Open Tasks', 'icon' => 'clipboard'],
-            ['label' => 'At Risk', 'icon' => 'bell'],
+            ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region'],
+            ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running'],
+            ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 2), 'hint' => 'committed to events'],
+            ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress'],
+            ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'events needing attention', 'risk' => $stats['atRisk'] > 0],
         ] as $kpi)
             <div class="card p-5">
                 <div class="flex items-center gap-3">
-                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-50 text-navy-600">
+                    <span @class([
+                            'flex h-10 w-10 items-center justify-center rounded-xl',
+                            'bg-risk/10 text-risk' => $kpi['risk'] ?? false,
+                            'bg-navy-50 text-navy-600' => ! ($kpi['risk'] ?? false),
+                        ])>
                         <x-icon :name="$kpi['icon']" class="h-5 w-5" />
                     </span>
                     <p class="text-xs font-semibold uppercase tracking-wide text-muted">{{ $kpi['label'] }}</p>
                 </div>
-                <p class="mt-4 text-3xl font-bold text-navy-900">—</p>
-                <p class="mt-1 text-xs text-muted">awaiting data</p>
+                <p class="mt-4 text-3xl font-bold {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
+                <p class="mt-1 text-xs text-muted">{{ $kpi['hint'] }}</p>
             </div>
         @endforeach
     </div>

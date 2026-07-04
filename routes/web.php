@@ -1,6 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Models\Event;
+use App\Models\Project;
+use App\Models\Supplier;
+use App\Models\Task;
+use App\Models\User;
+use App\Models\Venue;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -11,10 +17,51 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-    foreach (config('modules.nav') as $key => $module) {
-        $view = $key === 'command-center' ? 'modules.command-center' : 'modules.stub';
 
-        Route::get($module['path'], fn () => view($view, ['module' => $module + ['key' => $key]]))
+    Route::get('/', fn () => view('modules.command-center', [
+        'stats' => [
+            'events' => Event::count(),
+            'projects' => Project::where('status', 'active')->count(),
+            'budget' => Event::sum('budget_cents'),
+            'openTasks' => Task::whereNot('status', 'completed')->count(),
+            'atRisk' => Event::whereIn('status', ['at_risk', 'behind'])->count(),
+        ],
+    ]))->name('home');
+
+    Route::get('/events', fn () => view('modules.events', [
+        'events' => Event::with('venue')->withCount('tasks')->orderBy('starts_at')->get(),
+    ]))->name('events.index');
+
+    Route::get('/projects', fn () => view('modules.projects', [
+        'projects' => Project::withCount(['events', 'tasks'])->orderBy('name')->get(),
+    ]))->name('projects.index');
+
+    Route::get('/tasks', fn () => view('modules.tasks', [
+        'tasks' => Task::with(['event', 'assignee'])->orderByRaw("status = 'completed'")->orderBy('due_on')->paginate(25),
+        'counts' => [
+            'completed' => Task::where('status', 'completed')->count(),
+            'in_progress' => Task::where('status', 'in_progress')->count(),
+            'pending' => Task::where('status', 'pending')->count(),
+        ],
+    ]))->name('tasks.index');
+
+    Route::get('/suppliers', fn () => view('modules.suppliers', [
+        'suppliers' => Supplier::withCount('events')->orderByDesc('rating')->get(),
+    ]))->name('suppliers.index');
+
+    Route::get('/venues', fn () => view('modules.venues', [
+        'venues' => Venue::withCount('events')->orderBy('name')->get(),
+    ]))->name('venues.index');
+
+    Route::get('/team', fn () => view('modules.team', [
+        'members' => User::orderBy('name')->get(),
+    ]))->name('team.index');
+
+    // Modules still awaiting their build phase render the generic stub.
+    foreach (['crm', 'finance', 'assets', 'reports', 'ai-assistant', 'settings'] as $key) {
+        $module = config("modules.nav.{$key}");
+
+        Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))
             ->name($module['route']);
     }
 });
