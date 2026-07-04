@@ -43,7 +43,7 @@ class CommandCenterService
      */
     public function islands(): Collection
     {
-        $events = Event::with('venue')->whereNot('status', 'completed')->orderBy('starts_at')->get();
+        $events = Event::with(['venue', 'avatar'])->whereNot('status', 'completed')->orderBy('starts_at')->get();
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {

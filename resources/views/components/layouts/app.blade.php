@@ -91,6 +91,12 @@
             </header>
 
             <main class="px-6 py-6 lg:px-8">
+                @if (session('status'))
+                    <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
                 {{ $slot }}
             </main>
         </div>

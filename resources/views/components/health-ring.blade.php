@@ -1,4 +1,4 @@
-@props(['percent', 'group' => 'track', 'size' => 'h-14 w-14'])
+@props(['percent', 'group' => 'track', 'size' => 'h-14 w-14', 'label' => true])
 
 @php
     // r = 15.9155 → circumference ≈ 100, so dasharray maps 1:1 to percent.
@@ -20,5 +20,7 @@
         <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="3.5" stroke-linecap="round"
                 stroke-dasharray="{{ $percent }} {{ 100 - $percent }}" class="{{ $stroke }}" />
     </svg>
-    <span class="absolute text-[0.65rem] font-bold {{ $text }}">{{ $percent }}%</span>
+    @if ($label)
+        <span class="absolute text-[0.65rem] font-bold {{ $text }}">{{ $percent }}%</span>
+    @endif
 </span>

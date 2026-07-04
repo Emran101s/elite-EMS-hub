@@ -21,8 +21,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
 
     Route::get('/events', fn () => view('modules.events', [
-        'events' => Event::with('venue')->withCount('tasks')->orderBy('starts_at')->get(),
+        'events' => Event::with(['venue', 'avatar'])->withCount('tasks')->orderBy('starts_at')->get(),
     ]))->name('events.index');
+
+    Route::get('/events/create', \App\Livewire\EventCreate::class)->name('events.create');
+
+    Route::get('/events/avatars', fn () => view('modules.avatar-library', [
+        'category' => request('category'),
+        'avatars' => \App\Models\EventAvatar::active()
+            ->when(request('category'), fn ($query, $category) => $query->where('category', $category))
+            ->orderBy('sort_order')
+            ->get(),
+    ]))->name('events.avatars');
 
     Route::get('/projects', fn () => view('modules.projects', [
         'projects' => Project::withCount(['events', 'tasks'])->orderBy('name')->get(),

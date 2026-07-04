@@ -1,7 +1,13 @@
 <x-layouts.app title="Events" subtitle="All events across the region — health, schedule and budget.">
+    <div class="mb-5 flex items-center justify-end gap-3">
+        <a href="{{ route('events.avatars') }}" class="rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">Avatar Library</a>
+        <a href="{{ route('events.create') }}" class="btn-gold text-xs">+ New Event</a>
+    </div>
+
     <div class="card divide-y divide-line">
         @forelse ($events as $event)
             <div class="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center">
+                <x-event-avatar :event="$event" size="md" class="hidden sm:inline-block" />
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-3">
                         <p class="truncate text-sm font-bold text-navy-900">{{ $event->name }}</p>
