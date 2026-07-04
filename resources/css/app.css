@@ -1,9 +1,63 @@
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/livewire/src/**/*.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand — Elite Business Hub */
+    --color-navy-50: #eef2f8;
+    --color-navy-100: #d8e0ee;
+    --color-navy-200: #b3c2dd;
+    --color-navy-300: #869cc4;
+    --color-navy-400: #5877a5;
+    --color-navy-500: #3a5885;
+    --color-navy-600: #2a4368;
+    --color-navy-700: #1e3352;
+    --color-navy-800: #142842;
+    --color-navy-900: #0b1f3a;
+    --color-navy-950: #061426;
+
+    --color-gold-50: #fbf7ea;
+    --color-gold-100: #f5ebc8;
+    --color-gold-200: #ecda94;
+    --color-gold-300: #e3c766;
+    --color-gold-400: #dbba4a;
+    --color-gold-500: #d4af37;
+    --color-gold-600: #b8942c;
+    --color-gold-700: #937423;
+    --color-gold-800: #6f571c;
+    --color-gold-900: #4c3b14;
+
+    /* Surfaces & lines */
+    --color-page: #f4f6fb;
+    --color-line: #e5eaf3;
+    --color-ink: #0b1f3a;
+    --color-muted: #64748b;
+
+    /* Health semantics: on track / in progress / at risk */
+    --color-track: #22c55e;
+    --color-warn: #f59e0b;
+    --color-risk: #ef4444;
+}
+
+@layer components {
+    .card {
+        @apply rounded-2xl border border-line bg-white shadow-[0_1px_3px_rgba(11,31,58,0.05)];
+    }
+
+    .btn-navy {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500;
+    }
+
+    .btn-gold {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold-500 px-4 py-2.5 text-sm font-semibold text-navy-900 transition hover:bg-gold-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900;
+    }
+
+    .input {
+        @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder-muted focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30;
+    }
 }

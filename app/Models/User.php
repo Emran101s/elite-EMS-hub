@@ -29,4 +29,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Up-to-two-letter initials for the avatar chip.
+     */
+    public function initials(): string
+    {
+        return str($this->name)
+            ->explode(' ')
+            ->filter()
+            ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
+            ->take(2)
+            ->implode('');
+    }
 }
