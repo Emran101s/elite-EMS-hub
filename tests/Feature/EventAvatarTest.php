@@ -30,11 +30,14 @@ class EventAvatarTest extends TestCase
         $this->seed(EventAvatarSeeder::class);
 
         $this->assertSame('international-conference', EventAvatar::recommendedFor('conference')->first()->slug);
-        $this->assertSame('gala-dinner', EventAvatar::recommendedFor('gala')->first()->slug);
+        $this->assertSame('international-conference', EventAvatar::recommendedFor('summit')->first()->slug);
+        $this->assertSame('gala-dinner', EventAvatar::recommendedFor('gala_dinner')->first()->slug);
         $this->assertSame('exhibition', EventAvatar::recommendedFor('career_fair')->first()->slug);
         $this->assertSame('exhibition', EventAvatar::recommendedFor('exhibition')->first()->slug);
         $this->assertSame('workshop', EventAvatar::recommendedFor('workshop')->first()->slug);
-        $this->assertSame('vip-event', EventAvatar::recommendedFor('dinner')->first()->slug);
+        $this->assertSame('vip-event', EventAvatar::recommendedFor('private_dinner')->first()->slug);
+        $this->assertSame('vip-event', EventAvatar::recommendedFor('embassy_event')->first()->slug);
+        $this->assertSame('festival-outdoor', EventAvatar::recommendedFor('outdoor_event')->first()->slug);
     }
 
     public function test_avatar_library_page_renders_and_filters(): void
@@ -62,7 +65,7 @@ class EventAvatarTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->assertSet('avatar_id', $conferenceAvatar->id) // default type = conference
-            ->set('type', 'gala')
+            ->set('type', 'gala_dinner')
             ->assertSet('avatar_id', $galaAvatar->id);
     }
 
@@ -75,7 +78,7 @@ class EventAvatarTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->call('chooseAvatar', $festival->id)
-            ->set('type', 'gala')
+            ->set('type', 'gala_dinner')
             ->assertSet('avatar_id', $festival->id);
     }
 
@@ -91,15 +94,18 @@ class EventAvatarTest extends TestCase
             ->set('country', 'Jordan')
             ->set('starts_at', '2027-03-10')
             ->set('budget', '150000')
+            ->set('new_client', 'Falcon Holdings')
             ->call('save')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('home'));
+            ->assertHasNoErrors();
 
         $event = Event::where('name', 'Falcon Summit 2027')->firstOrFail();
 
         $this->assertSame('international-conference', $event->avatar->slug);
         $this->assertSame(15000000, $event->budget_cents);
         $this->assertSame('planning', $event->status);
+        $this->assertSame('draft', $event->stage);
+        $this->assertSame('Falcon Holdings', $event->client->name);
+        $this->assertSame('#0B1F3A', $event->primary_color);
     }
 
     public function test_avatars_render_in_hub_and_events_list(): void

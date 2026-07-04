@@ -26,7 +26,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'conference',
                 'best_for' => 'Conferences, Summits, Forums, Congresses',
                 'colors' => ['#FFFFFF', '#0B1F3A', '#D4AF37'],
-                'recommended_types' => ['conference'],
+                'recommended_types' => ['conference', 'summit', 'hybrid_event', 'online_event'],
                 'sort_order' => 1,
             ],
             [
@@ -36,7 +36,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'gala',
                 'best_for' => 'Gala Dinners, Awards, Celebrations',
                 'colors' => ['#D4AF37', '#FFFFFF', '#0B1F3A'],
-                'recommended_types' => ['gala'],
+                'recommended_types' => ['gala_dinner', 'awards_ceremony'],
                 'sort_order' => 2,
             ],
             [
@@ -46,7 +46,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'exhibition',
                 'best_for' => 'Exhibitions, Trade Shows, Career Fairs',
                 'colors' => ['#3B82F6', '#FFFFFF', '#94A3B8'],
-                'recommended_types' => ['exhibition', 'career_fair'],
+                'recommended_types' => ['exhibition', 'career_fair', 'product_launch'],
                 'sort_order' => 3,
             ],
             [
@@ -56,7 +56,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'workshop',
                 'best_for' => 'Workshops, Training, Bootcamps',
                 'colors' => ['#22C55E', '#FFFFFF', '#0B1F3A'],
-                'recommended_types' => ['workshop'],
+                'recommended_types' => ['workshop', 'training_program'],
                 'sort_order' => 4,
             ],
             [
@@ -66,7 +66,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'vip',
                 'best_for' => 'VIP Receptions, Embassy Events, CEO Meetings',
                 'colors' => ['#F8FAFC', '#0B1F3A', '#D4AF37'],
-                'recommended_types' => ['dinner'],
+                'recommended_types' => ['private_dinner', 'vip_reception', 'embassy_event'],
                 'sort_order' => 5,
             ],
             [
@@ -76,7 +76,7 @@ class EventAvatarSeeder extends Seeder
                 'category' => 'festival',
                 'best_for' => 'Festivals, Public Events, National Events',
                 'colors' => ['#F59E0B', '#3B82F6', '#22C55E'],
-                'recommended_types' => ['festival'],
+                'recommended_types' => ['outdoor_event', 'public_event'],
                 'sort_order' => 6,
             ],
         ];

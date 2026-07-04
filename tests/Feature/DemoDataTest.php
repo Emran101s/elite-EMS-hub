@@ -31,7 +31,10 @@ class DemoDataTest extends TestCase
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
         $this->actingAs($user)->get('/events')->assertOk()
-            ->assertSee('ICFT 2026')->assertSee('Tech Expo 2026')->assertSee('Royal Convention Centre');
+            ->assertSee('ICFT 2026')->assertSee('Tech Expo 2026');
+
+        $this->actingAs($user)->get('/events?view=list')->assertOk()
+            ->assertSee('Royal Convention Centre');
 
         $this->actingAs($user)->get('/suppliers')->assertOk()
             ->assertSee('Creative Vision Co.')->assertSee('4.9');
