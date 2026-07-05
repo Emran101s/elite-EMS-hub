@@ -46,36 +46,48 @@
         <div class="lg:pl-60">
             <header class="flex items-center justify-between gap-4 px-6 pb-2 pt-6 lg:px-8">
                 <div class="min-w-0">
-                    <h1 class="truncate text-2xl font-bold text-navy-900">{{ $title ?? config('app.name') }}</h1>
+                    <h1 class="truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>
                     @if ($subtitle)
-                        <p class="mt-1 text-sm text-muted">{{ $subtitle }}</p>
+                        <p class="mt-1 text-[15px] text-muted">{{ $subtitle }}</p>
                     @endif
                 </div>
 
-                <div class="flex shrink-0 items-center gap-3">
+                <div class="flex shrink-0 items-center gap-4">
                     <label class="relative hidden md:block">
-                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted">
-                            <x-icon name="search" class="h-4 w-4" />
+                        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted">
+                            <x-icon name="search" class="h-4.5 w-4.5" />
                         </span>
-                        <input type="search" placeholder="Search events, clients, venues…" class="input h-11 w-80 pl-9" />
+                        <input type="search" placeholder="Search events, clients, venues…" class="input h-11 w-80 !rounded-full pl-11 xl:w-96" />
                     </label>
 
-                    <button type="button" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy-600 transition hover:text-navy-900" aria-label="Notifications">
-                        <x-icon name="bell" class="h-5 w-5" />
+                    @php
+                        // Real signals until a notification center lands: pending approvals + open/escalated risks.
+                        $alertCount = \App\Models\EventApproval::where('status', 'pending')->count()
+                            + \App\Models\EventRisk::whereIn('status', ['open', 'escalated'])->count();
+                        $messageCount = 5; // placeholder until the messaging module ships
+                    @endphp
+
+                    <button type="button" class="relative p-1 text-navy-500 transition hover:text-navy-900" aria-label="Notifications">
+                        <x-icon name="bell" class="h-6 w-6" />
+                        @if ($alertCount > 0)
+                            <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-warn px-1 text-[10px] font-bold text-white ring-2 ring-page">{{ $alertCount }}</span>
+                        @endif
                     </button>
-                    <button type="button" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy-600 transition hover:text-navy-900" aria-label="Messages">
-                        <x-icon name="chat" class="h-5 w-5" />
+                    <button type="button" class="relative p-1 text-navy-500 transition hover:text-navy-900" aria-label="Messages">
+                        <x-icon name="chat" class="h-6 w-6" />
+                        <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-warn px-1 text-[10px] font-bold text-white ring-2 ring-page">{{ $messageCount }}</span>
                     </button>
 
                     <details class="group relative">
-                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-xl border border-line bg-white py-1.5 pl-1.5 pr-3 transition hover:border-navy-200 [&::-webkit-details-marker]:hidden">
-                            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-900 text-sm font-bold text-gold-400">
+                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-full py-1 pl-1 pr-2 transition hover:bg-white [&::-webkit-details-marker]:hidden">
+                            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-gold-400 ring-2 ring-line">
                                 {{ auth()->user()?->initials() }}
                             </span>
                             <span class="hidden text-left sm:block">
-                                <span class="block text-sm font-semibold text-navy-900">{{ auth()->user()?->name }}</span>
+                                <span class="block text-[15px] font-bold text-navy-900">{{ auth()->user()?->name }}</span>
                                 <span class="block text-xs text-muted">Super Admin</span>
                             </span>
+                            <x-icon name="chevron" class="hidden h-4 w-4 text-navy-400 transition group-open:rotate-180 sm:block" />
                         </summary>
                         <div class="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
                             <a href="{{ route('settings.index') }}" class="block px-4 py-2.5 text-sm text-navy-700 hover:bg-navy-50">Settings</a>
