@@ -17,7 +17,8 @@
       @if ($avatar) data-avatar="{{ $avatar->slug }}" @endif>
     <span class="{{ $frame }} block overflow-hidden bg-navy-50 ring-1 ring-line">
         @if ($avatar?->image_path)
-            <img src="{{ asset($avatar->image_path) }}" alt="{{ $avatar->name }}" class="h-full w-full object-cover">
+            @php $src = in_array($size, ['sm', 'md']) && $avatar->thumbnail_path ? $avatar->thumbnail_path : $avatar->image_path; @endphp
+            <img src="{{ asset($src) }}" alt="{{ $avatar->name }}" loading="lazy" class="h-full w-full object-contain">
         @elseif ($avatar)
             <x-dynamic-component :component="'avatars.' . $avatar->slug" class="h-full w-full" />
         @else

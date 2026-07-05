@@ -116,7 +116,7 @@ class DemoDataSeeder extends Seeder
 
         // Give each demo event its library avatar.
         $avatarMap = [
-            'ICFT 2026' => 'international-conference',
+            'ICFT 2026' => 'convention-center', // ICFT-branded flagship render
             'EY Annual Gala' => 'gala-dinner',
             'NDI Workshop' => 'workshop',
             'Tech Expo 2026' => 'exhibition',

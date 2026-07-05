@@ -16,13 +16,14 @@ class EventAvatarTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_avatar_library_seeds_six_avatars_idempotently(): void
+    public function test_avatar_library_seeds_nine_avatars_idempotently(): void
     {
         $this->seed(EventAvatarSeeder::class);
         $this->seed(EventAvatarSeeder::class);
 
-        $this->assertSame(6, EventAvatar::count());
-        $this->assertSame(6, EventAvatar::active()->count());
+        $this->assertSame(9, EventAvatar::count());
+        $this->assertSame(9, EventAvatar::active()->count());
+        $this->assertSame(7, EventAvatar::whereNotNull('image_path')->count()); // uploaded 3D renders
     }
 
     public function test_recommendation_matches_event_types(): void
@@ -114,7 +115,7 @@ class EventAvatarTest extends TestCase
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
         $this->actingAs($user)->get('/')->assertOk()
-            ->assertSee('data-avatar="international-conference"', false)
+            ->assertSee('data-avatar="convention-center"', false) // ICFT's branded render
             ->assertSee('data-avatar="vip-event"', false);
 
         $this->actingAs($user)->get('/events')->assertOk()
