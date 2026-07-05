@@ -4,24 +4,24 @@
                :subtitle="($event->avatar?->name ?? str($event->type)->replace('_', ' ')->title()) . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))">
 
     {{-- ══ Hero ══ --}}
-    <div class="card overflow-hidden">
+    <div class="card overflow-hidden !rounded-[28px]">
         <div class="h-1.5" style="background: linear-gradient(90deg, {{ $theme['primary'] }}, {{ $theme['accent'] }})"></div>
-        <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,11rem)_minmax(0,20rem)_minmax(0,1fr)_minmax(0,24rem)]">
+        <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,150px)_minmax(0,430px)_minmax(0,1fr)_minmax(0,24rem)]">
 
             {{-- Health ring + Operations Hub link --}}
             <div class="flex flex-col items-center justify-center gap-4">
                 <div class="flex flex-col items-center">
-                    <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-28 w-28" class="[&>span]:!text-lg" />
-                    <p class="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">Health Score</p>
+                    <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-[120px] w-[120px]" textSize="text-[24px]" dark />
+                    <p class="mt-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">Health Score</p>
                 </div>
                 <a href="{{ route('home') }}" class="flex w-full items-center justify-center gap-2 rounded-xl border border-gold-300 bg-gold-50 px-3 py-2.5 text-center text-[0.68rem] font-bold text-gold-700 transition hover:bg-gold-100">
                     <x-icon name="sparkles" class="h-3.5 w-3.5 shrink-0" /> View Event in Operations Hub
                 </a>
             </div>
 
-            {{-- Avatar visual --}}
+            {{-- Avatar visual (430×240 area) --}}
             <div class="relative overflow-hidden rounded-2xl">
-                <x-event-avatar :event="$event" :ring="false" size="xl" class="block w-full [&>span]:h-48 [&>span]:w-full [&>span]:rounded-2xl" />
+                <x-event-avatar :event="$event" :ring="false" size="xl" class="block w-full [&>span]:h-[240px] [&>span]:w-full [&>span]:rounded-2xl [&>span]:bg-white" />
             </div>
 
             {{-- Meta column --}}
@@ -71,7 +71,7 @@
                         ['label' => 'Supplier Readiness', 'score' => $health['components']['suppliers'], 'word' => ['Good', 'Building', 'Weak']],
                     ] as $chip)
                         @php $s = $chip['score']; @endphp
-                        <div class="rounded-2xl border border-line bg-white px-3 py-3 text-center shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
+                        <div class="flex min-h-[82px] flex-col justify-center rounded-2xl border border-line bg-white px-3 py-2 text-center shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
                             <p class="text-[0.55rem] font-semibold text-muted">{{ $chip['label'] }}</p>
                             <p class="mt-1 text-xl font-bold {{ $s === null ? 'text-muted' : ($s >= 81 ? 'text-emerald-600' : ($s >= 61 ? 'text-amber-600' : 'text-risk')) }}">
                                 {{ $s !== null ? $s.'%' : '—' }}
@@ -85,7 +85,7 @@
                     @endforeach
                 </div>
 
-                <div class="grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-white px-1 py-3 shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
+                <div class="grid min-h-[80px] grid-cols-3 items-center divide-x divide-line rounded-2xl border border-line bg-white px-1 py-2 shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
                     <div class="px-3">
                         <p class="text-[0.55rem] font-semibold text-muted">Start Date</p>
                         <p class="mt-0.5 text-sm font-bold text-navy-900">{{ $event->starts_at?->format('M j, Y') ?? '—' }}</p>
@@ -115,8 +115,8 @@
             ] as $key => [$label, $icon])
                 <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
                    @class([
-                       'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3.5 text-xs font-semibold transition',
-                       'border-gold-500 bg-gold-50/50 text-gold-700' => $tab === $key,
+                       'flex h-14 items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-semibold transition',
+                       'border-gold-500 bg-[#FFF7E6] text-gold-700' => $tab === $key,
                        'border-transparent text-navy-600 hover:text-navy-900' => $tab !== $key,
                    ])>
                     <x-icon :name="$icon" class="h-3.5 w-3.5 shrink-0" /> {{ $label }}

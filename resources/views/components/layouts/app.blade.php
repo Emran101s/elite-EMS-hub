@@ -12,7 +12,7 @@
     <div class="min-h-screen">
 
         {{-- Sidebar --}}
-        <aside class="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-line bg-white lg:flex">
+        <aside class="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-line bg-white lg:flex">
             <div class="px-6 pb-5 pt-6">
                 <a href="{{ route('home') }}"><x-brand /></a>
             </div>
@@ -22,7 +22,7 @@
                     @php $active = request()->routeIs($module['route']) || request()->routeIs(str_replace('.index', '.*', $module['route'])); @endphp
                     <a href="{{ route($module['route']) }}"
                        @class([
-                           'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                           'flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition',
                            'bg-gold-50 text-gold-700 ring-1 ring-gold-200' => $active,
                            'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => ! $active,
                        ])
@@ -43,7 +43,7 @@
         </aside>
 
         {{-- Main column --}}
-        <div class="lg:pl-64">
+        <div class="lg:pl-60">
             <header class="flex items-center justify-between gap-4 px-6 pb-2 pt-6 lg:px-8">
                 <div class="min-w-0">
                     <h1 class="truncate text-2xl font-bold text-navy-900">{{ $title ?? config('app.name') }}</h1>
@@ -57,13 +57,13 @@
                         <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted">
                             <x-icon name="search" class="h-4 w-4" />
                         </span>
-                        <input type="search" placeholder="Search anything…" class="input w-64 pl-9" />
+                        <input type="search" placeholder="Search events, clients, venues…" class="input h-11 w-80 pl-9" />
                     </label>
 
-                    <button type="button" class="relative rounded-xl border border-line bg-white p-2.5 text-navy-600 transition hover:text-navy-900" aria-label="Notifications">
+                    <button type="button" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy-600 transition hover:text-navy-900" aria-label="Notifications">
                         <x-icon name="bell" class="h-5 w-5" />
                     </button>
-                    <button type="button" class="relative rounded-xl border border-line bg-white p-2.5 text-navy-600 transition hover:text-navy-900" aria-label="Messages">
+                    <button type="button" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy-600 transition hover:text-navy-900" aria-label="Messages">
                         <x-icon name="chat" class="h-5 w-5" />
                     </button>
 

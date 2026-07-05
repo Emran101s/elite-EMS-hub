@@ -18,18 +18,18 @@
                     default => 'bg-navy-50 text-navy-600',
                 };
             @endphp
-            <div class="card px-4 py-4">
+            <div class="min-h-[100px] rounded-[18px] border border-line bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
                 <div class="flex items-center gap-2.5">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ $toneClass }}"><x-icon :name="$kpi['icon']" class="h-4.5 w-4.5" /></span>
-                    <p class="text-[0.65rem] font-semibold text-muted">{{ $kpi['label'] }}</p>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ $toneClass }}"><x-icon :name="$kpi['icon']" class="h-5 w-5" /></span>
+                    <p class="text-xs font-semibold text-muted">{{ $kpi['label'] }}</p>
                 </div>
-                <p class="mt-2.5 text-3xl font-bold text-navy-900">{{ $kpi['value'] }}</p>
-                <p class="mt-1 text-[0.62rem] font-semibold {{ $kpi['up'] ? 'text-emerald-600' : 'text-risk' }}">{{ $kpi['trend'] }}</p>
+                <p class="mt-2 text-[26px] font-bold leading-none text-navy-900">{{ $kpi['value'] }}</p>
+                <p class="mt-1.5 text-[11px] font-semibold {{ $kpi['up'] ? 'text-emerald-600' : 'text-risk' }}">{{ $kpi['trend'] }}</p>
             </div>
         @endforeach
     </div>
 
-    <div class="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)]">
+    <div class="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_520px]">
 
         {{-- ══ Left: filters + cards ══ --}}
         <div class="min-w-0">
@@ -38,7 +38,7 @@
                 @foreach (['all' => 'All Events', 'conference' => 'Conference', 'workshop' => 'Workshop', 'exhibition' => 'Exhibition', 'gala' => 'Gala Dinner', 'vip' => 'VIP', 'outdoor' => 'Outdoor'] as $key => $label)
                     <button type="button" wire:click="setTab('{{ $key }}')"
                             @class([
-                                'rounded-full px-4 py-2 text-xs font-semibold transition',
+                                'h-9 rounded-xl px-[18px] text-[13px] font-semibold transition',
                                 'bg-navy-900 text-white shadow' => $tab === $key && ! $exactType,
                                 'text-navy-600 hover:text-navy-900' => $tab !== $key || $exactType,
                             ])>{{ $label }}</button>
@@ -49,7 +49,7 @@
 
             {{-- Grid view --}}
             @if ($view === 'grid')
-                <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                       :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />

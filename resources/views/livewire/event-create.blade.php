@@ -1,8 +1,59 @@
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+<div class="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+
+    {{-- ── Left step navigation (260px) ── --}}
+    <div class="hidden xl:block">
+        <div class="card sticky top-6 p-4">
+            <p class="mb-3 px-2 text-xs font-bold uppercase tracking-wide text-navy-900">Create New Event</p>
+            <ol class="space-y-1">
+                @foreach ([
+                    ['label' => 'Basic Information', 'step' => 1],
+                    ['label' => 'Choose Event Avatar', 'step' => 2],
+                    ['label' => 'Choose Color Theme', 'step' => 3],
+                    ['label' => 'Venue & Rooms', 'step' => null],
+                    ['label' => 'Agenda Builder', 'step' => null],
+                    ['label' => 'Team Assignment', 'step' => null],
+                    ['label' => 'Budget Setup', 'step' => null],
+                    ['label' => 'Suppliers', 'step' => null],
+                    ['label' => 'Sponsors', 'step' => null],
+                    ['label' => 'Review & Create', 'step' => 4],
+                ] as $i => $item)
+                    <li>
+                        @if ($item['step'] !== null)
+                            <button type="button"
+                                    @if ($item['step'] < $step) wire:click="$set('step', {{ $item['step'] }})" @endif
+                                    @class([
+                                        'flex h-11 w-full items-center gap-2.5 rounded-xl px-2.5 text-left transition',
+                                        'bg-gold-50 ring-1 ring-gold-300' => $step === $item['step'],
+                                        'hover:bg-page' => $item['step'] < $step,
+                                        'cursor-default' => $item['step'] > $step,
+                                    ])>
+                                <span @class([
+                                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                                        'bg-gold-500 text-navy-900' => $step === $item['step'],
+                                        'bg-navy-900 text-gold-400' => $step > $item['step'],
+                                        'bg-white text-muted ring-1 ring-line' => $step < $item['step'],
+                                    ])>{{ $step > $item['step'] ? '✓' : $i + 1 }}</span>
+                                <span class="{{ $step === $item['step'] ? 'font-bold text-navy-900' : 'text-navy-600' }} truncate text-[13px]">{{ $item['label'] }}</span>
+                            </button>
+                        @else
+                            <a href="#" onclick="return false"
+                               class="flex h-11 w-full cursor-default items-center gap-2.5 rounded-xl px-2.5 opacity-60"
+                               title="Configured inside the Event Hub after creation">
+                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-page text-xs font-bold text-navy-300 ring-1 ring-line">{{ $i + 1 }}</span>
+                                <span class="min-w-0 flex-1 truncate text-[13px] text-muted">{{ $item['label'] }}</span>
+                                <span class="shrink-0 rounded-full bg-navy-50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-navy-500">Hub</span>
+                            </a>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
+            <p class="mt-3 px-2 text-[11px] leading-snug text-muted">Steps marked <span class="font-bold">Hub</span> are set up inside the Event Hub tabs right after creation — so an event goes live in under a minute.</p>
+        </div>
+    </div>
 
     <div class="min-w-0">
-        {{-- Step indicator --}}
-        <div class="mb-5 flex items-center gap-2">
+        {{-- Compact step indicator (mobile/tablet) --}}
+        <div class="mb-5 flex items-center gap-2 xl:hidden">
             @foreach (['Basics', 'Avatar', 'Color Theme', 'Review'] as $i => $label)
                 <div class="flex items-center gap-2">
                     <span @class([
@@ -141,16 +192,20 @@
                     @foreach ($avatars as $avatar)
                         <button type="button" wire:click="chooseAvatar({{ $avatar->id }})"
                                 @class([
-                                    'relative rounded-2xl border p-2 text-left transition',
-                                    'border-gold-500 ring-2 ring-gold-500/40' => $avatar_id === $avatar->id,
+                                    'relative rounded-[20px] border p-3 text-left transition',
+                                    'border-2 border-gold-500 bg-[#FFF7E6]' => $avatar_id === $avatar->id,
                                     'border-line hover:border-gold-300' => $avatar_id !== $avatar->id,
                                 ])>
                             @if ($avatar->id === $recommendedId)
                                 <span class="absolute -top-2 left-3 z-10 rounded-full bg-gold-500 px-2 py-0.5 text-[0.6rem] font-bold text-navy-900">Recommended</span>
                             @endif
-                            <x-event-avatar :avatar="$avatar" :ring="false" size="md" class="w-full [&>span]:h-20 [&>span]:w-full" />
+                            @if ($avatar_id === $avatar->id)
+                                <span class="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow">✓</span>
+                            @endif
+                            <x-event-avatar :avatar="$avatar" :ring="false" size="md" class="w-full [&>span]:h-[120px] [&>span]:w-full [&>span]:rounded-xl" />
                             <p class="mt-2 truncate text-xs font-bold text-navy-900">{{ $avatar->name }}</p>
                             <p class="truncate text-[0.65rem] text-muted">{{ $avatar->subtitle }}</p>
+                            <p class="mt-1 truncate text-[0.6rem] text-muted">{{ $avatar->best_for }}</p>
                         </button>
                     @endforeach
                 </div>
@@ -247,21 +302,22 @@
                 </dl>
             @endif
 
-            {{-- ══ Navigation ══ --}}
-            <div class="mt-6 flex items-center justify-between border-t border-line pt-5">
+            {{-- ══ Action bar (72px) ══ --}}
+            <div class="mt-6 flex h-[72px] items-center justify-between border-t border-line">
                 <div>
                     @if ($step > 1)
-                        <button type="button" wire:click="back" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-navy-600 hover:text-navy-900">← Back</button>
+                        <button type="button" wire:click="back" class="h-11 w-[120px] rounded-xl border border-line text-sm font-semibold text-navy-600 transition hover:border-gold-300 hover:text-navy-900">← Back</button>
                     @else
-                        <a href="{{ route('events.index') }}" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-navy-600 hover:text-navy-900">Cancel</a>
+                        <a href="{{ route('events.index') }}" class="inline-flex h-11 w-[120px] items-center justify-center rounded-xl border border-line text-sm font-semibold text-navy-600 transition hover:text-navy-900">Cancel</a>
                     @endif
                 </div>
-                <div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex h-11 w-[130px] cursor-not-allowed items-center justify-center rounded-xl border border-line text-sm font-semibold text-navy-300" title="Coming soon">Save Draft</span>
                     @if ($step < 4)
-                        <button type="button" wire:click="next" class="btn-navy">Continue →</button>
+                        <button type="button" wire:click="next" class="btn-navy h-11 w-[130px]">Next →</button>
                     @else
-                        <button type="button" wire:click="save" class="btn-gold">
-                            <span wire:loading.remove wire:target="save">✦ Create Event Hub</span>
+                        <button type="button" wire:click="save" class="btn-gold h-11 w-[160px]">
+                            <span wire:loading.remove wire:target="save">✦ Create Event</span>
                             <span wire:loading wire:target="save">Creating…</span>
                         </button>
                     @endif
