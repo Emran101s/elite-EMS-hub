@@ -14,38 +14,44 @@
 
 <div class="rounded-[28px] border border-line bg-white p-4 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
 
-    {{-- ── Hero: 250px navy gradient ── --}}
-    <div class="relative h-[250px] overflow-hidden rounded-[22px] shadow-[0_14px_35px_rgba(11,31,58,0.30)]"
-         style="background: linear-gradient(120deg, {{ $theme['primary'] }} 0%, #101c33 55%, #1b2c4c 100%)">
-        <div class="grid h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div class="p-5">
-                <div class="flex items-center gap-2.5">
-                    <span class="truncate text-lg font-bold text-white">{{ $event->name }}</span>
-                    <x-status-badge :status="$health['status']" />
-                </div>
-                <p class="mt-0.5 text-[13px] text-white/85">{{ $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title() }}</p>
-                <ul class="mt-3 space-y-1.5 text-xs text-white/80">
-                    <li class="flex items-center gap-2"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->city }}, {{ $event->country }}</li>
-                    <li class="flex items-center gap-2"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('j, Y') ?? $event->starts_at?->format('Y') }}</li>
-                    @if ($event->venue)<li class="flex items-center gap-2"><x-icon name="home" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Venue: {{ $event->venue->name }}</li>@endif
-                    @if ($event->expected_participants)<li class="flex items-center gap-2"><x-icon name="users" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Participants: {{ number_format($event->expected_participants) }}</li>@endif
-                    @if ($event->projectManager)<li class="flex items-center gap-2"><x-icon name="identification" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Project Manager: {{ $event->projectManager->name }}</li>@endif
-                </ul>
-            </div>
+    {{-- ── Hero: one dark-navy gradient, avatar blended into it ── --}}
+    <div class="relative h-[250px] overflow-hidden rounded-[22px] shadow-[0_14px_35px_rgba(11,31,58,0.35)]"
+         style="background: linear-gradient(115deg, #0B1F3A 0%, #0E1E36 45%, #16294A 78%, #1C3357 100%)">
 
-            <div class="relative">
-                <x-event-avatar :event="$event" :ring="false" size="xl"
-                                class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:bg-transparent [&>span]:ring-0" />
-                <div class="pointer-events-none absolute inset-0" style="background: linear-gradient(90deg, {{ $theme['primary'] }} 0%, transparent 30%)"></div>
-                <span class="absolute bottom-3 right-3 flex flex-col items-center rounded-2xl bg-navy-950/70 px-2.5 py-2 backdrop-blur">
-                    <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-[92px] w-[92px]" textSize="text-[20px]"
-                                   class="[&_span]:!text-white [&_circle:first-child]:!stroke-white/20" />
-                    <span class="mt-0.5 text-[10px] font-semibold text-white/85">Health Score</span>
-                </span>
-            </div>
+        {{-- Avatar layer: multiply-blend melts white/light backgrounds into the navy --}}
+        <div class="absolute inset-y-0 right-0 w-[64%] [mask-image:linear-gradient(90deg,transparent_0%,black_38%)]">
+            <x-event-avatar :event="$event" :ring="false" size="xl"
+                            class="block h-full w-full opacity-95 mix-blend-multiply [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:bg-transparent [&>span]:ring-0 [&_img]:object-right" />
         </div>
 
-        <span class="absolute right-3 top-3 flex gap-1.5">
+        {{-- Soft gold ambience --}}
+        <div class="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-gold-500/15 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-20 left-1/3 h-44 w-44 rounded-full bg-gold-500/10 blur-3xl"></div>
+
+        {{-- Content --}}
+        <div class="relative z-10 flex h-full max-w-[58%] flex-col p-5">
+            <div class="flex items-center gap-2.5">
+                <span class="truncate text-lg font-bold text-white">{{ $event->name }}</span>
+                <x-status-badge :status="$health['status']" />
+            </div>
+            <p class="mt-0.5 text-[13px]" style="color: {{ $theme['accent'] }}">{{ $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title() }}</p>
+            <ul class="mt-3 space-y-1.5 text-xs text-white/80">
+                <li class="flex items-center gap-2"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->city }}, {{ $event->country }}</li>
+                <li class="flex items-center gap-2"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('j, Y') ?? $event->starts_at?->format('Y') }}</li>
+                @if ($event->venue)<li class="flex items-center gap-2"><x-icon name="home" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Venue: {{ $event->venue->name }}</li>@endif
+                @if ($event->expected_participants)<li class="flex items-center gap-2"><x-icon name="users" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Participants: {{ number_format($event->expected_participants) }}</li>@endif
+                @if ($event->projectManager)<li class="flex items-center gap-2"><x-icon name="identification" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Project Manager: {{ $event->projectManager->name }}</li>@endif
+            </ul>
+        </div>
+
+        {{-- Health ring --}}
+        <span class="absolute bottom-3 right-3 z-10 flex flex-col items-center rounded-2xl bg-navy-950/60 px-2.5 py-2 backdrop-blur-sm">
+            <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-[88px] w-[88px]" textSize="text-[20px]"
+                           class="[&_span]:!text-white [&_circle:first-child]:!stroke-white/20" />
+            <span class="mt-0.5 text-[10px] font-semibold text-white/85">Health Score</span>
+        </span>
+
+        <span class="absolute right-3 top-3 z-10 flex gap-1.5">
             <button type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-gold-400 backdrop-blur transition hover:bg-white/20" aria-label="Favorite"><x-icon name="star" class="h-4 w-4" /></button>
             <button type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur transition hover:bg-white/20" aria-label="Actions"><x-icon name="dots" class="h-4 w-4" /></button>
         </span>
