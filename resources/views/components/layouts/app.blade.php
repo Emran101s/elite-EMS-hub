@@ -80,9 +80,7 @@
 
                     <details class="group relative">
                         <summary class="flex cursor-pointer list-none items-center gap-3 rounded-full py-1 pl-1 pr-2 transition hover:bg-white [&::-webkit-details-marker]:hidden">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-gold-400 ring-2 ring-line">
-                                {{ auth()->user()?->initials() }}
-                            </span>
+                            <x-user-avatar :user="auth()->user()" size="h-11 w-11" />
                             <span class="hidden text-left sm:block">
                                 <span class="block text-[15px] font-bold text-navy-900">{{ auth()->user()?->name }}</span>
                                 <span class="block text-xs text-muted">Super Admin</span>

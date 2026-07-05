@@ -226,7 +226,7 @@
         <ul class="space-y-3.5">
             @forelse ($workload as $row)
                 <li class="flex items-center gap-2.5">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-[0.6rem] font-bold text-gold-400">{{ $row['user']->initials() }}</span>
+                    <x-user-avatar :user="$row['user']" size="h-8 w-8" text="text-[0.6rem]" />
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-2">
                             <p class="truncate text-xs font-semibold text-navy-900">{{ $row['user']->name }}</p>

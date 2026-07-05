@@ -158,7 +158,7 @@ class DemoDataSeeder extends Seeder
 
         // ── Team ────────────────────────────────────────────────────────
         $team = collect([
-            ['name' => 'Emran Ahmed', 'email' => 'emran.itan@elitebhub.com', 'title' => 'Super Admin'],
+            ['name' => 'Emran Ahmed', 'email' => 'emran.itan@elitebhub.com', 'title' => 'Super Admin', 'avatar_path' => 'images/team/emran-ahmed.jpg'],
             ['name' => 'Layla Haddad', 'email' => 'layla.haddad@elitebhub.com', 'title' => 'Operations Manager'],
             ['name' => 'Omar Nassar', 'email' => 'omar.nassar@elitebhub.com', 'title' => 'Event Producer'],
             ['name' => 'Sara Al-Rashid', 'email' => 'sara.alrashid@elitebhub.com', 'title' => 'Finance Lead'],
