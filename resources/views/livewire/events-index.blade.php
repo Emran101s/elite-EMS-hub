@@ -48,7 +48,7 @@
 
             {{-- Grid view --}}
             @if ($view === 'grid')
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                <div class="grid justify-start gap-4 [grid-template-columns:repeat(auto-fill,250px)]">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                       :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />
