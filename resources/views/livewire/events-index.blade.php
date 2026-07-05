@@ -48,7 +48,7 @@
 
             {{-- Grid view --}}
             @if ($view === 'grid')
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                       :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />
@@ -120,7 +120,7 @@
         </div>
 
         {{-- ══ Right: view switcher + preview ══ --}}
-        <div class="min-w-0 2xl:w-[440px] 2xl:shrink-0">
+        <div class="min-w-0 2xl:w-[500px] 2xl:shrink-0">
             <div class="mb-5 flex items-center justify-between gap-3">
                 <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
                     @foreach ([
