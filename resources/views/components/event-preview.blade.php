@@ -12,10 +12,11 @@
     $riskWord = $openRisks->isEmpty() ? null : ($openRisks->max(fn ($r) => $r->severity()) >= 15 ? 'High' : 'Medium');
 @endphp
 
-<div class="rounded-[28px] border border-line bg-white p-4 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
+<div class="rounded-[28px] border border-line p-4 shadow-[0_12px_35px_rgba(15,23,42,0.08)]"
+     style="background: linear-gradient(180deg, #0B1F3A 0%, #122645 210px, #DDE5F0 330px, #F8FAFC 430px, #FFFFFF 100%)">
 
     {{-- ── Hero: one dark-navy gradient, avatar blended into it ── --}}
-    <div class="relative h-[250px] overflow-hidden rounded-[22px] shadow-[0_14px_35px_rgba(11,31,58,0.35)] ring-1 ring-gold-500/25"
+    <div class="relative h-[250px] overflow-hidden rounded-[22px] ring-1 ring-white/10"
          style="background: linear-gradient(115deg, #0B1F3A 0%, #0E1E36 45%, #16294A 78%, #1C3357 100%)">
 
         {{-- Avatar layer: multiply-blend melts white/light backgrounds into the navy --}}
@@ -95,7 +96,7 @@
 
     {{-- ── Control Room shortcuts: 96×60 ── --}}
     <div class="mt-4">
-        <p class="mb-2.5 text-xs font-bold uppercase tracking-wide text-navy-900">Event Control Room</p>
+        <p class="mb-2.5 text-xs font-bold uppercase tracking-wide text-navy-800">Event Control Room</p>
         <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
             @foreach ([
                 'overview' => ['Overview', 'home'], 'agenda' => ['Agenda', 'calendar'], 'tasks' => ['Tasks', 'clipboard'],
