@@ -1,12 +1,17 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VIP Event — Private Luxury Villa">
     <defs>
-        <linearGradient id="vip-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#EDF1F8"/></linearGradient>
+        <linearGradient id="vip-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F4F6FB"/></linearGradient>
         <linearGradient id="vip-pool" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#93C5FD"/><stop offset="1" stop-color="#3B82F6"/></linearGradient>
         <linearGradient id="vip-door" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#E3C766"/><stop offset="1" stop-color="#B8942C"/></linearGradient>
+        <linearGradient id="vip-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#vip-sky)"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" fill="#FFFFFF"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" stroke="#E2E8F0"/>
+    {{-- gold podium --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#vip-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="#F7F3E6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="112" rx="68" ry="9.5" fill="#FFFFFF" opacity="0.65"/>
     {{-- two-tier marble villa --}}
     <rect x="52" y="74" width="96" height="38" rx="3" fill="#FFFFFF"/>
     <rect x="52" y="74" width="96" height="38" rx="3" stroke="#E2E8F0"/>

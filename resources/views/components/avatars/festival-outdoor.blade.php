@@ -1,14 +1,17 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Festival / Outdoor Event — Outdoor Event Island">
     <defs>
-        <linearGradient id="fo-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#FDF3E3"/></linearGradient>
+        <linearGradient id="fo-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#FBF7EE"/></linearGradient>
         <linearGradient id="fo-water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#93C5FD"/><stop offset="1" stop-color="#3B82F6"/></linearGradient>
         <linearGradient id="fo-stage" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FBBF24"/><stop offset="1" stop-color="#F59E0B"/></linearGradient>
+        <linearGradient id="fo-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#fo-sky)"/>
-    {{-- water ring + island --}}
-    <ellipse cx="100" cy="116" rx="90" ry="20" fill="url(#fo-water)" opacity="0.55"/>
-    <ellipse cx="100" cy="112" rx="74" ry="16" fill="#FDF6E3"/>
-    <ellipse cx="100" cy="112" rx="74" ry="16" stroke="#E2E8F0"/>
+    {{-- gold podium with water ring + island deck --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#fo-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="url(#fo-water)" opacity="0.6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="111" rx="66" ry="10" fill="#FDF6E3"/>
     {{-- stage shell --}}
     <path d="M64 108 A30 30 0 0 1 124 108 Z" fill="url(#fo-stage)"/>
     <path d="M72 108 A22 22 0 0 1 116 108 Z" fill="#FFFFFF" opacity="0.35"/>

@@ -1,11 +1,16 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Exhibition — Exhibition Park">
     <defs>
-        <linearGradient id="ex-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#E3ECF9"/></linearGradient>
+        <linearGradient id="ex-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F1F6FC"/></linearGradient>
         <linearGradient id="ex-roof" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#3B82F6"/></linearGradient>
+        <linearGradient id="ex-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#ex-sky)"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" fill="#FFFFFF"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" stroke="#E2E8F0"/>
+    {{-- gold podium --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#ex-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="#F7F3E6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="112" rx="68" ry="9.5" fill="#FFFFFF" opacity="0.65"/>
     {{-- three sawtooth halls --}}
     @foreach ([['x' => 30, 'w' => 52], ['x' => 88, 'w' => 52], ['x' => 146, 'w' => 30]] as $hall)
         <rect x="{{ $hall['x'] }}" y="78" width="{{ $hall['w'] }}" height="34" rx="2" fill="#FFFFFF"/>

@@ -1,4 +1,4 @@
-@props(['percent', 'group' => 'track', 'size' => 'h-14 w-14', 'label' => true])
+@props(['percent', 'group' => 'track', 'size' => 'h-14 w-14', 'label' => true, 'dark' => false, 'textSize' => 'text-[0.65rem]'])
 
 @php
     // r = 15.9155 → circumference ≈ 100, so dasharray maps 1:1 to percent.
@@ -7,7 +7,7 @@
         'warn' => 'stroke-warn',
         default => 'stroke-track',
     };
-    $text = match ($group) {
+    $text = $dark ? 'text-navy-900' : match ($group) {
         'risk' => 'text-risk',
         'warn' => 'text-amber-600',
         default => 'text-emerald-600',
@@ -21,6 +21,6 @@
                 stroke-dasharray="{{ $percent }} {{ 100 - $percent }}" class="{{ $stroke }}" />
     </svg>
     @if ($label)
-        <span class="absolute text-[0.65rem] font-bold {{ $text }}">{{ $percent }}%</span>
+        <span class="absolute font-bold {{ $textSize }} {{ $text }}">{{ $percent }}%</span>
     @endif
 </span>

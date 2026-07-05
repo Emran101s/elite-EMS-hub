@@ -1,12 +1,17 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="International Conference — Modern Convention Center">
     <defs>
-        <linearGradient id="ic-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#E6EDF7"/></linearGradient>
+        <linearGradient id="ic-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F1F5FA"/></linearGradient>
         <linearGradient id="ic-glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2A4368"/><stop offset="1" stop-color="#0B1F3A"/></linearGradient>
         <linearGradient id="ic-tower" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3A5885"/><stop offset="1" stop-color="#0B1F3A"/></linearGradient>
+        <linearGradient id="ic-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#ic-sky)"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" fill="#FFFFFF"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" stroke="#E2E8F0"/>
+    {{-- gold podium --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#ic-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="#F7F3E6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="112" rx="68" ry="9.5" fill="#FFFFFF" opacity="0.65"/>
     {{-- glass tower --}}
     <rect x="132" y="38" width="30" height="76" rx="3" fill="url(#ic-tower)"/>
     <rect x="136" y="44" width="22" height="64" rx="2" fill="#FFFFFF" opacity="0.12"/>

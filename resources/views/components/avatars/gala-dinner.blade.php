@@ -1,12 +1,17 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gala Dinner — Luxury Ballroom">
     <defs>
-        <linearGradient id="gd-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F1EBDD"/></linearGradient>
+        <linearGradient id="gd-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F8F4EA"/></linearGradient>
         <radialGradient id="gd-glow" cx="0.5" cy="0.4" r="0.6"><stop stop-color="#D4AF37" stop-opacity="0.5"/><stop offset="1" stop-color="#D4AF37" stop-opacity="0"/></radialGradient>
         <linearGradient id="gd-door" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#E3C766"/><stop offset="1" stop-color="#B8942C"/></linearGradient>
+        <linearGradient id="gd-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#gd-sky)"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" fill="#FFFFFF"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" stroke="#E2E8F0"/>
+    {{-- gold podium --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#gd-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="#F7F3E6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="112" rx="68" ry="9.5" fill="#FFFFFF" opacity="0.65"/>
     <ellipse cx="100" cy="86" rx="58" ry="34" fill="url(#gd-glow)"/>
     {{-- ballroom facade --}}
     <rect x="46" y="62" width="108" height="50" rx="3" fill="#FFFFFF"/>

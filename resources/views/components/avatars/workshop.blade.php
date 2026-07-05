@@ -1,11 +1,16 @@
 <svg {{ $attributes }} viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workshop — Learning Center">
     <defs>
-        <linearGradient id="ws-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#E9F4EC"/></linearGradient>
+        <linearGradient id="ws-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#F2F9F4"/></linearGradient>
         <linearGradient id="ws-fin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#4ADE80"/><stop offset="1" stop-color="#22C55E"/></linearGradient>
+        <linearGradient id="ws-pod" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EFD98E"/><stop offset="0.55" stop-color="#D4AF37"/><stop offset="1" stop-color="#8F6F1F"/></linearGradient>
     </defs>
     <rect width="200" height="140" fill="url(#ws-sky)"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" fill="#FFFFFF"/>
-    <ellipse cx="100" cy="122" rx="86" ry="14" stroke="#E2E8F0"/>
+    {{-- gold podium --}}
+    <ellipse cx="100" cy="130" rx="80" ry="7" fill="#0B1F3A" opacity="0.10"/>
+    <path d="M18 112 L18 122 A82 13 0 0 0 182 122 L182 112 A82 13 0 0 1 18 112 Z" fill="url(#ws-pod)"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" fill="#F7F3E6"/>
+    <ellipse cx="100" cy="112" rx="82" ry="13" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="0.8"/>
+    <ellipse cx="100" cy="112" rx="68" ry="9.5" fill="#FFFFFF" opacity="0.65"/>
     {{-- main learning block --}}
     <rect x="44" y="62" width="84" height="50" rx="3" fill="#FFFFFF"/>
     <rect x="44" y="62" width="84" height="50" rx="3" stroke="#E2E8F0"/>
