@@ -29,10 +29,10 @@
         @endforeach
     </div>
 
-    <div class="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_520px]">
+    <div class="flex flex-col gap-5 2xl:flex-row">
 
-        {{-- ══ Left: filters + cards ══ --}}
-        <div class="min-w-0">
+        {{-- ══ Left: filters + cards (locked to the 3-card grid width) ══ --}}
+        <div class="min-w-0 2xl:w-[722px] 2xl:shrink-0">
             {{-- Filter tabs --}}
             <div class="mb-5 flex flex-wrap items-center gap-1">
                 @foreach (['all' => 'All Events', 'conference' => 'Conference', 'workshop' => 'Workshop', 'exhibition' => 'Exhibition', 'gala' => 'Gala Dinner', 'vip' => 'VIP', 'outdoor' => 'Outdoor'] as $key => $label)
@@ -44,7 +44,6 @@
                             ])>{{ $label }}</button>
                 @endforeach
                 <span class="px-2 text-xs text-navy-400" title="More types via search">More ▾</span>
-                <input type="search" wire:model.live.debounce.400ms="q" placeholder="Search events, clients, venues…" class="input ml-auto w-52 !py-2 text-xs">
             </div>
 
             {{-- Grid view --}}
@@ -120,10 +119,10 @@
             </div>
         </div>
 
-        {{-- ══ Right: view switcher + preview ══ --}}
-        <div class="min-w-0">
-            <div class="mb-5 flex items-center justify-between">
-                <span class="inline-flex gap-1 rounded-2xl border border-line bg-white p-1">
+        {{-- ══ Right: view switcher + preview (fills all remaining space) ══ --}}
+        <div class="min-w-0 flex-1">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
                     @foreach ([
                         ['grid', 'grid', 'Grid view'], ['list', 'list', 'List view'],
                         [null, 'calendar', 'Calendar — coming soon'], [null, 'columns', 'Kanban — coming soon'],
@@ -141,7 +140,8 @@
                         @endif
                     @endforeach
                 </span>
-                <span class="text-navy-300"><x-icon name="dots" class="h-4 w-4" /></span>
+                <input type="search" wire:model.live.debounce.400ms="q" placeholder="Search events, clients, venues…" class="input h-10 min-w-0 flex-1 !rounded-xl text-xs">
+                <span class="shrink-0 text-navy-300"><x-icon name="dots" class="h-4 w-4" /></span>
             </div>
 
             @if ($selected)
