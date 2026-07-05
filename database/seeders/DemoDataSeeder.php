@@ -68,43 +68,43 @@ class DemoDataSeeder extends Seeder
                 'name' => 'ICFT 2026', 'type' => 'conference', 'status' => 'on_track',
                 'city' => 'Amman', 'country' => 'Jordan',
                 'venue' => 'Royal Convention Centre', 'project' => 'Conference Season 2026',
-                'starts_at' => '2026-09-14', 'ends_at' => '2026-09-16',
-                'budget_cents' => 65000000, 'progress' => 92,
+                'starts_at' => '2026-10-19', 'ends_at' => '2026-10-21',
+                'budget_cents' => 65000000, 'progress' => 92, 'expected_participants' => 400,
             ],
             [
                 'name' => 'EY Annual Gala', 'type' => 'gala_dinner', 'status' => 'in_progress',
                 'city' => 'Manama', 'country' => 'Bahrain',
                 'venue' => 'Gulf Grand Ballroom', 'project' => 'Corporate Events Portfolio',
-                'starts_at' => '2026-08-20', 'ends_at' => '2026-08-20',
-                'budget_cents' => 28000000, 'progress' => 76,
+                'starts_at' => '2026-11-12', 'ends_at' => '2026-11-12',
+                'budget_cents' => 28000000, 'progress' => 76, 'expected_participants' => 120,
             ],
             [
                 'name' => 'NDI Workshop', 'type' => 'workshop', 'status' => 'at_risk',
                 'city' => 'Dubai', 'country' => 'UAE',
                 'venue' => 'Jumeirah Learning Hub', 'project' => 'Education & Training Series',
-                'starts_at' => '2026-07-28', 'ends_at' => '2026-07-30',
-                'budget_cents' => 9000000, 'progress' => 61,
+                'starts_at' => '2026-08-05', 'ends_at' => '2026-08-07',
+                'budget_cents' => 9000000, 'progress' => 61, 'expected_participants' => 80,
             ],
             [
                 'name' => 'Tech Expo 2026', 'type' => 'exhibition', 'status' => 'behind',
                 'city' => 'Doha', 'country' => 'Qatar',
                 'venue' => 'Doha Exhibition Center', 'project' => 'Conference Season 2026',
-                'starts_at' => '2026-10-05', 'ends_at' => '2026-10-08',
-                'budget_cents' => 82000000, 'progress' => 45,
+                'starts_at' => '2026-12-10', 'ends_at' => '2026-12-12',
+                'budget_cents' => 82000000, 'progress' => 45, 'expected_participants' => 1000,
             ],
             [
                 'name' => 'GJU Career Fair', 'type' => 'career_fair', 'status' => 'on_track',
                 'city' => 'Amman', 'country' => 'Jordan',
                 'venue' => 'GJU Main Campus Hall', 'project' => 'Education & Training Series',
-                'starts_at' => '2026-09-02', 'ends_at' => '2026-09-03',
-                'budget_cents' => 12000000, 'progress' => 85,
+                'starts_at' => '2026-09-28', 'ends_at' => '2026-09-29',
+                'budget_cents' => 12000000, 'progress' => 85, 'expected_participants' => 600,
             ],
             [
                 'name' => 'Private Dinner', 'type' => 'private_dinner', 'status' => 'on_track',
                 'city' => 'Riyadh', 'country' => 'KSA',
                 'venue' => 'Al Faisaliah Private Suites', 'project' => 'Corporate Events Portfolio',
-                'starts_at' => '2026-08-06', 'ends_at' => '2026-08-06',
-                'budget_cents' => 15000000, 'progress' => 90,
+                'starts_at' => '2026-11-20', 'ends_at' => '2026-11-20',
+                'budget_cents' => 15000000, 'progress' => 90, 'expected_participants' => 45,
             ],
         ])->mapWithKeys(function (array $event) use ($venues, $projects) {
             $attributes = collect($event)->except(['venue', 'project'])->all();
@@ -272,11 +272,13 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── ICFT agenda: 2 days ─────────────────────────────────────────
+        \App\Models\EventAgendaDay::where('event_id', $icft->id)
+            ->whereNotIn('date', ['2026-10-19', '2026-10-20'])->delete();
         $day1 = \App\Models\EventAgendaDay::updateOrCreate(
-            ['event_id' => $icft->id, 'date' => '2026-09-14'],
+            ['event_id' => $icft->id, 'date' => '2026-10-19'],
             ['label' => 'Day 1 — Opening & Keynotes', 'sort' => 1]);
         $day2 = \App\Models\EventAgendaDay::updateOrCreate(
-            ['event_id' => $icft->id, 'date' => '2026-09-15'],
+            ['event_id' => $icft->id, 'date' => '2026-10-20'],
             ['label' => 'Day 2 — Workshops & Closing', 'sort' => 2]);
 
         foreach ([

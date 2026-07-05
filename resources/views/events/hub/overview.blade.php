@@ -65,6 +65,76 @@
             </div>
         </div>
 
+        {{-- Agenda overview + summaries --}}
+        <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card p-5">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Agenda Overview</h3>
+                    @php $firstDay = $event->agendaDays->first(); @endphp
+                    @if ($firstDay)
+                        <span class="rounded-full bg-navy-50 px-2.5 py-1 text-[0.65rem] font-semibold text-navy-600">{{ $firstDay->date->format('M j, Y') }}</span>
+                    @endif
+                </div>
+                @if ($firstDay && $firstDay->sessions->isNotEmpty())
+                    <ul class="space-y-2">
+                        @foreach ($firstDay->sessions->take(5) as $session)
+                            <li class="flex items-center gap-3 text-xs">
+                                <span class="w-24 shrink-0 border-l-2 pl-2 font-semibold text-navy-900" style="border-color: {{ $event->theme()['accent'] }}">
+                                    {{ substr($session->starts_at, 0, 5) }} – {{ substr($session->ends_at, 0, 5) }}
+                                </span>
+                                <span class="min-w-0 flex-1 truncate font-medium text-navy-800">{{ $session->title }}</span>
+                                <span class="shrink-0 text-[0.65rem] text-muted">{{ $session->room?->name }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}" class="mt-3 block text-right text-xs font-semibold text-gold-600 hover:text-gold-700">View Full Agenda →</a>
+                @else
+                    <p class="text-xs text-muted">No sessions yet — the agenda contributes 10% of the health score.</p>
+                @endif
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                @php
+                    $taskTotal = max($event->tasks->count(), 1);
+                    $done = $event->tasks->where('status', 'completed')->count();
+                    $doing = $event->tasks->where('status', 'in_progress')->count();
+                    $todo = $event->tasks->where('status', 'pending')->count();
+                    $estimated = $event->budgetItems->sum('estimated_cents');
+                    $actual = $event->budgetItems->sum('actual_cents');
+                    $budgetTotal = max($event->budget_cents, 1);
+                    $committed = max($estimated - $actual, 0);
+                    $remaining = max($event->budget_cents - $estimated, 0);
+                @endphp
+                <div class="card flex flex-col items-center p-4">
+                    <h3 class="mb-2 self-start text-xs font-bold uppercase tracking-wide text-navy-900">Tasks</h3>
+                    <x-donut :segments="[
+                        ['pct' => $done / $taskTotal * 100, 'class' => 'stroke-track'],
+                        ['pct' => $doing / $taskTotal * 100, 'class' => 'stroke-warn'],
+                        ['pct' => $todo / $taskTotal * 100, 'class' => 'stroke-navy-200'],
+                    ]" size="h-24 w-24">
+                        <span class="text-lg font-bold text-navy-900">{{ $event->tasks->count() }}</span>
+                        <span class="text-[0.55rem] text-muted">Total</span>
+                    </x-donut>
+                    <p class="mt-2 text-[0.6rem] text-muted">{{ $done }} done · {{ $doing }} active · {{ $todo }} pending</p>
+                </div>
+                <div class="card flex flex-col items-center p-4">
+                    <h3 class="mb-2 self-start text-xs font-bold uppercase tracking-wide text-navy-900">Budget</h3>
+                    <x-donut :segments="[
+                        ['pct' => min($actual / $budgetTotal * 100, 100), 'class' => 'stroke-risk'],
+                        ['pct' => min($committed / $budgetTotal * 100, 100 - min($actual / $budgetTotal * 100, 100)), 'class' => 'stroke-warn'],
+                    ]" size="h-24 w-24">
+                        <span class="text-sm font-bold text-navy-900">${{ \Illuminate\Support\Number::abbreviate($event->budget_cents / 100) }}</span>
+                        <span class="text-[0.55rem] text-muted">Budget</span>
+                    </x-donut>
+                    <p class="mt-2 text-[0.6rem] text-muted">
+                        ${{ \Illuminate\Support\Number::abbreviate($actual / 100) }} spent ·
+                        ${{ \Illuminate\Support\Number::abbreviate($committed / 100) }} committed ·
+                        ${{ \Illuminate\Support\Number::abbreviate($remaining / 100) }} free
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- Quick stat cards --}}
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
             @php

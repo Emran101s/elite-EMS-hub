@@ -107,7 +107,8 @@ class EventHubTest extends TestCase
 
         $this->actingAs($user)->get('/events')->assertOk()
             ->assertSee('Total Events')->assertSee('At Risk')
-            ->assertSee('ICFT 2026')->assertSee('Open Hub');
+            ->assertSee('ICFT 2026')->assertSee('Open Event Hub')
+            ->assertSee('Event Control Room'); // preview panel with shortcuts
 
         $this->actingAs($user)->get('/events?type=conference')->assertOk()
             ->assertSee('ICFT 2026')->assertDontSee('Tech Expo 2026');

@@ -20,31 +20,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
 
-    Route::get('/events', function () {
-        $filtered = Event::with(['venue', 'avatar', 'client', 'projectManager'])
-            ->withCount('tasks')
-            ->when(request('q'), fn ($query, $q) => $query->where(fn ($w) => $w
-                ->where('name', 'like', "%{$q}%")
-                ->orWhere('city', 'like', "%{$q}%")
-                ->orWhere('country', 'like', "%{$q}%")))
-            ->when(request('type'), fn ($query, $type) => $query->where('type', $type))
-            ->when(request('stage'), fn ($query, $stage) => $query->where('stage', $stage))
-            ->orderBy('starts_at')
-            ->get();
-
-        return view('modules.events', [
-            'events' => $filtered,
-            'view' => in_array(request('view'), ['grid', 'list']) ? request('view') : 'grid',
-            'kpis' => [
-                'Total Events' => Event::count(),
-                'Active' => Event::whereIn('stage', ['confirmed', 'planning', 'production'])->count(),
-                'Upcoming' => Event::where('starts_at', '>', now())->count(),
-                'Live' => Event::where('stage', 'live')->count(),
-                'Completed' => Event::whereIn('stage', ['completed', 'closed'])->count(),
-                'At Risk' => Event::whereIn('status', ['at_risk', 'behind'])->count(),
-            ],
-        ]);
-    })->name('events.index');
+    Route::get('/events', \App\Livewire\EventsIndex::class)->name('events.index');
 
     Route::get('/events/{event}', [\App\Http\Controllers\EventHubController::class, 'show'])
         ->whereNumber('event')->name('events.hub');
