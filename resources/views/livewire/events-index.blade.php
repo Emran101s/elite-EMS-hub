@@ -6,8 +6,8 @@
         </a>
     </div>
 
-    {{-- KPI row --}}
-    <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    {{-- KPI row: 155×90 cards --}}
+    <div class="mb-6 flex flex-wrap gap-3">
         @foreach ($kpis as $kpi)
             @php
                 $toneClass = match ($kpi['tone']) {
@@ -18,13 +18,13 @@
                     default => 'bg-navy-50 text-navy-600',
                 };
             @endphp
-            <div class="min-h-[100px] rounded-[18px] border border-line bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                <div class="flex items-center gap-2.5">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ $toneClass }}"><x-icon :name="$kpi['icon']" class="h-5 w-5" /></span>
-                    <p class="text-xs font-semibold text-muted">{{ $kpi['label'] }}</p>
+            <div class="flex h-[90px] w-[155px] flex-col justify-between rounded-[18px] border border-line bg-white px-3 py-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+                <div class="flex items-center gap-2">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $toneClass }}"><x-icon :name="$kpi['icon']" class="h-4.5 w-4.5" /></span>
+                    <p class="text-[11px] font-semibold leading-tight text-muted">{{ $kpi['label'] }}</p>
                 </div>
-                <p class="mt-2 text-[26px] font-bold leading-none text-navy-900">{{ $kpi['value'] }}</p>
-                <p class="mt-1.5 text-[11px] font-semibold {{ $kpi['up'] ? 'text-emerald-600' : 'text-risk' }}">{{ $kpi['trend'] }}</p>
+                <p class="text-[22px] font-bold leading-none text-navy-900">{{ $kpi['value'] }}</p>
+                <p class="truncate text-[10px] font-semibold {{ $kpi['up'] ? 'text-emerald-600' : 'text-risk' }}">{{ $kpi['trend'] }}</p>
             </div>
         @endforeach
     </div>
@@ -49,7 +49,7 @@
 
             {{-- Grid view --}}
             @if ($view === 'grid')
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div class="grid justify-start gap-4 [grid-template-columns:repeat(auto-fill,230px)]">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                       :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />
