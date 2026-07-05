@@ -125,7 +125,7 @@
         </nav>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-5">
         @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
     </div>
 </x-layouts.app>

@@ -44,7 +44,7 @@
 
         {{-- Main column --}}
         <div class="lg:pl-60">
-            <header class="flex items-center justify-between gap-4 px-6 pb-2 pt-6 lg:px-8">
+            <header class="flex items-center justify-between gap-4 px-6 pb-4 pt-7 lg:px-8">
                 <div class="min-w-0">
                     <h1 class="truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>
                     @if ($subtitle)
@@ -100,7 +100,7 @@
                 </div>
             </header>
 
-            <main class="px-6 py-6 lg:px-8">
+            <main class="px-6 pb-12 pt-1 lg:px-8">
                 @if (session('status'))
                     <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">
                         {{ session('status') }}

@@ -32,9 +32,9 @@
     --color-gold-800: #6f571c;
     --color-gold-900: #4c3b14;
 
-    /* Surfaces & lines */
-    --color-page: #f4f6fb;
-    --color-line: #e5eaf3;
+    /* Surfaces & lines (exact spec: Soft Background / Soft Border) */
+    --color-page: #f8fafc;
+    --color-line: #e2e8f0;
     --color-ink: #0b1f3a;
     --color-muted: #64748b;
 

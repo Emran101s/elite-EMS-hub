@@ -2,10 +2,10 @@
     :title="'Welcome back, ' . str(auth()->user()->name)->before(' ') . ' 👋'"
     subtitle="Here's what's happening across your events and projects.">
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
 
         {{-- ════════ Main column ════════ --}}
-        <div class="min-w-0 space-y-6">
+        <div class="min-w-0 space-y-5">
 
             {{-- KPI row --}}
             <div class="grid grid-cols-2 gap-4 md:grid-cols-3 2xl:grid-cols-5">
@@ -197,7 +197,7 @@
         </div>
 
         {{-- ════════ Right rail ════════ --}}
-        <div class="space-y-6">
+        <div class="space-y-5">
 
             <div class="card p-5">
                 <div class="mb-4 flex items-center justify-between">

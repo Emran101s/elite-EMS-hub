@@ -1,13 +1,13 @@
 <div>
     {{-- Create Event (top right, above KPIs) --}}
-    <div class="mb-4 flex justify-end">
+    <div class="mb-5 flex justify-end">
         <a href="{{ route('events.create') }}" class="btn-navy !rounded-2xl px-5 text-sm !text-white">
             <span class="text-gold-400">+</span> Create Event
         </a>
     </div>
 
     {{-- KPI row: 155×90 cards --}}
-    <div class="mb-6 flex flex-wrap gap-3">
+    <div class="mb-5 flex flex-wrap gap-3">
         @foreach ($kpis as $kpi)
             @php
                 $toneClass = match ($kpi['tone']) {

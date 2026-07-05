@@ -68,7 +68,7 @@
     </div>
 
     {{-- ── Quick metric cards: 68px ── --}}
-    <div class="mt-3 grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+    <div class="mt-4 grid grid-cols-2 gap-2.5 xl:grid-cols-4">
         @foreach ([
             ['icon' => 'currency', 'label' => 'Budget Health', 'value' => $budgetLabel, 'good' => $budgetLabel === 'Healthy'],
             ['icon' => 'clipboard', 'label' => 'Tasks Completed', 'value' => $health['components']['tasks'] !== null ? $health['components']['tasks'].'%' : '—', 'good' => ($health['components']['tasks'] ?? 0) >= 61],
