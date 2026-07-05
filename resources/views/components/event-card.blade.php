@@ -2,7 +2,7 @@
 
 <div wire:click="select({{ $event->id }})"
      @class([
-         'group relative flex h-[350px] w-[230px] cursor-pointer flex-col rounded-3xl border bg-white p-3 transition duration-300',
+         'group relative flex h-[350px] w-full cursor-pointer flex-col rounded-3xl border bg-white p-3 transition duration-300',
          'border-gold-400 shadow-[0_18px_40px_rgba(212,175,55,0.16)] ring-1 ring-gold-300' => $selected,
          'border-line shadow-[0_12px_30px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:border-[rgba(212,175,55,0.45)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)]' => ! $selected,
      ])>

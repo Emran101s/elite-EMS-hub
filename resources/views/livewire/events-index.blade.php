@@ -31,8 +31,8 @@
 
     <div class="flex flex-col gap-5 2xl:flex-row">
 
-        {{-- ══ Left: filters + cards (locked to the 3-card grid width) ══ --}}
-        <div class="min-w-0 2xl:w-[722px] 2xl:shrink-0">
+        {{-- ══ Left: filters + cards (fluid, 5 columns on wide screens) ══ --}}
+        <div class="min-w-0 flex-1">
             {{-- Filter tabs --}}
             <div class="mb-5 flex flex-wrap items-center gap-1">
                 @foreach (['all' => 'All Events', 'conference' => 'Conference', 'workshop' => 'Workshop', 'exhibition' => 'Exhibition', 'gala' => 'Gala Dinner', 'vip' => 'VIP', 'outdoor' => 'Outdoor'] as $key => $label)
@@ -48,7 +48,7 @@
 
             {{-- Grid view --}}
             @if ($view === 'grid')
-                <div class="grid justify-start gap-4 [grid-template-columns:repeat(auto-fill,230px)]">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                       :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />
@@ -119,8 +119,8 @@
             </div>
         </div>
 
-        {{-- ══ Right: view switcher + preview (fills all remaining space) ══ --}}
-        <div class="min-w-0 flex-1">
+        {{-- ══ Right: view switcher + preview ══ --}}
+        <div class="min-w-0 2xl:w-[440px] 2xl:shrink-0">
             <div class="mb-5 flex items-center justify-between gap-3">
                 <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
                     @foreach ([
