@@ -31,8 +31,8 @@
 
     <div class="flex flex-col gap-5 2xl:flex-row">
 
-        {{-- ══ Left: filters + cards (fluid, 5 columns on wide screens) ══ --}}
-        <div class="min-w-0 flex-1">
+        {{-- ══ Left: filters + cards (locked to the 4-card grid width) ══ --}}
+        <div class="min-w-0 2xl:w-[1048px] 2xl:shrink-0">
             {{-- Filter tabs --}}
             <div class="mb-5 flex flex-wrap items-center gap-1">
                 @foreach (['all' => 'All Events', 'conference' => 'Conference', 'workshop' => 'Workshop', 'exhibition' => 'Exhibition', 'gala' => 'Gala Dinner', 'vip' => 'VIP', 'outdoor' => 'Outdoor'] as $key => $label)
@@ -120,7 +120,7 @@
         </div>
 
         {{-- ══ Right: view switcher + preview ══ --}}
-        <div class="min-w-0 2xl:w-[500px] 2xl:shrink-0">
+        <div class="min-w-0 flex-1">
             <div class="mb-5 flex items-center justify-between gap-3">
                 <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
                     @foreach ([
