@@ -29,53 +29,120 @@
                 @endforeach
             </div>
 
-            {{-- Operations Hub --}}
+            {{-- Operations Hub — circular event ecosystem --}}
             <div class="card overflow-hidden">
-                <div class="border-b border-line px-6 py-4">
-                    <h2 class="text-sm font-bold uppercase tracking-wide text-navy-900">Operations Hub</h2>
-                    <p class="mt-0.5 text-xs text-muted">Real-time overview of your events ecosystem</p>
+                <div class="flex items-center justify-between border-b border-line px-6 py-4">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wide text-navy-900">Operations Hub</h2>
+                        <p class="mt-0.5 text-xs text-muted">Real-time overview of your events ecosystem</p>
+                    </div>
+                    <div class="hidden items-center gap-3 text-[0.65rem] font-semibold text-muted sm:flex">
+                        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-track"></span> On Track</span>
+                        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-warn"></span> In Progress</span>
+                        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-risk"></span> At Risk</span>
+                    </div>
                 </div>
 
                 {{-- Orbit canvas (lg+) --}}
-                <div class="relative hidden h-[540px] bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_65%)] lg:block">
+                <div class="relative hidden h-[620px] overflow-hidden lg:block"
+                     style="background:
+                        radial-gradient(ellipse 60% 55% at 50% 50%, rgba(212,175,55,0.10), transparent 70%),
+                        radial-gradient(ellipse 90% 80% at 50% 50%, rgba(11,31,58,0.04), transparent 75%),
+                        linear-gradient(180deg, #FBFCFE, #F4F7FC);">
+
+                    {{-- faint dot texture --}}
+                    <div class="pointer-events-none absolute inset-0 opacity-[0.5]"
+                         style="background-image: radial-gradient(rgba(11,31,58,0.05) 1px, transparent 1px); background-size: 26px 26px;"></div>
+
+                    {{-- Rotating orbit rings --}}
+                    <div class="pointer-events-none absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2">
+                        <div class="orbit-spin-slow absolute inset-0 rounded-full border border-dashed border-gold-500/25"></div>
+                        <div class="orbit-spin-reverse absolute inset-[70px] rounded-full border border-dashed border-navy-300/25"></div>
+                        <div class="absolute inset-[150px] rounded-full border border-gold-500/10"></div>
+                    </div>
+
+                    {{-- Curved gold connectors --}}
                     <svg class="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                        <ellipse cx="50" cy="50" rx="42" ry="36" fill="none" stroke="#D4AF37" stroke-opacity="0.35"
-                                 stroke-width="0.18" stroke-dasharray="1.2 1" />
+                        <defs>
+                            <radialGradient id="conn" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.65" />
+                                <stop offset="100%" stop-color="#D4AF37" stop-opacity="0.12" />
+                            </radialGradient>
+                        </defs>
                         @foreach ($islands as $event)
-                            <line x1="50" y1="50" x2="{{ $event->pos_x }}" y2="{{ $event->pos_y }}"
-                                  stroke="#D4AF37" stroke-opacity="0.22" stroke-width="0.15" />
+                            {{-- soft glow underlay --}}
+                            <path d="M50 50 Q{{ $event->ctrl_x }} {{ $event->ctrl_y }} {{ $event->pos_x }} {{ $event->pos_y }}"
+                                  fill="none" stroke="#D4AF37" stroke-opacity="0.10" stroke-width="0.9" stroke-linecap="round" />
+                            <path d="M50 50 Q{{ $event->ctrl_x }} {{ $event->ctrl_y }} {{ $event->pos_x }} {{ $event->pos_y }}"
+                                  fill="none" stroke="url(#conn)" stroke-width="0.28" stroke-linecap="round"
+                                  stroke-dasharray="1.6 1.2" class="dash-flow" />
                         @endforeach
                     </svg>
 
-                    {{-- AI Command Core --}}
-                    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div class="flex flex-col items-center gap-2 rounded-2xl border border-gold-200 bg-white/90 px-5 py-4 text-center shadow-[0_8px_30px_rgba(212,175,55,0.18)] backdrop-blur">
-                            <svg class="h-8 w-8" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                                <rect x="20" y="3.5" width="23.3" height="23.3" rx="4" transform="rotate(45 20 3.5)" stroke="#D4AF37" stroke-width="2.5"/>
-                                <rect x="20" y="12.5" width="10.6" height="10.6" rx="2" transform="rotate(45 20 12.5)" fill="#D4AF37"/>
-                            </svg>
-                            <p class="text-xs font-bold tracking-wide text-navy-900">AI COMMAND CORE</p>
-                            <p class="flex items-center gap-1.5 text-[0.65rem] text-muted">
-                                <span class="h-1.5 w-1.5 rounded-full bg-track"></span> All systems operational
-                            </p>
-                        </div>
-                    </div>
-
-                    {{-- Event islands --}}
+                    {{-- Event Circle Cards --}}
                     @foreach ($islands as $event)
+                        @php
+                            $ringColor = ['track' => '#22C55E', 'warn' => '#F59E0B', 'risk' => '#EF4444'][$event->health_group];
+                            $statusLabel = str($event->health_status)->replace('_', ' ')->title();
+                        @endphp
                         <a href="{{ route('events.hub', $event) }}"
-                           class="absolute -translate-x-1/2 -translate-y-1/2 transition hover:scale-105"
+                           class="group absolute z-10 flex w-40 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center"
                            style="left: {{ $event->pos_x }}%; top: {{ $event->pos_y }}%">
-                            <span class="flex w-48 items-center gap-3 rounded-2xl border border-line bg-white/95 p-3 shadow-[0_6px_24px_rgba(11,31,58,0.10)] backdrop-blur">
-                                <x-event-avatar :event="$event" size="md" :percent="$event->health_score" :group="$event->health_group" />
-                                <span class="min-w-0">
-                                    <span class="block truncate text-xs font-bold text-navy-900">{{ $event->name }}</span>
-                                    <span class="block truncate text-[0.65rem] text-muted">{{ str($event->type)->replace('_', ' ')->title() }}</span>
-                                    <span class="block truncate text-[0.65rem] text-muted">{{ $event->city }}, {{ $event->country }}</span>
+
+                            {{-- Circular medallion --}}
+                            <span class="relative block h-[116px] w-[116px] transition duration-300 group-hover:-translate-y-1 group-hover:scale-105">
+                                <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full -rotate-90 drop-shadow-[0_8px_20px_rgba(11,31,58,0.15)]">
+                                    <circle cx="50" cy="50" r="45" fill="#FFFFFF" />
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#E2E8F0" stroke-width="5" />
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="{{ $ringColor }}" stroke-width="5"
+                                            stroke-linecap="round" stroke-dasharray="{{ $event->health_score * 2.827 }} 283" />
+                                </svg>
+                                {{-- avatar inside the ring --}}
+                                <span class="absolute inset-[11px] overflow-hidden rounded-full bg-[radial-gradient(circle,#FFFFFF,#EEF2F8)] ring-1 ring-white">
+                                    <x-event-avatar :event="$event" :ring="false" size="md"
+                                                    class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-full [&>span]:!bg-transparent [&>span]:ring-0 [&_img]:scale-[1.35] [&_img]:object-contain" />
                                 </span>
+                                {{-- health % pill --}}
+                                <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-white px-2 py-0.5 text-[0.7rem] font-bold shadow ring-1 ring-line"
+                                      style="color: {{ $ringColor }}">{{ $event->health_score }}%</span>
+                                {{-- status pill --}}
+                                <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-white shadow"
+                                      style="background: {{ $ringColor }}">{{ $statusLabel }}</span>
+                                {{-- risk badge --}}
+                                @if ($event->open_risks > 0)
+                                    <span class="absolute right-0 top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-risk px-1 text-[0.6rem] font-bold text-white shadow ring-2 ring-white"
+                                          title="{{ $event->open_risks }} open {{ str('risk')->plural($event->open_risks) }}">⚠</span>
+                                @endif
                             </span>
+
+                            {{-- Labels --}}
+                            <span class="mt-3 block max-w-full truncate text-xs font-bold text-navy-900 group-hover:text-gold-700">{{ $event->name }}</span>
+                            <span class="block truncate text-[0.62rem] text-muted">{{ $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title() }}</span>
+                            <span class="block truncate text-[0.62rem] text-muted">{{ $event->city }}, {{ $event->country }}</span>
                         </a>
                     @endforeach
+
+                    {{-- AI Command Core (center, on top) --}}
+                    <div class="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+                        <div class="relative flex h-[168px] w-[168px] items-center justify-center">
+                            {{-- glow + pulse rings --}}
+                            <div class="core-glow absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.35),transparent_70%)]"></div>
+                            <div class="absolute inset-4 rounded-full border border-gold-400/40"></div>
+                            <div class="absolute inset-4 animate-ping rounded-full border border-gold-400/30 [animation-duration:3s]"></div>
+                            {{-- core disc --}}
+                            <div class="relative flex h-[132px] w-[132px] flex-col items-center justify-center rounded-full border border-gold-300/60 text-center shadow-[0_12px_40px_rgba(11,31,58,0.30)]"
+                                 style="background: radial-gradient(circle at 50% 35%, #16294A, #0B1F3A 70%);">
+                                <svg class="h-9 w-9" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                                    <rect x="20" y="3.5" width="23.3" height="23.3" rx="4" transform="rotate(45 20 3.5)" stroke="#D4AF37" stroke-width="2.5"/>
+                                    <rect x="20" y="12.5" width="10.6" height="10.6" rx="2" transform="rotate(45 20 12.5)" fill="#D4AF37"/>
+                                </svg>
+                                <p class="mt-1.5 text-[0.6rem] font-bold tracking-[0.15em] text-gold-300">AI COMMAND CORE</p>
+                                <p class="mt-1 flex items-center gap-1.5 text-[0.55rem] text-white/70">
+                                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-track"></span> All systems operational
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Stacked fallback (< lg) --}}

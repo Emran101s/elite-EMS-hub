@@ -52,15 +52,29 @@ class CommandCenterService
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {
-            $angle = deg2rad(-90 + (360 / $count) * $i);
+            $deg = -90 + (360 / $count) * $i;
+            $angle = deg2rad($deg);
 
-            $event->pos_x = round(50 + 42 * cos($angle), 1);
-            $event->pos_y = round(50 + 36 * sin($angle), 1);
+            $event->pos_x = round(50 + 42 * cos($angle), 2);
+            $event->pos_y = round(50 + 38 * sin($angle), 2);
+            $event->orbit_deg = $deg;
+
+            // Curved connector control point: straight-line midpoint pushed
+            // perpendicular so every arc bows the same rotational way.
+            $mx = (50 + $event->pos_x) / 2;
+            $my = (50 + $event->pos_y) / 2;
+            $dx = $event->pos_x - 50;
+            $dy = $event->pos_y - 50;
+            $len = max(sqrt($dx * $dx + $dy * $dy), 0.001);
+            $event->ctrl_x = round($mx + (-$dy / $len) * 9, 2);
+            $event->ctrl_y = round($my + ($dx / $len) * 9, 2);
 
             // Islands show the same computed health score as the Event Hub.
             $health = $this->healthService->breakdown($event);
             $event->health_score = $health['score'];
             $event->health_group = $health['group'];
+            $event->health_status = $health['status'];
+            $event->open_risks = $event->risks->filter->isOpen()->count();
 
             return $event;
         });

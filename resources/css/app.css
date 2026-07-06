@@ -61,3 +61,22 @@
         @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder-muted focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30;
     }
 }
+
+/* Operations Hub — slow orbital rotation + core glow pulse */
+@keyframes orbit-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes core-glow {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.06); }
+}
+@keyframes dash-flow {
+    to { stroke-dashoffset: -24; }
+}
+.orbit-spin-slow { animation: orbit-spin 90s linear infinite; }
+.orbit-spin-reverse { animation: orbit-spin 120s linear infinite reverse; }
+.core-glow { animation: core-glow 4s ease-in-out infinite; }
+.dash-flow { animation: dash-flow 3s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+    .orbit-spin-slow, .orbit-spin-reverse, .core-glow, .dash-flow { animation: none; }
+}
