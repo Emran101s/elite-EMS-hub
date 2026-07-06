@@ -15,7 +15,7 @@
 
 <span {{ $attributes->merge(['class' => 'relative inline-block shrink-0']) }}
       @if ($avatar) data-avatar="{{ $avatar->slug }}" @endif>
-    <span class="{{ $frame }} block overflow-hidden bg-navy-50 ring-1 ring-line">
+    <span class="{{ $frame }} block overflow-hidden {{ $avatar?->image_path ? 'bg-transparent' : 'bg-navy-50 ring-1 ring-line' }}">
         @if ($avatar?->image_path)
             @php $src = in_array($size, ['sm', 'md']) && $avatar->thumbnail_path ? $avatar->thumbnail_path : $avatar->image_path; @endphp
             <img src="{{ asset($src) }}" alt="{{ $avatar->name }}" loading="lazy" class="h-full w-full object-contain">

@@ -22,7 +22,7 @@
         {{-- Avatar layer: multiply-blend melts white/light backgrounds into the navy --}}
         <div class="absolute inset-y-0 right-0 w-[64%] [mask-image:linear-gradient(90deg,transparent_0%,black_38%)]">
             <x-event-avatar :event="$event" :ring="false" size="xl"
-                            class="block h-full w-full opacity-95 mix-blend-multiply [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:bg-transparent [&>span]:ring-0 [&_img]:object-right" />
+                            class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0 [&_img]:object-right" />
         </div>
 
         {{-- Soft gold ambience + bottom vignette --}}

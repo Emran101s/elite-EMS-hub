@@ -21,7 +21,7 @@
 
             {{-- Avatar visual (430×240 area) --}}
             <div class="relative overflow-hidden rounded-2xl">
-                <x-event-avatar :event="$event" :ring="false" size="xl" class="block w-full [&>span]:h-[240px] [&>span]:w-full [&>span]:rounded-2xl [&>span]:bg-white" />
+                <x-event-avatar :event="$event" :ring="false" size="xl" class="block w-full [&>span]:h-[240px] [&>span]:w-full [&>span]:rounded-2xl [&>span]:!bg-transparent" />
             </div>
 
             {{-- Meta column --}}

@@ -10,7 +10,7 @@
     {{-- Avatar visual --}}
     <div class="relative h-[150px] shrink-0 overflow-hidden rounded-2xl bg-page">
         <x-event-avatar :event="$event" :ring="false" size="xl"
-                        class="block h-full w-full transition duration-500 group-hover:scale-[1.04] [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:bg-white [&>span]:ring-0" />
+                        class="block h-full w-full transition duration-500 group-hover:scale-[1.04] [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
         <button type="button" wire:click.stop
                 class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-gold-500 shadow ring-1 ring-gold-300 backdrop-blur transition hover:text-gold-600 {{ $selected ? '' : 'opacity-0 group-hover:opacity-100' }}"
                 aria-label="Favorite">
