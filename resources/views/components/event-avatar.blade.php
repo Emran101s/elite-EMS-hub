@@ -1,4 +1,4 @@
-@props(['event' => null, 'avatar' => null, 'size' => 'md', 'ring' => true])
+@props(['event' => null, 'avatar' => null, 'size' => 'md', 'ring' => true, 'percent' => null, 'group' => null])
 
 @php
     // The single way avatars render anywhere in the platform.
@@ -29,9 +29,13 @@
     </span>
 
     @if ($ring && $event)
+        @php
+            $ringPercent = $percent ?? $event->progress;
+            $ringGroup = $group ?? $event->healthGroup();
+        @endphp
         <span class="absolute -bottom-2 -right-2 rounded-full bg-white p-0.5 shadow ring-1 ring-line"
-              title="{{ $event->progress }}% · {{ str($event->status)->replace('_', ' ')->title() }}">
-            <x-health-ring :percent="$event->progress" :group="$event->healthGroup()"
+              title="{{ $ringPercent }}% · {{ str($event->status)->replace('_', ' ')->title() }}">
+            <x-health-ring :percent="$ringPercent" :group="$ringGroup"
                            :label="$size === 'lg' || $size === 'xl'"
                            :size="$size === 'lg' || $size === 'xl' ? 'h-10 w-10' : 'h-6 w-6'" />
         </span>

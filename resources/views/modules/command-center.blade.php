@@ -67,7 +67,7 @@
                            class="absolute -translate-x-1/2 -translate-y-1/2 transition hover:scale-105"
                            style="left: {{ $event->pos_x }}%; top: {{ $event->pos_y }}%">
                             <span class="flex w-48 items-center gap-3 rounded-2xl border border-line bg-white/95 p-3 shadow-[0_6px_24px_rgba(11,31,58,0.10)] backdrop-blur">
-                                <x-event-avatar :event="$event" size="md" />
+                                <x-event-avatar :event="$event" size="md" :percent="$event->health_score" :group="$event->health_group" />
                                 <span class="min-w-0">
                                     <span class="block truncate text-xs font-bold text-navy-900">{{ $event->name }}</span>
                                     <span class="block truncate text-[0.65rem] text-muted">{{ str($event->type)->replace('_', ' ')->title() }}</span>
@@ -82,7 +82,7 @@
                 <div class="grid gap-3 p-4 sm:grid-cols-2 lg:hidden">
                     @foreach ($islands as $event)
                         <a href="{{ route('events.hub', $event) }}" class="flex items-center gap-3 rounded-2xl border border-line p-3">
-                            <x-event-avatar :event="$event" size="md" />
+                            <x-event-avatar :event="$event" size="md" :percent="$event->health_score" :group="$event->health_group" />
                             <span class="min-w-0">
                                 <span class="block truncate text-xs font-bold text-navy-900">{{ $event->name }}</span>
                                 <span class="block truncate text-[0.65rem] text-muted">{{ $event->city }}, {{ $event->country }}</span>

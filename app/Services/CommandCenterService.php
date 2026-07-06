@@ -17,6 +17,10 @@ use Illuminate\Support\Collection;
  */
 class CommandCenterService
 {
+    public function __construct(private EventHealthService $healthService)
+    {
+    }
+
     /** Average open tasks a team member can carry before being "fully utilized". */
     private const MEMBER_TASK_CAPACITY = 12;
 
@@ -43,7 +47,8 @@ class CommandCenterService
      */
     public function islands(): Collection
     {
-        $events = Event::with(['venue', 'avatar'])->whereNot('status', 'completed')->orderBy('starts_at')->get();
+        $events = Event::with(['venue', 'avatar', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
+            ->whereNot('status', 'completed')->orderBy('starts_at')->get();
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {
@@ -51,6 +56,11 @@ class CommandCenterService
 
             $event->pos_x = round(50 + 42 * cos($angle), 1);
             $event->pos_y = round(50 + 36 * sin($angle), 1);
+
+            // Islands show the same computed health score as the Event Hub.
+            $health = $this->healthService->breakdown($event);
+            $event->health_score = $health['score'];
+            $event->health_group = $health['group'];
 
             return $event;
         });

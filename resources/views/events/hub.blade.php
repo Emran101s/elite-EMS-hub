@@ -57,9 +57,24 @@
 
             {{-- Actions + stat chips + dates --}}
             <div class="flex flex-col gap-4">
-                <div class="flex justify-end gap-2">
-                    <span class="btn-navy cursor-default px-3.5 py-2 text-xs"><span class="text-gold-400">⚡</span> Quick Actions ▾</span>
-                </div>
+                <details class="group relative flex justify-end">
+                    <summary class="btn-navy ml-auto flex w-fit cursor-pointer list-none px-3.5 py-2 text-xs [&::-webkit-details-marker]:hidden">
+                        <span class="text-gold-400">⚡</span> Quick Actions ▾
+                    </summary>
+                    <div class="absolute right-0 top-10 z-30 w-52 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
+                        @foreach ([
+                            ['tasks', '＋ Add Task', 'clipboard'],
+                            ['budget', '＋ Add Budget Line', 'currency'],
+                            ['risks', '＋ Register Risk', 'bell'],
+                            ['approvals', '＋ Request Approval', 'identification'],
+                        ] as [$actionTab, $label, $icon])
+                            <a href="{{ route('events.hub', [$event, 'tab' => $actionTab, 'action' => 'add']) }}"
+                               class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
+                                <x-icon :name="$icon" class="h-4 w-4 text-navy-500" /> {{ $label }}
+                            </a>
+                        @endforeach
+                    </div>
+                </details>
                 <div class="flex justify-end">
                     <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="rounded-xl border border-line bg-white px-3.5 py-2 text-xs font-semibold text-navy-700 transition hover:border-gold-300">✎ Edit Event</a>
                 </div>

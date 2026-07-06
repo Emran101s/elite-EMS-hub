@@ -34,12 +34,16 @@ class CommandCenterTest extends TestCase
             ->assertSee('Events by Status');
     }
 
-    public function test_islands_show_all_active_events_with_progress(): void
+    public function test_islands_show_computed_health_scores(): void
     {
-        $this->dashboard()
-            ->assertSee('ICFT 2026')->assertSee('92%')
-            ->assertSee('Tech Expo 2026')->assertSee('45%')
-            ->assertSee('NDI Workshop')->assertSee('61%');
+        $response = $this->dashboard();
+        $pulse = app(\App\Services\EventHealthService::class);
+
+        foreach (['ICFT 2026', 'Tech Expo 2026', 'NDI Workshop'] as $name) {
+            $event = \App\Models\Event::where('name', $name)->firstOrFail();
+            $response->assertSee($name)
+                ->assertSee($pulse->breakdown($event)['score'].'%');
+        }
     }
 
     public function test_alerts_surface_at_risk_and_behind_events(): void
