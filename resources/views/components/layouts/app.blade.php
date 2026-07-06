@@ -11,39 +11,13 @@
 <body class="bg-page font-sans text-ink antialiased">
     <div class="min-h-screen">
 
-        {{-- Sidebar --}}
-        <aside class="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-line bg-white lg:flex">
-            <div class="px-6 pb-5 pt-6">
-                <a href="{{ route('home') }}"><x-brand /></a>
-            </div>
-
-            <nav class="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4" aria-label="Main">
-                @foreach (config('modules.nav') as $key => $module)
-                    @php $active = request()->routeIs($module['route']) || request()->routeIs(str_replace('.index', '.*', $module['route'])); @endphp
-                    <a href="{{ route($module['route']) }}"
-                       @class([
-                           'flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition',
-                           'bg-gold-50 text-gold-700 ring-1 ring-gold-200' => $active,
-                           'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => ! $active,
-                       ])
-                       @if ($active) aria-current="page" @endif>
-                        <x-icon :name="$module['icon']" class="h-5 w-5 shrink-0" />
-                        {{ $module['label'] }}
-                    </a>
-                @endforeach
-            </nav>
-
-            <div class="border-t border-line p-4">
-                <div class="card p-4 text-center">
-                    <p class="text-[0.65rem] font-bold tracking-widest text-gold-600">✦ AI ASSISTANT</p>
-                    <p class="mt-2 text-xs text-muted">Ask anything about your operations</p>
-                    <a href="{{ route('ai.index') }}" class="btn-navy mt-3 w-full text-xs">✦ Ask AI</a>
-                </div>
-            </div>
+        {{-- Command Spine Navigation (floating control tower) --}}
+        <aside class="fixed inset-y-0 left-0 z-20 hidden w-[292px] p-4 lg:flex">
+            <x-command-spine />
         </aside>
 
         {{-- Main column --}}
-        <div class="lg:pl-60">
+        <div class="lg:pl-[292px]">
             <header class="flex items-center justify-between gap-4 px-6 pb-4 pt-7 lg:px-8">
                 <div class="min-w-0">
                     <h1 class="truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>

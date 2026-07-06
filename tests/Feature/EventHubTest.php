@@ -112,14 +112,16 @@ class EventHubTest extends TestCase
             ->assertSee('AI Recommendation')
             ->assertSee('Showing 1 to 6 of 6 events');
 
+        // Filters narrow the grid (radar in the Command Spine always lists all
+        // events, so assert the filtered paginator count rather than absence).
         $this->actingAs($user)->get('/events?type=conference')->assertOk()
-            ->assertSee('ICFT 2026')->assertDontSee('Tech Expo 2026');
+            ->assertSee('ICFT 2026')->assertSee('Showing 1 to 1 of 1 events');
 
         $this->actingAs($user)->get('/events?stage=live')->assertOk()
-            ->assertSee('Private Dinner')->assertDontSee('ICFT 2026');
+            ->assertSee('Private Dinner')->assertSee('Showing 1 to 1 of 1 events');
 
         $this->actingAs($user)->get('/events?q=Doha')->assertOk()
-            ->assertSee('Tech Expo 2026')->assertDontSee('EY Annual Gala');
+            ->assertSee('Tech Expo 2026')->assertSee('Showing 1 to 1 of 1 events');
     }
 
     public function test_wizard_saves_theme_and_redirects_to_hub(): void

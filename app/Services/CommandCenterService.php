@@ -87,7 +87,7 @@ class CommandCenterService
     {
         $alerts = collect();
 
-        foreach (Event::whereIn('status', ['at_risk', 'behind'])->orderBy('starts_at')->get() as $event) {
+        foreach (Event::whereNull('archived_at')->whereIn('status', ['at_risk', 'behind'])->orderBy('starts_at')->get() as $event) {
             $alerts->push([
                 'severity' => $event->status === 'behind' ? 'risk' : 'warn',
                 'title' => $event->name.' '.($event->status === 'behind' ? 'behind schedule' : 'at risk'),
@@ -98,6 +98,7 @@ class CommandCenterService
         $urgent = Task::with('event')
             ->whereNot('status', 'completed')
             ->whereIn('priority', ['urgent', 'high'])
+            ->whereHas('event', fn ($query) => $query->whereNull('archived_at'))
             ->orderBy('due_on')
             ->limit(4)
             ->get();

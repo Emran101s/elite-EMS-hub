@@ -30,7 +30,7 @@
             </div>
 
             {{-- Operations Hub — circular event ecosystem --}}
-            <div class="card overflow-hidden">
+            <div id="operations-hub" class="card scroll-mt-6 overflow-hidden">
                 <div class="flex items-center justify-between border-b border-line px-6 py-4">
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wide text-navy-900">Operations Hub</h2>

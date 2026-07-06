@@ -60,6 +60,12 @@ Route::middleware('auth')->group(function () {
         'members' => User::orderBy('name')->get(),
     ]))->name('team.index');
 
+    Route::get('/sponsors', fn () => view('modules.sponsors', [
+        'events' => Event::whereNull('archived_at')->whereHas('sponsors')
+            ->with(['sponsors', 'avatar'])->orderBy('starts_at')->get(),
+        'total' => \App\Models\EventSponsor::sum('amount_cents'),
+    ]))->name('sponsors.index');
+
     // Modules still awaiting their build phase render the generic stub.
     foreach (['crm', 'finance', 'assets', 'reports', 'ai-assistant', 'settings'] as $key) {
         $module = config("modules.nav.{$key}");
