@@ -1,4 +1,4 @@
-@props(['event', 'health', 'metrics', 'selected' => false])
+@props(['event', 'health', 'metrics', 'selected' => false, 'favorite' => false])
 
 <div wire:click="select({{ $event->id }})"
      @class([
@@ -11,10 +11,10 @@
     <div class="relative h-[150px] shrink-0 overflow-hidden rounded-2xl bg-page">
         <x-event-avatar :event="$event" :ring="false" size="xl"
                         class="block h-full w-full transition duration-500 group-hover:scale-[1.04] [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
-        <button type="button" wire:click.stop
-                class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-gold-500 shadow ring-1 ring-gold-300 backdrop-blur transition hover:text-gold-600 {{ $selected ? '' : 'opacity-0 group-hover:opacity-100' }}"
-                aria-label="Favorite">
-            <x-icon name="star" class="h-3.5 w-3.5" />
+        <button type="button" wire:click.stop="toggleFavorite({{ $event->id }})"
+                class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow ring-1 backdrop-blur transition {{ $favorite ? 'text-gold-500 ring-gold-300' : 'text-navy-300 ring-line hover:text-gold-500' }} {{ $favorite || $selected ? '' : 'opacity-0 group-hover:opacity-100' }}"
+                aria-label="{{ $favorite ? 'Unstar' : 'Star' }} event">
+            <x-icon name="star" class="h-3.5 w-3.5 {{ $favorite ? 'fill-current' : '' }}" />
         </button>
     </div>
 
@@ -28,9 +28,29 @@
                 <div class="flex items-start justify-between gap-1.5">
                     <a href="{{ route('events.hub', $event) }}" wire:click.stop
                        class="truncate text-[16px] font-bold leading-tight text-navy-900 hover:text-gold-700">{{ $event->name }}</a>
-                    <button type="button" wire:click.stop class="mt-0.5 shrink-0 rotate-90 text-navy-400 transition hover:text-navy-700" aria-label="Actions">
-                        <x-icon name="dots" class="h-3.5 w-3.5" />
-                    </button>
+
+                    {{-- Kebab menu --}}
+                    <details class="relative shrink-0" wire:click.stop>
+                        <summary class="mt-0.5 flex cursor-pointer list-none text-navy-400 transition hover:text-navy-700 [&::-webkit-details-marker]:hidden" aria-label="Card actions">
+                            <span class="rotate-90"><x-icon name="dots" class="h-3.5 w-3.5" /></span>
+                        </summary>
+                        <div class="absolute right-0 top-6 z-30 w-40 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
+                            <a href="{{ route('events.hub', $event) }}" class="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
+                                <x-icon name="home" class="h-3.5 w-3.5 text-navy-500" /> Open Hub
+                            </a>
+                            <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
+                                <x-icon name="cog" class="h-3.5 w-3.5 text-navy-500" /> Edit
+                            </a>
+                            <button type="button" wire:click.stop="duplicate({{ $event->id }})" class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
+                                <x-icon name="archive" class="h-3.5 w-3.5 text-navy-500" /> Duplicate
+                            </button>
+                            <button type="button" wire:click.stop="archive({{ $event->id }})"
+                                    wire:confirm="Archive “{{ $event->name }}”? It will disappear from lists and the Operations Hub."
+                                    class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-risk transition hover:bg-risk/5">
+                                <x-icon name="logout" class="h-3.5 w-3.5" /> Archive
+                            </button>
+                        </div>
+                    </details>
                 </div>
                 <p class="truncate text-[11px] text-muted">{{ $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title() }}</p>
 

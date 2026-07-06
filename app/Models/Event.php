@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name', 'description', 'type', 'status', 'stage', 'city', 'country',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'avatar_id',
     'starts_at', 'ends_at', 'budget_cents', 'progress', 'expected_participants',
-    'primary_color', 'secondary_color', 'accent_color', 'text_color',
+    'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at',
 ])]
 class Event extends Model
 {
@@ -43,6 +43,7 @@ class Event extends Model
             'budget_cents' => 'integer',
             'progress' => 'integer',
             'expected_participants' => 'integer',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -147,5 +148,10 @@ class Event extends Model
     public function teamMembers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'event_team_members')->withPivot('role');
+    }
+
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_favorites');
     }
 }

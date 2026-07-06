@@ -31,6 +31,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Events this user starred.
+     */
+    public function favoriteEvents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_favorites');
+    }
+
+    /**
      * Up-to-two-letter initials for the avatar chip.
      */
     public function initials(): string

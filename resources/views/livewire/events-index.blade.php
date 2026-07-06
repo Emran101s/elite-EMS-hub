@@ -44,19 +44,75 @@
                             ])>{{ $label }}</button>
                 @endforeach
                 <span class="px-2 text-xs text-navy-400" title="More types via search">More ▾</span>
+                <button type="button" wire:click="toggleStarred"
+                        @class([
+                            'ml-1 flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-[13px] font-semibold transition',
+                            'bg-gold-50 text-gold-700 ring-1 ring-gold-300' => $starred,
+                            'text-navy-600 hover:text-navy-900' => ! $starred,
+                        ])>
+                    <x-icon name="star" class="h-3.5 w-3.5 {{ $starred ? 'fill-current' : '' }}" /> Starred
+                </button>
+                <select wire:model.live="sort" class="input ml-auto h-9 w-40 !rounded-xl text-xs" title="Sort events">
+                    <option value="date">Sort: Date</option>
+                    <option value="health">Sort: Health Score</option>
+                    <option value="budget">Sort: Budget Used</option>
+                </select>
             </div>
+
+            {{-- Calendar view --}}
+            @if ($view === 'calendar' && $calendar)
+                <div class="card overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-line px-5 py-3.5">
+                        <h3 class="text-sm font-bold text-navy-900">{{ $calendar['label'] }}</h3>
+                        <span class="flex gap-1.5">
+                            <button type="button" wire:click="prevMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">‹</button>
+                            <button type="button" wire:click="nextMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">›</button>
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-7 border-b border-line bg-page/60">
+                        @foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dayName)
+                            <div class="px-2 py-2 text-center text-[0.62rem] font-bold uppercase tracking-wide text-muted">{{ $dayName }}</div>
+                        @endforeach
+                    </div>
+                    @foreach ($calendar['weeks'] as $week)
+                        <div class="grid grid-cols-7 divide-x divide-line border-b border-line last:border-b-0">
+                            @foreach ($week as $day)
+                                <div @class(['min-h-24 p-1.5', 'bg-page/50' => ! $day['inMonth']])>
+                                    <p @class([
+                                        'mb-1 px-1 text-[0.65rem] font-semibold',
+                                        'text-navy-900' => $day['inMonth'],
+                                        'text-navy-300' => ! $day['inMonth'],
+                                        '!text-gold-600' => $day['date']->isToday(),
+                                    ])>{{ $day['date']->day }}</p>
+                                    @foreach ($day['events']->take(2) as $calEvent)
+                                        <button type="button" wire:click="select({{ $calEvent->id }})"
+                                                class="mb-1 flex w-full items-center gap-1.5 rounded-lg border px-1.5 py-1 text-left transition hover:border-gold-300 {{ $selected && $selected->id === $calEvent->id ? 'border-gold-400 bg-gold-50' : 'border-line bg-white' }}">
+                                            <x-event-avatar :event="$calEvent" :ring="false" size="sm" class="[&>span]:h-5 [&>span]:w-7 [&>span]:rounded" />
+                                            <span class="truncate text-[0.6rem] font-semibold text-navy-800">{{ $calEvent->name }}</span>
+                                        </button>
+                                    @endforeach
+                                    @if ($day['events']->count() > 2)
+                                        <p class="px-1 text-[0.55rem] font-semibold text-muted">+ {{ $day['events']->count() - 2 }} more</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             {{-- Grid view --}}
             @if ($view === 'grid')
                 <div class="grid justify-start gap-4 [grid-template-columns:repeat(auto-fill,250px)]">
                     @forelse ($events as $event)
                         <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
-                                      :selected="$selected && $selected->id === $event->id" wire:key="card-{{ $event->id }}" />
+                                      :selected="$selected && $selected->id === $event->id"
+                                      :favorite="in_array($event->id, $favoriteIds)" wire:key="card-{{ $event->id }}" />
                     @empty
                         <p class="col-span-full py-12 text-center text-sm text-muted">No events match these filters.</p>
                     @endforelse
                 </div>
-            @else
+            @elseif ($view === 'list')
                 {{-- List view --}}
                 <div class="card divide-y divide-line">
                     @forelse ($events as $event)
@@ -97,7 +153,7 @@
             @endif
 
             {{-- Pagination footer --}}
-            <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+            <div @class(['mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-muted', 'hidden' => $view === 'calendar'])>
                 <span>Showing {{ $events->firstItem() ?? 0 }} to {{ $events->lastItem() ?? 0 }} of {{ $events->total() }} events</span>
                 @if ($events->hasPages())
                     <span class="flex items-center gap-1.5">
@@ -125,7 +181,7 @@
                 <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
                     @foreach ([
                         ['grid', 'grid', 'Grid view'], ['list', 'list', 'List view'],
-                        [null, 'calendar', 'Calendar — coming soon'], [null, 'columns', 'Kanban — coming soon'],
+                        ['calendar', 'calendar', 'Calendar view'], [null, 'columns', 'Kanban — coming soon'],
                         [null, 'share', 'Hub view — coming soon'], [null, 'pin', 'Map — coming soon'],
                     ] as [$mode, $icon, $title])
                         @if ($mode)

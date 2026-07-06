@@ -33,11 +33,11 @@ class CommandCenterService
     public function stats(): array
     {
         return [
-            'events' => Event::count(),
+            'events' => Event::whereNull('archived_at')->count(),
             'projects' => Project::where('status', 'active')->count(),
-            'budget' => (int) Event::sum('budget_cents'),
+            'budget' => (int) Event::whereNull('archived_at')->sum('budget_cents'),
             'openTasks' => Task::whereNot('status', 'completed')->count(),
-            'atRisk' => Event::whereIn('status', ['at_risk', 'behind'])->count(),
+            'atRisk' => Event::whereNull('archived_at')->whereIn('status', ['at_risk', 'behind'])->count(),
         ];
     }
 
@@ -48,7 +48,7 @@ class CommandCenterService
     public function islands(): Collection
     {
         $events = Event::with(['venue', 'avatar', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
-            ->whereNot('status', 'completed')->orderBy('starts_at')->get();
+            ->whereNull('archived_at')->whereNot('status', 'completed')->orderBy('starts_at')->get();
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {
