@@ -15,7 +15,7 @@ class EventsIndex extends Component
 {
     use WithPagination;
 
-    public const PER_PAGE = 6;
+    public const PER_PAGE = 8;
 
     /** Filter tabs → event type groups. */
     public const TYPE_TABS = [
