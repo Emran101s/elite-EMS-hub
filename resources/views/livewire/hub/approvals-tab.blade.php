@@ -7,18 +7,18 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="a-title">What needs approval?</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="a-title">What needs approval?</label>
                 <input id="a-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Revised catering budget">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="a-type">Type</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="a-type">Type</label>
                 <select id="a-type" wire:model="type" class="input h-10 text-sm">
                     @foreach (\App\Models\EventApproval::TYPES as $typeOption)<option value="{{ $typeOption }}">{{ str($typeOption)->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="a-notes">Notes</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="a-notes">Notes</label>
                 <input id="a-notes" type="text" wire:model="notes" class="input h-10 text-sm" placeholder="Optional context">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">

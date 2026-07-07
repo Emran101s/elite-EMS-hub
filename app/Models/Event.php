@@ -78,6 +78,45 @@ class Event extends Model
         return $this->enabled_modules === null || in_array($key, $this->enabled_modules, true);
     }
 
+    /** Number of calendar days the event spans (inclusive). */
+    public function dayCount(): int
+    {
+        if (! $this->starts_at) {
+            return 0;
+        }
+
+        return (int) $this->starts_at->diffInDays($this->ends_at ?? $this->starts_at) + 1;
+    }
+
+    /**
+     * Ensure one agenda day exists per date in the event's [start, end] range.
+     * Never overwrites custom labels or deletes days; re-sorts everything by date.
+     * Capped so an accidental far-off end date can't spawn hundreds of days.
+     */
+    public function syncAgendaDays(int $cap = 60): void
+    {
+        if (! $this->starts_at) {
+            return;
+        }
+
+        $end = ($this->ends_at ?? $this->starts_at)->copy();
+        $existing = $this->agendaDays()->get()->keyBy(fn ($d) => $d->date->format('Y-m-d'));
+        $cursor = $this->starts_at->copy();
+        $n = 1;
+
+        while ($cursor->lte($end) && $n <= $cap) {
+            $key = $cursor->format('Y-m-d');
+            if (! $existing->has($key)) {
+                $this->agendaDays()->create(['date' => $key, 'label' => 'Day '.$n, 'sort' => $n]);
+            }
+            $n++;
+            $cursor->addDay();
+        }
+
+        $this->agendaDays()->orderBy('date')->get()
+            ->each(fn ($day, $i) => $day->update(['sort' => $i + 1]));
+    }
+
     /**
      * Collapse health statuses into the three health colors (track / warn / risk).
      */

@@ -123,7 +123,11 @@ class EventCreate extends Component
             'enabled_modules' => array_values(array_intersect(array_keys(Event::HUB_MODULES), $this->modules)),
         ]);
 
-        session()->flash('status', "Event “{$event->name}” created — its enabled modules are in the Event Hub.");
+        // Build the agenda day scaffold from the date range so the agenda &
+        // Run of Show are per-day from the start.
+        $event->syncAgendaDays();
+
+        session()->flash('status', "Event “{$event->name}” created — {$event->dayCount()} agenda ".str('day')->plural($event->dayCount()).' ready in the Event Hub.');
 
         return $this->redirectRoute('events.hub', $event);
     }

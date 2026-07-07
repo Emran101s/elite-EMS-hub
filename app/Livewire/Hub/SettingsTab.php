@@ -146,7 +146,10 @@ class SettingsTab extends Component
             $this->event->teamMembers()->syncWithoutDetaching([$this->project_manager_id => ['role' => 'project_manager']]);
         }
 
-        session()->flash('status', 'Event settings saved.');
+        // Reconcile agenda days with the (possibly changed) date range.
+        $this->event->refresh()->syncAgendaDays();
+
+        session()->flash('status', "Event settings saved · {$this->event->dayCount()} agenda ".str('day')->plural($this->event->dayCount()).'.');
 
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'settings']);
     }

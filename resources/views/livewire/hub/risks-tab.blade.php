@@ -7,37 +7,37 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-title">Risk</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-title">Risk</label>
                 <input id="r-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Venue contract pending signature">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-cat">Category</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-cat">Category</label>
                 <select id="r-cat" wire:model="category" class="input h-10 text-sm">
                     @foreach (\App\Models\EventRisk::CATEGORIES as $categoryOption)<option value="{{ $categoryOption }}">{{ str($categoryOption)->replace('_', ' ')->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-owner">Owner</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-owner">Owner</label>
                 <select id="r-owner" wire:model="owner_id" class="input h-10 text-sm">
                     <option value="">—</option>
                     @foreach ($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-prob">Probability (1–5)</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-prob">Probability (1–5)</label>
                 <select id="r-prob" wire:model="probability" class="input h-10 text-sm">
                     @foreach (range(1, 5) as $n)<option value="{{ $n }}">{{ $n }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-imp">Impact (1–5)</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-imp">Impact (1–5)</label>
                 <select id="r-imp" wire:model="impact" class="input h-10 text-sm">
                     @foreach (range(1, 5) as $n)<option value="{{ $n }}">{{ $n }}</option>@endforeach
                 </select>
             </div>
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="r-mit">Mitigation plan</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="r-mit">Mitigation plan</label>
                 <input id="r-mit" type="text" wire:model="mitigation" class="input h-10 text-sm" placeholder="What are we doing about it?">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">

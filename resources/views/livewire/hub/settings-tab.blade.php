@@ -6,56 +6,72 @@
             <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Event Details</h3>
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-name">Event name</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-name">Event name</label>
                     <input id="st-name" type="text" wire:model="name" class="input h-10 text-sm">
                     @error('name') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-desc">Description</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-desc">Description</label>
                     <textarea id="st-desc" wire:model="description" rows="2" class="input text-sm" placeholder="Scope, audience, objectives…"></textarea>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-client">Client</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-client">Client</label>
                     <select id="st-client" wire:model="client_id" class="input h-10 text-sm">
                         <option value="">— Select client —</option>
                         @foreach ($clients as $client)<option value="{{ $client->id }}">{{ $client->name }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-newclient">…or new client</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-newclient">…or new client</label>
                     <input id="st-newclient" type="text" wire:model="new_client" class="input h-10 text-sm" placeholder="Creates on save">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-part">Expected participants</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-part">Expected participants</label>
                     <input id="st-part" type="number" min="0" wire:model="expected_participants" class="input h-10 text-sm" placeholder="e.g. 400">
                     @error('expected_participants') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-budget">Budget (USD)</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-budget">Budget (USD)</label>
                     <input id="st-budget" type="number" step="0.01" min="0" wire:model="budget" class="input h-10 text-sm" placeholder="250000">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-city">City</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-city">City</label>
                     <input id="st-city" type="text" wire:model="city" class="input h-10 text-sm" placeholder="Amman">
                     @error('city') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-country">Country</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-country">Country</label>
                     <select id="st-country" wire:model="country" class="input h-10 text-sm">
                         @foreach (['Jordan', 'Bahrain', 'UAE', 'Qatar', 'KSA', 'Kuwait', 'Oman', 'Egypt'] as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-start">Start date</label>
-                    <input id="st-start" type="date" wire:model="starts_at" class="input h-10 text-sm">
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-start">Start date</label>
+                    <input id="st-start" type="date" wire:model.live="starts_at" class="input h-10 text-sm">
                     @error('starts_at') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-end">End date</label>
-                    <input id="st-end" type="date" wire:model="ends_at" class="input h-10 text-sm">
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-end">End date</label>
+                    <input id="st-end" type="date" wire:model.live="ends_at" class="input h-10 text-sm">
                     @error('ends_at') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
             </div>
+            @php
+                $span = 0;
+                if ($starts_at) {
+                    try {
+                        $s = \Carbon\Carbon::parse($starts_at);
+                        $e = $ends_at ? \Carbon\Carbon::parse($ends_at) : $s;
+                        $span = $e->gte($s) ? (int) $s->diffInDays($e) + 1 : 0;
+                    } catch (\Throwable) {}
+                }
+            @endphp
+            @if ($span > 0)
+                <div class="mt-4 flex items-center gap-2 rounded-2xl bg-navy-50 px-4 py-2.5 text-xs font-semibold text-navy-800">
+                    <x-icon name="calendar" class="h-4 w-4 text-gold-600" />
+                    {{ $span }}-day event · saving keeps the agenda &amp; Run of Show at {{ $span }} {{ str('day')->plural($span) }} (Day 1–{{ $span }}).
+                </div>
+            @endif
         </div>
 
         {{-- ── Ownership ── --}}
@@ -63,21 +79,21 @@
             <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Ownership & Lifecycle</h3>
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-pm">Project manager</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-pm">Project manager</label>
                     <select id="st-pm" wire:model="project_manager_id" class="input h-10 text-sm">
                         <option value="">— Unassigned —</option>
                         @foreach ($managers as $manager)<option value="{{ $manager->id }}">{{ $manager->name }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-venue">Venue</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-venue">Venue</label>
                     <select id="st-venue" wire:model="venue_id" class="input h-10 text-sm">
                         <option value="">— Not assigned —</option>
                         @foreach ($venues as $venue)<option value="{{ $venue->id }}">{{ $venue->name }} ({{ $venue->city }})</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="st-stage">Lifecycle stage</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-stage">Lifecycle stage</label>
                     <select id="st-stage" wire:model="stage" class="input h-10 text-sm">
                         @foreach (\App\Models\Event::STAGES as $s)<option value="{{ $s }}">{{ str($s)->replace('_', ' ')->title() }}</option>@endforeach
                     </select>

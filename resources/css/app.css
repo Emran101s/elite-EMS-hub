@@ -58,8 +58,9 @@
         @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold-500 px-4 py-2.5 text-sm font-semibold text-navy-900 transition hover:bg-gold-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900;
     }
 
+    /* Unified form input — gray-filled, matching the Create Event fields (compact variant). */
     .input {
-        @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder-muted focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30;
+        @apply w-full rounded-xl border border-transparent bg-fill px-4 py-2.5 text-sm font-medium text-navy-900 placeholder-navy-300 transition focus:border-navy-900/10 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-900/10;
     }
 
     /* Premium filled-form kit (reference design) */

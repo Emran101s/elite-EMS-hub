@@ -27,43 +27,43 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-cat">Category</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-cat">Category</label>
                 <select id="b-cat" wire:model="category" class="input h-10 text-sm">
                     @foreach (\App\Models\EventBudgetItem::CATEGORIES as $categoryOption)<option value="{{ $categoryOption }}">{{ str($categoryOption)->replace('_', ' & ')->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-desc">Description</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-desc">Description</label>
                 <input id="b-desc" type="text" wire:model="description" class="input h-10 text-sm" placeholder="e.g. Main stage build">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-est">Estimated (USD)</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-est">Estimated (USD)</label>
                 <input id="b-est" type="number" step="0.01" min="0" wire:model="estimated" class="input h-10 text-sm" placeholder="25000">
                 @error('estimated') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-act">Actual (USD)</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-act">Actual (USD)</label>
                 <input id="b-act" type="number" step="0.01" min="0" wire:model="actual" class="input h-10 text-sm" placeholder="0">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-sup">Supplier</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-sup">Supplier</label>
                 <select id="b-sup" wire:model="supplier_id" class="input h-10 text-sm">
                     <option value="">—</option>
                     @foreach ($suppliers as $supplier)<option value="{{ $supplier->id }}">{{ $supplier->name }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-pay">Payment status</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-pay">Payment status</label>
                 <select id="b-pay" wire:model="payment_status" class="input h-10 text-sm">
                     @foreach (\App\Models\EventBudgetItem::PAYMENT_STATUSES as $paymentOption)<option value="{{ $paymentOption }}">{{ str($paymentOption)->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-inv">Invoice #</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-inv">Invoice #</label>
                 <input id="b-inv" type="text" wire:model="invoice_number" class="input h-10 text-sm" placeholder="INV-2026-060">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="b-due">Due date</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="b-due">Due date</label>
                 <input id="b-due" type="date" wire:model="due_on" class="input h-10 text-sm">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">

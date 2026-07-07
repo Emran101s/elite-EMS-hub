@@ -7,25 +7,25 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-5">
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="t-title">Task title</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="t-title">Task title</label>
                 <input id="t-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Confirm keynote AV rehearsal">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="t-assignee">Assignee</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="t-assignee">Assignee</label>
                 <select id="t-assignee" wire:model="assignee_id" class="input h-10 text-sm">
                     <option value="">Unassigned</option>
                     @foreach ($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="t-priority">Priority</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="t-priority">Priority</label>
                 <select id="t-priority" wire:model="priority" class="input h-10 text-sm">
                     @foreach (\App\Models\Task::PRIORITIES as $priorityOption)<option value="{{ $priorityOption }}">{{ str($priorityOption)->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="t-due">Due date</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="t-due">Due date</label>
                 <input id="t-due" type="date" wire:model="due_on" class="input h-10 text-sm">
                 @error('due_on') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>

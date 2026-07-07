@@ -52,12 +52,12 @@
                 <div class="grid gap-5 sm:grid-cols-3">
                     <div>
                         <label class="field-label" for="e-start">Start Date <span class="text-risk">*</span></label>
-                        <input id="e-start" type="date" wire:model="starts_at" class="field">
+                        <input id="e-start" type="date" wire:model.live="starts_at" class="field">
                         @error('starts_at') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="field-label" for="e-end">End Date</label>
-                        <input id="e-end" type="date" wire:model="ends_at" class="field">
+                        <input id="e-end" type="date" wire:model.live="ends_at" class="field">
                         @error('ends_at') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -67,6 +67,23 @@
                         </select>
                     </div>
                 </div>
+
+                @php
+                    $dayCount = 0;
+                    if ($starts_at) {
+                        try {
+                            $s = \Carbon\Carbon::parse($starts_at);
+                            $e = $ends_at ? \Carbon\Carbon::parse($ends_at) : $s;
+                            $dayCount = $e->gte($s) ? (int) $s->diffInDays($e) + 1 : 0;
+                        } catch (\Throwable) {}
+                    }
+                @endphp
+                @if ($dayCount > 0)
+                    <div class="flex items-center gap-2 rounded-2xl bg-navy-50 px-4 py-2.5 text-sm font-semibold text-navy-800">
+                        <x-icon name="calendar" class="h-4 w-4 text-gold-600" />
+                        This event spans <span class="text-navy-900">{{ $dayCount }} {{ str('day')->plural($dayCount) }}</span> — {{ $dayCount }} agenda {{ str('day')->plural($dayCount) }} will be created (Day 1–{{ $dayCount }}).
+                    </div>
+                @endif
 
                 <div>
                     <span class="field-label">Status</span>

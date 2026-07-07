@@ -43,18 +43,18 @@
             <form wire:submit="saveRoom" class="mb-4 rounded-2xl border border-line bg-page/50 p-4">
                 <div class="grid gap-3 sm:grid-cols-3">
                     <div class="sm:col-span-3">
-                        <label class="mb-1 block text-xs font-medium text-navy-800" for="room-name">Room name</label>
+                        <label class="field-label !mb-1 !text-[0.62rem]" for="room-name">Room name</label>
                         <input id="room-name" type="text" wire:model="room_name" class="input h-10 text-sm" placeholder="e.g. Main Hall">
                         @error('room_name') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-xs font-medium text-navy-800" for="room-type">Type</label>
+                        <label class="field-label !mb-1 !text-[0.62rem]" for="room-type">Type</label>
                         <select id="room-type" wire:model="room_type" class="input h-10 text-sm">
                             @foreach ($roomTypeLabels as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-navy-800" for="room-capacity">Capacity</label>
+                        <label class="field-label !mb-1 !text-[0.62rem]" for="room-capacity">Capacity</label>
                         <input id="room-capacity" type="number" min="0" wire:model="room_capacity" class="input h-10 text-sm" placeholder="—">
                     </div>
                 </div>

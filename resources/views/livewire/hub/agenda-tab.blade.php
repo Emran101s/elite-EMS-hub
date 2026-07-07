@@ -28,7 +28,7 @@
         <form wire:submit="import" class="card mb-5 p-5">
             <div class="flex flex-wrap items-end gap-3">
                 <div class="flex-1">
-                    <label class="mb-1 block text-xs font-medium text-navy-800" for="import-file">CSV file</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="import-file">CSV file</label>
                     <input id="import-file" type="file" wire:model="importFile" accept=".csv,text/csv" class="input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
                     <p class="mt-1 text-[0.65rem] text-muted">Columns: <code>title, type, start, end, room, speaker, moderator, track</code> — imported into the first day.</p>
                     @error('importFile') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
@@ -48,19 +48,19 @@
     @if ($showForm)
         <form wire:submit="saveSession" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-title">Session title</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-title">Session title</label>
                 <input id="s-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Keynote: The Future of FinTech">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-day">Day</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-day">Day</label>
                 <select id="s-day" wire:model="agenda_day_id" class="input h-10 text-sm">
                     @foreach ($days as $day)<option value="{{ $day->id }}">{{ $day->label }} · {{ $day->date?->format('M j') }}</option>@endforeach
                 </select>
             </div>
             <div>
                 <div class="mb-1 flex items-center justify-between">
-                    <label class="block text-xs font-medium text-navy-800" for="s-room">Room / Venue</label>
+                    <label class="field-label !mb-0 !text-[0.62rem]" for="s-room">Room / Venue</label>
                     <button type="button" wire:click="toggleAddRoom" class="text-[0.65rem] font-bold text-gold-600 hover:text-gold-700">
                         {{ $addingRoom ? ($rooms->isNotEmpty() ? '← Pick existing' : 'Cancel') : '＋ New room' }}
                     </button>
@@ -81,31 +81,31 @@
                 @endif
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-type">Type</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-type">Type</label>
                 <select id="s-type" wire:model="type" class="input h-10 text-sm">
                     @foreach (\App\Models\EventAgendaSession::TYPES as $t)<option value="{{ $t }}">{{ str($t)->replace('_', ' ')->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-status">Status</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-status">Status</label>
                 <select id="s-status" wire:model="status" class="input h-10 text-sm">
                     @foreach (\App\Models\EventAgendaSession::STATUSES as $st)<option value="{{ $st }}">{{ str($st)->replace('_', ' ')->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-start">Start</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-start">Start</label>
                 <input id="s-start" type="time" wire:model="starts_at" class="input h-10 text-sm">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-end">End</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-end">End</label>
                 <input id="s-end" type="time" wire:model="ends_at" class="input h-10 text-sm">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-speaker">Speaker</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-speaker">Speaker</label>
                 <input id="s-speaker" type="text" wire:model="speaker" class="input h-10 text-sm" placeholder="Optional">
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-track">Track</label>
+                <label class="field-label !mb-1 !text-[0.62rem]" for="s-track">Track</label>
                 <input id="s-track" type="text" wire:model="track" class="input h-10 text-sm" placeholder="Optional">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
