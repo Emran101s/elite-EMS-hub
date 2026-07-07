@@ -105,37 +105,67 @@
         {{-- ── Identity: avatar + theme ── --}}
         <div class="card p-6">
             <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Avatar & Color Theme</h3>
-            <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-6">
-                @foreach ($avatars as $avatar)
-                    <button type="button" wire:click="chooseAvatar({{ $avatar->id }})"
-                            @class([
-                                'relative rounded-2xl border-2 p-1.5 text-left transition',
-                                'border-gold-500 bg-[#FFF7E6]' => $avatar_id === $avatar->id,
-                                'border-line hover:border-gold-300' => $avatar_id !== $avatar->id,
-                            ])>
-                        @if ($avatar_id === $avatar->id)<span class="absolute -right-2 -top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-gold-500 text-[0.6rem] font-bold text-navy-900">✓</span>@endif
-                        <x-event-avatar :avatar="$avatar" :ring="false" size="md" class="w-full [&>span]:h-16 [&>span]:w-full [&>span]:rounded-xl" />
-                        <p class="mt-1 truncate text-[0.62rem] font-bold text-navy-900">{{ $avatar->name }}</p>
-                    </button>
-                @endforeach
-            </div>
+            <div class="grid gap-5 sm:grid-cols-2">
 
-            <div class="mt-5 flex flex-wrap items-center gap-2.5">
-                <span class="text-[0.65rem] font-bold uppercase tracking-wide text-muted">Theme</span>
-                @foreach ($palettes as $key => [$label, $primary, $secondary, $accent, $text])
-                    <button type="button" wire:click="usePalette('{{ $key }}')"
-                            @class([
-                                'flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition',
-                                'border-gold-500 ring-1 ring-gold-300' => $primary_color === $primary && $accent_color === $accent,
-                                'border-line hover:border-gold-300' => ! ($primary_color === $primary && $accent_color === $accent),
-                            ])>
-                        <span class="flex gap-0.5">
-                            <span class="h-4 w-4 rounded ring-1 ring-line" style="background: {{ $primary }}"></span>
-                            <span class="h-4 w-4 rounded ring-1 ring-line" style="background: {{ $accent }}"></span>
-                        </span>
-                        <span class="text-[0.65rem] font-semibold text-navy-800">{{ $label }}</span>
-                    </button>
-                @endforeach
+                {{-- Avatar — elegant combo box --}}
+                <div>
+                    <label class="field-label !mb-1 !text-[0.62rem]">Event Avatar</label>
+                    @php $selectedAvatar = $avatars->firstWhere('id', $avatar_id); @endphp
+                    <details class="group relative" wire:key="avatar-dd">
+                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl bg-fill px-3 py-2 transition hover:bg-navy-50 [&::-webkit-details-marker]:hidden">
+                            <span class="h-9 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-line">
+                                @if ($selectedAvatar)
+                                    <x-event-avatar :avatar="$selectedAvatar" :ring="false" size="sm" class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-white" />
+                                @endif
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm font-semibold text-navy-900">{{ $selectedAvatar?->name ?? 'Choose an avatar…' }}</span>
+                                <span class="block truncate text-[0.65rem] text-muted">{{ $selectedAvatar?->subtitle }}</span>
+                            </span>
+                            <x-icon name="chevron" class="h-4 w-4 shrink-0 text-navy-400 transition group-open:rotate-180" />
+                        </summary>
+                        <div class="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-line bg-white p-1.5 shadow-[0_20px_45px_rgba(11,31,58,0.15)]">
+                            @foreach ($avatars as $avatar)
+                                <button type="button" wire:click="chooseAvatar({{ $avatar->id }})" onclick="this.closest('details').removeAttribute('open')"
+                                        @class([
+                                            'flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition',
+                                            'bg-gold-50 ring-1 ring-gold-200' => $avatar_id === $avatar->id,
+                                            'hover:bg-navy-50' => $avatar_id !== $avatar->id,
+                                        ])>
+                                    <span class="h-8 w-12 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-line">
+                                        <x-event-avatar :avatar="$avatar" :ring="false" size="sm" class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-white" />
+                                    </span>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-xs font-semibold text-navy-900">{{ $avatar->name }}</span>
+                                        <span class="block truncate text-[0.6rem] text-muted">{{ $avatar->subtitle }}</span>
+                                    </span>
+                                    @if ($avatar_id === $avatar->id)<span class="shrink-0 text-sm text-gold-600">✓</span>@endif
+                                </button>
+                            @endforeach
+                        </div>
+                    </details>
+                </div>
+
+                {{-- Color theme --}}
+                <div>
+                    <label class="field-label !mb-1 !text-[0.62rem]">Color Theme</label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @foreach ($palettes as $key => [$label, $primary, $secondary, $accent, $text])
+                            <button type="button" wire:click="usePalette('{{ $key }}')" title="{{ $label }}"
+                                    @class([
+                                        'flex items-center gap-1.5 rounded-xl border px-2 py-1.5 transition',
+                                        'border-gold-500 ring-1 ring-gold-300' => $primary_color === $primary && $accent_color === $accent,
+                                        'border-line hover:border-gold-300' => ! ($primary_color === $primary && $accent_color === $accent),
+                                    ])>
+                                <span class="flex gap-0.5">
+                                    <span class="h-4 w-4 rounded ring-1 ring-line" style="background: {{ $primary }}"></span>
+                                    <span class="h-4 w-4 rounded ring-1 ring-line" style="background: {{ $accent }}"></span>
+                                </span>
+                                <span class="text-[0.62rem] font-semibold text-navy-800">{{ str($label)->before(' +') }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
 
