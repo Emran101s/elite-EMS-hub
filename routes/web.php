@@ -22,6 +22,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/events', \App\Livewire\EventsIndex::class)->name('events.index');
 
+    Route::get('/events/{event}/agenda.pdf', \App\Http\Controllers\AgendaPdfController::class)
+        ->whereNumber('event')->name('events.agenda.pdf');
+
     Route::get('/events/{event}', [\App\Http\Controllers\EventHubController::class, 'show'])
         ->whereNumber('event')->name('events.hub');
 
