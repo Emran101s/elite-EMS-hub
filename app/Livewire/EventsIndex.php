@@ -54,7 +54,7 @@ class EventsIndex extends Component
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
-        $this->view = in_array(request('view'), ['grid', 'list', 'calendar'], true) ? request('view') : 'grid';
+        $this->view = in_array(request('view'), ['grid', 'list', 'calendar', 'kanban'], true) ? request('view') : 'grid';
         $this->selectedId = request()->integer('selected') ?: null;
         $this->calMonth = now()->format('Y-m');
     }
@@ -92,6 +92,26 @@ class EventsIndex extends Component
     public function toggleFavorite(int $eventId): void
     {
         auth()->user()->favoriteEvents()->toggle($eventId);
+    }
+
+    /** Pipeline stage buckets: label, which stages fall in, the canonical stage to set, colors. */
+    public const PIPELINE = [
+        'lead' => ['label' => 'Lead', 'stages' => ['draft'], 'set' => 'draft', 'dot' => 'bg-navy-300', 'accent' => 'navy', 'next' => 'proposal', 'nextLabel' => 'Proposal'],
+        'proposal' => ['label' => 'Proposal', 'stages' => ['proposal'], 'set' => 'proposal', 'dot' => 'bg-gold-500', 'accent' => 'gold', 'next' => 'confirmed', 'nextLabel' => 'Confirmed'],
+        'confirmed' => ['label' => 'Confirmed', 'stages' => ['confirmed', 'planning'], 'set' => 'confirmed', 'dot' => 'bg-track', 'accent' => 'track', 'next' => 'delivery', 'nextLabel' => 'In delivery'],
+        'delivery' => ['label' => 'In delivery', 'stages' => ['production', 'live'], 'set' => 'production', 'dot' => 'bg-[#3B82F6]', 'accent' => 'blue', 'next' => 'completed', 'nextLabel' => 'Completed'],
+        'completed' => ['label' => 'Completed', 'stages' => ['completed', 'closed'], 'set' => 'completed', 'dot' => 'bg-navy-900', 'accent' => 'ink', 'next' => null, 'nextLabel' => null],
+    ];
+
+    /** Move an event into a pipeline bucket (drag drop or the Move button). */
+    public function moveStage(int $eventId, string $bucket): void
+    {
+        if (! isset(self::PIPELINE[$bucket])) {
+            return;
+        }
+
+        $event = Event::whereNull('archived_at')->find($eventId);
+        $event?->update(['stage' => self::PIPELINE[$bucket]['set']]);
     }
 
     public function duplicate(int $eventId)
@@ -199,6 +219,7 @@ class EventsIndex extends Component
             'selectedHealth' => $selected ? $health[$selected->id] : null,
             'ai' => $selected ? $pulse->aiSummary($selected) : null,
             'calendar' => $this->view === 'calendar' ? $this->buildCalendar($all) : null,
+            'pipeline' => $this->view === 'kanban' ? $this->buildPipeline($all) : null,
             'kpis' => [
                 ['label' => 'Total Events', 'value' => Event::whereNull('archived_at')->count(), 'icon' => 'calendar', 'tone' => 'blue',
                     'trend' => '↑ '.Event::whereNull('archived_at')->whereMonth('created_at', now()->month)->count().' added this month', 'up' => true],
@@ -242,5 +263,21 @@ class EventsIndex extends Component
         }
 
         return ['label' => $month->format('F Y'), 'weeks' => $weeks];
+    }
+
+    /**
+     * Pipeline columns keyed by bucket, each carrying its events (by stage).
+     */
+    private function buildPipeline($all): array
+    {
+        $columns = [];
+        foreach (self::PIPELINE as $key => $meta) {
+            $columns[$key] = $meta + [
+                'events' => $all->filter(fn (Event $e) => in_array($e->stage, $meta['stages'], true))
+                    ->sortBy('starts_at')->values(),
+            ];
+        }
+
+        return $columns;
     }
 }
