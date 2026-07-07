@@ -90,6 +90,26 @@ class AgendaConflictTest extends TestCase
             ->assertSee('Innovation Lab');
     }
 
+    public function test_session_form_can_create_a_room_inline(): void
+    {
+        [$event, $user] = $this->ctx();
+        $gala = \App\Models\Event::where('name', 'EY Annual Gala')->firstOrFail(); // starts with 0 rooms
+        $day = $gala->agendaDays()->create(['date' => now(), 'label' => 'Day 1', 'sort' => 0]);
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Hub\AgendaTab::class, ['event' => $gala])
+            ->call('newSession', $day->id)
+            ->assertSet('addingRoom', true) // no rooms → jumps straight to add-room
+            ->set('title', 'Welcome Reception')
+            ->set('newRoomName', 'Grand Ballroom')
+            ->set('newRoomType', 'main_hall')
+            ->call('saveSession')
+            ->assertHasNoErrors();
+
+        $room = $gala->rooms()->where('name', 'Grand Ballroom')->firstOrFail();
+        $this->assertSame('main_hall', $room->type);
+        $this->assertSame($room->id, $gala->agendaSessions()->where('title', 'Welcome Reception')->value('room_id'));
+    }
+
     public function test_assigning_venue_persists(): void
     {
         [$event, $user] = $this->ctx();

@@ -59,13 +59,25 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-medium text-navy-800" for="s-room">Room</label>
-                <select id="s-room" wire:model="room_id" class="input h-10 text-sm">
-                    <option value="">—</option>
-                    @foreach ($rooms as $room)<option value="{{ $room->id }}">{{ $room->name }}@if ($room->capacity) ({{ number_format($room->capacity) }}) @endif</option>@endforeach
-                </select>
-                @if ($rooms->isEmpty())
-                    <p class="mt-1 text-[0.65rem] text-muted">No rooms yet — add them in the <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="font-semibold text-gold-600">Venue tab</a>.</p>
+                <div class="mb-1 flex items-center justify-between">
+                    <label class="block text-xs font-medium text-navy-800" for="s-room">Room / Venue</label>
+                    <button type="button" wire:click="toggleAddRoom" class="text-[0.65rem] font-bold text-gold-600 hover:text-gold-700">
+                        {{ $addingRoom ? ($rooms->isNotEmpty() ? '← Pick existing' : 'Cancel') : '＋ New room' }}
+                    </button>
+                </div>
+                @if ($addingRoom)
+                    <div class="flex gap-2">
+                        <input id="s-room" type="text" wire:model="newRoomName" class="input h-10 flex-1 text-sm" placeholder="e.g. Main Hall">
+                        <select wire:model="newRoomType" class="input h-10 w-32 text-sm">
+                            @foreach (['main_hall' => 'Main Hall', 'breakout' => 'Breakout', 'exhibition' => 'Exhibition', 'registration' => 'Registration', 'vip' => 'VIP', 'catering' => 'Catering'] as $val => $lbl)<option value="{{ $val }}">{{ $lbl }}</option>@endforeach
+                        </select>
+                    </div>
+                    <p class="mt-1 text-[0.65rem] text-muted">A new room is created and used for this session — it'll be reusable next time.</p>
+                @else
+                    <select id="s-room" wire:model="room_id" class="input h-10 text-sm">
+                        <option value="">—</option>
+                        @foreach ($rooms as $room)<option value="{{ $room->id }}">{{ $room->name }}@if ($room->capacity) ({{ number_format($room->capacity) }}) @endif</option>@endforeach
+                    </select>
                 @endif
             </div>
             <div>

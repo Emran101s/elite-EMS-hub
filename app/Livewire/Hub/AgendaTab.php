@@ -24,6 +24,11 @@ class AgendaTab extends Component
     public ?int $agenda_day_id = null;
     public ?int $room_id = null;
 
+    // Inline "add a room" from the session form
+    public bool $addingRoom = false;
+    public string $newRoomName = '';
+    public string $newRoomType = 'breakout';
+
     #[Validate('required|string|max:160')]
     public string $title = '';
 
@@ -115,11 +120,21 @@ class AgendaTab extends Component
         $this->ends_at = '10:00';
         $this->agenda_day_id = $dayId;
         $this->room_id = $this->event->rooms()->value('id');
+        // No rooms yet? Drop straight into "add a room" so the picker isn't empty.
+        $this->addingRoom = $this->event->rooms()->doesntExist();
+        $this->newRoomName = '';
         $this->showForm = true;
+    }
+
+    public function toggleAddRoom(): void
+    {
+        $this->addingRoom = ! $this->addingRoom;
+        $this->addingRoom ? $this->room_id = null : $this->newRoomName = '';
     }
 
     public function editSession(int $sessionId): void
     {
+        $this->reset(['addingRoom', 'newRoomName']);
         $s = $this->event->agendaSessions()->findOrFail($sessionId);
         $this->editingId = $s->id;
         $this->agenda_day_id = $s->agenda_day_id;
@@ -142,7 +157,17 @@ class AgendaTab extends Component
             'room_id' => ['nullable', 'exists:event_rooms,id'],
             'type' => ['required', 'in:'.implode(',', EventAgendaSession::TYPES)],
             'status' => ['required', 'in:'.implode(',', EventAgendaSession::STATUSES)],
+            'newRoomName' => ['nullable', 'string', 'max:120'],
+            'newRoomType' => ['required', 'in:'.implode(',', \App\Models\EventRoom::TYPES)],
         ]);
+
+        // Create a room on the fly if one was typed in.
+        if ($this->addingRoom && trim($this->newRoomName) !== '') {
+            $this->room_id = $this->event->rooms()->create([
+                'name' => trim($this->newRoomName),
+                'type' => $this->newRoomType,
+            ])->id;
+        }
 
         $data = [
             'agenda_day_id' => $this->agenda_day_id,
