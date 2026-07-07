@@ -1,4 +1,16 @@
 <div>
+    {{-- Conflict banner --}}
+    @php $conflictCount = collect($conflicts)->count(); @endphp
+    @if ($conflictCount > 0)
+        <div class="mb-4 flex items-center gap-2.5 rounded-2xl border border-risk/30 bg-risk/5 px-4 py-3">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-risk/10 text-risk">⚠</span>
+            <p class="text-xs font-semibold text-red-700">
+                {{ $conflictCount }} scheduling {{ str('conflict')->plural($conflictCount) }} detected —
+                <span class="font-normal text-red-600">sessions overlapping in the same room or with the same speaker are flagged below.</span>
+            </p>
+        </div>
+    @endif
+
     {{-- Toolbar --}}
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p class="text-xs text-muted">Drag the ⠿ handle to reorder sessions or move them between days.</p>
@@ -49,8 +61,11 @@
                 <label class="mb-1 block text-xs font-medium text-navy-800" for="s-room">Room</label>
                 <select id="s-room" wire:model="room_id" class="input h-10 text-sm">
                     <option value="">—</option>
-                    @foreach ($rooms as $room)<option value="{{ $room->id }}">{{ $room->name }}</option>@endforeach
+                    @foreach ($rooms as $room)<option value="{{ $room->id }}">{{ $room->name }}@if ($room->capacity) ({{ number_format($room->capacity) }}) @endif</option>@endforeach
                 </select>
+                @if ($rooms->isEmpty())
+                    <p class="mt-1 text-[0.65rem] text-muted">No rooms yet — add them in the <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="font-semibold text-gold-600">Venue tab</a>.</p>
+                @endif
             </div>
             <div>
                 <label class="mb-1 block text-xs font-medium text-navy-800" for="s-type">Type</label>
@@ -123,18 +138,30 @@
                                         default => 'border-l-navy-200',
                                     };
                                 @endphp
+                                @php $sessionConflicts = $conflicts[$session->id] ?? []; @endphp
                                 <div data-session="{{ $session->id }}" wire:key="sess-{{ $session->id }}"
-                                     class="group rounded-xl border border-line border-l-[3px] {{ $tone }} bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+                                     class="group rounded-xl border border-l-[3px] {{ $tone }} bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.05)] {{ $sessionConflicts ? 'border-risk/50 ring-1 ring-risk/20' : 'border-line' }}">
                                     <div class="flex items-start gap-2">
                                         <button type="button" data-drag class="mt-0.5 cursor-grab text-navy-300 transition hover:text-navy-600 active:cursor-grabbing" title="Drag to reorder">⠿</button>
                                         <div class="min-w-0 flex-1">
-                                            <p class="text-xs font-bold text-navy-900">{{ substr($session->starts_at, 0, 5) }}–{{ substr($session->ends_at, 0, 5) }}</p>
+                                            <div class="flex items-center justify-between gap-2">
+                                                <p class="text-xs font-bold text-navy-900">{{ substr($session->starts_at, 0, 5) }}–{{ substr($session->ends_at, 0, 5) }}</p>
+                                                @if ($sessionConflicts)
+                                                    <span class="shrink-0 rounded-full bg-risk/10 px-1.5 py-0.5 text-[0.55rem] font-bold uppercase text-red-700"
+                                                          title="{{ collect($sessionConflicts)->pluck('text')->implode(' · ') }}">⚠ Conflict</span>
+                                                @endif
+                                            </div>
                                             <p class="truncate text-sm font-semibold text-navy-900">{{ $session->title }}</p>
                                             <p class="mt-0.5 truncate text-[0.65rem] text-muted">
                                                 {{ str($session->type)->replace('_', ' ')->title() }}
-                                                @if ($session->room) · {{ $session->room->name }} @endif
+                                                @if ($session->room) · 📍 {{ $session->room->name }} @endif
                                                 @if ($session->speaker) · 🎤 {{ $session->speaker }} @endif
                                             </p>
+                                            @foreach ($sessionConflicts as $c)
+                                                <p class="mt-1 flex items-start gap-1 text-[0.6rem] font-medium text-red-600">
+                                                    <span class="shrink-0">{{ $c['type'] === 'room' ? '📍' : '🎤' }}</span> {{ $c['text'] }}
+                                                </p>
+                                            @endforeach
                                             <div class="mt-1.5 flex items-center justify-between">
                                                 <x-status-badge :status="$session->status" class="!text-[0.55rem]" />
                                                 <span class="flex gap-1 opacity-0 transition group-hover:opacity-100">

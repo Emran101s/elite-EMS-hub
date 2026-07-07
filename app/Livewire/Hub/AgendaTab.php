@@ -261,13 +261,52 @@ class AgendaTab extends Component
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'agenda']);
     }
 
+    /**
+     * Scheduling conflicts within each day: two sessions clash when their
+     * time ranges overlap AND they share the same room or the same speaker.
+     * Returns [session_id => ['Room double-booked with “…”', …]].
+     */
+    private function detectConflicts($days): array
+    {
+        $conflicts = [];
+
+        foreach ($days as $day) {
+            $sessions = $day->sessions->all();
+
+            foreach ($sessions as $a) {
+                foreach ($sessions as $b) {
+                    if ($a->id === $b->id) {
+                        continue;
+                    }
+                    // overlap: a.start < b.end && a.end > b.start
+                    $overlap = $a->starts_at < $b->ends_at && $a->ends_at > $b->starts_at;
+                    if (! $overlap) {
+                        continue;
+                    }
+
+                    if ($a->room_id && $a->room_id === $b->room_id) {
+                        $conflicts[$a->id][] = ['type' => 'room', 'text' => 'Room "'.$a->room?->name.'" double-booked with "'.$b->title.'"'];
+                    }
+                    if ($a->speaker && $a->speaker === $b->speaker) {
+                        $conflicts[$a->id][] = ['type' => 'speaker', 'text' => $a->speaker.' also speaks at "'.$b->title.'"'];
+                    }
+                }
+            }
+        }
+
+        return $conflicts;
+    }
+
     public function render()
     {
+        $days = $this->event->agendaDays()
+            ->with(['sessions' => fn ($q) => $q->orderBy('sort')->orderBy('starts_at'), 'sessions.room'])
+            ->orderBy('sort')->get();
+
         return view('livewire.hub.agenda-tab', [
-            'days' => $this->event->agendaDays()
-                ->with(['sessions' => fn ($q) => $q->orderBy('sort')->orderBy('starts_at'), 'sessions.room'])
-                ->orderBy('sort')->get(),
+            'days' => $days,
             'rooms' => $this->event->rooms()->orderBy('name')->get(),
+            'conflicts' => $this->detectConflicts($days),
         ]);
     }
 }
