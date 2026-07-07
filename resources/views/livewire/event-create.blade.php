@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-4xl">
+<div class="mx-auto max-w-6xl">
 
     {{-- ══ Step bar ══ --}}
     <div class="mb-6 flex items-center">

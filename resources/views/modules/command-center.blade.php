@@ -16,15 +16,15 @@
                     ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress', 'tone' => 'bg-track/10 text-emerald-600'],
                     ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'tone' => 'bg-risk/10 text-risk', 'risk' => $stats['atRisk'] > 0],
                 ] as $kpi)
-                    <div class="flex h-[90px] w-[155px] flex-col justify-between rounded-[18px] border border-line bg-white px-3 py-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                        <div class="flex items-center gap-2">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $kpi['tone'] }}">
-                                <x-icon :name="$kpi['icon']" class="h-4.5 w-4.5" />
+                    <div class="flex h-[78px] w-[140px] flex-col justify-between rounded-2xl border border-line bg-white px-2.5 py-2 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                        <div class="flex items-center gap-1.5">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg {{ $kpi['tone'] }}">
+                                <x-icon :name="$kpi['icon']" class="h-3.5 w-3.5" />
                             </span>
-                            <p class="text-[11px] font-semibold leading-tight text-muted">{{ $kpi['label'] }}</p>
+                            <p class="truncate text-[10px] font-semibold leading-tight text-muted">{{ $kpi['label'] }}</p>
                         </div>
-                        <p class="text-[22px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
-                        <p class="truncate text-[10px] font-semibold text-muted">{{ $kpi['hint'] }}</p>
+                        <p class="text-[19px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
+                        <p class="truncate text-[9px] font-semibold text-muted">{{ $kpi['hint'] }}</p>
                     </div>
                 @endforeach
             </div>
