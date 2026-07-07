@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'name', 'description', 'type', 'status', 'stage', 'city', 'country',
+    'name', 'description', 'type', 'status', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'avatar_id',
     'starts_at', 'ends_at', 'budget_cents', 'progress', 'expected_participants',
-    'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at',
+    'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
 ])]
 class Event extends Model
 {
@@ -25,6 +25,24 @@ class Event extends Model
         'vip_reception', 'embassy_event', 'training_program', 'product_launch',
         'awards_ceremony', 'outdoor_event', 'public_event', 'private_dinner',
         'hybrid_event', 'online_event',
+    ];
+
+    /**
+     * Toggleable Event Hub modules (Overview / AI Insights / Settings are always on).
+     * key => [tab label, category, icon].
+     */
+    public const HUB_MODULES = [
+        'agenda' => ['Agenda & Sessions', 'Programme', 'calendar'],
+        'tasks' => ['Tasks', 'Plan', 'clipboard'],
+        'budget' => ['Budget & Finance', 'Plan', 'currency'],
+        'suppliers' => ['Suppliers', 'Logistics', 'truck'],
+        'venue' => ['Venues & Rooms', 'Logistics', 'building'],
+        'sponsors' => ['Exhibitors & Sponsors', 'Exhibition', 'star'],
+        'attendees' => ['Registration & Tickets', 'Sell', 'users'],
+        'files' => ['Documents', 'Grow', 'archive'],
+        'risks' => ['Risks', 'Plan', 'bell'],
+        'approvals' => ['Approvals', 'Plan', 'identification'],
+        'reports' => ['Reports', 'Grow', 'chart'],
     ];
 
     /** Health statuses (color-mapped; `stage` below tracks the lifecycle). */
@@ -44,7 +62,20 @@ class Event extends Model
             'progress' => 'integer',
             'expected_participants' => 'integer',
             'archived_at' => 'datetime',
+            'enabled_modules' => 'array',
         ];
+    }
+
+    /**
+     * Is a hub module active? Legacy events (null enabled_modules) show everything.
+     */
+    public function moduleEnabled(string $key): bool
+    {
+        if (! array_key_exists($key, self::HUB_MODULES)) {
+            return true; // overview / ai / settings are never gated
+        }
+
+        return $this->enabled_modules === null || in_array($key, $this->enabled_modules, true);
     }
 
     /**

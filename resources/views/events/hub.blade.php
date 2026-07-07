@@ -128,6 +128,7 @@
                 'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification'], 'reports' => ['Reports', 'chart'],
                 'ai' => ['AI Insights', 'sparkles'], 'settings' => ['Settings', 'cog'],
             ] as $key => [$label, $icon])
+                @continue (! $event->moduleEnabled($key))
                 <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
                    @class([
                        'flex h-14 items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-semibold transition',

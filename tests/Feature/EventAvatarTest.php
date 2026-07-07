@@ -56,57 +56,45 @@ class EventAvatarTest extends TestCase
             ->assertDontSee('Luxury Ballroom');
     }
 
-    public function test_create_event_auto_recommends_avatar_by_type(): void
+    public function test_template_auto_assigns_avatar_and_pre_enables_modules(): void
     {
         $this->seed(EventAvatarSeeder::class);
         $user = User::factory()->create();
 
-        $galaAvatar = EventAvatar::where('slug', 'gala-dinner')->first();
-        $conferenceAvatar = EventAvatar::where('slug', 'international-conference')->first();
-
+        // Gala template → gala-dinner avatar + its module set (incl. sponsors, no agenda).
         Livewire::actingAs($user)->test(EventCreate::class)
-            ->assertSet('avatar_id', $conferenceAvatar->id) // default type = conference
-            ->set('type', 'gala_dinner')
-            ->assertSet('avatar_id', $galaAvatar->id);
-    }
-
-    public function test_manual_avatar_choice_survives_type_changes(): void
-    {
-        $this->seed(EventAvatarSeeder::class);
-        $user = User::factory()->create();
-
-        $festival = EventAvatar::where('slug', 'festival-outdoor')->first();
-
-        Livewire::actingAs($user)->test(EventCreate::class)
-            ->call('chooseAvatar', $festival->id)
-            ->set('type', 'gala_dinner')
-            ->assertSet('avatar_id', $festival->id);
-    }
-
-    public function test_saving_creates_event_with_avatar(): void
-    {
-        $this->seed(EventAvatarSeeder::class);
-        $user = User::factory()->create();
-
-        Livewire::actingAs($user)->test(EventCreate::class)
-            ->set('name', 'Falcon Summit 2027')
-            ->set('type', 'conference')
-            ->set('city', 'Amman')
-            ->set('country', 'Jordan')
-            ->set('starts_at', '2027-03-10')
-            ->set('budget', '150000')
             ->set('new_client', 'Falcon Holdings')
+            ->set('name', 'Falcon Gala 2027')
+            ->set('starts_at', '2027-03-10')
+            ->call('chooseTemplate', 'gala')
+            ->assertSet('modules', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors'])
             ->call('save')
             ->assertHasNoErrors();
 
-        $event = Event::where('name', 'Falcon Summit 2027')->firstOrFail();
+        $event = Event::where('name', 'Falcon Gala 2027')->firstOrFail();
 
-        $this->assertSame('international-conference', $event->avatar->slug);
-        $this->assertSame(15000000, $event->budget_cents);
-        $this->assertSame('planning', $event->status);
+        $this->assertSame('gala-dinner', $event->avatar->slug);
+        $this->assertSame('gala_dinner', $event->type);
         $this->assertSame('draft', $event->stage);
         $this->assertSame('Falcon Holdings', $event->client->name);
-        $this->assertSame('#0B1F3A', $event->primary_color);
+        $this->assertContains('sponsors', $event->enabled_modules);
+        $this->assertNotContains('agenda', $event->enabled_modules);
+    }
+
+    public function test_status_pill_maps_to_stage(): void
+    {
+        $this->seed(EventAvatarSeeder::class);
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('new_client', 'Acme')
+            ->set('name', 'Confirmed Congress')
+            ->set('starts_at', '2027-05-01')
+            ->set('statusPill', 'confirmed')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('confirmed', Event::where('name', 'Confirmed Congress')->value('stage'));
     }
 
     public function test_avatars_render_in_hub_and_events_list(): void

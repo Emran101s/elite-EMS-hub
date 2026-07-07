@@ -17,6 +17,11 @@ class EventHubController extends Controller
     {
         $tab = in_array(request('tab'), self::TABS, true) ? request('tab') : 'overview';
 
+        // A disabled module's tab falls back to Overview.
+        if (! $event->moduleEnabled($tab)) {
+            $tab = 'overview';
+        }
+
         $event->load([
             'avatar', 'client', 'venue', 'projectManager', 'project',
             'rooms', 'agendaDays.sessions.room', 'agendaSessions',

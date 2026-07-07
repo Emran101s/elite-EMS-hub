@@ -1,353 +1,157 @@
-<div class="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+<div class="mx-auto max-w-4xl">
 
-    {{-- ── Left step navigation (260px) ── --}}
-    <div class="hidden xl:block">
-        <div class="card sticky top-6 p-4">
-            <p class="mb-3 px-2 text-xs font-bold uppercase tracking-wide text-navy-900">Create New Event</p>
-            <ol class="space-y-1">
-                @foreach ([
-                    ['label' => 'Basic Information', 'step' => 1],
-                    ['label' => 'Choose Event Avatar', 'step' => 2],
-                    ['label' => 'Choose Color Theme', 'step' => 3],
-                    ['label' => 'Venue & Rooms', 'step' => null],
-                    ['label' => 'Agenda Builder', 'step' => null],
-                    ['label' => 'Team Assignment', 'step' => null],
-                    ['label' => 'Budget Setup', 'step' => null],
-                    ['label' => 'Suppliers', 'step' => null],
-                    ['label' => 'Sponsors', 'step' => null],
-                    ['label' => 'Review & Create', 'step' => 4],
-                ] as $i => $item)
-                    <li>
-                        @if ($item['step'] !== null)
-                            <button type="button"
-                                    @if ($item['step'] < $step) wire:click="$set('step', {{ $item['step'] }})" @endif
-                                    @class([
-                                        'flex h-11 w-full items-center gap-2.5 rounded-xl px-2.5 text-left transition',
-                                        'bg-gold-50 ring-1 ring-gold-300' => $step === $item['step'],
-                                        'hover:bg-page' => $item['step'] < $step,
-                                        'cursor-default' => $item['step'] > $step,
-                                    ])>
-                                <span @class([
-                                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                                        'bg-gold-500 text-navy-900' => $step === $item['step'],
-                                        'bg-navy-900 text-gold-400' => $step > $item['step'],
-                                        'bg-white text-muted ring-1 ring-line' => $step < $item['step'],
-                                    ])>{{ $step > $item['step'] ? '✓' : $i + 1 }}</span>
-                                <span class="{{ $step === $item['step'] ? 'font-bold text-navy-900' : 'text-navy-600' }} truncate text-[13px]">{{ $item['label'] }}</span>
-                            </button>
-                        @else
-                            <a href="#" onclick="return false"
-                               class="flex h-11 w-full cursor-default items-center gap-2.5 rounded-xl px-2.5 opacity-60"
-                               title="Configured inside the Event Hub after creation">
-                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-page text-xs font-bold text-navy-300 ring-1 ring-line">{{ $i + 1 }}</span>
-                                <span class="min-w-0 flex-1 truncate text-[13px] text-muted">{{ $item['label'] }}</span>
-                                <span class="shrink-0 rounded-full bg-navy-50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-navy-500">Hub</span>
-                            </a>
-                        @endif
-                    </li>
-                @endforeach
-            </ol>
-            <p class="mt-3 px-2 text-[11px] leading-snug text-muted">Steps marked <span class="font-bold">Hub</span> are set up inside the Event Hub tabs right after creation — so an event goes live in under a minute.</p>
-        </div>
+    {{-- ══ Step bar ══ --}}
+    <div class="mb-6 flex items-center">
+        @foreach (['Basics', 'Type', 'Modules'] as $i => $label)
+            @php $n = $i + 1; @endphp
+            <div class="flex items-center gap-3">
+                <span @class([
+                        'flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition',
+                        'bg-navy-900 text-white' => $step >= $n,
+                        'bg-white text-navy-300 ring-1 ring-line' => $step < $n,
+                    ])>{{ $step > $n ? '✓' : $n }}</span>
+                <span class="{{ $step === $n ? 'font-bold text-navy-900' : 'font-semibold text-navy-300' }} text-lg">{{ $label }}</span>
+            </div>
+            @unless ($loop->last)
+                <div class="mx-4 h-0.5 flex-1 rounded {{ $step > $n ? 'bg-navy-900' : 'bg-line' }}"></div>
+            @endunless
+        @endforeach
     </div>
 
-    <div class="min-w-0">
-        {{-- Compact step indicator (mobile/tablet) --}}
-        <div class="mb-5 flex items-center gap-2 xl:hidden">
-            @foreach (['Basics', 'Avatar', 'Color Theme', 'Review'] as $i => $label)
-                <div class="flex items-center gap-2">
-                    <span @class([
-                            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                            'bg-gold-500 text-navy-900' => $step === $i + 1,
-                            'bg-navy-900 text-gold-400' => $step > $i + 1,
-                            'bg-white text-muted ring-1 ring-line' => $step < $i + 1,
-                        ])>{{ $step > $i + 1 ? '✓' : $i + 1 }}</span>
-                    <span class="{{ $step === $i + 1 ? 'font-bold text-navy-900' : 'text-muted' }} hidden text-xs sm:block">{{ $label }}</span>
-                    @unless ($loop->last)<span class="h-px w-6 bg-line"></span>@endunless
-                </div>
-            @endforeach
-        </div>
+    <div class="rounded-[28px] bg-white p-8 shadow-[0_20px_50px_rgba(11,31,58,0.08)] sm:p-10">
 
-        <div class="card p-6">
-
-            {{-- ══ Step 1: Basics ══ --}}
-            @if ($step === 1)
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
-                        <label for="name" class="mb-1.5 block text-sm font-medium text-navy-800">Event name</label>
-                        <input id="name" type="text" wire:model="name" class="input" placeholder="e.g. ICFT 2027">
-                        @error('name') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="type" class="mb-1.5 block text-sm font-medium text-navy-800">Event type</label>
-                        <select id="type" wire:model.live="type" class="input">
-                            @foreach ($types as $eventType)
-                                <option value="{{ $eventType }}">{{ str($eventType)->replace('_', ' ')->title() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="expected_participants" class="mb-1.5 block text-sm font-medium text-navy-800">Expected participants</label>
-                        <input id="expected_participants" type="number" min="1" wire:model="expected_participants" class="input" placeholder="500">
-                        @error('expected_participants') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="client_id" class="mb-1.5 block text-sm font-medium text-navy-800">Client</label>
-                        <select id="client_id" wire:model="client_id" class="input">
-                            <option value="">— Select client —</option>
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="new_client" class="mb-1.5 block text-sm font-medium text-navy-800">…or new client name</label>
-                        <input id="new_client" type="text" wire:model="new_client" class="input" placeholder="Creates the client on save">
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="description" class="mb-1.5 block text-sm font-medium text-navy-800">Description <span class="text-muted">(optional)</span></label>
-                        <textarea id="description" wire:model="description" rows="2" class="input" placeholder="Scope, audience, objectives…"></textarea>
-                    </div>
-
-                    <div>
-                        <label for="city" class="mb-1.5 block text-sm font-medium text-navy-800">City</label>
-                        <input id="city" type="text" wire:model="city" class="input" placeholder="Amman">
-                        @error('city') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="country" class="mb-1.5 block text-sm font-medium text-navy-800">Country</label>
-                        <select id="country" wire:model="country" class="input">
-                            @foreach (['Jordan', 'Bahrain', 'UAE', 'Qatar', 'KSA', 'Kuwait', 'Oman', 'Egypt'] as $countryOption)
-                                <option value="{{ $countryOption }}">{{ $countryOption }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="starts_at" class="mb-1.5 block text-sm font-medium text-navy-800">Starts</label>
-                        <input id="starts_at" type="date" wire:model="starts_at" class="input">
-                        @error('starts_at') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="ends_at" class="mb-1.5 block text-sm font-medium text-navy-800">Ends</label>
-                        <input id="ends_at" type="date" wire:model="ends_at" class="input">
-                        @error('ends_at') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="budget" class="mb-1.5 block text-sm font-medium text-navy-800">Budget (USD)</label>
-                        <input id="budget" type="number" step="0.01" min="0" wire:model="budget" class="input" placeholder="250000">
-                        @error('budget') <p class="mt-1 text-sm text-risk">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="project_manager_id" class="mb-1.5 block text-sm font-medium text-navy-800">Project manager</label>
-                        <select id="project_manager_id" wire:model="project_manager_id" class="input">
-                            <option value="">—</option>
-                            @foreach ($managers as $manager)
-                                <option value="{{ $manager->id }}">{{ $manager->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="venue_id" class="mb-1.5 block text-sm font-medium text-navy-800">Venue <span class="text-muted">(optional)</span></label>
-                        <select id="venue_id" wire:model="venue_id" class="input">
-                            <option value="">—</option>
-                            @foreach ($venues as $venue)
-                                <option value="{{ $venue->id }}">{{ $venue->name }} ({{ $venue->city }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="project_id" class="mb-1.5 block text-sm font-medium text-navy-800">Project <span class="text-muted">(optional)</span></label>
-                        <select id="project_id" wire:model="project_id" class="input">
-                            <option value="">—</option>
-                            @foreach ($projects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            @endif
-
-            {{-- ══ Step 2: Avatar ══ --}}
-            @if ($step === 2)
-                <div class="mb-3 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-bold text-navy-900">Choose the Event Avatar</p>
-                        <p class="text-xs text-muted">Auto-suggested from the event type — pick any to override.</p>
-                    </div>
-                    <a href="{{ route('events.avatars') }}" target="_blank" class="text-xs font-semibold text-gold-600 hover:text-gold-700">Browse library</a>
-                </div>
-                <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                    @foreach ($avatars as $avatar)
-                        <button type="button" wire:click="chooseAvatar({{ $avatar->id }})"
-                                @class([
-                                    'relative rounded-[20px] border p-3 text-left transition',
-                                    'border-2 border-gold-500 bg-[#FFF7E6]' => $avatar_id === $avatar->id,
-                                    'border-line hover:border-gold-300' => $avatar_id !== $avatar->id,
-                                ])>
-                            @if ($avatar->id === $recommendedId)
-                                <span class="absolute -top-2 left-3 z-10 rounded-full bg-gold-500 px-2 py-0.5 text-[0.6rem] font-bold text-navy-900">Recommended</span>
-                            @endif
-                            @if ($avatar_id === $avatar->id)
-                                <span class="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow">✓</span>
-                            @endif
-                            <x-event-avatar :avatar="$avatar" :ring="false" size="md" class="w-full [&>span]:h-[120px] [&>span]:w-full [&>span]:rounded-xl" />
-                            <p class="mt-2 truncate text-xs font-bold text-navy-900">{{ $avatar->name }}</p>
-                            <p class="truncate text-[0.65rem] text-muted">{{ $avatar->subtitle }}</p>
-                            <p class="mt-1 truncate text-[0.6rem] text-muted">{{ $avatar->best_for }}</p>
-                        </button>
-                    @endforeach
-                </div>
-                @error('avatar_id') <p class="mt-2 text-sm text-risk">{{ $message }}</p> @enderror
-            @endif
-
-            {{-- ══ Step 3: Color theme ══ --}}
-            @if ($step === 3)
-                <p class="text-sm font-bold text-navy-900">Event Color Theme</p>
-                <p class="mb-4 text-xs text-muted">Used on the hub cover, event cards, rings, agenda blocks and report covers.</p>
-
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    @foreach ($palettes as $key => [$label, $primary, $secondary, $accent, $text])
-                        <button type="button" wire:click="$set('palette', '{{ $key }}')"
-                                @class([
-                                    'rounded-2xl border p-3 text-left transition',
-                                    'border-gold-500 ring-2 ring-gold-500/40' => $palette === $key,
-                                    'border-line hover:border-gold-300' => $palette !== $key,
-                                ])>
-                            <span class="flex gap-1.5">
-                                <span class="h-6 w-6 rounded-lg ring-1 ring-line" style="background: {{ $primary }}"></span>
-                                <span class="h-6 w-6 rounded-lg ring-1 ring-line" style="background: {{ $accent }}"></span>
-                                <span class="h-6 w-6 rounded-lg ring-1 ring-line" style="background: {{ $secondary }}"></span>
-                            </span>
-                            <span class="mt-2 block text-xs font-semibold text-navy-900">{{ $label }}</span>
-                        </button>
-                    @endforeach
-
-                    <div @class([
-                            'rounded-2xl border p-3',
-                            'border-gold-500 ring-2 ring-gold-500/40' => $palette === 'custom',
-                            'border-line' => $palette !== 'custom',
-                        ])>
-                        <button type="button" wire:click="$set('palette', 'custom')" class="text-xs font-semibold text-navy-900">Custom brand colors</button>
-                        <div class="mt-2 grid grid-cols-4 gap-1.5">
-                            @foreach ([['primary_color', 'Primary'], ['secondary_color', 'Surface'], ['accent_color', 'Accent'], ['text_color', 'Text']] as [$field, $label])
-                                <label class="block">
-                                    <input type="color" wire:model.live="{{ $field }}" class="h-8 w-full cursor-pointer rounded-lg border border-line" title="{{ $label }}">
-                                    <span class="mt-0.5 block text-center text-[0.55rem] text-muted">{{ $label }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Live theme preview --}}
-                <div class="mt-5 overflow-hidden rounded-2xl ring-1 ring-line">
-                    <div class="flex items-center gap-4 px-5 py-4" style="background: linear-gradient(100deg, {{ $primary_color }} 0%, {{ $primary_color }}E6 70%, {{ $accent_color }}33 100%)">
-                        @php $selectedAvatar = $avatars->firstWhere('id', $avatar_id); @endphp
-                        <x-event-avatar :avatar="$selectedAvatar" :ring="false" size="sm" />
-                        <div>
-                            <p class="text-sm font-bold text-white">{{ $name !== '' ? $name : 'Your event' }} — Event Hub</p>
-                            <p class="text-[0.65rem]" style="color: {{ $accent_color }}">{{ str($type)->replace('_', ' ')->title() }} · {{ $city !== '' ? $city : 'City' }}, {{ $country }}</p>
-                        </div>
-                    </div>
-                    <div class="px-5 py-3 text-xs" style="background: {{ $secondary_color }}; color: {{ $text_color }}">
-                        Cover band, accents and rings will use this palette across the hub and reports.
-                    </div>
-                </div>
-            @endif
-
-            {{-- ══ Step 4: Review ══ --}}
-            @if ($step === 4)
-                @php $selectedAvatar = $avatars->firstWhere('id', $avatar_id); @endphp
-                <p class="text-sm font-bold text-navy-900">Review & Create</p>
-                <p class="mb-4 text-xs text-muted">Venue rooms, agenda, team, detailed budget, suppliers and sponsors are managed inside the hub after creation.</p>
-
-                <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                    @foreach ([
-                        'Event' => $name ?: '—',
-                        'Type' => str($type)->replace('_', ' ')->title(),
-                        'Client' => $clients->firstWhere('id', $client_id)?->name ?? ($new_client ?: '—'),
-                        'Avatar' => $selectedAvatar?->name ?? '—',
-                        'Location' => trim("{$city}, {$country}", ' ,'),
-                        'Dates' => trim("{$starts_at} → {$ends_at}", ' →'),
-                        'Budget' => $budget !== '' ? '$'.number_format((float) $budget) : '—',
-                        'Project manager' => $managers->firstWhere('id', $project_manager_id)?->name ?? '—',
-                        'Participants' => $expected_participants !== '' ? $expected_participants : '—',
-                        'Venue' => $venues->firstWhere('id', $venue_id)?->name ?? 'Set inside the hub',
-                    ] as $label => $value)
-                        <div class="flex justify-between gap-4 border-b border-line pb-2">
-                            <dt class="text-muted">{{ $label }}</dt>
-                            <dd class="text-right font-semibold text-navy-900">{{ $value }}</dd>
-                        </div>
-                    @endforeach
-                    <div class="flex items-center justify-between gap-4 border-b border-line pb-2">
-                        <dt class="text-muted">Color theme</dt>
-                        <dd class="flex gap-1.5">
-                            @foreach ([$primary_color, $accent_color, $secondary_color, $text_color] as $color)
-                                <span class="h-4 w-4 rounded-full ring-1 ring-line" style="background: {{ $color }}"></span>
-                            @endforeach
-                        </dd>
-                    </div>
-                </dl>
-            @endif
-
-            {{-- ══ Action bar (72px) ══ --}}
-            <div class="mt-6 flex h-[72px] items-center justify-between border-t border-line">
+        {{-- ══ Step 1: Basics ══ --}}
+        @if ($step === 1)
+            <div class="space-y-6">
                 <div>
-                    @if ($step > 1)
-                        <button type="button" wire:click="back" class="h-11 w-[120px] rounded-xl border border-line text-sm font-semibold text-navy-600 transition hover:border-gold-300 hover:text-navy-900">← Back</button>
-                    @else
-                        <a href="{{ route('events.index') }}" class="inline-flex h-11 w-[120px] items-center justify-center rounded-xl border border-line text-sm font-semibold text-navy-600 transition hover:text-navy-900">Cancel</a>
-                    @endif
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex h-11 w-[130px] cursor-not-allowed items-center justify-center rounded-xl border border-line text-sm font-semibold text-navy-300" title="Coming soon">Save Draft</span>
-                    @if ($step < 4)
-                        <button type="button" wire:click="next" class="btn-navy h-11 w-[130px]">Next →</button>
-                    @else
-                        <button type="button" wire:click="save" class="btn-gold h-11 w-[160px]">
-                            <span wire:loading.remove wire:target="save">✦ Create Event</span>
-                            <span wire:loading wire:target="save">Creating…</span>
+                    <div class="mb-2 flex items-center justify-between">
+                        <span class="field-label !mb-0">Client / Account <span class="text-risk">*</span></span>
+                        <button type="button" wire:click="toggleNewClient" class="text-sm font-bold text-navy-900 hover:text-gold-600">
+                            {{ $newClientMode ? '← Pick existing' : '+ New client' }}
                         </button>
+                    </div>
+                    @if ($newClientMode)
+                        <input type="text" wire:model="new_client" class="field" placeholder="New client / account name">
+                    @else
+                        <select wire:model="client_id" class="field">
+                            <option value="">Select a client…</option>
+                            @foreach ($clients as $client)
+                                <option value="{{ $client->id }}">{{ $client->name }}@if ($client->organization) — {{ $client->organization }} @endif</option>
+                            @endforeach
+                        </select>
                     @endif
+                    @error('client_id') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="field-label" for="e-title">Event Title <span class="text-risk">*</span></label>
+                    <input id="e-title" type="text" wire:model="name" class="field" placeholder="e.g. Annual Investors Summit 2026">
+                    @error('name') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="grid gap-5 sm:grid-cols-3">
+                    <div>
+                        <label class="field-label" for="e-start">Start Date <span class="text-risk">*</span></label>
+                        <input id="e-start" type="date" wire:model="starts_at" class="field">
+                        @error('starts_at') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label" for="e-end">End Date</label>
+                        <input id="e-end" type="date" wire:model="ends_at" class="field">
+                        @error('ends_at') <p class="mt-1.5 text-sm text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label" for="e-tz">Timezone</label>
+                        <select id="e-tz" wire:model="timezone" class="field">
+                            @foreach ($timezones as $tz)<option value="{{ $tz }}">{{ $tz }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="field-label">Status</span>
+                    <div class="flex flex-wrap gap-3">
+                        @foreach (['lead' => 'Lead', 'proposal' => 'Proposal', 'confirmed' => 'Confirmed'] as $value => $label)
+                            <button type="button" wire:click="$set('statusPill', '{{ $value }}')"
+                                    @class([
+                                        'seg-pill',
+                                        'border-navy-900 text-navy-900' => $statusPill === $value,
+                                        'border-line text-navy-300 hover:text-navy-600' => $statusPill !== $value,
+                                    ])>{{ $label }}</button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        @endif
 
-    {{-- ── Island preview rail ── --}}
-    <div class="space-y-4">
-        <div class="card p-5">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Island Preview</h3>
-            @php $selected = $avatars->firstWhere('id', $avatar_id); @endphp
-            <div class="flex flex-col items-center rounded-2xl py-6"
-                 style="background: radial-gradient(ellipse at center, {{ $accent_color }}14, transparent 70%)">
-                <span class="rounded-2xl p-1" style="box-shadow: 0 0 0 3px {{ $accent_color }}55">
-                    <x-event-avatar :avatar="$selected" :ring="false" size="xl" />
-                </span>
-                <p class="mt-4 text-sm font-bold text-navy-900">{{ $name !== '' ? $name : 'Your event' }}</p>
-                <p class="text-xs text-muted">
-                    {{ str($type)->replace('_', ' ')->title() }}
-                    @if ($city !== '') · {{ $city }}, {{ $country }} @endif
-                </p>
-                @if ($selected)
-                    <p class="mt-2 text-[0.65rem] text-muted">{{ $selected->name }} — {{ $selected->subtitle }}</p>
+        {{-- ══ Step 2: Type ══ --}}
+        @if ($step === 2)
+            <p class="mb-6 text-[0.95rem] text-muted">Choose a template — it pre-enables the modules this kind of event usually needs (you can fine-tune next). Optional.</p>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($templates as $key => [$label, $type, $icon, $mods])
+                    <button type="button" wire:click="chooseTemplate('{{ $key }}')"
+                            @class([
+                                'flex items-center gap-4 rounded-2xl border-2 p-5 text-left transition',
+                                'border-navy-900 bg-navy-50/40' => $template === $key,
+                                'border-line hover:border-navy-200' => $template !== $key,
+                            ])>
+                        <span @class([
+                                'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
+                                'bg-navy-900 text-gold-400' => $template === $key,
+                                'bg-fill text-navy-500' => $template !== $key,
+                            ])><x-icon :name="$icon" class="h-6 w-6" /></span>
+                        <span class="text-lg font-bold text-navy-900">{{ $label }}</span>
+                    </button>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- ══ Step 3: Modules ══ --}}
+        @if ($step === 3)
+            <p class="mb-6 text-[0.95rem] text-muted">Turn on the modules this event needs. They appear in the Event Control Center — you can change these anytime.</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach ($hubModules as $key => [$label, $category, $icon])
+                    @php $on = in_array($key, $modules, true); @endphp
+                    <button type="button" wire:click="toggleModule('{{ $key }}')"
+                            class="flex items-center gap-4 rounded-2xl border border-line p-4 text-left transition hover:border-navy-200">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-fill text-navy-500">
+                            <x-icon :name="$icon" class="h-5 w-5" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-[0.95rem] font-bold text-navy-900">{{ $label }}</span>
+                            <span class="block text-xs text-muted">{{ $category }}</span>
+                        </span>
+                        <span @class([
+                                'relative flex h-6 w-11 shrink-0 items-center rounded-full transition',
+                                'bg-navy-900' => $on,
+                                'bg-navy-200' => ! $on,
+                            ])>
+                            <span class="absolute h-5 w-5 rounded-full bg-white shadow transition-all {{ $on ? 'left-[22px]' : 'left-0.5' }}"></span>
+                        </span>
+                    </button>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- ══ Footer actions ══ --}}
+        <div class="mt-8 flex items-center justify-between border-t border-line pt-6">
+            <div>
+                @if ($step > 1)
+                    <button type="button" wire:click="back" class="rounded-2xl border border-line px-6 py-3 text-sm font-bold text-navy-600 transition hover:border-navy-200 hover:text-navy-900">← Back</button>
+                @else
+                    <a href="{{ route('events.index') }}" class="rounded-2xl px-6 py-3 text-sm font-bold text-navy-400 transition hover:text-navy-700">Cancel</a>
                 @endif
             </div>
-            <p class="mt-3 text-[0.65rem] text-muted">
-                Live preview of the Operations Hub island — avatar, theme ring and (once live) the health score.
-            </p>
+            <div class="flex items-center gap-3">
+                <button type="button" wire:click="save" class="rounded-2xl bg-fill px-6 py-3 text-sm font-bold text-navy-900 transition hover:bg-line"
+                        wire:loading.attr="disabled" wire:target="save">Create &amp; open</button>
+                @if ($step < 3)
+                    <button type="button" wire:click="next" class="rounded-2xl bg-navy-900 px-7 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(11,31,58,0.25)] transition hover:bg-navy-800">Continue →</button>
+                @else
+                    <button type="button" wire:click="save" class="rounded-2xl bg-navy-900 px-7 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(11,31,58,0.25)] transition hover:bg-navy-800"
+                            wire:loading.attr="disabled" wire:target="save">Create event</button>
+                @endif
+            </div>
         </div>
     </div>
 </div>

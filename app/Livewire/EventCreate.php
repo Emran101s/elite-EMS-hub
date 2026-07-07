@@ -5,107 +5,85 @@ namespace App\Livewire;
 use App\Models\Client;
 use App\Models\Event;
 use App\Models\EventAvatar;
-use App\Models\Project;
-use App\Models\User;
-use App\Models\Venue;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Create Event', 'subtitle' => 'Identity first — operate everything else inside the Event Hub.'])]
+#[Layout('components.layouts.app', ['title' => 'Create Event', 'subtitle' => 'Basics, type, then the modules this event needs.'])]
 class EventCreate extends Component
 {
-    /** Preset color themes: [label, primary, secondary, accent, text]. */
-    public const PALETTES = [
-        'navy-gold' => ['Navy + Gold', '#0B1F3A', '#F8FAFC', '#D4AF37', '#0F172A'],
-        'white-gold' => ['White + Gold', '#FFFFFF', '#F8FAFC', '#D4AF37', '#0B1F3A'],
-        'black-gold' => ['Black + Gold', '#10141A', '#F8FAFC', '#D4AF37', '#0F172A'],
-        'blue-silver' => ['Blue + Silver', '#1D4ED8', '#F8FAFC', '#94A3B8', '#0F172A'],
-        'green-navy' => ['Green + Navy', '#166534', '#F8FAFC', '#0B1F3A', '#0F172A'],
-        'maroon-gold' => ['Maroon + Gold', '#7F1D1D', '#F8FAFC', '#D4AF37', '#0F172A'],
-        'purple-gold' => ['Purple + Gold', '#6D28D9', '#F8FAFC', '#D4AF37', '#0F172A'],
+    /** Type templates: key => [label, event type, icon, default modules]. */
+    public const TEMPLATES = [
+        'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports']],
+        'summit' => ['Summit', 'summit', 'sparkles', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'sponsors']],
+        'exhibition' => ['Exhibition', 'exhibition', 'building', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'files', 'attendees']],
+        'workshop' => ['Workshop', 'workshop', 'clipboard', ['agenda', 'tasks', 'budget', 'venue', 'attendees']],
+        'seminar' => ['Seminar', 'training_program', 'identification', ['agenda', 'tasks', 'venue', 'attendees']],
+        'gala' => ['Gala / Dinner', 'gala_dinner', 'star', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors']],
+        'corporate' => ['Corporate', 'product_launch', 'folder', ['agenda', 'tasks', 'budget', 'suppliers', 'venue']],
+        'awards' => ['Awards', 'awards_ceremony', 'star', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors']],
+        'hybrid' => ['Hybrid', 'hybrid_event', 'globe', ['agenda', 'tasks', 'budget', 'venue', 'attendees', 'reports']],
+        'outdoor' => ['Outdoor', 'outdoor_event', 'sparkles', ['tasks', 'budget', 'suppliers', 'venue']],
+        'other' => ['Other', 'public_event', 'dots', ['tasks', 'budget', 'venue']],
     ];
+
+    /** Status pills → lifecycle stage. */
+    public const STATUS_PILLS = ['lead' => 'draft', 'proposal' => 'proposal', 'confirmed' => 'confirmed'];
 
     public int $step = 1;
 
     // Step 1 — basics
-    public string $name = '';
-    public string $type = 'conference';
-    public string $description = '';
     public ?int $client_id = null;
     public string $new_client = '';
-    public string $expected_participants = '';
-    public string $city = '';
-    public string $country = 'Jordan';
-    public ?int $venue_id = null;
-    public ?int $project_id = null;
-    public ?int $project_manager_id = null;
+    public bool $newClientMode = false;
+    public string $name = '';
     public string $starts_at = '';
     public string $ends_at = '';
-    public string $budget = '';
+    public string $timezone = 'UTC';
+    public string $statusPill = 'lead';
 
-    // Step 2 — avatar
-    public ?int $avatar_id = null;
-    public bool $avatarChosenManually = false;
+    // Step 2 — type template
+    public ?string $template = null;
 
-    // Step 3 — color theme
-    public string $palette = 'navy-gold';
-    public string $primary_color = '#0B1F3A';
-    public string $secondary_color = '#F8FAFC';
-    public string $accent_color = '#D4AF37';
-    public string $text_color = '#0F172A';
+    // Step 3 — modules (enabled keys)
+    public array $modules = [];
 
     public function mount(): void
     {
-        if (request()->filled('avatar')) {
-            $this->avatar_id = EventAvatar::active()->whereKey(request()->integer('avatar'))->value('id');
-            $this->avatarChosenManually = $this->avatar_id !== null;
-        }
-
-        if (! $this->avatar_id) {
-            $this->recommendAvatar();
-        }
+        // Sensible default module set until a template is chosen.
+        $this->modules = self::TEMPLATES['conference'][3];
     }
 
-    public function updatedType(): void
+    public function toggleNewClient(): void
     {
-        if (! $this->avatarChosenManually) {
-            $this->recommendAvatar();
-        }
+        $this->newClientMode = ! $this->newClientMode;
+        $this->newClientMode ? $this->client_id = null : $this->new_client = '';
     }
 
-    public function updatedPalette(string $key): void
+    public function chooseTemplate(string $key): void
     {
-        if (isset(self::PALETTES[$key])) {
-            [, $this->primary_color, $this->secondary_color, $this->accent_color, $this->text_color] = self::PALETTES[$key];
+        if (! isset(self::TEMPLATES[$key])) {
+            return;
         }
+        $this->template = $key;
+        $this->modules = self::TEMPLATES[$key][3]; // pre-enable the modules this type usually needs
     }
 
-    public function chooseAvatar(int $avatarId): void
+    public function toggleModule(string $key): void
     {
-        $this->avatar_id = $avatarId;
-        $this->avatarChosenManually = true;
+        if (! array_key_exists($key, Event::HUB_MODULES)) {
+            return;
+        }
+        $this->modules = in_array($key, $this->modules, true)
+            ? array_values(array_diff($this->modules, [$key]))
+            : [...$this->modules, $key];
     }
 
     public function next(): void
     {
         if ($this->step === 1) {
-            $this->validate([
-                'name' => ['required', 'string', 'max:120'],
-                'type' => ['required', 'in:'.implode(',', Event::TYPES)],
-                'city' => ['required', 'string', 'max:80'],
-                'country' => ['required', 'string', 'max:80'],
-                'starts_at' => ['required', 'date'],
-                'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-                'budget' => ['nullable', 'numeric', 'min:0'],
-                'expected_participants' => ['nullable', 'integer', 'min:1'],
-            ]);
+            $this->validateBasics();
         }
-
-        if ($this->step === 2) {
-            $this->validate(['avatar_id' => ['required', 'exists:event_avatars,id']]);
-        }
-
-        $this->step = min(4, $this->step + 1);
+        $this->step = min(3, $this->step + 1);
     }
 
     public function back(): void
@@ -113,81 +91,72 @@ class EventCreate extends Component
         $this->step = max(1, $this->step - 1);
     }
 
+    /** "Create & open" (any step) and "Create event" (final) both land here. */
     public function save()
     {
-        $this->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'type' => ['required', 'in:'.implode(',', Event::TYPES)],
-            'city' => ['required', 'string', 'max:80'],
-            'country' => ['required', 'string', 'max:80'],
-            'venue_id' => ['nullable', 'exists:venues,id'],
-            'project_id' => ['nullable', 'exists:projects,id'],
-            'client_id' => ['nullable', 'exists:clients,id'],
-            'project_manager_id' => ['nullable', 'exists:users,id'],
-            'avatar_id' => ['nullable', 'exists:event_avatars,id'],
-            'starts_at' => ['required', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'budget' => ['nullable', 'numeric', 'min:0'],
-            'expected_participants' => ['nullable', 'integer', 'min:1'],
-            'primary_color' => ['required', 'string', 'max:9'],
-            'secondary_color' => ['required', 'string', 'max:9'],
-            'accent_color' => ['required', 'string', 'max:9'],
-            'text_color' => ['required', 'string', 'max:9'],
-        ]);
+        $this->validateBasics();
 
         if ($this->new_client !== '' && ! $this->client_id) {
             $this->client_id = Client::firstOrCreate(['name' => trim($this->new_client)])->id;
         }
 
+        [, $type] = $this->template ? self::TEMPLATES[$this->template] : self::TEMPLATES['conference'];
+
         $event = Event::create([
             'name' => $this->name,
-            'description' => $this->description ?: null,
-            'type' => $this->type,
+            'type' => $type,
             'status' => 'planning',
-            'stage' => 'draft',
-            'city' => $this->city,
-            'country' => $this->country,
-            'venue_id' => $this->venue_id,
-            'project_id' => $this->project_id,
+            'stage' => self::STATUS_PILLS[$this->statusPill] ?? 'draft',
+            'city' => 'TBD',
+            'country' => 'Jordan',
+            'timezone' => $this->timezone,
             'client_id' => $this->client_id,
-            'project_manager_id' => $this->project_manager_id,
-            'avatar_id' => $this->avatar_id,
+            // Avatar auto-assigned from the type; theme defaults to the platform brand.
+            'avatar_id' => EventAvatar::recommendedFor($type)->value('id'),
+            'primary_color' => '#0B1F3A',
+            'secondary_color' => '#F8FAFC',
+            'accent_color' => '#D4AF37',
+            'text_color' => '#0F172A',
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at ?: null,
-            'budget_cents' => (int) round((float) ($this->budget ?: 0) * 100),
             'progress' => 0,
-            'expected_participants' => $this->expected_participants ?: null,
-            'primary_color' => $this->primary_color,
-            'secondary_color' => $this->secondary_color,
-            'accent_color' => $this->accent_color,
-            'text_color' => $this->text_color,
+            'enabled_modules' => array_values(array_intersect(array_keys(Event::HUB_MODULES), $this->modules)),
         ]);
 
-        if ($this->project_manager_id) {
-            $event->teamMembers()->syncWithoutDetaching([$this->project_manager_id => ['role' => 'project_manager']]);
-        }
-
-        session()->flash('status', "Event Hub for “{$event->name}” is live — set up the agenda, budget and suppliers from the tabs.");
+        session()->flash('status', "Event “{$event->name}” created — its enabled modules are in the Event Hub.");
 
         return $this->redirectRoute('events.hub', $event);
     }
 
-    private function recommendAvatar(): void
+    private function validateBasics(): void
     {
-        $this->avatar_id = EventAvatar::recommendedFor($this->type)->value('id');
+        $this->validate([
+            'client_id' => ['nullable', 'exists:clients,id'],
+            'new_client' => ['nullable', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120'],
+            'starts_at' => ['required', 'date'],
+            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'timezone' => ['required', 'string', 'max:60'],
+            'statusPill' => ['required', 'in:'.implode(',', array_keys(self::STATUS_PILLS))],
+        ], [
+            'client_id.required' => 'Choose a client or add a new one.',
+            'name.required' => 'Give the event a title.',
+            'starts_at.required' => 'Pick a start date.',
+        ]);
+
+        if (! $this->client_id && $this->new_client === '') {
+            $this->addError('client_id', 'Choose a client or add a new one.');
+            $this->validate(['client_id' => ['required']]); // halt
+        }
     }
 
     public function render()
     {
         return view('livewire.event-create', [
-            'avatars' => EventAvatar::active()->orderBy('sort_order')->get(),
-            'recommendedId' => EventAvatar::recommendedFor($this->type)->value('id'),
-            'venues' => Venue::orderBy('name')->get(),
-            'projects' => Project::orderBy('name')->get(),
             'clients' => Client::orderBy('name')->get(),
-            'managers' => User::orderBy('name')->get(),
-            'types' => Event::TYPES,
-            'palettes' => self::PALETTES,
+            'templates' => self::TEMPLATES,
+            'hubModules' => Event::HUB_MODULES,
+            'timezones' => ['UTC', 'Asia/Amman', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Bahrain', 'Europe/London', 'America/New_York'],
         ]);
     }
 }

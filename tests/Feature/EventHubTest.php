@@ -124,28 +124,43 @@ class EventHubTest extends TestCase
             ->assertSee('Tech Expo 2026')->assertSee('Showing 1 to 1 of 1 events');
     }
 
-    public function test_wizard_saves_theme_and_redirects_to_hub(): void
+    public function test_wizard_walks_three_steps_and_creates_event(): void
     {
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventCreate::class)
+            ->set('new_client', 'Royal Office')
             ->set('name', 'Royal Gala 2027')
-            ->set('type', 'gala_dinner')
-            ->set('city', 'Manama')
-            ->set('country', 'Bahrain')
             ->set('starts_at', '2027-05-20')
             ->call('next')->assertSet('step', 2)
+            ->call('chooseTemplate', 'gala')
             ->call('next')->assertSet('step', 3)
-            ->set('palette', 'black-gold')
-            ->call('next')->assertSet('step', 4)
+            ->call('toggleModule', 'agenda') // turn agenda on
             ->call('save')
             ->assertHasNoErrors();
 
         $event = Event::where('name', 'Royal Gala 2027')->firstOrFail();
 
-        $this->assertSame('#10141A', $event->primary_color); // Black + Gold preset
-        $this->assertSame('#D4AF37', $event->accent_color);
-        $this->assertSame('gala-dinner', $event->avatar->slug); // auto-recommended
+        $this->assertSame('gala_dinner', $event->type);
+        $this->assertSame('gala-dinner', $event->avatar->slug);
+        $this->assertContains('agenda', $event->enabled_modules);
+    }
+
+    public function test_disabled_module_tab_falls_back_to_overview(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        // Enable only budget; agenda is now off.
+        $event->update(['enabled_modules' => ['budget']]);
+
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
+            ->assertOk()->assertSee('Budget');
+
+        // Requesting a disabled tab silently shows Overview (no agenda tab link).
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'agenda']))
+            ->assertOk()->assertSee('Event Overview');
     }
 }
