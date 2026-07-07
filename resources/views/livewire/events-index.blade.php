@@ -210,10 +210,10 @@
 
     {{-- ══════════ Grid / List + preview ══════════ --}}
     @else
-        <div class="flex flex-col gap-5 2xl:flex-row">
-            <div class="min-w-0 2xl:w-[1048px] 2xl:shrink-0">
+        <div class="flex flex-col gap-5 xl:flex-row">
+            <div class="min-w-0 flex-1">
                 @if ($view === 'grid')
-                    <div class="grid justify-start gap-4 [grid-template-columns:repeat(auto-fill,250px)]">
+                    <div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]">
                         @forelse ($events as $event)
                             <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
                                           :selected="$selected && $selected->id === $event->id"
@@ -285,9 +285,9 @@
             </div>
 
             {{-- Preview panel --}}
-            <div class="min-w-0 flex-1">
+            <div class="min-w-0 xl:w-[400px] xl:shrink-0 2xl:w-[440px]">
                 @if ($selected)
-                    <div wire:key="preview-{{ $selected->id }}" class="2xl:sticky 2xl:top-6">
+                    <div wire:key="preview-{{ $selected->id }}" class="xl:sticky xl:top-6">
                         <x-event-preview :event="$selected" :health="$selectedHealth" :ai="$ai" />
                     </div>
                 @endif
