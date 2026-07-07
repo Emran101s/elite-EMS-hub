@@ -15,6 +15,7 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p class="text-xs text-muted">Drag the ⠿ handle to reorder sessions or move them between days.</p>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('events.run-of-show', $event) }}" class="flex h-9 items-center rounded-xl border border-line bg-white px-3.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⧗ Run of Show</a>
             <button type="button" wire:click="$toggle('showImport')" class="h-9 rounded-xl border border-line bg-white px-3.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⇪ Import CSV</button>
             <a href="{{ route('events.agenda.pdf', $event) }}" class="flex h-9 items-center rounded-xl border border-line bg-white px-3.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⇩ Export PDF</a>
             <button type="button" wire:click="addDay" class="h-9 rounded-xl border border-line bg-white px-3.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">＋ Add Day</button>

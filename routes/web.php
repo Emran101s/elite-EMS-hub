@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/agenda.pdf', \App\Http\Controllers\AgendaPdfController::class)
         ->whereNumber('event')->name('events.agenda.pdf');
 
+    Route::get('/events/{event}/run-of-show', \App\Http\Controllers\RunOfShowController::class)
+        ->whereNumber('event')->name('events.run-of-show');
+
     Route::get('/events/{event}', [\App\Http\Controllers\EventHubController::class, 'show'])
         ->whereNumber('event')->name('events.hub');
 
