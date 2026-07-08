@@ -78,7 +78,11 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        @php $placed = collect($room->layout ?? [])->sum(fn ($el) => (int) ($el['seats'] ?? 0)); @endphp
                         <span class="text-xs font-semibold text-navy-900">{{ $room->capacity ? number_format($room->capacity).' pax' : '—' }}</span>
+                        <a href="{{ route('events.room-layout', [$event, $room]) }}" class="flex items-center gap-1 rounded-lg border border-line bg-white px-2 py-0.5 text-[0.6rem] font-bold text-navy-700 transition hover:border-gold-300" title="Seating layout builder">
+                            ⊞ Layout @if ($placed) <span class="text-gold-600">· {{ $placed }}</span> @endif
+                        </a>
                         <span class="flex gap-1 opacity-0 transition group-hover:opacity-100">
                             <button type="button" wire:click="editRoom({{ $room->id }})" class="rounded-lg bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
                             <button type="button" wire:click="deleteRoom({{ $room->id }})" wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less." class="rounded-lg bg-risk/10 px-1.5 py-0.5 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>

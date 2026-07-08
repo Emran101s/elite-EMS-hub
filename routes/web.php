@@ -28,6 +28,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/run-of-show', \App\Http\Controllers\RunOfShowController::class)
         ->whereNumber('event')->name('events.run-of-show');
 
+    Route::get('/events/{event}/rooms/{room}/layout', \App\Livewire\RoomLayoutBuilder::class)
+        ->whereNumber('event')->whereNumber('room')->name('events.room-layout');
+
+    Route::get('/events/{event}/rooms/{room}/layout.pdf', \App\Http\Controllers\RoomLayoutPdfController::class)
+        ->whereNumber('event')->whereNumber('room')->name('events.room-layout.pdf');
+
     Route::get('/events/{event}', [\App\Http\Controllers\EventHubController::class, 'show'])
         ->whereNumber('event')->name('events.hub');
 
