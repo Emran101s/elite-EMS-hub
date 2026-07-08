@@ -98,15 +98,12 @@ class AgendaConflictTest extends TestCase
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Hub\AgendaTab::class, ['event' => $gala])
             ->call('newSession', $day->id)
-            ->assertSet('addingRoom', true) // no rooms → jumps straight to add-room
             ->set('title', 'Welcome Reception')
-            ->set('newRoomName', 'Grand Ballroom')
-            ->set('newRoomType', 'main_hall')
+            ->set('newRoomName', 'Grand Ballroom') // "…or type a room" — created on save
             ->call('saveSession')
             ->assertHasNoErrors();
 
         $room = $gala->rooms()->where('name', 'Grand Ballroom')->firstOrFail();
-        $this->assertSame('main_hall', $room->type);
         $this->assertSame($room->id, $gala->agendaSessions()->where('title', 'Welcome Reception')->value('room_id'));
     }
 

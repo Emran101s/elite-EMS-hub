@@ -3,10 +3,10 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
-use App\Models\EventAgendaDay;
 use App\Models\EventAgendaSession;
+use App\Models\EventRoom;
+use App\Models\User;
 use Illuminate\Support\Carbon;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -14,39 +14,36 @@ class AgendaTab extends Component
 {
     use WithFileUploads;
 
+    /** Session type → [legend label, hex]. */
+    public const PALETTE = [
+        'opening' => ['Opening', '#0B1F3A'], 'keynote' => ['Keynote', '#8B5CF6'],
+        'panel' => ['Session', '#3B82F6'], 'workshop' => ['Workshop', '#22C55E'],
+        'break' => ['Break', '#94A3B8'], 'lunch' => ['Meal', '#D4AF37'],
+        'networking' => ['Session', '#3B82F6'], 'exhibition' => ['Session', '#3B82F6'],
+        'gala_dinner' => ['Meal', '#D4AF37'], 'closing' => ['Closing', '#0B1F3A'],
+    ];
+
     public Event $event;
 
-    public bool $showForm = false;
+    public ?int $selectedDayId = null;
 
+    // Modal
+    public bool $showForm = false;
     public ?int $editingId = null;
 
     // Session form
     public ?int $agenda_day_id = null;
     public ?int $room_id = null;
-
-    // Inline "add a room" from the session form
-    public bool $addingRoom = false;
     public string $newRoomName = '';
-    public string $newRoomType = 'breakout';
-
-    #[Validate('required|string|max:160')]
     public string $title = '';
-
-    #[Validate('required')]
-    public string $type = 'keynote';
-
-    #[Validate('required')]
-    public string $status = 'draft';
-
-    #[Validate('required')]
+    public string $type = 'panel';
+    public string $format = 'in_person';
+    public string $capacity = '';
     public string $starts_at = '09:00';
-
-    #[Validate('required')]
     public string $ends_at = '10:00';
-
     public string $speaker = '';
-    public string $moderator = '';
-    public string $track = '';
+    public string $speakerPick = '';
+    public string $description = '';
 
     // Import
     public bool $showImport = false;
@@ -54,21 +51,36 @@ class AgendaTab extends Component
 
     public function mount(): void
     {
-        $this->showForm = request('action') === 'add';
-        $this->agenda_day_id = $this->event->agendaDays()->value('id');
+        $this->selectedDayId = $this->event->agendaDays()->orderBy('sort')->value('id');
+        if (request('action') === 'add') {
+            $this->newSession($this->selectedDayId);
+        }
     }
+
+    public function selectDay(int $dayId): void
+    {
+        $this->selectedDayId = $dayId;
+    }
+
+    public function updatedSpeakerPick(string $value): void
+    {
+        if ($value !== '') {
+            $this->speaker = $value;
+        }
+    }
+
+    /* ── Days ── */
 
     public function addDay()
     {
         $last = $this->event->agendaDays()->orderByDesc('sort')->first();
-        $nextDate = $last?->date ? $last->date->copy()->addDay() : ($this->event->starts_at ?? now());
         $count = $this->event->agendaDays()->count();
-
-        $this->event->agendaDays()->create([
-            'date' => $nextDate,
+        $day = $this->event->agendaDays()->create([
+            'date' => $last?->date ? $last->date->copy()->addDay() : ($this->event->starts_at ?? now()),
             'label' => 'Day '.($count + 1),
             'sort' => ($last?->sort ?? 0) + 1,
         ]);
+        $this->selectedDayId = $day->id;
 
         return $this->redirectTab();
     }
@@ -76,29 +88,17 @@ class AgendaTab extends Component
     public function duplicateDay(int $dayId)
     {
         $day = $this->event->agendaDays()->with('sessions')->findOrFail($dayId);
-
         $copy = $this->event->agendaDays()->create([
             'date' => $day->date?->copy()->addDay() ?? now(),
             'label' => $day->label.' (Copy)',
             'sort' => $this->event->agendaDays()->max('sort') + 1,
         ]);
-
-        foreach ($day->sessions as $session) {
-            $copy->sessions()->create([
-                'event_id' => $this->event->id,
-                'room_id' => $session->room_id,
-                'title' => $session->title,
-                'type' => $session->type,
-                'status' => 'draft',
-                'starts_at' => $session->starts_at,
-                'ends_at' => $session->ends_at,
-                'speaker' => $session->speaker,
-                'moderator' => $session->moderator,
-                'track' => $session->track,
-                'sort' => $session->sort,
-            ]);
+        foreach ($day->sessions as $s) {
+            $copy->sessions()->create($s->only([
+                'event_id', 'room_id', 'title', 'type', 'format', 'capacity',
+                'starts_at', 'ends_at', 'speaker', 'moderator', 'track', 'description', 'sort',
+            ]) + ['event_id' => $this->event->id, 'status' => 'draft']);
         }
-
         session()->flash('status', "Duplicated “{$day->label}”.");
 
         return $this->redirectTab();
@@ -111,62 +111,59 @@ class AgendaTab extends Component
         return $this->redirectTab();
     }
 
-    public function newSession(int $dayId): void
+    /* ── Sessions ── */
+
+    public function newSession(?int $dayId = null): void
     {
-        $this->reset(['editingId', 'title', 'speaker', 'moderator', 'track']);
-        $this->type = 'keynote';
-        $this->status = 'draft';
+        $this->reset(['editingId', 'title', 'speaker', 'speakerPick', 'description', 'capacity', 'newRoomName']);
+        $this->type = 'panel';
+        $this->format = 'in_person';
         $this->starts_at = '09:00';
         $this->ends_at = '10:00';
-        $this->agenda_day_id = $dayId;
-        $this->room_id = $this->event->rooms()->value('id');
-        // No rooms yet? Drop straight into "add a room" so the picker isn't empty.
-        $this->addingRoom = $this->event->rooms()->doesntExist();
-        $this->newRoomName = '';
+        $this->agenda_day_id = $dayId ?? $this->selectedDayId ?? $this->event->agendaDays()->value('id');
+        $this->room_id = null;
         $this->showForm = true;
-    }
-
-    public function toggleAddRoom(): void
-    {
-        $this->addingRoom = ! $this->addingRoom;
-        $this->addingRoom ? $this->room_id = null : $this->newRoomName = '';
     }
 
     public function editSession(int $sessionId): void
     {
-        $this->reset(['addingRoom', 'newRoomName']);
+        $this->reset(['newRoomName', 'speakerPick']);
         $s = $this->event->agendaSessions()->findOrFail($sessionId);
         $this->editingId = $s->id;
         $this->agenda_day_id = $s->agenda_day_id;
         $this->room_id = $s->room_id;
         $this->title = $s->title;
         $this->type = $s->type;
-        $this->status = $s->status;
+        $this->format = $s->format ?? 'in_person';
+        $this->capacity = (string) ($s->capacity ?? '');
         $this->starts_at = substr((string) $s->starts_at, 0, 5);
         $this->ends_at = substr((string) $s->ends_at, 0, 5);
         $this->speaker = (string) $s->speaker;
-        $this->moderator = (string) $s->moderator;
-        $this->track = (string) $s->track;
+        $this->description = (string) $s->description;
         $this->showForm = true;
+    }
+
+    public function closeForm(): void
+    {
+        $this->showForm = false;
     }
 
     public function saveSession()
     {
         $this->validate([
+            'title' => ['required', 'string', 'max:160'],
             'agenda_day_id' => ['required', 'exists:event_agenda_days,id'],
             'room_id' => ['nullable', 'exists:event_rooms,id'],
             'type' => ['required', 'in:'.implode(',', EventAgendaSession::TYPES)],
-            'status' => ['required', 'in:'.implode(',', EventAgendaSession::STATUSES)],
-            'newRoomName' => ['nullable', 'string', 'max:120'],
-            'newRoomType' => ['required', 'in:'.implode(',', \App\Models\EventRoom::TYPES)],
+            'format' => ['required', 'in:'.implode(',', array_keys(EventAgendaSession::FORMATS))],
+            'capacity' => ['nullable', 'integer', 'min:0'],
+            'starts_at' => ['required'],
+            'ends_at' => ['required'],
         ]);
 
-        // Create a room on the fly if one was typed in.
-        if ($this->addingRoom && trim($this->newRoomName) !== '') {
-            $this->room_id = $this->event->rooms()->create([
-                'name' => trim($this->newRoomName),
-                'type' => $this->newRoomType,
-            ])->id;
+        // Type a room → create it on the fly.
+        if (trim($this->newRoomName) !== '') {
+            $this->room_id = $this->event->rooms()->create(['name' => trim($this->newRoomName), 'type' => 'breakout'])->id;
         }
 
         $data = [
@@ -174,22 +171,24 @@ class AgendaTab extends Component
             'room_id' => $this->room_id,
             'title' => $this->title,
             'type' => $this->type,
-            'status' => $this->status,
+            'format' => $this->format,
+            'capacity' => $this->capacity !== '' ? (int) $this->capacity : null,
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at,
             'speaker' => $this->speaker ?: null,
-            'moderator' => $this->moderator ?: null,
-            'track' => $this->track ?: null,
+            'description' => $this->description ?: null,
         ];
 
         if ($this->editingId) {
             $this->event->agendaSessions()->whereKey($this->editingId)->firstOrFail()->update($data);
         } else {
             $this->event->agendaSessions()->create($data + [
+                'status' => 'confirmed',
                 'sort' => ($this->event->agendaSessions()->where('agenda_day_id', $this->agenda_day_id)->max('sort') ?? 0) + 1,
             ]);
         }
 
+        $this->selectedDayId = $this->agenda_day_id;
         session()->flash('status', $this->editingId ? 'Session updated.' : 'Session added.');
 
         return $this->redirectTab();
@@ -202,15 +201,8 @@ class AgendaTab extends Component
         return $this->redirectTab();
     }
 
-    public function setStatus(int $sessionId, string $status)
-    {
-        abort_unless(in_array($status, EventAgendaSession::STATUSES, true), 422);
-        $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail()->update(['status' => $status]);
-    }
-
     /**
-     * Persist a drag-and-drop reorder. $groups = [['dayId'=>x, 'ids'=>[...]], ...]
-     * (the source and target lists). Sets agenda_day_id + sequential sort.
+     * Kept for drag reorder support (persists day + sort).
      */
     public function reorder(array $groups): void
     {
@@ -232,7 +224,6 @@ class AgendaTab extends Component
 
         $day = $this->event->agendaDays()->orderBy('sort')->first()
             ?? $this->event->agendaDays()->create(['date' => $this->event->starts_at ?? now(), 'label' => 'Day 1', 'sort' => 0]);
-
         $rooms = $this->event->rooms()->get()->keyBy(fn ($r) => strtolower($r->name));
         $handle = fopen($this->importFile->getRealPath(), 'r');
         $header = null;
@@ -245,28 +236,25 @@ class AgendaTab extends Component
 
                 continue;
             }
-            $data = array_combine($header, array_pad($row, count($header), ''));
-            if (blank($data['title'] ?? '')) {
+            $d = array_combine($header, array_pad($row, count($header), ''));
+            if (blank($d['title'] ?? '')) {
                 continue;
             }
-
             $this->event->agendaSessions()->create([
                 'agenda_day_id' => $day->id,
-                'room_id' => $rooms[strtolower(trim($data['room'] ?? ''))]?->id ?? null,
-                'title' => trim($data['title']),
-                'type' => in_array($data['type'] ?? '', EventAgendaSession::TYPES, true) ? $data['type'] : 'keynote',
-                'status' => 'draft',
-                'starts_at' => $this->parseTime($data['start'] ?? $data['starts_at'] ?? '09:00'),
-                'ends_at' => $this->parseTime($data['end'] ?? $data['ends_at'] ?? '10:00'),
-                'speaker' => trim($data['speaker'] ?? '') ?: null,
-                'moderator' => trim($data['moderator'] ?? '') ?: null,
-                'track' => trim($data['track'] ?? '') ?: null,
+                'room_id' => $rooms[strtolower(trim($d['room'] ?? ''))]?->id ?? null,
+                'title' => trim($d['title']),
+                'type' => in_array($d['type'] ?? '', EventAgendaSession::TYPES, true) ? $d['type'] : 'panel',
+                'format' => 'in_person',
+                'status' => 'confirmed',
+                'starts_at' => $this->parseTime($d['start'] ?? $d['starts_at'] ?? '09:00'),
+                'ends_at' => $this->parseTime($d['end'] ?? $d['ends_at'] ?? '10:00'),
+                'speaker' => trim($d['speaker'] ?? '') ?: null,
                 'sort' => $sort++,
             ]);
             $imported++;
         }
         fclose($handle);
-
         session()->flash('status', "Imported {$imported} ".str('session')->plural($imported).'.');
 
         return $this->redirectTab();
@@ -287,34 +275,25 @@ class AgendaTab extends Component
     }
 
     /**
-     * Scheduling conflicts within each day: two sessions clash when their
-     * time ranges overlap AND they share the same room or the same speaker.
-     * Returns [session_id => ['Room double-booked with “…”', …]].
+     * Scheduling conflicts on a day: overlapping sessions sharing a room or speaker.
+     * Returns [session_id => [reason, …]].
      */
-    private function detectConflicts($days): array
+    private function detectConflicts($sessions): array
     {
         $conflicts = [];
-
-        foreach ($days as $day) {
-            $sessions = $day->sessions->all();
-
-            foreach ($sessions as $a) {
-                foreach ($sessions as $b) {
-                    if ($a->id === $b->id) {
-                        continue;
-                    }
-                    // overlap: a.start < b.end && a.end > b.start
-                    $overlap = $a->starts_at < $b->ends_at && $a->ends_at > $b->starts_at;
-                    if (! $overlap) {
-                        continue;
-                    }
-
-                    if ($a->room_id && $a->room_id === $b->room_id) {
-                        $conflicts[$a->id][] = ['type' => 'room', 'text' => 'Room "'.$a->room?->name.'" double-booked with "'.$b->title.'"'];
-                    }
-                    if ($a->speaker && $a->speaker === $b->speaker) {
-                        $conflicts[$a->id][] = ['type' => 'speaker', 'text' => $a->speaker.' also speaks at "'.$b->title.'"'];
-                    }
+        foreach ($sessions as $a) {
+            foreach ($sessions as $b) {
+                if ($a->id === $b->id) {
+                    continue;
+                }
+                if (! ($a->starts_at < $b->ends_at && $a->ends_at > $b->starts_at)) {
+                    continue;
+                }
+                if ($a->room_id && $a->room_id === $b->room_id) {
+                    $conflicts[$a->id][] = 'Room "'.$a->room?->name.'" double-booked with "'.$b->title.'"';
+                }
+                if ($a->speaker && $a->speaker === $b->speaker) {
+                    $conflicts[$a->id][] = $a->speaker.' also speaks at "'.$b->title.'"';
                 }
             }
         }
@@ -322,16 +301,71 @@ class AgendaTab extends Component
         return $conflicts;
     }
 
+    /**
+     * Timeline geometry for the selected day: room lanes with time-positioned blocks.
+     */
+    private function buildTimeline($sessions): ?array
+    {
+        if ($sessions->isEmpty()) {
+            return null;
+        }
+        $toMin = fn (string $t) => (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2);
+        $startMin = (int) (floor($sessions->min(fn ($s) => $toMin($s->starts_at)) / 60) * 60);
+        $endMin = (int) (ceil($sessions->max(fn ($s) => $toMin($s->ends_at)) / 60) * 60);
+        $startMin = min($startMin, $endMin - 60);
+        $span = max($endMin - $startMin, 60);
+
+        $hours = [];
+        for ($m = $startMin; $m <= $endMin; $m += 60) {
+            $hours[] = ['label' => sprintf('%02d:00', intdiv($m, 60)), 'left' => round(($m - $startMin) / $span * 100, 3)];
+        }
+
+        $lanes = $sessions->groupBy(fn ($s) => $s->room?->name ?? 'Unassigned')->map(fn ($group, $room) => [
+            'room' => $room,
+            'blocks' => $group->map(function ($s) use ($toMin, $startMin, $span) {
+                [$legend, $hex] = self::PALETTE[$s->type] ?? ['Session', '#3B82F6'];
+
+                return [
+                    'session' => $s,
+                    'left' => round(($toMin($s->starts_at) - $startMin) / $span * 100, 3),
+                    'width' => round(max($toMin($s->ends_at) - $toMin($s->starts_at), 15) / $span * 100, 3),
+                    'hex' => $hex, 'legend' => $legend,
+                ];
+            })->values(),
+        ])->values();
+
+        return ['hours' => $hours, 'lanes' => $lanes];
+    }
+
     public function render()
     {
         $days = $this->event->agendaDays()
-            ->with(['sessions' => fn ($q) => $q->orderBy('sort')->orderBy('starts_at'), 'sessions.room'])
+            ->with(['sessions' => fn ($q) => $q->orderBy('starts_at'), 'sessions.room'])
             ->orderBy('sort')->get();
+
+        $day = $days->firstWhere('id', $this->selectedDayId) ?? $days->first();
+        $sessions = $day?->sessions ?? collect();
+
+        // Day stats
+        $toMin = fn (string $t) => (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2);
+        $totalMin = $sessions->sum(fn ($s) => max($toMin($s->ends_at) - $toMin($s->starts_at), 0));
 
         return view('livewire.hub.agenda-tab', [
             'days' => $days,
+            'day' => $day,
+            'timeline' => $day ? $this->buildTimeline($sessions) : null,
+            'conflicts' => $this->detectConflicts($sessions),
+            'legend' => collect(self::PALETTE)->only($sessions->pluck('type')->unique()->all())->values()->unique(0)->values(),
             'rooms' => $this->event->rooms()->orderBy('name')->get(),
-            'conflicts' => $this->detectConflicts($days),
+            'speakerOptions' => User::orderBy('name')->pluck('name')
+                ->merge($this->event->agendaSessions()->whereNotNull('speaker')->pluck('speaker'))
+                ->unique()->filter()->values(),
+            'stats' => [
+                'sessions' => $sessions->count(),
+                'hours' => round($totalMin / 60, 1),
+                'speakers' => $sessions->pluck('speaker')->filter()->unique()->count(),
+                'rooms' => $sessions->pluck('room.name')->filter()->unique()->count(),
+            ],
         ]);
     }
 }
