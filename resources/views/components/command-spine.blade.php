@@ -1,35 +1,33 @@
 @php
     // Command Spine items — label, route, active matcher.
     $spine = [
+        // "Operations Hub" lived here too, but it only jumped to a section of the Command
+        // Center page — two spine entries for one destination. Dropped; the Command Center
+        // page still anchors it, and the event header links straight to it.
         ['label' => 'Command Center', 'route' => 'home', 'active' => request()->routeIs('home')],
-        ['label' => 'Operations Hub', 'href' => route('home').'#operations-hub', 'active' => false, 'jump' => true],
         ['label' => 'Events', 'route' => 'events.index', 'active' => request()->routeIs('events.*')],
         ['label' => 'Projects', 'route' => 'projects.index', 'active' => request()->routeIs('projects.*')],
         ['label' => 'Tasks', 'route' => 'tasks.index', 'active' => request()->routeIs('tasks.*')],
-        ['label' => 'CRM', 'route' => 'crm.index', 'active' => request()->routeIs('crm.*')],
         ['label' => 'Finance', 'route' => 'finance.index', 'active' => request()->routeIs('finance.*')],
-        ['label' => 'Suppliers', 'route' => 'suppliers.index', 'active' => request()->routeIs('suppliers.*')],
-        ['label' => 'Venues', 'route' => 'venues.index', 'active' => request()->routeIs('venues.*')],
         ['label' => 'Sponsors', 'route' => 'sponsors.index', 'active' => request()->routeIs('sponsors.*')],
-        ['label' => 'Team', 'route' => 'team.index', 'active' => request()->routeIs('team.*')],
         ['label' => 'Reports', 'route' => 'reports.index', 'active' => request()->routeIs('reports.*')],
         ['label' => 'Settings', 'route' => 'settings.index', 'active' => request()->routeIs('settings.*')],
     ];
 @endphp
 
-<div class="flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-line bg-white shadow-[0_20px_50px_rgba(11,31,58,0.10)]">
+<div class="flex h-full w-full flex-col overflow-hidden rounded-[28px] bg-navy-950 ring-1 ring-white/10 shadow-[0_24px_60px_-18px_rgba(11,31,58,0.6)]">
 
     {{-- ══ 1. Logo Area ══ --}}
-    <div class="flex h-[88px] shrink-0 items-center border-b border-line px-5">
-        <a href="{{ route('home') }}"><x-brand /></a>
+    <div class="flex h-[88px] shrink-0 items-center border-b border-white/10 px-5">
+        <a href="{{ route('home') }}"><x-brand dark /></a>
     </div>
 
     {{-- ══ 2. Command Spine Navigation (scrolls if the screen is short) ══ --}}
     <div class="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <p class="mb-2 pl-1.5 text-[0.6rem] font-bold uppercase tracking-[0.18em] text-muted">Command Spine</p>
+        <p class="mb-2 pl-1.5 text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/35">Command Spine</p>
         <nav class="relative" aria-label="Primary">
             {{-- the spine line --}}
-            <span class="pointer-events-none absolute bottom-4 left-[11px] top-4 w-0.5 bg-gradient-to-b from-gold-300/50 via-line to-line"></span>
+            <span class="pointer-events-none absolute bottom-4 left-[11px] top-4 w-0.5 bg-gradient-to-b from-gold-400/70 via-white/15 to-white/5"></span>
 
             @foreach ($spine as $item)
                 <a href="{{ $item['href'] ?? route($item['route']) }}"
@@ -40,17 +38,17 @@
                         @if ($item['active'])
                             <span class="h-[18px] w-[18px] rotate-45 rounded-[4px] bg-gold-500 shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_0_14px_rgba(212,175,55,0.65)]"></span>
                         @else
-                            <span class="h-3 w-3 rotate-45 rounded-[3px] bg-navy-200 transition duration-200 group-hover:scale-125 group-hover:bg-gold-400"></span>
+                            <span class="h-3 w-3 rotate-45 rounded-[3px] bg-white/25 transition duration-200 group-hover:scale-125 group-hover:bg-gold-400"></span>
                         @endif
                     </span>
                     {{-- label --}}
                     <span @class([
                         'truncate transition',
-                        'text-[15px] font-bold text-navy-900' => $item['active'],
-                        'text-sm font-medium text-navy-600 group-hover:text-navy-900' => ! $item['active'],
+                        'text-[15px] font-bold text-white' => $item['active'],
+                        'text-sm font-medium text-white/55 group-hover:text-white' => ! $item['active'],
                     ])>{{ $item['label'] }}</span>
                     @if ($item['jump'] ?? false)
-                        <span class="ml-auto text-[0.6rem] text-navy-300 transition group-hover:text-gold-500">↧</span>
+                        <span class="ml-auto text-[0.6rem] text-white/30 transition group-hover:text-gold-400">↧</span>
                     @endif
                 </a>
             @endforeach
@@ -58,13 +56,13 @@
     </div>
 
     {{-- ══ 3. Event Radar (pinned — always visible) ══ --}}
-    <div class="shrink-0 border-t border-line px-4 pb-1 pt-3">
+    <div class="shrink-0 border-t border-white/10 px-4 pb-1 pt-3">
         <div class="mb-1.5 flex items-center justify-between pl-1.5">
             <div>
-                <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-muted">Event Radar</p>
-                <p class="text-[0.6rem] text-muted">Live event health</p>
+                <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/35">Event Radar</p>
+                <p class="text-[0.6rem] text-white/30">Live event health</p>
             </div>
-            <span class="flex items-center gap-1 text-[0.55rem] font-semibold text-emerald-600">
+            <span class="flex items-center gap-1 text-[0.55rem] font-semibold text-emerald-400">
                 <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-track"></span> Live
             </span>
         </div>
@@ -73,7 +71,7 @@
             @forelse ($radar->take(6) as $event)
                     @php $dot = ['track' => 'bg-track', 'warn' => 'bg-warn', 'risk' => 'bg-risk'][$event->radar_group]; @endphp
                     <a href="{{ route('events.hub', $event) }}"
-                       class="group flex h-12 items-center gap-2.5 rounded-xl px-2 transition hover:-translate-y-px hover:bg-page"
+                       class="group flex h-12 items-center gap-2.5 rounded-xl px-2 transition hover:-translate-y-px hover:bg-white/5"
                        title="{{ $event->name }} — {{ $event->radar_score }}% · {{ $event->radar_status }}">
                         <span class="relative flex shrink-0">
                             <span class="h-2.5 w-2.5 rounded-full {{ $dot }}"></span>
@@ -81,23 +79,23 @@
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="flex items-center gap-1">
-                                <span class="truncate text-xs font-semibold text-navy-900 group-hover:text-gold-700">{{ $event->name }}</span>
+                                <span class="truncate text-xs font-semibold text-white group-hover:text-gold-300">{{ $event->name }}</span>
                                 @if ($event->radar_vip)<span class="text-[0.6rem] text-gold-500" title="VIP">★</span>@endif
                             </span>
-                            <span class="block truncate text-[0.6rem] text-muted">{{ $event->radar_status }}</span>
+                            <span class="block truncate text-[0.6rem] text-white/40">{{ $event->radar_status }}</span>
                         </span>
                         <x-health-ring :percent="$event->radar_score" :group="$event->radar_group"
                                        size="h-7 w-7" textSize="text-[8px]" dark class="shrink-0" />
                     </a>
                 @empty
-                    <p class="px-2 text-[0.65rem] text-muted">No active events on the radar.</p>
+                    <p class="px-2 text-[0.65rem] text-white/40">No active events on the radar.</p>
                 @endforelse
             </div>
         </div>
 
     {{-- ══ 4. AI Command Core Card ══ --}}
     <div class="shrink-0 p-3">
-        <div class="relative h-[210px] overflow-hidden rounded-[24px] p-4 text-white shadow-[0_14px_35px_rgba(11,31,58,0.30)]"
+        <div class="relative h-[210px] overflow-hidden rounded-[24px] p-4 text-white ring-1 ring-gold-400/20"
              style="background: radial-gradient(circle at 30% 20%, #16294A, #0B1F3A 75%);">
             {{-- radar animation --}}
             <div class="core-glow pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.4),transparent_70%)]"></div>

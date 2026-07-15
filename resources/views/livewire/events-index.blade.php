@@ -1,32 +1,33 @@
 <div>
-    {{-- Create Event (top right, above KPIs) --}}
-    <div class="mb-5 flex justify-end">
-        <a href="{{ route('events.create') }}" class="btn-navy !rounded-2xl px-5 text-sm !text-white">
-            <span class="text-gold-400">+</span> Create Event
-        </a>
-    </div>
+    {{-- ══ KPI command strip + primary action ══ --}}
+    <div class="strip-dark mb-5 px-6 py-5">
+        <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
 
-    {{-- KPI row: 155×90 cards --}}
-    <div class="mb-5 flex flex-wrap gap-3">
-        @foreach ($kpis as $kpi)
-            @php
-                $toneClass = match ($kpi['tone']) {
-                    'blue' => 'bg-[#3B82F6]/10 text-[#3B82F6]',
-                    'green' => 'bg-track/10 text-emerald-600',
-                    'gold' => 'bg-gold-50 text-gold-600',
-                    'red' => 'bg-risk/10 text-risk',
-                    default => 'bg-navy-50 text-navy-600',
-                };
-            @endphp
-            <div class="flex h-[78px] w-[140px] flex-col justify-between rounded-2xl border border-line bg-white px-2.5 py-2 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-                <div class="flex items-center gap-1.5">
-                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg {{ $toneClass }}"><x-icon :name="$kpi['icon']" class="h-3.5 w-3.5" /></span>
-                    <p class="truncate text-[10px] font-semibold leading-tight text-muted">{{ $kpi['label'] }}</p>
+        <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
+            @foreach ($kpis as $i => $kpi)
+                @if ($i > 0)
+                    <span class="hidden h-11 w-px bg-white/10 lg:block" aria-hidden="true"></span>
+                @endif
+                <div class="flex min-w-[118px] items-center gap-2.5">
+                    <span @class([
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1',
+                        'bg-red-400/10 text-red-300 ring-red-400/30' => $kpi['tone'] === 'red',
+                        'bg-white/[0.07] text-gold-400 ring-white/10' => $kpi['tone'] !== 'red',
+                    ])>
+                        <x-icon :name="$kpi['icon']" class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                        <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $kpi['label'] }}</p>
+                        <p class="pf mt-0.5 text-[26px] font-bold leading-none {{ $kpi['tone'] === 'red' ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
+                        <p class="mt-1 truncate text-[0.6rem] {{ $kpi['up'] ? 'text-emerald-300/80' : 'text-red-300/80' }}">{{ $kpi['trend'] }}</p>
+                    </div>
                 </div>
-                <p class="text-[19px] font-bold leading-none text-navy-900">{{ $kpi['value'] }}</p>
-                <p class="truncate text-[9px] font-semibold {{ $kpi['up'] ? 'text-emerald-600' : 'text-risk' }}">{{ $kpi['trend'] }}</p>
-            </div>
-        @endforeach
+            @endforeach
+
+            <a href="{{ route('events.create') }}" class="btn-gold ml-auto h-10 shrink-0 !rounded-xl px-5 text-xs">
+                ＋ Create Event
+            </a>
+        </div>
     </div>
 
     {{-- ══ Toolbar: filters + view switcher + search (always visible) ══ --}}
@@ -90,7 +91,7 @@
             ];
         @endphp
         <div class="mb-1">
-            <h2 class="text-lg font-bold text-navy-900">Pipeline</h2>
+            <h2 class="pf text-lg font-bold text-navy-900">Pipeline</h2>
             <p class="text-xs text-muted">Drag events across stages as deals progress</p>
         </div>
         <div class="flex gap-4 overflow-x-auto pb-3 pt-3">
@@ -171,7 +172,7 @@
     @elseif ($view === 'calendar' && $calendar)
         <div class="card overflow-hidden">
             <div class="flex items-center justify-between border-b border-line px-5 py-3.5">
-                <h3 class="text-sm font-bold text-navy-900">{{ $calendar['label'] }}</h3>
+                <h3 class="pf text-base font-bold text-navy-900">{{ $calendar['label'] }}</h3>
                 <span class="flex gap-1.5">
                     <button type="button" wire:click="prevMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">‹</button>
                     <button type="button" wire:click="nextMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">›</button>

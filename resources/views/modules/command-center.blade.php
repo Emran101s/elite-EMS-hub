@@ -7,33 +7,44 @@
         {{-- ════════ Main column ════════ --}}
         <div class="min-w-0 space-y-5">
 
-            {{-- KPI row: 155×90 cards (same scale as the Events page) --}}
-            <div class="flex flex-wrap gap-3">
-                @foreach ([
-                    ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region', 'tone' => 'bg-[#3B82F6]/10 text-[#3B82F6]'],
-                    ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running', 'tone' => 'bg-track/10 text-emerald-600'],
-                    ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 2), 'hint' => 'committed to events', 'tone' => 'bg-gold-50 text-gold-600'],
-                    ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress', 'tone' => 'bg-track/10 text-emerald-600'],
-                    ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'tone' => 'bg-risk/10 text-risk', 'risk' => $stats['atRisk'] > 0],
-                ] as $kpi)
-                    <div class="flex h-[78px] w-[140px] flex-col justify-between rounded-2xl border border-line bg-white px-2.5 py-2 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-                        <div class="flex items-center gap-1.5">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg {{ $kpi['tone'] }}">
-                                <x-icon :name="$kpi['icon']" class="h-3.5 w-3.5" />
+            {{-- KPI command strip --}}
+            <div class="strip-dark px-6 py-5">
+                <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
+
+                <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
+                    @foreach ([
+                        ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region'],
+                        ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running'],
+                        ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 2), 'hint' => 'committed to events'],
+                        ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress'],
+                        ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'risk' => $stats['atRisk'] > 0],
+                    ] as $i => $kpi)
+                        @if ($i > 0)
+                            <span class="hidden h-11 w-px bg-white/10 lg:block" aria-hidden="true"></span>
+                        @endif
+                        <div class="flex min-w-[122px] flex-1 items-center gap-2.5">
+                            <span @class([
+                                'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1',
+                                'bg-red-400/10 text-red-300 ring-red-400/30' => $kpi['risk'] ?? false,
+                                'bg-white/[0.07] text-gold-400 ring-white/10' => ! ($kpi['risk'] ?? false),
+                            ])>
+                                <x-icon :name="$kpi['icon']" class="h-4 w-4" />
                             </span>
-                            <p class="truncate text-[10px] font-semibold leading-tight text-muted">{{ $kpi['label'] }}</p>
+                            <div class="min-w-0">
+                                <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $kpi['label'] }}</p>
+                                <p class="pf mt-0.5 text-[26px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
+                                <p class="mt-1 truncate text-[0.6rem] text-white/40">{{ $kpi['hint'] }}</p>
+                            </div>
                         </div>
-                        <p class="text-[19px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
-                        <p class="truncate text-[9px] font-semibold text-muted">{{ $kpi['hint'] }}</p>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
             {{-- Operations Hub — circular event ecosystem --}}
             <div id="operations-hub" class="card scroll-mt-6 overflow-hidden">
                 <div class="flex items-center justify-between border-b border-line px-6 py-4">
                     <div>
-                        <h2 class="text-sm font-bold uppercase tracking-wide text-navy-900">Operations Hub</h2>
+                        <h2 class="pf text-base font-bold text-navy-900">Operations Hub</h2>
                         <p class="mt-0.5 text-xs text-muted">Real-time overview of your events ecosystem</p>
                     </div>
                     <div class="hidden items-center gap-3 text-[0.65rem] font-semibold text-muted sm:flex">
@@ -164,7 +175,7 @@
 
                 <div class="card p-5">
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Upcoming Deadlines</h3>
+                        <h3 class="pf text-base font-bold text-navy-900">Upcoming Deadlines</h3>
                         <a href="{{ route('tasks.index') }}" class="text-xs font-semibold text-gold-600 hover:text-gold-700">View all</a>
                     </div>
                     <ul class="space-y-3">
@@ -185,7 +196,7 @@
                 </div>
 
                 <div class="card p-5">
-                    <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Tasks Overview</h3>
+                    <h3 class="mb-4 pf text-base font-bold text-navy-900">Tasks Overview</h3>
                     @php $totalTasks = max(array_sum($taskCounts), 1); @endphp
                     <div class="flex items-center gap-5">
                         <x-donut :segments="[
@@ -215,7 +226,7 @@
 
                 <div class="card p-5">
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Top Suppliers</h3>
+                        <h3 class="pf text-base font-bold text-navy-900">Top Suppliers</h3>
                         <a href="{{ route('suppliers.index') }}" class="text-xs font-semibold text-gold-600 hover:text-gold-700">View all</a>
                     </div>
                     <ul class="divide-y divide-line">
@@ -235,7 +246,7 @@
                 </div>
 
                 <div class="card p-5">
-                    <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Events by Status</h3>
+                    <h3 class="mb-4 pf text-base font-bold text-navy-900">Events by Status</h3>
                     <ul class="space-y-3">
                         @foreach ([
                             ['label' => 'On Track', 'bar' => 'bg-track'],
@@ -264,7 +275,7 @@
 
             <div class="card p-5">
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Live Alerts</h3>
+                    <h3 class="pf text-base font-bold text-navy-900">Live Alerts</h3>
                     <a href="{{ route('events.index') }}" class="text-xs font-semibold text-gold-600 hover:text-gold-700">View all</a>
                 </div>
                 <ul class="space-y-3.5">
@@ -288,7 +299,7 @@
             </div>
 
             <div class="card p-5">
-                <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Resource Utilization</h3>
+                <h3 class="mb-4 pf text-base font-bold text-navy-900">Resource Utilization</h3>
                 <ul class="space-y-4">
                     @foreach ($utilization as $resource)
                         <li>
@@ -313,7 +324,7 @@
             </div>
 
             <div class="card p-5">
-                <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Budget Overview</h3>
+                <h3 class="mb-4 pf text-base font-bold text-navy-900">Budget Overview</h3>
                 <div class="flex justify-center">
                     <x-donut :segments="collect($budget['segments'])->map(fn ($segment) => [
                         'pct' => $segment['pct'],

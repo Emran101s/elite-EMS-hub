@@ -6,6 +6,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ? $title . ' — ' : '' }}{{ config('app.name') }}</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=playfair-display:500,600,700,800,900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">
@@ -20,7 +22,11 @@
         <div class="lg:pl-[292px]">
             <header class="flex items-center justify-between gap-4 px-6 pb-4 pt-7 lg:px-8">
                 <div class="min-w-0">
-                    <h1 class="truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>
+                    <div class="mb-1 flex items-center gap-2">
+                        <span class="h-px w-6 bg-gold-400"></span>
+                        <span class="eyebrow-gold">Elite Business Hub</span>
+                    </div>
+                    <h1 class="pf truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>
                     @if ($subtitle)
                         <p class="mt-1 text-[15px] text-muted">{{ $subtitle }}</p>
                     @endif

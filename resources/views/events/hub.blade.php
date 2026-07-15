@@ -3,67 +3,107 @@
 <x-layouts.app :title="$event->name . ' — Event Hub'"
                :subtitle="($event->avatar?->name ?? str($event->type)->replace('_', ' ')->title()) . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))">
 
-    {{-- ══ Hero ══ --}}
-    <div class="card overflow-hidden !rounded-[28px]">
-        <div class="h-1.5" style="background: linear-gradient(90deg, {{ $theme['primary'] }}, {{ $theme['accent'] }})"></div>
-        <div class="grid gap-5 p-5 xl:grid-cols-[minmax(0,128px)_minmax(0,300px)_minmax(0,1fr)_minmax(0,23rem)]">
+    {{-- ══ Hero — command strip ══ --}}
+    @php
+        $hs = $health['score'];
+        $daysLeft = $event->starts_at ? ($event->starts_at->isPast() ? 'Started' : (int) now()->diffInDays($event->starts_at).'d left') : '—';
+        $healthWord = $hs === null ? 'No data' : ($health['group'] === 'risk' ? 'Behind' : ($health['group'] === 'warn' ? 'At Watch' : 'On Track'));
+    @endphp
+    <div class="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-900 via-navy-950 to-[#050F1E] shadow-[0_24px_60px_-24px_rgba(11,31,58,0.65)] ring-1 ring-white/[0.06]">
+        {{-- ambience --}}
+        <div class="pointer-events-none absolute inset-0">
+            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/70 to-transparent"></div>
+            <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.16),transparent_65%)]"></div>
+        </div>
 
-            {{-- Health ring + Operations Hub link --}}
-            <div class="flex flex-col items-center justify-center gap-3">
-                <div class="flex flex-col items-center">
-                    <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-[96px] w-[96px]" textSize="text-xl" dark />
-                    <p class="mt-1 text-[0.6rem] font-semibold uppercase tracking-wide text-muted">Health Score</p>
-                </div>
-                <a href="{{ route('home') }}" class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-gold-300 bg-gold-50 px-2 py-2 text-center text-[0.62rem] font-bold leading-tight text-gold-700 transition hover:bg-gold-100">
-                    <x-icon name="sparkles" class="h-3 w-3 shrink-0" /> View in Operations Hub
-                </a>
-            </div>
+        <div class="relative flex flex-wrap items-center gap-x-7 gap-y-4 px-5 py-4">
 
-            {{-- Avatar visual --}}
-            <div class="relative overflow-hidden rounded-2xl">
-                <x-event-avatar :event="$event" :ring="false" size="xl" class="block h-full w-full [&>span]:h-full [&>span]:min-h-[172px] [&>span]:w-full [&>span]:rounded-2xl [&>span]:!bg-transparent" />
-            </div>
-
-            {{-- Meta column (2-up grid) --}}
-            <div class="min-w-0">
-                <div class="mb-2.5 flex flex-wrap items-center gap-2">
-                    <x-status-badge :status="$event->stage" />
-                    <x-status-badge :status="$health['status']" />
-                    @if ($health['pending_approvals'] > 0)
-                        <span class="inline-flex items-center rounded-full bg-[#3B82F6]/10 px-2 py-0.5 text-[0.65rem] font-semibold text-blue-700 ring-1 ring-[#3B82F6]/40">
-                            {{ $health['pending_approvals'] }} pending {{ str('approval')->plural($health['pending_approvals']) }}
+            {{-- Identity: avatar + health --}}
+            <div class="flex shrink-0 items-center gap-3.5">
+                <x-event-avatar :event="$event" :ring="false" size="md"
+                                class="[&>span]:h-[54px] [&>span]:w-[78px] [&>span]:rounded-xl [&>span]:ring-1 [&>span]:ring-white/15" />
+                <div class="h-10 w-px bg-white/10"></div>
+                <div class="flex items-center gap-2.5">
+                    <span class="relative inline-flex h-11 w-11 items-center justify-center">
+                        <x-health-ring :percent="$hs ?? 0" :group="$health['group']" size="h-11 w-11" :label="false" />
+                        <span class="absolute font-bold text-white">
+                            <span class="text-[0.7rem]">{{ $hs ?? '—' }}</span><span class="text-[0.45rem] text-white/50">%</span>
                         </span>
-                    @endif
+                    </span>
+                    <div class="leading-tight">
+                        <p class="text-[0.48rem] font-bold uppercase tracking-[0.2em] text-gold-400/80">Health</p>
+                        <p class="text-[0.82rem] font-bold text-white">{{ $healthWord }}</p>
+                    </div>
                 </div>
-                <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
+            </div>
+
+            <div class="hidden h-12 w-px bg-white/10 lg:block"></div>
+
+            {{-- Meta --}}
+            <div class="min-w-0">
+                <div class="mb-2 flex flex-wrap items-center gap-1.5">
+                    <span class="rounded-full bg-gold-400/15 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-gold-300 ring-1 ring-gold-400/30">{{ str($event->stage)->replace('_', ' ')->title() }}</span>
+                    @if ($health['pending_approvals'] > 0)
+                        <span class="rounded-full bg-blue-400/15 px-2.5 py-0.5 text-[0.6rem] font-bold text-blue-300 ring-1 ring-blue-400/30">{{ $health['pending_approvals'] }} pending</span>
+                    @endif
+                    <a href="{{ route('home') }}" class="ml-1 inline-flex items-center gap-1 text-[0.62rem] font-bold text-white/45 transition hover:text-gold-300">
+                        <x-icon name="sparkles" class="h-3 w-3 shrink-0" /> Operations Hub →
+                    </a>
+                </div>
+                <dl class="flex flex-wrap items-center gap-x-6 gap-y-1.5">
                     @foreach ([
-                        ['identification', 'Client', $event->client?->name ?? '—'],
-                        ['calendar', 'Event Type', $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title()],
-                        ['building', 'Venue', $event->venue?->name ?? 'Not assigned'],
-                        ['users', 'Participants', $event->expected_participants ? number_format($event->expected_participants).' pax' : '—'],
-                        ['users', 'Project Manager', $event->projectManager?->name ?? '—'],
-                        ['home', 'Event Owner', 'Elite Business Hub'],
-                    ] as [$icon, $label, $value])
-                        <div class="flex items-center gap-2">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-50 text-navy-600"><x-icon :name="$icon" class="h-3.5 w-3.5" /></span>
-                            <div class="min-w-0">
-                                <dt class="text-[0.55rem] font-semibold uppercase tracking-wide text-muted">{{ $label }}</dt>
-                                <dd class="truncate text-xs font-semibold text-navy-900">{{ $value }}</dd>
-                            </div>
+                        ['Client', $event->client?->name ?? '—'],
+                        ['Venue', $event->venue?->name ?? 'Not assigned'],
+                        ['Participants', $event->expected_participants ? number_format($event->expected_participants).' pax' : '—'],
+                        ['Project Manager', $event->projectManager?->name ?? '—'],
+                    ] as [$label, $value])
+                        <div class="min-w-0">
+                            <dt class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-400/70">{{ $label }}</dt>
+                            <dd class="truncate text-[0.82rem] font-semibold text-white">{{ $value }}</dd>
                         </div>
                     @endforeach
                 </dl>
             </div>
 
-            {{-- Actions + stat chips + dates --}}
-            <div class="flex flex-col gap-3">
-                <div class="flex items-center justify-end gap-2">
-                    <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">✎ Edit</a>
+            {{-- Right: gauges · dates · actions --}}
+            <div class="ml-auto flex flex-wrap items-center gap-x-5 gap-y-3">
+                <div class="flex items-center gap-4">
+                    @foreach ([
+                        ['Budget', $health['components']['budget']],
+                        ['Tasks', $health['components']['tasks']],
+                        ['Suppliers', $health['components']['suppliers']],
+                    ] as [$label, $s])
+                        @php
+                            $fill = $s === null ? 'bg-white/20' : ($s >= 81 ? 'bg-emerald-400' : ($s >= 61 ? 'bg-amber-400' : 'bg-red-400'));
+                            $txt  = $s === null ? 'text-white/35' : ($s >= 81 ? 'text-emerald-300' : ($s >= 61 ? 'text-amber-300' : 'text-red-300'));
+                        @endphp
+                        <div class="w-[62px]">
+                            <div class="flex items-baseline justify-between gap-1">
+                                <span class="text-[0.48rem] font-bold uppercase tracking-[0.12em] text-white/40">{{ $label }}</span>
+                                <span class="text-[0.72rem] font-bold {{ $txt }}">{{ $s !== null ? $s : '—' }}</span>
+                            </div>
+                            <div class="mt-1 h-[3px] w-full overflow-hidden rounded-full bg-white/10">
+                                <div class="h-full rounded-full {{ $fill }}" style="width: {{ $s ?? 0 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="hidden h-10 w-px bg-white/10 sm:block"></div>
+
+                <div class="text-right leading-tight">
+                    <p class="text-[0.82rem] font-bold text-white">{{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y') }}</p>
+                    <p class="text-[0.64rem] font-bold {{ $event->starts_at?->isPast() ? 'text-white/40' : 'text-gold-400' }}">{{ $daysLeft }}</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}"
+                       class="flex h-9 items-center rounded-xl bg-white/[0.06] px-3 text-xs font-semibold text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white">✎ Edit</a>
                     <details class="group relative">
-                        <summary class="btn-navy flex w-fit cursor-pointer list-none px-3 py-1.5 text-xs [&::-webkit-details-marker]:hidden">
-                            <span class="text-gold-400">⚡</span> Quick Actions ▾
+                        <summary class="flex h-9 w-fit cursor-pointer list-none items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3.5 text-xs font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition hover:brightness-105 [&::-webkit-details-marker]:hidden">
+                            ⚡ Quick Actions ▾
                         </summary>
-                        <div class="absolute right-0 top-9 z-30 w-52 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
+                        <div class="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-xl border border-white/10 bg-navy-950 shadow-2xl ring-1 ring-black/20">
                             @foreach ([
                                 ['tasks', '＋ Add Task', 'clipboard'],
                                 ['budget', '＋ Add Budget Line', 'currency'],
@@ -71,68 +111,60 @@
                                 ['approvals', '＋ Request Approval', 'identification'],
                             ] as [$actionTab, $label, $icon])
                                 <a href="{{ route('events.hub', [$event, 'tab' => $actionTab, 'action' => 'add']) }}"
-                                   class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
-                                    <x-icon :name="$icon" class="h-4 w-4 text-navy-500" /> {{ $label }}
+                                   class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white">
+                                    <x-icon :name="$icon" class="h-4 w-4 text-gold-400/80" /> {{ $label }}
                                 </a>
                             @endforeach
+                            @if ($event->moduleEnabled('planning') || $event->moduleEnabled('agenda'))
+                                <div class="border-t border-white/10">
+                                    @if ($event->moduleEnabled('planning'))
+                                        <a href="{{ route('events.planning.pdf', $event) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"><x-icon name="chart" class="h-4 w-4 text-gold-400/80" /> Export Planning PDF</a>
+                                    @endif
+                                    @if ($event->moduleEnabled('agenda'))
+                                        <a href="{{ route('events.agenda.pdf', $event) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"><x-icon name="calendar" class="h-4 w-4 text-gold-400/80" /> Export Agenda PDF</a>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </details>
                 </div>
-
-                <div class="grid grid-cols-3 gap-2">
-                    @foreach ([
-                        ['label' => 'Budget Health', 'score' => $health['components']['budget'], 'word' => ['Healthy', 'Watch', 'Over']],
-                        ['label' => 'Tasks Completed', 'score' => $health['components']['tasks'], 'word' => ['Strong', 'In Progress', 'Behind']],
-                        ['label' => 'Supplier Readiness', 'score' => $health['components']['suppliers'], 'word' => ['Good', 'Building', 'Weak']],
-                    ] as $chip)
-                        @php $s = $chip['score']; @endphp
-                        <div class="flex min-h-[62px] flex-col justify-center rounded-2xl border border-line bg-white px-2.5 py-2 text-center shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
-                            <p class="text-[0.52rem] font-semibold leading-tight text-muted">{{ $chip['label'] }}</p>
-                            <p class="mt-0.5 text-lg font-bold leading-none {{ $s === null ? 'text-muted' : ($s >= 81 ? 'text-emerald-600' : ($s >= 61 ? 'text-amber-600' : 'text-risk')) }}">
-                                {{ $s !== null ? $s.'%' : '—' }}
-                            </p>
-                            @if ($s !== null)
-                                <p class="mt-0.5 text-[0.55rem] font-semibold {{ $s >= 81 ? 'text-emerald-600' : ($s >= 61 ? 'text-amber-600' : 'text-risk') }}">
-                                    {{ $chip['word'][$s >= 81 ? 0 : ($s >= 61 ? 1 : 2)] }}
-                                </p>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="grid grid-cols-3 items-center divide-x divide-line rounded-2xl border border-line bg-white py-2 shadow-[0_1px_3px_rgba(11,31,58,0.04)]">
-                    @foreach ([
-                        ['Start', $event->starts_at?->format('M j, Y') ?? '—', 'text-navy-900'],
-                        ['End', $event->ends_at?->format('M j, Y') ?? '—', 'text-navy-900'],
-                        ['Days Left', $event->starts_at ? ($event->starts_at->isPast() ? 'Started' : (int) now()->diffInDays($event->starts_at).'d') : '—', $event->starts_at?->isPast() ? 'text-muted' : 'text-gold-600'],
-                    ] as [$dl, $dv, $dc])
-                        <div class="px-3">
-                            <p class="text-[0.52rem] font-semibold text-muted">{{ $dl }}</p>
-                            <p class="mt-0.5 text-[0.8rem] font-bold {{ $dc }}">{{ $dv }}</p>
-                        </div>
-                    @endforeach
-                </div>
             </div>
         </div>
+    </div>
 
-        {{-- ══ Tabs: gold underline ══ --}}
-        <nav class="scrollbar-none flex gap-1 overflow-x-auto border-t border-line bg-white px-4" aria-label="Event hub">
-            @foreach ([
-                'overview' => ['Overview', 'home'], 'agenda' => ['Agenda', 'calendar'], 'tasks' => ['Tasks', 'clipboard'],
-                'budget' => ['Budget', 'currency'], 'suppliers' => ['Suppliers', 'truck'], 'venue' => ['Venue', 'building'],
-                'sponsors' => ['Sponsors', 'star'], 'attendees' => ['Attendees', 'users'], 'files' => ['Files', 'archive'],
-                'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification'], 'reports' => ['Reports', 'chart'],
-                'ai' => ['AI Insights', 'sparkles'], 'settings' => ['Settings', 'cog'],
-            ] as $key => [$label, $icon])
-                @continue (! $event->moduleEnabled($key))
-                <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
-                   @class([
-                       'flex h-14 items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-semibold transition',
-                       'border-gold-500 bg-[#FFF7E6] text-gold-700' => $tab === $key,
-                       'border-transparent text-navy-600 hover:text-navy-900' => $tab !== $key,
-                   ])>
-                    <x-icon :name="$icon" class="h-3.5 w-3.5 shrink-0" /> {{ $label }}
-                </a>
+    {{-- ══ Module rail: grouped pills that wrap — every enabled module stays visible, nothing scrolls away ══ --}}
+    @php
+        // Grouped so the rail reads as a control panel, not a run-on list.
+        $groups = [
+            'Event' => ['overview' => ['Overview', 'home'], 'brief' => ['Brief', 'clipboard']],
+            'Plan' => ['planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'], 'budget' => ['Budget', 'currency'], 'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification']],
+            'Programme' => ['agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification']],
+            'Logistics' => ['venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'], 'accommodation' => ['Stay', 'home']],
+            'Commercial' => ['exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'], 'attendees' => ['Attendees', 'users']],
+            'Grow' => ['files' => ['Files', 'archive'], 'reports' => ['Reports', 'chart']],
+            'System' => ['ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog']],
+        ];
+    @endphp
+    <div class="sticky top-0 z-20 mt-3">
+        <nav class="flex flex-wrap items-center gap-1.5 rounded-2xl border border-line bg-gradient-to-b from-white to-page/60 px-2.5 py-2 shadow-[0_8px_24px_-10px_rgba(11,31,58,0.18)] backdrop-blur-sm" aria-label="Event modules">
+            @foreach ($groups as $groupName => $tabs)
+                @php $visible = collect($tabs)->filter(fn ($t, $key) => $event->moduleEnabled($key)); @endphp
+                @continue ($visible->isEmpty())
+
+                {{-- one segmented cluster per group — it wraps as a whole, never splitting mid-group --}}
+                <div class="flex items-center gap-0.5 rounded-xl bg-navy-50/70 p-[3px] ring-1 ring-line/70" role="group" aria-label="{{ $groupName }}">
+                    @foreach ($visible as $key => [$label, $icon])
+                        <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}" title="{{ $groupName }} · {{ $label }}"
+                           @class([
+                               'flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-[9px] px-2.5 text-[12px] font-semibold tracking-tight transition-all duration-150',
+                               'bg-navy-900 text-white shadow-[0_4px_12px_-4px_rgba(11,31,58,0.55)]' => $tab === $key,
+                               'text-navy-500 hover:bg-white hover:text-navy-900 hover:shadow-sm' => $tab !== $key,
+                           ])>
+                            <x-icon :name="$icon" @class(['h-3.5 w-3.5 shrink-0', 'text-gold-400' => $tab === $key, 'text-navy-400' => $tab !== $key]) />
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
             @endforeach
         </nav>
     </div>

@@ -45,17 +45,68 @@
     --color-risk: #ef4444;
 }
 
+@layer base {
+    /* Everything clickable shows the hand cursor (Tailwind v4 resets buttons to default). */
+    button:not(:disabled),
+    summary,
+    label[for],
+    a[href],
+    select:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [wire\:click],
+    [x-on\:click],
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled="true"],
+    [wire\:click][disabled] {
+        cursor: not-allowed;
+    }
+
+    /* Drag handles feel grabbable. */
+    .cat-drag { cursor: grab; }
+    .cat-drag:active { cursor: grabbing; }
+}
+
 @layer components {
+    /* ── Design system ─────────────────────────────────────────────
+       One look, one feel. Use these instead of re-styling per page.   */
+
+    /* Display serif — every title across the platform. */
+    .pf { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
+
+    /* Micro label above a value or section. */
+    .eyebrow { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-navy-400; }
+    .eyebrow-gold { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-gold-600; }
+
+    /* The premium accent surface — navy, matching the Planning countdown strip.
+       Deliberately NOT near-black: that reads too heavy on a light canvas. */
+    .strip-dark {
+        @apply relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-900 to-[#16294A] text-white shadow-[0_18px_45px_-20px_rgba(11,31,58,0.5)];
+    }
+
+    /* Pills / chips. */
+    .chip { @apply inline-flex items-center gap-1 rounded-full bg-navy-50 px-2 py-0.5 text-[0.6rem] font-bold text-navy-600; }
+    .chip-gold { @apply inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-[0.6rem] font-bold text-gold-700 ring-1 ring-gold-200; }
+
     .card {
         @apply rounded-[22px] border border-line bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)];
     }
 
     .btn-navy {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy-950 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_6px_18px_-8px_rgba(11,31,58,0.7)] transition hover:bg-navy-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500;
     }
 
+    /* Primary action — the gold bar used across the platform. */
     .btn-gold {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold-500 px-4 py-2.5 text-sm font-semibold text-navy-900 transition hover:bg-gold-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-4 py-2.5 text-sm font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.75)] transition hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900;
+    }
+
+    /* Quiet secondary action. */
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy-700 transition hover:border-gold-300 hover:text-navy-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400;
     }
 
     /* Unified form input — gray-filled, matching the Create Event fields (compact variant). */
@@ -75,7 +126,19 @@
     .seg-pill {
         @apply rounded-2xl border px-6 py-3 text-sm font-bold transition;
     }
+
+    /* Compact +/- stepper button (layout builder resize & equipment qty) */
+    .seg-step {
+        @apply flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-navy-600 transition hover:border-gold-300 hover:text-navy-900;
+    }
 }
+
+/* Floating multi-select action pill — subtle slide-up entrance. */
+@keyframes bulkbar-in {
+    from { opacity: 0; transform: translate(-50%, 14px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+.bulkbar-in { animation: bulkbar-in 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* Operations Hub — slow orbital rotation + core glow pulse */
 @keyframes orbit-spin {
