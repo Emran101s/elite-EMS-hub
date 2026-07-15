@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Client;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventAvatar;
 use Livewire\Attributes\Layout;
@@ -49,6 +50,8 @@ class EventCreate extends Component
 
     public function mount(): void
     {
+        // Inherit the workspace default timezone.
+        $this->timezone = CompanyProfile::current()->default_timezone;
         // Sensible default module set until a template is chosen.
         $this->modules = self::TEMPLATES['conference'][3];
     }
@@ -102,13 +105,17 @@ class EventCreate extends Component
 
         [, $type] = $this->template ? self::TEMPLATES[$this->template] : self::TEMPLATES['conference'];
 
+        $company = CompanyProfile::current();
+
         $event = Event::create([
             'name' => $this->name,
             'type' => $type,
             'status' => 'planning',
             'stage' => self::STATUS_PILLS[$this->statusPill] ?? 'draft',
-            'city' => 'TBD',
-            'country' => 'Jordan',
+            'city' => $company->city ?: 'TBD',
+            'country' => $company->country ?: 'Jordan',
+            'currency' => $company->default_currency,
+            'management_fee_pct' => $company->default_management_fee_pct,
             'timezone' => $this->timezone,
             'client_id' => $this->client_id,
             // Avatar auto-assigned from the type; theme defaults to the platform brand.

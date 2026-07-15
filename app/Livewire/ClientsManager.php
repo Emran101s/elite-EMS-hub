@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Models\Client;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+#[Layout('components.layouts.app', ['title' => 'Clients'])]
+class ClientsManager extends Component
+{
+    use WithFileUploads;
+
+    public bool $showForm = false;
+
+    public ?int $editingId = null;
+
+    public string $name = '';
+
+    public string $organization = '';
+
+    public string $contact_name = '';
+
+    public string $email = '';
+
+    public string $phone = '';
+
+    public string $website = '';
+
+    public string $notes = '';
+
+    /** Uploaded logo (optional). */
+    public $logo = null;
+
+    public string $search = '';
+
+    public function newItem(): void
+    {
+        $this->reset(['editingId', 'name', 'organization', 'contact_name', 'email', 'phone', 'website', 'notes', 'logo']);
+        $this->resetValidation();
+        $this->showForm = true;
+    }
+
+    public function edit(int $id): void
+    {
+        $c = Client::findOrFail($id);
+        $this->editingId = $c->id;
+        $this->name = $c->name;
+        $this->organization = $c->organization ?? '';
+        $this->contact_name = $c->contact_name ?? '';
+        $this->email = $c->email ?? '';
+        $this->phone = $c->phone ?? '';
+        $this->website = $c->website ?? '';
+        $this->notes = $c->notes ?? '';
+        $this->logo = null;
+        $this->resetValidation();
+        $this->showForm = true;
+    }
+
+    public function save(): void
+    {
+        $this->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'organization' => ['nullable', 'string', 'max:160'],
+            'contact_name' => ['nullable', 'string', 'max:160'],
+            'email' => ['nullable', 'email', 'max:190'],
+            'phone' => ['nullable', 'string', 'max:60'],
+            'website' => ['nullable', 'string', 'max:190'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'logo' => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $data = [
+            'name' => trim($this->name),
+            'organization' => trim($this->organization) ?: null,
+            'contact_name' => trim($this->contact_name) ?: null,
+            'email' => trim($this->email) ?: null,
+            'phone' => trim($this->phone) ?: null,
+            'website' => trim($this->website) ?: null,
+            'notes' => trim($this->notes) ?: null,
+        ];
+
+        if ($this->logo) {
+            $data['logo_path'] = 'storage/'.$this->logo->store('clients', 'public');
+        }
+
+        if ($this->editingId) {
+            Client::whereKey($this->editingId)->update($data);
+        } else {
+            Client::create($data);
+        }
+
+        $this->showForm = false;
+        $this->reset(['editingId', 'logo']);
+        session()->flash('status', 'Client saved.');
+    }
+
+    public function delete(int $id): void
+    {
+        // events.client_id is nullOnDelete → events keep working, just unlinked.
+        Client::whereKey($id)->delete();
+    }
+
+    public function render()
+    {
+        $clients = Client::when($this->search !== '', fn ($q) => $q
+            ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')
+                ->orWhere('organization', 'like', '%'.$this->search.'%')
+                ->orWhere('contact_name', 'like', '%'.$this->search.'%')))
+            ->withCount('events')
+            ->orderBy('name')->get();
+
+        return view('livewire.clients-manager', ['clients' => $clients]);
+    }
+}

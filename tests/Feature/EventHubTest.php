@@ -30,7 +30,7 @@ class EventHubTest extends TestCase
             ->assertSee('ICFT 2026 — Event Hub')
             ->assertSee('ICFT Global Committee')
             ->assertSee('Layla Haddad')
-            ->assertSee('Health Score');
+            ->assertSee('Health');
     }
 
     public function test_every_tab_renders(): void

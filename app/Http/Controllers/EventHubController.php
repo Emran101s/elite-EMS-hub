@@ -9,7 +9,8 @@ use Illuminate\View\View;
 class EventHubController extends Controller
 {
     public const TABS = [
-        'overview', 'agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors',
+        'overview', 'brief', 'planning', 'agenda', 'speakers', 'tasks', 'budget', 'suppliers', 'venue',
+        'transportation', 'accommodation', 'exhibition', 'sponsors',
         'attendees', 'files', 'risks', 'approvals', 'reports', 'ai', 'settings',
     ];
 

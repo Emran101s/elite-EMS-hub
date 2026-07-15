@@ -30,7 +30,7 @@
 
     <div class="grid gap-5 lg:grid-cols-2">
         <div class="card p-6">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Pending Approval ({{ $pending->count() }})</h3>
+            <h3 class="mb-4 pf text-base font-bold text-navy-900">Pending Approval ({{ $pending->count() }})</h3>
             <ul class="space-y-3">
                 @forelse ($pending as $approval)
                     <li class="rounded-xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 px-4 py-3">
@@ -56,7 +56,7 @@
         </div>
 
         <div class="card p-6">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">History</h3>
+            <h3 class="mb-4 pf text-base font-bold text-navy-900">History</h3>
             <ul class="space-y-3">
                 @forelse ($decided as $approval)
                     <li class="flex items-center justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0">

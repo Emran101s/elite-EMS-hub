@@ -24,6 +24,7 @@
         return $out;
     };
 
+    $staging = in_array($type, ['stage', 'screen', 'podium', 'entrance'], true);
     $table = null; // [x,y,w,h,radius]
     switch ($type) {
         case 'round':
@@ -75,6 +76,22 @@
     }
 @endphp
 
+@php
+    // Staging visuals: solid navy/gold blocks with a label.
+    $stageStyles = [
+        'stage' => ['bg' => '#0B1F3A', 'fg' => '#D4AF37', 'rad' => '10px', 'label' => 'STAGE'],
+        'screen' => ['bg' => '#1E293B', 'fg' => '#E2E8F0', 'rad' => '4px', 'label' => 'SCREEN'],
+        'podium' => ['bg' => '#0B1F3A', 'fg' => '#D4AF37', 'rad' => '6px 6px 3px 3px', 'label' => '◆'],
+        'entrance' => ['bg' => '#EEF2F8', 'fg' => '#0B1F3A', 'rad' => '4px', 'label' => 'ENTRY'],
+    ];
+@endphp
+
+@if ($staging)
+    @php $s = $stageStyles[$type]; @endphp
+    <div style="width:{{ $w }}px; height:{{ $h }}px; border-radius:{{ $s['rad'] }}; background:{{ $s['bg'] }}; {{ $type === 'entrance' ? 'border:1.5px dashed #94A3B8;' : '' }} color:{{ $s['fg'] }}; display:flex; align-items:center; justify-content:center; font-size:{{ $type === 'podium' ? 12 : 9 }}px; font-weight:bold; letter-spacing:2px; text-align:center; overflow:hidden;">
+        {{ $s['label'] }}
+    </div>
+@else
 <div style="position:relative; width:{{ $w }}px; height:{{ $h }}px;">
     @if ($table)
         @php [$tx, $ty, $tw, $th, $trad] = $table; @endphp
@@ -89,3 +106,4 @@
         <div style="position:absolute; left:{{ round($cx, 1) }}px; top:{{ round($cy, 1) }}px; width:{{ $chair }}px; height:{{ $chair }}px; border-radius:3px; background:#0B1F3A;"></div>
     @endforeach
 </div>
+@endif

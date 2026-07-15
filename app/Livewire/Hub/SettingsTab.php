@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventAvatar;
 use App\Models\User;
 use App\Models\Venue;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class SettingsTab extends Component
@@ -35,11 +36,16 @@ class SettingsTab extends Component
     public string $starts_at = '';
     public string $ends_at = '';
     public string $budget = '';
+    public string $currency = 'USD';
     public string $stage = 'planning';
 
     // Ownership
     public ?int $project_manager_id = null;
     public ?int $venue_id = null;
+
+    // Event team assignment
+    public ?int $teamUserId = null;
+    public string $teamRole = 'operations_lead';
 
     // Identity
     public ?int $avatar_id = null;
@@ -63,6 +69,7 @@ class SettingsTab extends Component
         $this->starts_at = $e->starts_at?->format('Y-m-d') ?? '';
         $this->ends_at = $e->ends_at?->format('Y-m-d') ?? '';
         $this->budget = $e->budget_cents ? (string) ($e->budget_cents / 100) : '';
+        $this->currency = $e->currency ?? 'USD';
         $this->stage = $e->stage;
         $this->project_manager_id = $e->project_manager_id;
         $this->venue_id = $e->venue_id;
@@ -111,6 +118,7 @@ class SettingsTab extends Component
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'budget' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['required', 'in:'.implode(',', array_keys(Event::CURRENCIES))],
             'stage' => ['required', 'in:'.implode(',', Event::STAGES)],
             'project_manager_id' => ['nullable', 'exists:users,id'],
             'venue_id' => ['nullable', 'exists:venues,id'],
@@ -131,6 +139,7 @@ class SettingsTab extends Component
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at ?: null,
             'budget_cents' => (int) round((float) ($this->budget ?: 0) * 100),
+            'currency' => $this->currency,
             'stage' => $this->stage,
             'project_manager_id' => $this->project_manager_id,
             'venue_id' => $this->venue_id,
@@ -152,6 +161,35 @@ class SettingsTab extends Component
         session()->flash('status', "Event settings saved · {$this->event->dayCount()} agenda ".str('day')->plural($this->event->dayCount()).'.');
 
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'settings']);
+    }
+
+    /** Assign a workspace member to this event with a role. */
+    public function addTeamMember(): void
+    {
+        if (! $this->teamUserId || ! in_array($this->teamRole, Event::TEAM_ROLES, true)) {
+            return;
+        }
+        // Unique (event, user, role) makes this idempotent — no duplicate assignments.
+        DB::table('event_team_members')->insertOrIgnore([
+            'event_id' => $this->event->id,
+            'user_id' => $this->teamUserId,
+            'role' => $this->teamRole,
+        ]);
+        if ($this->teamRole === 'project_manager' && ! $this->event->project_manager_id) {
+            $this->event->update(['project_manager_id' => $this->teamUserId]);
+            $this->project_manager_id = $this->teamUserId;
+        }
+        $this->teamUserId = null;
+    }
+
+    public function removeTeamMember(int $userId, string $role): void
+    {
+        DB::table('event_team_members')
+            ->where('event_id', $this->event->id)->where('user_id', $userId)->where('role', $role)->delete();
+        if ($role === 'project_manager' && $this->event->project_manager_id === $userId) {
+            $this->event->update(['project_manager_id' => null]);
+            $this->project_manager_id = null;
+        }
     }
 
     public function duplicate()
@@ -181,6 +219,8 @@ class SettingsTab extends Component
         return view('livewire.hub.settings-tab', [
             'clients' => Client::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
+            'team' => $this->event->teamMembers()->orderBy('name')->get(),
+            'roleLabels' => Event::TEAM_ROLE_LABELS,
             'venues' => Venue::orderBy('name')->get(),
             'avatars' => EventAvatar::active()->orderBy('sort_order')->get(),
             'palettes' => self::PALETTES,

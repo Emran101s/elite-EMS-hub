@@ -56,7 +56,7 @@ class RoomLayoutTest extends TestCase
         Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
             ->call('addElement', 'round')     // 8
             ->call('addElement', 'banquet')   // 10
-            ->assertSeeInOrder(['18', 'seats placed']);
+            ->assertSeeInOrder(['18', 'seats']);
 
         $this->assertSame(18, $room->fresh()->seatCount());
     }
@@ -70,6 +70,153 @@ class RoomLayoutTest extends TestCase
 
         $response->assertOk();
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_resize_element_updates_dimensions(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('addElement', 'round');
+        $id = $room->fresh()->layout[0]['id'];
+
+        $c->call('resizeElement', $id, 'both', 20);
+        $el = $room->fresh()->layout[0];
+        $this->assertSame(116, $el['w']); // 96 + 20
+        $this->assertSame(116, $el['h']);
+
+        // width-only on a rectangular element
+        $c->call('resizeElement', $id, 'w', -10);
+        $this->assertSame(106, $room->fresh()->layout[0]['w']);
+        $this->assertSame(116, $room->fresh()->layout[0]['h']);
+    }
+
+    public function test_rotation_absolute_and_relative(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('addElement', 'table');
+        $id = $room->fresh()->layout[0]['id'];
+
+        $c->call('setRotation', $id, 137);
+        $this->assertSame(137, $room->fresh()->layout[0]['rot']);
+
+        $c->call('rotateBy', $id, 250); // 137 + 250 = 387 → 27
+        $this->assertSame(27, $room->fresh()->layout[0]['rot']);
+
+        $c->call('rotateBy', $id, -30); // 27 - 30 = -3 → 357
+        $this->assertSame(357, $room->fresh()->layout[0]['rot']);
+    }
+
+    public function test_size_in_metres_converts_with_scale(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->set('width_m', '20')->set('length_m', '14')
+            ->call('addElement', 'round');
+        $id = $room->fresh()->layout[0]['id'];
+
+        // scale = min(960/20, 560/14) = min(48, 40) = 40 px/m → 2 m = 80 px
+        $c->call('setSizeMeters', $id, 'both', 2);
+        $this->assertSame(80, $room->fresh()->layout[0]['w']);
+        $this->assertSame(80, $room->fresh()->layout[0]['h']);
+
+        // without dimensions the metre setter is a no-op
+        $c->set('width_m', '')->set('length_m', '')->call('setSizeMeters', $id, 'both', 5);
+        $this->assertSame(80, $room->fresh()->layout[0]['w']);
+    }
+
+    public function test_room_dimensions_persist(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->set('width_m', '20')
+            ->set('length_m', '12.5');
+
+        $room->refresh();
+        $this->assertSame(20.0, $room->width_m);
+        $this->assertSame(12.5, $room->length_m);
+    }
+
+    public function test_equipment_toggle_quantity_and_status(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('toggleEquipment', 'Handheld microphones');
+        $this->assertSame(1, $room->fresh()->equipment['Handheld microphones']['qty']);
+        $this->assertSame('needed', $room->fresh()->equipment['Handheld microphones']['status']);
+
+        $c->call('bumpEquipment', 'Handheld microphones', 3);
+        $this->assertSame(4, $room->fresh()->equipment['Handheld microphones']['qty']);
+        $this->assertSame(4, $room->fresh()->equipmentCount());
+
+        // status advances through the lifecycle and wraps
+        $c->call('cycleStatus', 'Handheld microphones');
+        $this->assertSame('requested', $room->fresh()->equipment['Handheld microphones']['status']);
+
+        $c->call('setNote', 'Handheld microphones', 'Shure SM58 ×4');
+        $this->assertSame('Shure SM58 ×4', $room->fresh()->equipment['Handheld microphones']['notes']);
+
+        // dropping to zero removes the line
+        $c->call('bumpEquipment', 'Handheld microphones', -4);
+        $this->assertArrayNotHasKey('Handheld microphones', $room->fresh()->equipment ?? []);
+    }
+
+    public function test_equipment_package_and_custom_item(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('applyPackage', 'Conference');
+        $expected = collect(\App\Models\EventRoom::EQUIPMENT_PACKAGES['Conference'])->sum();
+        $this->assertSame($expected, $room->fresh()->equipmentCount());
+
+        $c->set('customItem', 'Fog machine')->call('addCustomItem');
+        $this->assertSame(1, $room->fresh()->equipment['Fog machine']['qty']);
+
+        // readiness: confirm one line's worth
+        $c->call('cycleStatus', 'Fog machine')->call('cycleStatus', 'Fog machine'); // needed→requested→confirmed
+        $this->assertGreaterThan(0, $room->fresh()->equipmentReadiness());
+    }
+
+    public function test_equipment_pdf_downloads(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+        $room->update(['equipment' => ['Projector' => ['qty' => 2, 'status' => 'confirmed', 'notes' => '4K']]]);
+
+        $response = $this->actingAs($user)->get(route('events.room-equipment.pdf', [$event, $room]));
+
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_legacy_int_equipment_is_normalised(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+        $room->update(['equipment' => ['Projector' => 3]]); // legacy shape
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->assertSet('equipment.Projector.qty', 3)
+            ->assertSet('equipment.Projector.status', 'needed');
+
+        $this->assertSame(3, $room->fresh()->equipmentCount());
+    }
+
+    public function test_staging_elements_have_no_seats(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('addElement', 'stage')
+            ->call('addElement', 'screen');
+
+        $room->refresh();
+        $this->assertSame('stage', $room->layout[0]['type']);
+        $this->assertSame(0, $room->seatCount());
     }
 
     public function test_builder_rejects_foreign_room(): void

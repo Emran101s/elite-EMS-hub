@@ -3,7 +3,7 @@
         <div class="mb-4 flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-50 text-gold-600"><x-icon name="sparkles" class="h-5 w-5" /></span>
             <div>
-                <h3 class="text-sm font-bold text-navy-900">AI Daily Summary</h3>
+                <h3 class="pf text-base font-bold text-navy-900">AI Daily Summary</h3>
                 <p class="text-xs text-muted">Rule-based advisor v1 — every point traces to a record. LLM backend arrives in a later phase.</p>
             </div>
         </div>
@@ -37,7 +37,7 @@
     </div>
 
     <div class="card p-5">
-        <h3 class="mb-3 text-xs font-bold uppercase tracking-wide text-navy-900">Health Inputs</h3>
+        <h3 class="mb-3 pf text-base font-bold text-navy-900">Health Inputs</h3>
         <ul class="space-y-2 text-xs">
             @foreach ([
                 'tasks' => 'Task Completion', 'budget' => 'Budget Health', 'suppliers' => 'Supplier Readiness',

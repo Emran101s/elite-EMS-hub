@@ -2,17 +2,25 @@
 
 namespace App\Livewire\Hub;
 
+use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\EventRoom;
-use App\Models\Venue;
+use App\Models\Requirement;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class VenueTab extends Component
 {
+    use BulkSelectable;
+
     public Event $event;
 
-    // Venue assignment
-    public ?int $venue_id = null;
+    /** Delete the selected rooms. */
+    public function deleteSelected(): void
+    {
+        $this->event->rooms()->whereIn('id', $this->selectedIds())->delete();
+        $this->clearSelection();
+    }
 
     // Room form
     public bool $showRoomForm = false;
@@ -20,21 +28,16 @@ class VenueTab extends Component
     public string $room_name = '';
     public string $room_type = 'breakout';
     public string $room_capacity = '';
+    public string $room_cost = '';
 
-    public function mount(): void
-    {
-        $this->venue_id = $this->event->venue_id;
-    }
-
-    public function updatedVenueId($value): void
-    {
-        $this->event->update(['venue_id' => $value ?: null]);
-        session()->flash('status', 'Venue updated.');
-    }
+    // Event-wide requirements (not tied to a venue). Per-venue requirements now
+    // live inside each venue's detail (RoomLayoutBuilder → Requirements tab).
+    public string $evReqName = '';
+    public string $evReqCost = '';
 
     public function newRoom(): void
     {
-        $this->reset(['editingRoomId', 'room_name', 'room_capacity']);
+        $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost']);
         $this->room_type = 'breakout';
         $this->showRoomForm = true;
     }
@@ -46,6 +49,7 @@ class VenueTab extends Component
         $this->room_name = $room->name;
         $this->room_type = $room->type;
         $this->room_capacity = (string) ($room->capacity ?? '');
+        $this->room_cost = $room->cost_cents ? (string) ($room->cost_cents / 100) : '';
         $this->showRoomForm = true;
     }
 
@@ -55,12 +59,14 @@ class VenueTab extends Component
             'room_name' => ['required', 'string', 'max:120'],
             'room_type' => ['required', 'in:'.implode(',', EventRoom::TYPES)],
             'room_capacity' => ['nullable', 'integer', 'min:0'],
+            'room_cost' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $data = [
             'name' => $this->room_name,
             'type' => $this->room_type,
             'capacity' => $this->room_capacity !== '' ? (int) $this->room_capacity : null,
+            'cost_cents' => $this->room_cost !== '' ? (int) round((float) $this->room_cost * 100) : 0,
         ];
 
         if ($this->editingRoomId) {
@@ -82,6 +88,39 @@ class VenueTab extends Component
         return $this->redirectTab();
     }
 
+    // ── Event-wide requirements (feed the budget's "Event Requirements") ──
+    public function addEventRequirement(): void
+    {
+        $this->validate([
+            'evReqName' => ['required', 'string', 'max:120'],
+            'evReqCost' => ['nullable', 'numeric', 'min:0'],
+        ]);
+        $reqs = $this->event->event_requirements ?? [];
+        $reqs[] = [
+            'id' => Str::random(8),
+            'name' => trim($this->evReqName),
+            'cost_cents' => $this->evReqCost !== '' ? (int) round((float) $this->evReqCost * 100) : 0,
+        ];
+        $this->event->update(['event_requirements' => $reqs]);
+        $this->reset(['evReqName', 'evReqCost']);
+    }
+
+    public function removeEventRequirement(string $reqId): void
+    {
+        $this->event->update([
+            'event_requirements' => collect($this->event->event_requirements ?? [])->reject(fn ($r) => ($r['id'] ?? null) === $reqId)->values()->all(),
+        ]);
+    }
+
+    /** Fill the event-wide add form from a catalog requirement. */
+    public function pickEvReq($catalogId): void
+    {
+        if ($r = Requirement::find($catalogId)) {
+            $this->evReqName = $r->name;
+            $this->evReqCost = $r->unit_price_cents ? (string) ($r->unit_price_cents / 100) : '';
+        }
+    }
+
     private function redirectTab()
     {
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'venue']);
@@ -90,8 +129,8 @@ class VenueTab extends Component
     public function render()
     {
         return view('livewire.hub.venue-tab', [
-            'venues' => Venue::orderBy('name')->get(),
             'rooms' => $this->event->rooms()->withCount('sessions')->orderBy('name')->get(),
+            'catalog' => Requirement::orderBy('name')->get(),
         ]);
     }
 }

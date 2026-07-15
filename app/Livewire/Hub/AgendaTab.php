@@ -44,6 +44,7 @@ class AgendaTab extends Component
     public string $speaker = '';
     public string $speakerPick = '';
     public string $description = '';
+    public bool $flagged = false;
 
     // Import
     public bool $showImport = false;
@@ -118,6 +119,7 @@ class AgendaTab extends Component
         $this->reset(['editingId', 'title', 'speaker', 'speakerPick', 'description', 'capacity', 'newRoomName']);
         $this->type = 'panel';
         $this->format = 'in_person';
+        $this->flagged = false;
         $this->starts_at = '09:00';
         $this->ends_at = '10:00';
         $this->agenda_day_id = $dayId ?? $this->selectedDayId ?? $this->event->agendaDays()->value('id');
@@ -140,6 +142,7 @@ class AgendaTab extends Component
         $this->ends_at = substr((string) $s->ends_at, 0, 5);
         $this->speaker = (string) $s->speaker;
         $this->description = (string) $s->description;
+        $this->flagged = (bool) $s->flagged;
         $this->showForm = true;
     }
 
@@ -177,6 +180,7 @@ class AgendaTab extends Component
             'ends_at' => $this->ends_at,
             'speaker' => $this->speaker ?: null,
             'description' => $this->description ?: null,
+            'flagged' => $this->flagged,
         ];
 
         if ($this->editingId) {
@@ -194,11 +198,46 @@ class AgendaTab extends Component
         return $this->redirectTab();
     }
 
-    public function deleteSession(int $sessionId)
+    public function deleteSession(int $sessionId): void
     {
         $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail()->delete();
+        $this->showForm = false;
+    }
 
-        return $this->redirectTab();
+    public function toggleFlag(int $sessionId): void
+    {
+        $s = $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail();
+        $s->update(['flagged' => ! $s->flagged]);
+    }
+
+    /**
+     * Drag-to-reschedule: set a new start (minutes from midnight, snapped to 5)
+     * keeping the duration, and optionally move to the room lane it was dropped on.
+     */
+    public function moveSession(int $sessionId, int $startMin, $roomId = null): void
+    {
+        $s = $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail();
+
+        $toMin = fn (string $t) => (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2);
+        $dur = max($toMin($s->ends_at) - $toMin($s->starts_at), 5);
+
+        $startMin = (int) (round($startMin / 5) * 5);
+        $startMin = max(0, min($startMin, 24 * 60 - $dur));
+        $end = $startMin + $dur;
+
+        $data = [
+            'starts_at' => sprintf('%02d:%02d', intdiv($startMin, 60), $startMin % 60),
+            'ends_at' => sprintf('%02d:%02d', intdiv($end, 60), $end % 60),
+        ];
+
+        // Empty target → Unassigned lane; a real room id must exist for this event.
+        if ($roomId === null || $roomId === '' || (int) $roomId === 0) {
+            $data['room_id'] = null;
+        } elseif ($this->event->rooms()->whereKey((int) $roomId)->exists()) {
+            $data['room_id'] = (int) $roomId;
+        }
+
+        $s->update($data);
     }
 
     /**
@@ -322,19 +361,24 @@ class AgendaTab extends Component
 
         $lanes = $sessions->groupBy(fn ($s) => $s->room?->name ?? 'Unassigned')->map(fn ($group, $room) => [
             'room' => $room,
+            'room_id' => $group->first()->room_id,
             'blocks' => $group->map(function ($s) use ($toMin, $startMin, $span) {
                 [$legend, $hex] = self::PALETTE[$s->type] ?? ['Session', '#3B82F6'];
+                $sMin = $toMin($s->starts_at);
+                $dMin = $toMin($s->ends_at) - $sMin;
 
                 return [
                     'session' => $s,
-                    'left' => round(($toMin($s->starts_at) - $startMin) / $span * 100, 3),
-                    'width' => round(max($toMin($s->ends_at) - $toMin($s->starts_at), 15) / $span * 100, 3),
+                    'left' => round(($sMin - $startMin) / $span * 100, 3),
+                    'width' => round(max($dMin, 15) / $span * 100, 3),
+                    'startMin' => $sMin,
+                    'durMin' => $dMin,
                     'hex' => $hex, 'legend' => $legend,
                 ];
             })->values(),
         ])->values();
 
-        return ['hours' => $hours, 'lanes' => $lanes];
+        return ['hours' => $hours, 'lanes' => $lanes, 'startMin' => $startMin, 'span' => $span];
     }
 
     public function render()

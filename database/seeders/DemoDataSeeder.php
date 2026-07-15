@@ -308,19 +308,19 @@ class DemoDataSeeder extends Seeder
                 ['venue', 'Royal Convention Centre — 3 days', 18000000, 9000000, 'partial', 'INV-2026-014'],
                 ['catering', 'Full board — 1,200 pax', 9500000, 0, 'pending', null],
                 ['av', 'Main stage AV + breakout kits', 12000000, 6000000, 'partial', 'INV-2026-021'],
-                ['branding', 'Stage, wayfinding, badges', 4500000, 4500000, 'paid', 'INV-2026-009'],
+                ['design', 'Stage, wayfinding, badges', 4500000, 4500000, 'paid', 'INV-2026-009'],
                 ['production', 'Stage build + exhibition booths', 8000000, 2000000, 'pending', null],
             ],
             'EY Annual Gala' => [
                 ['venue', 'Gulf Grand Ballroom', 6000000, 6000000, 'paid', 'INV-2026-031'],
                 ['catering', 'Gala dinner — 400 pax', 8500000, 4000000, 'partial', 'INV-2026-035'],
-                ['entertainment', 'Orchestra + show', 3000000, 0, 'pending', null],
+                ['misc', 'Orchestra + show', 3000000, 0, 'pending', null],
                 ['av', 'Lighting + sound design', 4500000, 4500000, 'paid', 'INV-2026-028'],
             ],
             'Tech Expo 2026' => [
                 ['venue', 'Doha Exhibition Center — 4 days', 25000000, 15000000, 'partial', 'INV-2026-040'],
                 ['production', 'Booth fabrication — 120 booths', 22000000, 24000000, 'paid', 'INV-2026-044'],
-                ['branding', 'Expo branding package', 6000000, 2000000, 'partial', null],
+                ['design', 'Expo branding package', 6000000, 2000000, 'partial', null],
             ],
             'NDI Workshop' => [
                 ['venue', 'Jumeirah Learning Hub', 1200000, 1200000, 'paid', 'INV-2026-018'],
@@ -328,13 +328,13 @@ class DemoDataSeeder extends Seeder
                 ['av', 'Training room AV', 1500000, 500000, 'partial', null],
             ],
             'GJU Career Fair' => [
-                ['branding', 'Campus branding + booths', 1500000, 500000, 'partial', null],
+                ['design', 'Campus branding + booths', 1500000, 500000, 'partial', null],
                 ['catering', 'Student refreshments', 2000000, 0, 'pending', null],
             ],
             'Private Dinner' => [
                 ['catering', 'Private chef — 24 covers', 4000000, 4000000, 'paid', 'INV-2026-050'],
                 ['venue', 'Al Faisaliah Private Suites', 2500000, 2500000, 'paid', 'INV-2026-049'],
-                ['entertainment', 'Oud ensemble', 1000000, 1000000, 'paid', 'INV-2026-051'],
+                ['misc', 'Oud ensemble', 1000000, 1000000, 'paid', 'INV-2026-051'],
             ],
         ];
         foreach ($budgets as $eventName => $items) {

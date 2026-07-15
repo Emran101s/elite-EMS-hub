@@ -10,12 +10,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'title', 'avatar_path'])]
+#[Fillable(['name', 'email', 'password', 'title', 'role', 'avatar_path'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /** Workspace roles — slug => label. */
+    public const ROLES = [
+        'super_admin' => 'Super Admin',
+        'admin' => 'Admin',
+        'manager' => 'Manager',
+        'coordinator' => 'Coordinator',
+        'viewer' => 'Viewer',
+    ];
+
+    public function roleLabel(): string
+    {
+        return self::ROLES[$this->role] ?? 'Member';
+    }
 
     /**
      * Get the attributes that should be cast.

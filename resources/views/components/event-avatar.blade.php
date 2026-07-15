@@ -19,7 +19,7 @@
         @if ($avatar?->image_path)
             @php $src = in_array($size, ['sm', 'md']) && $avatar->thumbnail_path ? $avatar->thumbnail_path : $avatar->image_path; @endphp
             <img src="{{ asset($src) }}" alt="{{ $avatar->name }}" loading="lazy" class="h-full w-full object-contain">
-        @elseif ($avatar)
+        @elseif ($avatar && view()->exists('components.avatars.' . $avatar->slug))
             <x-dynamic-component :component="'avatars.' . $avatar->slug" class="h-full w-full" />
         @else
             <span class="flex h-full w-full items-center justify-center text-navy-300">

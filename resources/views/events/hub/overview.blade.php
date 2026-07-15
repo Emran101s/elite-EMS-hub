@@ -19,7 +19,7 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Event Overview</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Event Overview</h3>
             <span class="rounded-full bg-gold-50 px-2.5 py-1 text-[0.62rem] font-bold text-gold-700 ring-1 ring-gold-200">
                 ✦ {{ str($event->stage)->replace('_', ' ')->title() }} Phase
             </span>
@@ -90,7 +90,7 @@
     <div class="card p-5">
         @php $firstDay = $event->agendaDays->first(); @endphp
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Agenda Overview</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Agenda Overview</h3>
             @if ($firstDay)
                 <span class="rounded-xl border border-line px-2.5 py-1 text-[0.62rem] font-semibold text-navy-700">{{ $firstDay->date->format('M j, Y') }} ‹ ›</span>
             @endif
@@ -117,7 +117,7 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Live Alerts</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Live Alerts</h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'risks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="space-y-3.5">
@@ -146,7 +146,7 @@
 <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
     <div class="card p-5">
-        <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Tasks Summary</h3>
+        <h3 class="mb-4 pf text-base font-bold text-navy-900">Tasks Summary</h3>
         <div class="flex items-center gap-4">
             <x-donut :segments="[
                 ['pct' => $done / $taskTotal * 100, 'class' => 'stroke-track'],
@@ -172,7 +172,7 @@
     </div>
 
     <div class="card p-5">
-        <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Budget Summary</h3>
+        <h3 class="mb-4 pf text-base font-bold text-navy-900">Budget Summary</h3>
         <div class="flex items-center gap-4">
             <x-donut :segments="[
                 ['pct' => min($actual / $budgetTotal * 100, 100), 'class' => 'stroke-[#3B82F6]'],
@@ -199,7 +199,7 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Top Suppliers</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Top Suppliers</h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'suppliers']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="divide-y divide-line">
@@ -220,7 +220,7 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Team Workload</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Team Workload</h3>
             <a href="{{ route('team.index') }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View team</a>
         </div>
         <ul class="space-y-3.5">
@@ -250,7 +250,7 @@
 
     <div class="card p-5 xl:col-span-2">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Upcoming Deadlines</h3>
+            <h3 class="pf text-base font-bold text-navy-900">Upcoming Deadlines</h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
@@ -276,7 +276,7 @@
 
     <div class="card p-5">
         <div class="mb-3 flex items-center justify-between">
-            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-navy-900"><span class="text-gold-500">✦</span> AI Recommendations</h3>
+            <h3 class="flex items-center gap-1.5 pf text-base font-bold text-navy-900"><span class="text-gold-500">✦</span> AI Recommendations</h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="space-y-2.5 text-xs text-navy-800">

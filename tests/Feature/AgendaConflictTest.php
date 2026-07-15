@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Hub\AgendaTab;
+use App\Livewire\Hub\SettingsTab;
 use App\Livewire\Hub\VenueTab;
 use App\Models\Event;
 use App\Models\User;
@@ -112,8 +113,11 @@ class AgendaConflictTest extends TestCase
         [$event, $user] = $this->ctx();
         $venue = \App\Models\Venue::where('name', 'Doha Exhibition Center')->firstOrFail();
 
-        Livewire::actingAs($user)->test(VenueTab::class, ['event' => $event])
-            ->set('venue_id', $venue->id);
+        // The event's location/venue is set in Settings (not the Venue tab anymore).
+        Livewire::actingAs($user)->test(SettingsTab::class, ['event' => $event])
+            ->set('venue_id', $venue->id)
+            ->call('save')
+            ->assertHasNoErrors();
 
         $this->assertSame($venue->id, $event->fresh()->venue_id);
     }

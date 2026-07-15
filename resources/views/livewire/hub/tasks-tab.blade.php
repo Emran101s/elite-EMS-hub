@@ -36,6 +36,8 @@
         </form>
     @endif
 
+    <x-bulk-bar :count="$this->selectedCount()" noun="task" />
+
     <div class="grid gap-5 lg:grid-cols-3">
         @foreach ($groups as $status => $tasks)
             <div class="card p-4">
@@ -45,8 +47,11 @@
                 </div>
                 <div class="space-y-2.5">
                     @forelse ($tasks->take(10) as $task)
-                        <div class="group/task rounded-xl border border-line bg-page/50 px-3.5 py-3">
-                            <p class="text-xs font-semibold text-navy-900">{{ $task->title }}</p>
+                        <div class="group/task rounded-xl border px-3.5 py-3 {{ $this->isSelected($task->id) ? 'border-navy-900 bg-navy-50/60' : 'border-line bg-page/50' }}">
+                            <div class="flex items-start gap-2">
+                                <button type="button" wire:click="toggleSelect({{ $task->id }})" class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[0.55rem] {{ $this->isSelected($task->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                <p class="min-w-0 flex-1 text-xs font-semibold text-navy-900">{{ $task->title }}</p>
+                            </div>
                             <div class="mt-1.5 flex items-center justify-between">
                                 <span class="text-[0.65rem] text-muted">{{ $task->assignee?->name ?? 'Unassigned' }}</span>
                                 <span class="flex items-center gap-2">

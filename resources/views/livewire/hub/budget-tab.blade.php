@@ -1,109 +1,671 @@
-<div>
-    @php
-        $estimated = $items->sum('estimated_cents');
-        $actual = $items->sum('actual_cents');
-        $paid = $items->where('payment_status', 'paid')->sum('actual_cents');
-        $fmt = fn (int $cents) => '$'.number_format($cents / 100);
-    @endphp
+@php
+    use App\Models\Event;
+    use App\Models\EventBudgetItem;
+    $fmt = fn ($cents) => $event->money($cents);
+    // convert cents in the event currency into the other currency, formatted
+    $conv = fn ($cents) => Event::moneyIn((int) round(($cents ?? 0) * $fxRate), $fxOther);
+    $cap = $event->budget_cents ?? 0;
+    $usedPct = $cap > 0 ? min(100, round($grandForecast / $cap * 100)) : 0;
+    $paidPct = $cap > 0 ? min(100, round($paidTotal / $cap * 100)) : 0;
+    $remaining = $cap - $grandForecast;
+    $track = $view === 'track';
+    $money = 'w-24 shrink-0 text-right';
+    // Per-category colour + icon, cycled by position — a distinct chip like the builder concept.
+    $catPalette = [
+        ['bg-sky-100', 'text-sky-600'], ['bg-blue-100', 'text-blue-600'], ['bg-rose-100', 'text-rose-600'],
+        ['bg-violet-100', 'text-violet-600'], ['bg-teal-100', 'text-teal-600'], ['bg-emerald-100', 'text-emerald-600'],
+        ['bg-amber-100', 'text-amber-600'], ['bg-indigo-100', 'text-indigo-600'], ['bg-fuchsia-100', 'text-fuchsia-600'],
+    ];
+    $catIcons = ['users', 'building', 'clipboard', 'grid', 'star', 'truck', 'archive', 'currency', 'chart'];
+@endphp
 
-    <div class="mb-4 flex items-center justify-between">
-        <div class="flex flex-wrap gap-3">
+<div>
+    {{-- ══ Budget headline strip ══ --}}
+    <div class="strip-dark mb-5 px-6 py-5">
+        <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
+
+        <div class="relative flex flex-wrap items-center gap-x-6 gap-y-5">
             @foreach ([
-                ['label' => 'Event Budget', 'value' => $fmt($event->budget_cents)],
-                ['label' => 'Estimated', 'value' => $fmt($estimated)],
-                ['label' => 'Actual', 'value' => $fmt($actual), 'risk' => $actual > $estimated],
-                ['label' => 'Paid', 'value' => $fmt($paid)],
-                ['label' => 'Outstanding', 'value' => $fmt(max($actual - $paid, 0))],
-            ] as $stat)
-                <div class="flex h-[90px] w-[155px] flex-col justify-center rounded-[18px] border border-line bg-white px-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                    <p class="text-[11px] font-semibold text-muted">{{ $stat['label'] }}</p>
-                    <p class="mt-1 text-xl font-bold {{ ($stat['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $stat['value'] }}</p>
+                ['Total budget', $fmt($cap), 'text-white'],
+                ['Forecast', $fmt($grandForecast), $grandForecast > $cap && $cap > 0 ? 'text-red-300' : 'text-white'],
+                ['Paid', $paidTotal ? $fmt($paidTotal) : '—', $paidTotal ? 'text-emerald-300' : 'text-white/30'],
+                [$remaining < 0 ? 'Over budget' : 'Remaining', $fmt(abs($remaining)), $remaining < 0 ? 'text-red-300' : 'text-gold-300'],
+            ] as $i => [$lbl, $val, $tone])
+                @if ($i > 0)
+                    <span class="hidden h-11 w-px bg-white/10 sm:block" aria-hidden="true"></span>
+                @endif
+                <div class="min-w-[110px]">
+                    <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $lbl }}</p>
+                    <p class="pf mt-1 text-[22px] font-bold leading-none {{ $tone }}">{{ $val }}</p>
                 </div>
             @endforeach
+
+            {{-- usage bar --}}
+            <div class="ml-auto min-w-[200px] flex-1">
+                <div class="mb-1.5 flex items-baseline justify-between">
+                    <span class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">Budget used</span>
+                    <span class="text-xs font-bold {{ $usedPct >= 100 ? 'text-red-300' : 'text-white' }}">{{ $usedPct }}%</span>
+                </div>
+                <div class="flex h-2 overflow-hidden rounded-full bg-white/15">
+                    <div class="bg-emerald-400" style="width: {{ $paidPct }}%"></div>
+                    <div class="bg-gold-400" style="width: {{ max(0, $usedPct - $paidPct) }}%"></div>
+                </div>
+                <p class="mt-1.5 flex items-center gap-3 text-[0.55rem] text-white/40">
+                    <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Paid</span>
+                    <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-gold-400"></span> Committed</span>
+                </p>
+            </div>
         </div>
-        <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-10 shrink-0 px-4 text-xs">＋ Add Line</button>
     </div>
 
-    @if ($showForm)
-        <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-cat">Category</label>
-                <select id="b-cat" wire:model="category" class="input h-10 text-sm">
-                    @foreach (\App\Models\EventBudgetItem::CATEGORIES as $categoryOption)<option value="{{ $categoryOption }}">{{ str($categoryOption)->replace('_', ' & ')->title() }}</option>@endforeach
-                </select>
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-desc">Description</label>
-                <input id="b-desc" type="text" wire:model="description" class="input h-10 text-sm" placeholder="e.g. Main stage build">
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-est">Estimated (USD)</label>
-                <input id="b-est" type="number" step="0.01" min="0" wire:model="estimated" class="input h-10 text-sm" placeholder="25000">
-                @error('estimated') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-act">Actual (USD)</label>
-                <input id="b-act" type="number" step="0.01" min="0" wire:model="actual" class="input h-10 text-sm" placeholder="0">
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-sup">Supplier</label>
-                <select id="b-sup" wire:model="supplier_id" class="input h-10 text-sm">
-                    <option value="">—</option>
-                    @foreach ($suppliers as $supplier)<option value="{{ $supplier->id }}">{{ $supplier->name }}</option>@endforeach
-                </select>
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-pay">Payment status</label>
-                <select id="b-pay" wire:model="payment_status" class="input h-10 text-sm">
-                    @foreach (\App\Models\EventBudgetItem::PAYMENT_STATUSES as $paymentOption)<option value="{{ $paymentOption }}">{{ str($paymentOption)->title() }}</option>@endforeach
-                </select>
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-inv">Invoice #</label>
-                <input id="b-inv" type="text" wire:model="invoice_number" class="input h-10 text-sm" placeholder="INV-2026-060">
-            </div>
-            <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="b-due">Due date</label>
-                <input id="b-due" type="date" wire:model="due_on" class="input h-10 text-sm">
-            </div>
-            <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
-                <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                <button type="submit" class="btn-navy h-10 px-5 text-xs">Save Line</button>
-            </div>
-        </form>
-    @endif
-
-    <div class="card divide-y divide-line">
-        <div class="hidden grid-cols-12 gap-3 px-6 py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-muted md:grid">
-            <span class="col-span-4">Line Item</span>
-            <span class="col-span-2 text-right">Estimated</span>
-            <span class="col-span-2 text-right">Actual</span>
-            <span class="col-span-2">Supplier</span>
-            <span class="col-span-2 text-right">Payment</span>
-        </div>
-        @forelse ($items as $item)
-            <div class="group/line grid grid-cols-2 items-center gap-3 px-6 py-4 md:grid-cols-12">
-                <div class="col-span-2 md:col-span-4">
-                    <p class="text-sm font-semibold text-navy-900">{{ $item->description ?? str($item->category)->title() }}</p>
-                    <p class="text-[0.65rem] uppercase tracking-wide text-muted">{{ str($item->category)->replace('_', ' & ')->title() }}
-                        @if ($item->invoice_number) · {{ $item->invoice_number }} @endif
-                    </p>
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+        {{-- ══════════ MAIN · ledger ══════════ --}}
+        <div class="min-w-0">
+            @if ($event->budgetLocked())
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
+                    <span class="text-lg">🔒</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-emerald-800">Approved budget — locked baseline</p>
+                        <p class="text-[0.62rem] text-emerald-700/80">This budget is the approved baseline and can't be edited. Actual costs still track; create a revision to change the plan.</p>
+                    </div>
+                    <button type="button" wire:click="reviseBudget" class="shrink-0 rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-[0.62rem] font-bold text-emerald-700 transition hover:bg-emerald-100">Create revision</button>
                 </div>
-                <p class="text-xs font-semibold text-navy-900 md:col-span-2 md:text-right">{{ $item->estimated_cents ? '$'.number_format($item->estimated_cents / 100) : '—' }}</p>
-                <p class="text-xs font-semibold md:col-span-2 md:text-right {{ $item->actual_cents > $item->estimated_cents ? 'text-risk' : 'text-navy-900' }}">
-                    {{ $item->actual_cents ? '$'.number_format($item->actual_cents / 100) : '—' }}
-                </p>
-                <p class="truncate text-xs text-muted md:col-span-2">{{ $item->supplier?->name ?? '—' }}</p>
-                <div class="flex items-center justify-end gap-2 md:col-span-2">
-                    <x-status-badge :status="$item->payment_status" />
-                    @if ($item->payment_status !== 'paid')
-                        <button type="button" wire:click="setPayment({{ $item->id }}, 'paid')"
-                                class="rounded-lg bg-track/10 px-2 py-1 text-[0.6rem] font-bold text-emerald-700 opacity-0 transition hover:bg-track/20 group-hover/line:opacity-100">✓ Mark Paid</button>
+            @elseif (($event->budget_status ?? 'draft') === 'pending')
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3">
+                    <span class="text-lg">⏳</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-amber-800">Pending approval</p>
+                        <p class="text-[0.62rem] text-amber-700/80">Submitted for sign-off. Approve or reject from the Approval panel.</p>
+                    </div>
+                </div>
+            @endif
+            {{-- income (money in) — three streams, target vs actual --}}
+            @php $tin = 'w-20 shrink-0 text-right'; @endphp
+            <div class="card mb-4 overflow-hidden">
+                <div class="flex items-center justify-between border-b border-line bg-emerald-50/50 px-3 py-2">
+                    <span class="flex items-center gap-1.5 text-[0.8rem] font-bold text-navy-900"><span class="text-emerald-600">▲</span> Income (money in)</span>
+                    <div class="text-right leading-tight">
+                        <span class="text-sm font-bold text-emerald-700">{{ $fmt($totalIncome) }}</span>
+                        <span class="block text-[0.54rem] text-muted">actual · target {{ $fmt($totalTargetIncome) }}</span>
+                    </div>
+                </div>
+
+                {{-- column header --}}
+                <div class="flex items-center gap-2 border-b border-line bg-page/30 px-3 py-1 text-[0.5rem] font-bold uppercase tracking-wide text-muted">
+                    <span class="flex-1">Source</span>
+                    <span class="{{ $tin }}">Target</span>
+                    <span class="{{ $tin }}">Actual</span>
+                </div>
+
+                {{-- Client / Main Fund (primary) --}}
+                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-[0.78rem]">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold text-navy-900">Client / Main Fund</p>
+                        <p class="text-[0.56rem] text-muted">Primary income · <button type="button" wire:click="newIncome('client')" class="font-bold text-gold-600 hover:text-gold-700">＋ log payment</button></p>
+                    </div>
+                    <div class="{{ $tin }}">
+                        <span class="inline-flex items-center gap-0.5 rounded-md border border-line bg-white px-1">
+                            <span class="text-[0.55rem] text-navy-300">{{ $event->currencySymbol() }}</span>
+                            <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="clientTarget" placeholder="0" class="w-12 bg-transparent text-right text-[0.72rem] font-semibold text-navy-700 focus:outline-none">
+                        </span>
+                    </div>
+                    <span class="{{ $tin }} font-bold text-emerald-700">{{ $clientActual ? $fmt($clientActual) : '—' }}</span>
+                </div>
+
+                {{-- Extra income --}}
+                <div class="bg-navy-900/[0.03] px-3 py-1 text-[0.5rem] font-bold uppercase tracking-[0.16em] text-navy-400">Extra income</div>
+
+                {{-- Sponsorships --}}
+                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-[0.78rem]">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'sponsors']) }}" class="min-w-0 flex-1">
+                        <p class="font-bold text-navy-900 hover:text-gold-700">Sponsorships →</p>
+                        <p class="text-[0.56rem] text-muted">{{ $sponsorsCount }} sold · {{ $sponsorsReceived ? $fmt($sponsorsReceived).' received' : 'sell packages' }}</p>
+                    </a>
+                    <div class="{{ $tin }}">
+                        <span class="inline-flex items-center gap-0.5 rounded-md border border-line bg-white px-1">
+                            <span class="text-[0.55rem] text-navy-300">{{ $event->currencySymbol() }}</span>
+                            <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="sponsorshipTarget" placeholder="0" class="w-12 bg-transparent text-right text-[0.72rem] font-semibold text-navy-700 focus:outline-none">
+                        </span>
+                    </div>
+                    <span class="{{ $tin }} font-bold text-emerald-700">{{ $sponsorsIncome ? $fmt($sponsorsIncome) : '—' }}</span>
+                </div>
+
+                {{-- Exhibition / Booths --}}
+                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-[0.78rem]">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'exhibition']) }}" class="min-w-0 flex-1">
+                        <p class="font-bold text-navy-900 hover:text-gold-700">Exhibition / Booths →</p>
+                        <p class="text-[0.56rem] text-muted">{{ $exhibitorsCount }} sold · {{ $exhibitorsReceived ? $fmt($exhibitorsReceived).' received' : 'sell booths' }}</p>
+                    </a>
+                    <div class="{{ $tin }}">
+                        <span class="inline-flex items-center gap-0.5 rounded-md border border-line bg-white px-1">
+                            <span class="text-[0.55rem] text-navy-300">{{ $event->currencySymbol() }}</span>
+                            <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="exhibitionTarget" placeholder="0" class="w-12 bg-transparent text-right text-[0.72rem] font-semibold text-navy-700 focus:outline-none">
+                        </span>
+                    </div>
+                    <span class="{{ $tin }} font-bold text-emerald-700">{{ $exhibitorsIncome ? $fmt($exhibitorsIncome) : '—' }}</span>
+                </div>
+
+                {{-- Other income items --}}
+                @foreach ($otherIncomeItems as $inc)
+                    <div wire:key="inc-{{ $inc->id }}" class="group/inc relative flex items-center gap-2 border-b border-line px-3 py-1.5 text-[0.78rem] hover:bg-page/30">
+                        <span class="min-w-0 flex-1 truncate text-navy-900"><span class="font-semibold">{{ $inc->sourceLabel() }}</span>@if ($inc->description) <span class="text-muted">· {{ $inc->description }}</span>@endif <span class="rounded-full bg-navy-100 px-1.5 text-[0.52rem] font-bold uppercase text-navy-500">{{ $inc->status }}</span></span>
+                        <span class="{{ $tin }} text-navy-300">—</span>
+                        <span class="{{ $tin }} font-semibold text-emerald-700">{{ $fmt($inc->amount_cents) }}</span>
+                        <div class="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border border-line bg-white px-1 py-0.5 shadow-sm group-hover/inc:flex">
+                            <button type="button" wire:click="editIncome({{ $inc->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100">✎</button>
+                            <button type="button" wire:click="deleteIncome({{ $inc->id }})" wire:confirm="Delete this income line?" class="rounded bg-risk/10 px-1.5 py-0.5 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20">✕</button>
+                        </div>
+                    </div>
+                @endforeach
+
+                {{-- quick-add other income sources (client fund is its own stream above) --}}
+                <div class="flex flex-wrap items-center gap-1.5 border-t border-line bg-page/20 px-3 py-2">
+                    <span class="text-[0.6rem] font-semibold uppercase tracking-wide text-muted">Add income:</span>
+                    @foreach (\App\Models\EventIncomeItem::SOURCES as $key => $label)
+                        @continue ($key === 'client')
+                        <button type="button" wire:click="newIncome('{{ $key }}')" class="rounded-full border border-line bg-white px-2.5 py-0.5 text-[0.62rem] font-semibold text-navy-700 transition hover:border-gold-400 hover:text-gold-700">＋ {{ $label }}</button>
+                    @endforeach
+                </div>
+
+                {{-- total --}}
+                <div class="flex items-center gap-2 border-t border-line bg-emerald-50/40 px-3 py-2 text-[0.8rem] font-bold">
+                    <span class="flex-1 text-navy-900">Total income</span>
+                    <span class="{{ $tin }} text-navy-500">{{ $fmt($totalTargetIncome) }}</span>
+                    <span class="{{ $tin }} text-emerald-700">{{ $fmt($totalIncome) }}</span>
+                </div>
+            </div>
+
+                {{-- ══ builder toolbar ══ --}}
+                @unless ($event->budgetLocked())
+                    <div class="mb-3 flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" data-newcat wire:model="newCategoryName" wire:keydown.enter="addCategory" maxlength="60" class="input h-10 w-44 text-sm" placeholder="New category name…">
+                            <button type="button" wire:click="addCategory" class="btn-navy h-10 px-4 text-xs"><span class="text-gold-400">＋</span> Add Category</button>
+                        </div>
+                        <button type="button" wire:click="newLine" class="h-10 rounded-xl border border-line bg-white px-4 text-xs font-semibold text-navy-700 transition hover:border-gold-300">＋ Add Line Item</button>
+                        <div class="ml-auto flex items-center gap-2 text-[0.6rem] font-bold uppercase tracking-wide text-muted">
+                            <button type="button" wire:click="expandAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Expand all</button>
+                            <button type="button" wire:click="collapseAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Collapse all</button>
+                        </div>
+                    </div>
+                    @error('newCategoryName') <p class="mb-2 text-[0.65rem] font-semibold text-risk">{{ $message }}</p> @enderror
+                @endunless
+
+                <x-bulk-bar :count="$this->selectedCount()" noun="line" />
+
+                <div class="card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <div class="{{ $track ? 'min-w-[680px]' : 'min-w-[380px]' }}">
+                            {{-- column labels --}}
+                            <div class="flex items-center gap-2 border-b border-line bg-page/40 px-3 py-2.5 text-[0.56rem] font-bold uppercase tracking-wide text-muted">
+                                <span class="flex-1">Category / Line item</span>
+                                <span class="{{ $money }}">{{ $track ? 'Budget' : 'Estimated cost' }}</span>
+                                @if ($track)
+                                    <span class="{{ $money }}">Actual</span>
+                                    <span class="{{ $money }}">Paid</span>
+                                    <span class="{{ $money }}">Saved / Over</span>
+                                @endif
+                            </div>
+
+                            <div data-cat-sort>
+                            @foreach ($sections as $section)
+                                @php
+                                    $secItems = $section['items'];
+                                    $catEst = $secItems->sum('estimated_cents');
+                                    $catAct = $secItems->sum('actual_cents');
+                                    $catPaid = $secItems->sum('paid_cents');
+                                    $isOpen = ! in_array($section['key'], $collapsed, true);
+                                    $catFlagged = $secItems->contains(fn ($i) => $i->flagged);
+                                    $spendPct = $catEst > 0 ? min(100, round($catAct / $catEst * 100)) : 0;
+                                    $paidPctCat = $catEst > 0 ? min(100, round($catPaid / $catEst * 100)) : 0;
+                                    $isRenaming = $section['id'] && $editingCategoryId === $section['id'];
+                                    $catArg = addslashes($section['name']);
+                                    [$cbg, $cfg] = $catPalette[$loop->index % count($catPalette)];
+                                    $cicon = $catIcons[$loop->index % count($catIcons)];
+                                @endphp
+
+                                <div wire:key="catblock-{{ $section['key'] }}" @if ($section['id']) data-cat="{{ $section['id'] }}" @endif class="cat-block">
+                                {{-- ── category header ── --}}
+                                <div class="group/cat border-b border-line bg-white">
+                                    <div class="flex items-center gap-2 px-3 py-2">
+                                        @if ($isRenaming)
+                                            <span class="shrink-0 text-[0.6rem] text-navy-300">▶</span>
+                                            <input type="text" wire:model="categoryEditName" wire:keydown.enter="saveCategoryName" maxlength="60" class="input h-8 min-w-0 flex-1 text-[0.82rem] font-bold">
+                                            <button type="button" wire:click="saveCategoryName" class="shrink-0 rounded-lg bg-navy-900 px-2.5 py-1 text-[0.6rem] font-bold text-white">Save</button>
+                                            <button type="button" wire:click="cancelRenameCategory" class="shrink-0 text-[0.62rem] font-semibold text-navy-500 hover:text-navy-900">Cancel</button>
+                                        @else
+                                            @if ($section['id'] && ! $event->budgetLocked())
+                                                <span class="cat-drag hidden shrink-0 cursor-grab select-none text-[0.7rem] leading-none text-navy-300 hover:text-navy-500 active:cursor-grabbing sm:inline" title="Drag to reorder">⠿</span>
+                                            @endif
+                                            <button type="button" wire:click="toggleCollapse('{{ $section['key'] }}')" class="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+                                                <span class="shrink-0 text-[0.6rem] text-navy-400 transition-transform {{ $isOpen ? 'rotate-90' : '' }}">▶</span>
+                                                <span class="w-4 shrink-0 text-center text-[0.62rem] font-bold text-navy-300">{{ $loop->iteration }}</span>
+                                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg {{ $cbg }} {{ $cfg }}"><x-icon :name="$cicon" class="h-3.5 w-3.5" /></span>
+                                                <span class="truncate text-[0.86rem] font-bold text-navy-900">{{ $section['name'] }}</span>
+                                                <span class="shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[0.55rem] font-bold text-navy-500">{{ $secItems->count() }} {{ str('item')->plural($secItems->count()) }}</span>
+                                                @if ($catFlagged)<span class="shrink-0 text-[0.72rem] text-risk">⚑</span>@endif
+                                            </button>
+                                            @unless ($event->budgetLocked())
+                                                <span class="hidden shrink-0 items-center gap-1 group-hover/cat:flex">
+                                                    <button type="button" wire:click="newLine('{{ $catArg }}')" class="rounded bg-gold-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-gold-700 hover:bg-gold-100" title="Add line">＋ line</button>
+                                                    @if ($section['id'])
+                                                        <button type="button" wire:click="startRenameCategory({{ $section['id'] }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Rename category">✎</button>
+                                                        <button type="button" wire:click="deleteCategory({{ $section['id'] }})" wire:confirm="Delete “{{ $section['name'] }}”? Any lines move to another category." class="rounded bg-risk/10 px-1.5 py-0.5 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20" title="Delete category">✕</button>
+                                                    @endif
+                                                </span>
+                                            @endunless
+                                            <button type="button" wire:click="newLine('{{ $catArg }}')" class="shrink-0 text-[0.78rem] font-bold text-gold-600 hover:text-gold-700 group-hover/cat:hidden" title="Add line to this category">＋</button>
+                                            <span class="{{ $money }} text-[0.74rem] font-bold text-navy-900">{{ $catEst ? $fmt($catEst) : '—' }}</span>
+                                            @if ($track)
+                                                @php $secCosted = $secItems->where('actual_cents', '>', 0); $secSaved = $secCosted->sum('estimated_cents') - $secCosted->sum('actual_cents'); @endphp
+                                                <span class="{{ $money }} text-[0.74rem] font-bold {{ $catAct > $catEst && $catEst > 0 ? 'text-risk' : 'text-navy-700' }}">{{ $catAct ? $fmt($catAct) : '—' }}</span>
+                                                <span class="{{ $money }} text-[0.74rem] font-bold text-emerald-700">{{ $catPaid ? $fmt($catPaid) : '—' }}</span>
+                                                <span class="{{ $money }} text-[0.74rem] font-bold {{ $secCosted->isEmpty() ? 'text-navy-300' : ($secSaved < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ $secCosted->isEmpty() ? '—' : ($secSaved >= 0 ? '+' : '−').$fmt(abs($secSaved)) }}</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                    {{-- spend bar (track only) --}}
+                                    @if ($track && $catEst > 0 && ! $isRenaming)
+                                        <div class="px-3 pb-2">
+                                            <div class="flex h-1 overflow-hidden rounded-full bg-navy-100">
+                                                <div class="bg-emerald-500" style="width: {{ $paidPctCat }}%"></div>
+                                                <div class="bg-gold-400" style="width: {{ max(0, $spendPct - $paidPctCat) }}%"></div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- ── line items (collapsible) ── --}}
+                                @if ($isOpen)
+                                    @forelse ($secItems as $item)
+                                        <div wire:key="bi-{{ $item->id }}" class="group/line relative flex items-center gap-2 border-b border-line px-3 py-1.5 pl-9 last:border-0 hover:bg-page/40 {{ $this->isSelected($item->id) ? 'bg-navy-50/60' : 'bg-page/[0.15]' }}">
+                                            @unless ($item->isLinked())
+                                                <button type="button" wire:click.stop="toggleSelect({{ $item->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[0.55rem] {{ $this->isSelected($item->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                            @endunless
+                                            <button type="button" wire:click="toggleFlag({{ $item->id }})" class="shrink-0 text-[0.7rem] {{ $item->flagged ? 'text-risk' : 'text-navy-200 hover:text-navy-400' }}" title="{{ $item->flagged ? 'Flagged — click to unflag' : 'Flag as priority' }}">{{ $item->flagged ? '⚑' : '⚐' }}</button>
+                                            @php
+                                                $bits = [];
+                                                if ($item->quantity > 1 || $item->unit_cents) $bits[] = $item->quantity.' × '.$fmt($item->unit_cents);
+                                                if ($item->vendor) $bits[] = $item->vendor;
+                                                if ($item->invoice_number) $bits[] = $item->invoice_number;
+                                                if ($item->due_on) $bits[] = 'due '.$item->due_on->format('M j');
+                                            @endphp
+                                            <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="group/edit min-w-0 flex-1 text-left" title="{{ $item->isLinked() ? 'Synced — edit in the '.\Illuminate\Support\Str::headline($item->linkedTab()).' tab' : 'Click to edit this line' }}">
+                                                <p class="flex items-center gap-1.5 truncate text-[0.8rem] font-medium text-navy-900 group-hover/edit:text-gold-700">
+                                                    @if ($item->isLinked())<span class="shrink-0 rounded bg-navy-100 px-1 text-[0.5rem] font-bold uppercase tracking-wide text-navy-500" title="Synced from module">🔗 {{ $item->linkedTab() === 'transportation' ? 'transport' : $item->linkedTab() }}</span>@endif
+                                                    <span class="truncate">{{ $item->description ?? $item->categoryLabel() }}</span>
+                                                </p>
+                                                @if ($item->isLinked())
+                                                    <p class="truncate text-[0.56rem] text-navy-400">Synced from {{ \Illuminate\Support\Str::headline($item->linkedTab()) }}@if ($item->vendor) · {{ $item->vendor }}@endif</p>
+                                                @elseif ($bits)
+                                                    <p class="truncate text-[0.56rem] text-muted">{{ implode(' · ', $bits) }}</p>
+                                                @else
+                                                    <p class="truncate text-[0.56rem] text-gold-600/70 group-hover/edit:text-gold-700">Click to set quantity &amp; unit cost →</p>
+                                                @endif
+                                            </button>
+                                            <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="{{ $money }} text-[0.72rem] font-semibold {{ $item->estimated_cents ? 'text-navy-900' : 'text-gold-600 hover:text-gold-700' }}">{{ $item->estimated_cents ? $fmt($item->estimated_cents) : '＋ set' }}</button>
+                                            @if ($track)
+                                                @php $lineSaved = $item->actual_cents > 0 ? $item->estimated_cents - $item->actual_cents : null; @endphp
+                                                <span class="{{ $money }} text-[0.72rem] font-semibold {{ $item->actual_cents > $item->estimated_cents && $item->estimated_cents > 0 ? 'text-risk' : 'text-navy-900' }}">{{ $item->actual_cents ? $fmt($item->actual_cents) : '—' }}</span>
+                                                <span class="{{ $money }} text-[0.72rem] font-semibold text-emerald-700">{{ $item->paid_cents ? $fmt($item->paid_cents) : '—' }}</span>
+                                                <span class="{{ $money }} text-[0.72rem] font-semibold {{ $lineSaved === null ? 'text-navy-300' : ($lineSaved < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ $lineSaved === null ? '—' : ($lineSaved >= 0 ? '+' : '−').$fmt(abs($lineSaved)) }}</span>
+                                            @endif
+                                            {{-- hover actions --}}
+                                            <div class="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border border-line bg-white px-1 py-0.5 shadow-sm group-hover/line:flex">
+                                                @if ($track && $item->payment_status !== 'paid')
+                                                    <button type="button" wire:click="markPaid({{ $item->id }})" class="rounded bg-emerald-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-emerald-700 hover:bg-emerald-100" title="Mark fully paid">✓</button>
+                                                @endif
+                                                @if ($item->isLinked())
+                                                    <a href="{{ route('events.hub', [$event, 'tab' => $item->linkedTab()]) }}" class="rounded bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Edit in the {{ \Illuminate\Support\Str::headline($item->linkedTab()) }} tab">↗ source</a>
+                                                @else
+                                                    <button type="button" wire:click="duplicateLine({{ $item->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Duplicate">⧉</button>
+                                                    <button type="button" wire:click="editLine({{ $item->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
+                                                    <button type="button" wire:click="deleteLine({{ $item->id }})" wire:confirm="Delete this line?" class="rounded bg-risk/10 px-1.5 py-0.5 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <button type="button" wire:click="newLine('{{ $catArg }}')" @disabled($event->budgetLocked()) class="flex w-full items-center gap-2 border-b border-line bg-page/[0.15] px-3 py-2 pl-9 text-left text-[0.7rem] text-muted transition hover:bg-page/40 hover:text-gold-700 disabled:opacity-50">
+                                            <span class="text-gold-500">＋</span> Add a line to {{ $section['name'] }}
+                                        </button>
+                                    @endforelse
+                                    @if ($secItems->isNotEmpty() && ! $event->budgetLocked())
+                                        <button type="button" wire:click="newLine('{{ $catArg }}')" class="flex w-full items-center gap-1.5 border-b border-line bg-page/[0.15] px-3 py-1.5 pl-9 text-left text-[0.7rem] font-semibold text-gold-600 transition hover:bg-gold-50/60 hover:text-gold-700">
+                                            <span>＋</span> Add Line Item
+                                        </button>
+                                    @endif
+                                @endif
+                                </div>{{-- /cat-block --}}
+                            @endforeach
+                            </div>{{-- /data-cat-sort --}}
+
+                            {{-- ── add a category ── --}}
+                            @unless ($event->budgetLocked())
+                                <button type="button" x-on:click="document.querySelector('[data-newcat]')?.focus()" class="flex w-full items-center gap-1.5 border-b border-line bg-page/30 px-3 py-2.5 text-left text-[0.72rem] font-bold text-navy-500 transition hover:bg-navy-50/60 hover:text-navy-700">
+                                    <span class="text-gold-500">＋</span> Add New Category
+                                </button>
+                            @endunless
+
+                            {{-- ── totals ── --}}
+                            <div class="flex items-center gap-2 border-t border-line bg-white px-3 py-2">
+                                <span class="flex-1 text-[0.62rem] font-bold uppercase tracking-wide text-navy-600">Subtotal</span>
+                                <span class="{{ $money }} text-[0.74rem] font-bold text-navy-900">{{ $fmt($estimatedTotal) }}</span>
+                                @if ($track)
+                                    <span class="{{ $money }} text-[0.74rem] font-bold text-navy-900">{{ $actualTotal ? $fmt($actualTotal) : '—' }}</span>
+                                    <span class="{{ $money }} text-[0.74rem] font-bold text-emerald-700">{{ $paidTotal ? $fmt($paidTotal) : '—' }}</span>
+                                    <span class="{{ $money }} text-[0.74rem] font-bold {{ ! $hasActuals ? 'text-navy-300' : ($savedTotal < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ ! $hasActuals ? '—' : ($savedTotal >= 0 ? '+' : '−').$fmt(abs($savedTotal)) }}</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2 border-t border-line bg-gold-50/40 px-3 py-2">
+                                <span class="flex min-w-0 flex-1 items-center gap-1.5">
+                                    <span class="shrink-0 text-[0.7rem] text-gold-500">⚑</span>
+                                    <span class="truncate text-[0.78rem] font-bold text-navy-900">Management fee</span>
+                                    <span class="inline-flex shrink-0 items-center rounded-md border border-gold-300 bg-white px-1 text-[0.6rem] font-bold text-gold-700">
+                                        <input type="number" min="0" max="100" step="0.5" wire:model.live.debounce.500ms="feePct" class="w-7 bg-transparent text-center focus:outline-none">%
+                                    </span>
+                                </span>
+                                <span class="{{ $money }} text-[0.74rem] font-bold text-gold-700">{{ $fmt($feeEst) }}</span>
+                                @if ($track)
+                                    <span class="{{ $money }} text-[0.74rem] font-bold text-gold-700">{{ $feeAct ? $fmt($feeAct) : '—' }}</span>
+                                    <span class="{{ $money }}"></span>
+                                    <span class="{{ $money }}"></span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2 border-t-2 border-navy-900/10 bg-page/50 px-3 py-2.5">
+                                <span class="flex-1 text-xs font-bold uppercase tracking-wide text-navy-900">Grand total <span class="hidden font-normal normal-case text-muted sm:inline">(incl. {{ rtrim(rtrim(number_format($feePct, 2), '0'), '.') }}%)</span></span>
+                                <span class="{{ $money }} text-sm font-bold text-navy-900">{{ $fmt($grandEst) }}</span>
+                                @if ($track)
+                                    <span class="{{ $money }} text-sm font-bold {{ $grandAct > $grandEst && $grandEst > 0 ? 'text-risk' : 'text-navy-900' }}">{{ $grandAct ? $fmt($grandAct) : '—' }}</span>
+                                    <span class="{{ $money }} text-sm font-bold text-emerald-700">{{ $paidTotal ? $fmt($paidTotal) : '—' }}</span>
+                                    <span class="{{ $money }} text-sm font-bold {{ ! $hasActuals ? 'text-navy-300' : ($savedTotal < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ ! $hasActuals ? '—' : ($savedTotal >= 0 ? '+' : '−').$fmt(abs($savedTotal)) }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        {{-- ══════════ RIGHT · control rail ══════════ --}}
+        <div class="xl:sticky xl:top-[112px] xl:h-fit">
+            <div class="card overflow-hidden">
+                {{-- rail header --}}
+                <div class="flex items-center justify-between border-b border-line bg-navy-900 px-4 py-3">
+                    <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Budget Controls</span>
+                    <a href="{{ route('events.budget.pdf', $event) }}" class="rounded-lg bg-white/10 px-2.5 py-1 text-[0.62rem] font-bold text-white transition hover:bg-white/20 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ PDF</a>
+                </div>
+
+                {{-- mode --}}
+                <div class="border-b border-line p-4">
+                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Mode</p>
+                    <div class="flex rounded-xl border border-line bg-page/40 p-1">
+                        <button type="button" wire:click="$set('view', 'build')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">🧱 Build</button>
+                        <button type="button" wire:click="$set('view', 'track')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">📊 Track</button>
+                    </div>
+                    <p class="mt-2 text-[0.58rem] leading-snug text-muted">{{ $view === 'build' ? 'Plan budgeted amounts — quantity × unit from your own estimates.' : 'Track budget vs actual & paid — see where you saved or overspent.' }}</p>
+                </div>
+
+                {{-- total budget + fee + currency --}}
+                <div class="border-b border-line p-4">
+                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Total budget</p>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-lg font-bold text-navy-400">{{ $event->currencySymbol() }}</span>
+                        <input type="number" min="0" step="1000" wire:model.live.debounce.500ms="budgetCap" class="input h-10 flex-1 text-base font-bold" placeholder="0">
+                        <span class="text-[0.6rem] font-semibold text-muted">{{ $event->currency }}</span>
+                    </div>
+                    <div class="mt-2.5 flex items-center justify-between rounded-xl bg-gold-50/50 px-3 py-2">
+                        <span class="text-[0.62rem] font-semibold text-muted">Management fee</span>
+                        <span class="inline-flex items-center rounded-md border border-gold-300 bg-white px-1.5 text-xs font-bold text-gold-700">
+                            <input type="number" min="0" max="100" step="0.5" wire:model.live.debounce.500ms="feePct" class="w-8 bg-transparent text-center focus:outline-none">%
+                        </span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between rounded-xl bg-navy-50/60 px-3 py-2 text-[0.6rem]">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-navy-700">≈ {{ $conv($grandEst) }}</p>
+                            <p class="truncate text-muted">1 {{ $event->currency }} = {{ rtrim(rtrim(number_format($fxRate, 4), '0'), '.') }} {{ $fxOther }} <span class="rounded-full px-1 text-[0.52rem] font-bold uppercase {{ $fxLive ? 'bg-emerald-100 text-emerald-700' : 'bg-navy-100 text-navy-500' }}">{{ $fxLive ? 'live' : 'pegged' }}</span></p>
+                        </div>
+                        <button type="button" wire:click="refreshRate" class="shrink-0 text-gold-600 hover:text-gold-700" title="Refresh rate">↻</button>
+                    </div>
+                </div>
+
+                {{-- summary readout --}}
+                <div class="border-b border-line p-4">
+                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
+                    <div class="mb-1 flex justify-between text-[0.58rem] font-semibold text-muted">
+                        <span>{{ $fmt($grandForecast) }} of {{ $fmt($cap) }}</span>
+                        <span class="{{ $usedPct >= 100 ? 'text-risk' : 'text-navy-700' }}">{{ $usedPct }}%</span>
+                    </div>
+                    <div class="flex h-2 overflow-hidden rounded-full bg-navy-100">
+                        <div class="bg-emerald-500" style="width: {{ $paidPct }}%"></div>
+                        <div class="bg-gold-500" style="width: {{ max(0, $usedPct - $paidPct) }}%"></div>
+                    </div>
+                    <div class="mt-3 space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span class="text-muted">Grand budget</span><span class="font-bold text-navy-900">{{ $fmt($grandEst) }}</span></div>
+                        @if ($track)
+                            <div class="flex justify-between"><span class="text-muted">Actual</span><span class="font-bold {{ $grandAct > $grandEst && $grandEst > 0 ? 'text-risk' : 'text-navy-900' }}">{{ $grandAct ? $fmt($grandAct) : '—' }}</span></div>
+                            <div class="flex justify-between"><span class="text-muted">Paid</span><span class="font-bold text-emerald-700">{{ $paidTotal ? $fmt($paidTotal) : '—' }}</span></div>
+                            <div class="flex justify-between"><span class="text-muted">{{ $savedTotal < 0 ? 'Over budget' : 'Saved' }}</span><span class="font-bold {{ ! $hasActuals ? 'text-navy-300' : ($savedTotal < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ ! $hasActuals ? '—' : ($savedTotal >= 0 ? '+' : '−').$fmt(abs($savedTotal)) }}</span></div>
+                        @endif
+                        <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">{{ $remaining < 0 ? 'Over budget' : 'Remaining' }}</span><span class="font-bold {{ $remaining < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $fmt($remaining) }}</span></div>
+                        @if ($costPerHead !== null)
+                            <div class="flex justify-between"><span class="text-muted">Cost / attendee <span class="text-navy-300">· {{ number_format($heads) }} pax</span></span><span class="font-bold text-navy-900">{{ $fmt($costPerHead) }}</span></div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- profit & loss --}}
+                <div class="border-b border-line p-4">
+                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Profit &amp; loss</p>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span class="text-muted">Income (actual)</span><span class="font-bold text-emerald-700">{{ $fmt($totalIncome) }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Cost (incl. fee)</span><span class="font-bold text-navy-900">{{ $fmt($grandEst) }}</span></div>
+                        <div class="flex items-center justify-between rounded-xl px-2 py-1.5 {{ $netResult < 0 ? 'bg-red-50' : 'bg-emerald-50' }}">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wide {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult < 0 ? 'Net loss' : 'Net profit' }}</span>
+                            <span class="text-sm font-bold {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult >= 0 ? '+' : '−' }}{{ $fmt(abs($netResult)) }}</span>
+                        </div>
+                        @if ($totalTargetIncome !== $totalIncome)
+                            <div class="flex justify-between border-t border-line pt-1.5 text-[0.7rem]"><span class="text-muted">Projected (at target)</span><span class="font-bold {{ $projectedNet < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $projectedNet >= 0 ? '+' : '−' }}{{ $fmt(abs($projectedNet)) }}</span></div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- approval & versioning --}}
+                @php
+                    $bs = $event->budget_status ?? 'draft';
+                    $bsMeta = ['draft' => ['Draft', 'bg-navy-100 text-navy-600'], 'pending' => ['Pending approval', 'bg-amber-100 text-amber-700'], 'approved' => ['Approved · locked', 'bg-emerald-100 text-emerald-700']];
+                    [$bsLabel, $bsClass] = $bsMeta[$bs] ?? $bsMeta['draft'];
+                    $approvedV = $versions->firstWhere('status', 'approved');
+                @endphp
+                <div class="border-b border-line p-4">
+                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Approval</p>
+                    <div class="mb-2 flex items-center gap-2">
+                        <span class="rounded-full px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-wide {{ $bsClass }}">{{ $bsLabel }}</span>
+                        @if ($bs === 'approved' && $approvedV)<span class="text-[0.58rem] text-muted">baseline v{{ $approvedV->version }}</span>@endif
+                    </div>
+
+                    @if ($bs === 'approved')
+                        <p class="text-[0.6rem] leading-snug text-muted">🔒 Locked {{ $event->budget_locked_at?->format('M j') }}@if ($approvedV?->decider) · by {{ $approvedV->decider->name }}@endif.</p>
+                        @if ($approvedTotal)
+                            <div class="mt-2 flex justify-between text-xs"><span class="text-muted">Variance vs approved</span><span class="font-bold {{ $varianceVsApproved < 0 ? 'text-risk' : 'text-emerald-600' }}">{{ $varianceVsApproved >= 0 ? '+' : '−' }}{{ $fmt(abs($varianceVsApproved)) }}</span></div>
+                        @endif
+                        <button type="button" wire:click="reviseBudget" class="mt-2 h-9 w-full rounded-xl border border-gold-300 bg-gold-50/60 text-xs font-bold text-gold-700 transition hover:bg-gold-100">✎ Create revision</button>
+                    @elseif ($bs === 'pending')
+                        <p class="mb-2 text-[0.6rem] text-muted">Submitted — awaiting sign-off.</p>
+                        <div class="flex gap-2">
+                            <button type="button" wire:click="approveBudget" class="btn-navy h-9 flex-1 text-xs">✓ Approve</button>
+                            <button type="button" wire:click="rejectBudget" class="h-9 flex-1 rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Reject</button>
+                        </div>
+                    @else
+                        <input type="text" wire:model="approvalNote" maxlength="120" class="input mb-2 h-9 w-full text-sm" placeholder="Version note (optional)">
+                        <button type="button" wire:click="submitForApproval" @disabled($items->isEmpty()) class="btn-gold h-9 w-full text-xs disabled:opacity-40">Submit for approval</button>
+                    @endif
+
+                    @if ($versions->isNotEmpty())
+                        @php $vm = ['pending' => 'text-amber-600', 'approved' => 'text-emerald-600', 'rejected' => 'text-risk', 'superseded' => 'text-navy-400']; @endphp
+                        <div class="mt-3 space-y-1 border-t border-line pt-2">
+                            @foreach ($versions->take(4) as $v)
+                                <div class="flex items-center justify-between text-[0.6rem]">
+                                    <span class="text-muted">v{{ $v->version }} · <span class="font-bold {{ $vm[$v->status] ?? '' }}">{{ ucfirst($v->status) }}</span></span>
+                                    <span class="text-navy-500">{{ $fmt($v->totals['grand'] ?? 0) }} · {{ $v->created_at->format('M j') }}</span>
+                                </div>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
+
+                {{-- actions --}}
+                <div class="space-y-2 p-4">
+                    @unless ($event->budgetLocked())
+                        <button type="button" wire:click="newLine" class="btn-gold h-10 w-full text-xs">＋ Add Line</button>
+                        <button type="button" wire:click="syncModules" class="h-9 w-full rounded-xl border border-gold-300 bg-gold-50/60 text-xs font-bold text-gold-700 transition hover:bg-gold-100" title="Refresh linked costs from Accommodation, Transport, Speakers & Venue">↺ Sync modules @if ($syncedCount)· {{ $syncedCount }} linked @endif</button>
+                        @if ($items->isEmpty())
+                            <button type="button" wire:click="insertStarter" class="h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-gold-300">✨ Prefill common lines</button>
+                        @endif
+                    @endunless
+                    <a href="{{ route('events.budget.pdf', $event) }}" class="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-gold-300 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ Export PDF</a>
+                    @if (! $event->budgetLocked() && ! $items->isEmpty())
+                        <button type="button" wire:click="clearAllLines" wire:confirm="Delete ALL budget lines? This cannot be undone." class="h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Clear all lines</button>
+                    @endif
+                    <p class="pt-0.5 text-center text-[0.58rem] text-muted">{{ $items->count() }} {{ str('line')->plural($items->count()) }} · {{ $sections->count() }} {{ str('section')->plural($sections->count()) }}</p>
+                </div>
             </div>
-        @empty
-            <p class="px-6 py-12 text-center text-sm text-muted">No budget lines yet — add estimates to activate Budget Health.</p>
-        @endforelse
+        </div>
     </div>
+
+    {{-- ══ Add / Edit modal ══ --}}
+    @if ($showForm)
+        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-900/40 p-4 pt-16 backdrop-blur-sm" wire:key="budget-modal">
+            <div class="card w-full max-w-2xl p-6 shadow-2xl" @click.outside="$wire.set('showForm', false)">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="pf text-base font-bold text-navy-900">{{ $editingId ? 'Edit budget line' : 'New budget line' }}</h3>
+                    <button type="button" wire:click="$set('showForm', false)" class="text-navy-400 hover:text-navy-900">✕</button>
+                </div>
+
+                <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="field-label !mb-1 !text-[0.62rem]">Category</label>
+                        <select wire:model="category" class="input h-10 text-sm">
+                            @foreach ($categories as $c)<option value="{{ $c->name }}">{{ $c->name }}</option>@endforeach
+                        </select>
+                        @error('category') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-[0.58rem] text-muted">Add or rename categories directly on the ledger.</p>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="field-label !mb-1 !text-[0.62rem]">Description</label>
+                        <input type="text" wire:model="description" class="input h-10 text-sm" placeholder="e.g. Main stage build">
+                        @error('description') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Quantity</label>
+                        <input type="number" min="1" wire:model="quantity" class="input h-10 text-sm">
+                        @error('quantity') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Unit cost ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="unit" class="input h-10 text-sm" placeholder="0">
+                        @error('unit') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Actual cost ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="actual" class="input h-10 text-sm" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Paid to date ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="paid" class="input h-10 text-sm" placeholder="0">
+                    </div>
+
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Vendor / supplier</label>
+                        <input type="text" wire:model="vendor" class="input h-10 text-sm" placeholder="e.g. Prime AV">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="field-label !mb-1 !text-[0.62rem]">Invoice #</label>
+                            <input type="text" wire:model="invoice_number" class="input h-10 text-sm" placeholder="—">
+                        </div>
+                        <div>
+                            <label class="field-label !mb-1 !text-[0.62rem]">Due date</label>
+                            <input type="date" wire:model="due_on" class="input h-10 text-sm">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="field-label !mb-1 !text-[0.62rem]">Notes</label>
+                        <input type="text" wire:model="notes" class="input h-10 text-sm" placeholder="Optional notes">
+                    </div>
+
+                    <div class="mt-1 flex items-center justify-between sm:col-span-2">
+                        <p class="text-xs text-muted">Budgeted total: <span class="font-bold text-navy-900">{{ $event->currencySymbol() }}{{ number_format((float) ($unit ?: 0) * max(1, (int) $quantity), 0) }}</span></p>
+                        <div class="flex gap-2">
+                            <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
+                            <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update line' : 'Add line' }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- ══ Income modal ══ --}}
+    @if ($showIncomeForm)
+        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-900/40 p-4 pt-16 backdrop-blur-sm" wire:key="income-modal">
+            <div class="card w-full max-w-md p-6 shadow-2xl" @click.outside="$wire.set('showIncomeForm', false)">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="pf text-base font-bold text-navy-900">{{ $editingIncomeId ? 'Edit income' : 'New income' }}</h3>
+                    <button type="button" wire:click="$set('showIncomeForm', false)" class="text-navy-400 hover:text-navy-900">✕</button>
+                </div>
+                <form wire:submit="saveIncome" class="grid gap-3.5">
+                    <p class="text-[0.62rem] text-muted">Sponsorship &amp; exhibition income are pulled automatically from those modules — add tickets, grants and other income here.</p>
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Source</label>
+                        <select wire:model="incomeSource" class="input h-10 text-sm">
+                            @foreach (\App\Models\EventIncomeItem::SOURCES as $key => $lbl)<option value="{{ $key }}">{{ $lbl }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-[0.62rem]">Description</label>
+                        <input type="text" wire:model="incomeDesc" class="input h-10 text-sm" placeholder="e.g. 300 delegate tickets">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="field-label !mb-1 !text-[0.62rem]">Amount ({{ $event->currency }})</label>
+                            <input type="number" step="0.01" min="0" wire:model="incomeAmount" class="input h-10 text-sm" placeholder="0">
+                            @error('incomeAmount') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="field-label !mb-1 !text-[0.62rem]">Status</label>
+                            <select wire:model="incomeStatus" class="input h-10 text-sm">
+                                @foreach (\App\Models\EventIncomeItem::STATUSES as $s)<option value="{{ $s }}">{{ ucfirst($s) }}</option>@endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" wire:click="$set('showIncomeForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
+                        <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingIncomeId ? 'Update' : 'Add income' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    @script
+    <script>
+        const initCatSort = () => {
+            const el = document.querySelector('[data-cat-sort]');
+            if (! el || el._sortable) return;
+            el._sortable = window.Sortable.create(el, {
+                handle: '.cat-drag',
+                draggable: '[data-cat]',
+                animation: 160,
+                ghostClass: 'opacity-40',
+                onEnd: () => {
+                    const ids = [...el.querySelectorAll('[data-cat]')].map((n) => n.dataset.cat);
+                    $wire.reorderCategories(ids);
+                },
+            });
+        };
+        initCatSort();
+        Livewire.hook('morph.updated', () => initCatSort());
+    </script>
+    @endscript
 </div>

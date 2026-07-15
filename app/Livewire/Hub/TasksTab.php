@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Hub;
 
+use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\Task;
 use App\Models\User;
@@ -9,7 +10,15 @@ use Livewire\Component;
 
 class TasksTab extends Component
 {
+    use BulkSelectable;
+
     public Event $event;
+
+    public function deleteSelected(): void
+    {
+        $this->event->tasks()->whereIn('id', $this->selectedIds())->delete();
+        $this->clearSelection();
+    }
 
     public bool $showForm = false;
 

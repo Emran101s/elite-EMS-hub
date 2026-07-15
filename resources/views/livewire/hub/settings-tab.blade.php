@@ -1,9 +1,48 @@
-<div class="space-y-6">
+<div>
+    <style>.pf{font-family:'Playfair Display',Georgia,serif}</style>
+    <div class="flex gap-6">
+        {{-- section rail --}}
+        <aside class="hidden w-52 shrink-0 lg:block">
+            <nav class="sticky top-[112px] space-y-0.5">
+                <p class="mb-2 px-2 text-[0.55rem] font-bold uppercase tracking-[0.2em] text-navy-300">Event Settings</p>
+                <a href="#s-details" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">01</span>
+                    <span class="truncate">Event Details</span>
+                </a>
+                <a href="#s-ownership" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">02</span>
+                    <span class="truncate">Ownership & Lifecycle</span>
+                </a>
+                <a href="#s-team" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">03</span>
+                    <span class="truncate">Event Team</span>
+                </a>
+                <a href="#s-theme" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">04</span>
+                    <span class="truncate">Avatar & Theme</span>
+                </a>
+                <a href="#s-modules" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">05</span>
+                    <span class="truncate">Enabled Modules</span>
+                </a>
+                <a href="#s-manage" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.72rem] text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
+                    <span class="w-4 text-right text-[0.6rem] font-bold text-gold-500/70">06</span>
+                    <span class="truncate">Manage Event</span>
+                </a>
+            </nav>
+        </aside>
+
+        {{-- constrained column — no more edge-to-edge sprawl --}}
+        <div class="min-w-0 flex-1">
+            <div class="mx-auto max-w-3xl space-y-6">
     <form wire:submit="save" class="space-y-6">
 
         {{-- ── Event details ── --}}
-        <div class="card p-6">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Event Details</h3>
+        <div id="s-details" class="card scroll-mt-32 p-6">
+            <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+                <span class="pf text-xl font-bold leading-none text-gold-400/50">01</span>
+                <h3 class="pf text-base font-bold text-navy-900">Event Details</h3>
+            </div>
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                     <label class="field-label !mb-1 !text-[0.62rem]" for="st-name">Event name</label>
@@ -31,7 +70,13 @@
                     @error('expected_participants') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-budget">Budget (USD)</label>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-currency">Currency</label>
+                    <select id="st-currency" wire:model="currency" class="input h-10 text-sm">
+                        @foreach (\App\Models\Event::CURRENCIES as $code => [$symbol, $label])<option value="{{ $code }}">{{ $code }} — {{ $label }} ({{ $symbol }})</option>@endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label !mb-1 !text-[0.62rem]" for="st-budget">Budget ({{ $currency }})</label>
                     <input id="st-budget" type="number" step="0.01" min="0" wire:model="budget" class="input h-10 text-sm" placeholder="250000">
                 </div>
                 <div>
@@ -75,8 +120,11 @@
         </div>
 
         {{-- ── Ownership ── --}}
-        <div class="card p-6">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Ownership & Lifecycle</h3>
+        <div id="s-ownership" class="card scroll-mt-32 p-6">
+            <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+                <span class="pf text-xl font-bold leading-none text-gold-400/50">02</span>
+                <h3 class="pf text-base font-bold text-navy-900">Ownership &amp; Lifecycle</h3>
+            </div>
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
                     <label class="field-label !mb-1 !text-[0.62rem]" for="st-pm">Project manager</label>
@@ -102,9 +150,54 @@
             <p class="mt-2 text-[0.65rem] text-muted">Rooms are managed in the <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="font-semibold text-gold-600">Venue tab</a>.</p>
         </div>
 
+        {{-- ── Event Team ── --}}
+        <div id="s-team" class="card scroll-mt-32 p-6">
+            <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+                <span class="pf text-xl font-bold leading-none text-gold-400/50">03</span>
+                <h3 class="pf text-base font-bold text-navy-900">Event Team</h3>
+            </div>
+            <p class="mb-4 text-[0.65rem] text-muted">Assign workspace members to this event with a role. Manage the full staff list in <a href="{{ route('team.index') }}" class="font-semibold text-gold-600">Settings → Team</a>.</p>
+
+            <div class="space-y-1.5">
+                @forelse ($team as $m)
+                    <div wire:key="team-{{ $m->id }}-{{ $m->pivot->role }}" class="flex items-center gap-3 rounded-xl border border-line bg-page/40 px-3 py-2">
+                        <x-user-avatar :user="$m" size="h-8 w-8" text="text-[0.6rem]" />
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-navy-900">{{ $m->name }}</p>
+                            <p class="truncate text-[0.6rem] text-muted">{{ $m->title ?: $m->email }}</p>
+                        </div>
+                        <span class="shrink-0 rounded-full bg-navy-50 px-2.5 py-0.5 text-[0.6rem] font-bold text-navy-600">{{ $roleLabels[$m->pivot->role] ?? $m->pivot->role }}</span>
+                        <button type="button" wire:click="removeTeamMember({{ $m->id }}, '{{ $m->pivot->role }}')" class="shrink-0 text-[0.8rem] text-navy-300 transition hover:text-red-600" title="Remove from team">✕</button>
+                    </div>
+                @empty
+                    <p class="py-2 text-xs text-muted">No team assigned yet — add members below.</p>
+                @endforelse
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-end gap-2 border-t border-line pt-3">
+                <div class="min-w-[150px] flex-1">
+                    <label class="field-label !mb-1 !text-[0.62rem]">Member</label>
+                    <select wire:model="teamUserId" class="input h-10 text-sm">
+                        <option value="">— Select member —</option>
+                        @foreach ($managers as $manager)<option value="{{ $manager->id }}">{{ $manager->name }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="min-w-[150px] flex-1">
+                    <label class="field-label !mb-1 !text-[0.62rem]">Role</label>
+                    <select wire:model="teamRole" class="input h-10 text-sm">
+                        @foreach ($roleLabels as $val => $lbl)<option value="{{ $val }}">{{ $lbl }}</option>@endforeach
+                    </select>
+                </div>
+                <button type="button" wire:click="addTeamMember" class="btn-navy h-10 px-4 text-xs">＋ Add to team</button>
+            </div>
+        </div>
+
         {{-- ── Identity: avatar + theme ── --}}
-        <div class="card p-6">
-            <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Avatar & Color Theme</h3>
+        <div id="s-theme" class="card scroll-mt-32 p-6">
+            <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+                <span class="pf text-xl font-bold leading-none text-gold-400/50">04</span>
+                <h3 class="pf text-base font-bold text-navy-900">Avatar &amp; Theme</h3>
+            </div>
             <div class="grid gap-5 sm:grid-cols-2">
 
                 {{-- Avatar — elegant combo box --}}
@@ -170,18 +263,29 @@
         </div>
 
         {{-- ── Modules ── --}}
-        <div class="card p-6">
-            <h3 class="text-xs font-bold uppercase tracking-wide text-navy-900">Enabled Modules</h3>
+        <div id="s-modules" class="card scroll-mt-32 p-6">
+            <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+                <span class="pf text-xl font-bold leading-none text-gold-400/50">05</span>
+                <h3 class="pf text-base font-bold text-navy-900">Enabled Modules</h3>
+            </div>
             <p class="mb-4 text-xs text-muted">Turn tabs on or off for this event's control room.</p>
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 @foreach ($hubModules as $key => [$label, $category, $icon])
                     @php $on = in_array($key, $modules, true); @endphp
                     <button type="button" wire:click="toggleModule('{{ $key }}')"
-                            class="flex items-center gap-3 rounded-2xl border border-line p-3 text-left transition hover:border-navy-200">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-50 text-navy-500"><x-icon :name="$icon" class="h-4 w-4" /></span>
+                            @class([
+                                'flex items-center gap-3 rounded-2xl border p-3 text-left transition',
+                                'border-gold-300 bg-gold-50/40 shadow-sm' => $on,
+                                'border-line bg-white hover:border-navy-200' => ! $on,
+                            ])>
+                        <span @class([
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition',
+                            'bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400' => $on,
+                            'bg-navy-50 text-navy-400' => ! $on,
+                        ])><x-icon :name="$icon" class="h-4 w-4" /></span>
                         <span class="min-w-0 flex-1">
-                            <span class="block truncate text-xs font-bold text-navy-900">{{ $label }}</span>
-                            <span class="block text-[0.6rem] text-muted">{{ $category }}</span>
+                            <span class="block truncate text-xs font-bold {{ $on ? 'text-navy-900' : 'text-navy-500' }}">{{ $label }}</span>
+                            <span class="block text-[0.6rem] {{ $on ? 'text-gold-700' : 'text-muted' }}">{{ $category }}</span>
                         </span>
                         <span @class(['relative flex h-5 w-9 shrink-0 items-center rounded-full transition', 'bg-navy-900' => $on, 'bg-navy-200' => ! $on])>
                             <span class="absolute h-4 w-4 rounded-full bg-white shadow transition-all {{ $on ? 'left-[18px]' : 'left-0.5' }}"></span>
@@ -191,18 +295,29 @@
             </div>
         </div>
 
-        <div class="flex justify-end">
-            <button type="submit" class="btn-gold h-10 px-6 text-sm">Save Settings</button>
+        {{-- sticky save bar --}}
+        <div class="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl bg-navy-950 px-5 py-3 shadow-[0_18px_45px_-18px_rgba(11,31,58,0.7)] ring-1 ring-white/10">
+            <p class="text-[0.68rem] text-white/50">
+                <span wire:loading.remove>Changes are saved when you press Save.</span>
+                <span wire:loading class="text-gold-300">Saving…</span>
+            </p>
+            <button type="submit" class="flex h-9 items-center rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-5 text-xs font-bold text-navy-950 shadow transition hover:brightness-105">Save Settings</button>
         </div>
     </form>
 
     {{-- ── Danger zone ── --}}
-    <div class="card border-risk/20 p-6">
-        <h3 class="mb-4 text-xs font-bold uppercase tracking-wide text-navy-900">Manage Event</h3>
+    <div id="s-manage" class="card scroll-mt-32 border-risk/20 p-6">
+        <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
+            <span class="pf text-xl font-bold leading-none text-gold-400/50">06</span>
+            <h3 class="pf text-base font-bold text-navy-900">Manage Event</h3>
+        </div>
         <div class="flex flex-wrap gap-3">
             <button type="button" wire:click="duplicate" class="rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⧉ Duplicate event</button>
             <button type="button" wire:click="archive" wire:confirm="Archive “{{ $event->name }}”? It disappears from lists and the Operations Hub (recoverable)."
                     class="rounded-xl border border-risk/30 bg-risk/5 px-4 py-2.5 text-xs font-semibold text-risk transition hover:bg-risk/10">⌫ Archive event</button>
+        </div>
+    </div>
+        </div>
         </div>
     </div>
 </div>

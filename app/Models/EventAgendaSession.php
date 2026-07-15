@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'agenda_day_id', 'room_id', 'title', 'type', 'format', 'capacity', 'status', 'starts_at', 'ends_at', 'speaker', 'moderator', 'track', 'description', 'sort'])]
+#[Fillable(['event_id', 'agenda_day_id', 'room_id', 'title', 'type', 'format', 'capacity', 'status', 'flagged', 'starts_at', 'ends_at', 'speaker', 'moderator', 'track', 'description', 'sort'])]
 class EventAgendaSession extends Model
 {
     public const TYPES = ['opening', 'keynote', 'panel', 'workshop', 'break', 'lunch', 'networking', 'exhibition', 'gala_dinner', 'closing'];
@@ -17,7 +17,7 @@ class EventAgendaSession extends Model
 
     protected function casts(): array
     {
-        return ['capacity' => 'integer'];
+        return ['capacity' => 'integer', 'flagged' => 'boolean'];
     }
 
     public function event(): BelongsTo
