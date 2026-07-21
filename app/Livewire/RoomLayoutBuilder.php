@@ -494,6 +494,20 @@ class RoomLayoutBuilder extends Component
         $this->persist();
     }
 
+    /** Give any placed item a free-text name shown on the plan. */
+    public function nameElement(string $id, string $name): void
+    {
+        $name = \Illuminate\Support\Str::limit(trim($name), 40, '');
+        $this->elements = collect($this->elements)->map(function ($el) use ($id, $name) {
+            if (($el['id'] ?? '') === $id) {
+                $el['name'] = $name ?: null;
+            }
+
+            return $el;
+        })->all();
+        $this->persist();
+    }
+
     public function removeElement(string $id): void
     {
         $this->elements = collect($this->elements)->reject(fn ($el) => $el['id'] === $id)->values()->all();

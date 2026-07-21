@@ -207,6 +207,11 @@
                                     @endif
                                 @endif
 
+                                {{-- item name, upright, above the piece --}}
+                                @if (! empty($el['name']))
+                                    <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-white/90 px-1.5 py-px text-eyebrow font-bold text-navy-700 shadow-sm ring-1 ring-line">{{ $el['name'] }}</span>
+                                @endif
+
                                 @if ($sel)
                                     {{-- drag-to-rotate handle --}}
                                     <div class="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 flex-col items-center">
@@ -287,6 +292,15 @@
                                 <p class="field-label !mb-0 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> {{ $label }}</p>
                                 <button type="button" wire:click="removeElement('{{ $sid }}')" class="text-eyebrow font-bold text-risk hover:underline">Delete</button>
                             </div>
+
+                            {{-- NAME --}}
+                            <label class="mb-3 block">
+                                <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Name / label</span>
+                                <input type="text" maxlength="40" value="{{ $selected['name'] ?? '' }}"
+                                       wire:change="nameElement('{{ $sid }}', $event.target.value)"
+                                       placeholder="e.g. Head table, Booth A, VIP round"
+                                       class="input h-9 w-full text-sm">
+                            </label>
 
                             {{-- SEATBLOCK · edit the arrangement's counts & table sizes --}}
                             @if ($selected['type'] === 'seatblock')

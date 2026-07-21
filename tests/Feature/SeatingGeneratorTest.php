@@ -363,4 +363,43 @@ class SeatingGeneratorTest extends TestCase
         $this->assertEqualsWithDelta(2.0, $booth['h'] / $scale, 0.05, 'and 2m deep');
     }
 
+
+    public function test_an_item_can_be_named_and_the_name_shows_on_the_plan(): void
+    {
+        [$event, $user, $room] = $this->ctx(['width_m' => 12, 'length_m' => 16]);
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('addElement', 'round');
+        $id = $c->get('elements')[0]['id'];
+
+        $c->call('nameElement', $id, '  VIP Round 1  ')
+            ->assertSee('VIP Round 1');   // rendered on the canvas
+
+        $this->assertSame('VIP Round 1', collect($room->fresh()->layout)->firstWhere('id', $id)['name'], 'trimmed & persisted');
+
+        // Clearing the name removes it.
+        $c->call('nameElement', $id, '');
+        $this->assertNull(collect($room->fresh()->layout)->firstWhere('id', $id)['name']);
+
+        // Overlong names are capped at 40 chars.
+        $c->call('nameElement', $id, str_repeat('x', 60));
+        $this->assertSame(40, mb_strlen(collect($room->fresh()->layout)->firstWhere('id', $id)['name']));
+    }
+
+
+    public function test_the_inspector_shows_the_editor_and_name_field_for_a_selected_block(): void
+    {
+        [$event, $user, $room] = $this->ctx(['width_m' => 14, 'length_m' => 18]);
+
+        // designUShape leaves the new block selected, so the editor is already shown.
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->set('seatArr', 'ushape')->call('designUShape');
+
+        $c->assertSee('Arrangement · edit')   // the count editor
+            ->assertSee('Head tables')
+            ->assertSee('Chairs / table')
+            ->assertSee('Name / label')          // the naming field
+            ->assertSee('Total chairs');
+    }
+
 }
