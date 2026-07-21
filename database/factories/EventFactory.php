@@ -22,7 +22,6 @@ class EventFactory extends Factory
         return [
             'name' => fake()->company().' '.fake()->randomElement(['Summit', 'Forum', 'Expo', 'Gala', 'Workshop']),
             'type' => fake()->randomElement(Event::TYPES),
-            'status' => fake()->randomElement(Event::STATUSES),
             'city' => fake()->city(),
             'country' => fake()->randomElement(['Jordan', 'Bahrain', 'UAE', 'Qatar', 'KSA']),
             'starts_at' => $starts,

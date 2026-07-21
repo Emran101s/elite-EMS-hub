@@ -37,20 +37,20 @@ class EventHubActionsTest extends TestCase
     {
         [$event, $user] = $this->setup2();
 
+        // Quick-add drops a task straight into a lane, no modal.
         Livewire::actingAs($user)->test(TasksTab::class, ['event' => $event])
-            ->set('title', 'Print VIP badges')
-            ->set('priority', 'high')
-            ->set('due_on', '2026-10-01')
-            ->call('save')
+            ->call('quickAdd', 'todo', 'Print VIP badges')
             ->assertHasNoErrors();
 
         $task = $event->tasks()->where('title', 'Print VIP badges')->firstOrFail();
-        $this->assertSame('high', $task->priority);
+        $this->assertSame('todo', $task->status);
 
+        // Move it across the board and finish it.
         Livewire::actingAs($user)->test(TasksTab::class, ['event' => $event])
-            ->call('setStatus', $task->id, 'completed');
+            ->call('moveTask', $task->id, 'doing')
+            ->call('moveTask', $task->id, 'done');
 
-        $this->assertSame('completed', $task->fresh()->status);
+        $this->assertSame('done', $task->fresh()->status);
     }
 
     public function test_budget_line_can_be_added_and_marked_paid(): void
@@ -316,19 +316,19 @@ class EventHubActionsTest extends TestCase
         $hall = $event->exhibitionHalls()->first();
         $this->assertSame(30.0, $hall->width_m);
 
-        // place → assigned to the hall with metre coords + size (3×3)
+        // tray → creates a booth already assigned to the exhibitor, at hall centre
         $c->call('placeBooth', $ex->id);
-        $ex->refresh();
-        $this->assertTrue($ex->placed());
-        $this->assertSame($hall->id, $ex->hall_id);
-        $this->assertSame(3.0, $ex->booth_w_m);
-        $this->assertSame(15.0, $ex->booth_x); // hall centre = 30/2
+        $booth = $event->booths()->firstOrFail();
+        $this->assertSame($ex->id, $booth->exhibitor_id);
+        $this->assertSame($hall->id, $booth->hall_id);
+        $this->assertSame(3.0, $booth->w_m);
+        $this->assertSame(15.0, $booth->x); // hall centre = 30/2
 
         // move stores metres (clamped to the hall)
-        $c->call('moveBooth', $ex->id, 8.5, 6.0);
-        $ex->refresh();
-        $this->assertSame(8.5, $ex->booth_x);
-        $this->assertSame(6.0, $ex->booth_y);
+        $c->call('moveBooth', $booth->id, 8.5, 6.0);
+        $booth->refresh();
+        $this->assertSame(8.5, $booth->x);
+        $this->assertSame(6.0, $booth->y);
 
         // hall dimensions persist
         $c->set('hallW', '40')->set('hallL', '25');
@@ -342,18 +342,19 @@ class EventHubActionsTest extends TestCase
         $c->call('addFixture', 'stage');
         $this->assertCount(1, $event->exhibitionHalls()->find($hallBId)->fixtures);
 
-        // unplace → back to the shared tray
+        // deleting the booth destroys inventory; the exhibitor returns to the tray
         $c->call('selectHall', $hall->id);
-        $c->call('unplaceBooth', $ex->id);
-        $this->assertFalse($ex->fresh()->placed());
-        $this->assertNull($ex->fresh()->hall_id);
+        $c->call('deleteBooth', $booth->id);
+        $this->assertSame(0, $event->booths()->count());
+        $this->assertNull($ex->fresh()->booth_number);
     }
 
     public function test_exhibition_floor_plan_and_pdf_render(): void
     {
         [$event, $user] = $this->setup2();
         $hall = $event->ensureExhibitionHall();
-        $event->exhibitors()->create(['company' => 'Acme Tech', 'booth_size' => '3×3', 'package' => 'standard', 'status' => 'confirmed', 'hall_id' => $hall->id, 'booth_x' => 10, 'booth_y' => 8, 'booth_w_m' => 3, 'booth_h_m' => 3]);
+        $ex = $event->exhibitors()->create(['company' => 'Acme Tech', 'booth_size' => '3×3', 'package' => 'standard', 'status' => 'confirmed']);
+        $event->booths()->create(['hall_id' => $hall->id, 'exhibitor_id' => $ex->id, 'number' => 'B01', 'price_cents' => 500000, 'x' => 10, 'y' => 8, 'w_m' => 3, 'h_m' => 3]);
 
         $this->actingAs($user)->get(route('events.exhibition-floor', $event))->assertOk()->assertSee('Floor Plan');
 
@@ -531,16 +532,6 @@ class EventHubActionsTest extends TestCase
         $this->assertSame(2, $event->fresh()->budgetItems()->count());
     }
 
-    public function test_planning_pdf_downloads(): void
-    {
-        [$event, $user] = $this->setup2();
-        $event->planItems()->create(['phase' => 'venue', 'title' => 'Book venue', 'status' => 'todo', 'priority' => 'high']);
-
-        $response = $this->actingAs($user)->get(route('events.planning.pdf', $event));
-        $response->assertOk();
-        $this->assertSame('application/pdf', $response->headers->get('content-type'));
-    }
-
     public function test_budget_approval_versioning_and_lock(): void
     {
         [$event, $user] = $this->setup2();
@@ -687,12 +678,14 @@ class EventHubActionsTest extends TestCase
         $this->assertSame('pending', $approval->status);
         $this->assertSame($user->id, $approval->requested_by);
 
-        Livewire::actingAs($user)->test(ApprovalsTab::class, ['event' => $event])
+        // The requester can't decide their own request — a different manager does.
+        $decider = User::where('email', 'layla.haddad@elitebhub.com')->firstOrFail();
+        Livewire::actingAs($decider)->test(ApprovalsTab::class, ['event' => $event])
             ->call('decide', $approval->id, 'approved');
 
         $approval->refresh();
         $this->assertSame('approved', $approval->status);
-        $this->assertSame($user->id, $approval->decided_by);
+        $this->assertSame($decider->id, $approval->decided_by);
         $this->assertNotNull($approval->decided_at);
     }
 
@@ -703,7 +696,9 @@ class EventHubActionsTest extends TestCase
 
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
+        // The board only ever resolves tasks through its own event's relation,
+        // so another event's task id is not found — never touched.
         Livewire::actingAs($user)->test(TasksTab::class, ['event' => $event])
-            ->call('setStatus', $otherTask->id, 'completed');
+            ->call('moveTask', $otherTask->id, 'done');
     }
 }

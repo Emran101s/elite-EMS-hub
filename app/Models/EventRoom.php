@@ -27,6 +27,7 @@ class EventRoom extends Model
         'screen' => ['Screen', 0, 160, 20, 'staging'],
         'podium' => ['Podium', 0, 44, 44, 'staging'],
         'entrance' => ['Entrance', 0, 60, 22, 'staging'],
+        'booth' => ['Translation booth', 0, 64, 64, 'staging'],
     ];
 
     /** Auto-generated seating styles: key => [label, blurb, family]. */
@@ -130,7 +131,56 @@ class EventRoom extends Model
         $rects = [];
         $labels = [];
 
-        if (in_array($arr, ['ushape', 'boardroom', 'hollowsquare'], true)) {
+        // ── Table-designed U-shape: a head table plus arms of discrete rectangular
+        //    tables (180×60cm by default), delegates seated on the outer edge,
+        //    open toward the room. Driven by the Table Designer, not auto-fit. ──
+        if (($el['mode'] ?? '') === 'utables') {
+            // A U built from discrete tables: a head row of N tables and two arms
+            // of N tables, every table the same size, each seating `perTable`
+            // chairs on its outer edge. Everything is centred on the block origin.
+            $tW = max(0.6, (float) ($el['tableW_m'] ?? 1.8));   // table long side
+            $tH = max(0.4, (float) ($el['tableH_m'] ?? 0.6));   // table depth
+            $headT = max(1, (int) ($el['headTables'] ?? 2));    // tables across the head
+            $arm = max(0, (int) ($el['armTables'] ?? 3));       // tables per side arm
+            $perTable = max(1, (int) ($el['perTable'] ?? 3));   // chairs per table
+            $off = $tH / 2 + $seat / 2 + 0.08;                  // chair gap from a table edge
+
+            // Chair x/y offsets that spread `perTable` seats along a table's length.
+            $spread = fn ($centre, $len) => $perTable > 1
+                ? array_map(fn ($k) => $centre - $len / 2 + $seat / 2 + $k * (($len - $seat) / ($perTable - 1)), range(0, $perTable - 1))
+                : [$centre];
+
+            $headW = $headT * $tW;                               // head row spans its tables
+            $armLen = $arm * $tW;
+            $totalH = $tH + $armLen;
+            $topY = -$totalH / 2 + $tH / 2;                      // head-row centre-line
+            $leftX = -$headW / 2 + $tH / 2;                      // arm centre-lines
+            $rightX = $headW / 2 - $tH / 2;
+
+            // head: a row of tables, chairs along the outer (top) edge of each
+            $n = 0;
+            for ($t = 0; $t < $headT; $t++) {
+                $cx = -$headW / 2 + $tW / 2 + $t * $tW;
+                $rects[] = [$cx, $topY, $tW, $tH];
+                foreach ($spread($cx, $tW) as $x) {
+                    $chairs[] = [$x, $topY - $off, 'H'.(++$n)];
+                }
+            }
+
+            // arms: a stack of tables down each side, chairs on the outer edge
+            $n = 0;
+            for ($t = 0; $t < $arm; $t++) {
+                $cy = $topY + $tH / 2 + $t * $tW + $tW / 2;
+                $rects[] = [$leftX, $cy, $tH, $tW];
+                $rects[] = [$rightX, $cy, $tH, $tW];
+                foreach ($spread($cy, $tW) as $y) {
+                    $chairs[] = [$leftX - $off, $y, 'L'.(++$n)];
+                    $chairs[] = [$rightX + $off, $y, 'R'.$n];
+                }
+            }
+
+            $capacity = ($headT + 2 * $arm) * $perTable;
+        } elseif (in_array($arr, ['ushape', 'boardroom', 'hollowsquare'], true)) {
             $pitch = $seat + (float) ($el['colGap_m'] ?? 0.10);
             $cols = max(1, (int) ($el['pCols'] ?? 6));   // seats along a horizontal run
             $rows = max(1, (int) ($el['pRows'] ?? 4));   // seats along a vertical run
@@ -209,7 +259,7 @@ class EventRoom extends Model
             }
             $capacity = count($chairs);
         } elseif (in_array($arr, ['banquet', 'cabaret'], true)) {
-            $dia = max(0.8, (float) ($el['tableDia_m'] ?? 1.6));
+            $dia = max(0.8, (float) ($el['tableDia_m'] ?? 1.8));
             $per = max(2, (int) ($el['perTable'] ?? ($arr === 'cabaret' ? 6 : 10)));
             $tRows = max(1, (int) ($el['tRows'] ?? 1));
             $tCols = max(1, (int) ($el['tCols'] ?? 1));

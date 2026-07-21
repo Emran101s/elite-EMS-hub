@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     @php
         $fixColor = ['entrance' => '#0EA5E9', 'stage' => '#1E3352', 'registration' => '#6366F1', 'catering' => '#14B8A6', 'lounge' => '#B45309', 'info' => '#64748B', 'restrooms' => '#94A3B8', 'aisle' => '#CBD5E1'];
-        $boothHex = ['standard' => ['#EEF3F9', '#1E3352'], 'premium' => ['#FBF3DE', '#8A6D1F'], 'island' => ['#1E3352', '#FFFFFF'], 'custom' => ['#F1F5F9', '#475569']];
+        $statusFill = ['available' => ['#FFFFFF', '#94A3B8'], 'reserved' => ['#FBF3DE', '#8A6D1F'], 'sold' => ['#E7F6EC', '#1F7A48']];
         $fmtM = fn ($n) => rtrim(rtrim(number_format((float) $n, 1), '0'), '.');
     @endphp
     <style>
@@ -29,6 +29,10 @@
     <div class="head">
         <div class="eyebrow">&#9670; Elite Business Hub · Exhibition Floor Plan</div>
         <h1>{{ $event->name }}</h1>
+        <div style="font-size:9px; margin-top:3px; color:#D7DEE9;">
+            {{ $sales['sold'] }} of {{ $sales['total'] }} booths sold · revenue {{ $event->money($sales['soldValue']) }}
+            @if ($sales['reserved'])· {{ $sales['reserved'] }} reserved ({{ $event->money($sales['pipelineValue']) }} pipeline)@endif
+        </div>
     </div>
 
     @foreach ($halls as $hall)
@@ -38,12 +42,12 @@
             $scale = min(760 / $W, 400 / $L);
             $cw = round($W * $scale);
             $ch = round($L * $scale);
-            $placed = $hall->exhibitors;
+            $placed = $hall->booths;
             $fixtures = $hall->fixtures ?? [];
         @endphp
         <div class="hall" @if (! $loop->first) style="page-break-before: always;" @endif>
             <h2>{{ $hall->name }}</h2>
-            <div class="dims">{{ $fmtM($W) }} × {{ $fmtM($L) }} m · {{ $fmtM($W * $L) }} m² · {{ $placed->count() }} booths</div>
+            <div class="dims">{{ $fmtM($W) }} × {{ $fmtM($L) }} m · {{ $fmtM($W * $L) }} m² · {{ $placed->count() }} booths ({{ $placed->filter(fn ($b) => $b->status() === 'sold')->count() }} sold)</div>
             <div class="canvas" style="width:{{ $cw }}px; height:{{ $ch }}px;">
                 @foreach ($fixtures as $f)
                     @php $fc = $fixColor[$f['type']] ?? '#64748B'; $w = ($f['w'] ?? 3) * $scale; $h = ($f['h'] ?? 2) * $scale; $l = ($f['x'] ?? 0) * $scale - $w / 2; $t = ($f['y'] ?? 0) * $scale - $h / 2; @endphp
@@ -51,14 +55,13 @@
                 @endforeach
                 @foreach ($placed as $b)
                     @php
-                        [$bg, $tx] = $boothHex[$b->package] ?? ['#EEF3F9', '#1E3352'];
-                        $sh = ['reserved' => '#F59E0B', 'confirmed' => '#3B82F6', 'paid' => '#22C55E'][$b->status] ?? '#94A3B8';
-                        $w = ($b->booth_w_m ?: 3) * $scale; $h = ($b->booth_h_m ?: 3) * $scale; $l = $b->booth_x * $scale - $w / 2; $t = $b->booth_y * $scale - $h / 2;
+                        $st = $b->status();
+                        [$bg, $tx] = $statusFill[$st];
+                        $w = $b->w_m * $scale; $h = $b->h_m * $scale; $l = $b->x * $scale - $w / 2; $t = $b->y * $scale - $h / 2;
                     @endphp
-                    <div class="box booth" style="left:{{ round($l) }}px; top:{{ round($t) }}px; width:{{ round($w) }}px; height:{{ round($h) }}px; background:{{ $bg }}; border-color:{{ $tx }}; color:{{ $tx }};">
-                        <div style="position:absolute; right:2px; top:2px; width:5px; height:5px; border-radius:50%; background:{{ $sh }};"></div>
-                        @if ($b->booth_number && $h > 22)<div class="n" style="margin-top:2px;">#{{ $b->booth_number }}</div>@endif
-                        <div class="c">{{ \Illuminate\Support\Str::limit($b->company, 16) }}</div>
+                    <div class="box booth" style="left:{{ round($l) }}px; top:{{ round($t) }}px; width:{{ round($w) }}px; height:{{ round($h) }}px; background:{{ $bg }}; border-color:{{ $tx }}; color:{{ $tx }}; {{ $st === 'available' ? 'border-style:dashed;' : '' }}">
+                        @if ($h > 22)<div class="n" style="margin-top:2px;">{{ $b->number }}</div>@endif
+                        <div class="c">{{ \Illuminate\Support\Str::limit($b->exhibitor?->company ?? ($b->price_cents ? $event->money($b->price_cents) : 'For sale'), 16) }}</div>
                     </div>
                 @endforeach
             </div>

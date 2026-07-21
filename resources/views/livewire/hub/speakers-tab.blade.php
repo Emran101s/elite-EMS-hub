@@ -23,16 +23,16 @@
                 <div wire:key="sp-{{ $s->id }}" class="card group/sp p-5 {{ $this->isSelected($s->id) ? 'ring-2 ring-navy-900' : '' }}">
                     <div class="flex items-start justify-between gap-3">
                         <div class="flex min-w-0 items-center gap-3">
-                            <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[0.55rem] {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                            <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
                             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-900 text-sm font-bold text-gold-300">{{ $s->initials() }}</span>
                             <div>
                                 <p class="flex items-center gap-1.5 text-sm font-bold text-navy-900">{{ $s->name }}
-                                    @if ($s->is_keynote)<span class="rounded-full bg-gold-500/20 px-1.5 text-[0.55rem] font-bold uppercase text-gold-700">Keynote</span>@endif
+                                    @if ($s->is_keynote)<span class="rounded-full bg-gold-500/20 px-1.5 text-eyebrow font-bold uppercase text-gold-700">Keynote</span>@endif
                                 </p>
-                                <p class="text-[0.7rem] text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
+                                <p class="text-micro text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
                             </div>
                         </div>
-                        <span class="rounded-full px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
+                        <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
                     </div>
 
                     @if ($s->topic)<p class="mt-3 rounded-xl bg-page/60 px-3 py-2 text-xs text-navy-700">“{{ $s->topic }}”</p>@endif
@@ -41,10 +41,10 @@
                         <span class="text-xs text-muted">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
                         <div class="flex items-center gap-1 opacity-0 transition group-hover/sp:opacity-100">
                             @if ($s->status !== 'confirmed')
-                                <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-50 px-2 py-1 text-[0.6rem] font-bold text-emerald-700 hover:bg-emerald-100">✓ Confirm</button>
+                                <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-50 px-2 py-1 text-eyebrow font-bold text-emerald-700 hover:bg-emerald-100">✓ Confirm</button>
                             @endif
-                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-risk/10 px-1.5 py-1 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20">✕</button>
+                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
+                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
                         </div>
                     </div>
                 </div>
@@ -77,46 +77,41 @@
 
     {{-- modal --}}
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-900/40 p-4 pt-16 backdrop-blur-sm">
-            <div class="card w-full max-w-xl p-6 shadow-2xl" @click.outside="$wire.set('showForm', false)">
-                <div class="mb-4 flex items-center justify-between">
-                    <h3 class="pf text-base font-bold text-navy-900">{{ $editingId ? 'Edit speaker' : 'New speaker' }}</h3>
-                    <button type="button" wire:click="$set('showForm', false)" class="text-navy-400 hover:text-navy-900">✕</button>
-                </div>
+        <x-modal :title="$editingId ? 'Edit speaker' : 'New speaker'" max="xl" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Full name</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Full name</label>
                         <input type="text" wire:model="name" class="input h-10 text-sm" placeholder="Dr. Layla Haddad">
                         @error('name')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Job title</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Job title</label>
                         <input type="text" wire:model="title" class="input h-10 text-sm" placeholder="Minister of Economy">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Organization</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Organization</label>
                         <input type="text" wire:model="organization" class="input h-10 text-sm" placeholder="Government of Jordan">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Talk / topic</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Talk / topic</label>
                         <input type="text" wire:model="topic" class="input h-10 text-sm" placeholder="The Future of the Arab Economy">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Email</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Email</label>
                         <input type="email" wire:model="email" class="input h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Phone</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Phone</label>
                         <input type="text" wire:model="phone" class="input h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Status</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Status</label>
                         <select wire:model="status" class="input h-10 text-sm">
                             @foreach (\App\Models\EventSpeaker::STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Fee ({{ $event->currency }})</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Fee ({{ $event->currency }})</label>
                         <input type="number" step="0.01" min="0" wire:model="fee" class="input h-10 text-sm" placeholder="0">
                     </div>
                     <label class="flex items-center gap-2 sm:col-span-2">
@@ -124,7 +119,7 @@
                         <span class="text-xs font-semibold text-navy-800">Keynote speaker</span>
                     </label>
                     <div class="sm:col-span-2">
-                        <label class="field-label !mb-1 !text-[0.62rem]">Bio</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Bio</label>
                         <textarea wire:model="bio" rows="2" class="input text-sm" placeholder="Short biography…"></textarea>
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
@@ -132,7 +127,6 @@
                         <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update' : 'Add speaker' }}</button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </x-modal>
     @endif
 </div>

@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['event_id', 'version', 'label', 'status', 'note', 'snapshot', 'totals', 'requested_by', 'decided_by', 'decided_at'])]
 class EventBudgetVersion extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    /** Only these changes are audit-worthy — decisions, not noise. */
+    public const AUDIT_FIELDS = ['status'];
+
     public const STATUSES = ['pending', 'approved', 'rejected', 'superseded'];
 
     protected function casts(): array
@@ -33,5 +38,9 @@ class EventBudgetVersion extends Model
     public function decider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decided_by');
+    }
+    public function auditLabel(): string
+    {
+        return 'Budget v'.$this->version;
     }
 }

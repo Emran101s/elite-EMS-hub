@@ -31,6 +31,21 @@ class User extends Authenticatable
         return self::ROLES[$this->role] ?? 'Member';
     }
 
+    /** Role seniority, for "at least this role" checks. */
+    private const ROLE_RANK = [
+        'viewer' => 0,
+        'coordinator' => 1,
+        'manager' => 2,
+        'admin' => 3,
+        'super_admin' => 4,
+    ];
+
+    /** True when this user's role is the given role or more senior. */
+    public function isAtLeast(string $role): bool
+    {
+        return (self::ROLE_RANK[$this->role] ?? 0) >= (self::ROLE_RANK[$role] ?? PHP_INT_MAX);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

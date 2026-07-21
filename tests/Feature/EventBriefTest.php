@@ -31,7 +31,7 @@ class EventBriefTest extends TestCase
         $this->assertSame('conference', $brief->template);
         $this->assertSame('Test Summit', $brief->data['event_info']['name']);
         $this->assertSame('Plenary Programme', $brief->data['components'][0]['area']);
-        $this->assertNotEmpty($brief->data['kpis']);
+        $this->assertNotEmpty($brief->data['success']);
     }
 
     public function test_editing_a_field_persists(): void
@@ -54,11 +54,11 @@ class EventBriefTest extends TestCase
         EventBrief::forEvent($event);
 
         $c = Livewire::actingAs($user)->test(BriefTab::class, ['event' => $event])
-            ->call('addRow', 'objectives');
-        $this->assertCount(7, EventBrief::where('event_id', $event->id)->first()->data['objectives']);
+            ->call('addRow', 'audience');
+        $this->assertCount(7, EventBrief::where('event_id', $event->id)->first()->data['audience']);
 
-        $c->call('removeRow', 'objectives', 0);
-        $this->assertCount(6, EventBrief::where('event_id', $event->id)->first()->data['objectives']);
+        $c->call('removeRow', 'audience', 0);
+        $this->assertCount(6, EventBrief::where('event_id', $event->id)->first()->data['audience']);
     }
 
     public function test_all_five_templates_seed_a_full_brief(): void
@@ -98,7 +98,7 @@ class EventBriefTest extends TestCase
             ->call('generatePlan')
             ->assertHasErrors('generate');
 
-        $this->assertSame(0, $event->planItems()->count());
+        $this->assertDatabaseMissing('event_budget_categories', ['event_id' => $event->id]);
     }
 
     public function test_approved_brief_generates_the_erp_records(): void
@@ -111,40 +111,32 @@ class EventBriefTest extends TestCase
             ->call('generatePlan')
             ->assertHasNoErrors();
 
-        // Plan: tasks from components/venue/branding/operational + milestones, across the 7 phases.
-        $this->assertGreaterThan(10, $event->planItems()->count());
-        $this->assertDatabaseHas('event_plan_items', ['event_id' => $event->id, 'title' => 'Plenary Programme']);
-
-        // Budget categories, risks, sponsors, approvals.
+        // Budget categories, risks, sponsors.
         $this->assertDatabaseHas('event_budget_categories', ['event_id' => $event->id, 'name' => 'AV & Production']);
         $this->assertDatabaseHas('event_risks', ['event_id' => $event->id, 'title' => 'Keynote / VIP Cancellation', 'category' => 'speaker']);
         $this->assertDatabaseHas('event_sponsor_packages', ['event_id' => $event->id, 'name' => 'Platinum']);
-        $this->assertDatabaseHas('event_approvals', ['event_id' => $event->id, 'title' => 'Client approval — Budget', 'type' => 'budget']);
 
         $this->assertNotNull(EventBrief::where('event_id', $event->id)->first()->generated_at);
 
         // Idempotent: a second run creates nothing new.
-        $before = $event->planItems()->count();
+        $before = \App\Models\EventBudgetCategory::where('event_id', $event->id)->count();
         $c->call('generatePlan');
-        $this->assertSame($before, $event->planItems()->count());
+        $this->assertSame($before, \App\Models\EventBudgetCategory::where('event_id', $event->id)->count());
         $this->assertSame(0, array_sum($c->get('generated')));
     }
 
-    public function test_generate_does_not_overwrite_hand_made_items(): void
+    public function test_generate_does_not_overwrite_hand_made_budget(): void
     {
         [$user, $event] = $this->make();
         EventBrief::forEvent($event);
-        $event->ensurePlanCategories();
-        $mine = $event->planItems()->create([
-            'category_id' => $event->planCategories()->value('id'),
-            'title' => 'My own task', 'status' => 'in_progress', 'priority' => 'high',
-        ]);
+        $mine = \App\Models\EventBudgetCategory::create(['event_id' => $event->id, 'name' => 'AV & Production', 'position' => 0]);
 
         Livewire::actingAs($user)->test(BriefTab::class, ['event' => $event])
             ->call('toggleApproved')->call('generatePlan');
 
-        $this->assertSame('in_progress', $mine->fresh()->status);
-        $this->assertDatabaseHas('event_plan_items', ['id' => $mine->id, 'title' => 'My own task']);
+        // The hand-made category is matched by name, not duplicated.
+        $this->assertSame(1, \App\Models\EventBudgetCategory::where('event_id', $event->id)->where('name', 'AV & Production')->count());
+        $this->assertSame($mine->id, $mine->fresh()->id);
     }
 
     public function test_pdf_downloads(): void

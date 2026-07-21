@@ -39,12 +39,24 @@ class BriefTab extends Component
         $this->template = $brief->template;
     }
 
+    /** Section key that was just saved via its Save button (drives the "Saved ✓" flash). */
+    public ?string $savedSection = null;
+
     /** Autosave whenever a bound field changes (fields use wire:model.blur). */
     public function updated(string $name): void
     {
         if (str_starts_with($name, 'data') || $name === 'version') {
             $this->persist();
+            // Any edit clears a stale "Saved" flash on whichever section it belonged to.
+            $this->savedSection = null;
         }
+    }
+
+    /** Explicit per-section save — persists and flashes a confirmation on that section. */
+    public function saveSection(string $key): void
+    {
+        $this->persist();
+        $this->savedSection = $key;
     }
 
     public function addRow(string $section): void
@@ -90,9 +102,8 @@ class BriefTab extends Component
     }
 
     /**
-     * Turn the approved brief into the working plan: phases + tasks, milestones,
-     * budget categories, risk register, sponsorship packages and approval gates.
-     * Idempotent — safe to re-run after editing the brief.
+     * Turn the approved brief into working records: budget categories, risk
+     * register and sponsorship packages. Idempotent — safe to re-run.
      */
     public function generatePlan(BriefGenerator $generator): void
     {

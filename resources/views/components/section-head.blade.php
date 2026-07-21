@@ -4,7 +4,7 @@
     'subtitle' => null,
 ])
 
-{{-- Shared section header: gold serif numeral · Playfair title · hairline rule.
+{{-- Shared section header: gold serif numeral · Spectral title · hairline rule.
      Use everywhere so sections read the same across the platform. --}}
 <div {{ $attributes->merge(['class' => 'mb-5 flex items-end justify-between gap-3 border-b border-line pb-2.5']) }}>
     <div class="flex min-w-0 items-baseline gap-2.5">

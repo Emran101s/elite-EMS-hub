@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable(['event_id', 'name', 'title', 'organization', 'topic', 'bio', 'email', 'phone', 'photo_url', 'is_keynote', 'status', 'fee_cents', 'sort_order'])]
 class EventSpeaker extends Model
@@ -28,5 +29,13 @@ class EventSpeaker extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /** Every agenda session this person appears on, with their role on the pivot. */
+    public function sessions(): BelongsToMany
+    {
+        return $this->belongsToMany(EventAgendaSession::class, 'agenda_session_speaker', 'speaker_id', 'agenda_session_id')
+            ->withPivot(['role', 'sort'])
+            ->withTimestamps();
     }
 }

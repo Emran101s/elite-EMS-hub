@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'name', 'logo_path', 'default_currency', 'default_timezone',
-    'default_budget_categories', 'default_plan_phases', 'default_management_fee_pct', 'default_ticket_types', 'default_sponsor_packages',
+    'default_budget_categories', 'default_management_fee_pct', 'default_ticket_types', 'default_sponsor_packages',
     'country', 'city', 'email', 'phone', 'website', 'address',
 ])]
 class CompanyProfile extends Model
@@ -18,7 +18,6 @@ class CompanyProfile extends Model
     {
         return [
             'default_budget_categories' => 'array',
-            'default_plan_phases' => 'array',
             'default_ticket_types' => 'array',
             'default_sponsor_packages' => 'array',
             'default_management_fee_pct' => 'float',
@@ -47,15 +46,6 @@ class CompanyProfile extends Model
         return collect(\App\Models\Event::DEFAULT_SPONSOR_PACKAGES)
             ->map(fn ($slots, $name) => ['name' => $name, 'price_cents' => 0, 'slots' => $slots, 'benefits' => []])
             ->values()->all();
-    }
-
-    /** Default planning phases for new events (falls back to the built-in list). */
-    public function planPhases(): array
-    {
-        $list = collect($this->default_plan_phases ?? [])
-            ->map(fn ($n) => trim((string) $n))->filter()->values()->all();
-
-        return $list ?: \App\Models\Event::DEFAULT_PLAN_CATEGORIES;
     }
 
     /** Ticket types offered across events (falls back to the built-in list). */

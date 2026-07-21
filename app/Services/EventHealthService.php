@@ -18,6 +18,12 @@ use App\Models\Event;
  */
 class EventHealthService
 {
+    /**
+     * The relations breakdown() reads. Eager-load these before scoring a set of
+     * events, or each score silently costs one query per relation per event.
+     */
+    public const RELATIONS = ['tasks', 'risks', 'approvals', 'budgetItems', 'agendaSessions', 'rooms', 'suppliers', 'venue'];
+
     private const WEIGHTS = [
         'tasks' => 30,
         'budget' => 20,
@@ -92,7 +98,7 @@ class EventHealthService
             $attention[] = "Supplier issue: {$supplier->name}";
         }
 
-        $overdue = $event->tasks->filter(fn ($task) => $task->status !== 'completed' && $task->due_on?->isPast());
+        $overdue = $event->tasks->filter(fn ($task) => $task->isOpen() && $task->due_on?->isPast());
         if ($overdue->isNotEmpty()) {
             $attention[] = $overdue->count().' overdue '.str('task')->plural($overdue->count()).', next: “'.$overdue->sortBy('due_on')->first()->title.'”';
         }
@@ -116,7 +122,7 @@ class EventHealthService
         $total = $event->tasks->count();
 
         return $total === 0 ? null
-            : (int) round($event->tasks->where('status', 'completed')->count() / $total * 100);
+            : (int) round($event->tasks->where('status', 'done')->count() / $total * 100);
     }
 
     private function budgetScore(Event $event): ?int

@@ -3,18 +3,15 @@
 namespace App\Services;
 
 use App\Models\Event;
-use App\Models\EventApproval;
 use App\Models\EventBrief;
 use App\Models\EventBudgetCategory;
-use App\Models\EventPlanItem;
 use App\Models\EventRisk;
 use App\Models\EventSponsorPackage;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Turns an APPROVED Event Brief into the working ERP records:
- * plan phases + tasks, budget categories, risk register, sponsorship
- * packages and client approval gates.
+ * budget categories, risk register, and sponsorship packages.
  *
  * Guarantees:
  *  - Idempotent  — re-running matches on name/title and creates nothing twice.
@@ -22,14 +19,6 @@ use Illuminate\Support\Facades\DB;
  */
 class BriefGenerator
 {
-    /** Which plan phase each brief section feeds. */
-    private const SECTION_PHASE = [
-        'components' => 'Planning & Design',
-        'venue' => 'Planning & Design',
-        'branding' => 'Planning & Design',
-        'operational' => 'Pre-Event Readiness',
-    ];
-
     public function generate(EventBrief $brief): array
     {
         $event = $brief->event;
@@ -37,108 +26,15 @@ class BriefGenerator
 
         return DB::transaction(function () use ($event, $brief, $data) {
             $summary = [
-                'tasks' => $this->tasks($event, $data),
-                'milestones' => $this->milestones($event, $data),
                 'budget' => $this->budget($event, $data),
                 'risks' => $this->risks($event, $data),
                 'sponsors' => $this->sponsors($event, $data),
-                'approvals' => $this->approvals($event, $data),
             ];
 
             $brief->forceFill(['generated_at' => now()])->save();
 
             return $summary;
         });
-    }
-
-    // ── Plan: phases + tasks ─────────────────────────────────────────────
-    private function tasks(Event $event, array $data): int
-    {
-        $event->ensurePlanCategories();
-        $phases = $event->planCategories()->get()->keyBy('name');
-        $made = 0;
-
-        foreach (self::SECTION_PHASE as $section => $phaseName) {
-            $phase = $phases[$phaseName] ?? $phases->first();
-            if (! $phase) {
-                continue;
-            }
-
-            foreach ((array) ($data[$section] ?? []) as $row) {
-                // twocol rows are ['area','notes']; bullets are plain strings.
-                $title = is_array($row) ? trim((string) ($row['area'] ?? '')) : trim((string) $row);
-                $notes = is_array($row) ? trim((string) ($row['notes'] ?? '')) : null;
-
-                if ($title === '') {
-                    continue;
-                }
-
-                $made += $this->planItem($event, $phase->id, $title, $notes) ? 1 : 0;
-            }
-        }
-
-        return $made;
-    }
-
-    private function milestones(Event $event, array $data): int
-    {
-        $phases = $event->planCategories()->get()->keyBy('name');
-        $made = 0;
-
-        foreach ((array) ($data['milestones'] ?? []) as $row) {
-            $title = trim((string) ($row['area'] ?? ''));
-            if ($title === '') {
-                continue;
-            }
-
-            $phase = $phases[$this->milestonePhase($title)] ?? $phases->first();
-            if (! $phase) {
-                continue;
-            }
-
-            $made += $this->planItem($event, $phase->id, $title, trim((string) ($row['notes'] ?? '')), 'high') ? 1 : 0;
-        }
-
-        return $made;
-    }
-
-    /** Create a top-level plan item unless one with that title already exists on the event. */
-    private function planItem(Event $event, int $categoryId, string $title, ?string $notes, string $priority = 'medium'): bool
-    {
-        if ($event->planItems()->whereNull('parent_id')->where('title', $title)->exists()) {
-            return false;
-        }
-
-        $event->planItems()->create([
-            'category_id' => $categoryId,
-            'title' => $title,
-            'notes' => $notes ?: null,
-            'status' => 'todo',
-            'priority' => $priority,
-            'sort_order' => (int) $event->planItems()->where('category_id', $categoryId)->max('sort_order') + 1,
-        ]);
-
-        return true;
-    }
-
-    private function milestonePhase(string $title): string
-    {
-        $t = strtolower($title);
-
-        return match (true) {
-            str_contains($t, 'brief') || str_contains($t, 'concept') => 'Initiation & Strategy',
-            str_contains($t, 'venue') || str_contains($t, 'site') || str_contains($t, 'floorplan')
-                || str_contains($t, 'curriculum') || str_contains($t, 'design') => 'Planning & Design',
-            str_contains($t, 'registration') || str_contains($t, 'sponsorship') || str_contains($t, 'ticketing')
-                || str_contains($t, 'invitation') || str_contains($t, 'nomination') || str_contains($t, 'sales') => 'Marketing & Registration',
-            str_contains($t, 'rehearsal') || str_contains($t, 'readiness') || str_contains($t, 'build')
-                || str_contains($t, 'move-in') || str_contains($t, 'permits') || str_contains($t, 'final') => 'Pre-Event Readiness',
-            str_contains($t, 'event day') || str_contains($t, 'event dates') || str_contains($t, 'show day')
-                || str_contains($t, 'gala night') || str_contains($t, 'delivery') => 'Event Execution',
-            str_contains($t, 'move-out') || str_contains($t, 'de-rig') => 'Event Close-Out',
-            str_contains($t, 'report') || str_contains($t, 'evaluation') || str_contains($t, 'certificate') => 'Post-Event',
-            default => 'Initiation & Strategy',
-        };
     }
 
     // ── Budget ───────────────────────────────────────────────────────────
@@ -209,13 +105,13 @@ class BriefGenerator
         };
     }
 
-    // ── Sponsorship packages (from the Stakeholders → Sponsors row) ───────
+    // ── Sponsorship packages (from Sponsors & Partners → Sponsorship Tiers) ──
     private function sponsors(Event $event, array $data): int
     {
         $tiers = [];
 
-        foreach ((array) ($data['stakeholders'] ?? []) as $row) {
-            if (strtolower(trim((string) ($row['area'] ?? ''))) === 'sponsors') {
+        foreach ((array) ($data['sponsors'] ?? []) as $row) {
+            if (str_contains(strtolower((string) ($row['area'] ?? '')), 'tier')) {
                 $tiers = $this->splitList((string) ($row['notes'] ?? ''));
                 break;
             }
@@ -241,61 +137,6 @@ class BriefGenerator
         }
 
         return $made;
-    }
-
-    // ── Client approval gates (from Governance → Approval Process) ────────
-    private function approvals(Event $event, array $data): int
-    {
-        $gates = [];
-
-        foreach ((array) ($data['governance'] ?? []) as $row) {
-            if (str_contains(strtolower((string) ($row['area'] ?? '')), 'approval')) {
-                $notes = (string) ($row['notes'] ?? '');
-                // "Client approval required for scope, budget, venue, ..." → take the list after "for".
-                if (preg_match('/\bfor\b(.*)$/i', $notes, $m)) {
-                    $notes = $m[1];
-                }
-                $gates = $this->splitList($notes);
-                break;
-            }
-        }
-
-        $made = 0;
-        $requester = $event->project_manager_id;
-
-        foreach ($gates as $gate) {
-            $title = 'Client approval — '.ucfirst($gate);
-            if (EventApproval::where('event_id', $event->id)->where('title', $title)->exists()) {
-                continue;
-            }
-
-            EventApproval::create([
-                'event_id' => $event->id,
-                'title' => $title,
-                'type' => $this->approvalType($gate),
-                'status' => 'pending',
-                'requested_by' => $requester,
-                'notes' => 'Generated from the approved Event Brief.',
-            ]);
-            $made++;
-        }
-
-        return $made;
-    }
-
-    private function approvalType(string $gate): string
-    {
-        $g = strtolower($gate);
-
-        return match (true) {
-            str_contains($g, 'budget') => 'budget',
-            str_contains($g, 'venue') => 'venue',
-            str_contains($g, 'branding') || str_contains($g, 'design') => 'design',
-            str_contains($g, 'agenda') || str_contains($g, 'programme') || str_contains($g, 'program') => 'agenda',
-            str_contains($g, 'report') => 'report',
-            str_contains($g, 'supplier') => 'supplier',
-            default => 'client',
-        };
     }
 
     /** "a, b, and c." → ['a','b','c'] */

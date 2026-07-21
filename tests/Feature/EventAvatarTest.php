@@ -61,13 +61,14 @@ class EventAvatarTest extends TestCase
         $this->seed(EventAvatarSeeder::class);
         $user = User::factory()->create();
 
-        // Gala template → gala-dinner avatar + its module set (incl. sponsors, no agenda).
+        // Gala template → gala-dinner avatar + its module set (sponsors and
+        // attendees on, no agenda — a gala has guests but no session programme).
         Livewire::actingAs($user)->test(EventCreate::class)
             ->set('new_client', 'Falcon Holdings')
             ->set('name', 'Falcon Gala 2027')
             ->set('starts_at', '2027-03-10')
             ->call('chooseTemplate', 'gala')
-            ->assertSet('modules', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors'])
+            ->assertSet('modules', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees'])
             ->call('save')
             ->assertHasNoErrors();
 
@@ -78,6 +79,7 @@ class EventAvatarTest extends TestCase
         $this->assertSame('draft', $event->stage);
         $this->assertSame('Falcon Holdings', $event->client->name);
         $this->assertContains('sponsors', $event->enabled_modules);
+        $this->assertContains('attendees', $event->enabled_modules);
         $this->assertNotContains('agenda', $event->enabled_modules);
     }
 
@@ -102,11 +104,42 @@ class EventAvatarTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $this->actingAs($user)->get('/')->assertOk()
-            ->assertSee('data-avatar="convention-center"', false) // ICFT's branded render
-            ->assertSee('data-avatar="vip-event"', false);
-
+        // The command center now shows the task orbit, not event medallions —
+        // avatars live on the events list and each event's hub.
         $this->actingAs($user)->get('/events')->assertOk()
+            ->assertSee('data-avatar="convention-center"', false) // ICFT's branded render
             ->assertSee('data-avatar="exhibition"', false);
+
+        $icft = \App\Models\Event::where('name', 'ICFT 2026')->firstOrFail();
+        $this->actingAs($user)->get(route('events.hub', $icft))->assertOk()
+            ->assertSee('data-avatar="convention-center"', false);
+    }
+
+    public function test_events_without_an_avatar_get_a_generated_crest(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
+
+        $event = Event::create([
+            'name' => 'Crestless Congress', 'type' => 'conference', 'city' => 'Amman',
+            'country' => 'Jordan', 'starts_at' => now()->addMonth(), 'avatar_id' => null,
+        ]);
+
+        // The card falls back to a generated mark, not an empty placeholder.
+        $html = view('components.event-crest', ['event' => $event, 'name' => null, 'type' => null])->render();
+        $this->assertStringContainsString('Crestless Congress crest', $html);
+        $this->assertStringContainsString('CC', $html, 'initials are derived from the name');
+
+        // Deterministic: the same event always renders the same crest.
+        $again = view('components.event-crest', ['event' => $event, 'name' => null, 'type' => null])->render();
+        $this->assertSame($html, $again);
+
+        // ...and a different event gets a visibly different one.
+        $other = Event::create([
+            'name' => 'Desert Gala', 'type' => 'gala_dinner', 'city' => 'Amman',
+            'country' => 'Jordan', 'starts_at' => now()->addMonth(), 'avatar_id' => null,
+        ]);
+        $otherHtml = view('components.event-crest', ['event' => $other, 'name' => null, 'type' => null])->render();
+        $this->assertNotSame($html, $otherHtml);
     }
 }

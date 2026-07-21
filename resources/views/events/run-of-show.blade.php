@@ -1,10 +1,19 @@
 <x-layouts.app title="Run of Show"
-               :subtitle="$event->name . '  ·  EVT-' . str_pad($event->id, 3, '0', STR_PAD_LEFT) . ($event->venue ? '  ·  ' . $event->venue->name : '')">
+               :subtitle="$event->name . '  ·  EVT-' . str_pad($event->id, 3, '0', STR_PAD_LEFT) . ($event->venue ? '  ·  ' . $event->venue->name : '')"
+               :crumbs="[
+                   ['label' => 'Command Center', 'href' => route('home')],
+                   ['label' => 'Events', 'href' => route('events.index')],
+                   ['label' => $event->name, 'href' => route('events.hub', $event)],
+                   ['label' => 'Run of Show'],
+               ]">
 
     {{-- Top actions --}}
     <div class="mb-5 flex items-center justify-end gap-2">
-        <a href="{{ route('events.agenda.pdf', $event) }}" class="flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-navy-700 transition hover:border-gold-300">
-            <x-icon name="chart" class="h-4 w-4" /> Export PDF
+        <a href="{{ route('events.run-of-show.pdf', [$event, 'day' => $day?->id]) }}" class="btn-ghost !h-10 gap-2">
+            <x-icon name="chart" class="h-4 w-4" /> This day
+        </a>
+        <a href="{{ route('events.run-of-show.pdf', $event) }}" class="btn-ghost !h-10 gap-2">
+            <x-icon name="chart" class="h-4 w-4" /> Full run
         </a>
         <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}" class="btn-navy h-10 px-4 text-sm !text-white">Edit Agenda →</a>
     </div>
@@ -19,7 +28,7 @@
                        'border-navy-900 bg-navy-900 text-white' => $day && $day->id === $d->id,
                        'border-line bg-white text-navy-600 hover:border-navy-200' => ! ($day && $day->id === $d->id),
                    ])>
-                    <p class="text-[0.6rem] font-bold uppercase tracking-widest {{ $day && $day->id === $d->id ? 'text-gold-400' : 'text-muted' }}">Day {{ $loop->iteration }}</p>
+                    <p class="text-3xs font-bold uppercase tracking-widest {{ $day && $day->id === $d->id ? 'text-gold-400' : 'text-muted' }}">Day {{ $loop->iteration }}</p>
                     <p class="mt-0.5 text-sm font-bold">{{ $d->date?->format('D, j M') }}</p>
                     <p class="text-[0.65rem] {{ $day && $day->id === $d->id ? 'text-white/60' : 'text-muted' }}">{{ $d->sessions->count() }} {{ str('item')->plural($d->sessions->count()) }}</p>
                 </a>
@@ -44,7 +53,7 @@
                         <div class="flex items-stretch border-b border-line last:border-b-0">
                             <div class="flex w-[150px] shrink-0 flex-col justify-center border-r border-line px-4 py-4">
                                 <p class="flex items-center gap-1.5 text-xs font-bold text-navy-900"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> {{ $lane['room'] }}</p>
-                                <p class="text-[0.6rem] text-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
+                                <p class="text-3xs text-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
                             </div>
                             <div class="relative flex-1">
                                 {{-- gridlines --}}
@@ -70,9 +79,9 @@
 
             {{-- Legend --}}
             <div class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line px-5 py-3.5">
-                <span class="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Legend</span>
+                <span class="text-3xs font-bold uppercase tracking-widest text-muted">Legend</span>
                 @foreach ($legend as [$label, $hex])
-                    <span class="flex items-center gap-1.5 text-[0.7rem] font-medium text-navy-700">
+                    <span class="flex items-center gap-1.5 text-2xs font-medium text-navy-700">
                         <span class="h-3 w-4 rounded" style="background: {{ $hex }}"></span> {{ $label }}
                     </span>
                 @endforeach
@@ -93,7 +102,7 @@
             <table class="w-full min-w-[640px]">
                 <thead>
                     <tr class="border-b border-line">
-                        <th class="w-32 px-5 py-3 text-left text-[0.6rem] font-bold uppercase tracking-widest text-muted">Module</th>
+                        <th class="w-32 px-5 py-3 text-left text-3xs font-bold uppercase tracking-widest text-muted">Module</th>
                         @foreach ($overview as $o)
                             <th class="px-4 py-3 text-left text-[0.65rem] font-bold text-navy-900">{{ $o['label'] }}<span class="ml-1 font-normal text-muted">{{ $o['date']?->format('j M') }}</span></th>
                         @endforeach
@@ -106,9 +115,9 @@
                             @foreach ($overview as $o)
                                 <td class="px-4 py-3">
                                     @if ($o[$rowKey] > 0)
-                                        <span class="flex h-6 items-center justify-center rounded-lg text-[0.7rem] font-bold text-white" style="background: {{ $rowColor }}">{{ $o[$rowKey] }}</span>
+                                        <span class="flex h-6 items-center justify-center rounded-lg text-2xs font-bold text-white" style="background: {{ $rowColor }}">{{ $o[$rowKey] }}</span>
                                     @else
-                                        <span class="text-[0.7rem] text-navy-200">—</span>
+                                        <span class="text-2xs text-navy-200">—</span>
                                     @endif
                                 </td>
                             @endforeach

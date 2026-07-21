@@ -30,6 +30,8 @@ class RoomLayoutBuilder extends Component
     public array $equipment = [];
 
     /** ── Seating generator ── */
+    public bool $showSeatModal = false;
+
     public string $seatArr = 'theater';
 
     public string $seatTarget = '';
@@ -37,6 +39,8 @@ class RoomLayoutBuilder extends Component
     public string $seatSize = '0.6';
 
     public string $seatComfort = 'standard';
+
+    public string $seatGapCm = '8';   // space between chairs (cm)
 
     public string $seatAisles = '1';
 
@@ -46,10 +50,26 @@ class RoomLayoutBuilder extends Component
 
     public string $tableSeats = '10';
 
+    // ── Table Designer: professional per-table control (centimetres) ──
+    public string $uHeadTables = '2';       // tables across the head
+
+    public string $uArmTables = '3';        // tables per side arm
+
+    public string $uPerTable = '3';         // chairs per table (outer edge)
+
+    public string $tableW_cm = '180';       // rectangular table long side
+
+    public string $tableH_cm = '60';        // rectangular table depth
+
+    public string $roundDia_cm = '180';     // round/banquet table diameter
+
     public string $seatMsg = '';
 
     /** Currently selected element id (for the properties panel). */
     public ?string $selectedId = null;
+
+    /** Bulk selection for delete-many. */
+    public array $selectedIds = [];
 
     /** Active workspace: 'floor' | 'equipment' | 'requirements' — kept in the URL so refresh/deep-links land on the same tab. */
     #[Url(except: 'floor')]
@@ -100,11 +120,22 @@ class RoomLayoutBuilder extends Component
         }
         [, $seats, $w, $h] = EventRoom::LAYOUT_PRESETS[$type];
 
+        // Basics drop at their real-world size when the room is to scale:
+        // chair 60cm, rectangular table 180×60cm, round table 180cm.
+        $dropCm = ['round' => [180, 180], 'table' => [180, 60], 'chair' => [60, 60], 'booth' => [200, 200]];
+        if (($scale = $this->metreScale()) && isset($dropCm[$type])) {
+            [$wcm, $hcm] = $dropCm[$type];
+            $w = (int) round($wcm / 100 * $scale);
+            $h = (int) round($hcm / 100 * $scale);
+        }
+
         $id = Str::random(8);
+        $n = count($this->elements);   // fan drops out so they don't stack on one spot
         $this->elements[] = [
             'id' => $id,
             'type' => $type,
-            'x' => 480, 'y' => 280, // canvas center (960×560)
+            'x' => 480 + ($n % 5) * 26 - 52,
+            'y' => 280 + (intdiv($n, 5) % 4) * 26,
             'rot' => 0,
             'seats' => $seats,
             'w' => $w, 'h' => $h,
@@ -119,6 +150,13 @@ class RoomLayoutBuilder extends Component
     }
 
     /** Auto-generate a block of individual chairs in the chosen arrangement, sized to fit the room. */
+    public function openSeatModal(): void
+    {
+        $this->seatMsg = '';
+        $this->resetValidation();
+        $this->showSeatModal = true;
+    }
+
     public function generateSeating(): void
     {
         $this->validate([
@@ -126,6 +164,7 @@ class RoomLayoutBuilder extends Component
             'seatTarget' => [$this->seatFill ? 'nullable' : 'required', 'integer', 'min:1', 'max:5000'],
             'seatSize' => ['required', 'numeric', 'min:0.3', 'max:2'],
             'seatComfort' => ['required', Rule::in(array_keys(EventRoom::SEATING_COMFORT))],
+            'seatGapCm' => ['required', 'numeric', 'min:0', 'max:60'],
         ]);
 
         $w = is_numeric($this->width_m) ? (float) $this->width_m : 0;
@@ -145,6 +184,7 @@ class RoomLayoutBuilder extends Component
         $roomArea = $w * $l;
 
         [, $seatGap, $tRowGap, $cRowGap] = EventRoom::SEATING_COMFORT[$this->seatComfort];
+        $seatGap = max(0.0, (float) $this->seatGapCm / 100);   // explicit chair spacing wins
         $arr = $this->seatArr;
         $family = EventRoom::SEATING_ARRANGEMENTS[$arr][2];
         $target = $this->seatFill ? 100000 : (int) $this->seatTarget;
@@ -153,7 +193,7 @@ class RoomLayoutBuilder extends Component
         $roomMax = null;
 
         if ($family === 'rounds') {
-            $dia = 1.6;
+            $dia = max(0.8, (float) $this->roundDia_cm / 100);
             $per = $arr === 'cabaret' ? 6 : max(4, min(12, (int) ($this->tableSeats ?: 10)));
             $gap = 1.4;
             $pitch = $dia + $gap;
@@ -229,20 +269,53 @@ class RoomLayoutBuilder extends Component
         $el['seats'] = $capacity;
         $this->elements[] = $el;
 
-        // Give the audience a stage to face, if there isn't one.
-        if (! collect($this->elements)->contains(fn ($e) => ($e['type'] ?? '') === 'stage')) {
-            $this->elements[] = ['id' => Str::random(8), 'type' => 'stage', 'x' => 480, 'y' => 70, 'rot' => 0, 'seats' => 0, 'w' => 240, 'h' => 70];
-        }
-
         $this->selectedId = $el['id'];
         $this->persist();
 
         $label = EventRoom::SEATING_ARRANGEMENTS[$arr][0];
         $per = $capacity > 0 ? round($roomArea / $capacity, 1) : 0;
+        $this->showSeatModal = false;
         $short = ! $this->seatFill && $roomMax !== null && $capacity < $target;
         $this->seatMsg = "✓ {$capacity} seats · {$label}"
             .($short ? " (room fits ~{$roomMax})" : '')
             .' · '.$per.' m²/seat';
+    }
+
+    /**
+     * Table Designer — a U-shape built table by table: a head table with its own
+     * chair count, plus arms of standard 180×60cm tables, delegates on the outer
+     * edge, open toward the stage. This is manual control, not auto-fit.
+     */
+    public function designUShape(): void
+    {
+        $this->validate([
+            'uHeadTables' => ['required', 'integer', 'min:1', 'max:12'],
+            'uArmTables' => ['required', 'integer', 'min:0', 'max:24'],
+            'uPerTable' => ['required', 'integer', 'min:1', 'max:8'],
+            'tableW_cm' => ['required', 'numeric', 'min:60', 'max:300'],
+            'tableH_cm' => ['required', 'numeric', 'min:40', 'max:120'],
+        ]);
+
+        $head = (int) $this->uHeadTables;
+        $arm = (int) $this->uArmTables;
+        $per = (int) $this->uPerTable;
+        $capacity = ($head + 2 * $arm) * $per;
+
+        $el = [
+            'id' => Str::random(8), 'type' => 'seatblock', 'arr' => 'ushape', 'mode' => 'utables',
+            'rot' => 0, 'x' => 480, 'y' => 310, 'seat_m' => (float) $this->seatSize,
+            'headTables' => $head, 'armTables' => $arm, 'perTable' => $per,
+            'tableW_m' => (float) $this->tableW_cm / 100, 'tableH_m' => (float) $this->tableH_cm / 100,
+            'labels' => $this->seatLabels, 'seats' => $capacity,
+        ];
+        $this->elements[] = $el;
+
+        $this->selectedId = $el['id'];
+        $this->persist();
+
+        $this->showSeatModal = false;
+        $tables = $head + 2 * $arm;
+        $this->seatMsg = "✓ {$capacity} seats · U-shape · {$tables} tables ({$head} head + {$arm}/arm) · {$this->tableW_cm}×{$this->tableH_cm}cm · {$per} chairs/table";
     }
 
     public function moveElement(string $id, float $x, float $y): void
@@ -343,7 +416,8 @@ class RoomLayoutBuilder extends Component
         if (! $scale) {
             return;
         }
-        $px = max(20, min(920, (int) round(max(0.1, (float) $metres) * $scale)));
+        // Keep a small clickable floor without distorting real dimensions.
+        $px = max(6, min(920, (int) round(max(0.05, (float) $metres) * $scale)));
 
         $this->elements = collect($this->elements)->map(function ($el) use ($id, $axis, $px) {
             if ($el['id'] === $id) {
@@ -360,6 +434,66 @@ class RoomLayoutBuilder extends Component
         $this->persist();
     }
 
+    public function selectAll(): void
+    {
+        $this->selectedIds = collect($this->elements)->pluck('id')->all();
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedIds = [];
+    }
+
+    /** Toggle one element in the bulk selection (used by the checkbox overlay). */
+    public function toggleInSelection(string $id): void
+    {
+        $this->selectedIds = in_array($id, $this->selectedIds, true)
+            ? array_values(array_diff($this->selectedIds, [$id]))
+            : [...$this->selectedIds, $id];
+    }
+
+    public function deleteSelected(): void
+    {
+        if (empty($this->selectedIds)) {
+            return;
+        }
+        $this->elements = collect($this->elements)
+            ->reject(fn ($el) => in_array($el['id'], $this->selectedIds, true))->values()->all();
+        if (in_array($this->selectedId, $this->selectedIds, true)) {
+            $this->selectedId = null;
+        }
+        $this->selectedIds = [];
+        $this->persist();
+    }
+
+    /**
+     * Live-edit a generated seating block from the inspector: change the number
+     * of tables, chairs, rows, etc. and the capacity + drawing recompute at once.
+     */
+    public function updateSeatblock(string $id, string $field, $value): void
+    {
+        $ints = ['headTables', 'armTables', 'perTable', 'pCols', 'pRows', 'rows', 'cols', 'tRows', 'tCols', 'count'];
+        $cm = ['tableW_m', 'tableH_m', 'tableDia_m'];   // arrives in centimetres
+
+        if (! in_array($field, $ints, true) && ! in_array($field, $cm, true)) {
+            return;
+        }
+
+        $this->elements = collect($this->elements)->map(function ($el) use ($id, $field, $value, $ints) {
+            if (($el['id'] ?? '') !== $id || ($el['type'] ?? '') !== 'seatblock') {
+                return $el;
+            }
+            $el[$field] = in_array($field, $ints, true)
+                ? max(0, (int) $value)
+                : max(0.2, (float) $value / 100);
+            $el['seats'] = EventRoom::seatChairs($el, 12)['capacity'];
+
+            return $el;
+        })->all();
+
+        $this->persist();
+    }
+
     public function removeElement(string $id): void
     {
         $this->elements = collect($this->elements)->reject(fn ($el) => $el['id'] === $id)->values()->all();
@@ -373,6 +507,7 @@ class RoomLayoutBuilder extends Component
     {
         $this->elements = [];
         $this->selectedId = null;
+        $this->selectedIds = [];
         $this->persist();
     }
 
@@ -546,6 +681,15 @@ class RoomLayoutBuilder extends Component
             'equipmentReadiness' => $units > 0 ? (int) round($ready / $units * 100) : 0,
             'selected' => $selected,
             'catalog' => Requirement::orderBy('name')->get(),
+        ])->layoutData([
+            'title' => $this->room->name.' — Room Layout',
+            'crumbs' => [
+                ['label' => 'Command Center', 'href' => route('home')],
+                ['label' => 'Events', 'href' => route('events.index')],
+                ['label' => $this->event->name, 'href' => route('events.hub', $this->event)],
+                ['label' => 'Venue', 'href' => route('events.hub', [$this->event, 'tab' => 'venue'])],
+                ['label' => $this->room->name],
+            ],
         ]);
     }
 }

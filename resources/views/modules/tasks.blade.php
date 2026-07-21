@@ -5,34 +5,32 @@
 
         <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
             @php
-                $tones = [
-                    'completed' => ['Completed', 'text-emerald-300', 'bg-emerald-400'],
-                    'in_progress' => ['In Progress', 'text-gold-300', 'bg-gold-400'],
-                    'pending' => ['Pending', 'text-white', 'bg-white/40'],
-                ];
-                $totalTasks = max(array_sum($counts), 1);
+                // Labels and colours come from the model, so this page can never
+                // drift behind the board's statuses again.
+                $shown = $counts->filter(fn ($c) => $c > 0);
+                $totalTasks = max($counts->sum(), 1);
             @endphp
-            @foreach ($counts as $status => $count)
-                @php [$label, $tone, $dot] = $tones[$status] ?? [str($status)->headline(), 'text-white', 'bg-white/40']; @endphp
+            @foreach ($shown as $status => $count)
+                @php [$label, $hex] = \App\Models\Task::STAGES[$status] ?? [str($status)->headline(), '#94A3B8']; @endphp
                 @if (! $loop->first)
                     <span class="hidden h-11 w-px bg-white/10 sm:block" aria-hidden="true"></span>
                 @endif
-                <div class="min-w-[110px]">
+                <div class="min-w-[92px]">
                     <p class="flex items-center gap-1.5 text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">
-                        <span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span> {{ $label }}
+                        <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span> {{ $label }}
                     </p>
-                    <p class="pf mt-1 text-[26px] font-bold leading-none {{ $tone }}">{{ $count }}</p>
-                    <p class="mt-1 text-[0.6rem] text-white/40">{{ round($count / $totalTasks * 100) }}% of all tasks</p>
+                    <p class="pf mt-1 text-[26px] font-bold leading-none text-white">{{ $count }}</p>
+                    <p class="mt-1 text-3xs text-white/40">{{ round($count / $totalTasks * 100) }}%</p>
                 </div>
             @endforeach
 
             <div class="ml-auto min-w-[180px] flex-1">
                 <div class="mb-1.5 flex items-baseline justify-between">
                     <span class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">Completion</span>
-                    <span class="text-xs font-bold text-white">{{ round(($counts['completed'] ?? 0) / $totalTasks * 100) }}%</span>
+                    <span class="text-xs font-bold text-white">{{ round(($counts['done'] ?? 0) / $totalTasks * 100) }}%</span>
                 </div>
                 <div class="h-2 overflow-hidden rounded-full bg-white/15">
-                    <div class="h-full rounded-full bg-emerald-400" style="width: {{ round(($counts['completed'] ?? 0) / $totalTasks * 100) }}%"></div>
+                    <div class="h-full rounded-full bg-emerald-400" style="width: {{ round(($counts['done'] ?? 0) / $totalTasks * 100) }}%"></div>
                 </div>
             </div>
         </div>
@@ -43,9 +41,9 @@
             <div class="flex items-center gap-4 px-6 py-4">
                 <span @class([
                         'h-2.5 w-2.5 shrink-0 rounded-full',
-                        'bg-track' => $task->status === 'completed',
-                        'bg-warn' => $task->status === 'in_progress',
-                        'bg-navy-200' => $task->status === 'pending',
+                        'bg-track' => $task->status === 'done',
+                        'bg-warn' => $task->status === 'doing',
+                        'bg-navy-200' => $task->status === 'todo',
                     ])></span>
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-navy-900">{{ $task->title }}</p>

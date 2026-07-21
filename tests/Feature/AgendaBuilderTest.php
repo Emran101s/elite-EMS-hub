@@ -91,9 +91,9 @@ class AgendaBuilderTest extends TestCase
         [$event, $user] = $this->ctx();
         $before = $event->agendaSessions()->count();
 
-        $csv = "title,type,start,end,room,speaker\n"
-            ."Registration,networking,08:00,09:00,Main Hall,\n"
-            ."Welcome Keynote,keynote,09:00,10:00,Main Hall,Dr. Lina Odeh\n";
+        $csv = "title,type,start,end,room,speaker,moderator\n"
+            ."Registration,networking,08:00,09:00,Main Hall,,\n"
+            ."Welcome Keynote,keynote,09:00,10:00,Main Hall,Dr. Lina Odeh;Sara Kamal,Omar Nassar\n";
         $file = UploadedFile::fake()->createWithContent('agenda.csv', $csv);
 
         Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
@@ -102,17 +102,31 @@ class AgendaBuilderTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame($before + 2, $event->agendaSessions()->count());
-        $this->assertDatabaseHas('event_agenda_sessions', ['event_id' => $event->id, 'title' => 'Welcome Keynote', 'speaker' => 'Dr. Lina Odeh']);
+
+        // Imported names land on the roster and are billed with their role.
+        $session = $event->agendaSessions()->where('title', 'Welcome Keynote')->firstOrFail()->load('speakers');
+        $this->assertCount(3, $session->speakers);
+        $this->assertSame(
+            'Moderator: Omar Nassar · Panellists: Dr. Lina Odeh, Sara Kamal',
+            $session->speakerLine()
+        );
+        $this->assertNotNull($event->speakers()->where('name', 'Dr. Lina Odeh')->first());
     }
 
     public function test_pdf_export_downloads(): void
     {
         [$event, $user] = $this->ctx();
 
-        $response = $this->actingAs($user)->get(route('events.agenda.pdf', $event));
-
-        $response->assertOk();
-        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        // Three documents, one job each — all must render.
+        foreach ([
+            route('events.agenda.program.pdf', $event),   // delegates
+            route('events.agenda.master.pdf', $event),    // the team
+            route('events.run-of-show.pdf', $event),      // show day
+        ] as $url) {
+            $response = $this->actingAs($user)->get($url);
+            $response->assertOk();
+            $this->assertSame('application/pdf', $response->headers->get('content-type'), $url);
+        }
     }
 
     public function test_reorder_ignores_foreign_sessions(): void

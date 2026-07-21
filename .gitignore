@@ -25,3 +25,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Dusk local environment (contains APP_KEY / DB config)
+.env.dusk.local
+
+# Local database backups
+storage/backups/

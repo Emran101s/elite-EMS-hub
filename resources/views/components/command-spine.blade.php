@@ -24,7 +24,7 @@
 
     {{-- ══ 2. Command Spine Navigation (scrolls if the screen is short) ══ --}}
     <div class="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <p class="mb-2 pl-1.5 text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/35">Command Spine</p>
+        <p class="mb-2 pl-1.5 text-3xs font-bold uppercase tracking-[0.18em] text-white/35">Command Spine</p>
         <nav class="relative" aria-label="Primary">
             {{-- the spine line --}}
             <span class="pointer-events-none absolute bottom-4 left-[11px] top-4 w-0.5 bg-gradient-to-b from-gold-400/70 via-white/15 to-white/5"></span>
@@ -48,7 +48,7 @@
                         'text-sm font-medium text-white/55 group-hover:text-white' => ! $item['active'],
                     ])>{{ $item['label'] }}</span>
                     @if ($item['jump'] ?? false)
-                        <span class="ml-auto text-[0.6rem] text-white/30 transition group-hover:text-gold-400">↧</span>
+                        <span class="ml-auto text-3xs text-white/30 transition group-hover:text-gold-400">↧</span>
                     @endif
                 </a>
             @endforeach
@@ -59,8 +59,8 @@
     <div class="shrink-0 border-t border-white/10 px-4 pb-1 pt-3">
         <div class="mb-1.5 flex items-center justify-between pl-1.5">
             <div>
-                <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/35">Event Radar</p>
-                <p class="text-[0.6rem] text-white/30">Live event health</p>
+                <p class="text-3xs font-bold uppercase tracking-[0.18em] text-white/35">Event Radar</p>
+                <p class="text-3xs text-white/30">Live event health</p>
             </div>
             <span class="flex items-center gap-1 text-[0.55rem] font-semibold text-emerald-400">
                 <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-track"></span> Live
@@ -80,9 +80,9 @@
                         <span class="min-w-0 flex-1">
                             <span class="flex items-center gap-1">
                                 <span class="truncate text-xs font-semibold text-white group-hover:text-gold-300">{{ $event->name }}</span>
-                                @if ($event->radar_vip)<span class="text-[0.6rem] text-gold-500" title="VIP">★</span>@endif
+                                @if ($event->radar_vip)<span class="text-3xs text-gold-500" title="VIP">★</span>@endif
                             </span>
-                            <span class="block truncate text-[0.6rem] text-white/40">{{ $event->radar_status }}</span>
+                            <span class="block truncate text-3xs text-white/40">{{ $event->radar_status }}</span>
                         </span>
                         <x-health-ring :percent="$event->radar_score" :group="$event->radar_group"
                                        size="h-7 w-7" textSize="text-[8px]" dark class="shrink-0" />
@@ -110,7 +110,7 @@
                 </span>
                 <div>
                     <p class="text-[0.62rem] font-bold tracking-[0.14em] text-gold-300">AI COMMAND CORE</p>
-                    <p class="flex items-center gap-1.5 text-[0.6rem] text-white/70">
+                    <p class="flex items-center gap-1.5 text-3xs text-white/70">
                         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-track"></span> All Systems Operational
                     </p>
                 </div>

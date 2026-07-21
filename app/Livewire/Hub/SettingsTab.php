@@ -8,6 +8,7 @@ use App\Models\EventAvatar;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class SettingsTab extends Component
@@ -95,14 +96,31 @@ class SettingsTab extends Component
         $this->avatar_id = $avatarId;
     }
 
+    /**
+     * Turning a module on takes effect immediately rather than waiting for the
+     * form's Save. Previously this only moved component state, so switching a
+     * module on and navigating away lost the change silently — and the module
+     * you wanted stayed missing from the hub with no indication why.
+     */
     public function toggleModule(string $key): void
     {
+        Gate::authorize('write');
+
         if (! array_key_exists($key, Event::HUB_MODULES)) {
             return;
         }
-        $this->modules = in_array($key, $this->modules, true)
+
+        $on = in_array($key, $this->modules, true);
+        $this->modules = $on
             ? array_values(array_diff($this->modules, [$key]))
             : [...$this->modules, $key];
+
+        // Persist in HUB_MODULES order so the hub nav keeps a stable sequence.
+        $this->event->update([
+            'enabled_modules' => array_values(array_intersect(array_keys(Event::HUB_MODULES), $this->modules)),
+        ]);
+
+        session()->flash('status', Event::HUB_MODULES[$key][0].($on ? ' turned off.' : ' turned on.'));
     }
 
     public function save()
@@ -194,6 +212,7 @@ class SettingsTab extends Component
 
     public function duplicate()
     {
+        \Illuminate\Support\Facades\Gate::authorize('manage-events');
         $copy = $this->event->replicate(['progress']);
         $copy->name = $this->event->name.' (Copy)';
         $copy->stage = 'draft';
@@ -209,6 +228,7 @@ class SettingsTab extends Component
 
     public function archive()
     {
+        \Illuminate\Support\Facades\Gate::authorize('manage-events');
         $this->event->update(['archived_at' => now()]);
 
         return $this->redirectRoute('events.index');

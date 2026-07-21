@@ -18,24 +18,21 @@ class EventBrief extends Model
 
     /**
      * Section schema: key => [number, title, type].
-     * types: kv | text | bullets | kpi | twocol | approval
+     * types: kv | text | bullets | kpi | twocol
      */
     public const SECTIONS = [
-        'event_info' => ['1', 'Event Information', 'kv'],
-        'exec_summary' => ['2', 'Executive Summary', 'text'],
-        'objectives' => ['3', 'Objectives', 'bullets'],
-        'kpis' => ['4', 'Success Metrics / KPIs', 'kpi'],
-        'audience' => ['5', 'Audience Profile', 'bullets'],
-        'components' => ['6', 'Event Components', 'twocol'],
-        'stakeholders' => ['7', 'Key Stakeholders', 'twocol'],
-        'venue' => ['8', 'Venue Requirements', 'twocol'],
-        'branding' => ['9', 'Branding & Creative Requirements', 'bullets'],
-        'operational' => ['10', 'Operational Requirements', 'twocol'],
-        'risks' => ['11', 'Risk Overview', 'twocol'],
-        'budget' => ['12', 'Budget Summary', 'twocol'],
-        'milestones' => ['13', 'Key Milestones', 'twocol'],
-        'governance' => ['14', 'Project Governance', 'twocol'],
-        'approval' => ['15', 'Approval', 'approval'],
+        'overview' => ['1', 'Event Overview', 'text'],
+        'event_info' => ['2', 'Event Details', 'kv'],
+        'stakeholders' => ['3', 'Stakeholders', 'twocol'],
+        'audience' => ['4', 'Audience & Participants', 'bullets'],
+        'components' => ['5', 'Event Components', 'twocol'],
+        'venue' => ['6', 'Venue Requirements', 'twocol'],
+        'branding' => ['7', 'Branding & Production', 'twocol'],
+        'registration' => ['8', 'Registration & Participants', 'twocol'],
+        'sponsors' => ['9', 'Sponsors & Partners', 'twocol'],
+        'budget' => ['10', 'Budget Overview', 'twocol'],
+        'risks' => ['11', 'Risks & Special Requirements', 'twocol'],
+        'success' => ['12', 'Success Criteria', 'kpi'],
     ];
 
     /** Event Information fields: slug => label. */
@@ -71,12 +68,13 @@ class EventBrief extends Model
     }
 
     /**
-     * Seed a brief: one shared 16-section structure, with the content set of the
+     * Seed a brief: one shared 12-section structure, with the content set of the
      * chosen template (conference | exhibition | workshop | gala | festival).
      */
     public static function defaultData(Event $event, string $template = 'conference'): array
     {
         $t = BriefTemplates::content($template, $event->name);
+        $client = $event->client?->name ?? 'Organizing Committee';
 
         $location = trim(($event->city ? $event->city.', ' : '').($event->country ?? ''), ', ');
         $dates = $event->starts_at && $event->ends_at
@@ -90,8 +88,13 @@ class EventBrief extends Model
                 'prepared_by' => 'Elite Business Hub',
                 'purpose' => 'Initial event project brief and single source of truth',
                 'confidentiality' => 'Confidential',
-                'how_to' => 'Use this Event Brief in Phase 1 — Initiation & Strategy. Once approved, the Event Brief should drive the project plan, budget structure, milestones, participant targets, sponsorship plan, registration setup, and supplier scope of work.',
+                'how_to' => 'Use this Event Brief as the single source of truth for the event. Once approved, it drives the project plan, budget structure, participant targets, sponsorship plan, registration setup, and supplier scope of work.',
             ],
+
+            // 1 · Event Overview
+            'overview' => $t['overview'],
+
+            // 2 · Event Details
             'event_info' => [
                 'name' => $event->name,
                 'type' => $t['type'],
@@ -101,47 +104,62 @@ class EventBrief extends Model
                 'venue' => $event->venue?->name ?? 'To be confirmed',
                 'attendance' => '800 participants',
                 'language' => 'English / Arabic',
-                'owner' => $event->client?->name ?? 'Organizing Committee',
+                'owner' => $client,
                 'organizer' => 'Elite Business Hub',
             ],
-            'exec_summary' => $t['exec_summary'],
-            'objectives' => $t['objectives'],
-            'kpis' => $t['kpis'],
-            'audience' => $t['audience'],
-            'components' => $t['components'],
+
+            // 3 · Stakeholders
             'stakeholders' => [
-                ['area' => 'Client', 'notes' => $event->client?->name ?? 'Organizing Committee'],
+                ['area' => 'Client', 'notes' => $client],
                 ['area' => 'Organizer', 'notes' => 'Elite Business Hub'],
-                ['area' => 'Strategic Partners', 'notes' => 'Government entities, development partners, international organizations, and private sector partners.'],
-                ['area' => 'Sponsors', 'notes' => 'Strategic Partner, Airline Partner, Platinum, Gold, Silver, Tourism Partner, and Media Partner.'],
-                ['area' => 'Internal Team', 'notes' => 'Project Director, Project Manager, Operations Lead, Production Lead, Registration Lead, Marketing Lead, Sponsorship Lead, Finance Lead.'],
-            ],
-            'venue' => $t['venue'],
-            'branding' => [
-                'Event identity and design direction.',
-                'Brand guidelines including colors, typography, and logo usage.',
-                'Event website or landing page visual direction.',
-                'Social media toolkit and digital invitation template.',
-                'Stage screen design, backdrops, signage, badges, lanyards, certificates, and printed agenda.',
-                'Sponsor branding matrix and visibility plan.',
-            ],
-            'operational' => $t['operational'],
-            'risks' => $t['risks'],
-            'budget' => $t['budget'],
-            'milestones' => [...$t['milestones'], ['area' => 'Event Dates', 'notes' => $dates]],
-            'governance' => [
-                ['area' => 'Project Sponsor', 'notes' => 'Executive Client Representative'],
-                ['area' => 'Project Director', 'notes' => 'Elite Business Hub'],
                 ['area' => 'Project Manager', 'notes' => $event->projectManager?->name ?? 'Assigned Event Manager'],
-                ['area' => 'Workstream Leads', 'notes' => 'Operations, Production, Registration, Marketing, Sponsorship, Finance, Supplier Coordination, Protocol.'],
-                ['area' => 'Reporting Rhythm', 'notes' => 'Weekly planning meeting, milestone review meetings, and daily operational briefings during event execution.'],
-                ['area' => 'Approval Process', 'notes' => 'Client approval required for scope, budget, venue, branding, production design, final agenda, and final report.'],
+                ['area' => 'Strategic Partners', 'notes' => 'Government entities, development partners, international organizations, and private sector partners.'],
+                ['area' => 'Internal Team', 'notes' => 'Project Director, Operations Lead, Production Lead, Registration Lead, Marketing Lead, Sponsorship Lead, Finance Lead.'],
             ],
-            'approval' => [
-                ['name' => '', 'title' => 'Client Representative — Project Sponsor'],
-                ['name' => 'Elite Business Hub', 'title' => 'Project Director'],
-                ['name' => $event->projectManager?->name ?? '', 'title' => 'Project Manager'],
+
+            // 4 · Audience & Participants
+            'audience' => $t['audience'],
+
+            // 5 · Event Components
+            'components' => $t['components'],
+
+            // 6 · Venue Requirements
+            'venue' => $t['venue'],
+
+            // 7 · Branding & Production
+            'branding' => [
+                ['area' => 'Event Identity', 'notes' => 'Event name, theme, key visual, colour palette, typography, and logo usage guidelines.'],
+                ['area' => 'Collateral', 'notes' => 'Badges, lanyards, invitations, signage, backdrops, printed agenda, and certificates.'],
+                ['area' => 'Digital', 'notes' => 'Event website / landing page, social media toolkit, and digital invitation templates.'],
+                ['area' => 'Stage & Production', 'notes' => 'Stage design, LED screens, lighting, sound, livestreaming, show calling, cue sheet, and technical rehearsals.'],
+                ['area' => 'Sponsor Visibility', 'notes' => 'Sponsor branding matrix and on-site visibility plan across zones and materials.'],
             ],
+
+            // 8 · Registration & Participants
+            'registration' => [
+                ['area' => 'Registration System', 'notes' => 'Online registration, approval workflow, payment processing (if applicable), and a live registration dashboard.'],
+                ['area' => 'Check-in', 'notes' => 'QR code generation, on-site scanning, badge printing, and a dedicated VIP registration lane.'],
+                ['area' => 'Participant Lists', 'notes' => 'Master participant list, VIP list, speaker list, media list, and exhibitor list.'],
+                ['area' => 'Communication', 'notes' => 'Confirmation and reminder emails, agenda and venue information, and event updates.'],
+                ['area' => 'Hospitality', 'notes' => 'Catering, accommodation, transportation, dietary needs, and accessibility support.'],
+            ],
+
+            // 9 · Sponsors & Partners
+            'sponsors' => [
+                ['area' => 'Sponsorship Tiers', 'notes' => 'Strategic Partner, Platinum, Gold, Silver, plus category partners (Airline, Tourism, Media).'],
+                ['area' => 'Prospecting', 'notes' => 'Target sponsor pipeline, outreach plan, meetings, and contracting.'],
+                ['area' => 'Deliverables', 'notes' => 'Sponsor deliverables matrix — branding, speaking slots, passes, booth, and digital visibility.'],
+                ['area' => 'Strategic Partners', 'notes' => 'Government, institutional, and knowledge partners supporting the event.'],
+            ],
+
+            // 10 · Budget Overview
+            'budget' => $t['budget'],
+
+            // 11 · Risks & Special Requirements
+            'risks' => $t['risks'],
+
+            // 12 · Success Criteria
+            'success' => $t['success'],
         ];
     }
 

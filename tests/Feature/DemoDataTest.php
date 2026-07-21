@@ -21,7 +21,7 @@ class DemoDataTest extends TestCase
 
         $this->assertSame(6, Event::count());
         $this->assertSame(6, Supplier::count());
-        $this->assertSame(128, Task::count());
+        $this->assertSame(132, Task::count());
         $this->assertSame(6, User::count());
     }
 
@@ -51,16 +51,26 @@ class DemoDataTest extends TestCase
         $this->actingAs($user)->get('/tasks')->assertOk();
     }
 
-    public function test_command_center_kpis_reflect_seeded_data(): void
+    public function test_operations_room_counters_reflect_seeded_data(): void
     {
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $response = $this->actingAs($user)->get('/')->assertOk();
+        $this->actingAs($user)->get('/')->assertOk()
+            ->assertSee('Operations Room')
+            ->assertSee('At risk')
+            ->assertSee('ICFT 2026'); // the portfolio rail lists the seeded events
 
-        $response->assertSee('Total Events');
-        $response->assertSee('56'); // open tasks: 36 in progress + 20 pending
-        $response->assertSeeText('2'); // at-risk events: NDI Workshop + Tech Expo
+        // The pulse mirrors the health engine rather than a hard-coded number.
+        $healthSvc = app(\App\Services\EventHealthService::class);
+        $expectedAtRisk = Event::active()->get()
+            ->filter(fn (Event $e) => in_array($healthSvc->breakdown($e)['status'], ['at_risk', 'behind'], true))
+            ->count();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\CommandCenter::class)
+            ->assertViewHas('pulse', fn (array $p) => $p['events'] === Event::active()->count()
+                && $p['atRisk'] === $expectedAtRisk
+                && $p['signals'] > 0);
     }
 
     public function test_event_relationships_are_wired(): void

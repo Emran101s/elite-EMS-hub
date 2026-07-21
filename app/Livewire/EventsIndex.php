@@ -34,7 +34,16 @@ class EventsIndex extends Component
 
     public string $tab = 'all';
 
-    public string $view = 'grid';
+    public string $view = 'cards';
+
+    /** The card opened in place to show its full detail. */
+    public ?int $expandedId = null;
+
+    public function toggleExpand(int $id): void
+    {
+        $this->expandedId = $this->expandedId === $id ? null : $id;
+        $this->selectedId = $this->expandedId ?? $this->selectedId;
+    }
 
     public string $sort = 'date';
 
@@ -54,7 +63,7 @@ class EventsIndex extends Component
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
-        $this->view = in_array(request('view'), ['grid', 'list', 'calendar', 'kanban'], true) ? request('view') : 'grid';
+        $this->view = in_array(request('view'), ['cards', 'calendar'], true) ? request('view') : 'cards';
         $this->selectedId = request()->integer('selected') ?: null;
         $this->calMonth = now()->format('Y-m');
     }
@@ -94,34 +103,14 @@ class EventsIndex extends Component
         auth()->user()->favoriteEvents()->toggle($eventId);
     }
 
-    /** Pipeline stage buckets: label, which stages fall in, the canonical stage to set, colors. */
-    public const PIPELINE = [
-        'lead' => ['label' => 'Lead', 'stages' => ['draft'], 'set' => 'draft', 'dot' => 'bg-navy-300', 'accent' => 'navy', 'next' => 'proposal', 'nextLabel' => 'Proposal'],
-        'proposal' => ['label' => 'Proposal', 'stages' => ['proposal'], 'set' => 'proposal', 'dot' => 'bg-gold-500', 'accent' => 'gold', 'next' => 'confirmed', 'nextLabel' => 'Confirmed'],
-        'confirmed' => ['label' => 'Confirmed', 'stages' => ['confirmed', 'planning'], 'set' => 'confirmed', 'dot' => 'bg-track', 'accent' => 'track', 'next' => 'delivery', 'nextLabel' => 'In delivery'],
-        'delivery' => ['label' => 'In delivery', 'stages' => ['production', 'live'], 'set' => 'production', 'dot' => 'bg-[#3B82F6]', 'accent' => 'blue', 'next' => 'completed', 'nextLabel' => 'Completed'],
-        'completed' => ['label' => 'Completed', 'stages' => ['completed', 'closed'], 'set' => 'completed', 'dot' => 'bg-navy-900', 'accent' => 'ink', 'next' => null, 'nextLabel' => null],
-    ];
-
-    /** Move an event into a pipeline bucket (drag drop or the Move button). */
-    public function moveStage(int $eventId, string $bucket): void
-    {
-        if (! isset(self::PIPELINE[$bucket])) {
-            return;
-        }
-
-        $event = Event::whereNull('archived_at')->find($eventId);
-        $event?->update(['stage' => self::PIPELINE[$bucket]['set']]);
-    }
-
     public function duplicate(int $eventId)
     {
+        \Illuminate\Support\Facades\Gate::authorize('manage-events');
         $source = Event::whereNull('archived_at')->findOrFail($eventId);
 
         $copy = $source->replicate(['progress']);
         $copy->name = $source->name.' (Copy)';
         $copy->stage = 'draft';
-        $copy->status = 'planning';
         $copy->progress = 0;
         $copy->archived_at = null;
         $copy->save();
@@ -133,6 +122,7 @@ class EventsIndex extends Component
 
     public function archive(int $eventId): void
     {
+        \Illuminate\Support\Facades\Gate::authorize('manage-events');
         Event::findOrFail($eventId)->update(['archived_at' => now()]);
 
         if ($this->selectedId === $eventId) {
@@ -140,6 +130,24 @@ class EventsIndex extends Component
         }
 
         session()->flash('status', 'Event archived — it no longer appears in lists or the Operations Hub.');
+    }
+
+    /**
+     * Permanently delete an event and everything hanging off it — plan, tasks,
+     * agenda, budget, suppliers, the lot. Manager-only and unrecoverable.
+     */
+    public function deleteEvent(int $eventId): void
+    {
+        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        $event = Event::findOrFail($eventId);
+        $name = $event->name;
+        $event->delete();
+
+        if ($this->selectedId === $eventId) {
+            $this->selectedId = null;
+        }
+
+        session()->flash('status', "“{$name}” was permanently deleted.");
     }
 
     public function prevMonth(): void
@@ -150,6 +158,85 @@ class EventsIndex extends Component
     public function nextMonth(): void
     {
         $this->calMonth = Carbon::createFromFormat('Y-m', $this->calMonth)->addMonth()->format('Y-m');
+    }
+
+    /**
+     * How many events the health engine rates at-risk or behind, portfolio-wide.
+     * With no filters active the list already *is* the whole portfolio, so we
+     * reuse the scores we just computed instead of loading every event again.
+     */
+    private function atRiskCount(\Illuminate\Support\Collection $health): int
+    {
+        $unfiltered = $this->q === '' && ! $this->exactType && ! $this->stage
+            && ! $this->starred && $this->tab === 'all';
+
+        if ($unfiltered) {
+            return $health->filter(fn ($h) => in_array($h['status'], ['at_risk', 'behind'], true))->count();
+        }
+
+        $service = app(EventHealthService::class);
+
+        return Event::whereNull('archived_at')->with(EventHealthService::RELATIONS)->get()
+            ->filter(fn (Event $e) => in_array($service->breakdown($e)['status'], ['at_risk', 'behind'], true))
+            ->count();
+    }
+
+    /**
+     * Everything an expanded card reveals — computed only for the open card so
+     * a long list stays cheap.
+     */
+    private function cardDetail(Event $event, array $health): array
+    {
+        $today = now()->startOfDay();
+
+        $tasks = $event->tasks;
+        $open = $tasks->filter->isOpen();
+
+        $planByTrack = \App\Models\PlanItem::where('event_id', $event->id)->get()->groupBy('track_id');
+        $tracks = \App\Models\PlanTrack::where('event_id', $event->id)->orderBy('position')->get()
+            ->map(function ($t) use ($planByTrack) {
+                $items = $planByTrack->get($t->id, collect());
+                $total = $items->count();
+                $done = $items->where('status', 'done')->count();
+
+                return ['name' => $t->name, 'color' => $t->color ?? '#3B82F6', 'done' => $done,
+                    'total' => $total, 'pct' => $total ? (int) round($done / $total * 100) : 0];
+            });
+
+        $budget = (int) $event->budget_cents;
+        $spent = (int) $event->budgetItems->sum('actual_cents');
+        $outstanding = (int) \App\Models\EventContractPayment::where('event_id', $event->id)->get()
+            ->sum(fn ($p) => max($p->amount_cents - $p->paid_cents, 0));
+
+        // The next things due — tasks and deliverables together, soonest first.
+        $deadlines = collect()
+            ->concat($open->filter(fn (Task $t) => $t->due_on)->map(fn (Task $t) => [
+                'title' => $t->title, 'due' => $t->due_on, 'kind' => 'Task', 'hex' => $t->stageHex(),
+            ]))
+            ->concat(\App\Models\PlanItem::where('event_id', $event->id)
+                ->whereNotIn('status', \App\Models\PlanItem::CLOSED)->whereNotNull('due_on')->get()
+                ->map(fn ($p) => ['title' => $p->title, 'due' => $p->due_on, 'kind' => 'Deliverable', 'hex' => $p->statusHex()]))
+            ->sortBy(fn ($r) => $r['due']->timestamp)->take(5)->values();
+
+        return [
+            'ai' => app(EventHealthService::class)->aiSummary($event),
+            'components' => $health['components'] ?? [],
+            'tracks' => $tracks,
+            'stages' => collect(Task::STAGES)->mapWithKeys(fn ($m, $k) => [$k => $tasks->where('status', $k)->count()]),
+            'taskTotal' => $tasks->count(),
+            'overdue' => $open->filter->isOverdue()->count(),
+            'unassigned' => $open->whereNull('assignee_id')->count(),
+            'budget' => $budget,
+            'spent' => $spent,
+            'spentPct' => $budget > 0 ? min(100, (int) round($spent / $budget * 100)) : null,
+            'outstanding' => $outstanding,
+            'team' => $event->teamMembers,
+            'risks' => $event->risks->filter->isOpen()->count(),
+            'approvals' => $event->approvals->where('status', 'pending')->count(),
+            'sessions' => $event->agendaSessions->count(),
+            'suppliers' => $event->suppliers->count(),
+            'deadlines' => $deadlines,
+        ];
     }
 
     private function baseQuery()
@@ -174,7 +261,7 @@ class EventsIndex extends Component
 
         $relations = [
             'venue', 'avatar', 'client', 'projectManager', 'tasks',
-            'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'sponsors',
+            'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'sponsors', 'teamMembers',
         ];
 
         $all = $this->baseQuery()->with($relations)->get();
@@ -210,16 +297,32 @@ class EventsIndex extends Component
 
         $selected = $all->firstWhere('id', $this->selectedId) ?? collect($events->items())->first();
 
+        // "Next up": whatever is live right now, else the nearest upcoming event.
+        $today = now()->startOfDay();
+        $liveNow = $all->first(fn (Event $e) => $e->starts_at
+            && $e->starts_at->copy()->startOfDay()->lte($today)
+            && ($e->ends_at ?? $e->starts_at)->copy()->endOfDay()->gte($today));
+        $nextUp = $liveNow ?? $all
+            ->filter(fn (Event $e) => $e->starts_at && $e->starts_at->copy()->startOfDay()->gte($today))
+            ->sortBy('starts_at')->first();
+
         return view('livewire.events-index', [
             'events' => $events,
             'health' => $health,
             'metrics' => $metrics,
             'favoriteIds' => $favoriteIds,
             'selected' => $selected,
+            'nextUp' => $nextUp,
+            'nextUpLive' => (bool) $liveNow,
+            'nextUpHealth' => $nextUp ? $health[$nextUp->id] : null,
+            'nextUpMetrics' => $nextUp ? $metrics[$nextUp->id] : null,
             'selectedHealth' => $selected ? $health[$selected->id] : null,
             'ai' => $selected ? $pulse->aiSummary($selected) : null,
             'calendar' => $this->view === 'calendar' ? $this->buildCalendar($all) : null,
-            'pipeline' => $this->view === 'kanban' ? $this->buildPipeline($all) : null,
+            'expandedId' => $this->expandedId,
+            'expanded' => $this->expandedId && ($ex = $all->firstWhere('id', $this->expandedId))
+                ? $this->cardDetail($ex, $health[$ex->id])
+                : null,
             'kpis' => [
                 ['label' => 'Total Events', 'value' => Event::whereNull('archived_at')->count(), 'icon' => 'calendar', 'tone' => 'blue',
                     'trend' => '↑ '.Event::whereNull('archived_at')->whereMonth('created_at', now()->month)->count().' added this month', 'up' => true],
@@ -227,9 +330,10 @@ class EventsIndex extends Component
                     'trend' => '↑ '.Event::whereNull('archived_at')->where('stage', 'production')->count().' in production', 'up' => true],
                 ['label' => 'Live Events', 'value' => Event::whereNull('archived_at')->where('stage', 'live')->count(), 'icon' => 'sparkles', 'tone' => 'gold',
                     'trend' => 'happening today', 'up' => true],
-                ['label' => 'At Risk', 'value' => Event::whereNull('archived_at')->whereIn('status', ['at_risk', 'behind'])->count(), 'icon' => 'bell', 'tone' => 'red',
+                // Derived from the same computed health the hub shows — not a stored flag.
+                ['label' => 'At Risk', 'value' => $this->atRiskCount($health), 'icon' => 'bell', 'tone' => 'red',
                     'trend' => '↓ needs attention', 'up' => false],
-                ['label' => 'Open Tasks', 'value' => Task::whereNot('status', 'completed')->count(), 'icon' => 'clipboard', 'tone' => 'green',
+                ['label' => 'Open Tasks', 'value' => Task::whereNot('status', 'done')->count(), 'icon' => 'clipboard', 'tone' => 'green',
                     'trend' => '↑ across all events', 'up' => true],
                 ['label' => 'Pending Approvals', 'value' => EventApproval::where('status', 'pending')->count(), 'icon' => 'identification', 'tone' => 'gold',
                     'trend' => '↑ awaiting decision', 'up' => true],
@@ -265,19 +369,4 @@ class EventsIndex extends Component
         return ['label' => $month->format('F Y'), 'weeks' => $weeks];
     }
 
-    /**
-     * Pipeline columns keyed by bucket, each carrying its events (by stage).
-     */
-    private function buildPipeline($all): array
-    {
-        $columns = [];
-        foreach (self::PIPELINE as $key => $meta) {
-            $columns[$key] = $meta + [
-                'events' => $all->filter(fn (Event $e) => in_array($e->stage, $meta['stages'], true))
-                    ->sortBy('starts_at')->values(),
-            ];
-        }
-
-        return $columns;
-    }
 }

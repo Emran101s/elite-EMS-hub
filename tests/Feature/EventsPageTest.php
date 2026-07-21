@@ -21,6 +21,60 @@ class EventsPageTest extends TestCase
         return User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
     }
 
+    public function test_expanding_a_card_reveals_its_full_detail_in_place(): void
+    {
+        $user = $this->actor();
+        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        $c = Livewire::actingAs($user)->test(EventsIndex::class)
+            ->assertSet('view', 'cards')
+            ->assertSee('ICFT 2026')
+            ->assertDontSee('Event Control Room'); // collapsed: detail is hidden
+
+        $c->call('toggleExpand', $icft->id)
+            ->assertSet('expandedId', $icft->id)
+            ->assertSee('AI Recommendation')
+            ->assertSee('Health breakdown')
+            ->assertSee('Delivery phases')
+            ->assertSee('Event Control Room');
+
+        // Clicking the same card again closes it.
+        $c->call('toggleExpand', $icft->id)
+            ->assertSet('expandedId', null)
+            ->assertDontSee('Event Control Room');
+    }
+
+    public function test_manager_can_permanently_delete_an_event_and_the_audit_trail_survives(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $id = $event->id;
+        $event->tasks()->create(['title' => 'child task', 'status' => 'todo', 'priority' => 'normal']);
+
+        Livewire::actingAs($user)->test(EventsIndex::class)->call('deleteEvent', $id);
+
+        $this->assertNull(Event::find($id));
+        $this->assertSame(0, \App\Models\Task::where('event_id', $id)->count(), 'children must cascade');
+
+        // The record of the deletion outlives the event it describes.
+        $this->assertDatabaseHas('audit_logs', [
+            'auditable_type' => 'Event', 'auditable_id' => $id, 'action' => 'deleted', 'label' => 'ICFT 2026',
+        ]);
+    }
+
+    public function test_deleting_an_event_requires_manager(): void
+    {
+        $this->actor();
+        $viewer = User::create(['name' => 'Vic Viewer', 'email' => 'viewer@ebh.test', 'password' => bcrypt('x'), 'role' => 'viewer']);
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        Livewire::actingAs($viewer)->test(EventsIndex::class)
+            ->call('deleteEvent', $event->id)
+            ->assertForbidden();
+
+        $this->assertNotNull(Event::find($event->id));
+    }
+
     public function test_star_persists_and_starred_filter_scopes(): void
     {
         $user = $this->actor();

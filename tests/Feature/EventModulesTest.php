@@ -68,14 +68,22 @@ class EventModulesTest extends TestCase
         $this->assertSame(400000, $x->outstandingCents());
     }
 
-    public function test_transport_movement_is_saved(): void
+    public function test_transport_movement_is_saved_against_the_vehicle_catalogue(): void
     {
         [$event, $user] = $this->ctx();
+        \App\Models\VehicleType::ensureSeeded();
+        \App\Models\TransportServiceType::ensureSeeded();
+
+        $van = \App\Models\VehicleType::where('name', 'Regular Van')->firstOrFail();   // max 7
+        $service = \App\Models\TransportServiceType::where('name', 'Pickup & Drop-off')->firstOrFail();
 
         Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
             ->call('newItem')
-            ->set('type', 'vip')
-            ->set('route', 'Airport → Hotel')
+            ->set('service_type_id', $service->id)
+            ->set('vehicle_type_id', $van->id)
+            ->set('vehicles', 2)
+            ->set('pickup_from', 'Airport')
+            ->set('drop_to', 'Hotel')
             ->set('passengers', 3)
             ->set('cost', '250')
             ->call('save')
@@ -84,26 +92,72 @@ class EventModulesTest extends TestCase
         $t = $event->transport()->firstOrFail();
         $this->assertSame('Airport → Hotel', $t->route);
         $this->assertSame(25000, $t->cost_cents);
+        $this->assertSame(14, $t->seats());          // 7 per van × 2 vans
+        $this->assertFalse($t->isOverbooked());
     }
 
-    public function test_accommodation_autocomputes_cost_from_rate(): void
+    public function test_transport_flags_a_movement_with_more_passengers_than_seats(): void
+    {
+        [$event, $user] = $this->ctx();
+        \App\Models\VehicleType::ensureSeeded();
+
+        $sedan = \App\Models\VehicleType::where('name', 'Regular Sedan')->firstOrFail();  // max 2
+
+        Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
+            ->call('newItem')
+            ->set('vehicle_type_id', $sedan->id)
+            ->set('vehicles', 1)
+            ->set('passengers', 4)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertTrue($event->transport()->firstOrFail()->isOverbooked());
+    }
+
+    public function test_only_active_vehicle_and_service_types_are_offered(): void
+    {
+        [$event, $user] = $this->ctx();
+        \App\Models\VehicleType::ensureSeeded();
+        \App\Models\TransportServiceType::ensureSeeded();
+
+        // Out of the box the operation sees only what it actually runs.
+        $c = Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event]);
+
+        $this->assertSame(
+            ['Regular Sedan', 'Regular Van'],
+            $c->viewData('vehicleTypes')->pluck('name')->all()
+        );
+        $this->assertSame(['Pickup & Drop-off'], $c->viewData('serviceTypes')->pluck('name')->all());
+
+        // Switching a bus on in Settings makes it offerable.
+        $bus = \App\Models\VehicleType::where('name', 'Coach Bus')->firstOrFail();
+        Livewire::actingAs($user)->test(\App\Livewire\TransportSettings::class)->call('toggleVehicle', $bus->id);
+
+        $this->assertContains(
+            'Coach Bus',
+            Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
+                ->viewData('vehicleTypes')->pluck('name')->all()
+        );
+    }
+
+    public function test_a_room_block_computes_its_own_cost_from_the_rate(): void
     {
         [$event, $user] = $this->ctx();
 
         Livewire::actingAs($user)->test(AccommodationTab::class, ['event' => $event])
-            ->call('newItem')
+            ->call('newBlock')
             ->set('hotel', 'Kempinski Amman')
-            ->set('rooms', 2)
+            ->set('rooms_count', 2)
             ->set('check_in', '2026-11-09')
             ->set('check_out', '2026-11-14')   // 5 nights
             ->set('rate', '150')                // 150 × 2 rooms × 5 nights = 1500
             ->call('save')
             ->assertHasNoErrors();
 
-        $a = $event->accommodations()->firstOrFail();
-        $this->assertSame(5, $a->nights());
-        $this->assertSame(10, $a->roomNights());
-        $this->assertSame(150000, $a->cost_cents);
+        $b = $event->roomBlocks()->firstOrFail();
+        $this->assertSame(5, $b->nights());
+        $this->assertSame(10, $b->roomNights());
+        $this->assertSame(150000, $b->totalCents());
     }
 
     public function test_currency_formatting_switches_symbol(): void

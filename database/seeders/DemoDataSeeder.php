@@ -65,43 +65,37 @@ class DemoDataSeeder extends Seeder
         // ── Events (the six islands from the mockup) ────────────────────
         $events = collect([
             [
-                'name' => 'ICFT 2026', 'type' => 'conference', 'status' => 'on_track',
-                'city' => 'Amman', 'country' => 'Jordan',
+                'name' => 'ICFT 2026', 'type' => 'conference', 'city' => 'Amman', 'country' => 'Jordan',
                 'venue' => 'Royal Convention Centre', 'project' => 'Conference Season 2026',
                 'starts_at' => '2026-10-19', 'ends_at' => '2026-10-21',
                 'budget_cents' => 65000000, 'progress' => 92, 'expected_participants' => 400,
             ],
             [
-                'name' => 'EY Annual Gala', 'type' => 'gala_dinner', 'status' => 'in_progress',
-                'city' => 'Manama', 'country' => 'Bahrain',
+                'name' => 'EY Annual Gala', 'type' => 'gala_dinner', 'city' => 'Manama', 'country' => 'Bahrain',
                 'venue' => 'Gulf Grand Ballroom', 'project' => 'Corporate Events Portfolio',
                 'starts_at' => '2026-11-12', 'ends_at' => '2026-11-12',
                 'budget_cents' => 28000000, 'progress' => 76, 'expected_participants' => 120,
             ],
             [
-                'name' => 'NDI Workshop', 'type' => 'workshop', 'status' => 'at_risk',
-                'city' => 'Dubai', 'country' => 'UAE',
+                'name' => 'NDI Workshop', 'type' => 'workshop', 'city' => 'Dubai', 'country' => 'UAE',
                 'venue' => 'Jumeirah Learning Hub', 'project' => 'Education & Training Series',
                 'starts_at' => '2026-08-05', 'ends_at' => '2026-08-07',
                 'budget_cents' => 9000000, 'progress' => 61, 'expected_participants' => 80,
             ],
             [
-                'name' => 'Tech Expo 2026', 'type' => 'exhibition', 'status' => 'behind',
-                'city' => 'Doha', 'country' => 'Qatar',
+                'name' => 'Tech Expo 2026', 'type' => 'exhibition', 'city' => 'Doha', 'country' => 'Qatar',
                 'venue' => 'Doha Exhibition Center', 'project' => 'Conference Season 2026',
                 'starts_at' => '2026-12-10', 'ends_at' => '2026-12-12',
                 'budget_cents' => 82000000, 'progress' => 45, 'expected_participants' => 1000,
             ],
             [
-                'name' => 'GJU Career Fair', 'type' => 'career_fair', 'status' => 'on_track',
-                'city' => 'Amman', 'country' => 'Jordan',
+                'name' => 'GJU Career Fair', 'type' => 'career_fair', 'city' => 'Amman', 'country' => 'Jordan',
                 'venue' => 'GJU Main Campus Hall', 'project' => 'Education & Training Series',
                 'starts_at' => '2026-09-28', 'ends_at' => '2026-09-29',
                 'budget_cents' => 12000000, 'progress' => 85, 'expected_participants' => 600,
             ],
             [
-                'name' => 'Private Dinner', 'type' => 'private_dinner', 'status' => 'on_track',
-                'city' => 'Riyadh', 'country' => 'KSA',
+                'name' => 'Private Dinner', 'type' => 'private_dinner', 'city' => 'Riyadh', 'country' => 'KSA',
                 'venue' => 'Al Faisaliah Private Suites', 'project' => 'Corporate Events Portfolio',
                 'starts_at' => '2026-11-20', 'ends_at' => '2026-11-20',
                 'budget_cents' => 15000000, 'progress' => 90, 'expected_participants' => 45,
@@ -158,12 +152,12 @@ class DemoDataSeeder extends Seeder
 
         // ── Team ────────────────────────────────────────────────────────
         $team = collect([
-            ['name' => 'Emran Ahmed', 'email' => 'emran.itan@elitebhub.com', 'title' => 'Super Admin', 'avatar_path' => 'images/team/emran-ahmed.jpg'],
-            ['name' => 'Layla Haddad', 'email' => 'layla.haddad@elitebhub.com', 'title' => 'Operations Manager'],
-            ['name' => 'Omar Nassar', 'email' => 'omar.nassar@elitebhub.com', 'title' => 'Event Producer'],
-            ['name' => 'Sara Al-Rashid', 'email' => 'sara.alrashid@elitebhub.com', 'title' => 'Finance Lead'],
-            ['name' => 'Khalid Mansour', 'email' => 'khalid.mansour@elitebhub.com', 'title' => 'Logistics Coordinator'],
-            ['name' => 'Dana Qasem', 'email' => 'dana.qasem@elitebhub.com', 'title' => 'Client Relations'],
+            ['name' => 'Emran Ahmed', 'email' => 'emran.itan@elitebhub.com', 'title' => 'Super Admin', 'role' => 'super_admin', 'avatar_path' => 'images/team/emran-ahmed.jpg'],
+            ['name' => 'Layla Haddad', 'email' => 'layla.haddad@elitebhub.com', 'title' => 'Operations Manager', 'role' => 'manager'],
+            ['name' => 'Omar Nassar', 'email' => 'omar.nassar@elitebhub.com', 'title' => 'Event Producer', 'role' => 'coordinator'],
+            ['name' => 'Sara Al-Rashid', 'email' => 'sara.alrashid@elitebhub.com', 'title' => 'Finance Lead', 'role' => 'manager'],
+            ['name' => 'Khalid Mansour', 'email' => 'khalid.mansour@elitebhub.com', 'title' => 'Logistics Coordinator', 'role' => 'coordinator'],
+            ['name' => 'Dana Qasem', 'email' => 'dana.qasem@elitebhub.com', 'title' => 'Client Relations', 'role' => 'coordinator'],
         ])->mapWithKeys(fn (array $member) => [
             $member['name'] => User::updateOrCreate(
                 ['email' => $member['email']],
@@ -183,12 +177,13 @@ class DemoDataSeeder extends Seeder
                 'Registration page QA', 'Security briefing', 'Floor plan sign-off', 'Press invitations',
             ];
 
-            foreach (['completed' => 72, 'in_progress' => 36, 'pending' => 20] as $status => $count) {
+            $areas = \App\Models\Task::AREAS;
+            foreach (['done' => 40, 'approved' => 12, 'review' => 10, 'doing' => 30, 'todo' => 36, 'cancelled' => 4] as $status => $count) {
                 Task::factory($count)->create([
                     'status' => $status,
                     'title' => fn () => fake()->randomElement($titles).' — '.fake()->words(2, true),
                     'event_id' => fn () => fake()->randomElement($eventIds),
-                    'project_id' => fn () => fake()->optional(0.5)->randomElement(Project::pluck('id')->all()),
+                    'area' => fn () => fake()->randomElement($areas),
                     'assignee_id' => fn () => fake()->randomElement($assigneeIds),
                 ]);
             }

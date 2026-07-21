@@ -35,22 +35,18 @@ class DefaultsSettingsTest extends TestCase
 
         Livewire::actingAs($user)->test(DefaultsSettings::class)
             ->set('categories', ['Venue', 'Catering', 'Marketing'])
-            ->set('phases', ['Kickoff', 'Delivery', 'Wrap'])
             ->set('fee', '12.5')
             ->call('save')
             ->assertHasNoErrors();
 
         $p = CompanyProfile::current();
         $this->assertSame(['Venue', 'Catering', 'Marketing'], $p->default_budget_categories);
-        $this->assertSame(['Kickoff', 'Delivery', 'Wrap'], $p->default_plan_phases);
         $this->assertSame(12.5, $p->default_management_fee_pct);
 
-        // a brand-new event seeds its budget + plan from the workspace defaults
+        // a brand-new event seeds its budget from the workspace defaults
         $event = Event::create(['name' => 'Fresh Event', 'type' => 'conference', 'city' => 'Amman', 'country' => 'Jordan', 'starts_at' => now(), 'status' => 'planning']);
         $event->ensureBudgetCategories();
-        $event->ensurePlanCategories();
         $this->assertSame(['Venue', 'Catering', 'Marketing'], $event->budgetCategories()->orderBy('position')->pluck('name')->all());
-        $this->assertSame(['Kickoff', 'Delivery', 'Wrap'], $event->planCategories()->orderBy('position')->pluck('name')->all());
     }
 
     public function test_add_remove_reorder_categories(): void

@@ -1,1 +1,1 @@
-<livewire:hub.planning-tab :event="$event" />
+<livewire:hub.plan-studio :event="$event" />

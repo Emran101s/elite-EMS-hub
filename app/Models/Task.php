@@ -7,31 +7,159 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['title', 'status', 'priority', 'due_on', 'event_id', 'project_id', 'assignee_id'])]
+/**
+ * A task on an event's board. Deliberately standalone — no sync, no workflow
+ * engine, no audit hooks. Six stages a task travels by hand.
+ */
+#[Fillable(['event_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'area', 'track_id', 'due_on', 'start_on', 'checklist', 'sort'])]
 class Task extends Model
 {
     /** @use HasFactory<\Database\Factories\TaskFactory> */
     use HasFactory;
 
-    public const STATUSES = ['pending', 'in_progress', 'completed'];
+    /**
+     * The six board lanes, in flow order. status => [label, hex, open?].
+     * Colours align with Plan Studio so the two modules read as one system.
+     */
+    public const STAGES = [
+        'todo' => ['To Do', '#94A3B8', true],
+        'doing' => ['In Progress', '#D4AF37', true],
+        'review' => ['Need Approval', '#F97316', true],
+        'approved' => ['Approved', '#10B981', true],
+        'done' => ['Done', '#22C55E', false],
+        'cancelled' => ['Cancelled', '#64748B', false],
+    ];
 
-    public const PRIORITIES = ['low', 'normal', 'high', 'urgent'];
+    public const PRIORITIES = [
+        'low' => ['Low', '#94A3B8'],
+        'normal' => ['Normal', '#3B82F6'],
+        'high' => ['High', '#F59E0B'],
+        'urgent' => ['Urgent', '#EF4444'],
+    ];
+
+    /** The module (department) a task belongs to — slug => [label, hex]. */
+    public const MODULES = [
+        'venue' => ['Venue', '#3B82F6'],
+        'programme' => ['Programme', '#06B6D4'],
+        'speakers' => ['Speakers', '#8B5CF6'],
+        'marketing' => ['Marketing', '#EC4899'],
+        'registration' => ['Registration', '#0EA5E9'],
+        'sponsorship' => ['Sponsorship', '#D4AF37'],
+        'exhibition' => ['Exhibition', '#F59E0B'],
+        'production' => ['Production', '#10B981'],
+        'logistics' => ['Logistics', '#14B8A6'],
+        'transport' => ['Transport', '#22C55E'],
+        'operations' => ['Operations', '#64748B'],
+        'finance' => ['Finance', '#A855F7'],
+        'vip' => ['VIP', '#F97316'],
+    ];
+
+    /** Legacy alias — the module slugs. */
+    public const AREAS = [
+        'registration', 'marketing', 'speakers', 'sponsorship', 'exhibition',
+        'venue', 'operations', 'production', 'logistics', 'vip',
+    ];
 
     protected function casts(): array
     {
         return [
             'due_on' => 'date',
+            'start_on' => 'date',
+            'checklist' => 'array',
         ];
+    }
+
+    public static function statuses(): array
+    {
+        return array_keys(self::STAGES);
+    }
+
+    public function stageLabel(): string
+    {
+        return self::STAGES[$this->status][0] ?? ucfirst($this->status);
+    }
+
+    public function stageHex(): string
+    {
+        return self::STAGES[$this->status][1] ?? '#64748B';
+    }
+
+    /** Live work — not done, not cancelled. */
+    public function isOpen(): bool
+    {
+        return self::STAGES[$this->status][2] ?? true;
+    }
+
+    public function isOverdue(): bool
+    {
+        return $this->isOpen() && $this->due_on && $this->due_on->isPast();
+    }
+
+    public function priorityLabel(): string
+    {
+        return self::PRIORITIES[$this->priority][0] ?? 'Normal';
+    }
+
+    public function priorityHex(): string
+    {
+        return self::PRIORITIES[$this->priority][1] ?? '#3B82F6';
+    }
+
+    /** The module a task belongs to (stored in `area`). */
+    public function moduleLabel(): ?string
+    {
+        if (! $this->area) {
+            return null;
+        }
+
+        return self::MODULES[$this->area][0] ?? str($this->area)->replace('_', ' ')->title()->toString();
+    }
+
+    public function moduleHex(): string
+    {
+        return self::MODULES[$this->area][1] ?? '#64748B';
+    }
+
+    public function areaLabel(): ?string
+    {
+        return $this->moduleLabel();
+    }
+
+    /** Carries a light approval mark once past the sign-off gates. */
+    public function isSigned(): bool
+    {
+        return in_array($this->status, ['approved', 'done'], true);
+    }
+
+    public function track(): BelongsTo
+    {
+        return $this->belongsTo(PlanTrack::class, 'track_id');
+    }
+
+    /** [done, total] across the checklist. */
+    public function checklistProgress(): array
+    {
+        $items = $this->checklist ?? [];
+
+        return [collect($items)->where('done', true)->count(), count($items)];
+    }
+
+    /** 0–100 completion: the checklist if there is one, else stage-based. */
+    public function progress(): int
+    {
+        [$done, $total] = $this->checklistProgress();
+        if ($total > 0) {
+            return (int) round($done / $total * 100);
+        }
+
+        return match ($this->status) {
+            'done' => 100, 'approved' => 90, 'review' => 66, 'doing' => 33, default => 0,
+        };
     }
 
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
-    }
-
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
     }
 
     public function assignee(): BelongsTo

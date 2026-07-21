@@ -29,6 +29,11 @@ class EventExhibitionHall extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function booths(): HasMany
+    {
+        return $this->hasMany(EventBooth::class, 'hall_id');
+    }
+
     public function exhibitors(): HasMany
     {
         return $this->hasMany(EventExhibitor::class, 'hall_id');

@@ -15,11 +15,6 @@ class DefaultsSettings extends Component
 
     public string $newCategory = '';
 
-    /** @var array<int,string> */
-    public array $phases = [];
-
-    public string $newPhase = '';
-
     public string $fee = '15';
 
     /** @var array<int,string> */
@@ -31,44 +26,8 @@ class DefaultsSettings extends Component
     {
         $p = CompanyProfile::current();
         $this->categories = $p->budgetCategories();
-        $this->phases = $p->planPhases();
         $this->tickets = $p->ticketTypes();
         $this->fee = rtrim(rtrim(number_format((float) $p->default_management_fee_pct, 2, '.', ''), '0'), '.');
-    }
-
-    public function addPhase(): void
-    {
-        $name = trim($this->newPhase);
-        if ($name === '') {
-            return;
-        }
-        if (collect($this->phases)->contains(fn ($c) => mb_strtolower($c) === mb_strtolower($name))) {
-            $this->addError('newPhase', 'That phase already exists.');
-
-            return;
-        }
-        $this->phases[] = $name;
-        $this->newPhase = '';
-    }
-
-    public function removePhase(int $i): void
-    {
-        unset($this->phases[$i]);
-        $this->phases = array_values($this->phases);
-    }
-
-    public function movePhase(int $i, int $dir): void
-    {
-        $j = $i + $dir;
-        if ($j < 0 || $j >= count($this->phases)) {
-            return;
-        }
-        [$this->phases[$i], $this->phases[$j]] = [$this->phases[$j], $this->phases[$i]];
-    }
-
-    public function resetPhases(): void
-    {
-        $this->phases = \App\Models\Event::DEFAULT_PLAN_CATEGORIES;
     }
 
     public function addTicket(): void
@@ -133,7 +92,6 @@ class DefaultsSettings extends Component
 
         CompanyProfile::current()->update([
             'default_budget_categories' => array_values(array_filter(array_map('trim', $this->categories))),
-            'default_plan_phases' => array_values(array_filter(array_map('trim', $this->phases))),
             'default_ticket_types' => array_values(array_filter(array_map('trim', $this->tickets))),
             'default_management_fee_pct' => (float) $this->fee,
         ]);

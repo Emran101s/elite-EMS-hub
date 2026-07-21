@@ -36,7 +36,7 @@
         <div class="mx-auto flex max-w-[900px] items-center justify-between gap-3 px-5 py-3">
             <a href="{{ route('events.hub', [$event, 'tab' => 'sponsors']) }}" class="text-xs font-semibold text-navy-500 hover:text-navy-900">← Back to Sponsors</a>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="downloadPng()" class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3.5 text-xs font-bold text-navy-700 transition hover:border-gold-300">🖼 Download image</button>
+                <button type="button" onclick="downloadPng()" class="btn-ghost btn-sm gap-1.5 !font-bold">🖼 Download image</button>
                 <a href="{{ route('events.sponsorship.pdf', $event) }}{{ $single ? '?package='.urlencode($single->name) : '' }}" class="flex h-9 items-center gap-1.5 rounded-xl bg-navy-900 px-3.5 text-xs font-bold text-white transition hover:bg-navy-800"><span class="text-gold-400">↧</span> Download PDF</a>
             </div>
         </div>
@@ -50,7 +50,7 @@
             <div class="relative px-10 pb-9 pt-10 text-white" style="background: linear-gradient(135deg, {{ $theme['primary'] }} 0%, #14315a 100%);">
                 <div class="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full opacity-20" style="background: {{ $theme['accent'] }}; filter: blur(60px);"></div>
                 <div class="flex items-center justify-between">
-                    <span class="inline-flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-[0.2em]" style="color: {{ $theme['accent'] }};">◆ Elite Business Hub</span>
+                    <span class="inline-flex items-center gap-2 text-2xs font-bold uppercase tracking-[0.2em]" style="color: {{ $theme['accent'] }};">◆ Elite Business Hub</span>
                     <span class="text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-white/50">{{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y') }}</span>
                 </div>
                 <h1 class="mt-6 max-w-2xl text-3xl font-bold leading-tight text-balance">{{ $event->name }}</h1>

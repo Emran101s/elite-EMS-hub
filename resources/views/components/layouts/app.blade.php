@@ -1,4 +1,4 @@
-@props(['title' => null, 'subtitle' => null])
+@props(['title' => null, 'subtitle' => null, 'crumbs' => null])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ? $title . ' — ' : '' }}{{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=playfair-display:500,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=spectral:500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">
@@ -22,6 +22,11 @@
         <div class="lg:pl-[292px]">
             <header class="flex items-center justify-between gap-4 px-6 pb-4 pt-7 lg:px-8">
                 <div class="min-w-0">
+                    {{-- Every page gets the same breadcrumb; pass :crumbs to go deeper
+                         than the default "Command Center → {Title}". --}}
+                    <x-crumbs :items="$crumbs ?? ($title && ! request()->routeIs('home')
+                        ? [['label' => 'Command Center', 'href' => route('home')], ['label' => $title]]
+                        : [])" />
                     <div class="mb-1 flex items-center gap-2">
                         <span class="h-px w-6 bg-gold-400"></span>
                         <span class="eyebrow-gold">Elite Business Hub</span>
@@ -33,12 +38,8 @@
                 </div>
 
                 <div class="flex shrink-0 items-center gap-4">
-                    <label class="relative hidden md:block">
-                        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted">
-                            <x-icon name="search" class="h-4.5 w-4.5" />
-                        </span>
-                        <input type="search" placeholder="Search events, clients, venues…" class="input h-11 w-80 !rounded-full pl-11 xl:w-96" />
-                    </label>
+                    {{-- ⌘K palette — the trigger renders where the old (dead) search box sat. --}}
+                    <livewire:command-palette />
 
                     @php
                         // Real signals until a notification center lands: pending approvals + open/escalated risks.
@@ -63,7 +64,7 @@
                             <x-user-avatar :user="auth()->user()" size="h-11 w-11" />
                             <span class="hidden text-left sm:block">
                                 <span class="block text-[15px] font-bold text-navy-900">{{ auth()->user()?->name }}</span>
-                                <span class="block text-xs text-muted">Super Admin</span>
+                                <span class="block text-xs text-muted">{{ auth()->user()?->roleLabel() }}</span>
                             </span>
                             <x-icon name="chevron" class="hidden h-4 w-4 text-navy-400 transition group-open:rotate-180 sm:block" />
                         </summary>

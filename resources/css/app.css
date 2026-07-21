@@ -35,6 +35,12 @@
     /* Surfaces & lines */
     --color-page: #eff3f8;
     --color-line: #e2e8f0;
+
+    /* Micro type scale — use these instead of arbitrary text-[0.Nrem] values. */
+    --text-2xs: 0.7rem;
+    --text-2xs--line-height: 1rem;
+    --text-3xs: 0.6rem;
+    --text-3xs--line-height: 0.85rem;
     --color-fill: #e8edf4; /* gray-filled inputs (wizard/forms) */
     --color-ink: #0b1f3a;
     --color-muted: #64748b;
@@ -43,9 +49,67 @@
     --color-track: #22c55e;
     --color-warn: #f59e0b;
     --color-risk: #ef4444;
+
+    /* ── Status semantics ───────────────────────────────────────────
+       Use these, not raw palette colours. Views currently reach for
+       emerald/red/amber/sky/blue/indigo directly, which is why "info"
+       has five different blues. Values match what is already on screen,
+       so adopting a token changes nothing visually. */
+    --color-success: #10b981;
+    --color-success-soft: #d1fae5;
+    --color-success-ink: #047857;
+    --color-warning: #f59e0b;
+    --color-warning-soft: #fef3c7;
+    --color-warning-ink: #b45309;
+    --color-danger: #ef4444;
+    --color-danger-soft: #fee2e2;
+    --color-danger-ink: #b91c1c;
+    --color-info: #3b82f6;
+    --color-info-soft: #dbeafe;
+    --color-info-ink: #1d4ed8;
+    --color-neutral: #64748b;
+    --color-neutral-soft: #f1f5f9;
+
+    /* On-dark variants. The base semantics are tuned for the light canvas and
+       go muddy on the navy strips, so the dashboard reached for red-400 /
+       emerald-400 / blue-400 / amber-400 by hand. Same intent, lighter tint. */
+    --color-success-on-dark: #34d399;
+    --color-warning-on-dark: #fbbf24;
+    --color-danger-on-dark: #f87171;
+    --color-info-on-dark: #60a5fa;
+
+    /* ── Type scale ─────────────────────────────────────────────────
+       Eight steps replacing the 41 sizes currently in use (31 of them
+       arbitrary values like text-[0.62rem], which appears 273 times). */
+    --text-eyebrow: 0.625rem;
+    --text-eyebrow--line-height: 0.9rem;
+    --text-micro: 0.6875rem;
+    --text-micro--line-height: 0.95rem;
+    --text-h2: 1.0625rem;
+    --text-h2--line-height: 1.4rem;
+    --text-h1: 1.25rem;
+    --text-h1--line-height: 1.6rem;
+    --text-display: 1.75rem;
+    --text-display--line-height: 2rem;
+
+    /* ── Radius ─────────────────────────────────────────────────────
+       Four steps replacing eight. lg is the card/panel radius. */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1.375rem;
+
+    /* ── Elevation ──────────────────────────────────────────────────
+       Three levels replacing 34 distinct arbitrary shadow values. */
+    --shadow-raise: 0 10px 30px rgba(15, 23, 42, 0.06);
+    --shadow-float: 0 18px 45px -20px rgba(11, 31, 58, 0.5);
+    --shadow-overlay: 0 24px 60px -20px rgba(11, 31, 58, 0.5);
 }
 
 @layer base {
+    /* Alpine: keep x-show elements hidden until Alpine boots, so drawers and
+       menus never flash open on first paint. */
+    [x-cloak] { display: none !important; }
+
     /* Everything clickable shows the hand cursor (Tailwind v4 resets buttons to default). */
     button:not(:disabled),
     summary,
@@ -75,24 +139,24 @@
        One look, one feel. Use these instead of re-styling per page.   */
 
     /* Display serif — every title across the platform. */
-    .pf { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
+    .pf { font-family: 'Spectral', Georgia, 'Times New Roman', serif; }
 
     /* Micro label above a value or section. */
-    .eyebrow { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-navy-400; }
-    .eyebrow-gold { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-gold-600; }
+    .eyebrow { @apply text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400; }
+    .eyebrow-gold { @apply text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-600; }
 
     /* The premium accent surface — navy, matching the Planning countdown strip.
        Deliberately NOT near-black: that reads too heavy on a light canvas. */
     .strip-dark {
-        @apply relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-900 to-[#16294A] text-white shadow-[0_18px_45px_-20px_rgba(11,31,58,0.5)];
+        @apply relative overflow-hidden rounded-lg bg-gradient-to-br from-navy-900 to-navy-800 text-white shadow-float;
     }
 
     /* Pills / chips. */
-    .chip { @apply inline-flex items-center gap-1 rounded-full bg-navy-50 px-2 py-0.5 text-[0.6rem] font-bold text-navy-600; }
-    .chip-gold { @apply inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-[0.6rem] font-bold text-gold-700 ring-1 ring-gold-200; }
+    .chip { @apply inline-flex items-center gap-1 rounded-full bg-navy-50 px-2 py-0.5 text-eyebrow font-bold text-navy-600; }
+    .chip-gold { @apply inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-eyebrow font-bold text-gold-700 ring-1 ring-gold-200; }
 
     .card {
-        @apply rounded-[22px] border border-line bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)];
+        @apply rounded-lg border border-line bg-white shadow-raise;
     }
 
     .btn-navy {
@@ -107,6 +171,20 @@
     /* Quiet secondary action. */
     .btn-ghost {
         @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy-700 transition hover:border-gold-300 hover:text-navy-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400;
+    }
+
+    /* Size modifiers — compose with any btn-*: `btn-ghost btn-sm`. */
+    .btn-sm {
+        @apply h-9 px-3.5 py-0 text-xs;
+    }
+
+    .btn-xs {
+        @apply h-auto rounded-lg px-2.5 py-1.5 text-xs;
+    }
+
+    /* Destructive action — delete, remove, reject. */
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-risk/10 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-risk/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-risk;
     }
 
     /* Unified form input — gray-filled, matching the Create Event fields (compact variant). */

@@ -105,26 +105,32 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
+        // The rebuilt page: light KPI strip, portfolio deck, only Card + Calendar views.
         $this->actingAs($user)->get('/events')->assertOk()
             ->assertSee('Total Events')->assertSee('At Risk')
             ->assertSee('ICFT 2026')
-            ->assertSee('Event Control Room') // preview panel shortcuts
-            ->assertSee('AI Recommendation')
-            ->assertSee('Showing 1 to 6 of 6 events');
+            ->assertSee('Portfolio');
 
-        // Filters narrow the grid (radar in the Command Spine always lists all
-        // events, so assert the filtered paginator count rather than absence).
-        $this->actingAs($user)->get('/events?type=conference')->assertOk()
-            ->assertSee('ICFT 2026')->assertSee('Showing 1 to 1 of 1 events');
+        // Filters narrow the card grid. Asserted through the component's paginator,
+        // since the Command Spine radar always lists every event in the page HTML.
+        $names = function (array $sets) use ($user) {
+            $c = \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventsIndex::class);
+            foreach ($sets as $k => $v) {
+                $c->set($k, $v);   // set after mount, which re-reads the request
+            }
 
-        $this->actingAs($user)->get('/events?stage=live')->assertOk()
-            ->assertSee('Private Dinner')->assertSee('Showing 1 to 1 of 1 events');
+            return collect($c->viewData('events')->items())->pluck('name');
+        };
 
-        $this->actingAs($user)->get('/events?q=Doha')->assertOk()
-            ->assertSee('Tech Expo 2026')->assertSee('Showing 1 to 1 of 1 events');
+        $this->assertSame(['ICFT 2026'], $names(['exactType' => 'conference'])->all());
+        $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
+        $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
+
+        // A removed view falls back to Cards rather than erroring.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Portfolio');
     }
 
-    public function test_wizard_walks_three_steps_and_creates_event(): void
+    public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void
     {
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
@@ -133,10 +139,13 @@ class EventHubTest extends TestCase
             ->set('new_client', 'Royal Office')
             ->set('name', 'Royal Gala 2027')
             ->set('starts_at', '2027-05-20')
-            ->call('next')->assertSet('step', 2)
+            ->set('ends_at', '2027-05-22')
+            // The preview reacts as you type — 3 days, and the crest for a gala.
+            ->assertViewHas('previewDays', 3)
             ->call('chooseTemplate', 'gala')
-            ->call('next')->assertSet('step', 3)
-            ->call('toggleModule', 'agenda') // turn agenda on
+            ->assertViewHas('previewType', 'gala_dinner')
+            ->assertViewHas('previewAvatar', fn ($a) => $a?->slug === 'gala-dinner')
+            ->call('toggleModule', 'agenda') // gala doesn't include agenda by default — turn it on
             ->call('save')
             ->assertHasNoErrors();
 
@@ -145,6 +154,17 @@ class EventHubTest extends TestCase
         $this->assertSame('gala_dinner', $event->type);
         $this->assertSame('gala-dinner', $event->avatar->slug);
         $this->assertContains('agenda', $event->enabled_modules);
+        $this->assertSame(3, $event->agendaDays()->count(), 'the date range scaffolds agenda days');
+    }
+
+    public function test_wizard_requires_a_client_and_a_title(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventCreate::class)
+            ->call('save')
+            ->assertHasErrors(['name', 'starts_at', 'client_id']);
     }
 
     public function test_disabled_module_tab_falls_back_to_overview(): void

@@ -7,14 +7,10 @@
                     <x-status-badge :status="$project->status" />
                 </div>
                 <p class="mt-2 line-clamp-2 text-xs text-muted">{{ $project->description }}</p>
-                <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4 text-center">
+                <dl class="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 text-center">
                     <div>
                         <dt class="text-[0.65rem] uppercase tracking-wide text-muted">Events</dt>
                         <dd class="mt-1 text-sm font-bold text-navy-900">{{ $project->events_count }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-[0.65rem] uppercase tracking-wide text-muted">Tasks</dt>
-                        <dd class="mt-1 text-sm font-bold text-navy-900">{{ $project->tasks_count }}</dd>
                     </div>
                     <div>
                         <dt class="text-[0.65rem] uppercase tracking-wide text-muted">Budget</dt>

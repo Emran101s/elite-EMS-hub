@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes'])]
+#[Fillable(['event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes', 'source_type', 'source_id'])]
 class EventApproval extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    /** Only these changes are audit-worthy — decisions, not noise. */
+    public const AUDIT_FIELDS = ['status', 'decided_by', 'title'];
+
     public const TYPES = ['budget', 'supplier', 'design', 'venue', 'agenda', 'client', 'payment', 'report'];
 
     public const STATUSES = ['pending', 'approved', 'rejected', 'needs_revision'];

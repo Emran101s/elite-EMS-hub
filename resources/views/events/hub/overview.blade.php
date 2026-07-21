@@ -3,15 +3,36 @@
     $openRisks = $event->risks->filter->isOpen();
     $riskWord = $openRisks->isEmpty() ? 'Low' : ($openRisks->max(fn ($r) => $r->severity()) >= 15 ? 'High' : 'Medium');
     $taskTotal = max($event->tasks->count(), 1);
-    $done = $event->tasks->where('status', 'completed')->count();
-    $doing = $event->tasks->where('status', 'in_progress')->count();
-    $todo = $event->tasks->where('status', 'pending')->count();
+    $done = $event->tasks->where('status', 'done')->count();
+    $doing = $event->tasks->where('status', 'doing')->count();
+    $todo = $event->tasks->whereIn('status', ['todo', 'review', 'approved'])->count();
     $estimated = $event->budgetItems->sum('estimated_cents');
     $actual = $event->budgetItems->sum('actual_cents');
     $budgetTotal = max($event->budget_cents, 1);
     $committed = max($estimated - $actual, 0);
     $remaining = max($event->budget_cents - $estimated, 0);
     $budgetUsedPct = $event->budget_cents > 0 ? (int) round($actual / $budgetTotal * 100) : null;
+
+    // Money must follow the event's currency — never a hard-coded "$".
+    $sym = $event->currencySymbol();
+    $gap = strlen($sym) > 1 ? ' ' : '';
+
+    // ── Delivery status: the modules the overview was previously blind to ──
+    $contract = $event->contract;
+    $brief = $event->brief;
+    $speakerCount = $event->speakers->count();
+    $speakersConfirmed = $event->speakers->where('status', 'confirmed')->count();
+
+    // The agenda card should open on the day that matters: the next upcoming day
+    // that actually has delegate content — never a pure build day.
+    $today = now()->startOfDay();
+    $upcoming = $event->agendaDays->filter(fn ($d) => $d->date && $d->date->gte($today));
+    $hasProgramme = fn ($d) => $d->sessions->contains(
+        fn ($s) => ! in_array($s->track, \App\Services\AgendaProgram::CREW_ONLY, true)
+    );
+    $agendaDay = $upcoming->first($hasProgramme)
+        ?? $upcoming->first()
+        ?? $event->agendaDays->last();
 @endphp
 
 {{-- ══ Row 1: Event Overview · Agenda Overview · Live Alerts ══ --}}
@@ -64,7 +85,7 @@
                     <dd class="flex items-center gap-1.5 text-sm font-bold text-navy-900">
                         <span class="text-navy-400"><x-icon :name="$metric['icon']" class="h-3.5 w-3.5" /></span> {{ $metric['value'] }}
                     </dd>
-                    <dt class="mt-0.5 text-[0.6rem] text-muted">{{ $metric['label'] }}</dt>
+                    <dt class="mt-0.5 text-3xs text-muted">{{ $metric['label'] }}</dt>
                 </div>
             @endforeach
             <div class="flex flex-col items-center">
@@ -76,7 +97,7 @@
                             'bg-risk/10 text-red-700 ring-risk/30' => $riskWord === 'High',
                         ])>✓ {{ $riskWord }}</span>
                 </dd>
-                <dt class="mt-1 text-[0.6rem] text-muted">Risk Level</dt>
+                <dt class="mt-1 text-3xs text-muted">Risk Level</dt>
             </div>
         </dl>
 
@@ -88,16 +109,20 @@
     </div>
 
     <div class="card p-5">
-        @php $firstDay = $event->agendaDays->first(); @endphp
+        @php $firstDay = $agendaDay; @endphp
         <div class="mb-4 flex items-center justify-between">
             <h3 class="pf text-base font-bold text-navy-900">Agenda Overview</h3>
             @if ($firstDay)
-                <span class="rounded-xl border border-line px-2.5 py-1 text-[0.62rem] font-semibold text-navy-700">{{ $firstDay->date->format('M j, Y') }} ‹ ›</span>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}"
+                   class="rounded-xl border border-line px-2.5 py-1 text-[0.62rem] font-semibold text-navy-700 transition hover:border-gold-300">
+                    {{ $firstDay->date->format('M j, Y') }}
+                </a>
             @endif
         </div>
         @if ($firstDay && $firstDay->sessions->isNotEmpty())
+            <p class="-mt-2 mb-3 truncate text-[0.62rem] text-muted">{{ $firstDay->label }}</p>
             <ul class="space-y-0">
-                @foreach ($firstDay->sessions->take(5) as $session)
+                @foreach ($firstDay->sessions->sortBy('starts_at')->take(5) as $session)
                     <li class="relative flex items-center gap-3 pb-4 text-xs {{ $loop->last ? 'pb-0' : '' }}">
                         @unless ($loop->last)
                             <span class="absolute left-[3px] top-4 h-full w-px bg-line"></span>
@@ -133,13 +158,65 @@
                         <p class="truncate text-xs font-semibold text-navy-900">{{ $alert['title'] }}</p>
                         <p class="truncate text-[0.62rem] text-muted">{{ $alert['sub'] }}</p>
                     </div>
-                    <span class="shrink-0 text-[0.6rem] text-muted">{{ $alert['when']?->diffForHumans(short: true) }}</span>
+                    <span class="shrink-0 text-3xs text-muted">{{ $alert['when']?->diffForHumans(short: true) }}</span>
                 </li>
             @empty
                 <li class="text-xs text-muted">All quiet — no active alerts. 🎉</li>
             @endforelse
         </ul>
     </div>
+</div>
+
+{{-- ══ Row 1b: Delivery status — brief, contract, plan and speakers at a glance ══ --}}
+@php
+    $docTone = [
+        'signed' => ['Signed', 'bg-track/10 text-emerald-700 ring-track/30'],
+        'sent' => ['Sent', 'bg-warn/10 text-amber-700 ring-warn/30'],
+        'draft' => ['Draft', 'bg-navy-50 text-navy-500 ring-line'],
+        'none' => ['Not started', 'bg-navy-50 text-navy-400 ring-line'],
+    ];
+    [$contractLabel, $contractClass] = $docTone[$contract?->status ?? 'none'];
+    [$briefLabel, $briefClass] = $docTone[$brief ? 'draft' : 'none'];
+    if ($brief) { $briefLabel = 'Ready'; $briefClass = $docTone['signed'][1]; }
+@endphp
+<div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+
+    {{-- Speakers --}}
+    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="card p-5 transition hover:border-gold-300">
+        <div class="flex items-center justify-between">
+            <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
+            <span class="text-3xs font-bold text-muted">roster</span>
+        </div>
+        <p class="mt-3 text-2xl font-bold text-navy-900">{{ $speakerCount }}</p>
+        <p class="mt-2 text-[0.62rem] text-muted">
+            {{ $speakersConfirmed }} confirmed · {{ max($speakerCount - $speakersConfirmed, 0) }} pending
+        </p>
+    </a>
+
+    {{-- Brief --}}
+    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="card p-5 transition hover:border-gold-300">
+        <div class="flex items-center justify-between">
+            <h3 class="pf text-sm font-bold text-navy-900">Event Brief</h3>
+        </div>
+        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold ring-1 {{ $briefClass }}">{{ $briefLabel }}</span>
+        <p class="mt-2 text-[0.62rem] text-muted">The front-door document that drives the plan.</p>
+    </a>
+
+    {{-- Contract --}}
+    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="card p-5 transition hover:border-gold-300">
+        <div class="flex items-center justify-between">
+            <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
+            @if ($contract)<span class="text-3xs font-bold text-muted">{{ $contract->reference }}</span>@endif
+        </div>
+        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold ring-1 {{ $contractClass }}">{{ $contractLabel }}</span>
+        <p class="mt-2 text-[0.62rem] text-muted">
+            @if ($contract)
+                {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }} estimated
+                @php $cpCollected = $contract->payments->sum('paid_cents'); @endphp
+                @if ($cpCollected > 0)· <b class="text-emerald-700">{{ $sym }}{{ $gap }}{{ number_format($cpCollected / 100) }} collected</b>@endif
+            @else Not generated yet. @endif
+        </p>
+    </a>
 </div>
 
 {{-- ══ Row 2: Tasks · Budget · Top Suppliers · Team Workload ══ --}}
@@ -179,7 +256,7 @@
                 ['pct' => min($committed / $budgetTotal * 100, max(100 - $actual / $budgetTotal * 100, 0)), 'class' => 'stroke-warn'],
                 ['pct' => min($remaining / $budgetTotal * 100, max(100 - ($actual + $committed) / $budgetTotal * 100, 0)), 'class' => 'stroke-track'],
             ]" size="h-28 w-28" class="shrink-0">
-                <span class="text-sm font-bold text-navy-900">${{ \Illuminate\Support\Number::abbreviate($event->budget_cents / 100) }}</span>
+                <span class="text-sm font-bold text-navy-900">{{ $sym }}{{ $gap }}{{ \Illuminate\Support\Number::abbreviate($event->budget_cents / 100) }}</span>
                 <span class="text-[0.55rem] text-muted">Total Budget</span>
             </x-donut>
             <ul class="space-y-2 text-[0.68rem]">
@@ -189,7 +266,7 @@
                     <li class="flex items-center gap-1.5">
                         <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
                         <span class="text-muted">{{ $label }}</span>
-                        <span class="font-bold text-navy-900">${{ \Illuminate\Support\Number::abbreviate($cents / 100) }} ({{ round($cents / $budgetTotal * 100) }}%)</span>
+                        <span class="font-bold text-navy-900">{{ $sym }}{{ $gap }}{{ \Illuminate\Support\Number::abbreviate($cents / 100) }} ({{ round($cents / $budgetTotal * 100) }}%)</span>
                     </li>
                 @endforeach
             </ul>
@@ -226,13 +303,13 @@
         <ul class="space-y-3.5">
             @forelse ($workload as $row)
                 <li class="flex items-center gap-2.5">
-                    <x-user-avatar :user="$row['user']" size="h-8 w-8" text="text-[0.6rem]" />
+                    <x-user-avatar :user="$row['user']" size="h-8 w-8" text="text-3xs" />
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-2">
                             <p class="truncate text-xs font-semibold text-navy-900">{{ $row['user']->name }}</p>
                             <span class="text-[0.65rem] font-bold text-navy-900">{{ $row['pct'] }}%</span>
                         </div>
-                        <p class="truncate text-[0.6rem] text-muted">{{ str($row['user']->pivot->role)->replace('_', ' ')->title() }}</p>
+                        <p class="truncate text-3xs text-muted">{{ str($row['user']->pivot->role)->replace('_', ' ')->title() }}</p>
                         <div class="mt-1 h-1 overflow-hidden rounded-full bg-navy-50">
                             <div @class(['h-full rounded-full', 'bg-risk' => $row['pct'] >= 80, 'bg-warn' => $row['pct'] >= 60 && $row['pct'] < 80, 'bg-track' => $row['pct'] < 60]) style="width: {{ $row['pct'] }}%"></div>
                         </div>
@@ -254,7 +331,7 @@
             <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
-            @forelse ($event->tasks->where('status', '!=', 'completed')->whereNotNull('due_on')->sortBy('due_on')->take(5) as $task)
+            @forelse ($event->tasks->where('status', '!=', 'done')->whereNotNull('due_on')->sortBy('due_on')->take(5) as $task)
                 @php $days = (int) now()->startOfDay()->diffInDays($task->due_on, false); @endphp
                 <div class="flex items-start gap-2.5 rounded-2xl border border-line px-3 py-3">
                     <span class="flex shrink-0 flex-col items-center rounded-xl border border-line px-2 py-1">
@@ -263,7 +340,7 @@
                     </span>
                     <span class="min-w-0">
                         <span class="line-clamp-2 text-[0.68rem] font-semibold leading-snug text-navy-900">{{ $task->title }}</span>
-                        <span class="mt-0.5 block text-[0.6rem] font-semibold {{ $days < 3 ? 'text-risk' : 'text-muted' }}">
+                        <span class="mt-0.5 block text-3xs font-semibold {{ $days < 3 ? 'text-risk' : 'text-muted' }}">
                             {{ $days < 0 ? abs($days).' days overdue' : ($days === 0 ? 'due today' : $days.' days left') }}
                         </span>
                     </span>
@@ -292,3 +369,30 @@
         </ul>
     </div>
 </div>
+
+{{-- ══ Row 4: Audit trail — every decision has an author ══ --}}
+@php $activity = $event->auditLogs()->with('user')->limit(8)->get(); @endphp
+@if ($activity->isNotEmpty())
+    <div class="mt-5 card p-5">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="pf text-base font-bold text-navy-900">Recent Activity</h3>
+            <span class="text-3xs font-bold uppercase tracking-[0.14em] text-muted">Audit trail</span>
+        </div>
+        <ul class="divide-y divide-line">
+            @foreach ($activity as $log)
+                <li class="flex items-start gap-2.5 py-2 text-xs first:pt-0 last:pb-0">
+                    @if ($log->user)<x-user-avatar :user="$log->user" size="h-5 w-5" text="text-[0.45rem]" />@endif
+                    <span class="min-w-0 flex-1">
+                        <span class="font-semibold text-navy-900">{{ $log->user?->name ?? 'System' }}</span>
+                        <span class="text-muted">{{ ['created' => 'created', 'updated' => 'changed', 'deleted' => 'deleted'][$log->action] }}</span>
+                        <span class="font-semibold text-navy-800">{{ $log->label }}</span>
+                        @if ($log->summary())
+                            <span class="block truncate text-[0.62rem] text-muted">{{ $log->summary() }}</span>
+                        @endif
+                    </span>
+                    <span class="shrink-0 text-[0.62rem] text-muted">{{ $log->created_at->diffForHumans(short: true) }}</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif

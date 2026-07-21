@@ -8,15 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
-    'name', 'description', 'type', 'status', 'stage', 'city', 'country', 'timezone',
+    'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'avatar_id',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
 ])]
 class Event extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    /** Only these changes are audit-worthy — decisions, not noise. */
+    public const AUDIT_FIELDS = ['stage', 'archived_at', 'budget_status', 'budget_cents', 'name', 'starts_at', 'ends_at'];
+
     /** @use HasFactory<\Database\Factories\EventFactory> */
     use HasFactory;
 
@@ -33,6 +39,7 @@ class Event extends Model
      */
     public const HUB_MODULES = [
         'brief' => ['Event Brief', 'Plan', 'clipboard'],
+        'contract' => ['Contract', 'Plan', 'identification'],
         'planning' => ['Planning', 'Plan', 'list'],
         'agenda' => ['Agenda & Sessions', 'Programme', 'calendar'],
         'speakers' => ['Speakers', 'Programme', 'identification'],
@@ -51,16 +58,62 @@ class Event extends Model
         'reports' => ['Reports', 'Grow', 'chart'],
     ];
 
+    /**
+     * A colour per module, used for document folders and module chips.
+     *
+     * Grouped by the HUB_MODULES category so the palette reads as a system —
+     * Plan is blue, Programme teal, Logistics amber, Exhibition violet, Sell
+     * green — rather than eighteen unrelated hues. Risks keeps a semantic red.
+     */
+    public const MODULE_COLORS = [
+        'brief' => '#3B6FD4', 'contract' => '#2E5AA8', 'planning' => '#4C7FE0',
+        'tasks' => '#5B8DEF', 'budget' => '#1F4B99', 'risks' => '#E2574C', 'approvals' => '#7C6BD9',
+        'agenda' => '#0E9488', 'speakers' => '#14B8A6',
+        'suppliers' => '#C2761E', 'venue' => '#B45309', 'transportation' => '#D97706', 'accommodation' => '#A16207',
+        'exhibition' => '#A855F7', 'sponsors' => '#C026D3',
+        'attendees' => '#16A34A',
+        'files' => '#B08D2F', 'reports' => '#64748B',
+    ];
+
+    /**
+     * The lifecycle palette, mirroring MODULE_COLORS. Two views declared this
+     * map inline and had drifted apart; stage colour now has one home.
+     */
+    public const STAGE_COLORS = [
+        'draft' => '#94A3B8', 'proposal' => '#3B82F6', 'confirmed' => '#06B6D4',
+        'planning' => '#8B5CF6', 'production' => '#D4AF37', 'live' => '#22C55E',
+        'completed' => '#10B981', 'closed' => '#64748B',
+        'cancelled' => '#F87171', 'on_hold' => '#F59E0B',
+    ];
+
+    public static function stageColor(?string $stage): string
+    {
+        return self::STAGE_COLORS[$stage] ?? '#64748B';
+    }
+
+    /** Event-wide papers get the brand navy rather than a module hue. */
+    public static function moduleColor(?string $key): string
+    {
+        return self::MODULE_COLORS[$key] ?? '#0B1F3A';
+    }
+
+    public static function moduleLabel(?string $key): string
+    {
+        return $key === null ? 'Event-wide' : (self::HUB_MODULES[$key][0] ?? ucfirst($key));
+    }
+
+    public static function moduleIcon(?string $key): string
+    {
+        return $key === null ? 'archive' : (self::HUB_MODULES[$key][2] ?? 'archive');
+    }
+
     /** Supported currencies: code => [symbol, label]. */
     public const CURRENCIES = [
         'USD' => ['$', 'US Dollar'],
         'JOD' => ['JD', 'Jordanian Dinar'],
     ];
 
-    /** Health statuses (color-mapped; `stage` below tracks the lifecycle). */
-    public const STATUSES = ['planning', 'on_track', 'in_progress', 'at_risk', 'behind', 'completed'];
-
-    /** Lifecycle stages. */
+    /** Lifecycle stages — the event's single stored life story. Health is computed. */
     public const STAGES = ['draft', 'proposal', 'confirmed', 'planning', 'production', 'live', 'completed', 'closed', 'cancelled', 'on_hold'];
 
     public const TEAM_ROLES = ['project_manager', 'operations_lead', 'registration_lead', 'supplier_coordinator', 'finance_owner', 'design_owner', 'production_owner', 'client_rm'];
@@ -107,6 +160,16 @@ class Event extends Model
         }
 
         return $this->enabled_modules === null || in_array($key, $this->enabled_modules, true);
+    }
+
+    /**
+     * Events still in play: not archived and not at the end of their lifecycle.
+     * The single definition of "active" — never filter on a health word.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at')
+            ->whereNotIn('stage', ['completed', 'closed', 'cancelled']);
     }
 
     /** Currency symbol for this event ($ or JD). */
@@ -169,16 +232,19 @@ class Event extends Model
             ->each(fn ($day, $i) => $day->update(['sort' => $i + 1]));
     }
 
+    /** Memoized computed health, so list rows don't recompute per render. */
+    private ?array $healthMemo = null;
+
     /**
-     * Collapse health statuses into the three health colors (track / warn / risk).
+     * The three health colors (track / warn / risk) — always computed from the
+     * health engine, never stored. Callers that already hold a breakdown should
+     * pass its group instead of calling this.
      */
     public function healthGroup(): string
     {
-        return match ($this->status) {
-            'at_risk', 'behind' => 'risk',
-            'in_progress', 'planning' => 'warn',
-            default => 'track',
-        };
+        $this->healthMemo ??= app(\App\Services\EventHealthService::class)->breakdown($this);
+
+        return $this->healthMemo['group'];
     }
 
     /**
@@ -288,26 +354,47 @@ class Event extends Model
         return $this->budget_status === 'approved';
     }
 
+    /** The event's brief document (one per event). */
+    public function brief(): HasOne
+    {
+        return $this->hasOne(EventBrief::class);
+    }
+
+    /** The event's management services agreement (one per event). */
+    public function contract(): HasOne
+    {
+        return $this->hasOne(EventContract::class);
+    }
+
+    // ── Plan Studio ──────────────────────────────────────────
+    public function planTracks(): HasMany
+    {
+        return $this->hasMany(PlanTrack::class)->orderBy('position')->orderBy('id');
+    }
+
     public function planItems(): HasMany
     {
-        return $this->hasMany(EventPlanItem::class)->orderBy('sort_order')->orderBy('id');
+        return $this->hasMany(PlanItem::class)->orderBy('position')->orderBy('id');
     }
 
-    public function planCategories(): HasMany
-    {
-        return $this->hasMany(EventPlanCategory::class)->orderBy('position')->orderBy('id');
-    }
+    /** Default tracks seeded on first use — [name, colour, goal]. Fully user-editable. */
+    public const DEFAULT_TRACKS = [
+        ['Initiation & Strategy', '#8B5CF6', 'Define the event foundation and obtain approvals.'],
+        ['Planning & Design', '#3B82F6', 'Transform concept into a complete plan.'],
+        ['Marketing & Registration', '#EC4899', 'Generate attendance and registrations.'],
+        ['Pre-Event Preparation', '#06B6D4', 'Prepare operations for execution.'],
+        ['Event Execution', '#D4AF37', 'Deliver the event successfully.'],
+        ['Event Close-Out', '#10B981', 'Finalize all event operations.'],
+        ['Post-Event & Legacy', '#F59E0B', 'Measure success and maximize long-term value.'],
+    ];
 
-    /** Default planning phases — seeded on first use, fully user-editable. */
-    public const DEFAULT_PLAN_CATEGORIES = ['Initiation & Strategy', 'Planning & Design', 'Marketing & Registration', 'Pre-Event Readiness', 'Event Execution', 'Event Close-Out', 'Post-Event'];
-
-    public function ensurePlanCategories(): void
+    public function ensurePlanTracks(): void
     {
-        if ($this->planCategories()->exists()) {
+        if ($this->planTracks()->exists()) {
             return;
         }
-        foreach (CompanyProfile::current()->planPhases() as $i => $name) {
-            $this->planCategories()->create(['name' => $name, 'position' => $i]);
+        foreach (self::DEFAULT_TRACKS as $i => [$name, $color, $goal]) {
+            $this->planTracks()->create(['name' => $name, 'goal' => $goal, 'color' => $color, 'position' => $i]);
         }
     }
 
@@ -378,6 +465,16 @@ class Event extends Model
     }
 
     /** Guarantee at least one hall exists; migrate legacy event-level fixtures into it. */
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class)->latest('created_at');
+    }
+
+    public function booths(): HasMany
+    {
+        return $this->hasMany(EventBooth::class);
+    }
+
     public function ensureExhibitionHall(): EventExhibitionHall
     {
         $hall = $this->exhibitionHalls()->first();
@@ -407,6 +504,21 @@ class Event extends Model
     public function accommodations(): HasMany
     {
         return $this->hasMany(EventAccommodation::class);
+    }
+
+    public function roomBlocks(): HasMany
+    {
+        return $this->hasMany(EventRoomBlock::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(EventDocument::class);
+    }
+
+    public function documentFolders(): HasMany
+    {
+        return $this->hasMany(EventDocumentFolder::class)->orderBy('position')->orderBy('name');
     }
 
     public function risks(): HasMany

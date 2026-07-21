@@ -2,10 +2,10 @@
 
 @php
     $tone = match ($status) {
-        'on_track', 'completed', 'active', 'approved', 'paid', 'delivered',
+        'on_track', 'completed', 'done', 'active', 'approved', 'paid', 'delivered',
         'final', 'live', 'mitigated', 'confirmed', 'contracted' => 'bg-track/10 text-emerald-700 ring-track/30',
 
-        'in_progress', 'planning', 'pending', 'on_hold', 'production', 'partial',
+        'in_progress', 'doing', 'todo', 'review', 'planning', 'pending', 'on_hold', 'production', 'partial',
         'quoted', 'monitoring', 'waiting_speaker', 'needs_review', 'proposal',
         'requested', 'in_production' => 'bg-warn/10 text-amber-700 ring-warn/30',
 

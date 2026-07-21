@@ -18,7 +18,7 @@
     <div class="card overflow-x-auto">
         <table class="w-full min-w-[640px]">
             <thead>
-                <tr class="border-b border-line bg-page/40 text-left text-[0.6rem] font-bold uppercase tracking-wide text-muted">
+                <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
                     <th class="px-5 py-2.5">Client</th>
                     <th class="px-3 py-2.5">Primary contact</th>
                     <th class="px-3 py-2.5 text-center">Events</th>
@@ -37,23 +37,23 @@
                                 @endif
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-bold text-navy-900">{{ $c->name }}</p>
-                                    <p class="truncate text-[0.68rem] text-muted">{{ $c->organization ?: '—' }}</p>
+                                    <p class="truncate text-micro text-muted">{{ $c->organization ?: '—' }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-3 py-3">
                             <p class="text-xs font-semibold text-navy-700">{{ $c->contact_name ?: '—' }}</p>
-                            <p class="text-[0.68rem] text-muted">{{ $c->email ?: $c->phone ?: '' }}</p>
+                            <p class="text-micro text-muted">{{ $c->email ?: $c->phone ?: '' }}</p>
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-[0.62rem] font-bold text-navy-600">{{ $c->events_count }}</span>
+                            <span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-eyebrow font-bold text-navy-600">{{ $c->events_count }}</span>
                         </td>
                         <td class="px-3 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <span class="text-[0.6rem] font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
+                                <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
                                 <button type="button" wire:click.stop="delete({{ $c->id }})"
                                         wire:confirm="Delete {{ $c->name }}?{{ $c->events_count ? ' '.$c->events_count.' event(s) will be unlinked.' : '' }}"
-                                        class="rounded-lg bg-risk/10 px-2 py-1 text-[0.6rem] font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
+                                        class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                             </div>
                         </td>
                     </tr>
@@ -66,20 +66,15 @@
             </tbody>
         </table>
     </div>
-    <p class="mt-3 text-center text-[0.62rem] text-muted">{{ $clients->count() }} {{ str('client')->plural($clients->count()) }}</p>
+    <p class="mt-3 text-center text-eyebrow text-muted">{{ $clients->count() }} {{ str('client')->plural($clients->count()) }}</p>
 
     {{-- modal --}}
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-900/40 p-4 pt-12 backdrop-blur-sm">
-            <div class="card w-full max-w-lg p-6 shadow-2xl" @click.outside="$wire.set('showForm', false)">
-                <div class="mb-4 flex items-center justify-between">
-                    <h3 class="pf text-base font-bold text-navy-900">{{ $editingId ? 'Edit client' : 'Add client' }}</h3>
-                    <button type="button" wire:click="$set('showForm', false)" class="text-navy-400 hover:text-navy-900">✕</button>
-                </div>
+        <x-modal :title="$editingId ? 'Edit client' : 'Add client'" max="lg" close="set('showForm', false)">
 
                 <form wire:submit="save" class="grid gap-4">
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Logo (optional)</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Logo (optional)</label>
                         <div class="flex items-center gap-3">
                             <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-navy-900 text-sm font-bold text-gold-400 ring-1 ring-line">
                                 @if ($logo)
@@ -93,7 +88,7 @@
                             <div class="flex-1">
                                 <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
                                        class="block w-full text-xs text-navy-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-navy-800">
-                                <div wire:loading wire:target="logo" class="mt-1 text-[0.6rem] font-semibold text-gold-700">Uploading…</div>
+                                <div wire:loading wire:target="logo" class="mt-1 text-eyebrow font-semibold text-gold-700">Uploading…</div>
                                 @error('logo')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                             </div>
                         </div>
@@ -101,41 +96,41 @@
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Client name</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Client name</label>
                             <input type="text" wire:model="name" class="input h-10 text-sm" placeholder="e.g. Qatar Tech Authority">
                             @error('name')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Industry / sector</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Industry / sector</label>
                             <input type="text" wire:model="organization" class="input h-10 text-sm" placeholder="e.g. Government">
                         </div>
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Primary contact</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Primary contact</label>
                             <input type="text" wire:model="contact_name" class="input h-10 text-sm" placeholder="e.g. Noura Al-Sayed">
                         </div>
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Website</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Website</label>
                             <input type="text" wire:model="website" class="input h-10 text-sm" placeholder="e.g. qta.gov.qa">
                         </div>
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Email</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Email</label>
                             <input type="email" wire:model="email" class="input h-10 text-sm" placeholder="name@client.com">
                             @error('email')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Phone</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Phone</label>
                             <input type="text" wire:model="phone" class="input h-10 text-sm" placeholder="+974 …">
                         </div>
                     </div>
 
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Notes (optional)</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Notes (optional)</label>
                         <textarea wire:model="notes" rows="2" class="input text-sm" placeholder="Relationship notes, billing details, etc."></textarea>
                     </div>
 
@@ -144,7 +139,6 @@
                         <button type="submit" wire:loading.attr="disabled" wire:target="save,logo" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update' : 'Add client' }}</button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </x-modal>
     @endif
 </div>

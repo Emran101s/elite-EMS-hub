@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'hotel', 'guest', 'room_type', 'rooms', 'check_in', 'check_out', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes'])]
+#[Fillable(['event_id', 'block_id', 'hotel', 'guest', 'attendee_id', 'guest_email', 'guest_phone', 'sharing_with', 'room_type', 'occupancy', 'rooms', 'check_in', 'arrival_time', 'arrival_note', 'check_out', 'departure_time', 'departure_note', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes', 'position'])]
 class EventAccommodation extends Model
 {
     protected $table = 'event_accommodations';
@@ -38,6 +38,35 @@ class EventAccommodation extends Model
     public function roomNights(): int
     {
         return $this->rooms * $this->nights();
+    }
+
+    /** How many sleep in the room — what the hotel allocates beds for. */
+    public const OCCUPANCIES = ['single' => 'Single', 'double' => 'Double', 'twin' => 'Twin',
+        'triple' => 'Triple', 'quad' => 'Quad'];
+
+    /** Common grades, offered as suggestions — the field stays free text. */
+    public const CATEGORIES = ['Standard', 'Superior', 'Deluxe', 'Executive', 'Club', 'Junior Suite', 'Suite'];
+
+    /** The attendee this room belongs to, when the guest came from that list. */
+    public function attendee(): BelongsTo
+    {
+        return $this->belongsTo(EventAttendee::class, 'attendee_id');
+    }
+
+    public function occupancyLabel(): string
+    {
+        return self::OCCUPANCIES[$this->occupancy] ?? '';
+    }
+
+    public function block(): BelongsTo
+    {
+        return $this->belongsTo(EventRoomBlock::class, 'block_id');
+    }
+
+    /** A rooming-list line is only "named" once a guest is on it. */
+    public function isNamed(): bool
+    {
+        return filled($this->guest);
     }
 
     public function event(): BelongsTo

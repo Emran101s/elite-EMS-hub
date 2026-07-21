@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Event;
+use App\Models\EventBooth;
 use App\Models\EventExhibitionHall;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -106,8 +107,11 @@ class ExhibitionFloorPlan extends Component
 
             return;
         }
-        // Its booths go back to the shared tray.
-        $this->event->exhibitors()->where('hall_id', $id)->update(['hall_id' => null, 'booth_x' => null, 'booth_y' => null]);
+        // Deleting a hall destroys its booth inventory; the buyers survive and
+        // return to the waiting tray with their booth number cleared.
+        foreach ($this->event->booths()->where('hall_id', $id)->with('exhibitor')->get() as $booth) {
+            $booth->exhibitor?->update(['booth_number' => null]);
+        }
         $this->event->exhibitionHalls()->whereKey($id)->delete();
         $this->selectHall((int) $this->event->exhibitionHalls()->value('id'));
     }
@@ -134,23 +138,67 @@ class ExhibitionFloorPlan extends Component
         ]);
     }
 
-    // ── Booths (metres, hall-scoped) ──────────────────────────
-    public function placeBooth(int $id): void
+    // ── Booths: sellable inventory (metres, hall-scoped) ─────
+    /** Next free booth number for this event: B01, B02, … */
+    private function nextBoothNumber(): string
+    {
+        $taken = $this->event->booths()->pluck('number')->flip();
+        for ($i = 1; $i < 1000; $i++) {
+            $n = 'B'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+            if (! isset($taken[$n])) {
+                return $n;
+            }
+        }
+
+        return 'B'.uniqid();
+    }
+
+    /** Draw a new booth on the floor — inventory first, buyer later. */
+    public function addBooth(): void
     {
         $hall = $this->currentHall();
-        $ex = $this->event->exhibitors()->whereKey($id)->first();
+        if (! $hall) {
+            return;
+        }
+
+        // New booths default to the last price set on this event, so pricing a
+        // whole row doesn't mean retyping the number every time.
+        $price = $this->event->booths()->latest('id')->value('price_cents') ?? 0;
+
+        $booth = $this->event->booths()->create([
+            'hall_id' => $hall->id,
+            'number' => $this->nextBoothNumber(),
+            'price_cents' => $price,
+            'x' => round($hall->width_m / 2, 2),
+            'y' => round($hall->length_m / 2, 2),
+            'w_m' => 3,
+            'h_m' => 3,
+        ]);
+        $this->selectItem('booth', $booth->id);
+    }
+
+    /** Tray shortcut: create a booth already sold-to/reserved-for this exhibitor. */
+    public function placeBooth(int $exhibitorId): void
+    {
+        $hall = $this->currentHall();
+        $ex = $this->event->exhibitors()->whereKey($exhibitorId)->whereDoesntHave('booth')->first();
         if (! $hall || ! $ex) {
             return;
         }
-        [$w, $h] = $ex->booth_w_m && $ex->booth_h_m ? [$ex->booth_w_m, $ex->booth_h_m] : $this->boothMeters($ex->booth_size);
-        $ex->update([
+        [$w, $h] = $this->boothMeters($ex->booth_size);
+
+        $booth = $this->event->booths()->create([
             'hall_id' => $hall->id,
-            'booth_x' => round($hall->width_m / 2, 2),
-            'booth_y' => round($hall->length_m / 2, 2),
-            'booth_w_m' => $w,
-            'booth_h_m' => $h,
+            'exhibitor_id' => $ex->id,
+            'number' => trim((string) $ex->booth_number) ?: $this->nextBoothNumber(),
+            'price_cents' => $ex->fee_cents ?: 0,
+            'x' => round($hall->width_m / 2, 2),
+            'y' => round($hall->length_m / 2, 2),
+            'w_m' => $w,
+            'h_m' => $h,
         ]);
-        $this->selectItem('booth', $id);
+        $ex->update(['booth_number' => $booth->number]);
+        $this->selectItem('booth', $booth->id);
     }
 
     public function moveBooth(int $id, float $x, float $y): void
@@ -159,63 +207,117 @@ class ExhibitionFloorPlan extends Component
         if (! $hall) {
             return;
         }
-        $this->event->exhibitors()->whereKey($id)->where('hall_id', $hall->id)->update([
-            'booth_x' => round(max(0, min($hall->width_m, $x)), 2),
-            'booth_y' => round(max(0, min($hall->length_m, $y)), 2),
+        $this->event->booths()->whereKey($id)->where('hall_id', $hall->id)->update([
+            'x' => round(max(0, min($hall->width_m, $x)), 2),
+            'y' => round(max(0, min($hall->length_m, $y)), 2),
         ]);
     }
 
     public function resizeBooth(int $id, string $axis, float $delta): void
     {
         $hall = $this->currentHall();
-        $ex = $this->event->exhibitors()->whereKey($id)->first();
-        if (! $hall || ! $ex) {
+        $booth = $this->event->booths()->whereKey($id)->first();
+        if (! $hall || ! $booth) {
             return;
         }
-        $w = $ex->booth_w_m ?: 3;
-        $h = $ex->booth_h_m ?: 3;
+        $w = $booth->w_m;
+        $h = $booth->h_m;
         if ($axis === 'w' || $axis === 'both') {
             $w = round(max(0.5, min($hall->width_m, $w + $delta)), 2);
         }
         if ($axis === 'h' || $axis === 'both') {
             $h = round(max(0.5, min($hall->length_m, $h + $delta)), 2);
         }
-        $ex->update(['booth_w_m' => $w, 'booth_h_m' => $h]);
+        $booth->update(['w_m' => $w, 'h_m' => $h]);
     }
 
-    public function unplaceBooth(int $id): void
+    public function setBoothNumber(int $id, string $number): void
     {
-        $this->event->exhibitors()->whereKey($id)->update(['hall_id' => null, 'booth_x' => null, 'booth_y' => null]);
+        $number = trim($number);
+        if ($number === '' || $this->event->booths()->where('number', $number)->whereKeyNot($id)->exists()) {
+            return;   // numbers stay unique per event
+        }
+        $booth = $this->event->booths()->whereKey($id)->first();
+        $booth?->update(['number' => $number]);
+        $booth?->exhibitor?->update(['booth_number' => $number]);
+    }
+
+    public function setBoothPrice(int $id, $price): void
+    {
+        if (! is_numeric($price) || (float) $price < 0) {
+            return;
+        }
+        $this->event->booths()->whereKey($id)->update(['price_cents' => (int) round((float) $price * 100)]);
+    }
+
+    /** The sale: link a buyer to the booth. */
+    public function assignExhibitor(int $boothId, $exhibitorId): void
+    {
+        $booth = $this->event->booths()->whereKey($boothId)->first();
+        $ex = $this->event->exhibitors()->whereKey((int) $exhibitorId)->whereDoesntHave('booth')->first();
+        if (! $booth || ! $ex || $booth->exhibitor_id) {
+            return;
+        }
+
+        $booth->update(['exhibitor_id' => $ex->id]);
+        // The exhibitor record follows the booth: number always, fee only when unset.
+        $ex->update(['booth_number' => $booth->number]
+            + ($ex->fee_cents ? [] : ['fee_cents' => $booth->price_cents]));
+    }
+
+    /** Undo the sale — the booth returns to available inventory. */
+    public function releaseExhibitor(int $boothId): void
+    {
+        $booth = $this->event->booths()->whereKey($boothId)->first();
+        if (! $booth || ! $booth->exhibitor_id) {
+            return;
+        }
+        $booth->exhibitor?->update(['booth_number' => null]);
+        $booth->update(['exhibitor_id' => null]);
+    }
+
+    public function deleteBooth(int $id): void
+    {
+        $booth = $this->event->booths()->whereKey($id)->first();
+        if (! $booth) {
+            return;
+        }
+        $booth->exhibitor?->update(['booth_number' => null]);
+        $booth->delete();
         if ($this->selectedKind === 'booth' && $this->selectedId === $id) {
             $this->deselect();
         }
     }
 
-    /** Grid-lay every unplaced booth into the current hall, in metres. */
+    /** Grid-lay a booth for every exhibitor that doesn't have one yet. */
     public function autoArrange(): void
     {
         $hall = $this->currentHall();
         if (! $hall) {
             return;
         }
-        $unplaced = $this->event->exhibitors()->whereNull('hall_id')->where('status', '!=', 'cancelled')->get();
+        $waiting = $this->event->exhibitors()->whereDoesntHave('booth')->where('status', '!=', 'cancelled')->get();
         $x = 1.0;
         $y = 1.0;
         $rowH = 0.0;
-        foreach ($unplaced as $ex) {
-            [$w, $h] = $ex->booth_w_m && $ex->booth_h_m ? [$ex->booth_w_m, $ex->booth_h_m] : $this->boothMeters($ex->booth_size);
+        foreach ($waiting as $ex) {
+            [$w, $h] = $this->boothMeters($ex->booth_size);
             if ($x + $w > $hall->width_m) {
                 $x = 1.0;
                 $y += $rowH + 1.0;
                 $rowH = 0.0;
             }
-            $ex->update([
+            $booth = $this->event->booths()->create([
                 'hall_id' => $hall->id,
-                'booth_x' => round($x + $w / 2, 2),
-                'booth_y' => round($y + $h / 2, 2),
-                'booth_w_m' => $w,
-                'booth_h_m' => $h,
+                'exhibitor_id' => $ex->id,
+                'number' => trim((string) $ex->booth_number) ?: $this->nextBoothNumber(),
+                'price_cents' => $ex->fee_cents ?: 0,
+                'x' => round($x + $w / 2, 2),
+                'y' => round($y + $h / 2, 2),
+                'w_m' => $w,
+                'h_m' => $h,
             ]);
+            $ex->update(['booth_number' => $booth->number]);
             $x += $w + 1.0;
             $rowH = max($rowH, $h);
         }
@@ -317,27 +419,53 @@ class ExhibitionFloorPlan extends Component
         $hall = $halls->firstWhere('id', $this->hallId) ?? $halls->first();
         $this->hallId = $hall?->id;
 
-        $exhibitors = $this->event->exhibitors()->where('status', '!=', 'cancelled')->orderBy('booth_number')->orderBy('company')->get();
-        $placed = $exhibitors->filter(fn ($e) => $e->hall_id === $hall?->id && $e->booth_x !== null)->values();
-        $unplaced = $exhibitors->filter(fn ($e) => $e->hall_id === null)->values();
+        $allBooths = $this->event->booths()->with('exhibitor')->orderBy('number')->get();
+        $booths = $allBooths->where('hall_id', $hall?->id)->values();
+
+        // Exhibitors still waiting for a booth — the sales pipeline tray.
+        $waiting = $this->event->exhibitors()->whereDoesntHave('booth')
+            ->where('status', '!=', 'cancelled')->orderBy('company')->get();
+
         $fixtures = $hall?->fixtures ?? [];
 
         $selected = null;
         if ($this->selectedKind === 'booth') {
-            $selected = $placed->firstWhere('id', $this->selectedId);
+            $selected = $booths->firstWhere('id', $this->selectedId);
         } elseif ($this->selectedKind === 'fixture') {
             $selected = collect($fixtures)->firstWhere('id', $this->selectedId);
         }
 
+        // The floor plan is a revenue dashboard: sold / reserved / available,
+        // with money to match — across every hall of the event.
+        $byStatus = $allBooths->groupBy(fn ($b) => $b->status());
+        $sales = [
+            'total' => $allBooths->count(),
+            'sold' => $byStatus->get('sold', collect())->count(),
+            'reserved' => $byStatus->get('reserved', collect())->count(),
+            'available' => $byStatus->get('available', collect())->count(),
+            'soldValue' => $byStatus->get('sold', collect())->sum('price_cents'),
+            'pipelineValue' => $byStatus->get('reserved', collect())->sum('price_cents'),
+            'openValue' => $byStatus->get('available', collect())->sum('price_cents'),
+        ];
+
         return view('livewire.exhibition-floor-plan', [
             'halls' => $halls,
             'hall' => $hall,
-            'placed' => $placed,
-            'unplaced' => $unplaced,
+            'booths' => $booths,
+            'waiting' => $waiting,
             'fixtures' => $fixtures,
             'fixturePresets' => self::FIXTURE_PRESETS,
             'selected' => $selected,
-            'totalBooths' => $exhibitors->count(),
+            'sales' => $sales,
+        ])->layoutData([
+            'title' => 'Exhibition Floor Plan',
+            'crumbs' => [
+                ['label' => 'Command Center', 'href' => route('home')],
+                ['label' => 'Events', 'href' => route('events.index')],
+                ['label' => $this->event->name, 'href' => route('events.hub', $this->event)],
+                ['label' => 'Exhibition', 'href' => route('events.hub', [$this->event, 'tab' => 'exhibition'])],
+                ['label' => 'Floor Plan'],
+            ],
         ]);
     }
 }

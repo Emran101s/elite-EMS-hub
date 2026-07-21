@@ -1,297 +1,248 @@
-<div>
-    {{-- ══ KPI command strip + primary action ══ --}}
-    <div class="strip-dark mb-5 px-6 py-5">
-        <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
+@php
+    // KPI tone → soft/ink token pair, so the strip stays light with tinted chips.
+    $tone = [
+        'blue'  => ['var(--color-info-soft)', 'var(--color-info-ink)'],
+        'green' => ['var(--color-success-soft)', 'var(--color-success-ink)'],
+        'gold'  => ['var(--color-gold-100)', 'var(--color-gold-700)'],
+        'red'   => ['var(--color-danger-soft)', 'var(--color-danger-ink)'],
+    ];
+    $typeTabs = ['all' => 'All', 'conference' => 'Conferences', 'workshop' => 'Workshops',
+        'exhibition' => 'Exhibitions', 'gala' => 'Galas', 'vip' => 'VIP', 'outdoor' => 'Outdoor'];
+@endphp
 
-        <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
-            @foreach ($kpis as $i => $kpi)
-                @if ($i > 0)
-                    <span class="hidden h-11 w-px bg-white/10 lg:block" aria-hidden="true"></span>
-                @endif
-                <div class="flex min-w-[118px] items-center gap-2.5">
-                    <span @class([
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1',
-                        'bg-red-400/10 text-red-300 ring-red-400/30' => $kpi['tone'] === 'red',
-                        'bg-white/[0.07] text-gold-400 ring-white/10' => $kpi['tone'] !== 'red',
-                    ])>
-                        <x-icon :name="$kpi['icon']" class="h-4 w-4" />
+<div class="space-y-5">
+
+    {{-- ══════════ Command strip — light, tinted KPI tiles ══════════ --}}
+    <div class="card p-1.5">
+        <div class="grid grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
+            @foreach ($kpis as $k)
+                @php [$soft, $ink] = $tone[$k['tone']] ?? $tone['blue']; @endphp
+                <div class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-page/60">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style="background: {{ $soft }}; color: {{ $ink }}">
+                        <x-icon :name="$k['icon']" class="h-4 w-4" />
                     </span>
                     <div class="min-w-0">
-                        <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $kpi['label'] }}</p>
-                        <p class="pf mt-0.5 text-[26px] font-bold leading-none {{ $kpi['tone'] === 'red' ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
-                        <p class="mt-1 truncate text-[0.6rem] {{ $kpi['up'] ? 'text-emerald-300/80' : 'text-red-300/80' }}">{{ $kpi['trend'] }}</p>
+                        <p class="text-h2 font-black leading-none text-navy-900">{{ $k['value'] }}</p>
+                        <p class="mt-0.5 truncate text-eyebrow font-bold uppercase tracking-wider text-muted">{{ $k['label'] }}</p>
                     </div>
                 </div>
             @endforeach
-
-            <a href="{{ route('events.create') }}" class="btn-gold ml-auto h-10 shrink-0 !rounded-xl px-5 text-xs">
-                ＋ Create Event
-            </a>
         </div>
     </div>
 
-    {{-- ══ Toolbar: filters + view switcher + search (always visible) ══ --}}
-    <div class="mb-5 flex flex-wrap items-center gap-3">
-        <div class="flex flex-wrap items-center gap-1">
-            @foreach (['all' => 'All Events', 'conference' => 'Conference', 'workshop' => 'Workshop', 'exhibition' => 'Exhibition', 'gala' => 'Gala Dinner', 'vip' => 'VIP', 'outdoor' => 'Outdoor'] as $key => $label)
+    {{-- ══════════ Toolbar ══════════ --}}
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {{-- type filter --}}
+        <div class="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1">
+            @foreach ($typeTabs as $key => $label)
                 <button type="button" wire:click="setTab('{{ $key }}')"
                         @class([
-                            'h-9 rounded-xl px-[18px] text-[13px] font-semibold transition',
-                            'bg-navy-900 text-white shadow' => $tab === $key && ! $exactType,
-                            'text-navy-600 hover:text-navy-900' => $tab !== $key || $exactType,
+                            'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition',
+                            'bg-navy-900 text-white shadow-raise' => $tab === $key && ! $starred,
+                            'text-navy-500 hover:bg-navy-50 hover:text-navy-900' => ! ($tab === $key && ! $starred),
                         ])>{{ $label }}</button>
             @endforeach
+            <span class="mx-1 h-5 w-px shrink-0 bg-line"></span>
             <button type="button" wire:click="toggleStarred"
                     @class([
-                        'ml-1 flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-[13px] font-semibold transition',
-                        'bg-gold-50 text-gold-700 ring-1 ring-gold-300' => $starred,
-                        'text-navy-600 hover:text-navy-900' => ! $starred,
+                        'flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition',
+                        'bg-gold-400 text-navy-950' => $starred,
+                        'text-navy-500 hover:bg-gold-50 hover:text-gold-700' => ! $starred,
                     ])>
                 <x-icon name="star" class="h-3.5 w-3.5 {{ $starred ? 'fill-current' : '' }}" /> Starred
             </button>
         </div>
 
-        <div class="ml-auto flex items-center gap-3">
-            <input type="search" wire:model.live.debounce.400ms="q" placeholder="Search events, clients, venues…" class="input h-9 w-52 !rounded-xl text-xs">
-            <select wire:model.live="sort" class="input h-9 w-36 !rounded-xl text-xs" title="Sort events">
+        {{-- search · sort · view · create --}}
+        <div class="flex items-center gap-2">
+            <div class="relative">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
+                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search events, clients, venues…"
+                       class="input h-9 w-44 !rounded-xl !py-0 !ps-9 text-xs sm:w-56">
+            </div>
+            <select wire:model.live="sort" class="input h-9 w-auto !rounded-xl !py-0 text-xs">
                 <option value="date">Sort: Date</option>
-                <option value="health">Sort: Health Score</option>
-                <option value="budget">Sort: Budget Used</option>
+                <option value="health">Sort: Health</option>
+                <option value="budget">Sort: Budget used</option>
             </select>
-            <span class="inline-flex shrink-0 gap-1 rounded-2xl border border-line bg-white p-1">
-                @foreach ([
-                    ['grid', 'grid', 'Grid view'], ['list', 'list', 'List view'],
-                    ['calendar', 'calendar', 'Calendar view'], ['kanban', 'columns', 'Pipeline (Kanban)'],
-                    [null, 'share', 'Hub view — coming soon'], [null, 'pin', 'Map — coming soon'],
-                ] as [$mode, $icon, $title])
-                    @if ($mode)
-                        <button type="button" wire:click="$set('view', '{{ $mode }}')" title="{{ $title }}"
-                                @class([
-                                    'rounded-xl p-2 transition',
-                                    'bg-gold-50 text-gold-600 ring-1 ring-gold-200' => $view === $mode,
-                                    'text-navy-500 hover:text-navy-900' => $view !== $mode,
-                                ])><x-icon :name="$icon" class="h-4.5 w-4.5" /></button>
-                    @else
-                        <span class="cursor-not-allowed rounded-xl p-2 text-navy-200" title="{{ $title }}"><x-icon :name="$icon" class="h-4.5 w-4.5" /></span>
-                    @endif
+
+            {{-- view toggle: Cards | Calendar only --}}
+            <div class="flex h-9 shrink-0 items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
+                @foreach (['cards' => 'grid', 'calendar' => 'calendar'] as $mode => $icon)
+                    <button type="button" wire:click="$set('view', '{{ $mode }}')"
+                            @class([
+                                'flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-bold capitalize transition',
+                                'bg-navy-900 text-white' => $view === $mode,
+                                'text-navy-500 hover:text-navy-900' => $view !== $mode,
+                            ])>
+                        <x-icon :name="$icon" class="h-3.5 w-3.5" />{{ $mode }}
+                    </button>
                 @endforeach
-            </span>
+            </div>
+
+            <a href="{{ route('events.create') }}" class="btn-gold btn-sm shrink-0">＋ Create Event</a>
         </div>
     </div>
 
-    {{-- ══════════ Pipeline (Kanban) ══════════ --}}
-    @if ($view === 'kanban' && $pipeline)
-        @php
-            $accentBtn = [
-                'navy' => 'bg-navy-50 text-navy-600 hover:bg-navy-100',
-                'gold' => 'bg-gold-50 text-gold-700 hover:bg-gold-100',
-                'track' => 'bg-track/10 text-emerald-700 hover:bg-track/20',
-                'blue' => 'bg-[#3B82F6]/10 text-[#3B82F6] hover:bg-[#3B82F6]/20',
-                'ink' => 'bg-navy-900/5 text-navy-700 hover:bg-navy-900/10',
-            ];
-        @endphp
-        <div class="mb-1">
-            <h2 class="pf text-lg font-bold text-navy-900">Pipeline</h2>
-            <p class="text-xs text-muted">Drag events across stages as deals progress</p>
-        </div>
-        <div class="flex gap-4 overflow-x-auto pb-3 pt-3">
-            @foreach ($pipeline as $bucket => $col)
-                <div class="w-[290px] shrink-0" wire:key="col-{{ $bucket }}">
-                    <div class="mb-3 flex items-center gap-2 px-1">
-                        <span class="h-2.5 w-2.5 rounded-full {{ $col['dot'] }}"></span>
-                        <span class="text-sm font-bold text-navy-900">{{ $col['label'] }}</span>
-                        <span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-navy-50 px-1.5 text-[0.65rem] font-bold text-navy-600">{{ $col['events']->count() }}</span>
+    {{-- ══════════ CARDS VIEW ══════════ --}}
+    @if ($view === 'cards')
+
+        {{-- Next Up — cinematic hero for whatever is live or nearest --}}
+        @if ($nextUp && $events->currentPage() === 1)
+            @php
+                $nuStage = \App\Models\Event::stageColor($nextUp->stage);
+                $nuStart = $nextUp->starts_at?->copy()->startOfDay();
+                $nuDays = $nuStart ? (int) round(now()->startOfDay()->diffInDays($nuStart, false)) : null;
+            @endphp
+            <div class="strip-dark p-0.5">
+                <div class="relative flex flex-col gap-5 overflow-hidden rounded-[1.25rem] p-6 md:flex-row md:items-center">
+                    {{-- ambient glow in the stage colour --}}
+                    <div class="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl" style="background: {{ $nuStage }}"></div>
+
+                    {{-- crest --}}
+                    <a href="{{ route('events.hub', $nextUp) }}" class="relative z-10 h-24 w-32 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/15">
+                        @if ($nextUp->avatar)
+                            <x-event-avatar :event="$nextUp" :ring="false" size="lg" class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
+                        @else
+                            <x-event-crest :event="$nextUp" class="h-full w-full" />
+                        @endif
+                    </a>
+
+                    {{-- identity --}}
+                    <div class="relative z-10 min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="eyebrow-gold">{{ $nextUpLive ? 'Happening now' : 'Next up' }}</span>
+                            @if ($nextUpLive)<span class="flex items-center gap-1 rounded-md bg-gold-400 px-1.5 py-0.5 text-eyebrow font-black uppercase tracking-wider text-navy-950"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-navy-950"></span>Live</span>@endif
+                        </div>
+                        <a href="{{ route('events.hub', $nextUp) }}" class="pf mt-1 block truncate text-2xl font-black text-white hover:text-gold-200">{{ $nextUp->name }}</a>
+                        <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-micro text-white/55">
+                            <span>{{ $nextUp->client?->name ?? str($nextUp->type)->replace('_', ' ')->title() }}</span>
+                            @if ($nextUp->city)<span class="flex items-center gap-1"><x-icon name="pin" class="h-3 w-3" />{{ $nextUp->city }}</span>@endif
+                            @if ($nextUp->starts_at)<span class="flex items-center gap-1"><x-icon name="calendar" class="h-3 w-3" />{{ $nextUp->starts_at->format('j M Y') }}</span>@endif
+                            @if ($nextUp->venue)<span class="truncate">{{ $nextUp->venue->name }}</span>@endif
+                        </p>
                     </div>
 
-                    <div data-kanban-col="{{ $bucket }}" class="min-h-[120px] space-y-3 rounded-2xl">
-                        @forelse ($col['events'] as $event)
-                            <div data-kanban-card="{{ $event->id }}" wire:key="pcard-{{ $event->id }}"
-                                 class="cursor-grab rounded-2xl border border-line bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.05)] transition hover:shadow-[0_10px_28px_rgba(15,23,42,0.10)] active:cursor-grabbing">
-                                <p class="text-[0.62rem] font-bold uppercase tracking-wide text-navy-300">EVT-{{ str_pad($event->id, 3, '0', STR_PAD_LEFT) }}</p>
-                                <a href="{{ route('events.hub', $event) }}" class="mt-0.5 block text-sm font-bold leading-snug text-navy-900 hover:text-gold-700">{{ $event->name }}</a>
-
-                                <div class="mt-2.5 flex items-center gap-2">
-                                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-navy-900 text-[0.6rem] font-bold text-gold-400">
-                                        {{ $event->client ? str($event->client->name)->explode(' ')->map(fn ($p) => mb_substr($p, 0, 1))->take(2)->implode('') : '—' }}
-                                    </span>
-                                    <span class="truncate text-xs text-muted">{{ $event->client?->name ?? 'No client' }}</span>
-                                </div>
-
-                                <div class="mt-3 flex items-center justify-between">
-                                    <span class="text-[0.7rem] text-muted">{{ $event->starts_at?->format('d M Y') }}</span>
-                                    @if ($event->starts_at)
-                                        <span class="text-[0.7rem] font-semibold {{ $event->starts_at->isPast() ? 'text-muted' : ($event->starts_at->diffInDays() <= 7 ? 'text-gold-600' : 'text-navy-500') }}">
-                                            {{ $event->starts_at->isPast() ? $event->starts_at->diffForHumans(short: true) : 'in '.(int) now()->diffInDays($event->starts_at).'d' }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                @if ($event->budget_cents > 0)
-                                    <p class="mt-2 text-sm font-bold text-navy-900">{{ number_format($event->budget_cents / 100) }} <span class="text-[0.65rem] font-semibold text-muted">JOD</span></p>
-                                @endif
-
-                                @if ($col['next'])
-                                    <button type="button" wire:click="moveStage({{ $event->id }}, '{{ $col['next'] }}')"
-                                            class="mt-3 w-full rounded-xl py-2 text-xs font-bold transition {{ $accentBtn[$col['accent']] }}">
-                                        → Move to {{ $col['nextLabel'] }}
-                                    </button>
-                                @endif
+                    {{-- stats --}}
+                    <div class="relative z-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+                        @foreach ([
+                            ['Guests', $nextUpMetrics['participants'] ? number_format($nextUpMetrics['participants']) : '—'],
+                            ['Sponsors', $nextUpMetrics['sponsors'] ?: '—'],
+                            ['Budget', $nextUpMetrics['budget_used'] !== null ? $nextUpMetrics['budget_used'].'%' : '—'],
+                        ] as [$l, $v])
+                            <div class="text-center">
+                                <p class="pf text-2xl font-black leading-none text-white">{{ $v }}</p>
+                                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wider text-white/45">{{ $l }}</p>
                             </div>
-                        @empty
-                            <div class="rounded-2xl border border-dashed border-line py-8 text-center text-[0.7rem] text-navy-300">Drop events here</div>
-                        @endforelse
+                        @endforeach
+                        <div class="hidden h-12 w-px bg-white/10 sm:block"></div>
+                        <div class="hidden items-center gap-3 sm:flex">
+                            @if ($nuDays !== null)
+                                <div class="text-center">
+                                    <p class="pf text-2xl font-black leading-none {{ $nextUpLive ? 'text-gold-300' : 'text-white' }}">{{ $nextUpLive ? 'LIVE' : ($nuDays > 0 ? $nuDays : abs($nuDays)) }}</p>
+                                    <p class="mt-1 text-eyebrow font-bold uppercase tracking-wider text-white/45">{{ $nextUpLive ? 'now' : ($nuDays > 0 ? 'days to go' : 'days ago') }}</p>
+                                </div>
+                            @endif
+                            <x-health-ring :percent="$nextUpHealth['score']" :group="$nextUpHealth['group']" size="h-14 w-14" :dark="true" />
+                        </div>
+                        <a href="{{ route('events.hub', $nextUp) }}" class="btn-gold btn-sm shrink-0">Open hub →</a>
                     </div>
                 </div>
-            @endforeach
-        </div>
-
-        @script
-        <script>
-            const initPipeline = () => {
-                document.querySelectorAll('[data-kanban-col]').forEach((col) => {
-                    if (col._sortable) return;
-                    col._sortable = window.Sortable.create(col, {
-                        group: 'pipeline',
-                        animation: 160,
-                        ghostClass: 'opacity-40',
-                        onEnd: (evt) => {
-                            if (evt.from === evt.to) return;
-                            const id = parseInt(evt.item.dataset.kanbanCard);
-                            const bucket = evt.to.dataset.kanbanCol;
-                            $wire.moveStage(id, bucket);
-                        },
-                    });
-                });
-            };
-            initPipeline();
-            Livewire.hook('morph.updated', () => initPipeline());
-        </script>
-        @endscript
-
-    {{-- ══════════ Calendar ══════════ --}}
-    @elseif ($view === 'calendar' && $calendar)
-        <div class="card overflow-hidden">
-            <div class="flex items-center justify-between border-b border-line px-5 py-3.5">
-                <h3 class="pf text-base font-bold text-navy-900">{{ $calendar['label'] }}</h3>
-                <span class="flex gap-1.5">
-                    <button type="button" wire:click="prevMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">‹</button>
-                    <button type="button" wire:click="nextMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-600 transition hover:border-gold-300">›</button>
-                </span>
             </div>
-            <div class="grid grid-cols-7 border-b border-line bg-page/60">
-                @foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dayName)
-                    <div class="px-2 py-2 text-center text-[0.62rem] font-bold uppercase tracking-wide text-muted">{{ $dayName }}</div>
-                @endforeach
+        @endif
+
+        {{-- the deck --}}
+        <div>
+            <div class="mb-3 flex items-baseline gap-2">
+                <h2 class="pf text-h1 font-bold text-navy-900">Portfolio</h2>
+                <span class="text-xs text-muted">{{ $events->total() }} {{ str('event')->plural($events->total()) }} · click a card for full detail</span>
             </div>
-            @foreach ($calendar['weeks'] as $week)
-                <div class="grid grid-cols-7 divide-x divide-line border-b border-line last:border-b-0">
-                    @foreach ($week as $day)
-                        <div @class(['min-h-28 p-1.5', 'bg-page/50' => ! $day['inMonth']])>
-                            <p @class([
-                                'mb-1 px-1 text-[0.65rem] font-semibold',
-                                'text-navy-900' => $day['inMonth'],
-                                'text-navy-300' => ! $day['inMonth'],
-                                '!text-gold-600' => $day['date']->isToday(),
-                            ])>{{ $day['date']->day }}</p>
-                            @foreach ($day['events']->take(3) as $calEvent)
-                                <a href="{{ route('events.hub', $calEvent) }}"
-                                   class="mb-1 flex w-full items-center gap-1.5 rounded-lg border border-line bg-white px-1.5 py-1 text-left transition hover:border-gold-300">
-                                    <x-event-avatar :event="$calEvent" :ring="false" size="sm" class="[&>span]:h-5 [&>span]:w-7 [&>span]:rounded" />
-                                    <span class="truncate text-[0.6rem] font-semibold text-navy-800">{{ $calEvent->name }}</span>
-                                </a>
-                            @endforeach
-                            @if ($day['events']->count() > 3)
-                                <p class="px-1 text-[0.55rem] font-semibold text-muted">+ {{ $day['events']->count() - 3 }} more</p>
-                            @endif
-                        </div>
+
+            @if ($events->isEmpty())
+                <x-empty icon="calendar" title="No events match these filters"
+                         hint="Clear the search or filters, or create a new event to get started.">
+                    <x-slot:actions>
+                        <a href="{{ route('events.create') }}" class="btn-gold btn-sm">＋ Create Event</a>
+                    </x-slot:actions>
+                </x-empty>
+            @else
+                <div class="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($events as $event)
+                        @include('livewire.partials.events.card', ['event' => $event])
                     @endforeach
                 </div>
-            @endforeach
-        </div>
+            @endif
 
-    {{-- ══════════ Grid / List + preview ══════════ --}}
-    @else
-        <div class="flex flex-col gap-5 xl:flex-row">
-            <div class="min-w-0 flex-1">
-                @if ($view === 'grid')
-                    <div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]">
-                        @forelse ($events as $event)
-                            <x-event-card :event="$event" :health="$health[$event->id]" :metrics="$metrics[$event->id]"
-                                          :selected="$selected && $selected->id === $event->id"
-                                          :favorite="in_array($event->id, $favoriteIds)" wire:key="card-{{ $event->id }}" />
-                        @empty
-                            <p class="col-span-full py-12 text-center text-sm text-muted">No events match these filters.</p>
-                        @endforelse
-                    </div>
-                @else
-                    <div class="card divide-y divide-line">
-                        @forelse ($events as $event)
-                            <div wire:key="row-{{ $event->id }}" wire:click="select({{ $event->id }})"
-                                 @class([
-                                     'flex cursor-pointer flex-col gap-4 px-6 py-5 transition sm:flex-row sm:items-center',
-                                     'bg-gold-50/60' => $selected && $selected->id === $event->id,
-                                     'hover:bg-page/60' => ! ($selected && $selected->id === $event->id),
-                                 ])>
-                                <x-event-avatar :event="$event" size="md" class="hidden sm:inline-block" />
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route('events.hub', $event) }}" wire:click.stop class="truncate text-sm font-bold text-navy-900 hover:text-gold-700">{{ $event->name }}</a>
-                                        <x-status-badge :status="$event->stage" />
-                                    </div>
-                                    <p class="mt-1 text-xs text-muted">
-                                        {{ $event->client?->name ?? 'No client' }} · {{ $event->city }}, {{ $event->country }}
-                                        @if ($event->venue) · {{ $event->venue->name }} @endif
-                                        · {{ $event->starts_at?->format('M j, Y') }}
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-6">
-                                    <div class="hidden text-right md:block">
-                                        <p class="text-xs text-muted">Budget used</p>
-                                        <p class="text-sm font-semibold text-navy-900">{{ $metrics[$event->id]['budget_used'] !== null ? $metrics[$event->id]['budget_used'].'%' : '—' }}</p>
-                                    </div>
-                                    <div class="hidden text-right md:block">
-                                        <p class="text-xs text-muted">Tasks</p>
-                                        <p class="text-sm font-semibold text-navy-900">{{ $event->tasks->count() }}</p>
-                                    </div>
-                                    <x-health-ring :percent="$health[$event->id]['score']" :group="$health[$event->id]['group']" />
-                                </div>
-                            </div>
-                        @empty
-                            <p class="px-6 py-12 text-center text-sm text-muted">No events match these filters.</p>
-                        @endforelse
-                    </div>
-                @endif
-
-                {{-- Pagination footer --}}
+            @if ($events->hasPages())
                 <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
-                    <span>Showing {{ $events->firstItem() ?? 0 }} to {{ $events->lastItem() ?? 0 }} of {{ $events->total() }} events</span>
-                    @if ($events->hasPages())
-                        <span class="flex items-center gap-1.5">
-                            <button type="button" wire:click="previousPage" @disabled($events->onFirstPage())
-                                    class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">‹</button>
-                            @foreach (range(1, $events->lastPage()) as $page)
-                                <button type="button" wire:click="gotoPage({{ $page }})"
-                                        @class([
-                                            'rounded-lg px-3 py-1.5 font-semibold transition',
-                                            'bg-gold-50 text-gold-700 ring-1 ring-gold-300' => $events->currentPage() === $page,
-                                            'border border-line bg-white text-navy-600 hover:border-gold-300' => $events->currentPage() !== $page,
-                                        ])>{{ $page }}</button>
-                            @endforeach
-                            <button type="button" wire:click="nextPage" @disabled(! $events->hasMorePages())
-                                    class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">›</button>
-                        </span>
-                    @endif
-                    <span>Show {{ \App\Livewire\EventsIndex::PER_PAGE }} per page</span>
+                    <span>Showing {{ $events->firstItem() ?? 0 }}–{{ $events->lastItem() ?? 0 }} of {{ $events->total() }}</span>
+                    <span class="flex items-center gap-1.5">
+                        <button type="button" wire:click="previousPage" @disabled($events->onFirstPage()) class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">‹</button>
+                        @foreach (range(1, $events->lastPage()) as $page)
+                            <button type="button" wire:click="gotoPage({{ $page }})"
+                                    @class(['rounded-lg px-3 py-1.5 font-semibold transition', 'bg-gold-50 text-gold-700 ring-1 ring-gold-300' => $events->currentPage() === $page, 'border border-line bg-white text-navy-600 hover:border-gold-300' => $events->currentPage() !== $page])>{{ $page }}</button>
+                        @endforeach
+                        <button type="button" wire:click="nextPage" @disabled(! $events->hasMorePages()) class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">›</button>
+                    </span>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- ══════════ CALENDAR VIEW ══════════ --}}
+    @if ($view === 'calendar' && $calendar)
+        <div class="card overflow-hidden">
+            <div class="flex items-center justify-between border-b border-line px-5 py-3.5">
+                <h2 class="pf text-h1 font-bold text-navy-900">{{ $calendar['label'] }}</h2>
+                <div class="flex items-center gap-1">
+                    <button type="button" wire:click="prevMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-500 transition hover:border-gold-300 hover:text-navy-900">‹</button>
+                    <button type="button" wire:click="nextMonth" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-navy-500 transition hover:border-gold-300 hover:text-navy-900">›</button>
                 </div>
             </div>
 
-            {{-- Preview panel --}}
-            <div class="min-w-0 xl:w-[400px] xl:shrink-0 2xl:w-[440px]">
-                @if ($selected)
-                    <div wire:key="preview-{{ $selected->id }}" class="xl:sticky xl:top-6">
-                        <x-event-preview :event="$selected" :health="$selectedHealth" :ai="$ai" />
-                    </div>
-                @endif
+            {{-- weekday header --}}
+            <div class="grid grid-cols-7 border-b border-line bg-page/40">
+                @foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $d)
+                    <div class="px-3 py-2 text-eyebrow font-bold uppercase tracking-wider text-muted">{{ $d }}</div>
+                @endforeach
+            </div>
+
+            {{-- weeks --}}
+            <div class="grid grid-cols-7">
+                @foreach ($calendar['weeks'] as $week)
+                    @foreach ($week as $day)
+                        @php $isToday = $day['date']->isToday(); @endphp
+                        <div @class([
+                            'min-h-[104px] border-b border-r border-line p-1.5 last:border-r-0',
+                            'bg-white' => $day['inMonth'],
+                            'bg-page/40' => ! $day['inMonth'],
+                        ])>
+                            <div class="mb-1 flex justify-end">
+                                <span @class([
+                                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                                    'bg-gold-400 text-navy-950' => $isToday,
+                                    'text-navy-700' => ! $isToday && $day['inMonth'],
+                                    'text-navy-300' => ! $day['inMonth'],
+                                ])>{{ $day['date']->day }}</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach ($day['events']->take(3) as $ev)
+                                    @php $evHex = \App\Models\Event::stageColor($ev->stage); @endphp
+                                    <a href="{{ route('events.hub', $ev) }}"
+                                       class="flex items-center gap-1.5 truncate rounded-md px-1.5 py-1 text-eyebrow font-bold text-navy-700 transition hover:bg-page"
+                                       style="background: color-mix(in srgb, {{ $evHex }} 12%, transparent)"
+                                       title="{{ $ev->name }}">
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ $evHex }}"></span>
+                                        <span class="truncate">{{ $ev->name }}</span>
+                                    </a>
+                                @endforeach
+                                @if ($day['events']->count() > 3)
+                                    <p class="px-1.5 text-eyebrow font-bold text-muted">+{{ $day['events']->count() - 3 }} more</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                @endforeach
             </div>
         </div>
     @endif

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=playfair-display:500,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=spectral:500,600,700,800&display=swap" rel="stylesheet">
     <style>{!! $css !!}</style>
     <style>
         @page { size: A4; margin: 0; }
@@ -12,7 +12,7 @@
         .sheet { width: 794px; margin: 0 auto; }
         .sec-head { break-after: avoid; }   /* never orphan a heading at a page foot */
         .avoid { break-inside: avoid; }     /* keep individual rows/cards intact */
-        .pf { font-family: 'Playfair Display', Georgia, serif; }
+        .pf { font-family: 'Spectral', Georgia, serif; }
     </style>
     @php
         $meta = $data['meta'] ?? [];
@@ -90,7 +90,7 @@
                         @foreach ($data[$key] ?? [] as $row)
                             <div class="avoid rounded-2xl border border-line bg-gradient-to-br from-page/60 to-white p-4">
                                 <div class="pf text-[1.7rem] font-bold leading-none text-navy-900">{{ $row['target'] ?? '' }}</div>
-                                <div class="mt-2 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-navy-400">{{ $row['kpi'] ?? '' }}</div>
+                                <div class="mt-2 text-3xs font-bold uppercase tracking-[0.1em] text-navy-400">{{ $row['kpi'] ?? '' }}</div>
                                 <span class="mt-2.5 block h-0.5 w-8 rounded-full bg-gold-400"></span>
                             </div>
                         @endforeach

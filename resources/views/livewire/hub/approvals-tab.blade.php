@@ -7,18 +7,18 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="field-label !mb-1 !text-[0.62rem]" for="a-title">What needs approval?</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="a-title">What needs approval?</label>
                 <input id="a-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Revised catering budget">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="a-type">Type</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="a-type">Type</label>
                 <select id="a-type" wire:model="type" class="input h-10 text-sm">
                     @foreach (\App\Models\EventApproval::TYPES as $typeOption)<option value="{{ $typeOption }}">{{ str($typeOption)->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="a-notes">Notes</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="a-notes">Notes</label>
                 <input id="a-notes" type="text" wire:model="notes" class="input h-10 text-sm" placeholder="Optional context">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
@@ -33,21 +33,29 @@
             <h3 class="mb-4 pf text-base font-bold text-navy-900">Pending Approval ({{ $pending->count() }})</h3>
             <ul class="space-y-3">
                 @forelse ($pending as $approval)
-                    <li class="rounded-xl border border-[#3B82F6]/30 bg-[#3B82F6]/5 px-4 py-3">
+                    <li class="rounded-xl border border-[var(--color-info)]/30 bg-[var(--color-info)]/5 px-4 py-3">
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
-                            <span class="rounded-full bg-[#3B82F6]/10 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-blue-700">{{ $approval->type }}</span>
+                            <span class="rounded-full bg-[var(--color-info)]/10 px-2 py-0.5 text-eyebrow font-bold uppercase text-blue-700">{{ $approval->type }}</span>
                         </div>
                         <p class="mt-1 text-xs text-muted">Requested by {{ $approval->requester?->name ?? '—' }} · {{ $approval->created_at->diffForHumans() }}</p>
                         @if ($approval->notes)<p class="mt-1 text-xs text-muted">{{ $approval->notes }}</p>@endif
-                        <div class="mt-2.5 flex gap-2">
-                            <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
-                                    class="rounded-lg bg-track/10 px-3 py-1.5 text-[0.65rem] font-bold text-emerald-700 transition hover:bg-track/20">✓ Approve</button>
-                            <button type="button" wire:click="decide({{ $approval->id }}, 'rejected')"
-                                    class="rounded-lg bg-risk/10 px-3 py-1.5 text-[0.65rem] font-bold text-red-700 transition hover:bg-risk/20">✕ Reject</button>
-                            <button type="button" wire:click="decide({{ $approval->id }}, 'needs_revision')"
-                                    class="rounded-lg bg-warn/10 px-3 py-1.5 text-[0.65rem] font-bold text-amber-700 transition hover:bg-warn/20">↺ Needs Revision</button>
-                        </div>
+                        @can('decide-approvals')
+                            @if ($approval->requested_by === auth()->id())
+                                <p class="mt-2.5 text-eyebrow font-semibold text-muted">You raised this — a different manager decides it.</p>
+                            @else
+                                <div class="mt-2.5 flex gap-2">
+                                    <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
+                                            class="rounded-lg bg-track/10 px-3 py-1.5 text-eyebrow font-bold text-emerald-700 transition hover:bg-track/20">✓ Approve</button>
+                                    <button type="button" wire:click="decide({{ $approval->id }}, 'rejected')"
+                                            class="rounded-lg bg-risk/10 px-3 py-1.5 text-eyebrow font-bold text-red-700 transition hover:bg-risk/20">✕ Reject</button>
+                                    <button type="button" wire:click="decide({{ $approval->id }}, 'needs_revision')"
+                                            class="rounded-lg bg-warn/10 px-3 py-1.5 text-eyebrow font-bold text-amber-700 transition hover:bg-warn/20">↺ Needs Revision</button>
+                                </div>
+                            @endif
+                        @else
+                            <p class="mt-2.5 text-eyebrow text-muted">Awaiting a manager's decision.</p>
+                        @endcan
                     </li>
                 @empty
                     <li class="text-xs text-muted">Nothing awaiting approval.</li>

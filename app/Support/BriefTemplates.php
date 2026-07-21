@@ -5,9 +5,10 @@ namespace App\Support;
 /**
  * Content sets for the 5 Event Brief templates.
  *
- * All templates share ONE design + the same 16-section spine (see EventBrief::SECTIONS).
- * Only the content differs: event type, summary, objectives, KPIs, audience, components,
- * venue, operations, risks, budget and milestones.
+ * All templates share ONE design + the same 12-section spine (see EventBrief::SECTIONS).
+ * defaultData() reads: type, overview, audience, components, venue, budget, risks, success.
+ * (Older 'objectives' / 'operational' / 'milestones' keys remain in the arrays below but
+ * are no longer consumed — the trimmed 12-section brief ignores them.)
  */
 class BriefTemplates
 {
@@ -63,7 +64,7 @@ class BriefTemplates
     {
         return [
             'type' => 'International Summit & Conference',
-            'exec_summary' => "The {$name} is a high-level regional platform bringing together government leaders, policymakers, "
+            'overview' => "The {$name} is a high-level regional platform bringing together government leaders, policymakers, "
                 .'international organizations, academia, private sector representatives, and development partners. The summit will feature '
                 .'keynote addresses, plenary sessions, parallel knowledge tracks, workshops, an exhibition of partner initiatives, a VIP '
                 .'programme, and structured networking. This Event Brief defines the project direction, success measures, operational '
@@ -76,7 +77,7 @@ class BriefTemplates
                 'Generate meaningful media visibility and stakeholder engagement.',
                 'Attract sponsors, exhibitors, and strategic partners.',
             ],
-            'kpis' => self::kpi([
+            'success' => self::kpi([
                 ['Registered Delegates', '1,500'], ['Actual Attendance', '90%+'], ['VIP Attendance', '120'],
                 ['Speakers', '40'], ['Sponsors', '15'], ['Session Attendance', '75%+'],
                 ['Participant Satisfaction', '4.6 / 5'], ['Media Mentions', '100+'], ['Net Promoter Score', '60+'],
@@ -138,7 +139,7 @@ class BriefTemplates
     {
         return [
             'type' => 'Exhibition & Expo',
-            'exec_summary' => "The {$name} is a business-to-business exhibition bringing together exhibitors, sponsors, government "
+            'overview' => "The {$name} is a business-to-business exhibition bringing together exhibitors, sponsors, government "
                 .'entities, and trade visitors around a curated show floor. The event combines a booth-based exhibition, an innovation and '
                 .'demo zone, partner activations, and a structured lead-generation and business-matchmaking programme. This Event Brief '
                 .'defines the show concept, commercial targets, floor and operational requirements, and the governance needed to begin '
@@ -159,7 +160,7 @@ class BriefTemplates
                 'Industry associations, media, and analysts.',
                 'Start-ups, innovators, and technology providers.',
             ],
-            'kpis' => self::kpi([
+            'success' => self::kpi([
                 ['Exhibitors', '120'], ['Trade Visitors', '6,000'], ['Booth Occupancy', '95%+'],
                 ['Leads Generated', '4,000+'], ['Business Meetings', '500+'], ['Booth Revenue', 'Target'],
                 ['Exhibitor Satisfaction', '4.5 / 5'], ['Sponsor Satisfaction', '4.5 / 5'], ['Media Mentions', '80+'],
@@ -214,7 +215,7 @@ class BriefTemplates
     {
         return [
             'type' => 'Workshop & Training Programme',
-            'exec_summary' => "The {$name} is a structured capacity-building programme designed to deliver measurable learning outcomes "
+            'overview' => "The {$name} is a structured capacity-building programme designed to deliver measurable learning outcomes "
                 .'for a defined participant group. The programme combines expert facilitation, interactive exercises, group work, and '
                 .'assessment, with certification on completion. This Event Brief defines the learning objectives, participant profile, '
                 .'delivery methodology, materials, evaluation approach, and the operational requirements needed to deliver the training.',
@@ -233,7 +234,7 @@ class BriefTemplates
                 'Partner-organization delegates and sponsored participants.',
                 'Observers, mentors, and programme stakeholders.',
             ],
-            'kpis' => self::kpi([
+            'success' => self::kpi([
                 ['Enrolled Participants', '40'], ['Attendance Rate', '95%+'], ['Completion Rate', '90%+'],
                 ['Knowledge Improvement', '+30%'], ['Participant Satisfaction', '4.6 / 5'], ['Trainer Rating', '4.7 / 5'],
                 ['Certificates Issued', '100%'], ['Assessment Pass Rate', '85%+'], ['Learning Outcomes Met', '90%+'],
@@ -286,7 +287,7 @@ class BriefTemplates
     {
         return [
             'type' => 'Gala Dinner & Awards Ceremony',
-            'exec_summary' => "The {$name} is a premium evening event combining a formal reception, a seated dinner, and a stage "
+            'overview' => "The {$name} is a premium evening event combining a formal reception, a seated dinner, and a stage "
                 .'programme with awards and entertainment. The event is designed around the guest journey — arrival and welcome, reception, '
                 .'dinner service, ceremony, and departure — with full protocol handling for VIP guests. This Event Brief defines the concept, '
                 .'guest profile, seating and protocol requirements, ceremony flow, and the production standards required to deliver a flawless evening.',
@@ -305,7 +306,7 @@ class BriefTemplates
                 'Sponsors, partners, and honoured guests.',
                 'Media, photographers, and content teams.',
             ],
-            'kpis' => self::kpi([
+            'success' => self::kpi([
                 ['Confirmed Guests', '400'], ['VIP Attendance', '60'], ['Seating Accuracy', '100%'],
                 ['Programme Timing Accuracy', '±5 min'], ['Guest Satisfaction', '4.7 / 5'], ['Protocol Compliance', '100%'],
                 ['Sponsor Visibility Delivered', '100%'], ['Media / Photo Coverage', 'Full'], ['Client Satisfaction', '4.8 / 5'],
@@ -360,7 +361,7 @@ class BriefTemplates
     {
         return [
             'type' => 'Festival & Public Event',
-            'exec_summary' => "The {$name} is a large-scale public event delivered across a managed site with multiple stages, activation "
+            'overview' => "The {$name} is a large-scale public event delivered across a managed site with multiple stages, activation "
                 .'zones, food and beverage areas, and sponsor experiences. Public safety, crowd management, and authority compliance are '
                 .'central to delivery. This Event Brief defines the concept, expected footfall, site and zoning plan, safety and emergency '
                 .'framework, and the operational requirements needed to secure permits and begin site planning.',
@@ -380,7 +381,7 @@ class BriefTemplates
                 'Vendors, performers, and community groups.',
                 'Media, content creators, and local authorities.',
             ],
-            'kpis' => self::kpi([
+            'success' => self::kpi([
                 ['Total Footfall', '25,000'], ['Peak Attendance', '8,000'], ['Ticket Sales', 'Target'],
                 ['Crowd Flow Efficiency', 'No bottlenecks'], ['Incident Rate', 'Zero major'], ['Vendor Sales', 'Target'],
                 ['Sponsor Engagement', '4.5 / 5'], ['Public Satisfaction', '4.5 / 5'], ['Social Media Reach', '1M+'],

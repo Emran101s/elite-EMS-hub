@@ -17,8 +17,7 @@ class CommandSpine extends Component
     {
         // Live event radar — same computed health score as the hubs/islands.
         $radar = Event::with(['tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'avatar'])
-            ->whereNull('archived_at')
-            ->whereNot('status', 'completed')
+            ->active()
             ->orderBy('starts_at')
             ->get()
             ->map(function (Event $event) {

@@ -22,9 +22,8 @@
         @elseif ($avatar && view()->exists('components.avatars.' . $avatar->slug))
             <x-dynamic-component :component="'avatars.' . $avatar->slug" class="h-full w-full" />
         @else
-            <span class="flex h-full w-full items-center justify-center text-navy-300">
-                <x-icon name="calendar" class="h-5 w-5" />
-            </span>
+            {{-- No upload and no built-in scene: generate a crest so every event still has a mark. --}}
+            <x-event-crest :event="$event" :name="$avatar?->name ?? $event?->name" :type="$event?->type" class="h-full w-full" />
         @endif
     </span>
 
@@ -34,7 +33,7 @@
             $ringGroup = $group ?? $event->healthGroup();
         @endphp
         <span class="absolute -bottom-2 -right-2 rounded-full bg-white p-0.5 shadow ring-1 ring-line"
-              title="{{ $ringPercent }}% · {{ str($event->status)->replace('_', ' ')->title() }}">
+              title="{{ $ringPercent }}% · {{ str($event->stage)->replace('_', ' ')->title() }}">
             <x-health-ring :percent="$ringPercent" :group="$ringGroup"
                            :label="$size === 'lg' || $size === 'xl'"
                            :size="$size === 'lg' || $size === 'xl' ? 'h-10 w-10' : 'h-6 w-6'" />

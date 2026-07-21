@@ -152,6 +152,38 @@ class AttendeesTab extends Component
         ]);
     }
 
+    /* ── Check-in mode: the door on show day ── */
+
+    /** Full-screen arrival flow — search, tap, next person in line. */
+    public bool $checkinMode = false;
+
+    /** Walk-in quick registration. */
+    public string $walkinName = '';
+
+    public string $walkinOrg = '';
+
+    public function toggleCheckinMode(): void
+    {
+        $this->checkinMode = ! $this->checkinMode;
+        $this->reset(['search', 'filterStatus', 'filterTicket', 'showForm', 'showImport']);
+    }
+
+    /** Someone at the door who never registered — capture and admit in one tap. */
+    public function walkIn(): void
+    {
+        $this->validate(['walkinName' => ['required', 'string', 'max:120']]);
+
+        $this->event->attendees()->create([
+            'name' => trim($this->walkinName),
+            'organization' => trim($this->walkinOrg) ?: null,
+            'ticket_type' => 'Walk-in',
+            'status' => 'checked_in',
+            'checked_in_at' => now(),
+        ]);
+
+        $this->reset(['walkinName', 'walkinOrg']);
+    }
+
     public function import(): void
     {
         $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:8192']]);
@@ -181,29 +213,60 @@ class AttendeesTab extends Component
         $cPhone = $find(['phone', 'mobile', 'tel'], null);
         $cTicket = $find(['ticket', 'type', 'category'], null);
         $cAmount = $find(['amount', 'fee', 'price', 'paid'], null);
+        $cTitle = $find(['job', 'title', 'position', 'role'], null);
+        $cDiet = $find(['diet', 'allerg', 'meal'], null);
+        $cVip = $find(['vip'], null);
+        $cNotes = $find(['note', 'comment', 'remark'], null);
+
+        $cell = fn (array $row, ?int $i) => $i !== null ? (trim((string) ($row[$i] ?? '')) ?: null) : null;
 
         $imported = 0;
+        $updated = 0;
         foreach ($rows as $row) {
             $name = trim((string) ($row[$cName] ?? ''));
             if ($name === '') {
                 continue;
             }
+
             $amount = $cAmount !== null ? (float) preg_replace('/[^0-9.]/', '', (string) ($row[$cAmount] ?? '')) : 0;
-            $this->event->attendees()->create([
+            $vip = $cVip !== null
+                && in_array(mb_strtolower((string) ($row[$cVip] ?? '')), ['1', 'y', 'yes', 'true', 'vip'], true);
+
+            $data = array_filter([
                 'name' => mb_substr($name, 0, 160),
-                'email' => $cEmail !== null ? (trim((string) ($row[$cEmail] ?? '')) ?: null) : null,
-                'phone' => $cPhone !== null ? (trim((string) ($row[$cPhone] ?? '')) ?: null) : null,
-                'organization' => $cOrg !== null ? (trim((string) ($row[$cOrg] ?? '')) ?: null) : null,
-                'ticket_type' => $cTicket !== null ? (trim((string) ($row[$cTicket] ?? '')) ?: 'Delegate') : 'Delegate',
+                'email' => $cell($row, $cEmail),
+                'phone' => $cell($row, $cPhone),
+                'organization' => $cell($row, $cOrg),
+                'job_title' => $cell($row, $cTitle),
+                'dietary' => $cell($row, $cDiet),
+                'notes' => $cell($row, $cNotes),
+                'ticket_type' => $cell($row, $cTicket) ?: 'Delegate',
                 'amount_cents' => (int) round($amount * 100),
-                'status' => 'registered',
-            ]);
+            ], fn ($v) => $v !== null);
+
+            // Re-importing a corrected sheet should fix the rows, not double them.
+            // Email is the reliable key; without one, fall back to the name.
+            $existing = ($email = $data['email'] ?? null)
+                ? $this->event->attendees()->whereRaw('lower(email) = ?', [mb_strtolower($email)])->first()
+                : $this->event->attendees()->whereRaw('lower(name) = ?', [mb_strtolower($name)])->first();
+
+            if ($existing) {
+                $existing->update($data + ['vip' => $vip || $existing->vip]);
+                $updated++;
+
+                continue;
+            }
+
+            $this->event->attendees()->create($data + ['vip' => $vip, 'status' => 'registered']);
             $imported++;
         }
 
         $this->showImport = false;
         $this->reset('importFile');
-        session()->flash('status', "Imported {$imported} ".str('attendee')->plural($imported).'.');
+
+        $msg = "Imported {$imported} ".str('attendee')->plural($imported);
+        $msg .= $updated ? ", updated {$updated} existing." : '.';
+        session()->flash('status', $msg);
     }
 
     private function readRows($file): array
@@ -237,8 +300,19 @@ class AttendeesTab extends Component
         $capacity = (int) ($this->event->expected_participants ?? 0);
         $registered = $active->count();
 
+        // Door view: the queue you're actually working — arrivals pending first,
+        // matching the search, checked-in sinking to the bottom.
+        $doorList = $this->checkinMode
+            ? $active
+                ->when($this->search !== '', fn ($c) => $c->filter(fn ($a) => str_contains(mb_strtolower($a->name.' '.$a->email.' '.$a->organization), mb_strtolower($this->search))))
+                ->sortBy(fn ($a) => [$a->status === 'checked_in' ? 1 : 0, mb_strtolower($a->name)])
+                ->values()
+            : collect();
+
         return view('livewire.hub.attendees-tab', [
             'attendees' => $list,
+            'doorList' => $doorList,
+            'lastHour' => $all->filter(fn ($a) => $a->checked_in_at?->gt(now()->subHour()))->count(),
             'ticketTypes' => $this->ticketTypes(),
             'stats' => [
                 'registered' => $registered,

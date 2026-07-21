@@ -53,7 +53,7 @@
                 <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-navy-50">
                     <div @class(['h-full rounded-full', 'bg-risk' => $pct <= 30, 'bg-warn' => $pct > 30 && $pct < 81, 'bg-track' => $pct >= 81]) style="width: {{ $pct }}%"></div>
                 </div>
-                <span class="text-[0.6rem] font-bold text-navy-500">{{ $pct }}%</span>
+                <span class="text-3xs font-bold text-navy-500">{{ $pct }}%</span>
             </div>
             @if ($supplier->pivot->notes)
                 <p class="mt-2 rounded-lg bg-page/60 px-2.5 py-1.5 text-[0.68rem] text-navy-700">{{ $supplier->pivot->notes }}</p>

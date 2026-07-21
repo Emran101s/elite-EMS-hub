@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 #[Fillable(['event_id', 'agenda_day_id', 'room_id', 'title', 'type', 'format', 'capacity', 'status', 'flagged', 'starts_at', 'ends_at', 'speaker', 'moderator', 'track', 'description', 'sort'])]
 class EventAgendaSession extends Model
@@ -14,6 +16,40 @@ class EventAgendaSession extends Model
     public const FORMATS = ['in_person' => 'In person', 'hybrid' => 'Hybrid', 'virtual' => 'Virtual'];
 
     public const STATUSES = ['draft', 'confirmed', 'waiting_speaker', 'needs_review', 'final'];
+
+    /** status => [label, settled?, hex] — only settled sessions are safe to publish. */
+    public const STATUS_META = [
+        'draft' => ['Draft', false, '#94A3B8'],
+        'waiting_speaker' => ['Awaiting speaker', false, '#F59E0B'],
+        'needs_review' => ['Needs review', false, '#F97316'],
+        'confirmed' => ['Confirmed', true, '#10B981'],
+        'final' => ['Final', true, '#22C55E'],
+    ];
+
+    public function statusHex(): string
+    {
+        return self::STATUS_META[$this->status][2] ?? '#94A3B8';
+    }
+
+    /** A settled session is agreed and safe to put in front of a delegate. */
+    public function isSettled(): bool
+    {
+        return self::STATUS_META[$this->status][1] ?? false;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_META[$this->status][0] ?? ucfirst((string) $this->status);
+    }
+
+    /** Speaking roles on a session, in billing order (moderator leads the panel). */
+    public const SPEAKER_ROLES = [
+        'keynote' => 'Keynote',
+        'moderator' => 'Moderator',
+        'panelist' => 'Panellist',
+        'facilitator' => 'Facilitator',
+        'host' => 'Host',
+    ];
 
     protected function casts(): array
     {
@@ -33,5 +69,42 @@ class EventAgendaSession extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(EventRoom::class, 'room_id');
+    }
+
+    /** Roster speakers on this session, each carrying a `role` on the pivot. */
+    public function speakers(): BelongsToMany
+    {
+        return $this->belongsToMany(EventSpeaker::class, 'agenda_session_speaker', 'agenda_session_id', 'speaker_id')
+            ->withPivot(['role', 'sort'])
+            ->withTimestamps()
+            ->orderBy('agenda_session_speaker.sort');
+    }
+
+    /** Speakers grouped by role, ordered as SPEAKER_ROLES declares. */
+    public function speakersByRole(): Collection
+    {
+        return $this->speakers
+            ->groupBy(fn ($s) => $s->pivot->role)
+            ->sortBy(fn ($group, $role) => array_search($role, array_keys(self::SPEAKER_ROLES), true));
+    }
+
+    /**
+     * One-line billing for cards and print, e.g.
+     * "Moderator: Dr Salim · Panellists: A, B, C".
+     */
+    public function speakerLine(): string
+    {
+        if ($this->speakers->isEmpty()) {
+            return trim(collect([$this->speaker, $this->moderator])->filter()->implode(' · '));
+        }
+
+        return $this->speakersByRole()
+            ->map(function ($group, $role) {
+                $label = self::SPEAKER_ROLES[$role] ?? ucfirst($role);
+                $label = $group->count() > 1 ? str($label)->plural()->toString() : $label;
+
+                return $label.': '.$group->pluck('name')->implode(', ');
+            })
+            ->implode(' · ');
     }
 }

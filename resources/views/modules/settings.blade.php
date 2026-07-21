@@ -3,13 +3,14 @@
         $sections = [
             ['glyph' => '🖼', 'title' => 'Event Avatars', 'desc' => 'Cover visuals each event uses as its identity. Upload your own.', 'route' => 'settings.avatars', 'live' => true],
             ['glyph' => '🎛', 'title' => 'Equipment Catalog', 'desc' => 'Reusable equipment & prices for venues and events.', 'route' => 'requirements.index', 'live' => true],
-            ['glyph' => '📍', 'title' => 'Venues', 'desc' => 'Your venue library — layouts, equipment and costs.', 'route' => 'venues.index', 'live' => true],
+            ['glyph' => '📍', 'title' => 'Venues & Locations', 'desc' => 'Your library of hotels, halls and sites — reused by every event.', 'route' => 'venues.index', 'live' => true],
             ['glyph' => '🚚', 'title' => 'Suppliers', 'desc' => 'Supplier directory shared across all events.', 'route' => 'suppliers.index', 'live' => true],
             ['glyph' => '👥', 'title' => 'Team & Roles', 'desc' => 'Members, roles and profile photos.', 'route' => 'team.index', 'live' => true],
             ['glyph' => '🤝', 'title' => 'Clients', 'desc' => 'Your client directory — events attach to a client.', 'route' => 'clients.index', 'live' => true],
             ['glyph' => '🏆', 'title' => 'Sponsorship Packages', 'desc' => 'Default sponsorship tiers, prices, slots & benefits.', 'route' => 'sponsor-packages.index', 'live' => true],
             ['glyph' => '🏢', 'title' => 'Company Profile', 'desc' => 'Brand, logo, default currency & timezone.', 'route' => 'company.index', 'live' => true],
             ['glyph' => '⚙️', 'title' => 'Defaults & Templates', 'desc' => 'Default budget categories & management fee for new events.', 'route' => 'defaults.index', 'live' => true],
+            ['glyph' => '🚐', 'title' => 'Transport Types', 'desc' => 'Vehicles and their capacity, plus the services you offer.', 'route' => 'transport-settings.index', 'live' => true],
         ];
     @endphp
 

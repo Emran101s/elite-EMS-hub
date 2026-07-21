@@ -7,37 +7,37 @@
     @if ($showForm)
         <form wire:submit="save" class="card mb-5 grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-title">Risk</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-title">Risk</label>
                 <input id="r-title" type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Venue contract pending signature">
                 @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-cat">Category</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-cat">Category</label>
                 <select id="r-cat" wire:model="category" class="input h-10 text-sm">
                     @foreach (\App\Models\EventRisk::CATEGORIES as $categoryOption)<option value="{{ $categoryOption }}">{{ str($categoryOption)->replace('_', ' ')->title() }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-owner">Owner</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-owner">Owner</label>
                 <select id="r-owner" wire:model="owner_id" class="input h-10 text-sm">
                     <option value="">—</option>
                     @foreach ($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-prob">Probability (1–5)</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-prob">Probability (1–5)</label>
                 <select id="r-prob" wire:model="probability" class="input h-10 text-sm">
                     @foreach (range(1, 5) as $n)<option value="{{ $n }}">{{ $n }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-imp">Impact (1–5)</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-imp">Impact (1–5)</label>
                 <select id="r-imp" wire:model="impact" class="input h-10 text-sm">
                     @foreach (range(1, 5) as $n)<option value="{{ $n }}">{{ $n }}</option>@endforeach
                 </select>
             </div>
             <div class="sm:col-span-2">
-                <label class="field-label !mb-1 !text-[0.62rem]" for="r-mit">Mitigation plan</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="r-mit">Mitigation plan</label>
                 <input id="r-mit" type="text" wire:model="mitigation" class="input h-10 text-sm" placeholder="What are we doing about it?">
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
@@ -48,7 +48,7 @@
     @endif
 
     <div class="card divide-y divide-line">
-        <div class="hidden grid-cols-12 gap-3 px-6 py-3 text-[0.65rem] font-semibold uppercase tracking-wide text-muted md:grid">
+        <div class="hidden grid-cols-12 gap-3 px-6 py-3 text-eyebrow font-semibold uppercase tracking-wide text-muted md:grid">
             <span class="col-span-4">Risk</span>
             <span class="col-span-2">Category</span>
             <span class="col-span-2 text-center">Severity (P×I)</span>
@@ -75,12 +75,12 @@
                     <x-status-badge :status="$risk->status" />
                     @if ($risk->isOpen())
                         <span class="flex gap-1 opacity-0 transition group-hover/risk:opacity-100">
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'mitigated')" class="rounded-lg bg-track/10 px-2 py-1 text-[0.6rem] font-bold text-emerald-700 hover:bg-track/20" title="Mark mitigated">✓</button>
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'escalated')" class="rounded-lg bg-risk/10 px-2 py-1 text-[0.6rem] font-bold text-red-700 hover:bg-risk/20" title="Escalate">▲</button>
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'closed')" class="rounded-lg bg-navy-50 px-2 py-1 text-[0.6rem] font-bold text-navy-600 hover:bg-navy-100" title="Close">✕</button>
+                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'mitigated')" class="rounded-lg bg-track/10 px-2 py-1 text-eyebrow font-bold text-emerald-700 hover:bg-track/20" title="Mark mitigated">✓</button>
+                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'escalated')" class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Escalate">▲</button>
+                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'closed')" class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Close">✕</button>
                         </span>
                     @else
-                        <button type="button" wire:click="setStatus({{ $risk->id }}, 'open')" class="rounded-lg bg-navy-50 px-2 py-1 text-[0.6rem] font-bold text-navy-600 opacity-0 transition hover:bg-navy-100 group-hover/risk:opacity-100" title="Reopen">↺</button>
+                        <button type="button" wire:click="setStatus({{ $risk->id }}, 'open')" class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 opacity-0 transition hover:bg-navy-100 group-hover/risk:opacity-100" title="Reopen">↺</button>
                     @endif
                 </div>
             </div>

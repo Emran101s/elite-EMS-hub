@@ -190,6 +190,7 @@ class BudgetTab extends Component
 
     public function approveBudget(): void
     {
+        \Illuminate\Support\Facades\Gate::authorize('manage-budget');
         $v = $this->event->budgetVersions()->where('status', 'pending')->orderByDesc('version')->first();
         if (! $v) {
             return;

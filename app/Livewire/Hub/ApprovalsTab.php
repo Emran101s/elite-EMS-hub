@@ -46,9 +46,17 @@ class ApprovalsTab extends Component
 
     public function decide(int $approvalId, string $decision)
     {
+        \Illuminate\Support\Facades\Gate::authorize('decide-approvals');
         abort_unless(in_array($decision, ['approved', 'rejected', 'needs_revision'], true), 422);
 
         $approval = $this->event->approvals()->whereKey($approvalId)->where('status', 'pending')->firstOrFail();
+
+        // Nobody signs off their own request — not even a manager.
+        if ($approval->requested_by === auth()->id()) {
+            session()->flash('status', 'You raised this request — a different manager has to decide it.');
+
+            return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
+        }
 
         $approval->update([
             'status' => $decision,

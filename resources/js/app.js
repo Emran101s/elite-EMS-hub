@@ -9,3 +9,25 @@ window.Sortable = Sortable;
 // html2canvas for in-app pages where the SVG-foreignObject path is unreliable (floor plan).
 window.htmlToImage = htmlToImage;
 window.html2canvas = html2canvas;
+
+// ── Right-edge docks ──────────────────────────────────────────────────────
+// One store coordinates every dock so only one panel is ever open at a time.
+document.addEventListener('alpine:init', () => {
+    window.Alpine.store('dock', {
+        // Deliberately not persisted: a reload should give you a clean page, not
+        // a panel you left open three navigations ago sitting over your work.
+        open: null,
+
+        is(id) {
+            return this.open === id;
+        },
+
+        toggle(id) {
+            this.open = this.open === id ? null : id;
+        },
+
+        close() {
+            this.open = null;
+        },
+    });
+});

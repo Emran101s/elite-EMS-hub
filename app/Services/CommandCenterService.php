@@ -36,8 +36,10 @@ class CommandCenterService
             'events' => Event::whereNull('archived_at')->count(),
             'projects' => Project::where('status', 'active')->count(),
             'budget' => (int) Event::whereNull('archived_at')->sum('budget_cents'),
-            'openTasks' => Task::whereNot('status', 'completed')->count(),
-            'atRisk' => Event::whereNull('archived_at')->whereIn('status', ['at_risk', 'behind'])->count(),
+            'openTasks' => Task::whereNot('status', 'done')->count(),
+            'atRisk' => Event::active()->get()
+                ->filter(fn (Event $e) => in_array($this->healthService->breakdown($e)['status'], ['at_risk', 'behind'], true))
+                ->count(),
         ];
     }
 
@@ -48,7 +50,7 @@ class CommandCenterService
     public function islands(): Collection
     {
         $events = Event::with(['venue', 'avatar', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
-            ->whereNull('archived_at')->whereNot('status', 'completed')->orderBy('starts_at')->get();
+            ->active()->orderBy('starts_at')->get();
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {
@@ -81,22 +83,141 @@ class CommandCenterService
     }
 
     /**
+     * The platform orbit: every active event's tasks on the six stages.
+     * Each node carries a couple of real previews for the floating cards.
+     */
+    public function taskOrbit(): array
+    {
+        $tasks = Task::with(['event', 'assignee'])
+            ->whereHas('event', fn ($q) => $q->active())
+            ->get();
+
+        return collect(Task::STAGES)->keys()->values()->map(function ($status, $i) use ($tasks) {
+            [$label, $hex] = Task::STAGES[$status];
+            $members = $tasks->where('status', $status);
+            $angle = deg2rad(-90 + $i * 60);
+
+            return [
+                'status' => $status,
+                'label' => $label,
+                'hex' => $hex,
+                'count' => $members->count(),
+                'blocked' => 0,
+                'x' => round(50 + 38 * cos($angle), 2),
+                'y' => round(50 + 38 * sin($angle), 2),
+                'angle' => -90 + $i * 60,
+                'previews' => $members->sortBy(fn ($t) => $t->due_on?->timestamp ?? PHP_INT_MAX)->take(2)->values(),
+            ];
+        })->all();
+    }
+
+    /**
+     * The intelligence core: one health picture across every active event,
+     * from the same engine each hub shows.
+     */
+    public function platformCore(): array
+    {
+        $events = Event::active()->get();
+        $breakdowns = $events->map(fn ($e) => $this->healthService->breakdown($e));
+
+        $tasks = Task::whereHas('event', fn ($q) => $q->active())->get();
+        $open = $tasks->filter->isOpen();
+        $overdue = $open->filter(fn ($t) => $t->due_on && $t->due_on->lt(now()->startOfDay()))->count();
+        $risks = $events->sum(fn ($e) => $e->risks->filter->isOpen()->count());
+
+        $health = (int) round($breakdowns->avg('score') ?? 0);
+        $budgetAvg = (int) round($breakdowns->pluck('components.budget')->filter()->avg() ?? 0);
+
+        return [
+            'health' => $health,
+            'healthWord' => match (true) {
+                $health >= 81 => 'Excellent', $health >= 61 => 'Good',
+                $health >= 41 => 'At Risk', default => 'Critical',
+            },
+            'tasksPct' => $tasks->count() ? (int) round($tasks->where('status', 'done')->count() / $tasks->count() * 100) : 0,
+            'schedule' => $overdue === 0 ? 'On Track' : $overdue.' overdue',
+            'onTrack' => $overdue === 0,
+            'budgetWord' => match (true) {
+                $budgetAvg >= 81 => 'Good', $budgetAvg >= 61 => 'Fair', default => 'Strained',
+            },
+            'budgetGood' => $budgetAvg >= 61,
+            'riskWord' => match (true) {
+                $risks <= 2 => 'Low', $risks <= 5 => 'Medium', default => 'High',
+            },
+            'riskLow' => $risks <= 2,
+        ];
+    }
+
+    /** The live feed:decisions from the audit trail, newest first. */
+    public function activityFeed(int $limit = 8)
+    {
+        return \App\Models\AuditLog::with(['user', 'event'])->latest('id')->limit($limit)->get();
+    }
+
+    /**
      * Explainable alert feed: every alert names its source records.
      */
-    public function alerts(): Collection
+    /**
+     * One alert per unhealthy event — the complete set, before `alerts()` trims
+     * it for display. Kept separate so "every at-risk event raises an alert"
+     * can be verified without the presentation cap hiding some of them.
+     */
+    public function healthAlerts(): Collection
     {
         $alerts = collect();
 
-        foreach (Event::whereNull('archived_at')->whereIn('status', ['at_risk', 'behind'])->orderBy('starts_at')->get() as $event) {
+        // Health is computed, never stored — the same score the Event Hub shows.
+        foreach (Event::whereNull('archived_at')->orderBy('starts_at')
+            ->with(\App\Services\EventHealthService::RELATIONS)->get() as $event) {
+            $health = $this->healthService->breakdown($event);
+            if (! in_array($health['status'], ['at_risk', 'behind'], true)) {
+                continue;
+            }
             $alerts->push([
-                'severity' => $event->status === 'behind' ? 'risk' : 'warn',
-                'title' => $event->name.' '.($event->status === 'behind' ? 'behind schedule' : 'at risk'),
-                'detail' => $event->progress.'% complete · starts '.$event->starts_at?->diffForHumans(),
+                'severity' => $health['status'] === 'behind' ? 'risk' : 'warn',
+                'title' => $event->name.' '.($health['status'] === 'behind' ? 'behind schedule' : 'at risk'),
+                'detail' => 'health '.$health['score'].'% · starts '.$event->starts_at?->diffForHumans(),
+            ]);
+        }
+
+        return $alerts;
+    }
+
+    /**
+     * The dashboard's alert rail: health, conflicts, money and urgent tasks,
+     * risk-first and capped — it is a shortlist, not an exhaustive feed.
+     */
+    public function alerts(): Collection
+    {
+        $alerts = $this->healthAlerts();
+
+        // The same venue, person or supplier promised to two events at once.
+        foreach (app(ResourceConflicts::class)->detect() as $conflict) {
+            $alerts->push([
+                'severity' => $conflict['severity'],
+                'title' => ucfirst($conflict['type']).' double-booked: '.$conflict['label'],
+                'detail' => $conflict['detail'],
+            ]);
+        }
+
+        // Money that should have landed and hasn't — the alert that pays rent.
+        $overduePayments = \App\Models\EventContractPayment::with('event')
+            ->whereDate('due_on', '<', now())
+            ->whereColumn('paid_cents', '<', 'amount_cents')
+            ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
+            ->orderBy('due_on')
+            ->get();
+
+        foreach ($overduePayments as $p) {
+            $alerts->push([
+                'severity' => 'risk',
+                'title' => ($p->event?->name ?? 'Event').' — installment overdue',
+                'detail' => $p->label.' · '.\App\Models\Event::moneyIn($p->outstandingCents(), $p->event?->currency ?? 'USD').' outstanding since '.$p->due_on->format('M j'),
             ]);
         }
 
         $urgent = Task::with('event')
-            ->whereNot('status', 'completed')
+            ->whereNot('status', 'done')
             ->whereIn('priority', ['urgent', 'high'])
             ->whereHas('event', fn ($query) => $query->whereNull('archived_at'))
             ->orderBy('due_on')
@@ -123,15 +244,15 @@ class CommandCenterService
     public function utilization(): array
     {
         $members = max(User::count(), 1);
-        $openAssigned = Task::whereNot('status', 'completed')->whereNotNull('assignee_id')->count();
+        $openAssigned = Task::whereNot('status', 'done')->whereNotNull('assignee_id')->count();
 
         $venuesTotal = max(Venue::count(), 1);
         $venuesInUse = Venue::whereHas('events', fn ($query) => $query
-            ->whereNot('status', 'completed')
+            ->active()
             ->whereBetween('starts_at', [now(), now()->addDays(self::VENUE_WINDOW_DAYS)]))->count();
 
         $suppliersTotal = max(Supplier::count(), 1);
-        $engagements = Event::whereNot('status', 'completed')
+        $engagements = Event::active()
             ->withCount('suppliers')->get()->sum('suppliers_count');
 
         return [
@@ -165,8 +286,8 @@ class CommandCenterService
     {
         $groups = ['track' => 0, 'warn' => 0, 'risk' => 0];
 
-        foreach (Event::all() as $event) {
-            $groups[$event->healthGroup()] += $event->budget_cents;
+        foreach (Event::whereNull('archived_at')->get() as $event) {
+            $groups[$this->healthService->breakdown($event)['group']] += $event->budget_cents;
         }
 
         $total = max(array_sum($groups), 1);
@@ -183,17 +304,19 @@ class CommandCenterService
 
     public function taskCounts(): array
     {
-        return [
-            'completed' => Task::where('status', 'completed')->count(),
-            'in_progress' => Task::where('status', 'in_progress')->count(),
-            'pending' => Task::where('status', 'pending')->count(),
-        ];
+        $tasks = Task::whereHas('event', fn ($q) => $q->active())->get();
+
+        return collect(Task::STAGES)->map(function ($meta, $status) use ($tasks) {
+            [$label, $hex] = $meta;
+
+            return ['label' => $label, 'hex' => $hex, 'count' => $tasks->where('status', $status)->count()];
+        })->all();
     }
 
     public function deadlines(): Collection
     {
         return Task::with('event')
-            ->whereNot('status', 'completed')
+            ->whereNot('status', 'done')
             ->whereNotNull('due_on')
             ->orderBy('due_on')
             ->limit(4)
@@ -207,11 +330,15 @@ class CommandCenterService
 
     public function statusBars(): array
     {
+        // Event health is computed, never stored; the lifecycle lives on `stage`.
+        $active = Event::active()->get();
+        $groups = $active->groupBy(fn (Event $e) => $this->healthService->breakdown($e)['group']);
+
         $counts = [
-            'On Track' => Event::where('status', 'on_track')->count(),
-            'In Progress' => Event::whereIn('status', ['in_progress', 'planning'])->count(),
-            'At Risk' => Event::whereIn('status', ['at_risk', 'behind'])->count(),
-            'Completed' => Event::where('status', 'completed')->count(),
+            'On Track' => $groups->get('track', collect())->count(),
+            'In Progress' => $groups->get('warn', collect())->count(),
+            'At Risk' => $groups->get('risk', collect())->count(),
+            'Completed' => Event::whereNull('archived_at')->whereIn('stage', ['completed', 'closed'])->count(),
         ];
 
         return [

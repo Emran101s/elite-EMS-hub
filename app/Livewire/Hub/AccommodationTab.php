@@ -3,10 +3,20 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
-use App\Models\EventAccommodation;
+use App\Models\EventRoomBlock;
+use App\Models\Supplier;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
+/**
+ * Accommodation works in two moves:
+ *   1. Block  — the deal with the hotel: "50 rooms at this rate, these dates".
+ *   2. Rooming list — names filled into those rooms over time, until it's full.
+ *
+ * The rate lives on the block and is internal. The rooming list you send the
+ * hotel carries no money at all (see RoomingListPdfController).
+ */
 class AccommodationTab extends Component
 {
     public Event $event;
@@ -15,17 +25,26 @@ class AccommodationTab extends Component
 
     public ?int $editingId = null;
 
-    #[Validate('required|string|max:120')]
+    public ?int $expandedId = null;
+
+    // ── Block form ──────────────────────────────────────────────
+    #[Validate('required|string|max:160')]
     public string $hotel = '';
 
-    #[Validate('nullable|string|max:120')]
-    public string $guest = '';
+    #[Validate('nullable|integer|exists:suppliers,id')]
+    public ?int $supplier_id = null;
 
     #[Validate('nullable|string|max:80')]
     public string $room_type = '';
 
-    #[Validate('required|integer|min:1')]
-    public int $rooms = 1;
+    #[Validate('nullable|string|max:20')]
+    public string $occupancy = '';
+
+    #[Validate('required|integer|min:1|max:2000')]
+    public int $rooms_count = 10;
+
+    #[Validate('nullable|numeric|min:0')]
+    public string $rate = '';
 
     #[Validate('nullable|date')]
     public string $check_in = '';
@@ -33,11 +52,8 @@ class AccommodationTab extends Component
     #[Validate('nullable|date|after_or_equal:check_in')]
     public string $check_out = '';
 
-    #[Validate('nullable|numeric|min:0')]
-    public string $rate = '';
-
-    #[Validate('nullable|numeric|min:0')]
-    public string $cost = '';
+    #[Validate('nullable|date')]
+    public string $cutoff_on = '';
 
     #[Validate('required|in:held,booked,confirmed,cancelled')]
     public string $status = 'held';
@@ -48,82 +64,229 @@ class AccommodationTab extends Component
     #[Validate('nullable|string|max:400')]
     public string $notes = '';
 
-    public function newItem(): void
+    // ── Rooming-list quick add ──────────────────────────────────
+    /** @var array<int,string> keyed by block id */
+    public array $newGuest = [];
+
+    public function toggleExpand(int $id): void
     {
-        $this->reset(['editingId', 'hotel', 'guest', 'room_type', 'check_in', 'check_out', 'rate', 'cost', 'confirmation_number', 'notes']);
-        $this->rooms = 1;
+        $this->expandedId = $this->expandedId === $id ? null : $id;
+    }
+
+    public function newBlock(): void
+    {
+        $this->reset(['editingId', 'hotel', 'supplier_id', 'room_type', 'occupancy', 'rate',
+            'check_in', 'check_out', 'cutoff_on', 'confirmation_number', 'notes']);
+        $this->rooms_count = 10;
         $this->status = 'held';
+        // Default the stay to the event's own dates — the common case.
+        $this->check_in = $this->event->starts_at?->format('Y-m-d') ?? '';
+        $this->check_out = $this->event->ends_at?->format('Y-m-d') ?? '';
         $this->showForm = true;
     }
 
     public function edit(int $id): void
     {
-        $a = $this->event->accommodations()->findOrFail($id);
-        $this->editingId = $a->id;
-        $this->hotel = $a->hotel;
-        $this->guest = $a->guest ?? '';
-        $this->room_type = $a->room_type ?? '';
-        $this->rooms = max(1, $a->rooms);
-        $this->check_in = $a->check_in?->format('Y-m-d') ?? '';
-        $this->check_out = $a->check_out?->format('Y-m-d') ?? '';
-        $this->rate = $a->rate_cents ? (string) ($a->rate_cents / 100) : '';
-        $this->cost = $a->cost_cents ? (string) ($a->cost_cents / 100) : '';
-        $this->status = $a->status;
-        $this->confirmation_number = $a->confirmation_number ?? '';
-        $this->notes = $a->notes ?? '';
+        $b = $this->event->roomBlocks()->findOrFail($id);
+        $this->editingId = $b->id;
+        $this->hotel = $b->hotel;
+        $this->supplier_id = $b->supplier_id;
+        $this->room_type = $b->room_type ?? '';
+        $this->occupancy = $b->occupancy ?? '';
+        $this->rooms_count = max(1, $b->rooms_count);
+        $this->rate = $b->rate_cents ? (string) ($b->rate_cents / 100) : '';
+        $this->check_in = $b->check_in?->format('Y-m-d') ?? '';
+        $this->check_out = $b->check_out?->format('Y-m-d') ?? '';
+        $this->cutoff_on = $b->cutoff_on?->format('Y-m-d') ?? '';
+        $this->status = $b->status;
+        $this->confirmation_number = $b->confirmation_number ?? '';
+        $this->notes = $b->notes ?? '';
         $this->showForm = true;
     }
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
-
-        $rateCents = (int) round((float) ($this->rate ?: 0) * 100);
-        $rooms = max(1, $this->rooms);
-        $nights = $this->check_in && $this->check_out
-            ? max(0, \Carbon\Carbon::parse($this->check_in)->diffInDays(\Carbon\Carbon::parse($this->check_out)))
-            : 0;
-
-        // Auto-total from rate × rooms × nights when a rate is given and cost is blank.
-        $costCents = $this->cost !== ''
-            ? (int) round((float) $this->cost * 100)
-            : ($rateCents && $nights ? $rateCents * $rooms * $nights : 0);
 
         $data = [
             'hotel' => $this->hotel,
-            'guest' => $this->guest ?: null,
+            'supplier_id' => $this->supplier_id,
             'room_type' => $this->room_type ?: null,
-            'rooms' => $rooms,
+            'occupancy' => $this->occupancy ?: null,
+            'rooms_count' => max(1, $this->rooms_count),
+            'rate_cents' => (int) round((float) ($this->rate ?: 0) * 100),
             'check_in' => $this->check_in ?: null,
             'check_out' => $this->check_out ?: null,
-            'rate_cents' => $rateCents,
-            'cost_cents' => $costCents,
+            'cutoff_on' => $this->cutoff_on ?: null,
             'status' => $this->status,
             'confirmation_number' => $this->confirmation_number ?: null,
             'notes' => $this->notes ?: null,
         ];
 
-        $this->editingId
-            ? $this->event->accommodations()->findOrFail($this->editingId)->update($data)
-            : $this->event->accommodations()->create($data);
+        if ($this->editingId) {
+            $this->event->roomBlocks()->findOrFail($this->editingId)->update($data);
+        } else {
+            $data['position'] = (int) $this->event->roomBlocks()->max('position') + 1;
+            $block = $this->event->roomBlocks()->create($data);
+            $this->expandedId = $block->id;   // drop straight into its rooming list
+        }
 
         $this->showForm = false;
-        session()->flash('status', 'Accommodation saved.');
+        session()->flash('status', 'Room block saved.');
     }
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
+        // Rooming-list rows cascade with the block.
+        $this->event->roomBlocks()->whereKey($id)->delete();
+        if ($this->expandedId === $id) {
+            $this->expandedId = null;
+        }
+    }
+
+    // ── Rooming list ────────────────────────────────────────────
+
+    /** Names the next free room in the block. */
+    public function addRoom(int $blockId): void
+    {
+        Gate::authorize('write');
+        $block = $this->event->roomBlocks()->findOrFail($blockId);
+        $name = trim($this->newGuest[$blockId] ?? '');
+
+        if ($name === '') {
+            return;
+        }
+
+        if ($block->rooms()->count() >= $block->rooms_count) {
+            $this->addError('newGuest.'.$blockId, 'This block is full — raise the room count to add more.');
+
+            return;
+        }
+
+        // The attendee list is the source of names. An exact match links the two
+        // records; anything else becomes a new attendee, so the guest exists in
+        // one place and can be edited from either side.
+        $attendee = $this->event->attendees()
+            ->whereRaw('lower(name) = ?', [mb_strtolower($name)])
+            ->first();
+
+        if (! $attendee) {
+            $attendee = $this->event->attendees()->create([
+                'name' => mb_substr($name, 0, 160),
+                'ticket_type' => 'Delegate',
+                'status' => 'registered',
+            ]);
+        }
+
+        $this->event->accommodations()->create([
+            'block_id' => $block->id,
+            'attendee_id' => $attendee->id,
+            'hotel' => $block->hotel,
+            'guest' => $attendee->name,
+            'guest_email' => $attendee->email,
+            'guest_phone' => $attendee->phone,
+            'room_type' => $block->room_type,
+            'occupancy' => $block->occupancy,
+            'rooms' => 1,
+            'check_in' => $block->check_in,
+            'check_out' => $block->check_out,
+            'rate_cents' => $block->rate_cents,
+            'status' => $block->status === 'cancelled' ? 'cancelled' : 'booked',
+            'position' => (int) $block->rooms()->max('position') + 1,
+        ]);
+
+        $this->newGuest[$blockId] = '';
+    }
+
+    /** Inline field edits on a rooming-list row autosave as you leave the field. */
+    public function updateRoom(int $id, string $field, string $value): void
+    {
+        Gate::authorize('write');
+
+        // Flight details deliberately absent — those belong to Transportation,
+        // where a movement owns the flight it meets.
+        if (! in_array($field, ['guest', 'guest_email', 'guest_phone', 'sharing_with',
+            'room_type', 'occupancy', 'check_in', 'check_out',
+            'arrival_time', 'departure_time'], true)) {
+            return;
+        }
+
+        // Dates come off a date input; an unparseable value clears rather than crashes.
+        if (in_array($field, ['check_in', 'check_out'], true)) {
+            $value = $value !== '' ? (\Carbon\Carbon::hasFormat($value, 'Y-m-d') ? $value : '') : '';
+        }
+
+        if (in_array($field, ['arrival_time', 'departure_time'], true)) {
+            $value = preg_match('/^\d{2}:\d{2}$/', $value) ? $value : '';
+        }
+
+        $room = $this->event->accommodations()->findOrFail($id);
+        $room->update([$field => $value ?: null]);
+
+        // Name and contact details belong to the attendee — keep the two in step
+        // so editing here or on the Attendees tab reaches the same record.
+        if ($room->attendee && in_array($field, ['guest', 'guest_email', 'guest_phone'], true)) {
+            $room->attendee->update([
+                ['guest' => 'name', 'guest_email' => 'email', 'guest_phone' => 'phone'][$field]
+                    => $value ?: null,
+            ]);
+        }
+    }
+
+    public function deleteRoom(int $id): void
+    {
+        Gate::authorize('write');
         $this->event->accommodations()->whereKey($id)->delete();
+    }
+
+    /**
+     * Turns a pre-block booking into a real block. Group bookings made before
+     * blocks existed already carry the shape — "70 rooms at the St Regis for
+     * World Assembly delegates" — so the guest label becomes the block note
+     * and the room count carries over ready to be named.
+     */
+    public function convertToBlock(int $id): void
+    {
+        Gate::authorize('write');
+        $a = $this->event->accommodations()->whereNull('block_id')->findOrFail($id);
+
+        $block = $this->event->roomBlocks()->create([
+            'hotel' => $a->hotel,
+            'room_type' => $a->room_type,
+            'rooms_count' => max(1, $a->rooms),
+            'rate_cents' => $a->rate_cents,
+            'check_in' => $a->check_in,
+            'check_out' => $a->check_out,
+            'status' => $a->status === 'cancelled' ? 'cancelled' : $a->status,
+            'confirmation_number' => $a->confirmation_number,
+            'notes' => trim(collect([$a->guest, $a->notes])->filter()->implode(' · ')) ?: null,
+            'position' => (int) $this->event->roomBlocks()->max('position') + 1,
+        ]);
+
+        $a->delete();
+        $this->expandedId = $block->id;
+        session()->flash('status', 'Converted to a room block — ready to name guests.');
     }
 
     public function render()
     {
-        $bookings = $this->event->accommodations()->orderBy('check_in')->orderBy('id')->get();
+        $blocks = $this->event->roomBlocks()->with(['rooms', 'supplier'])->get();
+
+        // Rows that predate blocks (or were added outside one) still deserve a home.
+        $loose = $this->event->accommodations()->whereNull('block_id')->orderBy('check_in')->get();
 
         return view('livewire.hub.accommodation-tab', [
-            'bookings' => $bookings,
-            'roomNightsTotal' => $bookings->sum(fn ($b) => $b->roomNights()),
-            'costTotal' => $bookings->sum('cost_cents'),
+            'blocks' => $blocks,
+            'loose' => $loose,
+            'hotels' => Supplier::orderBy('name')->get(['id', 'name']),
+            // Names to autocomplete against; empty means "go build the list first".
+            'attendees' => $this->event->attendees()->orderBy('name')->get(['id', 'name', 'ticket_type']),
+            'roomsHeld' => $blocks->sum('rooms_count'),
+            'roomsNamed' => $blocks->sum(fn (EventRoomBlock $b) => $b->filled()),
+            'roomNightsTotal' => $blocks->sum(fn (EventRoomBlock $b) => $b->roomNights()),
+            'costTotal' => $blocks->sum(fn (EventRoomBlock $b) => $b->totalCents()),
         ]);
     }
 }

@@ -45,4 +45,10 @@ class EventExhibitor extends Model
     {
         return $this->belongsTo(EventExhibitionHall::class, 'hall_id');
     }
+
+    /** The booth this exhibitor bought, if any. */
+    public function booth(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(EventBooth::class, 'exhibitor_id');
+    }
 }

@@ -28,7 +28,7 @@
     <div class="card overflow-x-auto">
         <table class="w-full min-w-[620px]">
             <thead>
-                <tr class="border-b border-line bg-page/40 text-left text-[0.6rem] font-bold uppercase tracking-wide text-muted">
+                <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
                     <th class="px-5 py-2.5">Member</th>
                     <th class="px-3 py-2.5">Email</th>
                     <th class="px-3 py-2.5">Role</th>
@@ -43,21 +43,21 @@
                                 <x-user-avatar :user="$m" size="h-10 w-10" text="text-xs" />
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-bold text-navy-900">{{ $m->name }}
-                                        @if ($m->id === auth()->id())<span class="ml-1 text-[0.6rem] font-semibold text-muted">(you)</span>@endif
+                                        @if ($m->id === auth()->id())<span class="ml-1 text-eyebrow font-semibold text-muted">(you)</span>@endif
                                     </p>
-                                    <p class="truncate text-[0.68rem] text-muted">{{ $m->title ?: '—' }}</p>
+                                    <p class="truncate text-micro text-muted">{{ $m->title ?: '—' }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-3 py-3 text-xs text-navy-600">{{ $m->email }}</td>
                         <td class="px-3 py-3">
-                            <span class="rounded-full px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide ring-1 {{ $roleTone[$m->role] ?? 'bg-navy-50 text-navy-500 ring-line' }}">{{ $m->roleLabel() }}</span>
+                            <span class="rounded-full px-2.5 py-0.5 text-eyebrow font-bold uppercase tracking-wide ring-1 {{ $roleTone[$m->role] ?? 'bg-navy-50 text-navy-500 ring-line' }}">{{ $m->roleLabel() }}</span>
                         </td>
                         <td class="px-3 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <span class="text-[0.6rem] font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
+                                <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
                                 @unless ($m->id === auth()->id())
-                                    <button type="button" wire:click.stop="delete({{ $m->id }})" wire:confirm="Remove {{ $m->name }} from the team?" class="rounded-lg bg-risk/10 px-2 py-1 text-[0.6rem] font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
+                                    <button type="button" wire:click.stop="delete({{ $m->id }})" wire:confirm="Remove {{ $m->name }} from the team?" class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                                 @endunless
                             </div>
                         </td>
@@ -71,20 +71,15 @@
             </tbody>
         </table>
     </div>
-    <p class="mt-3 text-center text-[0.62rem] text-muted">{{ $members->count() }} {{ str('member')->plural($members->count()) }}</p>
+    <p class="mt-3 text-center text-eyebrow text-muted">{{ $members->count() }} {{ str('member')->plural($members->count()) }}</p>
 
     {{-- modal --}}
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-900/40 p-4 pt-16 backdrop-blur-sm">
-            <div class="card w-full max-w-md p-6 shadow-2xl" @click.outside="$wire.set('showForm', false)">
-                <div class="mb-4 flex items-center justify-between">
-                    <h3 class="pf text-base font-bold text-navy-900">{{ $editingId ? 'Edit member' : 'Add member' }}</h3>
-                    <button type="button" wire:click="$set('showForm', false)" class="text-navy-400 hover:text-navy-900">✕</button>
-                </div>
+        <x-modal :title="$editingId ? 'Edit member' : 'Add member'" max="md" close="set('showForm', false)">
 
                 <form wire:submit="save" class="grid gap-4">
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Profile photo (optional)</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Profile photo (optional)</label>
                         <div class="flex items-center gap-3">
                             <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-navy-900 text-sm font-bold text-gold-400 ring-2 ring-line">
                                 @if ($photo)
@@ -98,27 +93,27 @@
                             <div class="flex-1">
                                 <input type="file" wire:model="photo" accept="image/png,image/jpeg,image/webp"
                                        class="block w-full text-xs text-navy-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-navy-800">
-                                <div wire:loading wire:target="photo" class="mt-1 text-[0.6rem] font-semibold text-gold-700">Uploading…</div>
+                                <div wire:loading wire:target="photo" class="mt-1 text-eyebrow font-semibold text-gold-700">Uploading…</div>
                                 @error('photo')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-                                <p class="mt-1 text-[0.6rem] text-muted">Leave blank to keep initials.</p>
+                                <p class="mt-1 text-eyebrow text-muted">Leave blank to keep initials.</p>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Full name</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Full name</label>
                         <input type="text" wire:model="name" class="input h-10 text-sm" placeholder="e.g. Layla Haddad">
                         @error('name')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Email</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Email</label>
                             <input type="email" wire:model="email" class="input h-10 text-sm" placeholder="name@company.com">
                             @error('email')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="field-label !mb-1 !text-[0.62rem]">Role</label>
+                            <label class="field-label !mb-1 !text-eyebrow">Role</label>
                             <select wire:model="role" class="input h-10 text-sm">
                                 @foreach ($roles as $val => $label)
                                     <option value="{{ $val }}">{{ $label }}</option>
@@ -128,7 +123,7 @@
                     </div>
 
                     <div>
-                        <label class="field-label !mb-1 !text-[0.62rem]">Job title (optional)</label>
+                        <label class="field-label !mb-1 !text-eyebrow">Job title (optional)</label>
                         <input type="text" wire:model="title" class="input h-10 text-sm" placeholder="e.g. Event Coordinator">
                     </div>
 
@@ -137,7 +132,6 @@
                         <button type="submit" wire:loading.attr="disabled" wire:target="save,photo" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update' : 'Add member' }}</button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </x-modal>
     @endif
 </div>

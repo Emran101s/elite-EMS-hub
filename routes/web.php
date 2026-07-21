@@ -18,12 +18,25 @@ Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
+    Route::get('/', \App\Livewire\CommandCenter::class)->name('home');
 
     Route::get('/events', \App\Livewire\EventsIndex::class)->name('events.index');
 
-    Route::get('/events/{event}/agenda.pdf', \App\Http\Controllers\AgendaPdfController::class)
-        ->whereNumber('event')->name('events.agenda.pdf');
+    /*
+     * Three agenda documents, one job each — all rendered by headless Chrome
+     * from the app's own design system:
+     *   Programme       → what's on, for delegates
+     *   Master Schedule → every session incl. crew, for the team
+     *   Run of Show     → the cue sheet for show day
+     */
+    Route::get('/events/{event}/programme.pdf', \App\Http\Controllers\AgendaProgramPdfController::class)
+        ->whereNumber('event')->name('events.agenda.program.pdf');
+
+    Route::get('/events/{event}/master-schedule.pdf', \App\Http\Controllers\MasterSchedulePdfController::class)
+        ->whereNumber('event')->name('events.agenda.master.pdf');
+
+    Route::get('/events/{event}/run-of-show.pdf', \App\Http\Controllers\RunOfShowPdfController::class)
+        ->whereNumber('event')->name('events.run-of-show.pdf');
 
     Route::get('/events/{event}/run-of-show', \App\Http\Controllers\RunOfShowController::class)
         ->whereNumber('event')->name('events.run-of-show');
@@ -41,11 +54,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/sponsorship.pdf', [\App\Http\Controllers\SponsorshipController::class, 'pdf'])
         ->whereNumber('event')->name('events.sponsorship.pdf');
 
-    Route::get('/events/{event}/plan.pdf', \App\Http\Controllers\PlanningPdfController::class)
+    Route::get('/events/{event}/plan.pdf', \App\Http\Controllers\PlanStudioPdfController::class)
         ->whereNumber('event')->name('events.planning.pdf');
+
+    Route::get('/events/{event}/rooming/{block}.pdf', \App\Http\Controllers\RoomingListPdfController::class)
+        ->whereNumber('event')->whereNumber('block')->name('events.rooming.pdf');
+
+    Route::get('/events/{event}/transport.pdf', \App\Http\Controllers\TransportManifestPdfController::class)
+        ->whereNumber('event')->name('events.transport.pdf');
+
+    Route::get('/events/{event}/documents/{document}/download', [\App\Http\Controllers\EventDocumentController::class, 'download'])
+        ->whereNumber('event')->whereNumber('document')->name('events.documents.download');
+    Route::get('/events/{event}/documents/{document}/view', [\App\Http\Controllers\EventDocumentController::class, 'view'])
+        ->whereNumber('event')->whereNumber('document')->name('events.documents.view');
 
     Route::get('/events/{event}/brief.pdf', \App\Http\Controllers\EventBriefPdfController::class)
         ->whereNumber('event')->name('events.brief.pdf');
+
+    Route::get('/events/{event}/contract.pdf', \App\Http\Controllers\EventContractPdfController::class)
+        ->whereNumber('event')->name('events.contract.pdf');
 
     Route::get('/events/{event}/rooms/{room}/layout', \App\Livewire\RoomLayoutBuilder::class)
         ->whereNumber('event')->whereNumber('room')->name('events.room-layout');
@@ -70,25 +97,24 @@ Route::middleware('auth')->group(function () {
     ]))->name('events.avatars');
 
     Route::get('/projects', fn () => view('modules.projects', [
-        'projects' => Project::withCount(['events', 'tasks'])->orderBy('name')->get(),
+        'projects' => Project::withCount('events')->orderBy('name')->get(),
     ]))->name('projects.index');
 
     Route::get('/tasks', fn () => view('modules.tasks', [
-        'tasks' => Task::with(['event', 'assignee'])->orderByRaw("status = 'completed'")->orderBy('due_on')->paginate(25),
-        'counts' => [
-            'completed' => Task::where('status', 'completed')->count(),
-            'in_progress' => Task::where('status', 'in_progress')->count(),
-            'pending' => Task::where('status', 'pending')->count(),
-        ],
+        'statusFilter' => request('status'),
+        'tasks' => Task::with(['event', 'assignee'])
+            ->when(request('status'), fn ($q, $s) => $q->where('status', $s))
+            ->orderByRaw("status = 'done'")->orderBy('due_on')->paginate(25)->withQueryString(),
+        // Keyed by the model's own stages, so a new status can never vanish here.
+        'counts' => Task::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status')
+            ->pipe(fn ($by) => collect(Task::statuses())->mapWithKeys(fn ($s) => [$s => (int) ($by[$s] ?? 0)])),
     ]))->name('tasks.index');
 
     Route::get('/suppliers', fn () => view('modules.suppliers', [
         'suppliers' => Supplier::withCount('events')->orderByDesc('rating')->get(),
     ]))->name('suppliers.index');
 
-    Route::get('/venues', fn () => view('modules.venues', [
-        'venues' => Venue::withCount('events')->orderBy('name')->get(),
-    ]))->name('venues.index');
+    Route::get('/venues', \App\Livewire\VenuesManager::class)->name('venues.index');
 
     Route::get('/requirements', \App\Livewire\RequirementsCatalog::class)->name('requirements.index');
     Route::get('/requirements/pdf', \App\Http\Controllers\EquipmentPdfController::class)->name('requirements.pdf');
@@ -107,6 +133,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/clients', \App\Livewire\ClientsManager::class)->name('clients.index');
     Route::get('/settings/company', \App\Livewire\CompanySettings::class)->name('company.index');
     Route::get('/settings/defaults', \App\Livewire\DefaultsSettings::class)->name('defaults.index');
+    Route::get('/settings/transport', \App\Livewire\TransportSettings::class)->name('transport-settings.index');
     Route::get('/settings/sponsor-packages', \App\Livewire\SponsorPackagesSettings::class)->name('sponsor-packages.index');
 
     // Modules still awaiting their build phase render the generic stub.

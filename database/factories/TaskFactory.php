@@ -10,18 +10,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class TaskFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
             'title' => ucfirst(fake()->words(4, true)),
-            'status' => fake()->randomElement(Task::STATUSES),
-            'priority' => fake()->randomElement(Task::PRIORITIES),
-            'due_on' => fake()->dateTimeBetween('now', '+2 months'),
+            'status' => fake()->randomElement(Task::statuses()),
+            'priority' => fake()->randomElement(array_keys(Task::PRIORITIES)),
+            'area' => fake()->randomElement(Task::AREAS),
+            'due_on' => fake()->dateTimeBetween('-1 week', '+2 months'),
         ];
     }
 }

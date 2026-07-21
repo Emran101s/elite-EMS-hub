@@ -9,7 +9,7 @@ use Illuminate\View\View;
 class EventHubController extends Controller
 {
     public const TABS = [
-        'overview', 'brief', 'planning', 'agenda', 'speakers', 'tasks', 'budget', 'suppliers', 'venue',
+        'overview', 'brief', 'contract', 'planning', 'agenda', 'speakers', 'tasks', 'budget', 'suppliers', 'venue',
         'transportation', 'accommodation', 'exhibition', 'sponsors',
         'attendees', 'files', 'risks', 'approvals', 'reports', 'ai', 'settings',
     ];
@@ -28,7 +28,7 @@ class EventHubController extends Controller
             'rooms', 'agendaDays.sessions.room', 'agendaSessions',
             'tasks.assignee', 'budgetItems.supplier', 'suppliers',
             'sponsors', 'risks.owner', 'approvals.requester', 'approvals.decider',
-            'teamMembers',
+            'teamMembers', 'speakers', 'brief', 'contract',
         ]);
 
         return view('events.hub', [
@@ -53,7 +53,7 @@ class EventHubController extends Controller
                 'sub' => ucfirst($approval->type).' approval', 'when' => $approval->created_at]);
         }
 
-        foreach ($event->tasks->filter(fn ($t) => $t->status !== 'completed' && $t->due_on?->isPast()) as $task) {
+        foreach ($event->tasks->filter(fn ($t) => $t->isOpen() && $t->due_on?->isPast()) as $task) {
             $alerts->push(['tone' => 'risk', 'title' => $task->title.' overdue',
                 'sub' => $task->assignee?->name ?? 'Unassigned', 'when' => $task->due_on]);
         }
@@ -77,7 +77,7 @@ class EventHubController extends Controller
     private function teamWorkload(Event $event)
     {
         return $event->teamMembers->map(function ($member) use ($event) {
-            $open = $event->tasks->where('assignee_id', $member->id)->where('status', '!=', 'completed')->count();
+            $open = $event->tasks->where('assignee_id', $member->id)->where('status', '!=', 'done')->count();
 
             return [
                 'user' => $member,
