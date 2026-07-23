@@ -15,9 +15,8 @@
 
 <div wire:key="card-{{ $event->id }}"
      @class([
-         'group relative flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300',
-         'col-span-full border-gold-400 shadow-float' => $open,
-         'border-line shadow-raise hover:-translate-y-1 hover:border-navy-200 hover:shadow-float' => ! $open,
+         'group op-card transition-all duration-300',
+         'col-span-full !border-gold-400 !shadow-float !translate-y-0' => $open,
      ])>
 
     {{-- ══ overlay actions (siblings of the toggle button, never nested) ══ --}}
@@ -125,13 +124,13 @@
         @include('livewire.partials.events.detail', ['event' => $event, 'expanded' => $expanded])
     @endif
 
-    {{-- ══ footer actions ══ --}}
-    <div class="flex items-center gap-1 border-t border-line px-3 py-2">
-        <a href="{{ route('events.hub', $event) }}" class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-navy-50 py-2 text-micro font-bold text-navy-700 transition hover:bg-navy-100">
-            <x-icon name="home" class="h-3.5 w-3.5" /> Open hub
+    {{-- ══ dark navy footer actions ══ --}}
+    <div class="mt-auto flex items-center gap-1 border-t border-white/10 bg-gradient-to-r from-navy-900 to-navy-950 px-3 py-2">
+        <a href="{{ route('events.hub', $event) }}" class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/[0.06] py-2 text-micro font-bold text-white/85 ring-1 ring-white/10 transition hover:bg-white/12 hover:text-white">
+            <x-icon name="home" class="h-3.5 w-3.5 text-gold-400" /> Open hub
         </a>
         <details class="relative" wire:key="cmenu-{{ $event->id }}">
-            <summary class="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-navy-400 transition hover:bg-navy-50 hover:text-navy-700 [&::-webkit-details-marker]:hidden" aria-label="Actions">
+            <summary class="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-white/50 transition hover:bg-white/10 hover:text-white [&::-webkit-details-marker]:hidden" aria-label="Actions">
                 <span class="rotate-90"><x-icon name="dots" class="h-4 w-4" /></span>
             </summary>
             <div class="absolute bottom-11 right-0 z-30 w-44 overflow-hidden rounded-xl border border-line bg-white shadow-float">
