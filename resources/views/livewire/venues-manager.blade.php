@@ -31,46 +31,46 @@
         @else
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 @foreach ($venues as $venue)
-                    <div wire:key="venue-{{ $venue->id }}" class="group card flex flex-col p-4 transition hover:border-navy-200 hover:shadow-float">
-                        <div class="flex items-start gap-3">
-                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500">
-                                <x-icon name="building" class="h-5 w-5" />
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-bold text-navy-900">{{ $venue->name }}</p>
-                                <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-micro text-muted">
-                                    @if ($venue->type)<span class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold uppercase tracking-wider text-navy-500">{{ $venue->type }}</span>@endif
-                                    <span>{{ $venue->locationLine() ?: 'No location set' }}</span>
-                                </p>
+                    <div wire:key="venue-{{ $venue->id }}" class="group op-card">
+                        <div class="flex flex-1 flex-col p-4">
+                            <div class="flex items-start gap-3">
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500">
+                                    <x-icon name="building" class="h-5 w-5" />
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="pf truncate text-sm font-bold text-navy-900">{{ $venue->name }}</p>
+                                    <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-micro text-muted">
+                                        @if ($venue->type)<span class="pill bg-navy-50 text-navy-500">{{ $venue->type }}</span>@endif
+                                        <span>{{ $venue->locationLine() ?: 'No location set' }}</span>
+                                    </p>
+                                </div>
+                                <div class="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                                    <button type="button" wire:click="edit({{ $venue->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
+                                    <button type="button" wire:click="delete({{ $venue->id }})"
+                                            wire:confirm="Delete “{{ $venue->name }}”? Events using it keep working — they just lose the venue link."
+                                            class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                </div>
                             </div>
-                            <div class="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
-                                <button type="button" wire:click="edit({{ $venue->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                <button type="button" wire:click="delete({{ $venue->id }})"
-                                        wire:confirm="Delete “{{ $venue->name }}”? Events using it keep working — they just lose the venue link."
-                                        class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
-                            </div>
+
+                            @if ($venue->address)
+                                <p class="mt-2.5 flex items-start gap-1.5 text-micro text-navy-600"><x-icon name="pin" class="mt-0.5 h-3 w-3 shrink-0 text-navy-300" />{{ $venue->address }}</p>
+                            @endif
+
+                            @if ($venue->contact_name || $venue->contact_phone || $venue->contact_email)
+                                <div class="mt-2.5 rounded-lg bg-page/60 px-2.5 py-1.5 text-micro text-navy-600">
+                                    @if ($venue->contact_name)<span class="font-semibold text-navy-800">{{ $venue->contact_name }}</span>@endif
+                                    @if ($venue->contact_phone) · {{ $venue->contact_phone }}@endif
+                                    @if ($venue->contact_email) · {{ $venue->contact_email }}@endif
+                                </div>
+                            @endif
                         </div>
 
-                        @if ($venue->address)
-                            <p class="mt-2.5 flex items-start gap-1.5 text-micro text-navy-600"><x-icon name="pin" class="mt-0.5 h-3 w-3 shrink-0 text-navy-300" />{{ $venue->address }}</p>
-                        @endif
-
-                        <div class="mt-3 flex items-center gap-4 border-t border-line pt-2.5 text-micro">
-                            <span class="flex items-center gap-1 text-navy-600">
-                                <span class="font-black text-navy-900">{{ $venue->capacity ? number_format($venue->capacity) : '—' }}</span> capacity
-                            </span>
-                            <span class="flex items-center gap-1 text-navy-600">
-                                <span class="font-black text-navy-900">{{ $venue->events_count }}</span> {{ str('event')->plural($venue->events_count) }}
-                            </span>
+                        {{-- dark navy footer: capacity + events --}}
+                        <div class="op-card-foot">
+                            <x-icon name="building" class="h-3 w-3 shrink-0 text-gold-400" />
+                            <span class="text-eyebrow font-semibold text-white/80">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
+                            <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
                         </div>
-
-                        @if ($venue->contact_name || $venue->contact_phone || $venue->contact_email)
-                            <div class="mt-2 rounded-lg bg-page/60 px-2.5 py-1.5 text-micro text-navy-600">
-                                @if ($venue->contact_name)<span class="font-semibold text-navy-800">{{ $venue->contact_name }}</span>@endif
-                                @if ($venue->contact_phone) · {{ $venue->contact_phone }}@endif
-                                @if ($venue->contact_email) · {{ $venue->contact_email }}@endif
-                            </div>
-                        @endif
                     </div>
                 @endforeach
             </div>

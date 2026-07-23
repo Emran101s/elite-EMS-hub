@@ -17,8 +17,8 @@
         @foreach ($sections as $s)
             @php $href = $s['route'] ? route($s['route']) : null; @endphp
             <a @if ($href) href="{{ $href }}" @endif
-                class="card group flex items-start gap-4 p-5 {{ $href ? 'cursor-pointer transition hover:-translate-y-0.5 hover:shadow-lg' : 'cursor-default opacity-70' }}">
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-xl">{{ $s['glyph'] }}</span>
+                class="group flex items-start gap-4 rounded-2xl border border-line bg-white p-5 shadow-sm transition duration-200 {{ $href ? 'cursor-pointer hover:-translate-y-1 hover:border-gold-200 hover:shadow-[0_22px_46px_-20px_rgba(11,31,58,0.5)]' : 'cursor-default opacity-70' }}">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-xl transition group-hover:bg-gold-50">{{ $s['glyph'] }}</span>
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
                         <h2 class="pf text-base font-bold text-navy-900">{{ $s['title'] }}</h2>
