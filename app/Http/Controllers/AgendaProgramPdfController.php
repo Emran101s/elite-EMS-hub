@@ -19,7 +19,7 @@ class AgendaProgramPdfController extends Controller
     public function __invoke(Event $event, AgendaProgram $program): Response
     {
         $event->load([
-            'agendaDays' => fn ($q) => $q->orderBy('sort'),
+            'agendaDays' => fn ($q) => $q->orderBy('date'),
             'agendaDays.sessions' => fn ($q) => $q->orderBy('starts_at'),
             'agendaDays.sessions.room',
             'agendaDays.sessions.speakers',

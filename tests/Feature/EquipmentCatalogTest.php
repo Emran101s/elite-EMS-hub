@@ -59,7 +59,7 @@ class EquipmentCatalogTest extends TestCase
         $user = $this->boot();
         $before = Requirement::count();
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->fromArray([
             ['Name', 'Price', 'Notes'],

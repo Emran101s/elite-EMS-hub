@@ -11,17 +11,6 @@
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
         html, body { background:#fff; margin:0; color:#26313F; font-family:'Spectral', Georgia, serif; }
 
-        .head { background:linear-gradient(135deg,{{ $navy }},{{ $navy2 }}); color:#fff; border-radius:12px;
-            padding:16px 22px; display:flex; align-items:center; justify-content:space-between; gap:20px;
-            position:relative; overflow:hidden; break-after:avoid; }
-        .head:after { content:""; position:absolute; right:-30px; top:-50px; width:170px; height:170px;
-            border-radius:50%; background:radial-gradient(circle,rgba(212,175,55,.28),transparent 70%); }
-        .eyebrow { font-family:'Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.3em;
-            text-transform:uppercase; color:#D9BE63; }
-        .h1 { font-size:19px; font-weight:800; margin-top:5px; }
-        .meta { font-family:'Inter',sans-serif; font-size:10px; color:#C7D0DE; text-align:right;
-            position:relative; z-index:1; line-height:1.6; }
-
         .day { margin-top:16px; }
         .daytag { display:flex; align-items:baseline; gap:12px; border-bottom:2px solid {{ $gold }};
             padding-bottom:6px; break-after:avoid; break-inside:avoid; }
@@ -63,19 +52,16 @@
 </head>
 <body>
 
-<div class="head">
-    <div>
-        <div class="eyebrow">Run of Show · Operations</div>
-        <div class="h1">{{ $event->name }}</div>
-    </div>
-    <div class="meta">
-        @if ($single)
-            {{ $single->label }}<br>{{ $single->date?->format('l, j F Y') }}
-        @else
-            Full run · {{ count($days) }} days
-        @endif
-        @if ($event->venue)<br>{{ $event->venue->name }}@endif
-    </div>
+@php $rosSessions = collect($days)->sum(fn ($d) => $d['day']->sessions->count()); @endphp
+<div style="border-radius:12px; overflow:hidden; margin-bottom:14px;">
+    <x-pdf-header serif navy="#0B1F3A" gold="#D4AF37"
+        eyebrow="Elite Business Hub · Run of Show · Operations"
+        :title="$event->name"
+        :subtitle="($single ? $single->label.' — '.($single->date?->format('l, j F Y') ?? '') : 'Full run of show · '.count($days).' '.\Illuminate\Support\Str::plural('day', count($days))).($event->venue ? ' · '.$event->venue->name : '')"
+        :chips="[
+            ['n' => (string) count($days), 'l' => 'Days'],
+            ['n' => (string) $rosSessions, 'l' => 'Cues'],
+        ]" />
 </div>
 
 @foreach ($days as $d)

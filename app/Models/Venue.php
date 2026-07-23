@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'contact_name', 'contact_phone', 'contact_email', 'notes'])]
 class Venue extends Model
 {
-    /** @use HasFactory<\Database\Factories\VenueFactory> */
+    /** @use HasFactory<VenueFactory> */
     use HasFactory;
 
     /** Location kinds offered when adding a venue — free text still allowed. */

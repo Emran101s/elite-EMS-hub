@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Livewire\Hub\AgendaTab;
 use App\Models\Event;
-use App\Models\EventAgendaSession;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -117,10 +116,11 @@ class AgendaBuilderTest extends TestCase
     {
         [$event, $user] = $this->ctx();
 
-        // Three documents, one job each — all must render.
+        // Four documents, one job each — all must render.
         foreach ([
             route('events.agenda.program.pdf', $event),   // delegates
             route('events.agenda.master.pdf', $event),    // the team
+            route('events.agenda.timeline.pdf', $event),  // the visual Gantt
             route('events.run-of-show.pdf', $event),      // show day
         ] as $url) {
             $response = $this->actingAs($user)->get($url);

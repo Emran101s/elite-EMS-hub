@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\RoomLayoutBuilder;
 use App\Models\Event;
+use App\Models\EventRoom;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -172,7 +173,7 @@ class RoomLayoutTest extends TestCase
 
         $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
             ->call('applyPackage', 'Conference');
-        $expected = collect(\App\Models\EventRoom::EQUIPMENT_PACKAGES['Conference'])->sum();
+        $expected = collect(EventRoom::EQUIPMENT_PACKAGES['Conference'])->sum();
         $this->assertSame($expected, $room->fresh()->equipmentCount());
 
         $c->set('customItem', 'Fog machine')->call('addCustomItem');

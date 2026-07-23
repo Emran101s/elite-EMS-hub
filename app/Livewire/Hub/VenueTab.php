@@ -4,7 +4,6 @@ namespace App\Livewire\Hub;
 
 use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
-use App\Models\EventRoom;
 use App\Models\Requirement;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -24,21 +23,27 @@ class VenueTab extends Component
 
     // Room form
     public bool $showRoomForm = false;
+
     public ?int $editingRoomId = null;
+
     public string $room_name = '';
+
     public string $room_type = 'breakout';
+
     public string $room_capacity = '';
+
     public string $room_cost = '';
 
     // Event-wide requirements (not tied to a venue). Per-venue requirements now
     // live inside each venue's detail (RoomLayoutBuilder → Requirements tab).
     public string $evReqName = '';
+
     public string $evReqCost = '';
 
     public function newRoom(): void
     {
         $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost']);
-        $this->room_type = 'breakout';
+        $this->room_type = 'Breakout';
         $this->showRoomForm = true;
     }
 
@@ -47,7 +52,8 @@ class VenueTab extends Component
         $room = $this->event->rooms()->findOrFail($roomId);
         $this->editingRoomId = $room->id;
         $this->room_name = $room->name;
-        $this->room_type = $room->type;
+        // Prettified for editing; normalised back to a slug on save.
+        $this->room_type = str($room->type)->replace('_', ' ')->title()->toString();
         $this->room_capacity = (string) ($room->capacity ?? '');
         $this->room_cost = $room->cost_cents ? (string) ($room->cost_cents / 100) : '';
         $this->showRoomForm = true;
@@ -57,14 +63,14 @@ class VenueTab extends Component
     {
         $this->validate([
             'room_name' => ['required', 'string', 'max:120'],
-            'room_type' => ['required', 'in:'.implode(',', EventRoom::TYPES)],
+            'room_type' => ['required', 'string', 'max:40'],   // built-in or a custom label
             'room_capacity' => ['nullable', 'integer', 'min:0'],
             'room_cost' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $data = [
             'name' => $this->room_name,
-            'type' => $this->room_type,
+            'type' => str($this->room_type)->snake()->toString() ?: 'room',
             'capacity' => $this->room_capacity !== '' ? (int) $this->room_capacity : null,
             'cost_cents' => $this->room_cost !== '' ? (int) round((float) $this->room_cost * 100) : 0,
         ];

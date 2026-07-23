@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 #[Fillable(['event_id', 'name', 'type', 'capacity', 'cost_cents', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
 class EventRoom extends Model
@@ -367,7 +368,7 @@ class EventRoom extends Model
      * Equipment lines: item => ['qty'=>int, 'status'=>string, 'notes'=>string].
      * Normalises legacy int-only values ({item: qty}).
      */
-    public function equipmentLines(): \Illuminate\Support\Collection
+    public function equipmentLines(): Collection
     {
         return collect($this->equipment ?? [])->map(function ($line) {
             if (is_array($line)) {

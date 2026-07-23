@@ -102,4 +102,12 @@ class EventRoomBlock extends Model
     {
         return $this->rooms_count * $this->nights();
     }
+
+    /** True room-nights: the sum of each named guest's own stay, not block × rooms. */
+    public function namedRoomNights(): int
+    {
+        $rooms = $this->relationLoaded('rooms') ? $this->rooms : $this->rooms()->get();
+
+        return $rooms->filter(fn ($r) => filled($r->guest))->sum(fn ($r) => $r->roomNights());
+    }
 }

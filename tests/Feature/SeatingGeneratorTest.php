@@ -204,7 +204,6 @@ class SeatingGeneratorTest extends TestCase
         $this->assertEqualsWithDelta(1.5 * 14, $geo['tables'][0][2], 0.5);
     }
 
-
     public function test_chair_size_and_spacing_flow_into_a_generated_block(): void
     {
         [$event, $user, $room] = $this->ctx(['width_m' => 20, 'length_m' => 30]);
@@ -269,7 +268,6 @@ class SeatingGeneratorTest extends TestCase
         $this->assertSame([$keep], $ids);
     }
 
-
     public function test_placed_items_match_the_floor_scale_exactly(): void
     {
         // Room 12×16m on a 960×560 canvas → the px-per-metre scale.
@@ -300,7 +298,6 @@ class SeatingGeneratorTest extends TestCase
         $resized = collect($c->get('elements'))->firstWhere('id', $chair['id']);
         $this->assertEqualsWithDelta(0.5, $resized['w'] / $scale, 0.03, '50cm chair stays to scale');
     }
-
 
     public function test_generating_no_longer_forces_a_default_stage(): void
     {
@@ -363,7 +360,6 @@ class SeatingGeneratorTest extends TestCase
         $this->assertEqualsWithDelta(2.0, $booth['h'] / $scale, 0.05, 'and 2m deep');
     }
 
-
     public function test_an_item_can_be_named_and_the_name_shows_on_the_plan(): void
     {
         [$event, $user, $room] = $this->ctx(['width_m' => 12, 'length_m' => 16]);
@@ -386,7 +382,6 @@ class SeatingGeneratorTest extends TestCase
         $this->assertSame(40, mb_strlen(collect($room->fresh()->layout)->firstWhere('id', $id)['name']));
     }
 
-
     public function test_the_inspector_shows_the_editor_and_name_field_for_a_selected_block(): void
     {
         [$event, $user, $room] = $this->ctx(['width_m' => 14, 'length_m' => 18]);
@@ -401,5 +396,4 @@ class SeatingGeneratorTest extends TestCase
             ->assertSee('Name / label')          // the naming field
             ->assertSee('Total chairs');
     }
-
 }

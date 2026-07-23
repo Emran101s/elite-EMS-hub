@@ -6,7 +6,10 @@ use App\Livewire\Hub\AgendaTab;
 use App\Livewire\Hub\SettingsTab;
 use App\Livewire\Hub\VenueTab;
 use App\Models\Event;
+use App\Models\EventAgendaSession;
 use App\Models\User;
+use App\Models\Venue;
+use App\Services\AgendaProgram;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -87,9 +90,9 @@ class AgendaConflictTest extends TestCase
     }
 
     /** Build a detached session for pure programme-shaping tests. */
-    private function stubSession(string $title, string $start, string $end, ?string $track = null, string $type = 'panel'): \App\Models\EventAgendaSession
+    private function stubSession(string $title, string $start, string $end, ?string $track = null, string $type = 'panel'): EventAgendaSession
     {
-        $s = new \App\Models\EventAgendaSession();
+        $s = new EventAgendaSession;
         $s->fill(['title' => $title, 'starts_at' => $start, 'ends_at' => $end, 'track' => $track, 'type' => $type]);
         $s->setRelation('speakers', collect());
         $s->setRelation('room', null);
@@ -99,7 +102,7 @@ class AgendaConflictTest extends TestCase
 
     public function test_card_shows_its_own_time_when_it_differs_from_the_slot(): void
     {
-        $p = (new \App\Services\AgendaProgram())->forDay(collect([
+        $p = (new AgendaProgram)->forDay(collect([
             $this->stubSession('Panel A', '13:30', '15:30', 'Track'),
             $this->stubSession('Panel B', '13:30', '18:00', 'Track'),
         ]));
@@ -115,7 +118,7 @@ class AgendaConflictTest extends TestCase
 
     public function test_overlapping_sessions_with_staggered_starts_share_a_slot(): void
     {
-        $p = (new \App\Services\AgendaProgram())->forDay(collect([
+        $p = (new AgendaProgram)->forDay(collect([
             $this->stubSession('Track A', '13:30', '15:30', 'Track'),
             $this->stubSession('Track B', '14:00', '16:00', 'Track'),
         ]));
@@ -126,7 +129,7 @@ class AgendaConflictTest extends TestCase
 
     public function test_sequential_sessions_do_not_chain_into_one_slot(): void
     {
-        $p = (new \App\Services\AgendaProgram())->forDay(collect([
+        $p = (new AgendaProgram)->forDay(collect([
             $this->stubSession('Lunch', '12:00', '13:30', null, 'lunch'),
             $this->stubSession('Panel', '13:30', '15:30', 'Track'),
             $this->stubSession('Coffee', '15:30', '16:00', null, 'break'),
@@ -138,7 +141,7 @@ class AgendaConflictTest extends TestCase
     public function test_long_session_stays_on_the_programme(): void
     {
         // Ambient is decided by track, never by duration.
-        $p = (new \App\Services\AgendaProgram())->forDay(collect([
+        $p = (new AgendaProgram)->forDay(collect([
             $this->stubSession('Full-Day Training Workshop', '09:00', '15:00', 'Track', 'workshop'),
         ]));
 
@@ -153,7 +156,7 @@ class AgendaConflictTest extends TestCase
         $confirmed = $this->stubSession('Signed-off Keynote', '12:00', '13:00', 'Plenary');
         $confirmed->status = 'confirmed';
 
-        $p = (new \App\Services\AgendaProgram())->forDay(collect([$draft, $confirmed]));
+        $p = (new AgendaProgram)->forDay(collect([$draft, $confirmed]));
 
         $this->assertSame(1, $p['unconfirmed']);
         $this->assertSame(2, $p['total']);
@@ -210,7 +213,7 @@ class AgendaConflictTest extends TestCase
         $event->agendaSessions()->create(['agenda_day_id' => $day->id, 'title' => 'Press Interviews', 'type' => 'networking', 'status' => 'draft', 'starts_at' => '11:00', 'ends_at' => '12:00', 'track' => 'Media', 'sort' => 3]);
 
         $sessions = $event->agendaSessions()->where('agenda_day_id', $day->id)->with('room', 'speakers')->get();
-        $svc = new \App\Services\AgendaProgram();
+        $svc = new AgendaProgram;
 
         $titles = fn (array $p) => collect($p['blocks'])->flatMap(fn ($b) => collect($b['cards'])->pluck('session.title'))
             ->merge(collect($p['ambient'])->pluck('title'))->all();
@@ -280,10 +283,10 @@ class AgendaConflictTest extends TestCase
     public function test_session_form_can_create_a_room_inline(): void
     {
         [$event, $user] = $this->ctx();
-        $gala = \App\Models\Event::where('name', 'EY Annual Gala')->firstOrFail(); // starts with 0 rooms
+        $gala = Event::where('name', 'EY Annual Gala')->firstOrFail(); // starts with 0 rooms
         $day = $gala->agendaDays()->create(['date' => now(), 'label' => 'Day 1', 'sort' => 0]);
 
-        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Hub\AgendaTab::class, ['event' => $gala])
+        Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $gala])
             ->call('newSession', $day->id)
             ->set('title', 'Welcome Reception')
             ->set('newRoomName', 'Grand Ballroom') // "…or type a room" — created on save
@@ -297,7 +300,7 @@ class AgendaConflictTest extends TestCase
     public function test_assigning_venue_persists(): void
     {
         [$event, $user] = $this->ctx();
-        $venue = \App\Models\Venue::where('name', 'Doha Exhibition Center')->firstOrFail();
+        $venue = Venue::where('name', 'Doha Exhibition Center')->firstOrFail();
 
         // The event's location/venue is set in Settings (not the Venue tab anymore).
         Livewire::actingAs($user)->test(SettingsTab::class, ['event' => $event])

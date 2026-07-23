@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RendersChromePdf;
 use App\Models\Event;
+use App\Services\AgendaProgram;
 use Illuminate\Http\Response;
 
 /**
@@ -21,7 +22,7 @@ class RunOfShowPdfController extends Controller
     {
         $event->load([
             'venue',
-            'agendaDays' => fn ($q) => $q->orderBy('sort'),
+            'agendaDays' => fn ($q) => $q->orderBy('date'),
             'agendaDays.sessions' => fn ($q) => $q->orderBy('starts_at'),
             'agendaDays.sessions.room',
             'agendaDays.sessions.speakers',
@@ -90,7 +91,7 @@ class RunOfShowPdfController extends Controller
                 'session' => $s,
                 'time' => $fmt($start).'–'.$fmt($end),
                 'length' => $len(max($end - $start, 0)),
-                'crew' => in_array($s->track, \App\Services\AgendaProgram::CREW_ONLY, true),
+                'crew' => in_array($s->track, AgendaProgram::CREW_ONLY, true),
             ];
 
             $venueClear = max($venueClear ?? $end, $end);

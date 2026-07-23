@@ -16,20 +16,11 @@
         };
     @endphp
     <style>
-        @page { size: A4 portrait; margin: 14mm 12mm; }
+        @page { size: A4 portrait; margin: 13mm 12mm; }
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
         html, body { background:#fff; margin:0; color:#26313F;
             font-family:'Spectral', Georgia, serif; }
         .sans { font-family:'Inter', system-ui, sans-serif; }
-
-        .head { background:linear-gradient(135deg,{{ $navy }},{{ $navy2 }}); color:#fff; border-radius:14px;
-            padding:22px 26px; position:relative; overflow:hidden; break-after:avoid; }
-        .head:after { content:""; position:absolute; right:-40px; top:-60px; width:200px; height:200px;
-            border-radius:50%; background:radial-gradient(circle,rgba(212,175,55,.28),transparent 70%); }
-        .eyebrow { font-family:'Inter',sans-serif; font-size:9.5px; font-weight:700; letter-spacing:.3em;
-            text-transform:uppercase; color:#D9BE63; }
-        .h1 { font-size:22px; font-weight:800; margin:7px 0 5px; }
-        .sub { font-family:'Inter',sans-serif; font-size:11px; color:#C7D0DE; position:relative; z-index:1; }
 
         .draft { display:flex; align-items:center; gap:10px; margin:0 0 14px; padding:9px 14px;
             border:1px solid #E3CE8F; border-left:3px solid {{ $gold }}; border-radius:9px; background:#F6EFDC;
@@ -73,16 +64,17 @@
 </head>
 <body>
 
-<div class="head">
-    <div class="eyebrow">Master Schedule · Internal</div>
-    <div class="h1">{{ $event->name }}</div>
-    <div class="sub">
-        Every session including crew and build · {{ $all->count() }} sessions across {{ $event->agendaDays->count() }} days
-        @if ($event->venue) · {{ $event->venue->name }} @endif
-    </div>
+<div style="border-radius:12px; overflow:hidden; margin-bottom:14px;">
+    <x-pdf-header serif navy="#0B1F3A" gold="#D4AF37"
+        eyebrow="Elite Business Hub · Master Schedule · Internal"
+        :title="$event->name"
+        :subtitle="'Every session incl. crew & build'.($event->venue ? ' · '.$event->venue->name : '')"
+        :chips="[
+            ['n' => (string) $all->count(), 'l' => 'Sessions'],
+            ['n' => (string) $event->agendaDays->count(), 'l' => 'Days'],
+            ['n' => (string) $unconfirmed, 'l' => 'Unconfirmed'],
+        ]" />
 </div>
-
-<div style="height:14px"></div>
 
 @if ($unconfirmed > 0)
     <div class="draft">

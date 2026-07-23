@@ -19,14 +19,20 @@
                 @if ($room->totalCents()) · <span class="font-semibold text-navy-900">{{ $event->money($room->totalCents()) }}</span> total @endif
             </p>
         </div>
-        {{-- Workspace tabs --}}
-        <div class="inline-flex rounded-xl border border-line bg-white p-1">
-            <button type="button" wire:click="$set('view', 'floor')"
-                    class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view === 'floor' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">⊞ Layout</button>
-            <button type="button" wire:click="$set('view', 'equipment')"
-                    class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view !== 'floor' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">
-                🎛 Equipment @if (count($room->requirements ?? []))<span class="ml-1 rounded-full bg-gold-500/20 px-1.5 text-eyebrow text-gold-700">{{ count($room->requirements) }}</span>@endif
-            </button>
+        <div class="flex flex-wrap items-center gap-2">
+            {{-- exports — available on both the Layout and Equipment views --}}
+            <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank" class="btn-ghost btn-sm" title="Floor plan to scale + inspector">↧ Layout PDF</a>
+            <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank" class="btn-ghost btn-sm" title="AV &amp; equipment prep sheet">↧ Equipment PDF</a>
+
+            {{-- Workspace tabs --}}
+            <div class="inline-flex rounded-xl border border-line bg-white p-1">
+                <button type="button" wire:click="$set('view', 'floor')"
+                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view === 'floor' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">⊞ Layout</button>
+                <button type="button" wire:click="$set('view', 'equipment')"
+                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view !== 'floor' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">
+                    🎛 Equipment @if (count($room->requirements ?? []))<span class="ml-1 rounded-full bg-gold-500/20 px-1.5 text-eyebrow text-gold-700">{{ count($room->requirements) }}</span>@endif
+                </button>
+            </div>
         </div>
     </div>
 
@@ -241,16 +247,7 @@
                     {{-- rail header --}}
                     <div class="flex items-center justify-between border-b border-line bg-navy-900 px-4 py-3">
                         <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Inspector</span>
-                        <div class="flex gap-1.5">
-                            {{-- Both exports for this room: the drawing and the AV prep sheet. --}}
-                            <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank"
-                               title="Layout drawing PDF"
-                               class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-white/20">↧ Layout</a>
-                            <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank"
-                               title="AV &amp; equipment prep sheet"
-                               class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-white/20">↧ Equipment</a>
-                            <button type="button" wire:click="clearAll" wire:confirm="Clear the whole layout?" @disabled(empty($elements)) class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-risk/70 disabled:opacity-30">Clear</button>
-                        </div>
+                        <button type="button" wire:click="clearAll" wire:confirm="Clear the whole layout?" @disabled(empty($elements)) class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-risk/70 disabled:opacity-30">Clear</button>
                     </div>
 
                     {{-- Room dimensions --}}

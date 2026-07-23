@@ -80,7 +80,7 @@
 
         <div class="ml-auto flex flex-wrap items-center gap-2">
             <button type="button" wire:click="$toggle('showImport')" class="btn-ghost btn-sm">⇪ Import CSV</button>
-            <a href="{{ route('events.run-of-show', $event) }}" class="btn-ghost btn-sm gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5" /> Run of Show</a>
+            <a href="{{ route('events.run-of-show', $event) }}" class="btn-ghost btn-sm gap-1.5" title="Open the live show-day cue sheet"><x-icon name="calendar" class="h-3.5 w-3.5" /> Open Run of Show</a>
             @if ($view === 'program')
                 <div class="flex items-center overflow-hidden rounded-xl border border-gold-300 bg-gold-50 text-xs font-semibold text-gold-800">
                     <span class="flex h-9 items-center gap-1.5 border-r border-gold-300/70 pl-3 pr-2.5"><x-icon name="chart" class="h-3.5 w-3.5" /> Programme PDF</span>
@@ -90,8 +90,15 @@
                     <a href="{{ route('events.agenda.program.pdf', [$event, 'audience' => $audience]) }}" class="flex h-9 items-center px-3 transition hover:bg-gold-100">All days</a>
                 </div>
             @else
+                <div class="flex items-center overflow-hidden rounded-xl border border-gold-300 bg-gold-50 text-xs font-semibold text-gold-800">
+                    <span class="flex h-9 items-center gap-1.5 border-r border-gold-300/70 pl-3 pr-2.5"><x-icon name="chart" class="h-3.5 w-3.5" /> Timeline PDF</span>
+                    @if ($day)
+                        <a href="{{ route('events.agenda.timeline.pdf', [$event, 'day' => $day->id]) }}" class="flex h-9 items-center border-r border-gold-300/70 px-3 transition hover:bg-gold-100" title="This day's timeline, drawn to scale">This day</a>
+                    @endif
+                    <a href="{{ route('events.agenda.timeline.pdf', $event) }}" class="flex h-9 items-center px-3 transition hover:bg-gold-100" title="Every day's timeline">All days</a>
+                </div>
                 <a href="{{ route('events.agenda.master.pdf', $event) }}" class="btn-ghost btn-sm gap-1.5" title="Every session incl. crew, with status"><x-icon name="chart" class="h-3.5 w-3.5" /> Master Schedule</a>
-                <a href="{{ route('events.run-of-show.pdf', [$event, 'day' => $day?->id]) }}" class="btn-ghost btn-sm gap-1.5" title="Show-day cue sheet for this day"><x-icon name="calendar" class="h-3.5 w-3.5" /> Run of Show</a>
+                <a href="{{ route('events.run-of-show.pdf', [$event, 'day' => $day?->id]) }}" class="btn-ghost btn-sm gap-1.5" title="Download the show-day cue sheet (PDF) for this day">↧ Run of Show PDF</a>
             @endif
             <button type="button" wire:click="newSession" @disabled($days->isEmpty()) class="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-4 text-xs font-bold text-navy-950 shadow-sm transition hover:brightness-105 disabled:opacity-40">＋ Add Session</button>
         </div>
@@ -265,9 +272,13 @@
                             </div>
                             <div class="sm:w-44">
                                 <label class="field-label !mb-1.5" for="m-type">Type</label>
-                                <select id="m-type" wire:model="type" class="field !py-2.5">
-                                    @foreach (\App\Models\EventAgendaSession::TYPES as $t)<option value="{{ $t }}">{{ str($t)->replace('_', ' ')->title() }}</option>@endforeach
-                                </select>
+                                <input id="m-type" type="text" list="session-types" wire:model="type" class="field !py-2.5"
+                                       autocomplete="off" placeholder="Keynote, Setup, Rehearsal…">
+                                <datalist id="session-types">
+                                    @foreach ($typeOptions as $t)<option value="{{ $t }}"></option>@endforeach
+                                </datalist>
+                                <p class="mt-1 text-eyebrow text-muted">Pick one or type your own.</p>
+                                @error('type') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                             </div>
                         </div>
 

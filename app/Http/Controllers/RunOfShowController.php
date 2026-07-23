@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\EventAgendaSession;
 use Illuminate\View\View;
 
 class RunOfShowController extends Controller
@@ -26,7 +25,7 @@ class RunOfShowController extends Controller
     {
         $event->load([
             'venue',
-            'agendaDays' => fn ($q) => $q->orderBy('sort'),
+            'agendaDays' => fn ($q) => $q->orderBy('date'),
             'agendaDays.sessions' => fn ($q) => $q->orderBy('starts_at'),
             'agendaDays.sessions.room',
             'tasks',

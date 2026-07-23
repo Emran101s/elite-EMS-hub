@@ -27,7 +27,7 @@
                 <p class="mt-1 text-xs text-white/55">
                     {{ $event->name }}
                     @if ($block->check_in)
-                        · {{ $block->check_in->format('d M Y') }} – {{ $block->check_out?->format('d M Y') ?? '—' }} · {{ $block->nights() }} nights
+                        · {{ $block->check_in->format('d M Y') }} – {{ $block->check_out?->format('d M Y') ?? '—' }} <span class="text-white/40">(default dates)</span>
                     @endif
                 </p>
             </div>
@@ -46,9 +46,9 @@
         @foreach ([
             'Room category' => $block->room_type ?: 'Standard',
             'Occupancy' => $block->occupancy ? (\App\Models\EventAccommodation::OCCUPANCIES[$block->occupancy] ?? '—') : '—',
-            'Check-in' => $block->check_in?->format('D, d M Y') ?? '—',
-            'Check-out' => $block->check_out?->format('D, d M Y') ?? '—',
-            'Nights' => $block->nights() ?: '—',
+            'Default check-in' => $block->check_in?->format('D, d M Y') ?? '—',
+            'Default check-out' => $block->check_out?->format('D, d M Y') ?? '—',
+            'Room-nights (total)' => $block->namedRoomNights() ?: '—',
             'Status' => $block->statusLabel(),
         ] as $label => $value)
             <div>
@@ -73,6 +73,7 @@
                         <th class="py-2 pr-3">Category</th>
                         <th class="py-2 pr-3">Check-in</th>
                         <th class="py-2 pr-3">Check-out</th>
+                        <th class="py-2 pr-3 text-center">Nights</th>
                         <th class="py-2">Contact</th>
                     </tr>
                 </thead>
@@ -90,6 +91,7 @@
                             <td class="py-2 pr-3 text-xs text-navy-700">
                                 {{ $r->check_out?->format('d M') ?? '—' }}{{ $r->departure_time ? ' · '.$r->departure_time : '' }}
                             </td>
+                            <td class="py-2 pr-3 text-center text-xs font-semibold text-navy-900">{{ $r->nights() ?: '—' }}</td>
                             <td class="py-2 text-3xs leading-tight text-navy-600">
                                 {{ $r->guest_email ?: '' }}@if ($r->guest_email && $r->guest_phone)<br>@endif{{ $r->guest_phone ?: '' }}
                                 @if (! $r->guest_email && ! $r->guest_phone)—@endif
@@ -101,7 +103,7 @@
                     @for ($n = $rooms->count(); $n < $block->rooms_count; $n++)
                         <tr class="border-b border-line {{ $n % 2 ? 'bg-page/40' : '' }}">
                             <td class="py-2 text-center text-3xs font-bold text-navy-300">{{ $n + 1 }}</td>
-                            <td class="py-2 pr-3 text-xs italic text-navy-300" colspan="7">To be advised</td>
+                            <td class="py-2 pr-3 text-xs italic text-navy-300" colspan="8">To be advised</td>
                         </tr>
                     @endfor
                 </tbody>

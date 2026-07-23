@@ -1,5 +1,9 @@
 @php
     $roomTypeLabels = ['main_hall' => 'Main Hall', 'breakout' => 'Breakout', 'exhibition' => 'Exhibition', 'registration' => 'Registration', 'vip' => 'VIP', 'catering' => 'Catering'];
+    // Built-in labels + any custom room types already used — suggestions for the datalist.
+    $roomTypeOptions = collect($roomTypeLabels)->values()
+        ->merge($rooms->pluck('type')->map(fn ($t) => str($t)->replace('_', ' ')->title()))
+        ->unique()->sort()->values();
     $typeMeta = [
         'main_hall' => ['building', 'bg-navy-100', 'text-navy-700'],
         'breakout' => ['users', 'bg-sky-100', 'text-sky-600'],
@@ -31,9 +35,12 @@
                     </div>
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow" for="room-type">Type</label>
-                        <select id="room-type" wire:model="room_type" class="input h-10 text-sm">
-                            @foreach ($roomTypeLabels as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
-                        </select>
+                        <input id="room-type" type="text" list="room-types" wire:model="room_type" class="input h-10 text-sm"
+                               autocomplete="off" placeholder="Breakout, Stage, Green Room…">
+                        <datalist id="room-types">
+                            @foreach ($roomTypeOptions as $label)<option value="{{ $label }}"></option>@endforeach
+                        </datalist>
+                        @error('room_type') <p class="mt-1 text-eyebrow text-risk">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow" for="room-capacity">Capacity</label>
@@ -77,7 +84,7 @@
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-bold text-navy-900 group-hover:text-gold-700">{{ $room->name }}</p>
                                 <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-eyebrow text-muted">
-                                    <span class="rounded px-1.5 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $tBg }} {{ $tText }}">{{ $roomTypeLabels[$room->type] ?? $room->type }}</span>
+                                    <span class="rounded px-1.5 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $tBg }} {{ $tText }}">{{ $roomTypeLabels[$room->type] ?? str($room->type)->replace('_', ' ')->title() }}</span>
                                     @if ($room->capacity)<span>{{ number_format($room->capacity) }} pax</span>@endif
                                     @if ($room->sessions_count)<span>{{ $room->sessions_count }} {{ str('session')->plural($room->sessions_count) }}</span>@endif
                                     @if ($eqCount)<span>🎛 {{ $eqCount }} {{ str('item')->plural($eqCount) }}</span>@endif

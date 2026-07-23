@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 #[Layout('components.layouts.app', ['title' => 'Equipment Catalog'])]
 class RequirementsCatalog extends Component
@@ -128,7 +129,7 @@ class RequirementsCatalog extends Component
         $ext = strtolower($file->getClientOriginalExtension());
 
         if (in_array($ext, ['xlsx', 'xls'], true)) {
-            $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath())->getActiveSheet();
+            $sheet = IOFactory::load($file->getRealPath())->getActiveSheet();
 
             return $sheet->toArray(null, true, false, false);
         }

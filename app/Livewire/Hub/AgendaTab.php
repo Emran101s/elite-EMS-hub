@@ -4,10 +4,11 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\EventAgendaSession;
-use App\Models\EventRoom;
 use App\Models\User;
 use App\Services\AgendaProgram;
+use App\Services\AgendaTimeline;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -36,20 +37,32 @@ class AgendaTab extends Component
 
     // Modal
     public bool $showForm = false;
+
     public ?int $editingId = null;
 
     // Session form
     public ?int $agenda_day_id = null;
+
     public ?int $room_id = null;
+
     public string $newRoomName = '';
+
     public string $title = '';
+
     public string $type = 'panel';
+
     public string $format = 'in_person';
+
     public string $status = 'draft';
+
     public string $capacity = '';
+
     public string $starts_at = '09:00';
+
     public string $ends_at = '10:00';
+
     public string $description = '';
+
     public bool $flagged = false;
 
     /** Repeatable speaker billing: [['name' => 'Dr Salim', 'role' => 'moderator'], …]. */
@@ -57,11 +70,16 @@ class AgendaTab extends Component
 
     // Import
     public bool $showImport = false;
+
     public $importFile;
 
     public function mount(): void
     {
-        $this->selectedDayId = $this->event->agendaDays()->orderBy('sort')->value('id');
+        // Keep the day the user was on across saves (redirectTab passes ?day=…).
+        $requested = (int) request('day');
+        $this->selectedDayId = ($requested && $this->event->agendaDays()->whereKey($requested)->exists())
+            ? $requested
+            : $this->event->agendaDays()->value('id');
         if (request('action') === 'add') {
             $this->newSession($this->selectedDayId);
         }
@@ -85,7 +103,7 @@ class AgendaTab extends Component
     /** Sign off every unconfirmed session on the selected day in one go. */
     public function confirmDay()
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         if (! $this->selectedDayId) {
             return null;
         }
@@ -150,14 +168,17 @@ class AgendaTab extends Component
 
     public function addDay()
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
-        $last = $this->event->agendaDays()->orderByDesc('sort')->first();
+        Gate::authorize('write');
+        $last = $this->event->agendaDays()->orderByDesc('date')->first();
         $count = $this->event->agendaDays()->count();
         $day = $this->event->agendaDays()->create([
             'date' => $last?->date ? $last->date->copy()->addDay() : ($this->event->starts_at ?? now()),
             'label' => 'Day '.($count + 1),
-            'sort' => ($last?->sort ?? 0) + 1,
+            'sort' => $count + 1,
         ]);
+        // Keep sort strictly by date so a new day always lands in the right place.
+        $this->event->agendaDays()->orderBy('date')->orderBy('id')->get()
+            ->each(fn ($d, $i) => $d->update(['sort' => $i + 1]));
         $this->selectedDayId = $day->id;
 
         return $this->redirectTab();
@@ -165,7 +186,7 @@ class AgendaTab extends Component
 
     public function duplicateDay(int $dayId)
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $day = $this->event->agendaDays()->with('sessions.speakers')->findOrFail($dayId);
         $copy = $this->event->agendaDays()->create([
             'date' => $day->date?->copy()->addDay() ?? now(),
@@ -192,7 +213,7 @@ class AgendaTab extends Component
 
     public function deleteDay(int $dayId)
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $this->event->agendaDays()->whereKey($dayId)->firstOrFail()->delete();
 
         return $this->redirectTab();
@@ -204,7 +225,7 @@ class AgendaTab extends Component
     {
         $this->reset(['editingId', 'title', 'description', 'capacity', 'newRoomName']);
         $this->speakerRows = [];
-        $this->type = 'panel';
+        $this->type = 'Panel';
         $this->format = 'in_person';
         $this->status = 'draft';
         $this->flagged = false;
@@ -223,7 +244,8 @@ class AgendaTab extends Component
         $this->agenda_day_id = $s->agenda_day_id;
         $this->room_id = $s->room_id;
         $this->title = $s->title;
-        $this->type = $s->type;
+        // Show the type prettily; it's normalised back to a slug on save.
+        $this->type = str($s->type)->replace('_', ' ')->title()->toString();
         $this->format = $s->format ?? 'in_person';
         $this->status = $s->status ?? 'draft';
         $this->capacity = (string) ($s->capacity ?? '');
@@ -244,12 +266,12 @@ class AgendaTab extends Component
 
     public function saveSession()
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $this->validate([
             'title' => ['required', 'string', 'max:160'],
             'agenda_day_id' => ['required', 'exists:event_agenda_days,id'],
             'room_id' => ['nullable', 'exists:event_rooms,id'],
-            'type' => ['required', 'in:'.implode(',', EventAgendaSession::TYPES)],
+            'type' => ['required', 'string', 'max:40'],   // built-in or a custom label
             'format' => ['required', 'in:'.implode(',', array_keys(EventAgendaSession::FORMATS))],
             'status' => ['required', 'in:'.implode(',', EventAgendaSession::STATUSES)],
             'capacity' => ['nullable', 'integer', 'min:0'],
@@ -264,11 +286,15 @@ class AgendaTab extends Component
             $this->room_id = $this->event->rooms()->create(['name' => trim($this->newRoomName), 'type' => 'breakout'])->id;
         }
 
+        // Normalise the type to a slug so built-in colours/legends keep matching,
+        // while still allowing any custom label (Setup, Rehearsal, Arriving, …).
+        $type = str($this->type)->snake()->toString() ?: 'session';
+
         $data = [
             'agenda_day_id' => $this->agenda_day_id,
             'room_id' => $this->room_id,
             'title' => $this->title,
-            'type' => $this->type,
+            'type' => $type,
             'format' => $this->format,
             'capacity' => $this->capacity !== '' ? (int) $this->capacity : null,
             'starts_at' => $this->starts_at,
@@ -297,7 +323,7 @@ class AgendaTab extends Component
 
     public function deleteSession(int $sessionId): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail()->delete();
         $this->showForm = false;
     }
@@ -314,7 +340,7 @@ class AgendaTab extends Component
      */
     public function moveSession(int $sessionId, int $startMin, $roomId = null): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $s = $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail();
 
         $toMin = fn (string $t) => (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2);
@@ -358,10 +384,10 @@ class AgendaTab extends Component
 
     public function import()
     {
-        \Illuminate\Support\Facades\Gate::authorize('write');
+        Gate::authorize('write');
         $this->validate(['importFile' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
 
-        $day = $this->event->agendaDays()->orderBy('sort')->first()
+        $day = $this->event->agendaDays()->orderBy('date')->first()
             ?? $this->event->agendaDays()->create(['date' => $this->event->starts_at ?? now(), 'label' => 'Day 1', 'sort' => 0]);
         $rooms = $this->event->rooms()->get()->keyBy(fn ($r) => strtolower($r->name));
         $handle = fopen($this->importFile->getRealPath(), 'r');
@@ -421,7 +447,7 @@ class AgendaTab extends Component
 
     private function redirectTab()
     {
-        return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'agenda']);
+        return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'agenda', 'day' => $this->selectedDayId]);
     }
 
     /**
@@ -458,47 +484,14 @@ class AgendaTab extends Component
      */
     private function buildTimeline($sessions): ?array
     {
-        if ($sessions->isEmpty()) {
-            return null;
-        }
-        $toMin = fn (string $t) => (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2);
-        $startMin = (int) (floor($sessions->min(fn ($s) => $toMin($s->starts_at)) / 60) * 60);
-        $endMin = (int) (ceil($sessions->max(fn ($s) => $toMin($s->ends_at)) / 60) * 60);
-        $startMin = min($startMin, $endMin - 60);
-        $span = max($endMin - $startMin, 60);
-
-        $hours = [];
-        for ($m = $startMin; $m <= $endMin; $m += 60) {
-            $hours[] = ['label' => sprintf('%02d:00', intdiv($m, 60)), 'left' => round(($m - $startMin) / $span * 100, 3)];
-        }
-
-        $lanes = $sessions->groupBy(fn ($s) => $s->room?->name ?? 'Unassigned')->map(fn ($group, $room) => [
-            'room' => $room,
-            'room_id' => $group->first()->room_id,
-            'blocks' => $group->map(function ($s) use ($toMin, $startMin, $span) {
-                [$legend, $hex] = self::PALETTE[$s->type] ?? ['Session', '#3B82F6'];
-                $sMin = $toMin($s->starts_at);
-                $dMin = $toMin($s->ends_at) - $sMin;
-
-                return [
-                    'session' => $s,
-                    'left' => round(($sMin - $startMin) / $span * 100, 3),
-                    'width' => round(max($dMin, 15) / $span * 100, 3),
-                    'startMin' => $sMin,
-                    'durMin' => $dMin,
-                    'hex' => $hex, 'legend' => $legend,
-                ];
-            })->values(),
-        ])->values();
-
-        return ['hours' => $hours, 'lanes' => $lanes, 'startMin' => $startMin, 'span' => $span];
+        return app(AgendaTimeline::class)->forSessions($sessions);
     }
 
     public function render()
     {
         $days = $this->event->agendaDays()
             ->with(['sessions' => fn ($q) => $q->orderBy('starts_at'), 'sessions.room', 'sessions.speakers'])
-            ->orderBy('sort')->get();
+            ->orderBy('date')->orderBy('id')->get();
 
         $day = $days->firstWhere('id', $this->selectedDayId) ?? $days->first();
         $sessions = $day?->sessions ?? collect();
@@ -525,6 +518,11 @@ class AgendaTab extends Component
                 ->merge(User::orderBy('name')->pluck('name'))
                 ->unique()->filter()->values(),
             'roles' => EventAgendaSession::SPEAKER_ROLES,
+            // Built-in types + any custom ones already used, prettified for the datalist.
+            'typeOptions' => collect(EventAgendaSession::TYPES)
+                ->merge($this->event->agendaSessions()->distinct()->pluck('type'))
+                ->map(fn ($t) => str($t)->replace('_', ' ')->title()->toString())
+                ->unique()->sort()->values(),
             'stats' => [
                 'sessions' => $sessions->count(),
                 'hours' => round($totalMin / 60, 1),
