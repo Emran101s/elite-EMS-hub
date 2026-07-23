@@ -1,10 +1,8 @@
-@props(['event' => null, 'avatar' => null, 'size' => 'md', 'ring' => true, 'percent' => null, 'group' => null])
+@props(['event' => null, 'size' => 'md', 'ring' => true, 'percent' => null, 'group' => null])
 
 @php
-    // The single way avatars render anywhere in the platform.
-    // Priority: uploaded image → built-in SVG scene for the slug → neutral placeholder.
-    $avatar ??= $event?->avatar;
-
+    // The single way an event's visual renders anywhere in the platform.
+    // Priority: uploaded cover image → generated crest so every event has a mark.
     $frame = match ($size) {
         'sm' => 'h-10 w-14 rounded-lg',
         'lg' => 'h-28 w-40 rounded-2xl',
@@ -13,17 +11,12 @@
     };
 @endphp
 
-<span {{ $attributes->merge(['class' => 'relative inline-block shrink-0']) }}
-      @if ($avatar) data-avatar="{{ $avatar->slug }}" @endif>
-    <span class="{{ $frame }} block overflow-hidden {{ $avatar?->image_path ? 'bg-transparent' : 'bg-navy-50 ring-1 ring-line' }}">
-        @if ($avatar?->image_path)
-            @php $src = in_array($size, ['sm', 'md']) && $avatar->thumbnail_path ? $avatar->thumbnail_path : $avatar->image_path; @endphp
-            <img src="{{ asset($src) }}" alt="{{ $avatar->name }}" loading="lazy" class="h-full w-full object-contain">
-        @elseif ($avatar && view()->exists('components.avatars.' . $avatar->slug))
-            <x-dynamic-component :component="'avatars.' . $avatar->slug" class="h-full w-full" />
+<span {{ $attributes->merge(['class' => 'relative inline-block shrink-0']) }}>
+    <span class="{{ $frame }} block overflow-hidden {{ $event?->cover_path ? 'bg-transparent' : 'bg-navy-50 ring-1 ring-line' }}">
+        @if ($event?->cover_path)
+            <img src="{{ $event->coverUrl() }}" alt="{{ $event->name }}" loading="lazy" class="h-full w-full object-cover">
         @else
-            {{-- No upload and no built-in scene: generate a crest so every event still has a mark. --}}
-            <x-event-crest :event="$event" :name="$avatar?->name ?? $event?->name" :type="$event?->type" class="h-full w-full" />
+            <x-event-crest :event="$event" :name="$event?->name" :type="$event?->type" class="h-full w-full" />
         @endif
     </span>
 

@@ -142,6 +142,29 @@
                 <p class="mt-2.5 text-micro text-muted">Overview, AI Insights and Settings are always on. You can change any of this later in the hub.</p>
             </section>
 
+            <section>
+                <div class="mb-2 flex items-center gap-2">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-black text-gold-400">◈</span>
+                    <h2 class="text-sm font-bold text-navy-900">Cover &amp; logo <span class="font-normal text-muted">— optional</span></h2>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="cursor-pointer rounded-2xl border border-dashed border-line bg-white px-4 py-3 transition hover:border-gold-300">
+                        <span class="text-micro font-bold text-navy-700">Cover image</span>
+                        <span class="mt-0.5 block text-eyebrow text-muted">Wide photo / banner · PNG or JPG</span>
+                        <input type="file" wire:model="cover" accept="image/*" class="mt-2 block w-full text-eyebrow file:mr-2 file:rounded-lg file:border-0 file:bg-navy-900 file:px-2.5 file:py-1 file:text-eyebrow file:font-semibold file:text-white">
+                        <span wire:loading wire:target="cover" class="text-eyebrow text-gold-600">Uploading…</span>
+                        @error('cover') <span class="mt-1 block text-eyebrow text-risk">{{ $message }}</span> @enderror
+                    </label>
+                    <label class="cursor-pointer rounded-2xl border border-dashed border-line bg-white px-4 py-3 transition hover:border-gold-300">
+                        <span class="text-micro font-bold text-navy-700">Logo</span>
+                        <span class="mt-0.5 block text-eyebrow text-muted">Square mark · transparent PNG best</span>
+                        <input type="file" wire:model="logo" accept="image/*" class="mt-2 block w-full text-eyebrow file:mr-2 file:rounded-lg file:border-0 file:bg-navy-900 file:px-2.5 file:py-1 file:text-eyebrow file:font-semibold file:text-white">
+                        <span wire:loading wire:target="logo" class="text-eyebrow text-gold-600">Uploading…</span>
+                        @error('logo') <span class="mt-1 block text-eyebrow text-risk">{{ $message }}</span> @enderror
+                    </label>
+                </div>
+            </section>
+
             <div class="flex flex-wrap items-center gap-3 pb-2">
                 <a href="{{ route('events.index') }}" class="rounded-2xl bg-fill px-5 py-2.5 text-sm font-bold text-navy-700 transition hover:bg-line">Cancel</a>
                 <button type="submit" class="btn-gold ml-auto h-11 !rounded-2xl px-7 text-sm" wire:loading.attr="disabled">
@@ -162,13 +185,15 @@
                     {{-- crest --}}
                     <div class="relative h-[132px] overflow-hidden bg-gradient-to-br from-navy-800 to-[var(--color-navy-950)]">
                         <div class="pointer-events-none absolute -right-7 -top-9 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
-                        @if ($previewAvatar)
-                            <div class="relative flex h-full w-full items-center justify-center p-4">
-                                <x-event-avatar :avatar="$previewAvatar" :ring="false" size="xl"
-                                                class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-xl [&>span]:!bg-transparent [&>span]:ring-0" />
-                            </div>
+                        @if ($cover)
+                            <img src="{{ $cover->temporaryUrl() }}" alt="Cover preview" class="h-full w-full object-cover">
                         @else
                             <x-event-crest :name="$pvName" :type="$previewType" class="h-full w-full" />
+                        @endif
+                        @if ($logo)
+                            <span class="absolute bottom-2.5 right-2.5 flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/95 p-1 shadow ring-1 ring-line">
+                                <img src="{{ $logo->temporaryUrl() }}" alt="Logo preview" class="h-full w-full object-contain">
+                            </span>
                         @endif
                         @if ($pvDays !== null)
                             <span class="absolute left-2.5 top-3 rounded-full bg-white/95 px-2 py-1 text-eyebrow font-black uppercase tracking-wider text-navy-700 backdrop-blur">

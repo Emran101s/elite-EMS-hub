@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Event;
-use App\Models\EventAvatar;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Venue;
@@ -59,7 +58,6 @@ class RandomEventSeeder extends Seeder
     {
         $count = (int) env('EBH_RANDOM_EVENTS', 10);
 
-        $avatars = EventAvatar::active()->get();
         $clients = Client::all();
         $team = User::all();
         $venues = Venue::all();
@@ -94,7 +92,6 @@ class RandomEventSeeder extends Seeder
                 'client_id' => $clients->isNotEmpty() ? $clients->random()->id : null,
                 'project_manager_id' => $team->isNotEmpty() ? $team->random()->id : null,
                 'venue_id' => fake()->boolean(70) && $venues->isNotEmpty() ? $venues->random()->id : null,
-                'avatar_id' => EventAvatar::recommendedFor($type)->value('id') ?? $avatars->random()->id,
                 'starts_at' => $start,
                 'ends_at' => $end,
                 'budget_cents' => fake()->numberBetween(30, 900) * 100000,

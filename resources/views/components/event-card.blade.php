@@ -31,7 +31,7 @@
     <div class="relative h-[124px] shrink-0 overflow-hidden bg-gradient-to-br from-navy-800 to-[#061225]">
         <div class="pointer-events-none absolute -right-7 -top-9 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
 
-        @if ($event->avatar)
+        @if ($event->cover_path)
             <div class="relative flex h-full w-full items-center justify-center p-4 transition duration-500 group-hover:scale-105">
                 <x-event-avatar :event="$event" :ring="false" size="xl"
                                 class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-xl [&>span]:!bg-transparent [&>span]:ring-0" />

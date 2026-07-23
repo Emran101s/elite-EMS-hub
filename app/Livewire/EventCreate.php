@@ -5,9 +5,10 @@ namespace App\Livewire;
 use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Event;
-use App\Models\EventAvatar;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * One canvas, not a three-step slog: answer a few questions on the left and
@@ -17,6 +18,8 @@ use Livewire\Component;
 #[Layout('components.layouts.app', ['title' => 'Create Event', 'subtitle' => 'Answer a few questions — the event builds itself as you type.'])]
 class EventCreate extends Component
 {
+    use WithFileUploads;
+
     /** Type templates: key => [label, event type, icon, default modules]. */
     public const TEMPLATES = [
         'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports']],
@@ -43,6 +46,11 @@ class EventCreate extends Component
     public bool $newClientMode = false;
 
     public string $name = '';
+
+    /** Uploaded cover image + logo (both optional). */
+    public $cover = null;
+
+    public $logo = null;
 
     // ── When & where ──
     public string $starts_at = '';
@@ -106,8 +114,8 @@ class EventCreate extends Component
             return 0;
         }
         try {
-            $start = \Illuminate\Support\Carbon::parse($this->starts_at)->startOfDay();
-            $end = $this->ends_at ? \Illuminate\Support\Carbon::parse($this->ends_at)->startOfDay() : $start;
+            $start = Carbon::parse($this->starts_at)->startOfDay();
+            $end = $this->ends_at ? Carbon::parse($this->ends_at)->startOfDay() : $start;
         } catch (\Throwable) {
             return 0;
         }
@@ -136,7 +144,8 @@ class EventCreate extends Component
             'management_fee_pct' => $company->default_management_fee_pct,
             'timezone' => $this->timezone,
             'client_id' => $this->client_id,
-            'avatar_id' => EventAvatar::recommendedFor($type)->value('id'),
+            'cover_path' => $this->cover ? 'storage/'.$this->cover->store('event-covers', 'public') : null,
+            'logo_path' => $this->logo ? 'storage/'.$this->logo->store('event-logos', 'public') : null,
             'primary_color' => '#0B1F3A',
             'secondary_color' => '#F8FAFC',
             'accent_color' => '#D4AF37',
@@ -167,6 +176,8 @@ class EventCreate extends Component
             'timezone' => ['required', 'string', 'max:60'],
             'city' => ['nullable', 'string', 'max:80'],
             'statusPill' => ['required', 'in:'.implode(',', array_keys(self::STATUS_PILLS))],
+            'cover' => ['nullable', 'image', 'max:8192'],
+            'logo' => ['nullable', 'image', 'max:4096'],
         ], [
             'client_id.required_without' => 'Choose a client or add a new one.',
             'name.required' => 'Give the event a title.',
@@ -184,7 +195,6 @@ class EventCreate extends Component
             'templates' => self::TEMPLATES,
             'hubModules' => Event::HUB_MODULES,
             'timezones' => ['UTC', 'Asia/Amman', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Bahrain', 'Europe/London', 'America/New_York'],
-            'previewAvatar' => EventAvatar::recommendedFor($type)->first(),
             'previewType' => $type,
             'previewDays' => $this->dayCount(),
         ]);

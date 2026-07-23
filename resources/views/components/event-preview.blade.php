@@ -37,7 +37,7 @@
                 <x-status-badge :status="$health['status']" />
             </div>
             <p class="mt-0.5 flex items-center gap-2 text-[13px] font-medium" style="color: {{ $theme['accent'] }}">
-                {{ $event->avatar?->name ?? str($event->type)->replace('_', ' ')->title() }}
+                {{ str($event->type)->replace('_', ' ')->title() }}
                 <span class="h-px w-8" style="background: {{ $theme['accent'] }}66"></span>
             </p>
             <ul class="mt-3 space-y-1.5 text-xs text-white/80">

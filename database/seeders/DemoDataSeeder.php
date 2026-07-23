@@ -21,7 +21,6 @@ class DemoDataSeeder extends Seeder
 
     public function run(): void
     {
-        $this->call(EventAvatarSeeder::class);
 
         // ── Venues ──────────────────────────────────────────────────────
         $venues = collect([
@@ -107,21 +106,6 @@ class DemoDataSeeder extends Seeder
 
             return [$event['name'] => Event::updateOrCreate(['name' => $event['name']], $attributes)];
         });
-
-        // Give each demo event its library avatar.
-        $avatarMap = [
-            'ICFT 2026' => 'convention-center', // ICFT-branded flagship render
-            'EY Annual Gala' => 'gala-dinner',
-            'NDI Workshop' => 'workshop',
-            'Tech Expo 2026' => 'exhibition',
-            'GJU Career Fair' => 'exhibition',
-            'Private Dinner' => 'vip-event',
-        ];
-        foreach ($avatarMap as $eventName => $slug) {
-            $events[$eventName]->update([
-                'avatar_id' => \App\Models\EventAvatar::where('slug', $slug)->value('id'),
-            ]);
-        }
 
         // ── Suppliers (top three from the mockup + supporting cast) ─────
         $suppliers = collect([

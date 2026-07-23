@@ -1,7 +1,6 @@
 <x-layouts.app title="Settings" subtitle="Workspace master data & platform configuration — the libraries every event draws from.">
     @php
         $sections = [
-            ['glyph' => '🖼', 'title' => 'Event Avatars', 'desc' => 'Cover visuals each event uses as its identity. Upload your own.', 'route' => 'settings.avatars', 'live' => true],
             ['glyph' => '🎛', 'title' => 'Equipment Catalog', 'desc' => 'Reusable equipment & prices for venues and events.', 'route' => 'requirements.index', 'live' => true],
             ['glyph' => '📍', 'title' => 'Venues & Locations', 'desc' => 'Your library of hotels, halls and sites — reused by every event.', 'route' => 'venues.index', 'live' => true],
             ['glyph' => '🚚', 'title' => 'Suppliers', 'desc' => 'Supplier directory shared across all events.', 'route' => 'suppliers.index', 'live' => true],

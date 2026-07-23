@@ -4,15 +4,17 @@ namespace App\Livewire\Hub;
 
 use App\Models\Client;
 use App\Models\Event;
-use App\Models\EventAvatar;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class SettingsTab extends Component
 {
+    use WithFileUploads;
+
     /** Preset color themes: [label, primary, secondary, accent, text]. */
     public const PALETTES = [
         'navy-gold' => ['Navy + Gold', '#0B1F3A', '#F8FAFC', '#D4AF37', '#0F172A'],
@@ -28,31 +30,50 @@ class SettingsTab extends Component
 
     // Details
     public string $name = '';
+
     public string $description = '';
+
     public ?int $client_id = null;
+
     public string $new_client = '';
+
     public string $expected_participants = '';
+
     public string $city = '';
+
     public string $country = 'Jordan';
+
     public string $starts_at = '';
+
     public string $ends_at = '';
+
     public string $budget = '';
+
     public string $currency = 'USD';
+
     public string $stage = 'planning';
 
     // Ownership
     public ?int $project_manager_id = null;
+
     public ?int $venue_id = null;
 
     // Event team assignment
     public ?int $teamUserId = null;
+
     public string $teamRole = 'operations_lead';
 
     // Identity
-    public ?int $avatar_id = null;
+    public $cover = null;
+
+    public $logo = null;
+
     public string $primary_color = '#0B1F3A';
+
     public string $secondary_color = '#F8FAFC';
+
     public string $accent_color = '#D4AF37';
+
     public string $text_color = '#0F172A';
 
     // Modules
@@ -74,7 +95,6 @@ class SettingsTab extends Component
         $this->stage = $e->stage;
         $this->project_manager_id = $e->project_manager_id;
         $this->venue_id = $e->venue_id;
-        $this->avatar_id = $e->avatar_id;
         $theme = $e->theme();
         $this->primary_color = $theme['primary'];
         $this->secondary_color = $theme['secondary'];
@@ -91,9 +111,20 @@ class SettingsTab extends Component
         }
     }
 
-    public function chooseAvatar(int $avatarId): void
+    public function removeCover(): void
     {
-        $this->avatar_id = $avatarId;
+        if ($this->event->cover_path) {
+            $this->event->update(['cover_path' => null]);
+        }
+        $this->cover = null;
+    }
+
+    public function removeLogo(): void
+    {
+        if ($this->event->logo_path) {
+            $this->event->update(['logo_path' => null]);
+        }
+        $this->logo = null;
     }
 
     /**
@@ -140,7 +171,8 @@ class SettingsTab extends Component
             'stage' => ['required', 'in:'.implode(',', Event::STAGES)],
             'project_manager_id' => ['nullable', 'exists:users,id'],
             'venue_id' => ['nullable', 'exists:venues,id'],
-            'avatar_id' => ['nullable', 'exists:event_avatars,id'],
+            'cover' => ['nullable', 'image', 'max:8192'],
+            'logo' => ['nullable', 'image', 'max:4096'],
         ]);
 
         if ($this->new_client !== '' && ! $this->client_id) {
@@ -161,13 +193,16 @@ class SettingsTab extends Component
             'stage' => $this->stage,
             'project_manager_id' => $this->project_manager_id,
             'venue_id' => $this->venue_id,
-            'avatar_id' => $this->avatar_id,
+            'cover_path' => $this->cover ? 'storage/'.$this->cover->store('event-covers', 'public') : $this->event->cover_path,
+            'logo_path' => $this->logo ? 'storage/'.$this->logo->store('event-logos', 'public') : $this->event->logo_path,
             'primary_color' => $this->primary_color,
             'secondary_color' => $this->secondary_color,
             'accent_color' => $this->accent_color,
             'text_color' => $this->text_color,
             'enabled_modules' => array_values(array_intersect(array_keys(Event::HUB_MODULES), $this->modules)),
         ]);
+
+        $this->reset(['cover', 'logo']);
 
         if ($this->project_manager_id) {
             $this->event->teamMembers()->syncWithoutDetaching([$this->project_manager_id => ['role' => 'project_manager']]);
@@ -212,7 +247,7 @@ class SettingsTab extends Component
 
     public function duplicate()
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        Gate::authorize('manage-events');
         $copy = $this->event->replicate(['progress']);
         $copy->name = $this->event->name.' (Copy)';
         $copy->stage = 'draft';
@@ -228,7 +263,7 @@ class SettingsTab extends Component
 
     public function archive()
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        Gate::authorize('manage-events');
         $this->event->update(['archived_at' => now()]);
 
         return $this->redirectRoute('events.index');
@@ -242,7 +277,6 @@ class SettingsTab extends Component
             'team' => $this->event->teamMembers()->orderBy('name')->get(),
             'roleLabels' => Event::TEAM_ROLE_LABELS,
             'venues' => Venue::orderBy('name')->get(),
-            'avatars' => EventAvatar::active()->orderBy('sort_order')->get(),
             'palettes' => self::PALETTES,
             'hubModules' => Event::HUB_MODULES,
         ]);

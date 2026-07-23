@@ -198,47 +198,60 @@
         <div id="s-theme" class="card scroll-mt-32 p-6">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="pf text-xl font-bold leading-none text-gold-400/50">04</span>
-                <h3 class="pf text-base font-bold text-navy-900">Avatar &amp; Theme</h3>
+                <h3 class="pf text-base font-bold text-navy-900">Identity &amp; Theme</h3>
             </div>
             <div class="grid gap-5 sm:grid-cols-2">
 
-                {{-- Avatar — elegant combo box --}}
-                <div>
-                    <label class="field-label !mb-1 !text-eyebrow">Event Avatar</label>
-                    @php $selectedAvatar = $avatars->firstWhere('id', $avatar_id); @endphp
-                    <details class="group relative" wire:key="avatar-dd">
-                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl bg-fill px-3 py-2 transition hover:bg-navy-50 [&::-webkit-details-marker]:hidden">
-                            <span class="h-9 w-14 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-line">
-                                @if ($selectedAvatar)
-                                    <x-event-avatar :avatar="$selectedAvatar" :ring="false" size="sm" class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-white" />
-                                @endif
-                            </span>
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-sm font-semibold text-navy-900">{{ $selectedAvatar?->name ?? 'Choose an avatar…' }}</span>
-                                <span class="block truncate text-eyebrow text-muted">{{ $selectedAvatar?->subtitle }}</span>
-                            </span>
-                            <x-icon name="chevron" class="h-4 w-4 shrink-0 text-navy-400 transition group-open:rotate-180" />
-                        </summary>
-                        <div class="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border border-line bg-white p-1.5 shadow-[0_20px_45px_rgba(11,31,58,0.15)]">
-                            @foreach ($avatars as $avatar)
-                                <button type="button" wire:click="chooseAvatar({{ $avatar->id }})" onclick="this.closest('details').removeAttribute('open')"
-                                        @class([
-                                            'flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition',
-                                            'bg-gold-50 ring-1 ring-gold-200' => $avatar_id === $avatar->id,
-                                            'hover:bg-navy-50' => $avatar_id !== $avatar->id,
-                                        ])>
-                                    <span class="h-8 w-12 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-line">
-                                        <x-event-avatar :avatar="$avatar" :ring="false" size="sm" class="block h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-white" />
-                                    </span>
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block truncate text-xs font-semibold text-navy-900">{{ $avatar->name }}</span>
-                                        <span class="block truncate text-eyebrow text-muted">{{ $avatar->subtitle }}</span>
-                                    </span>
-                                    @if ($avatar_id === $avatar->id)<span class="shrink-0 text-sm text-gold-600">✓</span>@endif
-                                </button>
-                            @endforeach
+                {{-- Cover image + logo uploads --}}
+                <div class="sm:col-span-2 grid gap-4 sm:grid-cols-2">
+                    {{-- cover --}}
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Cover image</label>
+                        <div class="relative h-28 overflow-hidden rounded-2xl border border-line bg-navy-50">
+                            @if ($cover)
+                                <img src="{{ $cover->temporaryUrl() }}" alt="Cover" class="h-full w-full object-cover">
+                            @elseif ($event->cover_path)
+                                <img src="{{ $event->coverUrl() }}" alt="Cover" class="h-full w-full object-cover">
+                            @else
+                                <x-event-crest :event="$event" :name="$event->name" :type="$event->type" class="h-full w-full" />
+                            @endif
                         </div>
-                    </details>
+                        <div class="mt-1.5 flex items-center gap-3">
+                            <label class="cursor-pointer text-eyebrow font-bold text-gold-700 hover:text-gold-800">
+                                <span wire:loading.remove wire:target="cover">{{ $event->cover_path || $cover ? 'Replace' : 'Upload' }}</span>
+                                <span wire:loading wire:target="cover">Uploading…</span>
+                                <input type="file" wire:model="cover" accept="image/*" class="hidden">
+                            </label>
+                            @if ($event->cover_path || $cover)
+                                <button type="button" wire:click="removeCover" class="text-eyebrow font-bold text-muted hover:text-risk">Remove</button>
+                            @endif
+                        </div>
+                        @error('cover') <p class="mt-1 text-eyebrow text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    {{-- logo --}}
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Logo</label>
+                        <div class="flex h-28 items-center justify-center overflow-hidden rounded-2xl border border-line bg-white">
+                            @if ($logo)
+                                <img src="{{ $logo->temporaryUrl() }}" alt="Logo" class="h-full w-full object-contain p-3">
+                            @elseif ($event->logo_path)
+                                <img src="{{ $event->logoUrl() }}" alt="Logo" class="h-full w-full object-contain p-3">
+                            @else
+                                <span class="text-eyebrow text-muted">No logo</span>
+                            @endif
+                        </div>
+                        <div class="mt-1.5 flex items-center gap-3">
+                            <label class="cursor-pointer text-eyebrow font-bold text-gold-700 hover:text-gold-800">
+                                <span wire:loading.remove wire:target="logo">{{ $event->logo_path || $logo ? 'Replace' : 'Upload' }}</span>
+                                <span wire:loading wire:target="logo">Uploading…</span>
+                                <input type="file" wire:model="logo" accept="image/*" class="hidden">
+                            </label>
+                            @if ($event->logo_path || $logo)
+                                <button type="button" wire:click="removeLogo" class="text-eyebrow font-bold text-muted hover:text-risk">Remove</button>
+                            @endif
+                        </div>
+                        @error('logo') <p class="mt-1 text-eyebrow text-risk">{{ $message }}</p> @enderror
+                    </div>
                 </div>
 
                 {{-- Color theme --}}
