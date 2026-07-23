@@ -1,6 +1,7 @@
 @php $theme = $event->theme(); @endphp
 
 <x-layouts.app :title="$event->name . ' — Event Hub'"
+               :hide-title-row="true"
                :subtitle="str($event->type)->replace('_', ' ')->title() . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))"
                :crumbs="[
                    ['label' => 'Command Center', 'href' => route('home')],
@@ -171,7 +172,7 @@
             ?? ($railExtras[$key] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $key)));
     @endphp
     <div class="sticky top-0 z-20 mt-3">
-        <nav class="flex flex-wrap items-center gap-1.5 rounded-2xl border border-line bg-gradient-to-b from-white to-page/60 px-2.5 py-2 shadow-[0_8px_24px_-10px_rgba(11,31,58,0.18)] backdrop-blur-sm" aria-label="Event modules">
+        <nav class="glass-dock flex flex-wrap items-center gap-1.5 px-2.5 py-2" aria-label="Event modules">
             @foreach ($groups as $groupName => $tabs)
                 @php $visible = collect($tabs)->filter(fn ($t, $key) => $event->moduleEnabled($key)); @endphp
                 @continue ($visible->isEmpty())

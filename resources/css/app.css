@@ -209,6 +209,56 @@
     .seg-step {
         @apply flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-navy-600 transition hover:border-gold-300 hover:text-navy-900;
     }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       COMMAND-CENTER DESIGN SYSTEM
+       The premium executive language: light glass workspace, dark navy
+       panels, gold accent. Reused across every module's Control Center,
+       Kanban and cards so the platform reads as one system.
+       ═══════════════════════════════════════════════════════════════════ */
+
+    /* Floating white glass navigation dock. */
+    .glass-dock {
+        @apply rounded-[18px] border border-white/70 bg-white/85 shadow-[0_12px_34px_-14px_rgba(11,31,58,0.28)] ring-1 ring-navy-900/[0.04] backdrop-blur-xl;
+    }
+
+    /* Right-side module Control Center — white panel, dark mini header. */
+    .cc-panel {
+        @apply overflow-hidden rounded-2xl border border-line bg-white shadow-[0_18px_50px_-24px_rgba(11,31,58,0.35)];
+    }
+    .cc-head {
+        @apply relative flex items-center gap-2 overflow-hidden bg-gradient-to-br from-navy-900 to-navy-950 px-4 py-3 text-white;
+    }
+    /* KPI tile inside a Control Center or workspace. */
+    .cc-tile {
+        @apply rounded-xl border border-line bg-page/40 px-3 py-2.5 transition hover:border-gold-200 hover:bg-white;
+    }
+    .cc-kpi { @apply text-xl font-black leading-none text-navy-900; font-family: 'Spectral', Georgia, serif; }
+    .cc-kpi-label { @apply mt-1 block text-[0.6rem] font-bold uppercase tracking-[0.1em] text-navy-400; }
+
+    /* Quick-action button in a Control Center. */
+    .qa-btn {
+        @apply flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-left text-micro font-bold text-navy-700 shadow-sm transition hover:-translate-y-0.5 hover:border-gold-300 hover:text-navy-900 hover:shadow-md;
+    }
+
+    /* Rich operational card (Kanban / module cards). */
+    .op-card {
+        @apply relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_10px_26px_-16px_rgba(11,31,58,0.45)] transition duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-[0_22px_46px_-20px_rgba(11,31,58,0.5)];
+    }
+    /* Dark navy event footer that anchors an operational card. */
+    .op-card-foot {
+        @apply mt-auto flex items-center gap-2 bg-gradient-to-r from-navy-900 to-navy-950 px-3.5 py-2 text-white;
+    }
+
+    /* Soft status/priority pill — pair with inline colour via style="". */
+    .pill {
+        @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.62rem] font-bold;
+    }
+
+    /* Kanban column header. */
+    .kanban-head {
+        @apply mb-3 flex items-center gap-2 px-1;
+    }
 }
 
 /* Floating multi-select action pill — subtle slide-up entrance. */
