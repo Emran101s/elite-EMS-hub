@@ -41,7 +41,7 @@
         <ul class="space-y-2 text-xs">
             @foreach ([
                 'tasks' => 'Task Completion', 'budget' => 'Budget Health', 'suppliers' => 'Supplier Readiness',
-                'venue' => 'Venue Readiness', 'agenda' => 'Agenda Completion', 'risk' => 'Risk Level',
+                'venue' => 'Venue Readiness', 'transport' => 'Transport Readiness', 'agenda' => 'Agenda Completion', 'risk' => 'Risk Level',
             ] as $key => $label)
                 <li class="flex items-center justify-between">
                     <span class="text-muted">{{ $label }}</span>

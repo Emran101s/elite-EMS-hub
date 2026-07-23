@@ -7,9 +7,9 @@ use App\Models\Event;
 /**
  * Explainable Event Health Score.
  *
- * Weights (per product spec):
- *   Task completion 30% · Budget health 20% · Supplier readiness 15% ·
- *   Venue readiness 15% · Agenda completion 10% · Risk level 10%
+ * Relative weights (per product spec):
+ *   Task completion 30 · Budget health 20 · Supplier readiness 15 ·
+ *   Venue readiness 15 · Transport readiness 15 · Agenda completion 10 · Risk level 10
  *
  * Components without data yet return null and their weight is redistributed,
  * so a freshly created event is not punished for empty tabs.
@@ -22,13 +22,14 @@ class EventHealthService
      * The relations breakdown() reads. Eager-load these before scoring a set of
      * events, or each score silently costs one query per relation per event.
      */
-    public const RELATIONS = ['tasks', 'risks', 'approvals', 'budgetItems', 'agendaSessions', 'rooms', 'suppliers', 'venue'];
+    public const RELATIONS = ['tasks', 'risks', 'approvals', 'budgetItems', 'agendaSessions', 'rooms', 'suppliers', 'venue', 'transport.manifest', 'transferGuests'];
 
     private const WEIGHTS = [
         'tasks' => 30,
         'budget' => 20,
         'suppliers' => 15,
         'venue' => 15,
+        'transport' => 15,
         'agenda' => 10,
         'risk' => 10,
     ];
@@ -45,6 +46,7 @@ class EventHealthService
             'budget' => $this->budgetScore($event),
             'suppliers' => $this->supplierScore($event),
             'venue' => $this->venueScore($event),
+            'transport' => $this->transportScore($event),
             'agenda' => $this->agendaScore($event),
             'risk' => $this->riskScore($event),
         ];
@@ -98,6 +100,21 @@ class EventHealthService
             $attention[] = "Supplier issue: {$supplier->name}";
         }
 
+        foreach ($event->transport->where('status', 'issue') as $movement) {
+            $attention[] = 'Transport issue: '.$movement->refLabel().' — '.($movement->issue_note ?: ($movement->route ?: 'unresolved'));
+        }
+
+        $unreadyVip = $event->transport->first(fn ($m) => $m->is_vip
+            && ! in_array($m->status, ['completed', 'cancelled'], true) && ! $m->isReady());
+        if ($unreadyVip) {
+            $attention[] = 'VIP transfer not ready: '.$unreadyVip->refLabel().' is missing '.implode(' + ', $unreadyVip->readiness()['missing']).'.';
+        }
+
+        $pool = $event->transferGuests->whereNull('transport_id')->count();
+        if ($pool > 0) {
+            $attention[] = $pool.' transfer '.str('guest')->plural($pool).' still unassigned in the transport pool.';
+        }
+
         $overdue = $event->tasks->filter(fn ($task) => $task->isOpen() && $task->due_on?->isPast());
         if ($overdue->isNotEmpty()) {
             $attention[] = $overdue->count().' overdue '.str('task')->plural($overdue->count()).', next: “'.$overdue->sortBy('due_on')->first()->title.'”';
@@ -148,6 +165,36 @@ class EventHealthService
         return (int) round($event->suppliers->avg(
             fn ($supplier) => self::SUPPLIER_READINESS[$supplier->pivot->status] ?? 10
         ));
+    }
+
+    /**
+     * Transport readiness: are the movements staffed and the guests on vehicles?
+     * Staffing weighs 70% (a completed run = 100, an open issue = 20, otherwise
+     * the movement's own readiness thirds: vehicle/driver/passengers); guest
+     * coverage — the share of transfer guests out of the pool — weighs 30%.
+     */
+    private function transportScore(Event $event): ?int
+    {
+        $movements = $event->transport->where('status', '!=', 'cancelled');
+        $guests = $event->transferGuests;
+
+        if ($movements->isEmpty() && $guests->isEmpty()) {
+            return null;
+        }
+
+        $staffing = $movements->isEmpty() ? null : (int) round($movements->avg(fn ($m) => match ($m->status) {
+            'completed' => 100,
+            'issue' => 20,
+            default => (int) round($m->readiness()['score'] / 3 * 100),
+        }));
+
+        $coverage = $guests->isEmpty() ? null
+            : (int) round($guests->whereNotNull('transport_id')->count() / $guests->count() * 100);
+
+        return match (true) {
+            $staffing !== null && $coverage !== null => (int) round($staffing * 0.7 + $coverage * 0.3),
+            default => $staffing ?? $coverage,
+        };
     }
 
     private function venueScore(Event $event): ?int
