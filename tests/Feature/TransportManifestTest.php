@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Hub\TransportationTab;
 use App\Models\Event;
 use App\Models\EventTransport;
+use App\Models\EventTransportPassenger;
 use App\Models\TransportServiceType;
 use App\Models\User;
 use App\Models\VehicleType;
@@ -44,7 +45,7 @@ class TransportManifestTest extends TestCase
             'flight_no' => 'RJ 512',
             'depart_at' => '2026-10-17 14:20',
             'capacity' => 7 * $vehicles,
-            'status' => 'booked',
+            'status' => 'ordered',
         ]);
     }
 
@@ -133,7 +134,7 @@ class TransportManifestTest extends TestCase
         $this->van($event, 2);   // 2 vans
         $this->van($event, 1);   // 1 more van
         $event->transport()->create(['type' => 'shuttle', 'vehicle_type_id' => $sedan->id,
-            'vehicles' => 3, 'route' => 'VIP run', 'capacity' => 6, 'status' => 'booked']);
+            'vehicles' => 3, 'route' => 'VIP run', 'capacity' => 6, 'status' => 'ordered']);
 
         $fleet = Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
             ->viewData('fleet');
@@ -158,7 +159,7 @@ class TransportManifestTest extends TestCase
         $this->assertSame('2026-10-18', $copy->depart_at->format('Y-m-d'), 'shifted one day on');
     }
 
-    public function test_deleting_a_movement_takes_its_manifest_with_it(): void
+    public function test_deleting_a_movement_frees_its_manifest_rather_than_erasing_it(): void
     {
         [$event, $user] = $this->ctx();
         $movement = $this->van($event);
@@ -167,7 +168,13 @@ class TransportManifestTest extends TestCase
             ->set("newPax.{$movement->id}", 'Dana Haddad')->call('addPassenger', $movement->id)
             ->call('delete', $movement->id);
 
-        $this->assertSame(0, \App\Models\EventTransportPassenger::where('transport_id', $movement->id)->count());
+        $this->assertSame(0, EventTransportPassenger::where('transport_id', $movement->id)->count(),
+            'nobody is left riding a deleted vehicle');
+
+        // The vehicle was a plan; the person is data. Dana still needs a transfer.
+        $dana = $event->transferGuests()->where('name', 'Dana Haddad')->first();
+        $this->assertNotNull($dana, 'the passenger survives the vehicle');
+        $this->assertNull($dana->transport_id, 'and is waiting in the pool');
     }
 
     public function test_the_manifest_pdf_lists_the_names_and_the_vehicle_count(): void

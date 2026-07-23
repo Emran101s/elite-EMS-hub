@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\RendersChromePdf;
 use App\Models\Event;
 use App\Models\EventTransport;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
@@ -16,7 +17,7 @@ class TransportManifestPdfController extends Controller
 {
     use RendersChromePdf;
 
-    public function __invoke(Event $event): Response
+    public function __invoke(Event $event, Request $request): Response
     {
         // Strictly chronological — date then time, first to arrive to last.
         // Unscheduled runs sort to the end rather than the top (see chronoKey).
@@ -25,6 +26,12 @@ class TransportManifestPdfController extends Controller
             ->get()
             ->sortBy([fn (EventTransport $a, EventTransport $b) => [$a->chronoKey(), $a->id] <=> [$b->chronoKey(), $b->id]])
             ->values();
+
+        // Export exactly what the tab is showing — one leg, one day, or all.
+        $leg = (string) $request->query('leg', '');
+        $day = (string) $request->query('day', '');
+        $movements = EventTransport::selection($movements, $leg, $day);
+        $selection = EventTransport::selectionLabel($leg, $day);
 
         // Same shape the tab's rail shows, computed here so the PDF stands alone.
         $fleet = $movements
@@ -44,6 +51,7 @@ class TransportManifestPdfController extends Controller
             'days' => $movements->groupBy(fn (EventTransport $m) => $m->depart_at?->format('Y-m-d') ?? 'unscheduled'),
             'fleet' => $fleet,
             'movements' => $movements,
+            'selection' => $selection,
             'css' => $this->compiledCss(),
         ])->render();
 
@@ -51,7 +59,10 @@ class TransportManifestPdfController extends Controller
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.Str::slug($event->name ?: 'event').'-transport-manifest.pdf"',
+            // A filtered export names its slice — three "…-manifest.pdf" files in
+            // a downloads folder are indistinguishable otherwise.
+            'Content-Disposition' => 'inline; filename="'.Str::slug($event->name ?: 'event')
+                .'-transport-manifest'.($selection === 'All movements' ? '' : '-'.Str::slug($selection)).'.pdf"',
         ]);
     }
 }

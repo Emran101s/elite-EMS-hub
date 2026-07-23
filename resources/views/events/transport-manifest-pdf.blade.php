@@ -24,6 +24,11 @@
             <div class="min-w-0">
                 <p class="text-3xs font-bold uppercase tracking-[0.28em] text-gold-300">Transport Manifest</p>
                 <h1 class="mt-1 text-3xl font-black leading-tight text-white" style="font-family:'Spectral',Georgia,serif">{{ $event->name }}</h1>
+                {{-- Says on its face which slice this is, so a filtered export is
+                     never mistaken for the whole plan once it's printed. --}}
+                @if (($selection ?? 'All movements') !== 'All movements')
+                    <p class="mt-1.5 inline-block rounded-full bg-gold-400/15 px-2.5 py-1 text-3xs font-bold uppercase tracking-[0.16em] text-gold-200">{{ $selection }}</p>
+                @endif
                 <p class="mt-1 text-xs text-white/55">
                     {{ $movements->count() }} {{ \Illuminate\Support\Str::plural('movement', $movements->count()) }}
                     · {{ $movements->sum(fn ($m) => $m->paxCount()) }} passengers
@@ -84,8 +89,12 @@
                     {{-- movement header --}}
                     <div class="flex items-start justify-between gap-4 border-b border-line bg-page/50 px-4 py-2.5">
                         <div class="min-w-0">
+                            @php $legClass = ['arrival' => 'bg-emerald-100 text-emerald-800', 'departure' => 'bg-sky-100 text-sky-800'][$m->leg] ?? 'bg-navy-100 text-navy-700'; @endphp
                             <p class="text-sm font-bold text-navy-900">
-                                {{ $m->depart_at?->format('H:i') ?? 'TBC' }} · {{ $m->serviceType?->name ?? $m->route }}
+                                <span class="mr-1 rounded bg-navy-900 px-1.5 py-0.5 align-middle text-3xs font-black text-white">CAR {{ $m->ref_no }}</span>
+                                {{ $m->depart_at?->format('H:i') ?? 'TBC' }}
+                                <span class="mx-1 rounded px-1.5 py-0.5 align-middle text-3xs font-bold uppercase tracking-wide {{ $legClass }}">{{ $m->legLabel() }}</span>
+                                {{ $m->serviceType?->name ?? $m->route }}
                             </p>
                             <p class="mt-0.5 text-3xs text-muted">
                                 @if ($m->pickup_from || $m->drop_to){{ $m->pickup_from ?: '—' }} → {{ $m->drop_to ?: '—' }}@endif
@@ -128,7 +137,18 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($m->manifest as $i => $p)
+                                @foreach ($m->manifestByVehicle() as $vehicleNo => $riders)
+                                    {{-- Several vehicles on one run: each driver gets their own list. --}}
+                                    @if ($m->vehicles > 1)
+                                        <tr class="bg-navy-50/70">
+                                            <td colspan="7" class="py-1 pl-4 text-3xs font-black uppercase tracking-wider text-navy-700">
+                                                Car {{ $m->vehicleLabel((int) $vehicleNo) }} ·
+                                                {{ $m->vehicleType?->name ?? 'Vehicle' }} {{ $vehicleNo }} of {{ $m->vehicles }}
+                                                <span class="font-semibold text-muted">· {{ $riders->count() }} {{ \Illuminate\Support\Str::plural('passenger', $riders->count()) }}@if ($m->seatsPerVehicle()) of {{ $m->seatsPerVehicle() }} seats @endif</span>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                    @foreach ($riders->values() as $i => $p)
                                     <tr class="border-b border-line last:border-0">
                                         <td class="py-1.5 pl-4 text-center text-3xs font-bold text-navy-300">{{ $i + 1 }}</td>
                                         <td class="py-1.5 pr-3 text-xs font-semibold text-navy-900">{{ $p->name }}</td>
@@ -140,6 +160,7 @@
                                         <td class="py-1.5 pr-3 text-xs text-navy-700">{{ $p->phone ?: '—' }}</td>
                                         <td class="py-1.5 pr-4 text-xs text-navy-700">{{ $p->pickup_point ?: '—' }}</td>
                                     </tr>
+                                    @endforeach
                                 @endforeach
                             </tbody>
                         </table>

@@ -1,10 +1,4 @@
 @php
-    $statusMeta = [
-        'planned' => ['Planned', 'bg-navy-100 text-navy-600'],
-        'booked' => ['Booked', 'bg-amber-100 text-amber-700'],
-        'confirmed' => ['Confirmed', 'bg-emerald-100 text-emerald-700'],
-        'completed' => ['Completed', 'bg-sky-100 text-sky-700'],
-    ];
     // The module's colour comes from the one map, never a literal.
     $moduleColor = \App\Models\Event::moduleColor('transportation');
 
@@ -26,11 +20,340 @@
                          :subtitle="$total.' '.\Illuminate\Support\Str::plural('movement', $total).' · '.$paxTotal.' passengers · '.$seatsTotal.' seats booked'.($overbooked ? ' · '.$overbooked.' over capacity' : '')">
                 <x-slot:actions>
                     @if ($total)
-                        <a href="{{ route('events.transport.pdf', $event) }}" target="_blank" class="btn-ghost btn-sm">↧ Manifest PDF</a>
+                        {{-- Four documents, one reader each. All carry the filters on screen. --}}
+                        <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                            <button type="button" @click="open = !open" class="btn-ghost btn-sm">
+                                <span>↧ Export</span>
+                                @if ($filterLeg !== '' || $filterDay !== '')
+                                    <span class="ml-1 opacity-60">({{ $shown }})</span>
+                                @endif
+                            </button>
+
+                            <div x-show="open" x-cloak x-transition.opacity.duration.150ms
+                                 class="absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-line bg-white shadow-overlay">
+                                <p class="border-b border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">
+                                    {{ $filterLeg || $filterDay ? $shown.' of '.$total.' movements' : 'All '.$total.' movements' }}
+                                </p>
+
+                                {{-- Written out rather than looped so a static scan can
+                                     see each route has a button. --}}
+                                <a href="{{ route('events.transport.daily-schedule.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
+                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">Daily Schedule</span>
+                                    <span class="block text-eyebrow text-muted">For the ops team — one day per page</span>
+                                </a>
+                                <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
+                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">Vehicle Manifest</span>
+                                    <span class="block text-eyebrow text-muted">Who rides in which vehicle</span>
+                                </a>
+                                <a href="{{ route('events.transport.trip-sheet.pdf', [$event, ...array_filter(['day' => $filterDay])]) }}" target="_blank"
+                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">Driver Trip Sheets</span>
+                                    <span class="block text-eyebrow text-muted">One page per driver, per day</span>
+                                </a>
+                                <a href="{{ route('events.transport.vip-sheet.pdf', $event) }}" target="_blank"
+                                   class="block px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">VIP Transfer Sheets</span>
+                                    <span class="block text-eyebrow text-muted">One page per VIP or speaker</span>
+                                </a>
+
+                                <p class="border-y border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Whole event</p>
+                                <a href="{{ route('events.transport.master-plan.pdf', $event) }}" target="_blank"
+                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">Master Plan</span>
+                                    <span class="block text-eyebrow text-muted">Client-facing, with a cover &amp; approval</span>
+                                </a>
+                                <a href="{{ route('events.transport.supplier-order.pdf', $event) }}" target="_blank"
+                                   class="block px-4 py-2.5 transition hover:bg-page/60">
+                                    <span class="block text-xs font-bold text-navy-900">Supplier Order</span>
+                                    <span class="block text-eyebrow text-muted">A request per vendor to quote against</span>
+                                </a>
+                            </div>
+                        </div>
+                        <button type="button" wire:click="deleteAllMovements"
+                                wire:confirm="Delete all {{ $total }} {{ \Illuminate\Support\Str::plural('vehicle', $total) }}? The guests are kept — they go back to the pool so you can plan again."
+                                class="btn-ghost btn-sm !text-rose-600 hover:!bg-rose-50"
+                                title="Clear the vehicle plan and start over; guests return to the pool">✕ Clear vehicles</button>
                     @endif
+                    @if ($total)
+                        <a href="{{ route('events.transport.dispatch', $event) }}"
+                           class="btn-ghost btn-sm" title="Lanes against a time axis — plan and catch clashes">▦ Dispatch</a>
+                        <a href="{{ route('events.transport.live', $event) }}"
+                           class="inline-flex items-center gap-2 rounded-xl bg-navy-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-navy-800"
+                           title="Event-day operations — designed for a phone">
+                            <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
+                            Live
+                        </a>
+                    @endif
+                    @if ($attendeePull > 0)
+                        <button type="button" wire:click="pullAttendees"
+                                wire:confirm="Add {{ $attendeePull }} registered {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }} to the transport guest pool as arrivals? People already pulled are skipped."
+                                class="btn-ghost btn-sm"
+                                title="Bring registered attendees into the guest pool — no retyping">⇩ Pull {{ $attendeePull }} {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }}</button>
+                    @endif
+                    <button type="button" wire:click="$toggle('showPlanImport')" class="btn-ghost btn-sm">⇪ Import movements</button>
                     <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add Movement</button>
                 </x-slot:actions>
             </x-page-head>
+
+            {{-- ══ import a whole transport plan: one sheet, every movement ══ --}}
+            @if ($showPlanImport)
+                <div class="card border-gold-300 bg-gold-50/40 p-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-bold text-navy-900">Import the guest list</p>
+                            <p class="mt-0.5 text-eyebrow leading-relaxed text-muted">
+                                Excel (.xlsx) or CSV — <span class="font-semibold text-navy-700">one row per traveller</span>:
+                                <span class="font-semibold text-navy-700">Name</span>, Direction (Arrival / Departure), Airline, Flight #, Date,
+                                <span class="font-semibold text-navy-700">Flight Time</span>, <span class="font-semibold text-navy-700">Pickup Time</span>, From, To, Phone, Notes.
+                                On arrivals leave Pickup Time blank and the landing is used; on departures it's when the car leaves the hotel.
+                                Guests land in the pool below — you book the vehicles and place them.
+                                Re-importing a corrected sheet updates guests instead of duplicating them.
+                            </p>
+                        </div>
+                        <button type="button" wire:click="$set('showPlanImport', false)" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-navy-400 hover:text-navy-700">✕</button>
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center gap-2.5">
+                        <input type="file" wire:model="planFile" accept=".xlsx,.xls,.csv,text/csv"
+                               class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                        <button type="button" wire:click="importPlan" wire:loading.attr="disabled" wire:target="importPlan,planFile"
+                                class="rounded-lg bg-gold-500 px-3.5 py-1.5 text-xs font-bold text-navy-950 transition hover:brightness-105 disabled:opacity-50">
+                            <span wire:loading.remove wire:target="importPlan">Import plan</span>
+                            <span wire:loading wire:target="importPlan">Importing…</span>
+                        </button>
+                        <span wire:loading wire:target="planFile" class="text-eyebrow font-semibold text-gold-700">Uploading…</span>
+                        <a href="{{ route('events.transport.plan-template', $event) }}"
+                           class="ml-1 border-l border-gold-300/70 pl-3 text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900"
+                           title="Download a ready-to-fill Excel template">↧ Download template</a>
+                    </div>
+                    @error('planFile')<p class="mt-1.5 text-xs text-risk">{{ $message }}</p>@enderror
+                </div>
+            @endif
+
+            @if ($planMsg)
+                <div class="card border-emerald-200 bg-emerald-50/60 px-4 py-2.5 text-xs font-semibold text-emerald-800">{{ $planMsg }}</div>
+            @endif
+
+            {{-- ══ Guest pool — imported flights waiting for a vehicle ══ --}}
+            @if ($guests->isNotEmpty() || $unassignedCount)
+                @php $guestIds = $guests->pluck('id')->all(); $allPicked = $guestIds && ! array_diff($guestIds, $pickedGuests); @endphp
+                <div class="card overflow-hidden">
+                    <div class="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
+                        <div>
+                            <p class="text-sm font-bold text-navy-900">Guests</p>
+                            <p class="text-eyebrow text-muted">{{ $unassignedCount }} still to place on a vehicle</p>
+                        </div>
+
+                        {{-- the leg you're working --}}
+                        <div class="flex rounded-xl border border-line bg-white p-0.5">
+                            @foreach (['arrival' => 'Arrivals', 'departure' => 'Departures'] as $leg => $label)
+                                <button type="button" wire:click="setGuestLeg('{{ $leg }}')"
+                                        @class([
+                                            'rounded-lg px-3 py-1.5 text-micro font-bold transition',
+                                            'bg-navy-900 text-white' => $guestLeg === $leg,
+                                            'text-navy-500 hover:text-navy-900' => $guestLeg !== $leg,
+                                        ])>
+                                    {{ $label }}
+                                    <span class="ml-1 rounded-full {{ $guestLeg === $leg ? 'bg-white/20' : 'bg-navy-50' }} px-1.5 text-eyebrow">{{ $legCounts[$leg] }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-navy-600">
+                            <input type="checkbox" wire:model.live="guestsOnlyUnassigned" class="h-3.5 w-3.5 rounded border-line text-gold-500 focus:ring-gold-400">
+                            Unassigned only
+                        </label>
+
+                        @if ($legCounts[$guestLeg] > 0)
+                            <button type="button" wire:click="suggestGrouping"
+                                    class="ml-auto btn-ghost btn-xs"
+                                    title="Group whoever is left by pickup place and time — a starting point you can adjust">✦ Suggest runs</button>
+                        @endif
+
+                        @if (array_sum($legCounts) > 0)
+                            <button type="button" wire:click="deleteAllGuests"
+                                    wire:confirm="Delete all {{ array_sum($legCounts) }} guests — arrivals and departures, assigned and unassigned? The vehicles stay. This cannot be undone."
+                                    @class(['text-eyebrow font-bold uppercase tracking-wide text-rose-600 hover:text-rose-800', 'ml-auto' => $legCounts[$guestLeg] === 0])
+                                    title="Empty the guest list so you can import a corrected sheet">Delete all guests</button>
+                        @endif
+                    </div>
+
+                    {{-- ══ drop rail: drag guests onto a vehicle ══ --}}
+                    @if ($assignTargets->isNotEmpty())
+                        <div class="flex flex-wrap items-center gap-2 border-b border-line bg-page/40 px-4 py-2.5">
+                            <span class="text-eyebrow font-bold uppercase tracking-wide text-muted">Drag onto</span>
+                            @foreach ($assignTargets as $t)
+                                @php $full = $t->seats() > 0 && $t->manifest->count() >= $t->seats(); @endphp
+                                <div data-drop-movement="{{ $t->id }}"
+                                     @class([
+                                         'flex min-w-[7rem] items-center gap-2 rounded-xl border border-dashed px-2.5 py-1.5 transition',
+                                         'border-emerald-300 bg-emerald-50/60' => ! $full,
+                                         'border-line bg-white opacity-60' => $full,
+                                     ])
+                                     title="Drop guests here to put them on this run">
+                                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-navy-900 text-eyebrow font-black text-white">{{ $t->ref_no }}</span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-eyebrow font-bold text-navy-900">{{ \Illuminate\Support\Str::limit($t->route, 22) }}</span>
+                                        <span class="block text-eyebrow text-muted">
+                                            {{ $t->depart_at?->format('d M · H:i') ?? 'Unscheduled' }} · {{ $t->manifest->count() }}/{{ $t->seats() ?: '?' }}
+                                        </span>
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- bulk bar --}}
+                    @if (count($pickedGuests))
+                        <div class="flex flex-wrap items-center gap-3 border-b border-gold-200 bg-gold-50/60 px-4 py-2.5">
+                            <span class="text-xs font-bold text-navy-900">{{ count($pickedGuests) }} selected</span>
+
+                            {{-- Type the car number; faster than hunting a route once the plan is long. --}}
+                            <form wire:submit="assignToNumber" class="flex items-center gap-1.5">
+                                <label class="text-eyebrow font-bold uppercase tracking-wide text-navy-600" for="carNo">Assign to car</label>
+                                <input id="carNo" type="text" inputmode="numeric" placeholder="#" wire:model="assignRef"
+                                       class="h-8 w-14 rounded-lg border border-line px-2 text-center text-xs font-bold text-navy-900 focus:border-gold-400 focus:outline-none">
+                                <button type="submit" class="rounded-lg bg-navy-900 px-2.5 py-1.5 text-eyebrow font-bold text-white hover:bg-navy-800">Go</button>
+                            </form>
+
+                            <select wire:change="assignPicked($event.target.value)" class="input h-8 w-auto !rounded-lg !py-0 text-xs">
+                                <option value="">or pick from the list…</option>
+                                @foreach ($assignTargets as $t)
+                                    <option value="{{ $t->id }}">
+                                        #{{ $t->ref_no }} · {{ $t->depart_at?->format('D d M · H:i') ?? 'Unscheduled' }} — {{ \Illuminate\Support\Str::limit($t->route, 30) }}
+                                        ({{ $t->manifest->count() }}/{{ $t->seats() ?: '?' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" wire:click="unassignPicked" class="text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">Send back to pool</button>
+                            <button type="button" wire:click="deletePicked"
+                                    wire:confirm="Delete {{ count($pickedGuests) }} {{ \Illuminate\Support\Str::plural('guest', count($pickedGuests)) }} from this event? This cannot be undone."
+                                    class="text-eyebrow font-bold uppercase tracking-wide text-rose-600 hover:text-rose-800">Delete</button>
+                            <button type="button" wire:click="clearPicked" class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-navy-700">Clear</button>
+                        </div>
+                    @endif
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[860px]">
+                            <thead>
+                                <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
+                                    <th class="w-10 px-4 py-2">
+                                        <input type="checkbox" @checked($allPicked) wire:click="toggleGuestPage({{ json_encode($guestIds) }})"
+                                               class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                    </th>
+                                    <th class="px-3 py-2">Guest</th>
+                                    <th class="px-3 py-2">Airline</th>
+                                    <th class="px-3 py-2">Flight</th>
+                                    <th class="px-3 py-2">{{ $guestLeg === 'departure' ? 'Departs' : 'Lands' }}</th>
+                                    <th class="px-3 py-2">Pick-up</th>
+                                    <th class="px-3 py-2">Route</th>
+                                    <th class="px-3 py-2">On vehicle</th>
+                                </tr>
+                            </thead>
+                            <tbody data-guest-pool>
+                                @forelse ($guests as $g)
+                                    @php $picked = in_array($g->id, $pickedGuests, true); @endphp
+                                    <tr wire:key="g-{{ $g->id }}" data-guest="{{ $g->id }}"
+                                        @class(['border-b border-line last:border-0 cursor-grab transition hover:bg-page/50', 'bg-gold-50/40' => $picked])>
+                                        <td class="px-4 py-2">
+                                            <input type="checkbox" @checked($picked) wire:click="toggleGuest({{ $g->id }})"
+                                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <span class="flex items-center gap-1.5">
+                                                <span class="text-xs font-bold text-navy-900">{{ $g->name }}</span>
+                                                @if ($g->isPriority())
+                                                    <span class="rounded px-1 py-0.5 text-eyebrow font-bold uppercase {{ $g->categoryClass() }}"
+                                                          title="Priority — promotes the whole vehicle">{{ $g->categoryLabel() }}</span>
+                                                @endif
+                                            </span>
+                                            <span class="mt-0.5 flex items-center gap-1.5">
+                                                {{-- Category is what turns one list into the VIP, speaker and shuttle sheets. --}}
+                                                <select wire:change="updatePassenger({{ $g->id }}, 'category', $event.target.value)"
+                                                        class="h-5 w-auto rounded border-0 bg-transparent p-0 pr-4 text-eyebrow font-semibold text-muted hover:text-navy-800 focus:ring-0">
+                                                    @foreach (\App\Models\EventTransportPassenger::CATEGORIES as $key => $label)
+                                                        <option value="{{ $key }}" @selected($g->category === $key)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @if ($g->phone)<span class="text-eyebrow text-muted">{{ $g->phone }}</span>@endif
+                                                @if ($wa = \App\Support\WhatsApp::toGuest($g))
+                                                    <a href="{{ $wa }}" target="_blank" rel="noopener"
+                                                       class="text-eyebrow font-bold text-emerald-600 hover:text-emerald-800"
+                                                       title="Send {{ $g->name }} their pickup details">WA</a>
+                                                @endif
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-2 text-xs text-navy-700">{{ $g->airline ?: '—' }}</td>
+                                        <td class="px-3 py-2">
+                                            @if ($g->flight_no)
+                                                <button type="button" wire:click="pickFlight('{{ $g->flight_no }}')"
+                                                        class="rounded-md bg-navy-50 px-1.5 py-0.5 text-xs font-bold text-navy-800 transition hover:bg-gold-100"
+                                                        title="Select everyone on {{ $g->flight_no }}">{{ $g->flight_no }}</button>
+                                            @else — @endif
+                                        </td>
+                                        <td class="px-3 py-2 text-xs text-navy-700 whitespace-nowrap">
+                                            {{ $g->arrival_on?->format('d M') ?? '—' }}{{ $g->arrival_time ? ' · '.substr($g->arrival_time, 0, 5) : '' }}
+                                        </td>
+                                        <td class="px-3 py-2 text-xs font-semibold text-navy-900 whitespace-nowrap">{{ $g->pickup_time ? substr($g->pickup_time, 0, 5) : '—' }}</td>
+                                        <td class="px-3 py-2 text-eyebrow text-muted">{{ \Illuminate\Support\Str::limit(($g->pickup_point ?: '—').' → '.($g->drop_point ?: '—'), 34) }}</td>
+                                        <td class="px-3 py-2">
+                                            @if ($assignTargets->isNotEmpty())
+                                                <span class="flex items-center gap-1.5">
+                                                    <select wire:change="moveGuest({{ $g->id }}, $event.target.value)"
+                                                            @class([
+                                                                'h-7 w-auto max-w-[11rem] rounded-lg border px-1.5 text-eyebrow font-semibold',
+                                                                'border-emerald-200 bg-emerald-50 text-emerald-800' => $g->transport_id,
+                                                                'border-amber-200 bg-amber-50 text-amber-700' => ! $g->transport_id,
+                                                            ])
+                                                            title="Move this guest to another vehicle">
+                                                        <option value="">Unassigned — in the pool</option>
+                                                        @foreach ($assignTargets as $t)
+                                                            <option value="{{ $t->id }}" @selected($g->transport_id === $t->id)>
+                                                                {{ $t->depart_at?->format('d M H:i') ?? 'Unscheduled' }} · {{ \Illuminate\Support\Str::limit($t->route, 22) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @if ($g->vehicle_no)
+                                                        <span class="text-eyebrow font-bold text-muted whitespace-nowrap">Van {{ $g->vehicle_no }}</span>
+                                                    @endif
+                                                </span>
+                                            @elseif ($g->transport_id)
+                                                <span class="rounded bg-emerald-50 px-1.5 py-0.5 text-eyebrow font-bold text-emerald-700">Assigned</span>
+                                            @else
+                                                <span class="text-eyebrow font-semibold text-amber-600">Unassigned</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="8" class="px-4 py-10 text-center text-xs text-muted">
+                                        {{ $guestsOnlyUnassigned ? 'Every '.$guestLeg.' guest is on a vehicle.' : 'No '.$guestLeg.' guests yet — import the flight list above.' }}
+                                    </td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ══ leg tabs — arrivals, departures, everything else ══ --}}
+            @if ($total)
+                <div class="card flex flex-wrap items-center gap-1.5 px-4 py-3">
+                    <button type="button" wire:click="setLeg('')"
+                            class="rounded-full px-3.5 py-1.5 text-xs font-semibold transition {{ $filterLeg === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
+                        All <span class="opacity-60">{{ $total }}</span>
+                    </button>
+                    @foreach ($legTabs as $tab)
+                        <button type="button" wire:click="setLeg('{{ $tab['key'] }}')"
+                                @disabled($tab['runs'] === 0)
+                                class="rounded-full px-3.5 py-1.5 text-xs font-semibold transition {{ $filterLeg === $tab['key'] ? 'bg-navy-900 text-white' : ($tab['runs'] ? 'bg-navy-50 text-navy-600 hover:bg-navy-100' : 'bg-white text-navy-300') }}"
+                                title="{{ $tab['hint'] }}">
+                            {{ $tab['label'] }} <span class="opacity-60">{{ $tab['runs'] }}</span>
+                        </button>
+                    @endforeach
+                    <span class="ml-auto text-eyebrow text-muted">{{ $shown }} of {{ $total }} shown</span>
+                </div>
+            @endif
 
             {{-- ══ day filter ══ --}}
             @if ($days->isNotEmpty())
@@ -38,7 +361,7 @@
                     <span class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Day</span>
                     <button type="button" wire:click="setDay('')"
                             class="rounded-full px-3 py-1 text-xs font-semibold transition {{ $filterDay === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
-                        All <span class="opacity-60">{{ $total }}</span>
+                        All <span class="opacity-60">{{ $days->sum() }}</span>
                     </button>
                     @foreach ($days as $day => $count)
                         <button type="button" wire:click="setDay('{{ $day }}')"
@@ -75,9 +398,13 @@
 
                     @foreach ($group as $m)
                         @php
-                            [$stLabel, $stClass] = $statusMeta[$m->status] ?? $statusMeta['planned'];
+                            $stLabel = $m->statusLabel(); $stClass = $m->statusClass();
                             $cap = $m->vehicleType?->capacity ?? 0;
                             $over = $m->isOverbooked();
+                            $ready = $m->readiness();
+                            $priority = $m->isPriority();
+                            $overloaded = $m->driver && $m->depart_at
+                                && $m->driver->isOverloadedOn($m->depart_at->toDateString());
                         @endphp
                         @php $open = $expandedId === $m->id; @endphp
                         <div wire:key="mv-{{ $m->id }}" class="border-b border-line last:border-0">
@@ -85,6 +412,14 @@
                              wire:click="toggleExpand({{ $m->id }})">
 
                             <span class="shrink-0 text-navy-300 transition group-hover/mv:text-navy-600 {{ $open ? 'rotate-90' : '' }}">▸</span>
+
+                            {{-- the number you say out loud: "put them on car 3" --}}
+                            <span @class([
+                                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black',
+                                      'bg-gold-500 text-navy-950' => $priority,
+                                      'bg-navy-900 text-white' => ! $priority,
+                                  ])
+                                  title="Car {{ $m->refLabel() }} — assign by this number">{{ $m->ref_no }}</span>
 
                             {{-- time --}}
                             <div class="w-14 shrink-0 text-center">
@@ -97,11 +432,22 @@
                             {{-- what & where --}}
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
+                                    @php $legClass = ['arrival' => 'bg-emerald-100 text-emerald-700', 'departure' => 'bg-sky-100 text-sky-700'][$m->leg] ?? 'bg-navy-100 text-navy-600'; @endphp
+                                    <span class="shrink-0 rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $legClass }}"
+                                          title="{{ \App\Models\EventTransport::LEG_HINTS[$m->leg] ?? '' }}">{{ $m->legLabel() }}</span>
                                     <p class="truncate text-sm font-semibold text-navy-900">{{ $m->serviceType?->name ?? $m->route }}</p>
                                     <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
+                                    @if ($priority)
+                                        <span class="rounded-full bg-gold-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-gold-800"
+                                              title="{{ $m->priorityReason() }}">★ Priority</span>
+                                    @endif
                                     @if ($over)
                                         <span class="rounded-full bg-risk/10 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-red-700"
                                               title="More passengers than seats booked">Over capacity</span>
+                                    @endif
+                                    @if ($overloaded)
+                                        <span class="rounded-full bg-amber-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-amber-800"
+                                              title="{{ $m->driver->name }} is on duty {{ \App\Models\TransportDriver::readableMinutes($m->driver->dutyMinutes($m->depart_at->toDateString())) }} that day">Driver overloaded</span>
                                     @endif
                                 </div>
                                 <p class="mt-0.5 truncate text-eyebrow text-muted">
@@ -111,9 +457,39 @@
                                     @if ($m->depart_at) · pick-up {{ $m->depart_at->format('D j M · H:i') }}@endif
                                     @if ($m->flight_no) · flight <span class="font-semibold text-navy-700">{{ $m->flight_no }}</span>@endif
                                     @if ($m->arrive_at) · lands {{ $m->arrive_at->format('H:i') }}@endif
-                                    @if ($m->provider) · {{ $m->provider }}@endif
-                                    @if ($m->driver_contact) · driver <span class="font-semibold text-navy-700">{{ $m->driver_contact }}</span>@endif
+                                    @if ($m->supplierName()) · {{ $m->supplierName() }}@endif
+                                    @if ($m->vehicle) · <span class="font-semibold text-navy-700">{{ $m->vehicle->label() }}</span>@endif
                                 </p>
+
+                                {{-- The driver, and the two ways you'd actually reach them. --}}
+                                <p class="mt-1 flex flex-wrap items-center gap-2 text-eyebrow">
+                                    @if ($m->driver)
+                                        <span class="font-bold text-navy-800">{{ $m->driver->name }}</span>
+                                        @if ($m->contactNumber())
+                                            <a href="tel:{{ $m->contactNumber() }}" wire:click.stop
+                                               class="rounded bg-navy-50 px-1.5 py-0.5 font-semibold text-navy-700 hover:bg-navy-100">📞 {{ $m->contactNumber() }}</a>
+                                        @endif
+                                        @if ($wa = \App\Support\WhatsApp::toDriver($m))
+                                            <a href="{{ $wa }}" target="_blank" rel="noopener" wire:click.stop
+                                               class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700 hover:bg-emerald-100"
+                                               title="Send this run's details to {{ $m->driver->name }}">WhatsApp</a>
+                                        @endif
+                                    @else
+                                        <span class="font-semibold text-amber-600">No driver assigned</span>
+                                    @endif
+                                </p>
+                            </div>
+
+                            {{-- readiness: vehicle · driver · passengers --}}
+                            <div class="hidden shrink-0 items-center gap-1 lg:flex"
+                                 title="{{ $ready['score'] }} of 3 ready{{ $ready['missing'] ? ' — needs '.implode(' and ', $ready['missing']) : '' }}">
+                                @foreach (['vehicle', 'driver', 'passengers'] as $part)
+                                    <span @class([
+                                        'h-2 w-2 rounded-full',
+                                        'bg-emerald-500' => $ready[$part],
+                                        'bg-navy-200' => ! $ready[$part],
+                                    ])></span>
+                                @endforeach
                             </div>
 
                             {{-- vehicle & load --}}
@@ -163,7 +539,7 @@
                                                 <th class="px-3 pt-2"></th>
                                             </tr>
                                             <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
-                                                <th class="w-12 px-4 pb-2 text-center">Seat</th>
+                                                <th class="w-14 px-4 pb-2 text-center">{{ $m->vehicles > 1 ? 'Van' : 'Seat' }}</th>
                                                 <th class="px-3 pb-2">Name</th>
                                                 <th class="border-l border-line px-3 pb-2">Airline</th>
                                                 <th class="px-3 pb-2">Flight no.</th>
@@ -177,7 +553,19 @@
                                         <tbody>
                                             @foreach ($m->manifest as $i => $p)
                                                 <tr wire:key="pax-{{ $p->id }}" class="group/px border-b border-line last:border-0 hover:bg-white">
-                                                    <td class="px-4 py-1.5 text-center text-eyebrow font-bold text-navy-300">{{ $i + 1 }}</td>
+                                                    <td class="px-2 py-1.5 text-center">
+                                                        @if ($m->vehicles > 1)
+                                                            <select wire:change="updatePassenger({{ $p->id }}, 'vehicle_no', $event.target.value)"
+                                                                    class="w-full cursor-pointer rounded-md border border-line bg-white px-1 py-1 text-eyebrow font-bold text-navy-700"
+                                                                    title="Which vehicle of this run">
+                                                                @for ($v = 1; $v <= $m->vehicles; $v++)
+                                                                    <option value="{{ $v }}" @selected((int) ($p->vehicle_no ?: 1) === $v)>{{ $v }}</option>
+                                                                @endfor
+                                                            </select>
+                                                        @else
+                                                            <span class="text-eyebrow font-bold text-navy-300">{{ $i + 1 }}</span>
+                                                        @endif
+                                                    </td>
                                                     @php
                                                         $pin = 'w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-xs text-navy-900 placeholder:text-navy-300 hover:border-line focus:border-gold-400 focus:bg-white focus:outline-none';
                                                     @endphp
@@ -217,8 +605,11 @@
                                                                class="{{ $pin }}">
                                                     </td>
                                                     <td class="px-3 py-1.5">
-                                                        <button type="button" wire:click="deletePassenger({{ $p->id }})"
-                                                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/px:opacity-100">✕</button>
+                                                        {{-- Takes them off this vehicle, back to the pool — they still
+                                                             need a transfer. Deleting for good lives in the Guests panel. --}}
+                                                        <button type="button" wire:click="unassignGuest({{ $p->id }})"
+                                                                title="Take {{ $p->name }} off this vehicle — back to the guest pool"
+                                                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-navy-50 hover:text-navy-800 group-hover/px:opacity-100">✕</button>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -246,10 +637,65 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="border-t border-line px-5 py-2.5 text-eyebrow text-muted">
-                                    <span class="font-bold text-navy-900">{{ $m->manifest->count() }}</span> named ·
-                                    <span class="font-bold text-navy-900">{{ $m->seatsFree() }}</span> seats free
-                                    @if ($m->vehicleType) · {{ $m->vehicleType->name }} holds {{ $m->vehicleType->capacity }} each, {{ $m->vehicleCount() }} booked @endif
+
+                                {{-- import an Excel / CSV manifest into this movement --}}
+                                @if ($importMoveId === $m->id)
+                                    <div class="border-t border-line bg-gold-50/40 px-5 py-4">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p class="text-xs font-bold text-navy-900">Import passengers into this run</p>
+                                                <p class="mt-0.5 text-eyebrow leading-relaxed text-muted">
+                                                    Excel (.xlsx) or CSV. First row = headers. Recognised columns:
+                                                    <span class="font-semibold text-navy-700">Name</span> (required), Airline, Flight #, Arrival Date, Arrival Time, Phone, Email, Pickup Point, Notes.
+                                                    Blank cells fall back to this run's flight &amp; pickup.
+                                                </p>
+                                            </div>
+                                            <button type="button" wire:click="closeImport" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-navy-400 hover:text-navy-700">✕</button>
+                                        </div>
+                                        <div class="mt-3 flex flex-wrap items-center gap-2.5">
+                                            <input type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv"
+                                                   class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                                            <button type="button" wire:click="importPassengers" wire:loading.attr="disabled" wire:target="importPassengers,importFile"
+                                                    class="rounded-lg bg-gold-500 px-3.5 py-1.5 text-xs font-bold text-navy-950 transition hover:brightness-105 disabled:opacity-50">
+                                                <span wire:loading.remove wire:target="importPassengers">Import manifest</span>
+                                                <span wire:loading wire:target="importPassengers">Importing…</span>
+                                            </button>
+                                            <span wire:loading wire:target="importFile" class="text-eyebrow font-semibold text-gold-700">Uploading…</span>
+                                            <a href="{{ route('events.transport.template', [$event, $m]) }}"
+                                               class="ml-1 border-l border-gold-300/70 pl-3 text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900"
+                                               title="Download a ready-to-fill Excel template">↧ Download template</a>
+                                        </div>
+                                        @error('importFile')<p class="mt-1.5 text-xs text-risk">{{ $message }}</p>@enderror
+                                    </div>
+                                @endif
+
+                                @if ($importMsg && $expandedId === $m->id)
+                                    <div class="border-t border-line bg-emerald-50/60 px-5 py-2 text-xs font-semibold text-emerald-800">{{ $importMsg }}</div>
+                                @endif
+
+                                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-2.5 text-eyebrow text-muted">
+                                    <span>
+                                        <span class="font-bold text-navy-900">{{ $m->manifest->count() }}</span> named ·
+                                        <span class="font-bold text-navy-900">{{ $m->seatsFree() }}</span> seats free
+                                        @if ($m->vehicleType) · {{ $m->vehicleType->name }} holds {{ $m->vehicleType->capacity }} each, {{ $m->vehicleCount() }} booked @endif
+                                        {{-- who is in which vehicle, at a glance --}}
+                                        @if ($m->vehicles > 1 && $m->manifest->isNotEmpty())
+                                            <span class="ml-2 border-l border-line pl-2">
+                                                @foreach ($m->manifestByVehicle() as $no => $pax)
+                                                    <span class="mr-1.5 rounded bg-navy-50 px-1.5 py-0.5 font-bold text-navy-700">Van {{ $no }}: {{ $pax->count() }}</span>
+                                                @endforeach
+                                            </span>
+                                        @endif
+                                    </span>
+                                    <span class="flex items-center gap-3">
+                                        @if ($m->manifest->isNotEmpty())
+                                            <button type="button" wire:click="autoAssign({{ $m->id }})"
+                                                    class="font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900"
+                                                    title="Fill each vehicle to capacity in order">⇄ Auto-assign vehicles</button>
+                                        @endif
+                                        <button type="button" wire:click="openImport({{ $m->id }})"
+                                                class="font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">⇪ Import Excel</button>
+                                    </span>
                                 </div>
                             </div>
                         @endif
@@ -300,7 +746,7 @@
                             class="h-10 w-full rounded-xl text-xs font-bold text-white transition hover:opacity-90"
                             style="background: {{ $moduleColor }}">＋ Add Movement</button>
                     @if ($total)
-                        <a href="{{ route('events.transport.pdf', $event) }}" target="_blank"
+                        <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
                            class="block rounded-xl border border-line bg-white px-4 py-2.5 text-center text-xs font-bold text-navy-700 transition hover:border-gold-300 hover:text-navy-900">
                             ↧ Export manifest PDF
                         </a>
@@ -318,6 +764,55 @@
                  subtitle="A service, in a vehicle, at a time — passengers are named on the manifest afterwards."
                  close="$set('showForm', false)">
             <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
+                    {{-- The first decision, and the one everything else filters by. --}}
+                    <div class="sm:col-span-2">
+                        <label class="field-label !mb-1 !text-eyebrow">Movement type</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            @foreach (\App\Models\EventTransport::LEGS as $key => $label)
+                                <button type="button" wire:click="$set('leg', '{{ $key }}')"
+                                        @class([
+                                            'rounded-xl border px-3 py-2 text-left transition',
+                                            'border-navy-900 bg-navy-900 text-white' => $leg === $key,
+                                            'border-line bg-white hover:border-navy-300' => $leg !== $key,
+                                        ])>
+                                    <span class="block text-xs font-bold">{{ $label }}</span>
+                                    <span class="block text-eyebrow {{ $leg === $key ? 'text-white/60' : 'text-muted' }}">
+                                        {{ \App\Models\EventTransport::LEG_HINTS[$key] }}
+                                    </span>
+                                </button>
+                            @endforeach
+                        </div>
+                        @error('leg')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                    </div>
+                    {{-- Who runs it. A named driver is what makes trip sheets and
+                         overload warnings possible, so it sits up front. --}}
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Driver</label>
+                        <select wire:model="driver_id" class="input h-10 text-sm">
+                            <option value="">— unassigned —</option>
+                            @foreach ($drivers as $d)<option value="{{ $d->id }}">{{ $d->label() }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Vehicle (specific car)</label>
+                        <select wire:model="vehicle_id" class="input h-10 text-sm">
+                            <option value="">— any of this type —</option>
+                            @foreach ($fleetVehicles as $v)<option value="{{ $v->id }}">{{ $v->label() }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Supplier</label>
+                        <select wire:model="supplier_id" class="input h-10 text-sm">
+                            <option value="">— none —</option>
+                            @foreach ($suppliers as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line px-3 transition hover:border-gold-300">
+                            <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400">
+                            <span class="text-xs font-semibold text-navy-900">Priority / VIP run</span>
+                        </label>
+                    </div>
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Service</label>
                         <select wire:model="service_type_id" class="input h-10 text-sm">
@@ -396,4 +891,58 @@
             </form>
         </x-modal>
     @endif
+
+    @script
+    <script>
+        // Drag a guest from the pool onto a vehicle in the drop rail.
+        // Dragging one of several selected guests moves the whole selection.
+        (() => {
+            const wire = $wire;
+
+            const wireUp = () => {
+                const pool = document.querySelector('[data-guest-pool]');
+                if (!pool || pool.dataset.sortableBound) return;
+                pool.dataset.sortableBound = '1';
+
+                // The pool only gives rows away; it never receives them.
+                new window.Sortable(pool, {
+                    group: { name: 'transferGuests', pull: 'clone', put: false },
+                    sort: false,
+                    animation: 140,
+                    draggable: '[data-guest]',
+                    filter: 'input,button,select,a',
+                    preventOnFilter: false,
+                    ghostClass: 'opacity-40',
+                });
+
+                document.querySelectorAll('[data-drop-movement]').forEach((zone) => {
+                    if (zone.dataset.sortableBound) return;
+                    zone.dataset.sortableBound = '1';
+
+                    new window.Sortable(zone, {
+                        group: { name: 'transferGuests', pull: false, put: true },
+                        sort: false,
+                        animation: 140,
+                        onAdd(evt) {
+                            const guestId = Number(evt.item?.dataset?.guest);
+                            const movementId = Number(zone.dataset.dropMovement);
+                            evt.item.remove();            // Livewire re-renders the truth
+                            if (guestId && movementId) {
+                                wire.dropGuest(guestId, movementId);
+                            }
+                        },
+                        onDragOver() { zone.classList.add('ring-2', 'ring-gold-400'); },
+                    });
+
+                    zone.addEventListener('dragleave', () => zone.classList.remove('ring-2', 'ring-gold-400'));
+                    zone.addEventListener('drop', () => zone.classList.remove('ring-2', 'ring-gold-400'));
+                });
+            };
+
+            wireUp();
+            // Re-bind after every Livewire re-render, since the rows are replaced.
+            Livewire.hook('morphed', wireUp);
+        })();
+    </script>
+    @endscript
 </div>
