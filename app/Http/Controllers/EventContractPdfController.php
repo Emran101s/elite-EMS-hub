@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\RendersChromePdf;
 use App\Models\Event;
 use App\Models\EventContract;
-use App\Support\ContractClauses;
 use Illuminate\Http\Response;
 
 /**
@@ -19,14 +18,14 @@ class EventContractPdfController extends Controller
     public function __invoke(Event $event): Response
     {
         $contract = EventContract::forEvent($event);
-        $data = $contract->data;
+        $contract->ensureSignatories();
 
-        $html = view('event-contract.contract', [
+        // The export IS the live preview: the same shared paper partial, the same
+        // compiled CSS, the same fonts — paginated onto A4. One source of truth.
+        $html = view('event-contract.paper-pdf', [
             'event' => $event,
             'contract' => $contract,
-            'data' => $data,
-            'recitals' => ContractClauses::recitals($data),
-            'clauses' => ContractClauses::clauses($data),
+            'signatories' => $contract->signatories()->get(),
             'css' => $this->compiledCss(),
         ])->render();
 

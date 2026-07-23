@@ -10,13 +10,15 @@
         $navy = '#0B1F3A'; $gold = '#D4AF37';
         $money = fn ($c) => number_format(($c ?? 0) / 100, 3);
         $f = $data['financials']; $cur = $f['currency'];
-        $est = $f['estimated_total_cents'] ?? 0;
+        // The agreed contract value — not a live budget estimate.
+        $est = $f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0;
+        $isFixed = ($f['value_mode'] ?? 'fixed') === 'fixed';
     @endphp
     <style>
         @page { size: A4; margin: 0 0 62px 0; }   /* reserve the bottom band for the fixed footer */
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
         html, body { background:#fff; color:#26313F; }
-        .sheet { width: 794px; margin: 0 auto; padding: 44px 54px 8px; }
+        .sheet { width: 794px; margin: 0 auto; padding: 22px 54px 8px; }
         .en { font-family:'Spectral', Georgia, serif; }
         .ar { font-family:'Amiri', serif; direction: rtl; text-align: right; }
         .avoid { break-inside: avoid; }
@@ -44,37 +46,39 @@
 </head>
 <body>
 
-<div class="foot">
-    <span>Elite Business Hub &middot; Events &amp; Logistics, Amman, Jordan</span>
-    <span>{{ $data['meta']['confidentiality'] }} &middot; {{ $contract->reference }}</span>
-</div>
+{{-- One platform identity: the same masthead and footer every EBH PDF carries. --}}
+<x-pdf-footer fixed :navy="$navy" :gold="$gold" :sheet="$contract->reference" />
+
+<x-pdf-header serif :navy="$navy" :gold="$gold"
+    eyebrow="Elite Business Hub · Event Management Services Agreement"
+    :title="$data['event']['name']"
+    :subtitle="$data['event']['dates'].' · '.$data['event']['venue'].' · '.$data['event']['location']"
+    :chips="[
+        ['n' => $cur.' '.number_format($est / 100), 'l' => $isFixed ? 'Contract Value' : 'Estimated'],
+        ['n' => \Illuminate\Support\Str::title($contract->status), 'l' => 'Status'],
+    ]" />
 
 <div class="sheet">
 
-    {{-- ══ Header ══ --}}
-    <div class="avoid" style="text-align:center;">
-        <svg width="42" height="42" viewBox="0 0 40 40" style="margin:0 auto;">
-            <rect x="20" y="3.5" width="23.3" height="23.3" rx="4" transform="rotate(45 20 3.5)" fill="none" stroke="{{ $gold }}" stroke-width="2.5"/>
-            <rect x="20" y="12.5" width="10.6" height="10.6" rx="2" transform="rotate(45 20 12.5)" fill="{{ $gold }}"/>
-        </svg>
-        <div class="pf" style="font-size:15px; font-weight:700; letter-spacing:.5px; color:{{ $navy }}; margin-top:8px;">
+    {{-- ══ Agreement title block ══ --}}
+    <div class="avoid" style="text-align:center; margin-top:6px;">
+        <div class="pf" style="font-size:13px; font-weight:700; letter-spacing:.5px; color:{{ $navy }};">
             {{ $data['first_party']['name_en'] }}
         </div>
-        <div class="ar" style="font-size:12px; color:#5B667A; margin-top:3px; text-align:center; direction:rtl;">
+        <div class="ar" style="font-size:11px; color:#5B667A; margin-top:3px; text-align:center; direction:rtl;">
             {{ $data['first_party']['name_ar'] }}
         </div>
-        <div class="rule-gold" style="margin:16px 0;"></div>
+        <div class="rule-gold" style="margin:14px 0;"></div>
         <div style="font-size:9px; letter-spacing:5px; text-transform:uppercase; color:{{ $gold }}; font-weight:700;">Agreement &middot; اتفاقية</div>
-        <h1 class="pf" style="font-size:23px; font-weight:800; color:{{ $navy }}; margin-top:8px;">{{ $data['meta']['title_en'] }}</h1>
-        <div class="ar" style="font-size:18px; font-weight:700; color:{{ $navy }}; margin-top:4px; text-align:center; direction:rtl;">{{ $data['meta']['title_ar'] }}</div>
-        <div class="pf" style="font-size:13px; font-style:italic; color:{{ $gold }}; margin-top:12px;">{{ $data['event']['name'] }}</div>
+        <h1 class="pf" style="font-size:22px; font-weight:800; color:{{ $navy }}; margin-top:8px;">{{ $data['meta']['title_en'] }}</h1>
+        <div class="ar" style="font-size:17px; font-weight:700; color:{{ $navy }}; margin-top:4px; text-align:center; direction:rtl;">{{ $data['meta']['title_ar'] }}</div>
     </div>
 
     {{-- meta grid --}}
     <table class="t avoid" style="margin-top:18px;">
         <tr><th style="width:25%">Reference</th><td style="width:25%">{{ $contract->reference }}</td><th style="width:22%">Date</th><td>{{ $data['meta']['date'] }}</td></tr>
         <tr><th>Event Dates</th><td>{{ $data['event']['dates'] }}</td><th>Venue</th><td>{{ $data['event']['venue'] }}</td></tr>
-        <tr><th>Location</th><td>{{ $data['event']['location'] }}</td><th>Estimated Total</th><td><strong>{{ $cur }} {{ $money($est) }}</strong></td></tr>
+        <tr><th>Location</th><td>{{ $data['event']['location'] }}</td><th>{{ $isFixed ? 'Contract Value' : 'Estimated Total' }}</th><td><strong>{{ $cur }} {{ $money($est) }}</strong></td></tr>
     </table>
 
     {{-- ══ Recitals / Parties ══ --}}
@@ -117,7 +121,7 @@
                         <tr>
                             <td><strong>{{ $r['name_en'] }}</strong></td>
                             <td class="ar" style="direction:rtl;">{{ $r['name_ar'] }}</td>
-                            <td class="num"><strong>{{ $r['share'] }}%</strong> <span style="color:#94A3B8">· {{ $cur }} {{ $money($est * $r['share'] / 100) }}</span></td>
+                            <td class="num"><strong>{{ (float) ($r['share'] ?? 0) }}%</strong> <span style="color:#94A3B8">· {{ $cur }} {{ $money($est * (float) ($r['share'] ?? 0) / 100) }}</span></td>
                         </tr>
                     @endforeach
                     <tr class="totrow"><td colspan="2">Total Guaranteed · إجمالي التغطية</td><td class="num">100% · {{ $cur }} {{ $money($est) }}</td></tr>
@@ -129,12 +133,29 @@
                     @foreach ($c['schedule'] as $i => $s)
                         <tr>
                             <td>{{ $i + 1 }}</td>
-                            <td class="num"><strong>{{ $s['pct'] }}%</strong><br><span style="color:#94A3B8; font-size:9px;">{{ $cur }} {{ $money($est * $s['pct'] / 100) }}</span></td>
+                            <td class="num"><strong>{{ (float) ($s['pct'] ?? 0) }}%</strong><br><span style="color:#94A3B8; font-size:9px;">{{ $cur }} {{ $money($est * (float) ($s['pct'] ?? 0) / 100) }}</span></td>
                             <td>{{ $s['when_en'] }}<div class="ar" style="direction:rtl; color:#5B667A; margin-top:2px;">{{ $s['when_ar'] }}</div></td>
                         </tr>
                     @endforeach
-                    <tr class="totrow"><td colspan="1">Total</td><td class="num">100%</td><td>{{ $cur }} {{ $money($est) }} · estimated</td></tr>
+                    <tr class="totrow"><td colspan="1">Total</td><td class="num">100%</td><td>{{ $cur }} {{ $money($est) }}{{ $isFixed ? '' : ' · estimated' }}</td></tr>
                 </table>
+
+            @elseif (($c['type'] ?? '') === 'bullets')
+                {{-- deliverables / exclusions: bold label — description, in both languages --}}
+                <div style="margin-top:8px; border-left:2px solid {{ $gold }}; background:#FBF8F0; padding:10px 14px;">
+                    @foreach ($c['items'] as $it)
+                        <div style="margin:6px 0;">
+                            <div style="font-size:9.5px; color:#33415A; line-height:1.5;">
+                                <span style="color:{{ $gold }}; font-weight:700;">&#9656;</span>
+                                <strong style="color:{{ $navy }};">{{ $it['l_en'] }}</strong>@if (! empty($it['t_en'])) <span style="color:#5B667A;">— {{ $it['t_en'] }}</span>@endif
+                            </div>
+                            <div class="ar" style="font-size:10.5px; color:#33415A; line-height:1.8; direction:rtl; margin-top:1px;">
+                                <span style="color:{{ $gold }}; font-weight:700;">&#9666;</span>
+                                <strong style="color:{{ $navy }};">{{ $it['l_ar'] }}</strong>@if (! empty($it['t_ar'])) <span style="color:#5B667A;">— {{ $it['t_ar'] }}</span>@endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
 
             @elseif (($c['type'] ?? '') === 'list')
                 <table class="t">
@@ -163,20 +184,25 @@
         <p class="clause-p-en" style="margin-top:0;">By signing below, the parties confirm their acceptance of this Agreement and its terms.
             <span class="ar" style="direction:rtl; display:block; margin-top:3px;">بالتوقيع أدناه، يؤكّد الطرفان قبولهما لهذه الاتفاقية وشروطها.</span></p>
 
-        @php
-            $blocks = array_merge(
-                [['role_en' => 'First Party — Elite Business Hub', 'role_ar' => 'الطرف الأول', 'name' => $data['first_party']['rep_en']]],
-                array_map(fn ($p) => ['role_en' => 'Second Party — '.$p['name_en'], 'role_ar' => 'الطرف الثاني', 'name' => 'Authorised Representative'], $data['second_parties'])
-            );
-        @endphp
+        {{-- Signature blocks are driven by the contract's signatories: a signed
+             party shows their signature, date and a verification fingerprint; an
+             unsigned one keeps the dashed line for ink. --}}
         <table style="width:100%; border-collapse:separate; border-spacing:10px; margin:6px -10px 0;">
             <tr>
-                @foreach ($blocks as $b)
-                    <td style="width:33.33%; border:.75px solid #E2DAC6; border-top:3px solid {{ $navy }}; border-radius:4px; padding:12px; vertical-align:top;">
-                        <div style="font-size:7px; letter-spacing:.5px; text-transform:uppercase; color:{{ $gold }}; font-weight:700;">{{ $b['role_en'] }}</div>
-                        <div class="ar" style="direction:rtl; font-size:9px; color:#94A3B8; margin-top:1px;">{{ $b['role_ar'] }}</div>
-                        <div class="pf" style="font-size:11px; font-weight:700; color:{{ $navy }}; margin-top:8px;">{{ $b['name'] }}</div>
-                        <div style="border-top:.75px dashed #C7BFA9; margin-top:34px; padding-top:3px; font-size:6.5px; letter-spacing:.5px; text-transform:uppercase; color:#A9A18C;">Signature &amp; Date · التوقيع والتاريخ</div>
+                @foreach ($signatories as $s)
+                    <td style="width:33.33%; border:.75px solid {{ $s->isSigned() ? '#BFD9CC' : '#E2DAC6' }}; border-top:3px solid {{ $navy }}; border-radius:4px; padding:12px; vertical-align:top;">
+                        <div style="font-size:7px; letter-spacing:.5px; text-transform:uppercase; color:{{ $gold }}; font-weight:700;">{{ $s->roleLabel() }}</div>
+                        <div class="pf" style="font-size:11px; font-weight:700; color:{{ $navy }}; margin-top:8px;">{{ $s->name }}</div>
+
+                        @if ($s->isSigned())
+                            <div style="margin-top:16px; font-family:'Spectral',serif; font-size:15px; font-style:italic; color:{{ $navy }};">{{ $s->signature_data }}</div>
+                            <div style="border-top:.75px solid #BFD9CC; margin-top:4px; padding-top:3px; font-size:6.5px; letter-spacing:.4px; text-transform:uppercase; color:#3F8E6E; font-weight:700;">
+                                ✓ Signed {{ $s->signed_at->format('j M Y · H:i') }}
+                            </div>
+                            <div style="margin-top:2px; font-size:5.5px; color:#A9A18C; font-family:monospace;">verify {{ substr($s->signed_hash ?? '', 0, 12) }}</div>
+                        @else
+                            <div style="border-top:.75px dashed #C7BFA9; margin-top:34px; padding-top:3px; font-size:6.5px; letter-spacing:.5px; text-transform:uppercase; color:#A9A18C;">Signature &amp; Date · التوقيع والتاريخ</div>
+                        @endif
                     </td>
                 @endforeach
             </tr>

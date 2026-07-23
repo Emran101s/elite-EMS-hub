@@ -43,37 +43,85 @@ class ContractClauses
         $cur = $f['currency'] ?? 'JOD';
         $fee = rtrim(rtrim(number_format((float) ($f['management_fee_pct'] ?? 15), 1), '0'), '.');
 
+        // The contract stands on its own agreed figure, not on a live budget estimate.
+        $valueCents = (int) ($f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0);
+        $money = $cur.' '.number_format($valueCents / 100, 2);
+        $isFixed = ($f['value_mode'] ?? 'fixed') === 'fixed';
+
         return [
             // 1 · SCOPE OF WORK
             [
-                'n' => '1', 'type' => 'prose',
+                'n' => '1', 'type' => 'bullets',
                 'en_title' => 'Scope of Work', 'ar_title' => 'نطاق العمل',
                 'en' => [
-                    'Elite Business Hub shall act as the sole event management company and the single point of coordination for the Event, and shall plan, manage, supervise and deliver the Event from end to end. The scope of services includes, without limitation:',
-                    'overall project management and full on-site supervision; concept, creative direction and design of all event materials; production and technical delivery (stage, audio-visual, lighting, sound, LED screens and livestreaming); exhibition design, build-up and management; venue sourcing, contracting and management; equipment, furniture and fit-out; accommodation and hospitality; catering coordination; transportation and logistics; registration and participant management; interpretation and translation; branding, signage and printed collateral; and security clearance and government permits.',
-                    'All services and third-party suppliers shall be sourced, contracted, managed and supervised by Elite Business Hub on the Client’s behalf, and Elite Business Hub shall coordinate with all hotels, vendors, suppliers and competent authorities in respect of the Event.',
+                    'Elite Business Hub shall act as the sole event management company and the single point of coordination for the Event, and shall plan, manage, supervise and deliver the Event from end to end. The scope of services comprises:',
                 ],
                 'ar' => [
-                    'تعمل إيليت بزنس هَب بصفتها الشركة المنظِّمة الوحيدة للفعالية ونقطة التنسيق الموحّدة، وتتولّى تخطيط الفعالية وإدارتها والإشراف عليها وتنفيذها من البداية إلى النهاية. ويشمل نطاق الخدمات، على سبيل المثال لا الحصر:',
-                    'الإدارة الشاملة للمشروع والإشراف الميداني الكامل؛ وابتكار الفكرة والتوجيه الإبداعي وتصميم كافة مواد الفعالية؛ والإنتاج والتنفيذ الفني (المسرح، والوسائط السمعية والبصرية، والإضاءة، والصوت، وشاشات الـ LED، والبث المباشر)؛ وتصميم المعرض وتجهيزه وإدارته؛ وتأمين القاعات والتعاقد عليها وإدارتها؛ والمعدّات والأثاث والتجهيزات؛ والإقامة والضيافة؛ وتنسيق التموين؛ والنقل والخدمات اللوجستية؛ والتسجيل وإدارة المشاركين؛ والترجمة الفورية والتحريرية؛ والهوية البصرية واللافتات والمطبوعات؛ والتصاريح الأمنية والحكومية.',
-                    'تتولّى إيليت بزنس هَب تأمين جميع الخدمات ومورّدي الغير والتعاقد معهم وإدارتهم والإشراف عليهم نيابةً عن العميل، كما تتولّى التنسيق مع كافة الفنادق والمورّدين والجهات المختصّة فيما يخصّ الفعالية.',
+                    'تعمل إيليت بزنس هَب بصفتها الشركة المنظِّمة الوحيدة للفعالية ونقطة التنسيق الموحّدة، وتتولّى تخطيط الفعالية وإدارتها والإشراف عليها وتنفيذها من البداية إلى النهاية. ويشمل نطاق الخدمات ما يلي:',
+                ],
+                // Edit, add or remove these freely — this is the deliverables list.
+                'items' => [
+                    ['l_en' => 'Project management & on-site supervision', 'l_ar' => 'إدارة المشروع والإشراف الميداني',
+                        't_en' => 'End-to-end coordination and full on-site delivery.', 't_ar' => 'التنسيق الشامل والتنفيذ الميداني الكامل.'],
+                    ['l_en' => 'Concept & creative direction', 'l_ar' => 'الفكرة والتوجيه الإبداعي',
+                        't_en' => 'Event concept, design and all event materials.', 't_ar' => 'ابتكار فكرة الفعالية وتصميمها وكافة موادها.'],
+                    ['l_en' => 'Production & technical delivery', 'l_ar' => 'الإنتاج والتنفيذ الفني',
+                        't_en' => 'Stage, audio-visual, lighting, sound, LED screens and livestreaming.', 't_ar' => 'المسرح والوسائط السمعية والبصرية والإضاءة والصوت وشاشات الـ LED والبث المباشر.'],
+                    ['l_en' => 'Venue & hotel liaison', 'l_ar' => 'التنسيق مع القاعات والفنادق',
+                        't_en' => 'Sourcing, contracting and day-to-day coordination.', 't_ar' => 'التأمين والتعاقد والتنسيق اليومي.'],
+                    ['l_en' => 'Branding & printing', 'l_ar' => 'الهوية البصرية والمطبوعات',
+                        't_en' => 'Signage, boards, stands and printed collateral.', 't_ar' => 'اللافتات واللوحات والحوامل والمطبوعات.'],
+                    ['l_en' => 'Accommodation & hospitality', 'l_ar' => 'الإقامة والضيافة',
+                        't_en' => 'Room blocks, rooming lists and guest services.', 't_ar' => 'حجوزات الغرف وقوائم الإقامة وخدمات الضيوف.'],
+                    ['l_en' => 'Catering coordination', 'l_ar' => 'تنسيق التموين',
+                        't_en' => 'Menus, service timings and dietary requirements.', 't_ar' => 'قوائم الطعام وأوقات الخدمة والمتطلّبات الغذائية.'],
+                    ['l_en' => 'Ground transportation', 'l_ar' => 'النقل البرّي',
+                        't_en' => 'Airport and event transfers, and on-site logistics.', 't_ar' => 'التنقّلات من وإلى المطار والفعالية والخدمات اللوجستية الميدانية.'],
+                    ['l_en' => 'Registration & participant management', 'l_ar' => 'التسجيل وإدارة المشاركين',
+                        't_en' => 'Delegate data, badges and on-site desk.', 't_ar' => 'بيانات المشاركين والبطاقات ومكتب الاستقبال.'],
+                    ['l_en' => 'Interpretation & translation', 'l_ar' => 'الترجمة الفورية والتحريرية',
+                        't_en' => 'Booths, equipment and interpreters as required.', 't_ar' => 'الكبائن والمعدّات والمترجمون حسب الحاجة.'],
+                    ['l_en' => 'Security clearance & permits', 'l_ar' => 'التصاريح الأمنية والحكومية',
+                        't_en' => 'Government permits and clearances for the Event.', 't_ar' => 'التصاريح والموافقات الحكومية اللازمة للفعالية.'],
+                    ['l_en' => 'Quality assurance', 'l_ar' => 'ضمان الجودة',
+                        't_en' => 'Brand compliance across every deliverable.', 't_ar' => 'الالتزام بالهوية المؤسسية في جميع المخرجات.'],
+                ],
+            ],
+
+            // 1b · EXCLUSIONS — what the price does not cover
+            [
+                'n' => '1b', 'type' => 'bullets',
+                'en_title' => 'Exclusions', 'ar_title' => 'الاستثناءات',
+                'en' => ['Unless expressly stated in the Scope of Work, the following are not included in this Agreement:'],
+                'ar' => ['ما لم يُنَص عليه صراحةً في نطاق العمل، فإن ما يلي غير مشمول بهذه الاتفاقية:'],
+                'items' => [
+                    ['l_en' => 'Anything not listed in the Scope of Work', 'l_ar' => 'أي بند غير مدرج في نطاق العمل', 't_en' => '', 't_ar' => ''],
+                    ['l_en' => 'Delegate international travel & visas', 'l_ar' => 'سفر المشاركين الدولي والتأشيرات', 't_en' => '', 't_ar' => ''],
+                    ['l_en' => 'Third-party speaker, content or sponsorship fees', 'l_ar' => 'أتعاب المتحدّثين أو المحتوى أو الرعاية من الغير', 't_en' => '', 't_ar' => ''],
+                    ['l_en' => 'Beverages and liquor where quoted separately', 'l_ar' => 'المشروبات والكحوليات حيثما تُسعَّر بشكل منفصل', 't_en' => '', 't_ar' => ''],
+                    ['l_en' => 'Costs arising from changes requested after written approval', 'l_ar' => 'التكاليف الناشئة عن تغييرات مطلوبة بعد الموافقة الخطّية', 't_en' => '', 't_ar' => ''],
+                    ['l_en' => 'Taxes, duties or government fees beyond those stated herein', 'l_ar' => 'الضرائب أو الرسوم الحكومية الزائدة عمّا ورد في هذه الاتفاقية', 't_en' => '', 't_ar' => ''],
                 ],
             ],
 
             // 2 · PROJECT PLAN & BUDGET
             [
                 'n' => '2', 'type' => 'prose',
-                'en_title' => 'Project Plan & Budget', 'ar_title' => 'خطة المشروع والموازنة',
-                'en' => [
-                    'The Event shall be executed in accordance with the project plan and budget prepared by Elite Business Hub and tracked through its project-management system.',
-                    'The budget is an estimate prepared in good faith and is not a fixed figure; the final amount may increase or decrease according to the final headcount, supplier availability and confirmed specifications. Elite Business Hub shall obtain the Client’s approval for the budget, and for any material change to it, before committing the relevant costs.',
-                    "The current budget is based on the following assumptions: approximately {$a['attendees_min']}–{$a['attendees_max']} attendees; {$a['catering_en']}; and {$a['rooms']} rooms for {$a['nights']} nights per guest.",
-                ],
-                'ar' => [
-                    'تُنفَّذ الفعالية وفقاً لخطة المشروع والموازنة المُعدّتين من قِبَل إيليت بزنس هَب، ويجري تتبّعهما من خلال نظام إدارة المشاريع الخاص بها.',
-                    'الموازنة تقديريّة أُعِدّت بحسن نيّة وهي غير ثابتة؛ وقد يزيد المبلغ النهائي أو ينقص تبعاً للعدد النهائي للحضور، وتوافر المورّدين، والمواصفات المعتمدة. وتلتزم إيليت بزنس هَب بالحصول على موافقة العميل على الموازنة وعلى أي تغيير جوهري فيها قبل الالتزام بالتكاليف ذات الصلة.',
-                    "وتستند الموازنة الحالية إلى الافتراضات التالية: نحو {$a['attendees_min']}–{$a['attendees_max']} مشاركاً؛ و{$a['catering_ar']}؛ و{$a['rooms']} غرفة لمدّة {$a['nights']} ليالٍ لكل ضيف.",
-                ],
+                'en_title' => 'Contract Value', 'ar_title' => 'قيمة العقد',
+                'en' => array_values(array_filter([
+                    $isFixed
+                        ? "The total contract value for the scope of work set out in Clause 1 is {$money}. This is a fixed lump-sum price and shall not vary save by a written variation signed by both parties."
+                        : "The estimated total value for the scope of work set out in Clause 1 is {$money}. This figure is an estimate prepared in good faith; the final amount may increase or decrease according to the final headcount, supplier availability and confirmed specifications.",
+                    'Any addition to, or reduction of, the scope of work shall be agreed in writing and priced as a written variation before the relevant costs are committed.',
+                    'The Event shall be executed in accordance with the project plan approved by the Client and tracked through Elite Business Hub’s project-management system.',
+                ])),
+                'ar' => array_values(array_filter([
+                    $isFixed
+                        ? "تبلغ قيمة العقد الإجمالية مقابل نطاق العمل المبيّن في البند (1) مبلغ {$money}. وهي قيمة إجمالية ثابتة لا تتغيّر إلا بموجب تعديل خطّي موقّع من الطرفين."
+                        : "تبلغ القيمة الإجمالية التقديريّة مقابل نطاق العمل المبيّن في البند (1) مبلغ {$money}. وهذه القيمة تقديريّة أُعِدّت بحسن نيّة؛ وقد يزيد المبلغ النهائي أو ينقص تبعاً للعدد النهائي للحضور، وتوافر المورّدين، والمواصفات المعتمدة.",
+                    'يُتَّفق خطياً على أي إضافة إلى نطاق العمل أو انتقاص منه، ويُسعَّر ذلك بموجب تعديل خطّي قبل الالتزام بالتكاليف ذات الصلة.',
+                    'تُنفَّذ الفعالية وفقاً لخطة المشروع المعتمَدة من العميل، ويجري تتبّعها من خلال نظام إدارة المشاريع الخاص بإيليت بزنس هَب.',
+                ])),
             ],
 
             // 3 · COST SHARING
@@ -181,9 +229,120 @@ class ContractClauses
             [
                 'n' => '11', 'type' => 'prose',
                 'en_title' => 'Amendments & Entire Agreement', 'ar_title' => 'التعديلات والاتفاقية الكاملة',
-                'en' => ['This Agreement, together with the approved project plan and budget, constitutes the entire agreement between the parties. Any amendment must be made in writing and signed by both parties. Where any conflict arises between the English and Arabic texts, the parties shall interpret them together in good faith to give effect to their common intention.'],
-                'ar' => ['تشكّل هذه الاتفاقية، مع خطة المشروع والموازنة المعتمَدتين، الاتفاقَ الكامل بين الطرفين. ويجب أن يتمّ أي تعديل كتابةً وبتوقيع الطرفين. وفي حال وجود أي تعارض بين النصّين الإنجليزي والعربي، يفسّرهما الطرفان معاً بحسن نيّة بما يحقّق قصدهما المشترك.'],
+                'en' => ['This Agreement, together with the approved project plan and budget, constitutes the entire agreement between the parties. Any amendment must be made in writing and signed by both parties.'],
+                'ar' => ['تشكّل هذه الاتفاقية، مع خطة المشروع والموازنة المعتمَدتين، الاتفاقَ الكامل بين الطرفين. ويجب أن يتمّ أي تعديل كتابةً وبتوقيع الطرفين.'],
             ],
         ];
+    }
+
+    /**
+     * Further standard conditions appended after the core clauses. Seeded into
+     * every new contract and fully editable from there.
+     */
+    public static function extraClauses(array $d): array
+    {
+        $prevailing = ($d['meta']['prevailing_language'] ?? 'ar') === 'en' ? 'English' : 'Arabic';
+        $prevailingAr = $prevailing === 'English' ? 'الإنجليزي' : 'العربي';
+
+        return [
+            [
+                'type' => 'prose',
+                'en_title' => 'Insurance & Liability', 'ar_title' => 'التأمين والمسؤولية',
+                'en' => [
+                    'Elite Business Hub shall exercise reasonable professional care in delivering the Event and shall require its suppliers to hold the insurance customary for their trade.',
+                    'Neither party shall be liable to the other for indirect or consequential loss, including loss of profit or reputation. The aggregate liability of Elite Business Hub under this Agreement shall not exceed the total amounts actually paid to it by the Client under this Agreement.',
+                    'The Client shall be responsible for the conduct of its own guests, delegates and invitees, and for any damage caused by them to the venue or to third-party property.',
+                ],
+                'ar' => [
+                    'تبذل إيليت بزنس هَب العناية المهنية المعقولة في تنفيذ الفعالية، وتُلزِم مورّديها بالاحتفاظ بالتأمينات المتعارف عليها في مجال عملهم.',
+                    'لا يُسأل أي من الطرفين تجاه الآخر عن الأضرار غير المباشرة أو التبعية، بما في ذلك فوات الربح أو الإضرار بالسمعة. ولا تتجاوز المسؤولية الإجمالية لإيليت بزنس هَب بموجب هذه الاتفاقية إجمالي المبالغ المدفوعة لها فعلياً من العميل بموجبها.',
+                    'يكون العميل مسؤولاً عن تصرّفات ضيوفه والمشاركين والمدعوّين من قِبَله، وعن أي ضرر يُلحقونه بالقاعة أو بممتلكات الغير.',
+                ],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Intellectual Property & Media Rights', 'ar_title' => 'الملكية الفكرية والحقوق الإعلامية',
+                'en' => [
+                    'Each party retains ownership of its own trademarks, logos and pre-existing materials. Each party grants the other a limited licence to use those marks solely for the purpose of promoting and delivering the Event.',
+                    'Designs, concepts and creative materials produced by Elite Business Hub for the Event shall transfer to the Client upon settlement of all amounts due under this Agreement.',
+                    'Elite Business Hub may photograph and film the Event and use such material for its portfolio and marketing, unless the Client notifies it otherwise in writing before the Event.',
+                ],
+                'ar' => [
+                    'يحتفظ كل طرف بملكية علاماته التجارية وشعاراته وموادّه السابقة. ويمنح كل طرف الآخر ترخيصاً محدوداً باستخدام تلك العلامات لغرض الترويج للفعالية وتنفيذها حصراً.',
+                    'تنتقل ملكية التصاميم والأفكار والمواد الإبداعية التي تُنتجها إيليت بزنس هَب للفعالية إلى العميل عند سداد كامل المبالغ المستحقّة بموجب هذه الاتفاقية.',
+                    'يجوز لإيليت بزنس هَب تصوير الفعالية فوتوغرافياً وفيديوياً واستخدام تلك المواد في أعمالها التعريفية والتسويقية، ما لم يُشعِرها العميل خطياً بخلاف ذلك قبل الفعالية.',
+                ],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Health, Safety & Security', 'ar_title' => 'الصحة والسلامة والأمن',
+                'en' => [
+                    'Elite Business Hub shall deliver the Event in accordance with the health, safety and security requirements of the venue and of the competent authorities, and shall obtain the security clearances and government permits required for the Event.',
+                    'The Client shall provide participant data required for security clearance sufficiently in advance. Any delay in providing such data that results in refused or late clearance shall not constitute a breach by Elite Business Hub.',
+                ],
+                'ar' => [
+                    'تنفّذ إيليت بزنس هَب الفعالية وفقاً لمتطلّبات الصحة والسلامة والأمن الخاصة بالقاعة وبالجهات المختصّة، وتتولّى استصدار التصاريح الأمنية والحكومية اللازمة للفعالية.',
+                    'يلتزم العميل بتزويد بيانات المشاركين اللازمة للتصاريح الأمنية في وقت كافٍ مسبقاً. ولا يُعَدّ أي تأخير في تقديم تلك البيانات يؤدّي إلى رفض التصريح أو تأخّره إخلالاً من جانب إيليت بزنس هَب.',
+                ],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Termination', 'ar_title' => 'إنهاء الاتفاقية',
+                'en' => [
+                    'Either party may terminate this Agreement by written notice if the other party commits a material breach and fails to remedy it within fourteen (14) days of written notice.',
+                    'On termination for any reason, the Client shall pay for all services delivered up to the date of termination, together with all costs committed to third parties which cannot be recovered, and the cancellation charges set out in the Cancellation & Refund Policy clause.',
+                ],
+                'ar' => [
+                    'يجوز لأيٍّ من الطرفين إنهاء هذه الاتفاقية بإشعار خطّي إذا ارتكب الطرف الآخر إخلالاً جوهرياً ولم يعالجه خلال أربعة عشر (14) يوماً من الإشعار الخطّي.',
+                    'عند الإنهاء لأي سبب، يلتزم العميل بسداد قيمة جميع الخدمات المنفَّذة حتى تاريخ الإنهاء، إضافةً إلى كافة التكاليف الملتزَم بها تجاه الغير وغير القابلة للاسترداد، ورسوم الإلغاء المنصوص عليها في بند سياسة الإلغاء والاسترداد.',
+                ],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Assignment & Subcontracting', 'ar_title' => 'التنازل والتعاقد من الباطن',
+                'en' => ['Neither party may assign this Agreement without the other’s written consent. Elite Business Hub may subcontract parts of the services to qualified suppliers and shall remain responsible to the Client for their performance.'],
+                'ar' => ['لا يجوز لأيٍّ من الطرفين التنازل عن هذه الاتفاقية دون موافقة خطّية من الطرف الآخر. ويجوز لإيليت بزنس هَب التعاقد من الباطن على أجزاء من الخدمات مع مورّدين مؤهّلين، وتبقى مسؤولةً تجاه العميل عن أدائهم.'],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Notices', 'ar_title' => 'الإشعارات',
+                'en' => ['All notices under this Agreement shall be in writing and sent to the representatives and addresses stated in this Agreement, by hand, courier or email. Notice by email shall be deemed received on the next business day.'],
+                'ar' => ['تكون جميع الإشعارات بموجب هذه الاتفاقية خطّية وتُرسَل إلى الممثّلين والعناوين المبيّنة في هذه الاتفاقية، باليد أو بالبريد السريع أو بالبريد الإلكتروني. ويُعَدّ الإشعار بالبريد الإلكتروني مستلَماً في يوم العمل التالي.'],
+            ],
+            [
+                'type' => 'prose',
+                'en_title' => 'Governing Language', 'ar_title' => 'لغة الاتفاقية',
+                'en' => ["This Agreement is executed in English and Arabic. In the event of any discrepancy between the two texts, the {$prevailing} text shall prevail."],
+                'ar' => ["حُرِّرت هذه الاتفاقية باللغتين الإنجليزية والعربية. وفي حال وجود أي تعارض بين النصّين، يُعتدّ بالنصّ {$prevailingAr}."],
+            ],
+        ];
+    }
+
+    /**
+     * The standard contract body as editable blocks. Variables are interpolated
+     * once, here — from then on the contract owns plain, editable text.
+     *
+     * @return list<array{id:string,type:string,title_en:string,title_ar:string,en:list<string>,ar:list<string>,items:array,rows:array}>
+     */
+    public static function blocks(array $d): array
+    {
+        $out = [];
+        $n = 0;
+
+        foreach ([...self::clauses($d), ...self::extraClauses($d)] as $c) {
+            $n++;
+            $out[] = [
+                'id' => 'b'.$n,
+                'type' => $c['type'] ?? 'prose',
+                'title_en' => $c['en_title'] ?? '',
+                'title_ar' => $c['ar_title'] ?? '',
+                'en' => array_values($c['en'] ?? []),
+                'ar' => array_values($c['ar'] ?? []),
+                'items' => array_values($c['items'] ?? []),
+                'rows' => array_values($c['rows'] ?? []),
+            ];
+        }
+
+        return $out;
     }
 }

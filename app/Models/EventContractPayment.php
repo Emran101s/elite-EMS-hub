@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['event_id', 'contract_id', 'sort', 'label', 'pct', 'amount_cents', 'due_on', 'paid_cents', 'paid_at', 'note'])]
 class EventContractPayment extends Model
 {
-    use \App\Models\Concerns\Auditable;
+    use Auditable;
 
     /** Money movements and date changes are decisions; the rest is noise. */
     public const AUDIT_FIELDS = ['paid_cents', 'paid_at', 'due_on', 'amount_cents'];

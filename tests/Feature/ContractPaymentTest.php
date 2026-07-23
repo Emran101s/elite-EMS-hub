@@ -57,11 +57,13 @@ class ContractPaymentTest extends TestCase
 
         // Partial payment.
         Livewire::actingAs($user)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $contract->id)
             ->call('recordPayment', $first->id, $first->amount_cents / 100 / 2);
         $this->assertSame('partial', $first->fresh()->status());
 
         // Blank amount settles the remainder in full.
         Livewire::actingAs($user)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $contract->id)
             ->call('recordPayment', $first->id);
         $first->refresh();
         $this->assertSame('paid', $first->status());
@@ -69,6 +71,7 @@ class ContractPaymentTest extends TestCase
 
         // Undo (bounced transfer) — back to pending.
         Livewire::actingAs($user)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $contract->id)
             ->call('clearPayment', $first->id);
         $this->assertSame(0, $first->fresh()->paid_cents);
     }
@@ -124,12 +127,14 @@ class ContractPaymentTest extends TestCase
 
         // Coordinators can't touch client money.
         Livewire::actingAs($coordinator)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $contract->id)
             ->call('recordPayment', $p->id)
             ->assertForbidden();
 
         // A manager can — and the movement lands in the audit trail.
         $manager = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
         Livewire::actingAs($manager)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $contract->id)
             ->call('recordPayment', $p->id);
 
         $log = AuditLog::where('auditable_type', 'EventContractPayment')->latest('id')->firstOrFail();
