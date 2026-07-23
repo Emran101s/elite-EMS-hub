@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Livewire\Hub\BriefTab;
 use App\Models\Event;
 use App\Models\EventBrief;
+use App\Models\EventBudgetCategory;
 use App\Models\User;
+use App\Support\BriefTemplates;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -65,7 +67,7 @@ class EventBriefTest extends TestCase
     {
         [, $event] = $this->make();
 
-        foreach (array_keys(\App\Support\BriefTemplates::TEMPLATES) as $key) {
+        foreach (array_keys(BriefTemplates::TEMPLATES) as $key) {
             $data = EventBrief::defaultData($event, $key);
 
             foreach (array_keys(EventBrief::SECTIONS) as $section) {
@@ -119,9 +121,9 @@ class EventBriefTest extends TestCase
         $this->assertNotNull(EventBrief::where('event_id', $event->id)->first()->generated_at);
 
         // Idempotent: a second run creates nothing new.
-        $before = \App\Models\EventBudgetCategory::where('event_id', $event->id)->count();
+        $before = EventBudgetCategory::where('event_id', $event->id)->count();
         $c->call('generatePlan');
-        $this->assertSame($before, \App\Models\EventBudgetCategory::where('event_id', $event->id)->count());
+        $this->assertSame($before, EventBudgetCategory::where('event_id', $event->id)->count());
         $this->assertSame(0, array_sum($c->get('generated')));
     }
 
@@ -129,13 +131,13 @@ class EventBriefTest extends TestCase
     {
         [$user, $event] = $this->make();
         EventBrief::forEvent($event);
-        $mine = \App\Models\EventBudgetCategory::create(['event_id' => $event->id, 'name' => 'AV & Production', 'position' => 0]);
+        $mine = EventBudgetCategory::create(['event_id' => $event->id, 'name' => 'AV & Production', 'position' => 0]);
 
         Livewire::actingAs($user)->test(BriefTab::class, ['event' => $event])
             ->call('toggleApproved')->call('generatePlan');
 
         // The hand-made category is matched by name, not duplicated.
-        $this->assertSame(1, \App\Models\EventBudgetCategory::where('event_id', $event->id)->where('name', 'AV & Production')->count());
+        $this->assertSame(1, EventBudgetCategory::where('event_id', $event->id)->where('name', 'AV & Production')->count());
         $this->assertSame($mine->id, $mine->fresh()->id);
     }
 

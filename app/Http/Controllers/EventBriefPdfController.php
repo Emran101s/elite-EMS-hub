@@ -19,13 +19,11 @@ class EventBriefPdfController extends Controller
     {
         $brief = EventBrief::forEvent($event);
 
-        $html = view('event-brief.dossier', [
+        // The export IS the live preview: the same shared paper partial, the
+        // same compiled CSS — paginated onto A4. One source of truth.
+        $html = view('event-brief.paper-pdf', [
             'event' => $event,
             'brief' => $brief,
-            'data' => $brief->data,
-            'sections' => EventBrief::SECTIONS,
-            'infoFields' => EventBrief::INFO_FIELDS,
-            'twocolHeads' => EventBrief::TWOCOL_HEADS,
             'css' => $this->compiledCss(),
         ])->render();
 

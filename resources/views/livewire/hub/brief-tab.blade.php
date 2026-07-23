@@ -82,84 +82,82 @@
         </div>
     @endif
 
-    <div class="flex gap-6">
-        {{-- ══ Section rail ══ --}}
-        <aside class="hidden w-48 shrink-0 lg:block">
-            <nav class="sticky top-32 space-y-0.5">
-                <p class="mb-2 px-2 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-300">Contents</p>
-                @foreach ($sections as $key => [$num, $title, $type])
-                    <a href="#sec-{{ $key }}" class="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                        <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">{{ $num }}</span>
-                        <span class="truncate">{{ $title }}</span>
-                    </a>
-                @endforeach
-            </nav>
-        </aside>
+    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
 
-        {{-- ══ Document canvas ══ --}}
-        <main class="min-w-0 flex-1">
-            {{-- A4 width (794px) so the editor and the PDF export stay pixel-matched --}}
-            <div class="mx-auto w-full max-w-[794px] overflow-hidden rounded-[1.75rem] bg-white shadow-[0_40px_90px_-40px_rgba(11,31,58,0.4)] ring-1 ring-line/70">
-                {{-- Dossier hero --}}
-                <div class="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-[#071528] px-8 pb-8 pt-10 text-white sm:px-12">
-                    <div class="pointer-events-none absolute inset-0">
-                        <div class="absolute -right-12 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.22),transparent_65%)]"></div>
-                        <div class="absolute left-8 top-8 h-px w-16 bg-gold-400"></div>
+        {{-- ══════════ LEFT · the sections, as collapsible modules ══════════ --}}
+        @php $in = 'w-full rounded-xl border border-transparent bg-page/70 px-3 py-2 text-sm font-medium text-navy-900 placeholder:text-navy-300 transition focus:border-gold-400 focus:bg-white focus:outline-none'; @endphp
+        <div class="space-y-3">
+
+            {{-- Cover module --}}
+            <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
+                <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
+                    <span class="pf text-lg font-bold text-gold-500">00</span>
+                    <span class="flex-1">
+                        <span class="block text-sm font-bold text-navy-900">Cover</span>
+                        <span class="block text-eyebrow text-muted">Subtitle, parties and how to use this document</span>
+                    </span>
+                    <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
+                </button>
+                <div x-show="open" class="space-y-2.5 border-t border-line px-5 py-4">
+                    <div><label class="field-label !mb-1 !text-eyebrow">Subtitle</label>
+                        <input type="text" wire:model.live.debounce.500ms="data.meta.subtitle" class="{{ $in }}"></div>
+                    <div class="grid gap-2.5 sm:grid-cols-2">
+                        <div><label class="field-label !mb-1 !text-eyebrow">Prepared for</label>
+                            <input type="text" wire:model.live.debounce.500ms="data.meta.prepared_for" class="{{ $in }}"></div>
+                        <div><label class="field-label !mb-1 !text-eyebrow">Prepared by</label>
+                            <input type="text" wire:model.live.debounce.500ms="data.meta.prepared_by" class="{{ $in }}"></div>
                     </div>
-                    <div class="relative">
-                        <p class="pt-3 text-eyebrow font-bold uppercase tracking-[0.36em] text-gold-400">◆ Elite Business Hub · Event Dossier</p>
-                        <h1 class="mt-4 text-3xl font-bold leading-tight text-white sm:text-4xl" style="{{ $serif }}">{{ $event->name }}</h1>
-                        <input type="text" wire:model.blur="data.meta.subtitle" class="mt-2 w-full border-0 bg-transparent p-0 text-sm text-white/60 placeholder:text-white/30 focus:outline-none focus:ring-0" placeholder="Document subtitle…" style="{{ $serif }} font-style: italic;">
-                        <div class="mt-6 grid grid-cols-2 gap-x-8 gap-y-4 border-t border-white/10 pt-5 sm:grid-cols-3">
-                            @foreach ([['Prepared For','prepared_for'],['Prepared By','prepared_by'],['Confidentiality','confidentiality']] as [$lbl,$mk])
-                                <div>
-                                    <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-white/40">{{ $lbl }}</p>
-                                    <input type="text" wire:model.blur="data.meta.{{ $mk }}" class="mt-1 w-full border-0 border-b border-transparent bg-transparent p-0 pb-0.5 text-sm font-medium text-white transition placeholder:text-white/30 focus:border-gold-400/60 focus:outline-none focus:ring-0">
-                                </div>
-                            @endforeach
-                        </div>
+                    <div><label class="field-label !mb-1 !text-eyebrow">Confidentiality</label>
+                        <input type="text" wire:model.live.debounce.500ms="data.meta.confidentiality" class="{{ $in }}"></div>
+                    <div><label class="field-label !mb-1 !text-eyebrow">How to use this document</label>
+                        <textarea rows="3" wire:model.live.debounce.500ms="data.meta.how_to" class="{{ $in }} !text-xs leading-relaxed"></textarea></div>
+                </div>
+            </section>
+
+            @foreach ($sections as $key => [$num, $title, $type])
+                @php
+                    $summary = match ($type) {
+                        'text' => trim((string) ($data[$key] ?? '')) !== '' ? 'Written' : 'Empty — write it',
+                        'kv' => collect($data['event_info'] ?? [])->filter(fn ($v) => trim((string) $v) !== '')->count().' of '.count($infoFields).' fields',
+                        default => count($data[$key] ?? []).' '.\Illuminate\Support\Str::plural('row', count($data[$key] ?? [])),
+                    };
+                @endphp
+                <section x-data="{ open: false }" wire:key="mod-{{ $key }}" class="overflow-hidden rounded-2xl border border-line bg-white">
+                    <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
+                        <span class="pf text-lg font-bold text-gold-500">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
+                        <span class="flex-1">
+                            <span class="block text-sm font-bold text-navy-900">{{ $title }}</span>
+                            <span class="block text-eyebrow text-muted">{{ $summary }}</span>
+                        </span>
+                        <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
+                    </button>
+                    <div x-show="open" class="border-t border-line px-5 py-4">
+                        @include('livewire.hub.partials.brief-section', ['type' => $type, 'key' => $key])
+                        @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
+                            <button type="button" wire:click="addRow('{{ $key }}')" class="mt-3 btn-ghost btn-xs">＋ Add row</button>
+                        @endif
                     </div>
+                </section>
+            @endforeach
+        </div>
+
+        {{-- ══════════ RIGHT · the living dossier ══════════ --}}
+        <div class="xl:sticky xl:top-[112px]">
+            <div class="rounded-3xl bg-navy-900/[0.05] p-3 ring-1 ring-line sm:p-5">
+                <div class="mb-2 flex items-center justify-between px-1">
+                    <span class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-500">
+                        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span> Live preview
+                    </span>
+                    <span class="text-eyebrow text-muted">Exactly what exports</span>
                 </div>
-
-                {{-- How-to strip --}}
-                <div class="border-b border-line bg-gold-50/40 px-8 py-3.5 sm:px-12">
-                    <div class="flex items-start gap-2.5">
-                        <span class="mt-0.5 text-gold-500">✦</span>
-                        <textarea wire:model.blur="data.meta.how_to" rows="2" class="w-full resize-none border-0 bg-transparent p-0 text-micro italic leading-relaxed text-navy-500 focus:outline-none focus:ring-0" placeholder="How to use this document…"></textarea>
-                    </div>
-                </div>
-
-                {{-- Sections --}}
-                <div class="space-y-11 px-8 py-10 sm:px-12">
-                    @foreach ($sections as $key => [$num, $title, $type])
-                        <section id="sec-{{ $key }}" wire:key="sec-{{ $key }}" class="scroll-mt-32">
-                            {{-- section header --}}
-                            <div class="mb-5 flex items-end justify-between gap-3 border-b border-line pb-2.5">
-                                <div class="flex items-baseline gap-3">
-                                    <span class="pf text-2xl font-bold leading-none text-gold-400/40">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
-                                    <h3 class="pf text-lg font-bold text-navy-900">{{ $title }}</h3>
-                                </div>
-                                <div class="flex shrink-0 items-center gap-1.5">
-                                    @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
-                                        <button type="button" wire:click="addRow('{{ $key }}')" class="rounded-full border border-line px-2.5 py-1 text-eyebrow font-bold uppercase tracking-wide text-navy-400 transition hover:border-gold-300 hover:text-gold-600">＋ Add</button>
-                                    @endif
-                                    @if ($savedSection === $key)
-                                        <span class="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-eyebrow font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-200">✓ Saved</span>
-                                    @else
-                                        <button type="button" wire:click="saveSection('{{ $key }}')" class="rounded-full bg-navy-900 px-3 py-1 text-eyebrow font-bold uppercase tracking-wide text-white transition hover:bg-navy-800">Save</button>
-                                    @endif
-                                </div>
-                            </div>
-
-                            @include('livewire.hub.partials.brief-section', ['type' => $type, 'key' => $key])
-                        </section>
-                    @endforeach
-                </div>
-
-                <div class="border-t border-line bg-navy-950 px-8 py-4 text-center sm:px-12">
-                    <p class="text-eyebrow font-medium uppercase tracking-[0.3em] text-white/40">{{ $data['meta']['confidentiality'] ?? 'Confidential' }} · Elite Business Hub · v{{ $version }}</p>
+                <div class="max-h-[calc(100vh-220px)] overflow-y-auto rounded-lg">
+                    @include('event-brief.paper', [
+                        'event' => $event, 'data' => $data, 'version' => $version, 'status' => $status,
+                        'sections' => $sections, 'infoFields' => $infoFields, 'twocolHeads' => $twocolHeads,
+                        'forPdf' => false,
+                    ])
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 </div>
