@@ -600,7 +600,7 @@ class EventHubActionsTest extends TestCase
 
         Livewire::actingAs($user)->test(BudgetTab::class, ['event' => $event])
             ->assertOk()
-            ->assertSee('Budget Controls');
+            ->assertSee('Budget Control Center');
     }
 
     public function test_budget_clear_all_and_duplicate(): void

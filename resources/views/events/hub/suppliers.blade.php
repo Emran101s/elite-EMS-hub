@@ -30,34 +30,44 @@
             [$catLabel, $catClass] = $catMeta[$supplier->category] ?? [str($supplier->category)->replace('_', ' ')->title(), 'bg-navy-50 text-navy-600'];
             $pct = $readiness[$supplier->pivot->status] ?? 10;
         @endphp
-        <div class="card p-5 transition hover:shadow-lg {{ $supplier->pivot->status === 'issue' ? 'ring-1 ring-risk/40' : '' }}">
-            <div class="flex items-start justify-between gap-3">
-                <div class="flex min-w-0 items-center gap-3">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-bold text-gold-400" style="background: linear-gradient(135deg, #1E3352, #14315a);">{{ str($supplier->name)->substr(0, 1) }}</span>
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-bold text-navy-900">{{ $supplier->name }}</p>
-                        <div class="mt-0.5 flex items-center gap-1.5">
-                            <span class="rounded px-1.5 py-0.5 text-[0.52rem] font-bold uppercase tracking-wide {{ $catClass }}">{{ $catLabel }}</span>
-                            <span class="text-[0.62rem] font-semibold text-gold-600">★ {{ number_format($supplier->rating, 1) }}</span>
+        <div class="group op-card {{ $supplier->pivot->status === 'issue' ? '!border-red-300 ring-1 ring-red-200' : '' }}">
+            <div class="flex flex-1 flex-col p-5">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-bold text-gold-400" style="background: linear-gradient(135deg, #1E3352, #14315a);">{{ str($supplier->name)->substr(0, 1) }}</span>
+                        <div class="min-w-0">
+                            <p class="pf truncate text-sm font-bold text-navy-900">{{ $supplier->name }}</p>
+                            <div class="mt-1 flex items-center gap-1.5">
+                                <span class="pill {{ $catClass }}">{{ $catLabel }}</span>
+                                <span class="text-eyebrow font-semibold text-gold-600">★ {{ number_format($supplier->rating, 1) }}</span>
+                            </div>
                         </div>
                     </div>
+                    <x-status-badge :status="$supplier->pivot->status" />
                 </div>
-                <x-status-badge :status="$supplier->pivot->status" />
+
+                @if ($supplier->email || $supplier->phone || $supplier->city)
+                    <p class="mt-3 truncate text-micro text-muted">{{ collect([$supplier->email, $supplier->phone, $supplier->city])->filter()->implode(' · ') }}</p>
+                @endif
+
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="shrink-0 text-eyebrow font-bold uppercase tracking-wide text-navy-400">Readiness</span>
+                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-navy-50">
+                        <div @class(['h-full rounded-full', 'bg-risk' => $pct <= 30, 'bg-warn' => $pct > 30 && $pct < 81, 'bg-track' => $pct >= 81]) style="width: {{ $pct }}%"></div>
+                    </div>
+                    <span class="shrink-0 text-eyebrow font-black text-navy-500">{{ $pct }}%</span>
+                </div>
+                @if ($supplier->pivot->notes)
+                    <p class="mt-2 rounded-lg bg-page/60 px-2.5 py-1.5 text-micro text-navy-700">{{ $supplier->pivot->notes }}</p>
+                @endif
             </div>
 
-            @if ($supplier->email || $supplier->phone || $supplier->city)
-                <p class="mt-3 truncate text-[0.68rem] text-muted">{{ collect([$supplier->email, $supplier->phone, $supplier->city])->filter()->implode(' · ') }}</p>
-            @endif
-
-            <div class="mt-3 flex items-center justify-between gap-2">
-                <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-navy-50">
-                    <div @class(['h-full rounded-full', 'bg-risk' => $pct <= 30, 'bg-warn' => $pct > 30 && $pct < 81, 'bg-track' => $pct >= 81]) style="width: {{ $pct }}%"></div>
-                </div>
-                <span class="text-3xs font-bold text-navy-500">{{ $pct }}%</span>
+            {{-- dark navy footer --}}
+            <div class="op-card-foot">
+                <x-icon name="truck" class="h-3 w-3 shrink-0 text-gold-400" />
+                <span class="truncate text-eyebrow font-semibold text-white/80">{{ \Illuminate\Support\Str::limit($event->name, 22) }}</span>
+                <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ $catLabel }}</span>
             </div>
-            @if ($supplier->pivot->notes)
-                <p class="mt-2 rounded-lg bg-page/60 px-2.5 py-1.5 text-[0.68rem] text-navy-700">{{ $supplier->pivot->notes }}</p>
-            @endif
         </div>
     @empty
         <div class="col-span-full card px-6 py-16 text-center">
