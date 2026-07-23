@@ -343,9 +343,11 @@
 
         {{-- ══ control rail ══ --}}
         <div class="xl:sticky xl:top-[76px] xl:h-fit">
-            <div class="card overflow-hidden">
-                <div class="border-b border-line bg-navy-900 px-4 py-3">
-                    <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Accommodation</span>
+            <div class="cc-panel">
+                <div class="cc-head">
+                    <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
+                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Accommodation Control Center</span>
                 </div>
                 <div class="border-b border-line p-4">
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
