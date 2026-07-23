@@ -65,30 +65,41 @@
             </div>
         </div>
     @else
-    {{-- ══ Stat cards ══ --}}
+    {{-- ══ Stat tiles ══ --}}
     <div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="card p-4">
-            <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">Registered</p>
-            <p class="mt-0.5 text-2xl font-black text-navy-900">{{ number_format($stats['registered']) }}@if ($stats['capacity'])<span class="text-sm font-semibold text-muted"> / {{ number_format($stats['capacity']) }}</span>@endif</p>
+        <div class="rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500"><x-icon name="users" class="h-5 w-5" /></span>
+                <div class="min-w-0">
+                    <p class="pf text-2xl font-black leading-none text-navy-900">{{ number_format($stats['registered']) }}@if ($stats['capacity'])<span class="text-sm font-semibold text-muted"> / {{ number_format($stats['capacity']) }}</span>@endif</p>
+                    <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Registered</p>
+                </div>
+            </div>
             @if ($stats['fillPct'] !== null)
-                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-page"><div class="h-full rounded-full bg-gold-400" style="width: {{ $stats['fillPct'] }}%"></div></div>
+                <div class="mt-2.5 h-1.5 overflow-hidden rounded-full bg-page"><div class="h-full rounded-full bg-gold-400" style="width: {{ $stats['fillPct'] }}%"></div></div>
                 <p class="mt-1 text-eyebrow text-muted">{{ $stats['fillPct'] }}% of capacity</p>
             @endif
         </div>
-        <div class="card p-4">
-            <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">Checked in</p>
-            <p class="mt-0.5 text-2xl font-black text-emerald-600">{{ number_format($stats['checkedIn']) }}</p>
-            <p class="mt-1 text-eyebrow text-muted">{{ number_format($stats['confirmed']) }} confirmed</p>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><x-icon name="clipboard" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none text-emerald-600">{{ number_format($stats['checkedIn']) }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Checked in · {{ number_format($stats['confirmed']) }} conf.</p>
+            </div>
         </div>
-        <div class="card p-4">
-            <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">VIPs</p>
-            <p class="mt-0.5 text-2xl font-black text-gold-600">{{ number_format($stats['vips']) }}</p>
-            <p class="mt-1 text-eyebrow text-muted">{{ number_format($stats['cancelled']) }} cancelled</p>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-50 text-gold-600"><x-icon name="star" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none text-gold-600">{{ number_format($stats['vips']) }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">VIPs · {{ number_format($stats['cancelled']) }} cancelled</p>
+            </div>
         </div>
-        <div class="card p-4">
-            <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">Ticket revenue</p>
-            <p class="mt-0.5 text-2xl font-black text-navy-900">{{ $event->money($stats['revenue']) }}</p>
-            <p class="mt-1 text-eyebrow text-muted">across paid tickets</p>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500"><x-icon name="currency" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none text-navy-900">{{ $event->money($stats['revenue']) }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Ticket revenue</p>
+            </div>
         </div>
     </div>
 
