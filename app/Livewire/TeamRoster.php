@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -55,7 +56,7 @@ class TeamRoster extends Component
 
     public function save(): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-team');
+        Gate::authorize('manage-team');
         $data = $this->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($this->editingId)],
@@ -89,7 +90,7 @@ class TeamRoster extends Component
 
     public function delete(int $id): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-team');
+        Gate::authorize('manage-team');
         if ($id === auth()->id()) {
             session()->flash('status', "You can't remove your own account.");
 

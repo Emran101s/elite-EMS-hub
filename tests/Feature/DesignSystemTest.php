@@ -24,7 +24,6 @@ class DesignSystemTest extends TestCase
         'livewire/command-center.blade.php',
         'livewire/events-index.blade.php',
         'livewire/partials/event-panel.blade.php',
-        'livewire/avatar-library.blade.php',
         'livewire/clients-manager.blade.php',
         'livewire/team-roster.blade.php',
         'livewire/requirements-catalog.blade.php',

@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\EventHubController;
+use App\Livewire\EventCreate;
+use App\Livewire\EventsIndex;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class EventHubTest extends TestCase
@@ -114,7 +117,7 @@ class EventHubTest extends TestCase
         // Filters narrow the card grid. Asserted through the component's paginator,
         // since the Command Spine radar always lists every event in the page HTML.
         $names = function (array $sets) use ($user) {
-            $c = \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventsIndex::class);
+            $c = Livewire::actingAs($user)->test(EventsIndex::class);
             foreach ($sets as $k => $v) {
                 $c->set($k, $v);   // set after mount, which re-reads the request
             }
@@ -135,7 +138,7 @@ class EventHubTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventCreate::class)
+        Livewire::actingAs($user)->test(EventCreate::class)
             ->set('new_client', 'Royal Office')
             ->set('name', 'Royal Gala 2027')
             ->set('starts_at', '2027-05-20')
@@ -144,7 +147,6 @@ class EventHubTest extends TestCase
             ->assertViewHas('previewDays', 3)
             ->call('chooseTemplate', 'gala')
             ->assertViewHas('previewType', 'gala_dinner')
-            ->assertViewHas('previewAvatar', fn ($a) => $a?->slug === 'gala-dinner')
             ->call('toggleModule', 'agenda') // gala doesn't include agenda by default — turn it on
             ->call('save')
             ->assertHasNoErrors();
@@ -152,7 +154,6 @@ class EventHubTest extends TestCase
         $event = Event::where('name', 'Royal Gala 2027')->firstOrFail();
 
         $this->assertSame('gala_dinner', $event->type);
-        $this->assertSame('gala-dinner', $event->avatar->slug);
         $this->assertContains('agenda', $event->enabled_modules);
         $this->assertSame(3, $event->agendaDays()->count(), 'the date range scaffolds agenda days');
     }
@@ -162,7 +163,7 @@ class EventHubTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\EventCreate::class)
+        Livewire::actingAs($user)->test(EventCreate::class)
             ->call('save')
             ->assertHasErrors(['name', 'starts_at', 'client_id']);
     }

@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\CommandCenter;
 use App\Models\Event;
 use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class DemoDataTest extends TestCase
@@ -62,12 +65,12 @@ class DemoDataTest extends TestCase
             ->assertSee('ICFT 2026'); // the portfolio rail lists the seeded events
 
         // The pulse mirrors the health engine rather than a hard-coded number.
-        $healthSvc = app(\App\Services\EventHealthService::class);
+        $healthSvc = app(EventHealthService::class);
         $expectedAtRisk = Event::active()->get()
             ->filter(fn (Event $e) => in_array($healthSvc->breakdown($e)['status'], ['at_risk', 'behind'], true))
             ->count();
 
-        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\CommandCenter::class)
+        Livewire::actingAs($user)->test(CommandCenter::class)
             ->assertViewHas('pulse', fn (array $p) => $p['events'] === Event::active()->count()
                 && $p['atRisk'] === $expectedAtRisk
                 && $p['signals'] > 0);

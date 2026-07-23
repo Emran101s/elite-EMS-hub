@@ -27,7 +27,7 @@
         <button type="button" wire:click="toggleExpand({{ $event->id }})" class="flex min-w-0 flex-1 items-center gap-4 p-4 text-left">
             {{-- crest --}}
             <span class="relative hidden h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-navy-800 to-[var(--color-navy-950)] sm:block">
-                @if ($event->avatar)
+                @if ($event->cover_path)
                     <x-event-avatar :event="$event" :ring="false" size="md" class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
                 @else
                     <x-event-crest :event="$event" class="h-full w-full" />

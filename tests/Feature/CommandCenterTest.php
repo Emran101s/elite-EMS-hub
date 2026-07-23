@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\CommandCenter;
+use App\Models\Event;
+use App\Models\Task;
 use App\Models\User;
 use App\Services\CommandCenterService;
+use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class CommandCenterTest extends TestCase
@@ -34,14 +39,14 @@ class CommandCenterTest extends TestCase
     {
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
-        $icft = \App\Models\Event::where('name', 'ICFT 2026')->firstOrFail();
-        $other = \App\Models\Event::where('name', 'Tech Expo 2026')->firstOrFail();
+        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $other = Event::where('name', 'Tech Expo 2026')->firstOrFail();
 
         // Give each event one unmistakable overdue task.
         $icft->tasks()->create(['title' => 'ICFT signal marker', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(3)]);
         $other->tasks()->create(['title' => 'Expo signal marker', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(3)]);
 
-        $c = \Livewire\Livewire::actingAs($user)->test(\App\Livewire\CommandCenter::class)
+        $c = Livewire::actingAs($user)->test(CommandCenter::class)
             ->assertSee('ICFT signal marker')
             ->assertSee('Expo signal marker');
 
@@ -58,12 +63,12 @@ class CommandCenterTest extends TestCase
     {
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
-        $icft = \App\Models\Event::where('name', 'ICFT 2026')->firstOrFail();
+        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         $icft->tasks()->create(['title' => 'Overdue marker task', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(2)]);
         $icft->tasks()->create(['title' => 'Awaiting signoff task', 'status' => 'review', 'priority' => 'high']);
 
-        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\CommandCenter::class)
+        Livewire::actingAs($user)->test(CommandCenter::class)
             ->call('setLens', 'overdue')
             ->assertSet('lens', 'overdue')
             ->assertSee('Overdue marker task')
@@ -73,10 +78,10 @@ class CommandCenterTest extends TestCase
     public function test_islands_show_computed_health_scores(): void
     {
         $response = $this->dashboard();
-        $pulse = app(\App\Services\EventHealthService::class);
+        $pulse = app(EventHealthService::class);
 
         foreach (['ICFT 2026', 'Tech Expo 2026', 'NDI Workshop'] as $name) {
-            $event = \App\Models\Event::where('name', $name)->firstOrFail();
+            $event = Event::where('name', $name)->firstOrFail();
             $response->assertSee($name)
                 ->assertSee($pulse->breakdown($event)['score'].'%');
         }
@@ -87,8 +92,8 @@ class CommandCenterTest extends TestCase
         $this->seed(DemoDataSeeder::class);
 
         // Health is derived, never stored: alerts must mirror the health engine.
-        $pulse = app(\App\Services\EventHealthService::class);
-        $expected = \App\Models\Event::whereNull('archived_at')->get()
+        $pulse = app(EventHealthService::class);
+        $expected = Event::whereNull('archived_at')->get()
             ->filter(fn ($e) => in_array($pulse->breakdown($e)['status'], ['at_risk', 'behind'], true));
 
         $service = app(CommandCenterService::class);
@@ -128,7 +133,7 @@ class CommandCenterTest extends TestCase
 
         // Six orbit stages, each with label/hex/count — blocked rides inside In Progress.
         $counts = $pulse->taskCounts();
-        $this->assertSame(array_keys(\App\Models\Task::STAGES), array_keys($counts));
+        $this->assertSame(array_keys(Task::STAGES), array_keys($counts));
         foreach ($counts as $stage) {
             $this->assertGreaterThanOrEqual(0, $stage['count']);
         }

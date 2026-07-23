@@ -43,7 +43,7 @@ class CompanyProfile extends Model
             return $list;
         }
 
-        return collect(\App\Models\Event::DEFAULT_SPONSOR_PACKAGES)
+        return collect(Event::DEFAULT_SPONSOR_PACKAGES)
             ->map(fn ($slots, $name) => ['name' => $name, 'price_cents' => 0, 'slots' => $slots, 'benefits' => []])
             ->values()->all();
     }
@@ -63,7 +63,7 @@ class CompanyProfile extends Model
         $list = collect($this->default_budget_categories ?? [])
             ->map(fn ($n) => trim((string) $n))->filter()->values()->all();
 
-        return $list ?: \App\Models\EventBudgetItem::DEFAULT_CATEGORIES;
+        return $list ?: EventBudgetItem::DEFAULT_CATEGORIES;
     }
 
     /** Common currencies for the workspace default. */

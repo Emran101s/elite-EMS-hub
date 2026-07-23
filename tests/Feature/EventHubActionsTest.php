@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Livewire\ExhibitionFloorPlan;
-use App\Livewire\RequirementsCatalog;
-use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\Hub\ApprovalsTab;
 use App\Livewire\Hub\BudgetTab;
 use App\Livewire\Hub\ExhibitionTab;
@@ -12,9 +10,15 @@ use App\Livewire\Hub\RisksTab;
 use App\Livewire\Hub\SponsorsTab;
 use App\Livewire\Hub\TasksTab;
 use App\Livewire\Hub\VenueTab;
+use App\Livewire\RequirementsCatalog;
+use App\Livewire\RoomLayoutBuilder;
 use App\Models\Event;
+use App\Models\EventBudgetItem;
+use App\Models\Requirement;
 use App\Models\User;
+use App\Services\CurrencyService;
 use Database\Seeders\DemoDataSeeder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -93,11 +97,11 @@ class EventHubActionsTest extends TestCase
             ->call('insertStarter');
 
         $this->assertSame(50000000, $event->fresh()->budget_cents);
-        $this->assertSame(count(\App\Models\EventBudgetItem::STARTER_TEMPLATE), $event->budgetItems()->count());
+        $this->assertSame(count(EventBudgetItem::STARTER_TEMPLATE), $event->budgetItems()->count());
 
         // idempotent — re-running adds no duplicates
         $c->call('insertStarter');
-        $this->assertSame(count(\App\Models\EventBudgetItem::STARTER_TEMPLATE), $event->fresh()->budgetItems()->count());
+        $this->assertSame(count(EventBudgetItem::STARTER_TEMPLATE), $event->fresh()->budgetItems()->count());
     }
 
     public function test_management_fee_is_derived_and_editable(): void
@@ -443,7 +447,7 @@ class EventHubActionsTest extends TestCase
             ->set('name', 'AV & sound system')->set('price', '5000')->call('save')->assertHasNoErrors();
         $this->assertDatabaseHas('requirements', ['name' => 'AV & sound system', 'unit_price_cents' => 500000]);
 
-        $r = \App\Models\Requirement::firstOrFail();
+        $r = Requirement::firstOrFail();
 
         // picking from the catalog fills the venue requirement form (in the venue detail)
         $room = $event->rooms()->create(['name' => 'Hall', 'type' => 'main_hall']);
@@ -474,12 +478,12 @@ class EventHubActionsTest extends TestCase
 
     public function test_currency_service_uses_peg_in_tests(): void
     {
-        $fx = app(\App\Services\CurrencyService::class);
+        $fx = app(CurrencyService::class);
 
         $this->assertSame(0.709, $fx->rate('USD', 'JOD'));
         $this->assertSame(1.0, $fx->rate('USD', 'USD'));
         $this->assertFalse($fx->isLive('USD', 'JOD'));
-        $this->assertSame('JD 709', \App\Models\Event::moneyIn((int) round(100000 * 0.709), 'JOD'));
+        $this->assertSame('JD 709', Event::moneyIn((int) round(100000 * 0.709), 'JOD'));
     }
 
     public function test_budget_income_and_net_result(): void
@@ -694,7 +698,7 @@ class EventHubActionsTest extends TestCase
         [$event, $user] = $this->setup2();
         $otherTask = Event::where('name', 'Tech Expo 2026')->firstOrFail()->tasks()->firstOrFail();
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        $this->expectException(ModelNotFoundException::class);
 
         // The board only ever resolves tasks through its own event's relation,
         // so another event's task id is not found — never touched.

@@ -4,9 +4,10 @@ namespace App\Livewire;
 
 use App\Models\Event;
 use App\Models\EventContractPayment;
-use App\Models\EventRisk;
+use App\Models\EventSponsor;
 use App\Models\PlanItem;
 use App\Models\PlanTrack;
+use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\EventHealthService;
@@ -146,7 +147,7 @@ class CommandCenter extends Component
         $spent = (int) $events->sum(fn (Event $e) => $e->budgetItems->sum('actual_cents'));
         $outstanding = (int) EventContractPayment::whereIn('event_id', $ids)
             ->get()->sum(fn ($p) => max($p->amount_cents - $p->paid_cents, 0));
-        $sponsorship = (int) \App\Models\EventSponsor::whereIn('event_id', $ids)->sum('amount_cents');
+        $sponsorship = (int) EventSponsor::whereIn('event_id', $ids)->sum('amount_cents');
 
         return [
             'next' => $next,
@@ -170,7 +171,7 @@ class CommandCenter extends Component
             'teamSize' => User::count(),
             'risks' => $events->sum(fn (Event $e) => $e->risks->filter->isOpen()->count()),
             'approvals' => $events->sum(fn (Event $e) => $e->approvals->where('status', 'pending')->count()),
-            'suppliers' => \App\Models\Supplier::count(),
+            'suppliers' => Supplier::count(),
             'sessions' => $events->sum(fn (Event $e) => $e->agendaSessions->count()),
             'budget' => $budget,
             'spent' => $spent,

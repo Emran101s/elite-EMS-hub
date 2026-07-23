@@ -1,7 +1,7 @@
 @php $theme = $event->theme(); @endphp
 
 <x-layouts.app :title="$event->name . ' — Event Hub'"
-               :subtitle="($event->avatar?->name ?? str($event->type)->replace('_', ' ')->title()) . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))"
+               :subtitle="str($event->type)->replace('_', ' ')->title() . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))"
                :crumbs="[
                    ['label' => 'Command Center', 'href' => route('home')],
                    ['label' => 'Events', 'href' => route('events.index')],
@@ -154,15 +154,21 @@
     {{-- ══ Module rail: grouped pills that wrap — every enabled module stays visible, nothing scrolls away ══ --}}
     @php
         // Grouped so the rail reads as a control panel, not a run-on list.
+        // Only the grouping + icon live here — every label comes from
+        // Event::HUB_MODULES so the rail, Settings and breadcrumb never drift.
         $groups = [
-            'Event' => ['overview' => ['Overview', 'home'], 'brief' => ['Brief', 'clipboard'], 'contract' => ['Contract', 'identification']],
-            'Plan' => ['planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'], 'budget' => ['Budget', 'currency'], 'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification']],
-            'Programme' => ['agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification']],
-            'Logistics' => ['venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'], 'accommodation' => ['Stay', 'home']],
-            'Commercial' => ['exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'], 'attendees' => ['Attendees', 'users']],
-            'Grow' => ['files' => ['Files', 'archive'], 'reports' => ['Reports', 'chart']],
-            'System' => ['ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog']],
+            'Event' => ['overview' => 'home', 'brief' => 'clipboard', 'contract' => 'identification'],
+            'Plan' => ['planning' => 'list', 'tasks' => 'clipboard', 'budget' => 'currency', 'risks' => 'bell', 'approvals' => 'identification'],
+            'Programme' => ['agenda' => 'calendar', 'speakers' => 'identification'],
+            'Logistics' => ['venue' => 'building', 'suppliers' => 'truck', 'transportation' => 'truck', 'accommodation' => 'home'],
+            'Commercial' => ['exhibition' => 'grid', 'sponsors' => 'star', 'attendees' => 'users'],
+            'Grow' => ['files' => 'archive', 'reports' => 'chart'],
+            'System' => ['ai' => 'sparkles', 'settings' => 'cog'],
         ];
+        // Overview / AI / Settings are always-on and live outside HUB_MODULES.
+        $railExtras = ['overview' => 'Overview', 'ai' => 'AI', 'settings' => 'Settings'];
+        $railLabel = fn ($key) => \App\Models\Event::HUB_MODULES[$key][0]
+            ?? ($railExtras[$key] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $key)));
     @endphp
     <div class="sticky top-0 z-20 mt-3">
         <nav class="flex flex-wrap items-center gap-1.5 rounded-2xl border border-line bg-gradient-to-b from-white to-page/60 px-2.5 py-2 shadow-[0_8px_24px_-10px_rgba(11,31,58,0.18)] backdrop-blur-sm" aria-label="Event modules">
@@ -172,7 +178,8 @@
 
                 {{-- one segmented cluster per group — it wraps as a whole, never splitting mid-group --}}
                 <div class="flex items-center gap-0.5 rounded-xl bg-navy-50/70 p-[3px] ring-1 ring-line/70" role="group" aria-label="{{ $groupName }}">
-                    @foreach ($visible as $key => [$label, $icon])
+                    @foreach ($visible as $key => $icon)
+                        @php $label = $railLabel($key); @endphp
                         <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}" title="{{ $groupName }} · {{ $label }}"
                            @class([
                                'flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-[9px] px-2.5 text-[12px] font-semibold tracking-tight transition-all duration-150',
@@ -185,6 +192,16 @@
                     @endforeach
                 </div>
             @endforeach
+
+            {{-- Turn any module on/off — jumps straight to Settings › Enabled Modules,
+                 so a disabled tab (Accommodation, Exhibition…) is never hard to find. --}}
+            @php $offCount = collect(\App\Models\Event::HUB_MODULES)->keys()->reject(fn ($k) => $event->moduleEnabled($k))->count(); @endphp
+            <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}#s-modules"
+               title="Turn modules on or off for this event"
+               class="flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-xl border border-dashed border-navy-200 px-2.5 text-[12px] font-semibold tracking-tight text-navy-500 transition hover:border-gold-300 hover:bg-gold-50/50 hover:text-navy-900">
+                <span class="text-sm leading-none text-navy-400">＋</span>
+                Modules @if ($offCount)<span class="rounded-full bg-navy-100 px-1.5 text-eyebrow font-bold text-navy-500">{{ $offCount }} off</span>@endif
+            </a>
         </nav>
     </div>
 

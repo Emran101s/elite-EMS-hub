@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['event_id', 'hall_id', 'company', 'contact_name', 'email', 'phone', 'booth_number', 'booth_size', 'package', 'fee_cents', 'paid_cents', 'status', 'notes', 'booth_x', 'booth_y', 'booth_w_m', 'booth_h_m'])]
 class EventExhibitor extends Model
@@ -47,7 +48,7 @@ class EventExhibitor extends Model
     }
 
     /** The booth this exhibitor bought, if any. */
-    public function booth(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function booth(): HasOne
     {
         return $this->hasOne(EventBooth::class, 'exhibitor_id');
     }

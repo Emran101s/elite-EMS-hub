@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['event_id', 'hall_id', 'exhibitor_id', 'number', 'price_cents', 'x', 'y', 'w_m', 'h_m', 'notes'])]
 class EventBooth extends Model
 {
-    use \App\Models\Concerns\Auditable;
+    use Auditable;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['exhibitor_id', 'price_cents', 'number'];
@@ -79,6 +80,7 @@ class EventBooth extends Model
     {
         return $this->belongsTo(EventExhibitor::class, 'exhibitor_id');
     }
+
     public function auditLabel(): string
     {
         return 'Booth '.$this->number;

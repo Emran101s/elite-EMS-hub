@@ -3,6 +3,8 @@
 namespace App\Models\Concerns;
 
 use App\Models\AuditLog;
+use App\Models\Event;
+use Illuminate\Support\Str;
 
 /**
  * Writes an append-only AuditLog row on create / update / delete.
@@ -61,7 +63,7 @@ trait Auditable
             return '[…]';
         }
 
-        return \Illuminate\Support\Str::limit((string) $value, 120);
+        return Str::limit((string) $value, 120);
     }
 
     private function writeAudit(string $action, array $changes): void
@@ -72,7 +74,7 @@ trait Auditable
 
         // A deleted event no longer exists, so the row can't point at it — the
         // trail keeps auditable_id + label instead, and survives the cascade.
-        $eventId = $this instanceof \App\Models\Event
+        $eventId = $this instanceof Event
             ? ($action === 'deleted' ? null : $this->id)
             : ($this->event_id ?? null);
 

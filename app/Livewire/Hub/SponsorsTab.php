@@ -122,7 +122,7 @@ class SponsorsTab extends Component
                 $sold = $this->event->sponsors()->where('package', $this->package)
                     ->when($this->editingId, fn ($q) => $q->whereKeyNot($this->editingId))->count();
                 if ($sold >= $pkg->slots) {
-                    $this->addError('package', "All {$pkg->slots} “{$this->package}” slot".($pkg->slots === 1 ? '' : 's')." are already sold.");
+                    $this->addError('package', "All {$pkg->slots} “{$this->package}” slot".($pkg->slots === 1 ? '' : 's').' are already sold.');
 
                     return;
                 }

@@ -36,7 +36,7 @@ class SponsorPackagesSettingsTest extends TestCase
         Livewire::actingAs($user)->test(SponsorPackagesSettings::class)
             ->set('packages', [
                 ['name' => 'Platinum', 'price' => '50000', 'slots' => '2', 'benefits' => "Main stage logo\n10 passes"],
-                ['name' => 'Gold', 'price' => '25000', 'slots' => '5', 'benefits' => "5 passes"],
+                ['name' => 'Gold', 'price' => '25000', 'slots' => '5', 'benefits' => '5 passes'],
                 ['name' => '', 'price' => '', 'slots' => '', 'benefits' => ''], // blank skipped
             ])
             ->call('save')

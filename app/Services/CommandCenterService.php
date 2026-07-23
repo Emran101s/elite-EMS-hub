@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Event;
+use App\Models\EventContractPayment;
 use App\Models\Project;
 use App\Models\Supplier;
 use App\Models\Task;
@@ -17,9 +19,7 @@ use Illuminate\Support\Collection;
  */
 class CommandCenterService
 {
-    public function __construct(private EventHealthService $healthService)
-    {
-    }
+    public function __construct(private EventHealthService $healthService) {}
 
     /** Average open tasks a team member can carry before being "fully utilized". */
     private const MEMBER_TASK_CAPACITY = 12;
@@ -49,7 +49,7 @@ class CommandCenterService
      */
     public function islands(): Collection
     {
-        $events = Event::with(['venue', 'avatar', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
+        $events = Event::with(['venue', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
             ->active()->orderBy('starts_at')->get();
         $count = max($events->count(), 1);
 
@@ -151,7 +151,7 @@ class CommandCenterService
     /** The live feed:decisions from the audit trail, newest first. */
     public function activityFeed(int $limit = 8)
     {
-        return \App\Models\AuditLog::with(['user', 'event'])->latest('id')->limit($limit)->get();
+        return AuditLog::with(['user', 'event'])->latest('id')->limit($limit)->get();
     }
 
     /**
@@ -168,7 +168,7 @@ class CommandCenterService
 
         // Health is computed, never stored — the same score the Event Hub shows.
         foreach (Event::whereNull('archived_at')->orderBy('starts_at')
-            ->with(\App\Services\EventHealthService::RELATIONS)->get() as $event) {
+            ->with(EventHealthService::RELATIONS)->get() as $event) {
             $health = $this->healthService->breakdown($event);
             if (! in_array($health['status'], ['at_risk', 'behind'], true)) {
                 continue;
@@ -201,7 +201,7 @@ class CommandCenterService
         }
 
         // Money that should have landed and hasn't — the alert that pays rent.
-        $overduePayments = \App\Models\EventContractPayment::with('event')
+        $overduePayments = EventContractPayment::with('event')
             ->whereDate('due_on', '<', now())
             ->whereColumn('paid_cents', '<', 'amount_cents')
             ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
@@ -212,7 +212,7 @@ class CommandCenterService
             $alerts->push([
                 'severity' => 'risk',
                 'title' => ($p->event?->name ?? 'Event').' — installment overdue',
-                'detail' => $p->label.' · '.\App\Models\Event::moneyIn($p->outstandingCents(), $p->event?->currency ?? 'USD').' outstanding since '.$p->due_on->format('M j'),
+                'detail' => $p->label.' · '.Event::moneyIn($p->outstandingCents(), $p->event?->currency ?? 'USD').' outstanding since '.$p->due_on->format('M j'),
             ]);
         }
 

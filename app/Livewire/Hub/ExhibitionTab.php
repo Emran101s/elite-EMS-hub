@@ -4,7 +4,6 @@ namespace App\Livewire\Hub;
 
 use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
-use App\Models\EventExhibitor;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 

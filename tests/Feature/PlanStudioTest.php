@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Livewire\Hub\PlanStudio;
 use App\Models\Event;
-use App\Models\PlanItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -62,7 +63,7 @@ class User extends Authenticatable
     /**
      * Events this user starred.
      */
-    public function favoriteEvents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function favoriteEvents(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'event_favorites');
     }

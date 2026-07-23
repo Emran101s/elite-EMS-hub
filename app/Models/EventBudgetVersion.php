@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['event_id', 'version', 'label', 'status', 'note', 'snapshot', 'totals', 'requested_by', 'decided_by', 'decided_at'])]
 class EventBudgetVersion extends Model
 {
-    use \App\Models\Concerns\Auditable;
+    use Auditable;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['status'];
@@ -39,6 +40,7 @@ class EventBudgetVersion extends Model
     {
         return $this->belongsTo(User::class, 'decided_by');
     }
+
     public function auditLabel(): string
     {
         return 'Budget v'.$this->version;

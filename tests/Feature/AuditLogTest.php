@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Hub\ApprovalsTab;
 use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\User;
@@ -42,7 +43,7 @@ class AuditLogTest extends TestCase
         ]);
         AuditLog::query()->delete();   // only the decision matters here
 
-        Livewire::actingAs($user)->test(\App\Livewire\Hub\ApprovalsTab::class, ['event' => $event])
+        Livewire::actingAs($user)->test(ApprovalsTab::class, ['event' => $event])
             ->call('decide', $approval->id, 'approved');
 
         $log = AuditLog::where('auditable_type', 'EventApproval')->where('action', 'updated')->firstOrFail();

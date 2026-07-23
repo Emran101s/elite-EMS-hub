@@ -4,6 +4,7 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\PlanItem;
+use App\Models\PlanSubtask;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -233,9 +234,9 @@ class PlanStudio extends Component
     }
 
     /** Guard: only subtasks belonging to this event's items are editable. */
-    private function subtaskForEvent(int $subtaskId): ?\App\Models\PlanSubtask
+    private function subtaskForEvent(int $subtaskId): ?PlanSubtask
     {
-        return \App\Models\PlanSubtask::whereKey($subtaskId)
+        return PlanSubtask::whereKey($subtaskId)
             ->whereHas('item', fn ($q) => $q->where('event_id', $this->event->id))
             ->first();
     }

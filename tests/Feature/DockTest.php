@@ -44,7 +44,7 @@ class DockTest extends TestCase
             'route' => 'Airport → Hotel',
             'depart_at' => '2026-10-17 14:20',
             'capacity' => 7 * $vehicles,
-            'status' => 'booked',
+            'status' => 'ordered',
         ]);
     }
 
@@ -73,8 +73,12 @@ class DockTest extends TestCase
         $this->assertSame(2, substr_count($html, '＋ Add Movement'),
             'the Add button must stay on the page as well as in the dock');
 
-        // The export is reachable without opening anything.
-        $this->assertStringContainsString('Manifest PDF', $html);
+        // The exports are reachable without opening anything: an Export control in
+        // the action bar, offering each document by name.
+        $this->assertStringContainsString('↧ Export', $html);
+        foreach (['Daily Schedule', 'Vehicle Manifest', 'Driver Trip Sheets', 'VIP Transfer Sheets'] as $doc) {
+            $this->assertStringContainsString($doc, $html, "{$doc} is offered in the export menu");
+        }
     }
 
     public function test_both_docks_stack_without_overlapping(): void

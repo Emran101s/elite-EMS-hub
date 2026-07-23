@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\CompanyProfile;
-use App\Models\Event;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

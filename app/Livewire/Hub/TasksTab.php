@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -314,7 +315,7 @@ class TasksTab extends Component
     /** Date axis for the timeline — month ticks, span, today marker. */
     private function axis($items): array
     {
-        $today = \Illuminate\Support\Carbon::today();
+        $today = Carbon::today();
         $marks = collect([$today]);
         foreach ($items as $t) {
             if ($t->start_on) {

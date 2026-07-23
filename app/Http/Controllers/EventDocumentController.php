@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventDocument;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -45,6 +46,6 @@ class EventDocumentController extends Controller
     {
         $ext = pathinfo($document->original_name, PATHINFO_EXTENSION);
 
-        return \Illuminate\Support\Str::slug($document->name).($ext ? '.'.$ext : '');
+        return Str::slug($document->name).($ext ? '.'.$ext : '');
     }
 }

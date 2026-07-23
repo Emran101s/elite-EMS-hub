@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
+use App\Services\EventHealthService;
+use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,18 +15,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
-    'venue_id', 'project_id', 'client_id', 'project_manager_id', 'avatar_id',
+    'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
 ])]
 class Event extends Model
 {
-    use \App\Models\Concerns\Auditable;
+    use Auditable;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['stage', 'archived_at', 'budget_status', 'budget_cents', 'name', 'starts_at', 'ends_at'];
 
-    /** @use HasFactory<\Database\Factories\EventFactory> */
+    /** @use HasFactory<EventFactory> */
     use HasFactory;
 
     public const TYPES = [
@@ -41,17 +44,17 @@ class Event extends Model
         'brief' => ['Event Brief', 'Plan', 'clipboard'],
         'contract' => ['Contract', 'Plan', 'identification'],
         'planning' => ['Planning', 'Plan', 'list'],
-        'agenda' => ['Agenda & Sessions', 'Programme', 'calendar'],
+        'agenda' => ['Agenda', 'Programme', 'calendar'],
         'speakers' => ['Speakers', 'Programme', 'identification'],
         'tasks' => ['Tasks', 'Plan', 'clipboard'],
-        'budget' => ['Budget & Finance', 'Plan', 'currency'],
+        'budget' => ['Budget', 'Plan', 'currency'],
         'suppliers' => ['Suppliers', 'Logistics', 'truck'],
-        'venue' => ['Venues & Rooms', 'Logistics', 'building'],
-        'transportation' => ['Transportation', 'Logistics', 'truck'],
+        'venue' => ['Venue', 'Logistics', 'building'],
+        'transportation' => ['Transport', 'Logistics', 'truck'],
         'accommodation' => ['Accommodation', 'Logistics', 'home'],
         'exhibition' => ['Exhibition', 'Exhibition', 'grid'],
         'sponsors' => ['Sponsors', 'Exhibition', 'star'],
-        'attendees' => ['Registration & Tickets', 'Sell', 'users'],
+        'attendees' => ['Attendees', 'Sell', 'users'],
         'files' => ['Documents', 'Grow', 'archive'],
         'risks' => ['Risks', 'Plan', 'bell'],
         'approvals' => ['Approvals', 'Plan', 'identification'],
@@ -214,21 +217,41 @@ class Event extends Model
             return;
         }
 
-        $end = ($this->ends_at ?? $this->starts_at)->copy();
-        $existing = $this->agendaDays()->get()->keyBy(fn ($d) => $d->date->format('Y-m-d'));
-        $cursor = $this->starts_at->copy();
-        $n = 1;
+        $start = $this->starts_at->copy()->startOfDay();
+        $end = ($this->ends_at ?? $this->starts_at)->copy()->startOfDay();
 
-        while ($cursor->lte($end) && $n <= $cap) {
+        // ── Dedupe: one day per date. Keep the busiest; drop empty duplicates. ──
+        $this->agendaDays()->withCount('sessions')->get()
+            ->groupBy(fn ($d) => $d->date->format('Y-m-d'))
+            ->each(function ($group) {
+                if ($group->count() < 2) {
+                    return;
+                }
+                $keep = $group->sortByDesc('sessions_count')->first();
+                $group->where('id', '!=', $keep->id)->where('sessions_count', 0)->each->delete();
+            });
+
+        // ── Drop empty days that fall outside the event's date range (never touch
+        //    a day that already holds sessions — that would lose work). ──
+        $this->agendaDays()->withCount('sessions')->get()
+            ->filter(fn ($d) => $d->sessions_count === 0 && ($d->date->lt($start) || $d->date->gt($end)))
+            ->each->delete();
+
+        // ── Create any missing in-range dates. ──
+        $existing = $this->agendaDays()->get()->keyBy(fn ($d) => $d->date->format('Y-m-d'));
+        $cursor = $start->copy();
+        $n = 0;
+        while ($cursor->lte($end) && $n < $cap) {
             $key = $cursor->format('Y-m-d');
             if (! $existing->has($key)) {
-                $this->agendaDays()->create(['date' => $key, 'label' => 'Day '.$n, 'sort' => $n]);
+                $this->agendaDays()->create(['date' => $key, 'label' => 'Day '.($n + 1), 'sort' => $n + 1]);
             }
             $n++;
             $cursor->addDay();
         }
 
-        $this->agendaDays()->orderBy('date')->get()
+        // ── Renumber sort strictly by date so ordering can never drift again. ──
+        $this->agendaDays()->orderBy('date')->orderBy('id')->get()
             ->each(fn ($day, $i) => $day->update(['sort' => $i + 1]));
     }
 
@@ -242,25 +265,34 @@ class Event extends Model
      */
     public function healthGroup(): string
     {
-        $this->healthMemo ??= app(\App\Services\EventHealthService::class)->breakdown($this);
+        $this->healthMemo ??= app(EventHealthService::class)->breakdown($this);
 
         return $this->healthMemo['group'];
     }
 
     /**
-     * The event color theme. Explicit colors win; otherwise inherit the
-     * avatar palette; otherwise brand defaults.
+     * The event color theme. Explicit colors win; otherwise brand defaults.
      */
     public function theme(): array
     {
-        $palette = $this->avatar?->colors ?? [];
-
         return [
-            'primary' => $this->primary_color ?? $palette[1] ?? '#0B1F3A',
-            'secondary' => $this->secondary_color ?? $palette[0] ?? '#F8FAFC',
-            'accent' => $this->accent_color ?? $palette[2] ?? '#D4AF37',
+            'primary' => $this->primary_color ?? '#0B1F3A',
+            'secondary' => $this->secondary_color ?? '#F8FAFC',
+            'accent' => $this->accent_color ?? '#D4AF37',
             'text' => $this->text_color ?? '#0F172A',
         ];
+    }
+
+    /** Public URL for the uploaded cover image, or null. */
+    public function coverUrl(): ?string
+    {
+        return $this->cover_path ? asset($this->cover_path) : null;
+    }
+
+    /** Public URL for the uploaded logo, or null. */
+    public function logoUrl(): ?string
+    {
+        return $this->logo_path ? asset($this->logo_path) : null;
     }
 
     public function client(): BelongsTo
@@ -273,14 +305,26 @@ class Event extends Model
         return $this->belongsTo(User::class, 'project_manager_id');
     }
 
+    /**
+     * Who to call when something goes wrong on the ground — printed on driver
+     * sheets and VIP sheets. The project manager by name, on the company's
+     * operations number, because a personal mobile is not ours to hand out.
+     *
+     * @return array{name:?string,phone:?string}
+     */
+    public function controlContact(): array
+    {
+        $company = CompanyProfile::first();
+
+        return [
+            'name' => $this->projectManager?->name,
+            'phone' => $company?->phone,
+        ];
+    }
+
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);
-    }
-
-    public function avatar(): BelongsTo
-    {
-        return $this->belongsTo(EventAvatar::class, 'avatar_id');
     }
 
     public function project(): BelongsTo
@@ -305,7 +349,8 @@ class Event extends Model
 
     public function agendaDays(): HasMany
     {
-        return $this->hasMany(EventAgendaDay::class)->orderBy('sort');
+        // Always chronological — the agenda reads by date, never by a stale sort.
+        return $this->hasMany(EventAgendaDay::class)->orderBy('date')->orderBy('id');
     }
 
     public function agendaSessions(): HasMany
@@ -360,10 +405,16 @@ class Event extends Model
         return $this->hasOne(EventBrief::class);
     }
 
-    /** The event's management services agreement (one per event). */
+    /** The client Management Services Agreement — the primary contract. */
     public function contract(): HasOne
     {
-        return $this->hasOne(EventContract::class);
+        return $this->hasOne(EventContract::class)->where('type', 'client');
+    }
+
+    /** Every generated contract and letter for this event, newest last. */
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(EventContract::class)->orderBy('id');
     }
 
     // ── Plan Studio ──────────────────────────────────────────
@@ -504,6 +555,15 @@ class Event extends Model
     public function accommodations(): HasMany
     {
         return $this->hasMany(EventAccommodation::class);
+    }
+
+    /**
+     * Everyone needing a transfer — the flight list. A guest with no
+     * transport_id is still in the pool, waiting to be put on a vehicle.
+     */
+    public function transferGuests(): HasMany
+    {
+        return $this->hasMany(EventTransportPassenger::class);
     }
 
     public function roomBlocks(): HasMany

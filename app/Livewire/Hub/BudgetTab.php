@@ -5,6 +5,11 @@ namespace App\Livewire\Hub;
 use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
+use App\Models\EventIncomeItem;
+use App\Services\BudgetSync;
+use App\Services\CurrencyService;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -94,7 +99,7 @@ class BudgetTab extends Component
     public function mount(): void
     {
         $this->event->ensureBudgetCategories();
-        app(\App\Services\BudgetSync::class)->sync($this->event);
+        app(BudgetSync::class)->sync($this->event);
         // Categories start collapsed — a clean "builder" overview; click to expand.
         $this->collapsed = $this->event->budgetCategories()->pluck('name')->map(fn ($n) => 'cat:'.$n)->all();
         $this->budgetCap = $this->event->budget_cents ? (string) ($this->event->budget_cents / 100) : '';
@@ -190,7 +195,7 @@ class BudgetTab extends Component
 
     public function approveBudget(): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-budget');
+        Gate::authorize('manage-budget');
         $v = $this->event->budgetVersions()->where('status', 'pending')->orderByDesc('version')->first();
         if (! $v) {
             return;
@@ -277,7 +282,7 @@ class BudgetTab extends Component
 
         // The line must land in one of the event's (user-editable) categories.
         $names = $this->event->budgetCategories()->pluck('name')->all();
-        $this->validate(['category' => ['required', \Illuminate\Validation\Rule::in($names)]]);
+        $this->validate(['category' => ['required', Rule::in($names)]]);
 
         $unitCents = (int) round((float) ($this->unit ?: 0) * 100);
         $actualCents = (int) round((float) ($this->actual ?: 0) * 100);
@@ -348,7 +353,7 @@ class BudgetTab extends Component
     public function newIncome(?string $source = null): void
     {
         $this->reset(['editingIncomeId', 'incomeDesc', 'incomeAmount']);
-        $this->incomeSource = $source && array_key_exists($source, \App\Models\EventIncomeItem::SOURCES) ? $source : 'client';
+        $this->incomeSource = $source && array_key_exists($source, EventIncomeItem::SOURCES) ? $source : 'client';
         $this->incomeStatus = 'expected';
         $this->showIncomeForm = true;
     }
@@ -367,10 +372,10 @@ class BudgetTab extends Component
     public function saveIncome(): void
     {
         $this->validate([
-            'incomeSource' => 'required|in:'.implode(',', array_keys(\App\Models\EventIncomeItem::SOURCES)),
+            'incomeSource' => 'required|in:'.implode(',', array_keys(EventIncomeItem::SOURCES)),
             'incomeDesc' => 'nullable|string|max:160',
             'incomeAmount' => 'required|numeric|min:0',
-            'incomeStatus' => 'required|in:'.implode(',', \App\Models\EventIncomeItem::STATUSES),
+            'incomeStatus' => 'required|in:'.implode(',', EventIncomeItem::STATUSES),
         ]);
 
         $data = [
@@ -399,7 +404,7 @@ class BudgetTab extends Component
         if (! $this->ensureUnlocked()) {
             return;
         }
-        app(\App\Services\BudgetSync::class)->sync($this->event->fresh());
+        app(BudgetSync::class)->sync($this->event->fresh());
         session()->flash('status', 'Budget synced with the modules.');
     }
 
@@ -519,7 +524,7 @@ class BudgetTab extends Component
     public function refreshRate(): void
     {
         $other = $this->event->currency === 'USD' ? 'JOD' : 'USD';
-        app(\App\Services\CurrencyService::class)->refresh($this->event->currency, $other);
+        app(CurrencyService::class)->refresh($this->event->currency, $other);
     }
 
     public function toggleFlag(int $id): void
@@ -633,7 +638,7 @@ class BudgetTab extends Component
         $grandCost = $baseEst + $feeEst;
 
         // Live currency conversion (e.g. USD → JOD).
-        $fx = app(\App\Services\CurrencyService::class);
+        $fx = app(CurrencyService::class);
         $other = $this->event->currency === 'USD' ? 'JOD' : 'USD';
         $rate = $fx->rate($this->event->currency, $other);
 

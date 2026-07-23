@@ -4,10 +4,15 @@ namespace App\Livewire;
 
 use App\Models\Event;
 use App\Models\EventApproval;
+use App\Models\EventContractPayment;
+use App\Models\PlanItem;
+use App\Models\PlanTrack;
 use App\Models\Task;
 use App\Services\EventHealthService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -105,7 +110,7 @@ class EventsIndex extends Component
 
     public function duplicate(int $eventId)
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        Gate::authorize('manage-events');
         $source = Event::whereNull('archived_at')->findOrFail($eventId);
 
         $copy = $source->replicate(['progress']);
@@ -122,7 +127,7 @@ class EventsIndex extends Component
 
     public function archive(int $eventId): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        Gate::authorize('manage-events');
         Event::findOrFail($eventId)->update(['archived_at' => now()]);
 
         if ($this->selectedId === $eventId) {
@@ -136,9 +141,66 @@ class EventsIndex extends Component
      * Permanently delete an event and everything hanging off it — plan, tasks,
      * agenda, budget, suppliers, the lot. Manager-only and unrecoverable.
      */
+    // ── Bulk selection (List view) ──────────────────────────────
+
+    /** @var array<int,int> event ids ticked for a bulk action */
+    public array $selectedIds = [];
+
+    public function toggleSelect(int $id): void
+    {
+        $this->selectedIds = in_array($id, $this->selectedIds, true)
+            ? array_values(array_diff($this->selectedIds, [$id]))
+            : [...$this->selectedIds, $id];
+    }
+
+    /** Header tick-box: select or clear every row on the page in view. */
+    public function toggleSelectPage(array $ids): void
+    {
+        $ids = array_map('intval', $ids);
+        $allOn = $ids !== [] && ! array_diff($ids, $this->selectedIds);
+
+        $this->selectedIds = $allOn
+            ? array_values(array_diff($this->selectedIds, $ids))
+            : array_values(array_unique([...$this->selectedIds, ...$ids]));
+    }
+
+    /** Everything the current filters match, across every page. */
+    public function selectAllMatching(): void
+    {
+        $this->selectedIds = $this->baseQuery()->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedIds = [];
+    }
+
+    public function deleteSelected(): void
+    {
+        Gate::authorize('manage-events');
+
+        $ids = array_map('intval', $this->selectedIds);
+        if ($ids === []) {
+            return;
+        }
+
+        // Delete per model so each event's own cleanup/cascades still run.
+        $events = Event::whereIn('id', $ids)->get();
+        $n = $events->count();
+        $events->each->delete();
+
+        if (in_array($this->selectedId, $ids, true)) {
+            $this->selectedId = null;
+        }
+        $this->selectedIds = [];
+        $this->resetPage();
+
+        session()->flash('status', $n.' '.str('event')->plural($n).' permanently deleted.');
+    }
+
     public function deleteEvent(int $eventId): void
     {
-        \Illuminate\Support\Facades\Gate::authorize('manage-events');
+        Gate::authorize('manage-events');
         $event = Event::findOrFail($eventId);
         $name = $event->name;
         $event->delete();
@@ -165,7 +227,7 @@ class EventsIndex extends Component
      * With no filters active the list already *is* the whole portfolio, so we
      * reuse the scores we just computed instead of loading every event again.
      */
-    private function atRiskCount(\Illuminate\Support\Collection $health): int
+    private function atRiskCount(Collection $health): int
     {
         $unfiltered = $this->q === '' && ! $this->exactType && ! $this->stage
             && ! $this->starred && $this->tab === 'all';
@@ -192,8 +254,8 @@ class EventsIndex extends Component
         $tasks = $event->tasks;
         $open = $tasks->filter->isOpen();
 
-        $planByTrack = \App\Models\PlanItem::where('event_id', $event->id)->get()->groupBy('track_id');
-        $tracks = \App\Models\PlanTrack::where('event_id', $event->id)->orderBy('position')->get()
+        $planByTrack = PlanItem::where('event_id', $event->id)->get()->groupBy('track_id');
+        $tracks = PlanTrack::where('event_id', $event->id)->orderBy('position')->get()
             ->map(function ($t) use ($planByTrack) {
                 $items = $planByTrack->get($t->id, collect());
                 $total = $items->count();
@@ -205,7 +267,7 @@ class EventsIndex extends Component
 
         $budget = (int) $event->budget_cents;
         $spent = (int) $event->budgetItems->sum('actual_cents');
-        $outstanding = (int) \App\Models\EventContractPayment::where('event_id', $event->id)->get()
+        $outstanding = (int) EventContractPayment::where('event_id', $event->id)->get()
             ->sum(fn ($p) => max($p->amount_cents - $p->paid_cents, 0));
 
         // The next things due — tasks and deliverables together, soonest first.
@@ -213,8 +275,8 @@ class EventsIndex extends Component
             ->concat($open->filter(fn (Task $t) => $t->due_on)->map(fn (Task $t) => [
                 'title' => $t->title, 'due' => $t->due_on, 'kind' => 'Task', 'hex' => $t->stageHex(),
             ]))
-            ->concat(\App\Models\PlanItem::where('event_id', $event->id)
-                ->whereNotIn('status', \App\Models\PlanItem::CLOSED)->whereNotNull('due_on')->get()
+            ->concat(PlanItem::where('event_id', $event->id)
+                ->whereNotIn('status', PlanItem::CLOSED)->whereNotNull('due_on')->get()
                 ->map(fn ($p) => ['title' => $p->title, 'due' => $p->due_on, 'kind' => 'Deliverable', 'hex' => $p->statusHex()]))
             ->sortBy(fn ($r) => $r['due']->timestamp)->take(5)->values();
 
@@ -260,7 +322,7 @@ class EventsIndex extends Component
         $pulse = app(EventHealthService::class);
 
         $relations = [
-            'venue', 'avatar', 'client', 'projectManager', 'tasks',
+            'venue', 'client', 'projectManager', 'tasks',
             'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'sponsors', 'teamMembers',
         ];
 
@@ -368,5 +430,4 @@ class EventsIndex extends Component
 
         return ['label' => $month->format('F Y'), 'weeks' => $weeks];
     }
-
 }

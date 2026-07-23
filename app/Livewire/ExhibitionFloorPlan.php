@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Event;
-use App\Models\EventBooth;
 use App\Models\EventExhibitionHall;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;

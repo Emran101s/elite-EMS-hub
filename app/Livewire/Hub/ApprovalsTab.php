@@ -4,6 +4,7 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\EventApproval;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class ApprovalsTab extends Component
@@ -46,7 +47,7 @@ class ApprovalsTab extends Component
 
     public function decide(int $approvalId, string $decision)
     {
-        \Illuminate\Support\Facades\Gate::authorize('decide-approvals');
+        Gate::authorize('decide-approvals');
         abort_unless(in_array($decision, ['approved', 'rejected', 'needs_revision'], true), 422);
 
         $approval = $this->event->approvals()->whereKey($approvalId)->where('status', 'pending')->firstOrFail();

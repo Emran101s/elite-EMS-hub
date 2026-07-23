@@ -3,7 +3,6 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
-use App\Models\EventDocumentFolder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;

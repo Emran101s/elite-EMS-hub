@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use Illuminate\Support\Str;
 
 /**
  * Keeps the budget in step with the operational modules. Each module cost
@@ -97,7 +98,7 @@ class BudgetSync
             $n = count($event->event_requirements ?? []);
             $touched += $this->upsert($event, 'event_req', 0, [
                 'category' => $reqCat,
-                'description' => 'Event requirements ('.$n.' '.\Illuminate\Support\Str::plural('item', $n).')',
+                'description' => 'Event requirements ('.$n.' '.Str::plural('item', $n).')',
                 'estimated_cents' => $eventReqTotal,
                 'quantity' => 1,
             ]);

@@ -66,9 +66,9 @@
                 <option value="budget">Sort: Budget used</option>
             </select>
 
-            {{-- view toggle: Cards | Calendar only --}}
+            {{-- view toggle: Cards | List | Calendar --}}
             <div class="flex h-9 shrink-0 items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
-                @foreach (['cards' => 'grid', 'calendar' => 'calendar'] as $mode => $icon)
+                @foreach (['cards' => 'grid', 'list' => 'list', 'calendar' => 'calendar'] as $mode => $icon)
                     <button type="button" wire:click="$set('view', '{{ $mode }}')"
                             @class([
                                 'flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-bold capitalize transition',
@@ -83,6 +83,114 @@
             <a href="{{ route('events.create') }}" class="btn-gold btn-sm shrink-0">＋ Create Event</a>
         </div>
     </div>
+
+    {{-- ══════════ LIST VIEW ══════════ --}}
+    @if ($view === 'list')
+        @php $pageIds = $events->pluck('id')->all(); $allOnPage = $pageIds && ! array_diff($pageIds, $selectedIds); @endphp
+
+        {{-- bulk bar — only once something is ticked --}}
+        @if (count($selectedIds))
+            <div class="mb-3 flex flex-wrap items-center gap-3 rounded-2xl border border-gold-300 bg-gold-50/60 px-4 py-2.5">
+                <span class="text-xs font-bold text-navy-900">{{ count($selectedIds) }} selected</span>
+                @if ($events->total() > count($selectedIds))
+                    <button type="button" wire:click="selectAllMatching"
+                            class="text-eyebrow font-bold uppercase tracking-wide text-navy-600 hover:text-navy-900">Select all {{ $events->total() }} matching</button>
+                @endif
+                <button type="button" wire:click="clearSelection"
+                        class="text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">Clear</button>
+                <button type="button" wire:click="deleteSelected"
+                        wire:confirm="Permanently delete {{ count($selectedIds) }} {{ \Illuminate\Support\Str::plural('event', count($selectedIds)) }}? Everything inside them goes too. This cannot be undone."
+                        class="ml-auto rounded-lg bg-risk px-3.5 py-1.5 text-xs font-bold text-white transition hover:brightness-110">
+                    Delete selected ({{ count($selectedIds) }})
+                </button>
+            </div>
+        @endif
+
+        <div class="card overflow-x-auto">
+            <table class="w-full min-w-[940px]">
+                <thead>
+                    <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
+                        <th class="w-10 px-4 py-3">
+                            <input type="checkbox" @checked($allOnPage)
+                                   wire:click="toggleSelectPage({{ json_encode($pageIds) }})"
+                                   title="Select everything on this page"
+                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                        </th>
+                        <th class="px-3 py-3">Event</th>
+                        <th class="px-3 py-3">Client</th>
+                        <th class="px-3 py-3">Dates</th>
+                        <th class="px-3 py-3">Stage</th>
+                        <th class="px-3 py-3">Health</th>
+                        <th class="px-3 py-3 text-right">Pax</th>
+                        <th class="w-24 px-3 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($events as $event)
+                        @php
+                            $h = $health[$event->id] ?? null;
+                            $m = $metrics[$event->id] ?? [];
+                            $ticked = in_array($event->id, $selectedIds, true);
+                        @endphp
+                        <tr wire:key="row-{{ $event->id }}"
+                            @class(['group border-b border-line last:border-0 transition hover:bg-page/50', 'bg-gold-50/40' => $ticked])>
+                            <td class="px-4 py-3">
+                                <input type="checkbox" @checked($ticked) wire:click="toggleSelect({{ $event->id }})"
+                                       class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                            </td>
+                            <td class="px-3 py-3">
+                                <a href="{{ route('events.hub', $event) }}" class="block">
+                                    <span class="block truncate text-sm font-bold text-navy-900 group-hover:text-gold-700">{{ $event->name }}</span>
+                                    <span class="mt-0.5 block text-eyebrow text-muted">
+                                        {{ str($event->type)->replace('_', ' ')->title() }} · {{ $event->city }}{{ $event->country ? ', '.$event->country : '' }}
+                                    </span>
+                                </a>
+                            </td>
+                            <td class="px-3 py-3 text-xs text-navy-700">{{ $event->client?->name ?? '—' }}</td>
+                            <td class="px-3 py-3 text-xs text-navy-700 whitespace-nowrap">
+                                {{ $event->starts_at?->format('d M Y') ?? '—' }}
+                                @if ($event->ends_at && $event->starts_at && ! $event->ends_at->isSameDay($event->starts_at))
+                                    <span class="text-muted">– {{ $event->ends_at->format('d M Y') }}</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3">
+                                <span class="inline-block rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-white"
+                                      style="background: {{ \App\Models\Event::stageColor($event->stage) }}">
+                                    {{ str($event->stage)->replace('_', ' ')->title() }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-3">
+                                @if ($h)
+                                    <span class="flex items-center gap-1.5 text-xs font-bold text-navy-900">
+                                        <x-health-ring :percent="$h['score']" :group="$h['group']" size="h-6 w-6" />
+                                        {{ $h['score'] }}%
+                                    </span>
+                                @else
+                                    <span class="text-xs text-muted">—</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3 text-right text-xs font-semibold text-navy-900">{{ $m['participants'] ?? '—' }}</td>
+                            <td class="px-3 py-3">
+                                <div class="flex items-center justify-end gap-1 opacity-0 transition group-hover:opacity-100">
+                                    <a href="{{ route('events.hub', $event) }}"
+                                       class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-700 hover:bg-navy-100">Open</a>
+                                    <button type="button" wire:click="deleteEvent({{ $event->id }})"
+                                            wire:confirm="Permanently delete “{{ $event->name }}”? Everything inside it goes too. This cannot be undone."
+                                            class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="8" class="px-4 py-16 text-center text-sm text-muted">No events match these filters.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($events->hasPages())
+            <div class="mt-4">{{ $events->links() }}</div>
+        @endif
+    @endif
 
     {{-- ══════════ CARDS VIEW ══════════ --}}
     @if ($view === 'cards')
@@ -101,7 +209,7 @@
 
                     {{-- crest --}}
                     <a href="{{ route('events.hub', $nextUp) }}" class="relative z-10 h-24 w-32 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/15">
-                        @if ($nextUp->avatar)
+                        @if ($nextUp->cover_path)
                             <x-event-avatar :event="$nextUp" :ring="false" size="lg" class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
                         @else
                             <x-event-crest :event="$nextUp" class="h-full w-full" />

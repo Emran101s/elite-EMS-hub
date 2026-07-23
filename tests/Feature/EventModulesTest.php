@@ -6,8 +6,11 @@ use App\Livewire\Hub\AccommodationTab;
 use App\Livewire\Hub\ExhibitionTab;
 use App\Livewire\Hub\SpeakersTab;
 use App\Livewire\Hub\TransportationTab;
+use App\Livewire\TransportSettings;
 use App\Models\Event;
+use App\Models\TransportServiceType;
 use App\Models\User;
+use App\Models\VehicleType;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -71,11 +74,11 @@ class EventModulesTest extends TestCase
     public function test_transport_movement_is_saved_against_the_vehicle_catalogue(): void
     {
         [$event, $user] = $this->ctx();
-        \App\Models\VehicleType::ensureSeeded();
-        \App\Models\TransportServiceType::ensureSeeded();
+        VehicleType::ensureSeeded();
+        TransportServiceType::ensureSeeded();
 
-        $van = \App\Models\VehicleType::where('name', 'Regular Van')->firstOrFail();   // max 7
-        $service = \App\Models\TransportServiceType::where('name', 'Pickup & Drop-off')->firstOrFail();
+        $van = VehicleType::where('name', 'Regular Van')->firstOrFail();   // max 7
+        $service = TransportServiceType::where('name', 'Pickup & Drop-off')->firstOrFail();
 
         Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
             ->call('newItem')
@@ -99,9 +102,9 @@ class EventModulesTest extends TestCase
     public function test_transport_flags_a_movement_with_more_passengers_than_seats(): void
     {
         [$event, $user] = $this->ctx();
-        \App\Models\VehicleType::ensureSeeded();
+        VehicleType::ensureSeeded();
 
-        $sedan = \App\Models\VehicleType::where('name', 'Regular Sedan')->firstOrFail();  // max 2
+        $sedan = VehicleType::where('name', 'Regular Sedan')->firstOrFail();  // max 2
 
         Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
             ->call('newItem')
@@ -117,8 +120,8 @@ class EventModulesTest extends TestCase
     public function test_only_active_vehicle_and_service_types_are_offered(): void
     {
         [$event, $user] = $this->ctx();
-        \App\Models\VehicleType::ensureSeeded();
-        \App\Models\TransportServiceType::ensureSeeded();
+        VehicleType::ensureSeeded();
+        TransportServiceType::ensureSeeded();
 
         // Out of the box the operation sees only what it actually runs.
         $c = Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event]);
@@ -130,8 +133,8 @@ class EventModulesTest extends TestCase
         $this->assertSame(['Pickup & Drop-off'], $c->viewData('serviceTypes')->pluck('name')->all());
 
         // Switching a bus on in Settings makes it offerable.
-        $bus = \App\Models\VehicleType::where('name', 'Coach Bus')->firstOrFail();
-        Livewire::actingAs($user)->test(\App\Livewire\TransportSettings::class)->call('toggleVehicle', $bus->id);
+        $bus = VehicleType::where('name', 'Coach Bus')->firstOrFail();
+        Livewire::actingAs($user)->test(TransportSettings::class)->call('toggleVehicle', $bus->id);
 
         $this->assertContains(
             'Coach Bus',

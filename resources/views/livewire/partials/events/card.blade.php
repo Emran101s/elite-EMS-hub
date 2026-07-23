@@ -33,7 +33,7 @@
         {{-- cover: crest / avatar under a dark wash, stage colour as the base glow --}}
         <div class="relative h-28 overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-br from-navy-800 to-navy-950"></div>
-            @if ($event->avatar)
+            @if ($event->cover_path)
                 <x-event-avatar :event="$event" :ring="false" size="lg"
                     class="absolute inset-0 opacity-80 [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
             @else

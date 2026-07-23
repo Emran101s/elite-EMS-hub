@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Livewire\EventsIndex;
 use App\Models\Event;
+use App\Models\Task;
 use App\Models\User;
+use App\Services\CommandCenterService;
+use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -19,6 +22,50 @@ class EventsPageTest extends TestCase
         $this->seed(DemoDataSeeder::class);
 
         return User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
+    }
+
+    public function test_list_view_selects_and_bulk_deletes_events(): void
+    {
+        $user = $this->actor();
+        $a = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $b = Event::where('name', 'Tech Expo 2026')->firstOrFail();
+        $before = Event::count();
+
+        Livewire::actingAs($user)->test(EventsIndex::class)
+            ->set('view', 'list')
+            ->call('toggleSelect', $a->id)
+            ->call('toggleSelect', $b->id)
+            ->assertCount('selectedIds', 2)
+            ->call('deleteSelected')
+            ->assertCount('selectedIds', 0);
+
+        $this->assertSame($before - 2, Event::count());
+        $this->assertNull(Event::find($a->id));
+        $this->assertNull(Event::find($b->id));
+    }
+
+    public function test_ticking_a_row_twice_clears_it_and_select_all_respects_the_filter(): void
+    {
+        $user = $this->actor();
+        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        // Toggling the same row twice leaves nothing selected.
+        Livewire::actingAs($user)->test(EventsIndex::class)
+            ->set('view', 'list')
+            ->call('toggleSelect', $icft->id)
+            ->assertCount('selectedIds', 1)
+            ->call('toggleSelect', $icft->id)
+            ->assertCount('selectedIds', 0);
+
+        // "Select all matching" only picks up what the current filter returns.
+        $c = Livewire::actingAs($user)->test(EventsIndex::class)
+            ->set('view', 'list')
+            ->set('q', 'ICFT')
+            ->call('selectAllMatching');
+
+        $selected = $c->get('selectedIds');
+        $this->assertContains($icft->id, $selected);
+        $this->assertCount(Event::whereNull('archived_at')->where('name', 'like', '%ICFT%')->count(), $selected);
     }
 
     public function test_expanding_a_card_reveals_its_full_detail_in_place(): void
@@ -54,7 +101,7 @@ class EventsPageTest extends TestCase
         Livewire::actingAs($user)->test(EventsIndex::class)->call('deleteEvent', $id);
 
         $this->assertNull(Event::find($id));
-        $this->assertSame(0, \App\Models\Task::where('event_id', $id)->count(), 'children must cascade');
+        $this->assertSame(0, Task::where('event_id', $id)->count(), 'children must cascade');
 
         // The record of the deletion outlives the event it describes.
         $this->assertDatabaseHas('audit_logs', [
@@ -108,7 +155,7 @@ class EventsPageTest extends TestCase
         $this->assertNotNull($expo->fresh()->archived_at);
 
         // Gone from the Operations Hub islands too.
-        $islands = app(\App\Services\CommandCenterService::class)->islands();
+        $islands = app(CommandCenterService::class)->islands();
         $this->assertNotContains('Tech Expo 2026', $islands->pluck('name')->all());
     }
 
@@ -123,14 +170,14 @@ class EventsPageTest extends TestCase
         $copy = Event::where('name', 'ICFT 2026 (Copy)')->firstOrFail();
         $this->assertSame('draft', $copy->stage);
         $this->assertSame(0, $copy->progress);
-        $this->assertSame($icft->avatar_id, $copy->avatar_id);
+        $this->assertSame($icft->cover_path, $copy->cover_path);
         $this->assertSame($icft->primary_color, $copy->primary_color);
     }
 
     public function test_sort_by_health_orders_highest_first(): void
     {
         $user = $this->actor();
-        $pulse = app(\App\Services\EventHealthService::class);
+        $pulse = app(EventHealthService::class);
 
         $component = Livewire::actingAs($user)->test(EventsIndex::class)->set('sort', 'health');
 

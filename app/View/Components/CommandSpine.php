@@ -9,14 +9,12 @@ use Illuminate\View\Component;
 
 class CommandSpine extends Component
 {
-    public function __construct(private EventHealthService $health)
-    {
-    }
+    public function __construct(private EventHealthService $health) {}
 
     public function render()
     {
         // Live event radar — same computed health score as the hubs/islands.
-        $radar = Event::with(['tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'avatar'])
+        $radar = Event::with(['tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
             ->active()
             ->orderBy('starts_at')
             ->get()
