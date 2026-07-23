@@ -125,10 +125,11 @@
     @if ($showImport)
         <form wire:submit="import" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
             <div class="flex-1">
-                <label class="field-label !mb-1 !text-eyebrow" for="att-import">Excel (.xlsx) or CSV — columns: <span class="font-semibold text-navy-700">name</span>, email, organization, phone, ticket, amount</label>
+                <label class="field-label !mb-1 !text-eyebrow" for="att-import">Excel (.xlsx) or CSV — columns: <span class="font-semibold text-navy-700">name</span>, email, organization, job title, phone, ticket, amount, VIP, dietary, notes · re-importing updates by email</label>
                 <input id="att-import" type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv" class="input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
                 @error('importFile') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>
+            <a href="{{ route('events.attendees.template', $event) }}" class="h-10 rounded-xl border border-gold-300 bg-gold-50 px-3.5 text-xs font-bold leading-10 text-gold-800 transition hover:bg-gold-100" title="Download a ready-to-fill Excel template">↧ Template</a>
             <button type="button" wire:click="$set('showImport', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
             <button type="submit" class="btn-navy h-10 px-5 text-xs" wire:loading.attr="disabled" wire:target="import,importFile">Import</button>
         </form>

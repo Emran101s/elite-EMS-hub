@@ -125,6 +125,7 @@
                                             <th class="border-l border-line px-3 pt-2" colspan="2">Room</th>
                                             <th class="border-l border-line px-3 pt-2" colspan="2">Check-in</th>
                                             <th class="border-l border-line px-3 pt-2" colspan="2">Check-out</th>
+                                            <th class="border-l border-line px-3 pt-2">Nights</th>
                                             <th class="px-3 pt-2"></th>
                                         </tr>
                                         <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
@@ -137,6 +138,7 @@
                                             <th class="px-3 pb-2">Time</th>
                                             <th class="border-l border-line px-3 pb-2">Date</th>
                                             <th class="px-3 pb-2">Time</th>
+                                            <th class="border-l border-line px-3 pb-2 text-center">#</th>
                                             <th class="w-10 px-3 pb-2"></th>
                                         </tr>
                                     </thead>
@@ -215,6 +217,10 @@
                                                            wire:change="updateRoom({{ $r->id }}, 'departure_time', $event.target.value)"
                                                            class="{{ $inp }}">
                                                 </td>
+                                                {{-- nights for THIS guest, from their own check-in/out --}}
+                                                <td class="border-l border-line px-2 py-2 text-center">
+                                                    <span class="inline-block rounded-md bg-navy-50 px-2 py-1 text-xs font-bold text-navy-700" title="Nights for this guest — from their own check-in and check-out">{{ $r->nights() ?: '·' }}</span>
+                                                </td>
                                                 <td class="px-3 py-2">
                                                     <button type="button" wire:click="deleteRoom({{ $r->id }})"
                                                             class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/rm:opacity-100">✕</button>
@@ -226,7 +232,7 @@
                                         @if ($b->rooms->count() < $b->rooms_count)
                                             <tr class="bg-white/60">
                                                 <td class="px-4 py-2 text-center text-eyebrow font-bold text-gold-500">{{ $b->rooms->count() + 1 }}</td>
-                                                <td class="px-1 py-2" colspan="8">
+                                                <td class="px-1 py-2" colspan="9">
                                                     <input type="text" wire:model="newGuest.{{ $b->id }}"
                                                            wire:keydown.enter="addRoom({{ $b->id }})"
                                                            list="attendee-names-{{ $b->id }}"
@@ -246,6 +252,41 @@
                                 </table>
                             </div>
 
+                            {{-- import an Excel / CSV rooming list into this block --}}
+                            @if ($importBlockId === $b->id)
+                                <div class="border-t border-line bg-gold-50/40 px-5 py-4">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="text-xs font-bold text-navy-900">Import guests into {{ $b->hotel }}</p>
+                                            <p class="mt-0.5 text-eyebrow leading-relaxed text-muted">
+                                                Excel (.xlsx) or CSV. First row = headers. Recognised columns:
+                                                <span class="font-semibold text-navy-700">Name</span> (required), Email, Phone, Room Type, Occupancy, Sharing With, Check In, Check Out, Arrival Time, Departure Time, Confirmation #, Notes.
+                                                Anything left blank uses the block's own dates, room type &amp; rate.
+                                            </p>
+                                        </div>
+                                        <button type="button" wire:click="closeImport" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-navy-400 hover:text-navy-700">✕</button>
+                                    </div>
+                                    <div class="mt-3 flex flex-wrap items-center gap-2.5">
+                                        <input type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv"
+                                               class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                                        <button type="button" wire:click="importRooms" wire:loading.attr="disabled" wire:target="importRooms,importFile"
+                                                class="rounded-lg bg-gold-500 px-3.5 py-1.5 text-xs font-bold text-navy-950 transition hover:brightness-105 disabled:opacity-50">
+                                            <span wire:loading.remove wire:target="importRooms">Import list</span>
+                                            <span wire:loading wire:target="importRooms">Importing…</span>
+                                        </button>
+                                        <span wire:loading wire:target="importFile" class="text-eyebrow font-semibold text-gold-700">Uploading…</span>
+                                        <a href="{{ route('events.rooming.template', [$event, $b]) }}"
+                                           class="ml-1 border-l border-gold-300/70 pl-3 text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900"
+                                           title="Download a ready-to-fill Excel template with these columns">↧ Download template</a>
+                                    </div>
+                                    @error('importFile')<p class="mt-1.5 text-xs text-risk">{{ $message }}</p>@enderror
+                                </div>
+                            @endif
+
+                            @if ($importMsg && $expandedId === $b->id)
+                                <div class="border-t border-line bg-emerald-50/60 px-5 py-2 text-xs font-semibold text-emerald-800">{{ $importMsg }}</div>
+                            @endif
+
                             <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-2.5">
                                 <p class="text-eyebrow text-muted">
                                     <span class="font-bold text-navy-900">{{ $named }}</span> named ·
@@ -263,8 +304,12 @@
                                         </span>
                                     @endif
                                 </p>
-                                <a href="{{ route('events.rooming.pdf', [$event, $b]) }}" target="_blank"
-                                   class="text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">Send to hotel →</a>
+                                <div class="flex items-center gap-3">
+                                    <button type="button" wire:click="openImport({{ $b->id }})"
+                                            class="text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">⇪ Import Excel</button>
+                                    <a href="{{ route('events.rooming.pdf', [$event, $b]) }}" target="_blank"
+                                       class="border-l border-line pl-3 text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">Send to hotel →</a>
+                                </div>
                             </div>
                         </div>
                     @endif

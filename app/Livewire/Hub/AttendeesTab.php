@@ -9,6 +9,7 @@ use App\Models\EventAttendee;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class AttendeesTab extends Component
 {
@@ -273,7 +274,7 @@ class AttendeesTab extends Component
     {
         $ext = strtolower($file->getClientOriginalExtension());
         if (in_array($ext, ['xlsx', 'xls'], true)) {
-            return \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath())->getActiveSheet()->toArray(null, true, false, false);
+            return IOFactory::load($file->getRealPath())->getActiveSheet()->toArray(null, true, false, false);
         }
         $rows = [];
         if (($h = fopen($file->getRealPath(), 'r')) !== false) {

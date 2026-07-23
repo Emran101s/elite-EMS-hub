@@ -9,6 +9,8 @@ use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
 class AttendeeImportTest extends TestCase
@@ -89,14 +91,14 @@ class AttendeeImportTest extends TestCase
         [$event, $user] = $this->ctx();
         $before = $event->attendees()->count();
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $spreadsheet->getActiveSheet()->fromArray([
             ['Name', 'Email', 'Organization', 'Attendee Type'],
             ['Lina Kaddoura', 'lina@icft.org', 'Royal Society', 'Press'],
             ['Yusuf Barakat', 'yusuf@icft.org', 'Oxford', 'Speaker'],
         ]);
         $path = tempnam(sys_get_temp_dir(), 'att').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save($path);
+        (new Xlsx($spreadsheet))->save($path);
 
         Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
             ->set('importFile', UploadedFile::fake()->createWithContent('attendees.xlsx', file_get_contents($path)))

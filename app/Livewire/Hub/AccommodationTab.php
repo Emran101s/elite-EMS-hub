@@ -3,11 +3,17 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
+use App\Models\EventAccommodation;
 use App\Models\EventRoomBlock;
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 /**
  * Accommodation works in two moves:
@@ -19,6 +25,8 @@ use Livewire\Component;
  */
 class AccommodationTab extends Component
 {
+    use WithFileUploads;
+
     public Event $event;
 
     public bool $showForm = false;
@@ -26,6 +34,13 @@ class AccommodationTab extends Component
     public ?int $editingId = null;
 
     public ?int $expandedId = null;
+
+    // ── Rooming-list import (Excel / CSV into one block) ──
+    public $importFile = null;
+
+    public ?int $importBlockId = null;
+
+    public string $importMsg = '';
 
     // ── Block form ──────────────────────────────────────────────
     #[Validate('required|string|max:160')]
@@ -215,7 +230,7 @@ class AccommodationTab extends Component
 
         // Dates come off a date input; an unparseable value clears rather than crashes.
         if (in_array($field, ['check_in', 'check_out'], true)) {
-            $value = $value !== '' ? (\Carbon\Carbon::hasFormat($value, 'Y-m-d') ? $value : '') : '';
+            $value = $value !== '' ? (Carbon::hasFormat($value, 'Y-m-d') ? $value : '') : '';
         }
 
         if (in_array($field, ['arrival_time', 'departure_time'], true)) {
@@ -229,8 +244,7 @@ class AccommodationTab extends Component
         // so editing here or on the Attendees tab reaches the same record.
         if ($room->attendee && in_array($field, ['guest', 'guest_email', 'guest_phone'], true)) {
             $room->attendee->update([
-                ['guest' => 'name', 'guest_email' => 'email', 'guest_phone' => 'phone'][$field]
-                    => $value ?: null,
+                ['guest' => 'name', 'guest_email' => 'email', 'guest_phone' => 'phone'][$field] => $value ?: null,
             ]);
         }
     }
@@ -268,6 +282,191 @@ class AccommodationTab extends Component
         $a->delete();
         $this->expandedId = $block->id;
         session()->flash('status', 'Converted to a room block — ready to name guests.');
+    }
+
+    // ── Import an Excel / CSV rooming list into one block ───────
+
+    /** Column headers we understand, tolerant of spacing/case/synonyms. */
+    private function fieldForHeader(string $header): ?string
+    {
+        $n = preg_replace('/[^a-z0-9]/', '', strtolower($header));
+
+        return match (true) {
+            in_array($n, ['name', 'guest', 'guestname', 'fullname', 'delegate', 'attendee'], true) => 'guest',
+            in_array($n, ['email', 'guestemail', 'mail', 'emailaddress', 'e'], true) => 'guest_email',
+            in_array($n, ['phone', 'mobile', 'guestphone', 'tel', 'telephone', 'contact', 'phonenumber'], true) => 'guest_phone',
+            in_array($n, ['roomtype', 'room', 'category', 'grade', 'roomcategory'], true) => 'room_type',
+            in_array($n, ['occupancy', 'occ', 'beds', 'bedtype'], true) => 'occupancy',
+            in_array($n, ['sharingwith', 'sharewith', 'roommate', 'shareswith', 'sharedwith', 'sharing'], true) => 'sharing_with',
+            in_array($n, ['checkin', 'checkindate', 'arrivaldate', 'arrival', 'arrive', 'datein', 'from'], true) => 'check_in',
+            in_array($n, ['checkout', 'checkoutdate', 'departuredate', 'departure', 'depart', 'dateout', 'to'], true) => 'check_out',
+            in_array($n, ['arrivaltime', 'arrivetime', 'timein', 'eta'], true) => 'arrival_time',
+            in_array($n, ['departuretime', 'departtime', 'timeout', 'etd'], true) => 'departure_time',
+            in_array($n, ['confirmation', 'confirmationnumber', 'confno', 'conf', 'booking', 'bookingref', 'bookingreference', 'reference', 'ref'], true) => 'confirmation_number',
+            in_array($n, ['notes', 'note', 'remarks', 'remark', 'comment', 'comments'], true) => 'notes',
+            default => null,
+        };
+    }
+
+    private function parseSheetDate($v): ?string
+    {
+        $v = trim((string) $v);
+        if ($v === '') {
+            return null;
+        }
+        try {
+            return is_numeric($v)
+                ? Date::excelToDateTimeObject((float) $v)->format('Y-m-d')
+                : Carbon::parse($v)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function parseSheetTime($v): ?string
+    {
+        $v = trim((string) $v);
+        if ($v === '') {
+            return null;
+        }
+        try {
+            return is_numeric($v)
+                ? Date::excelToDateTimeObject((float) $v)->format('H:i')
+                : Carbon::parse($v)->format('H:i');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function resolveOccupancy($v): ?string
+    {
+        $n = strtolower(trim((string) $v));
+        foreach (EventAccommodation::OCCUPANCIES as $key => $label) {
+            if ($n === $key || $n === strtolower($label)) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    public function openImport(int $blockId): void
+    {
+        $this->reset(['importFile', 'importMsg']);
+        $this->resetErrorBag('importFile');
+        $this->importBlockId = $blockId;
+        $this->expandedId = $blockId;
+    }
+
+    public function closeImport(): void
+    {
+        $this->reset(['importFile', 'importBlockId', 'importMsg']);
+    }
+
+    public function importRooms(): void
+    {
+        Gate::authorize('write');
+        $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:5120']]);
+
+        $block = $this->event->roomBlocks()->findOrFail($this->importBlockId);
+
+        try {
+            $rows = IOFactory::load($this->importFile->getRealPath())
+                ->getActiveSheet()->toArray(null, true, true, false);
+        } catch (\Throwable) {
+            $this->addError('importFile', 'Could not read that file. Save it as .xlsx or .csv and try again.');
+
+            return;
+        }
+
+        // First non-empty row is the header.
+        $headerIndex = null;
+        foreach ($rows as $i => $row) {
+            if (collect($row)->contains(fn ($c) => trim((string) $c) !== '')) {
+                $headerIndex = $i;
+                break;
+            }
+        }
+        if ($headerIndex === null) {
+            $this->addError('importFile', 'The sheet looks empty.');
+
+            return;
+        }
+
+        $map = [];
+        foreach ($rows[$headerIndex] as $col => $h) {
+            if ($field = $this->fieldForHeader((string) $h)) {
+                $map[$col] = $field;
+            }
+        }
+        if (! in_array('guest', $map, true)) {
+            $this->addError('importFile', 'No “Name” column found. Add a column headed Name (or Guest) and re-upload.');
+
+            return;
+        }
+
+        $imported = 0;
+        $position = (int) $block->rooms()->max('position');
+
+        foreach (array_slice($rows, $headerIndex + 1) as $row) {
+            $d = [];
+            foreach ($map as $col => $field) {
+                $d[$field] = trim((string) ($row[$col] ?? ''));
+            }
+            $name = $d['guest'] ?? '';
+            if ($name === '') {
+                continue;
+            }
+
+            // The attendee list is the source of names — match or create, so the
+            // guest exists once and edits from either side stay in step.
+            $attendee = $this->event->attendees()->whereRaw('lower(name) = ?', [mb_strtolower($name)])->first()
+                ?? $this->event->attendees()->create([
+                    'name' => mb_substr($name, 0, 160),
+                    'email' => ($d['guest_email'] ?? '') ?: null,
+                    'phone' => ($d['guest_phone'] ?? '') ?: null,
+                    'ticket_type' => 'Delegate',
+                    'status' => 'registered',
+                ]);
+
+            $this->event->accommodations()->create([
+                'block_id' => $block->id,
+                'attendee_id' => $attendee->id,
+                'hotel' => $block->hotel,
+                'guest' => mb_substr($name, 0, 160),
+                'guest_email' => ($d['guest_email'] ?? '') ?: $attendee->email,
+                'guest_phone' => ($d['guest_phone'] ?? '') ?: $attendee->phone,
+                'sharing_with' => ($d['sharing_with'] ?? '') ?: null,
+                'room_type' => ($d['room_type'] ?? '') ?: $block->room_type,
+                'occupancy' => $this->resolveOccupancy($d['occupancy'] ?? '') ?? $block->occupancy,
+                'rooms' => 1,
+                'check_in' => $this->parseSheetDate($d['check_in'] ?? '') ?? $block->check_in?->format('Y-m-d'),
+                'check_out' => $this->parseSheetDate($d['check_out'] ?? '') ?? $block->check_out?->format('Y-m-d'),
+                'arrival_time' => $this->parseSheetTime($d['arrival_time'] ?? ''),
+                'departure_time' => $this->parseSheetTime($d['departure_time'] ?? ''),
+                'confirmation_number' => ($d['confirmation_number'] ?? '') ?: null,
+                'notes' => ($d['notes'] ?? '') ?: null,
+                'rate_cents' => $block->rate_cents,
+                'status' => $block->status === 'cancelled' ? 'cancelled' : 'booked',
+                'position' => ++$position,
+            ]);
+
+            if (++$imported >= 2000) {
+                break;
+            }
+        }
+
+        // Grow the block so every imported guest has a held room.
+        $named = $block->rooms()->count();
+        if ($named > $block->rooms_count) {
+            $block->update(['rooms_count' => $named]);
+        }
+
+        $this->reset(['importFile', 'importBlockId']);
+        $this->expandedId = $block->id;
+        $this->importMsg = $imported === 0
+            ? 'No rows with a name were found in that file.'
+            : $imported.' '.Str::plural('guest', $imported).' imported into '.$block->hotel.'.';
     }
 
     public function render()
