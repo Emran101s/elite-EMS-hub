@@ -20,31 +20,34 @@
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             @foreach ($speakers as $s)
                 @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
-                <div wire:key="sp-{{ $s->id }}" class="card group/sp p-5 {{ $this->isSelected($s->id) ? 'ring-2 ring-navy-900' : '' }}">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex min-w-0 items-center gap-3">
-                            <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
-                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-900 text-sm font-bold text-gold-300">{{ $s->initials() }}</span>
-                            <div>
-                                <p class="flex items-center gap-1.5 text-sm font-bold text-navy-900">{{ $s->name }}
-                                    @if ($s->is_keynote)<span class="rounded-full bg-gold-500/20 px-1.5 text-eyebrow font-bold uppercase text-gold-700">Keynote</span>@endif
-                                </p>
-                                <p class="text-micro text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
+                <div wire:key="sp-{{ $s->id }}" class="group/sp op-card {{ $this->isSelected($s->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
+                    <div class="flex flex-1 flex-col p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-900 text-sm font-bold text-gold-300">{{ $s->initials() }}</span>
+                                <div class="min-w-0">
+                                    <p class="pf flex items-center gap-1.5 text-sm font-bold text-navy-900">{{ $s->name }}
+                                        @if ($s->is_keynote)<span class="pill bg-gold-500/20 text-gold-700">Keynote</span>@endif
+                                    </p>
+                                    <p class="truncate text-micro text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
+                                </div>
                             </div>
+                            <span class="pill shrink-0 {{ $stClass }}">{{ $stLabel }}</span>
                         </div>
-                        <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
+
+                        @if ($s->topic)<p class="mt-3 rounded-xl bg-page/60 px-3 py-2 text-xs italic text-navy-700">“{{ $s->topic }}”</p>@endif
                     </div>
 
-                    @if ($s->topic)<p class="mt-3 rounded-xl bg-page/60 px-3 py-2 text-xs text-navy-700">“{{ $s->topic }}”</p>@endif
-
-                    <div class="mt-3 flex items-center justify-between border-t border-line pt-3">
-                        <span class="text-xs text-muted">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
-                        <div class="flex items-center gap-1 opacity-0 transition group-hover/sp:opacity-100">
+                    {{-- dark navy footer: fee + hover actions --}}
+                    <div class="op-card-foot">
+                        <span class="truncate text-eyebrow font-semibold text-white/80">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
+                        <div class="ml-auto flex items-center gap-1 opacity-0 transition group-hover/sp:opacity-100">
                             @if ($s->status !== 'confirmed')
-                                <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-50 px-2 py-1 text-eyebrow font-bold text-emerald-700 hover:bg-emerald-100">✓ Confirm</button>
+                                <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-400/20 px-2 py-1 text-eyebrow font-bold text-emerald-300 hover:bg-emerald-400/30">✓ Confirm</button>
                             @endif
-                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-white/80 hover:bg-white/20">✎</button>
+                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-red-400/15 px-1.5 py-1 text-eyebrow font-bold text-red-300 hover:bg-red-400/25">✕</button>
                         </div>
                     </div>
                 </div>
@@ -53,11 +56,13 @@
     @endif
         </div>
 
-        {{-- ══ control rail ══ --}}
-        <div class="xl:sticky xl:top-[76px] xl:h-fit">
-            <div class="card overflow-hidden">
-                <div class="border-b border-line bg-navy-900 px-4 py-3">
-                    <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Speaker Controls</span>
+        {{-- ══ Speakers Control Center ══ --}}
+        <div class="xl:sticky xl:top-4 xl:h-fit">
+            <div class="cc-panel">
+                <div class="cc-head">
+                    <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
+                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Speakers Control Center</span>
                 </div>
                 <div class="border-b border-line p-4">
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
