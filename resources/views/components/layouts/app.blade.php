@@ -37,8 +37,12 @@
             <div class="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.12),transparent_65%)]"></div>
 
             <div class="relative mx-auto flex h-[68px] max-w-[1680px] items-center gap-4 px-4 lg:px-7">
-                {{-- brand --}}
-                <a href="{{ route('home') }}" class="shrink-0"><x-brand dark /></a>
+                {{-- brand — or the event's own identity when inside an event --}}
+                @isset($identity)
+                    {{ $identity }}
+                @else
+                    <a href="{{ route('home') }}" class="shrink-0"><x-brand dark /></a>
+                @endisset
 
                 <div class="hidden h-8 w-px bg-white/10 md:block"></div>
 
@@ -102,17 +106,22 @@
         <div class="sticky top-[68px] z-30 bg-page/85 px-4 pb-1 pt-3 backdrop-blur-sm lg:px-7">
             <div class="mx-auto max-w-[1680px]">
                 <nav class="glass-dock flex items-center gap-1 overflow-x-auto px-2 py-1.5 scrollbar-none" aria-label="Primary">
-                    @foreach ($nav as [$label, $route, $icon, $active])
-                        <a href="{{ route($route) }}" @if ($active) aria-current="page" @endif
-                           @class([
-                               'flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 text-[0.8rem] font-semibold transition-all duration-150',
-                               'bg-navy-900 text-white shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' => $active,
-                               'text-navy-500 hover:bg-white hover:text-navy-900' => ! $active,
-                           ])>
-                            <x-icon :name="$icon" @class(['h-4 w-4 shrink-0', 'text-gold-400' => $active, 'text-navy-400' => ! $active]) />
-                            {{ $label }}
-                        </a>
-                    @endforeach
+                    @isset($topnav)
+                        {{-- the event module nav, provided by the hub --}}
+                        {{ $topnav }}
+                    @else
+                        @foreach ($nav as [$label, $route, $icon, $active])
+                            <a href="{{ route($route) }}" @if ($active) aria-current="page" @endif
+                               @class([
+                                   'flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 text-[0.8rem] font-semibold transition-all duration-150',
+                                   'bg-navy-900 text-white shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' => $active,
+                                   'text-navy-500 hover:bg-white hover:text-navy-900' => ! $active,
+                               ])>
+                                <x-icon :name="$icon" @class(['h-4 w-4 shrink-0', 'text-gold-400' => $active, 'text-navy-400' => ! $active]) />
+                                {{ $label }}
+                            </a>
+                        @endforeach
+                    @endisset
                 </nav>
             </div>
         </div>
