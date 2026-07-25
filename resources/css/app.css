@@ -1,3 +1,8 @@
+/* ORBIT v1.0 design tokens — available app-wide (dark :root + light [data-theme]).
+   Additive: current navy/gold screens don't reference these yet, so nothing
+   changes visually until components/screens migrate onto them. */
+@import './orbit-tokens.css';
+
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

@@ -25,6 +25,8 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=spectral:500,600,700,800&display=swap" rel="stylesheet">
     <link href="https://fonts.bunny.net/css?family=amiri:400,700&display=swap" rel="stylesheet">
+    {{-- ORBIT type: Inter (UI) · Instrument Serif (display) · JetBrains Mono (data) --}}
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700|instrument-serif:400,400i|jetbrains-mono:400,500,700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">
