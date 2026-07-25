@@ -40,7 +40,7 @@
             {{-- risk chips --}}
             <div class="relative flex shrink-0 gap-2">
                 <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
-                    <span class="text-xl font-black leading-none" style="color: {{ $stats['needApproval'] > 0 ? '#F97316' : 'rgba(255,255,255,.4)' }}">{{ $stats['needApproval'] }}</span>
+                    <span class="text-xl font-black leading-none" style="color: {{ $stats['needApproval'] > 0 ? 'var(--flare-lit)' : 'var(--chrome-ink-3)' }}">{{ $stats['needApproval'] }}</span>
                     <span class="mt-1 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Awaiting sign-off</span>
                 </div>
                 <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
@@ -71,7 +71,7 @@
             <button type="button" wire:click="filterByTrack" @class(['h-8 rounded-lg px-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => ! $filterTrack, 'bg-white text-navy-500 ring-1 ring-line hover:text-navy-800' => $filterTrack])>All tracks</button>
             @foreach ($tracks as $t)
                 <button type="button" wire:click="filterByTrack({{ $t->id }})" @class(['flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterTrack === $t->id, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterTrack !== $t->id]) @style(['background: '.$t->color => $filterTrack === $t->id])>
-                    <span class="h-2 w-2 rounded-full" style="background: {{ $filterTrack === $t->id ? '#fff' : $t->color }}"></span>{{ \Illuminate\Support\Str::limit($t->name, 16) }}
+                    <span class="h-2 w-2 rounded-full" style="background: {{ $filterTrack === $t->id ? 'var(--chrome-ink)' : $t->color }}"></span>{{ \Illuminate\Support\Str::limit($t->name, 16) }}
                 </button>
             @endforeach
         </div>

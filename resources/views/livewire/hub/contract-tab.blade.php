@@ -1,11 +1,11 @@
 @php
     // ── Shared identity: the type's label, chip and document spine ──
     $typeMeta = [
-        'client' => ['Client Contract', 'bg-sky-100 text-sky-700', 'linear-gradient(#1F6FB2,#164e78)'],
-        'vendor' => ['Vendor Agreement', 'bg-emerald-100 text-emerald-700', 'linear-gradient(#2E7D63,#1c5b48)'],
-        'speaker' => ['Speaker Agreement', 'bg-violet-100 text-violet-700', 'linear-gradient(#7c5cbf,#573f8a)'],
-        'sponsorship' => ['Sponsorship', 'bg-gold-100 text-gold-800', 'linear-gradient(#C8A44A,#9c7d2e)'],
-        'letter' => ['Letter', 'bg-navy-100 text-navy-600', 'linear-gradient(#0E2140,#081426)'],
+        'client' => ['Client Contract', 'bg-sky-100 text-sky-700', 'linear-gradient(var(--ion),var(--ion-lit))'],
+        'vendor' => ['Vendor Agreement', 'bg-emerald-100 text-emerald-700', 'linear-gradient(var(--vital),var(--vital-lit))'],
+        'speaker' => ['Speaker Agreement', 'bg-violet-100 text-violet-700', 'linear-gradient(var(--plasma),var(--plasma-lit))'],
+        'sponsorship' => ['Sponsorship', 'bg-gold-100 text-gold-800', 'linear-gradient(var(--gold-2),var(--gold))'],
+        'letter' => ['Letter', 'bg-navy-100 text-navy-600', 'linear-gradient(var(--chrome-2),var(--chrome))'],
     ];
     $statusChip = [
         'draft' => ['Draft', 'bg-navy-50 text-navy-500'],
@@ -76,8 +76,8 @@
             {{-- the empty table: one clear invitation --}}
             <div class="strip-dark relative flex flex-col items-center gap-4 !rounded-2xl py-16 text-center">
                 <span aria-hidden="true" class="pointer-events-none absolute -top-20 left-1/2 h-64 w-[32rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(212,175,55,0.16),transparent_65%)]"></span>
-                <span class="relative flex h-16 w-16 -rotate-6 items-center justify-center rounded-full text-xl font-bold text-[#5a4718] shadow-lg"
-                      style="background: radial-gradient(circle at 35% 30%, #E4C874, #C8A44A 55%, #9c7d2e); font-family: Georgia, serif;">EB</span>
+                <span class="relative flex h-16 w-16 -rotate-6 items-center justify-center rounded-full text-xl font-bold text-[var(--gold-ink)] shadow-lg"
+                      style="background: radial-gradient(circle at 35% 30%, var(--gold-3), var(--gold-lit) 55%, var(--gold-2)); font-family: Georgia, serif;">EB</span>
                 <div class="relative">
                     <p class="pf text-lg font-bold text-white">No documents yet</p>
                     <p class="mx-auto mt-1 max-w-[44ch] text-sm text-white/60">
@@ -141,8 +141,8 @@
 
                                     {{-- wax seal over the paper's corner when fully signed --}}
                                     @if ($c->status === 'signed')
-                                        <span class="absolute -right-1 bottom-3 z-10 flex h-11 w-11 -rotate-6 items-center justify-center rounded-full font-bold text-[#5a4718] shadow-lg transition group-hover:rotate-0"
-                                              style="background: radial-gradient(circle at 35% 30%, #E4C874, #C8A44A 55%, #9c7d2e); font-family: Georgia, serif;"
+                                        <span class="absolute -right-1 bottom-3 z-10 flex h-11 w-11 -rotate-6 items-center justify-center rounded-full font-bold text-[var(--gold-ink)] shadow-lg transition group-hover:rotate-0"
+                                              style="background: radial-gradient(circle at 35% 30%, var(--gold-3), var(--gold-lit) 55%, var(--gold-2)); font-family: Georgia, serif;"
                                               title="Signed &amp; sealed">EB</span>
                                     @endif
                                 </div>

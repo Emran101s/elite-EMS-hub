@@ -22,7 +22,7 @@
                 @foreach (\App\Models\Task::STAGES as $sv => [$sl, $sh])
                     <button type="button" wire:click="moveTask({{ $detail->id }}, '{{ $sv }}')"
                             class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $detail->status === $sv ? 'text-white shadow' : 'text-white/45 ring-1 ring-white/15 hover:text-white/80' }}"
-                            style="{{ $detail->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $detail->status === $sv ? '#fff' : $sh }}"></span>{{ $sl }}</button>
+                            style="{{ $detail->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $detail->status === $sv ? 'var(--chrome-ink)' : $sh }}"></span>{{ $sl }}</button>
                 @endforeach
             </div>
         </div>

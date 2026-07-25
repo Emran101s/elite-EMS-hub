@@ -38,7 +38,7 @@
                 @foreach ($moduleCounts as $slug => $count)
                     @php [$mlabel, $mhex] = \App\Models\Task::MODULES[$slug] ?? [ucfirst($slug), 'var(--color-neutral)']; @endphp
                     <button type="button" wire:click="filterByModule('{{ $slug }}')" @class(['flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterArea === $slug, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterArea !== $slug]) @style(['background: '.$mhex => $filterArea === $slug])>
-                        <span class="h-2 w-2 rounded-full" style="background: {{ $filterArea === $slug ? '#fff' : $mhex }}"></span>{{ $mlabel }} <span class="opacity-60">{{ $count }}</span>
+                        <span class="h-2 w-2 rounded-full" style="background: {{ $filterArea === $slug ? 'var(--chrome-ink)' : $mhex }}"></span>{{ $mlabel }} <span class="opacity-60">{{ $count }}</span>
                     </button>
                 @endforeach
             </div>

@@ -101,5 +101,5 @@
     <text x="50" y="50" text-anchor="middle" dominant-baseline="central"
           font-family="Spectral, Georgia, serif" font-weight="800"
           font-size="{{ mb_strlen($initials) >= 3 ? 27 : 34 }}" letter-spacing="1.5"
-          fill="#FFFFFF" fill-opacity="0.94">{{ $initials }}</text>
+          fill="var(--chrome-ink)" fill-opacity="0.94">{{ $initials }}</text>
 </svg>

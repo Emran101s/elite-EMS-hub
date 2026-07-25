@@ -1,9 +1,9 @@
 @php
     // Sales status → booth colours [fill, border/text].
     $statusFill = [
-        'available' => ['#FFFFFF', '#94A3B8'],
-        'reserved' => ['#FBF3DE', '#8A6D1F'],
-        'sold' => ['#E7F6EC', '#1F7A48'],
+        'available' => ['var(--plate)', 'var(--ink-4)'],
+        'reserved' => ['var(--flare-tint)', 'var(--flare)'],
+        'sold' => ['var(--vital-tint)', 'var(--vital)'],
     ];
     // Metre → canvas scale (centre the hall rectangle in the 960×560 canvas).
     $W = $hall?->width_m ?: 30;
@@ -244,14 +244,14 @@
             <div class="mx-auto shrink-0" style="width:960px;">
                 <div id="floorplan" x-ref="canvas" @pointerdown.self="$wire.deselect()"
                      data-scale="{{ $scale }}" data-offx="{{ $offX }}" data-offy="{{ $offY }}" data-venw="{{ $venW }}" data-venh="{{ $venH }}" data-wm="{{ $W }}" data-lm="{{ $L }}"
-                     class="relative overflow-hidden rounded-xl border border-line" style="width:960px; height:560px; background:#F4F6FA;">
+                     class="relative overflow-hidden rounded-xl border border-line" style="width:960px; height:560px; background:var(--abyss);">
 
                     {{-- hall floor (to scale) with 1 m grid + rulers --}}
                     <div class="pointer-events-none absolute rounded-md border-2 border-navy-200"
                          style="left:{{ $offX }}px; top:{{ $offY }}px; width:{{ $venW }}px; height:{{ $venH }}px; background:
-                            linear-gradient(#E4EAF3 1px, transparent 1px) 0 0 / 100% {{ round($gridPx) }}px,
-                            linear-gradient(90deg, #E4EAF3 1px, transparent 1px) 0 0 / {{ round($gridPx) }}px 100%,
-                            #FFFFFF;"></div>
+                            linear-gradient(var(--rim) 1px, transparent 1px) 0 0 / 100% {{ round($gridPx) }}px,
+                            linear-gradient(90deg, var(--rim) 1px, transparent 1px) 0 0 / {{ round($gridPx) }}px 100%,
+                            var(--plate);"></div>
                     <span class="pointer-events-none absolute -translate-x-1/2 rounded bg-white px-1.5 text-eyebrow font-bold text-navy-500" style="left:{{ $offX + $venW / 2 }}px; top:{{ max(2, $offY - 16) }}px;">↔ {{ $fmtM($W) }} m</span>
                     <span class="pointer-events-none absolute origin-center -rotate-90 whitespace-nowrap rounded bg-white px-1.5 text-eyebrow font-bold text-navy-500" style="left:{{ max(2, $offX - 24) }}px; top:{{ $offY + $venH / 2 }}px;">↕ {{ $fmtM($L) }} m</span>
                     <span class="pointer-events-none absolute rounded bg-navy-50 px-1.5 text-eyebrow font-semibold text-navy-400" style="left:{{ $offX + 6 }}px; top:{{ $offY + 6 }}px;">1 grid = {{ $gridM }} m</span>
@@ -296,9 +296,9 @@
                 </div>
                 <div class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-eyebrow text-muted">
                     <span class="font-bold uppercase tracking-wide">Status</span>
-                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border border-dashed" style="border-color:#94A3B8; background:#fff"></span> Available</span>
-                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border" style="border-color:#8A6D1F; background:#FBF3DE"></span> Reserved</span>
-                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border" style="border-color:#1F7A48; background:#E7F6EC"></span> Sold</span>
+                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border border-dashed" style="border-color:var(--ink-4); background:var(--plate)"></span> Available</span>
+                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border" style="border-color:var(--flare); background:var(--flare-tint)"></span> Reserved</span>
+                    <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border" style="border-color:var(--vital); background:var(--vital-tint)"></span> Sold</span>
                 </div>
                 <p class="mt-1 text-center text-eyebrow text-muted">Drag any block to move · click to select &amp; resize · booths &amp; hall are drawn to real metre scale.</p>
             </div>
@@ -309,7 +309,7 @@
         function floorPng() {
             var node = document.getElementById('floorplan');
             if (!window.html2canvas) { alert('Image renderer still loading — try again in a second.'); return; }
-            window.html2canvas(node, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true })
+            window.html2canvas(node, { scale: 2, backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--plate').trim(), logging: false, useCORS: true })
                 .then(function (canvas) { var a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = '{{ $slug }}.png'; a.click(); })
                 .catch(function (e) { alert('Could not render image: ' + e); });
         }

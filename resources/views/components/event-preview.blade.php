@@ -13,11 +13,11 @@
 @endphp
 
 <div class="rounded-[28px] border border-line p-4 shadow-[0_12px_35px_rgba(15,23,42,0.08)]"
-     style="background: linear-gradient(180deg, #0B1F3A 0%, #122645 210px, #DDE5F0 330px, #F8FAFC 430px, #FFFFFF 100%)">
+     style="background: linear-gradient(180deg, var(--chrome) 0%, var(--chrome-2) 210px, var(--rim-hi) 330px, var(--deck) 430px, var(--plate) 100%)">
 
     {{-- ── Hero: one dark-navy gradient, avatar blended into it ── --}}
     <div class="relative h-[250px] overflow-hidden rounded-[22px] ring-1 ring-white/10"
-         style="background: linear-gradient(115deg, #0B1F3A 0%, #0E1E36 45%, #16294A 78%, #1C3357 100%)">
+         style="background: linear-gradient(115deg, var(--chrome) 0%, var(--chrome) 45%, var(--chrome-2) 78%, var(--chrome-2) 100%)">
 
         {{-- Avatar layer: multiply-blend melts white/light backgrounds into the navy --}}
         <div class="absolute inset-y-0 right-0 w-[64%] [mask-image:linear-gradient(90deg,transparent_0%,black_38%)]">

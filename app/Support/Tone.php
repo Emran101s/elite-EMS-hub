@@ -58,6 +58,35 @@ enum Tone: string
         };
     }
 
+    /** An event's lifecycle stage → a tone. Gold is deliberately absent: it marks
+     *  where you are, and a grid of event cards would spend it several times over. */
+    public static function forEventStage(?string $stage): self
+    {
+        return match ($stage) {
+            'live' => self::Vital,
+            'completed' => self::Vital,
+            'confirmed' => self::Vital,
+            'production' => self::Ion,
+            'proposal' => self::Ion,
+            'planning' => self::Plasma,
+            'on_hold' => self::Flare,
+            'cancelled' => self::Critical,
+            'draft', 'closed' => self::Neutral,
+            default => self::Neutral,
+        };
+    }
+
+    /** Budget consumption → a tone. Over 90% spent is a problem, not a colour choice. */
+    public static function forUsage(?float $percentUsed): self
+    {
+        return match (true) {
+            $percentUsed === null => self::Neutral,
+            $percentUsed > 90 => self::Critical,
+            $percentUsed > 70 => self::Flare,
+            default => self::Vital,
+        };
+    }
+
     /** Common status strings across modules → a tone. Extend as modules migrate. */
     public static function forStatus(?string $status): self
     {

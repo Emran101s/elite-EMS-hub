@@ -25,7 +25,7 @@
                 @foreach (\App\Models\PlanItem::STATUSES as $sv => [$sl, $sh])
                     <button type="button" wire:click="setStatus({{ $selected->id }}, '{{ $sv }}')"
                             class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $selected->status === $sv ? 'text-white shadow' : 'text-white/45 ring-1 ring-white/15 hover:text-white/80' }}"
-                            style="{{ $selected->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $selected->status === $sv ? '#fff' : $sh }}"></span>{{ $sl }}</button>
+                            style="{{ $selected->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $selected->status === $sv ? 'var(--chrome-ink)' : $sh }}"></span>{{ $sl }}</button>
                 @endforeach
             </div>
 

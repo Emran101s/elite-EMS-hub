@@ -154,7 +154,7 @@
         {{-- AI assistant --}}
         <div class="rounded-2xl border border-line bg-gradient-to-br from-white to-page/60 p-3.5">
             <div class="flex items-center gap-2">
-                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#7C5CFF] to-gold-500 text-white shadow"><x-icon name="sparkles" class="h-3.5 w-3.5" /></span>
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--plasma-lit)] to-[var(--gold-lit)] text-white shadow"><x-icon name="sparkles" class="h-3.5 w-3.5" /></span>
                 <span class="text-micro font-bold uppercase tracking-[0.14em] text-navy-700">AI Assistant</span>
                 <span class="ml-auto rounded-full bg-navy-50 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-wide text-navy-400">Beta</span>
             </div>

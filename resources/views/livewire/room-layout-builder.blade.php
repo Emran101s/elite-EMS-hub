@@ -151,7 +151,7 @@
 
                 <div class="mx-auto shrink-0" style="width:960px;">
                     <div x-ref="canvas" @pointerdown.self="$wire.selectElement('')" class="relative rounded-xl border border-line"
-                         style="width:960px; height:560px; background: #FBFCFE;
+                         style="width:960px; height:560px; background: var(--hull);
                             @if(!$scale) background-image:
                                 linear-gradient(var(--color-line) 1px, transparent 1px),
                                 linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
@@ -163,7 +163,7 @@
                                  style="left:{{ $offX }}px; top:{{ $offY }}px; width:{{ $venW }}px; height:{{ $venH }}px; background:
                                     linear-gradient(var(--color-line) 1px, transparent 1px) 0 0 / 100% {{ round($gridPx) }}px,
                                     linear-gradient(90deg, var(--color-line) 1px, transparent 1px) 0 0 / {{ round($gridPx) }}px 100%,
-                                    #FFFFFF;"></div>
+                                    var(--plate);"></div>
                             {{-- width ruler (top) --}}
                             <span class="pointer-events-none absolute -translate-x-1/2 rounded bg-white px-1.5 text-eyebrow font-bold text-navy-500"
                                   style="left:{{ $offX + $venW / 2 }}px; top:{{ max(2, $offY - 16) }}px;">↔ {{ $fmtM($roomW) }} m</span>

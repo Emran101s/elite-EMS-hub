@@ -303,7 +303,7 @@
                     <button type="button" wire:click="setLens('{{ $key }}')"
                             @class(['flex h-8 items-center gap-1.5 rounded-lg px-3 text-micro font-bold transition', 'text-white' => $lens === $key, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $lens !== $key])
                             @style(['background: '.$hex => $lens === $key])>
-                        <span class="h-2 w-2 rounded-full" style="background: {{ $lens === $key ? '#fff' : $hex }}"></span>{{ $label }}
+                        <span class="h-2 w-2 rounded-full" style="background: {{ $lens === $key ? 'var(--chrome-ink)' : $hex }}"></span>{{ $label }}
                         <span class="opacity-60">{{ $lensCounts[$key] }}</span>
                     </button>
                 @endforeach

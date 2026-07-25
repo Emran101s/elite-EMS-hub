@@ -97,38 +97,38 @@
     }
 
     $stageStyles = [
-        'stage' => ['bg' => '#0B1F3A', 'fg' => '#D4AF37', 'rad' => '10px', 'label' => 'STAGE'],
-        'screen' => ['bg' => '#1E293B', 'fg' => '#E2E8F0', 'rad' => '4px', 'label' => 'SCREEN'],
-        'podium' => ['bg' => '#0B1F3A', 'fg' => '#D4AF37', 'rad' => '6px 6px 3px 3px', 'label' => '◆'],
-        'entrance' => ['bg' => '#EEF2F8', 'fg' => '#0B1F3A', 'rad' => '4px', 'label' => 'ENTRY'],
-        'booth' => ['bg' => '#334155', 'fg' => '#E2E8F0', 'rad' => '4px', 'label' => 'TRANS. BOOTH'],
+        'stage' => ['bg' => 'var(--chrome)', 'fg' => 'var(--gold-lit)', 'rad' => '10px', 'label' => 'STAGE'],
+        'screen' => ['bg' => 'var(--chrome-2)', 'fg' => 'var(--chrome-ink-2)', 'rad' => '4px', 'label' => 'SCREEN'],
+        'podium' => ['bg' => 'var(--chrome)', 'fg' => 'var(--gold-lit)', 'rad' => '6px 6px 3px 3px', 'label' => '◆'],
+        'entrance' => ['bg' => 'var(--deck)', 'fg' => 'var(--ink)', 'rad' => '4px', 'label' => 'ENTRY'],
+        'booth' => ['bg' => 'var(--chrome-2)', 'fg' => 'var(--chrome-ink-2)', 'rad' => '4px', 'label' => 'TRANS. BOOTH'],
     ];
 @endphp
 
 @if ($staging)
     @php $s = $stageStyles[$type]; @endphp
-    <div style="width:{{ $w }}px; height:{{ $h }}px; border-radius:{{ $s['rad'] }}; background:{{ $s['bg'] }}; {{ $type === 'entrance' ? 'border:1.5px dashed #94A3B8;' : '' }} color:{{ $s['fg'] }}; display:flex; align-items:center; justify-content:center; font-size:{{ $type === 'podium' ? 12 : 9 }}px; font-weight:bold; letter-spacing:2px; text-align:center; overflow:hidden;">
+    <div style="width:{{ $w }}px; height:{{ $h }}px; border-radius:{{ $s['rad'] }}; background:{{ $s['bg'] }}; {{ $type === 'entrance' ? 'border:1.5px dashed var(--ink-4);' : '' }} color:{{ $s['fg'] }}; display:flex; align-items:center; justify-content:center; font-size:{{ $type === 'podium' ? 12 : 9 }}px; font-weight:bold; letter-spacing:2px; text-align:center; overflow:hidden;">
         {{ $s['label'] }}
     </div>
 @elseif ($type === 'chair')
     {{-- A chair, drawn at its true footprint: seat fills the box, a back bar on one edge. --}}
     <div style="position:relative; width:{{ $w }}px; height:{{ $h }}px;">
-        <div style="position:absolute; inset:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; border-radius:{{ $accurate ? max(2, round($w * 0.16)).'px' : '4px' }}; background:#334155;"></div>
-        <div style="position:absolute; left:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; right:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; top:{{ $accurate ? max(1, round($h * 0.08)) : 3 }}px; height:{{ $accurate ? max(2, round($h * 0.22)) : 4 }}px; border-radius:{{ $accurate ? max(2, round($w * 0.12)).'px' : '3px' }}; background:#0B1F3A;"></div>
+        <div style="position:absolute; inset:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; border-radius:{{ $accurate ? max(2, round($w * 0.16)).'px' : '4px' }}; background:var(--chrome-2);"></div>
+        <div style="position:absolute; left:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; right:{{ $accurate ? max(1, round($w * 0.08)) : 3 }}px; top:{{ $accurate ? max(1, round($h * 0.08)) : 3 }}px; height:{{ $accurate ? max(2, round($h * 0.22)) : 4 }}px; border-radius:{{ $accurate ? max(2, round($w * 0.12)).'px' : '3px' }}; background:var(--chrome);"></div>
     </div>
 @else
     <div style="position:relative; width:{{ $w }}px; height:{{ $h }}px;">
         @if ($table)
             @php [$tx, $ty, $tw, $th, $trad] = $table; @endphp
-            <div style="position:absolute; left:{{ $tx }}px; top:{{ $ty }}px; width:{{ $tw }}px; height:{{ $th }}px; border-radius:{{ $trad }}; background:#EEF2F8; border:1.5px solid #94A3B8;"></div>
+            <div style="position:absolute; left:{{ $tx }}px; top:{{ $ty }}px; width:{{ $tw }}px; height:{{ $th }}px; border-radius:{{ $trad }}; background:var(--deck); border:1.5px solid var(--ink-4);"></div>
             @if ($type === 'ushape')
-                <div style="position:absolute; left:44px; top:14px; width:{{ $w - 66 }}px; height:16px; border-radius:8px; background:#EEF2F8; border:1.5px solid #94A3B8;"></div>
-                <div style="position:absolute; left:{{ $w - 38 }}px; top:14px; width:16px; height:{{ $h - 28 }}px; border-radius:8px; background:#EEF2F8; border:1.5px solid #94A3B8;"></div>
+                <div style="position:absolute; left:44px; top:14px; width:{{ $w - 66 }}px; height:16px; border-radius:8px; background:var(--deck); border:1.5px solid var(--ink-4);"></div>
+                <div style="position:absolute; left:{{ $w - 38 }}px; top:14px; width:16px; height:{{ $h - 28 }}px; border-radius:8px; background:var(--deck); border:1.5px solid var(--ink-4);"></div>
             @endif
         @endif
 
         @foreach ($chairs as [$cx, $cy])
-            <div style="position:absolute; left:{{ round($cx, 1) }}px; top:{{ round($cy, 1) }}px; width:{{ $chairPx }}px; height:{{ $chairPx }}px; border-radius:{{ $chairR }}px; background:#0B1F3A;"></div>
+            <div style="position:absolute; left:{{ round($cx, 1) }}px; top:{{ round($cy, 1) }}px; width:{{ $chairPx }}px; height:{{ $chairPx }}px; border-radius:{{ $chairR }}px; background:var(--chrome);"></div>
         @endforeach
     </div>
 @endif

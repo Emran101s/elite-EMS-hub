@@ -1,6 +1,6 @@
 <div class="mx-auto max-w-6xl">
     @php
-        $stageHex = ['lead' => '#94A3B8', 'proposal' => 'var(--color-info)', 'confirmed' => '#06B6D4'];
+        $stageHex = ['lead' => 'var(--ink-4)', 'proposal' => 'var(--ion-lit)', 'confirmed' => 'var(--vital-lit)'];
         $pvName = trim($name) ?: 'Untitled event';
         $pvClient = trim($new_client) ?: optional($clients->firstWhere('id', (int) $client_id))->name;
         $pvStart = $starts_at ? \Illuminate\Support\Carbon::parse($starts_at) : null;
@@ -54,7 +54,7 @@
                             <button type="button" wire:click="$set('statusPill', '{{ $pill }}')"
                                     @class(['flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition', 'text-white' => $statusPill === $pill, 'border-line text-navy-500 hover:border-navy-200' => $statusPill !== $pill])
                                     @style(['background: '.$stageHex[$pill].'; border-color: '.$stageHex[$pill] => $statusPill === $pill])>
-                                <span class="h-2 w-2 rounded-full" style="background: {{ $statusPill === $pill ? '#fff' : $stageHex[$pill] }}"></span>{{ $label }}
+                                <span class="h-2 w-2 rounded-full" style="background: {{ $statusPill === $pill ? 'var(--chrome-ink)' : $stageHex[$pill] }}"></span>{{ $label }}
                             </button>
                         @endforeach
                     </div>
