@@ -341,8 +341,23 @@
     }
     .o-shell__evtmeta { margin-top: 2px; font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap; }
     .o-shell__ribbonend { margin-left: auto; display: flex; align-items: center; gap: var(--o-3); }
+    .o-shell__owner {
+        display: flex; align-items: center; gap: 7px;
+        font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap;
+    }
+    @media (max-width: 1400px) { .o-shell__owner span:last-child { display: none; } }
     .o-shell__ribbonend .o-search { min-width: 200px; }
     .o-shell__ribbonend .o-search span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 1b — breadcrumb */
+    .o-shell__crumbs {
+        display: flex; align-items: center; gap: var(--o-2); flex-wrap: wrap;
+        padding: var(--o-3) var(--o-5) 0;
+        font: var(--t-body-sm); color: var(--ink-3);
+    }
+    .o-shell__crumbs a { color: var(--ink-3); transition: color var(--d-fast) var(--ease-out); }
+    .o-shell__crumbs a:hover { color: var(--ink); }
+    .o-shell__crumbs [aria-current="page"] { color: var(--ink); font-weight: 600; }
 
     /* 2 — KPI ribbon */
     .o-shell__kpis { padding: var(--o-4) var(--o-5) 0; }
@@ -377,11 +392,30 @@
 
     /* Collapse, per the brief: the arc becomes an icon rail below 1280px and
        disappears below 900px, where the dock is the only navigation. */
-    @media (max-width: 1400px) { .o-shell__rails { width: 288px; } }
-    @media (max-width: 1279px) {
-        .o-arc { width: 64px; }
-        .o-arc__label, .o-arc__core { display: none; }
-        .o-arc__node { width: 44px; }
+    @media (max-width: 1600px) { .o-shell__rails { width: 296px; } }
+    /* The arc costs 336px and the rails ~300px, so the workspace only has room
+       for the full orbit on a wide screen. Below that it becomes the icon rail
+       the brief specifies — same information architecture, 64px instead. */
+    @media (max-width: 1599px) {
+        /* Nodes are absolutely placed on the arc, and .o-arc clips overflow — so
+           collapsing has to unset that positioning, not just narrow the box, or
+           half the modules would be clipped away and unreachable. */
+        .o-shell__body .o-arc {
+            width: 56px; min-height: 0 !important;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: var(--o-2) 0;
+            background: var(--hull); border: 1px solid var(--rim); border-radius: var(--r-lg);
+        }
+        .o-arc__rings, .o-arc__core, .o-arc__next, .o-arc__label { display: none; }
+        .o-arc__node {
+            position: static !important; transform: none !important;
+            left: auto !important; top: auto !important; width: auto;
+        }
+        .o-arc__node:hover .o-arc__dot { transform: none; }
+    }
+    @media (max-width: 1099px) {
+        .o-shell__body { flex-wrap: wrap; }
+        .o-shell__rails { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     }
     @media (max-width: 899px) {
         .o-arc { display: none; }

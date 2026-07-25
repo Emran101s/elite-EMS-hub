@@ -2,6 +2,7 @@
     'event' => null,
     'module' => 'overview',
     'kpis' => [],        // the dark ribbon — see App\Support\OrbitShell::kpis()
+    'title' => null,
 ])
 {{--
     The ORBIT shell. Structure per docs/orbit-ia-brief.md:
@@ -44,12 +45,21 @@
             <h1 class="o-shell__evt">{{ $event->name }}</h1>
             <p class="o-shell__evtmeta">
                 {{ $event->starts_at?->format('M j') }} – {{ ($event->ends_at ?? $event->starts_at)?->format('M j, Y') }}
-                @if ($event->city) · {{ $event->city }} @endif
+                @if ($event->venue?->name) · {{ $event->venue->name }} @elseif ($event->city) · {{ $event->city }} @endif
+                @if ($event->client?->name) · {{ $event->client->name }} @endif
             </p>
         </div>
     @endif
 
     <div class="o-shell__ribbonend">
+        {{-- Who owns this event. Ops staff ask "who do I chase" constantly, so the
+             manager stays on the ribbon rather than buried in a settings tab. --}}
+        @if ($event?->projectManager)
+            <span class="o-shell__owner" title="Project manager: {{ $event->projectManager->name }}">
+                <x-orbit.avatar :name="$event->projectManager->name" size="sm" />
+                <span>{{ $event->projectManager->name }}</span>
+            </span>
+        @endif
         <x-orbit.search />
         <x-orbit.btn variant="ghost" size="sm"><x-orbit.icon name="spark" :size="15" /> Ask AI</x-orbit.btn>
         <x-orbit.btn variant="gold" icon aria-label="Create"><x-orbit.icon name="plus" :size="17" /></x-orbit.btn>
@@ -58,6 +68,19 @@
         <x-orbit.avatar :name="auth()->user()?->name" />
     </div>
 </header>
+
+{{-- ══ 1b. BREADCRUMB — where you are, as a landmark screen readers can jump to ══ --}}
+@if ($event)
+    <nav aria-label="Breadcrumb" class="o-shell__crumbs">
+        <a href="{{ route('home') }}">Command Center</a>
+        <span aria-hidden="true">›</span>
+        <a href="{{ route('events.index') }}">Events</a>
+        <span aria-hidden="true">›</span>
+        <a href="{{ route('events.hub', $event) }}">{{ $event->name }}</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">{{ \App\Models\Event::moduleLabel($module) }}</span>
+    </nav>
+@endif
 
 {{-- ══ 2. KPI RIBBON — the real-time snapshot ══ --}}
 @if ($kpis)
