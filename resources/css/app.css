@@ -7,85 +7,105 @@
 @import 'tailwindcss';
 
 @import './orbit-theme.css';
-@import './orbit.css';
+
+/* Into the components layer on purpose. orbit.css carries a global reset
+   (`button{color:inherit}`, `a{color:inherit}`), and Tailwind v4 puts its
+   utilities in a cascade layer — unlayered CSS beats every layered rule
+   regardless of specificity, so an unlayered import silently overrides
+   text-* on every button and link. Layering it restores the normal order:
+   ORBIT's reset sits under Tailwind's utilities, not over them. */
+@import './orbit.css' layer(components);
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/livewire/src/**/*.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* ORBIT type. Numbers use --font-mono so currency columns align. */
+    --font-sans: var(--font-ui);
+    --font-serif: var(--font-display);
+    --font-mono: var(--font-data);
 
-    /* Brand — Elite Business Hub */
-    --color-navy-50: #eef2f8;
-    --color-navy-100: #d8e0ee;
-    --color-navy-200: #b3c2dd;
-    --color-navy-300: #869cc4;
-    --color-navy-400: #5877a5;
-    --color-navy-500: #3a5885;
-    --color-navy-600: #2a4368;
-    --color-navy-700: #1e3352;
-    --color-navy-800: #142842;
-    --color-navy-900: #0b1f3a;
-    --color-navy-950: #061426;
+    /* ── Brand → ORBIT ──────────────────────────────────────────────
+       These names are kept so 1,700 existing utility classes keep working,
+       but every value now resolves to an ORBIT token. Change a colour in
+       orbit-system.html and re-run setup-orbit.sh — never here.
 
-    --color-gold-50: #fbf7ea;
-    --color-gold-100: #f5ebc8;
-    --color-gold-200: #ecda94;
-    --color-gold-300: #e3c766;
-    --color-gold-400: #dbba4a;
-    --color-gold-500: #d4af37;
-    --color-gold-600: #b8942c;
-    --color-gold-700: #937423;
-    --color-gold-800: #6f571c;
-    --color-gold-900: #4c3b14;
+       The scale is mapped by LUMINANCE, not by name: navy-900 is the
+       darkest thing on screen, so it becomes --chrome; navy-50 is the
+       lightest fill, so it becomes --deck. Both themes define the same
+       names, so this inverts correctly when data-theme flips. */
+    --color-navy-50: var(--deck);
+    --color-navy-100: var(--rim);
+    --color-navy-200: var(--rim-hi);
+    --color-navy-300: var(--ink-4);
+    --color-navy-400: var(--ink-4);
+    --color-navy-500: var(--ink-3);
+    --color-navy-600: var(--ink-3);
+    --color-navy-700: var(--ink-2);
+    --color-navy-800: var(--chrome-2);
+    --color-navy-900: var(--chrome);
+    --color-navy-950: var(--chrome);
+
+    /* THE TWO GOLDS. 50–400 are FILLS and gold-on-dark text; 500–900 are
+       READ colours for text and icons on a light surface. --gold-lit as
+       text on light is 1.69:1, so it never appears above gold-400. */
+    --color-gold-50: var(--gold-tint);
+    --color-gold-100: var(--gold-tint);
+    --color-gold-200: var(--gold-3);
+    --color-gold-300: var(--gold-lit);
+    --color-gold-400: var(--gold-lit);
+    --color-gold-500: var(--gold-2);
+    --color-gold-600: var(--gold);
+    --color-gold-700: var(--gold);
+    --color-gold-800: var(--gold);
+    --color-gold-900: var(--gold);
 
     /* Surfaces & lines */
-    --color-page: #eff3f8;
-    --color-line: #e2e8f0;
+    --color-page: var(--abyss);
+    --color-line: var(--rim);
 
     /* Micro type scale — use these instead of arbitrary text-[0.Nrem] values. */
     --text-2xs: 0.7rem;
     --text-2xs--line-height: 1rem;
     --text-3xs: 0.6rem;
     --text-3xs--line-height: 0.85rem;
-    --color-fill: #e8edf4; /* gray-filled inputs (wizard/forms) */
-    --color-ink: #0b1f3a;
-    --color-muted: #64748b;
+    --color-fill: var(--deck); /* gray-filled inputs (wizard/forms) */
+    --color-ink: var(--ink);
+    --color-muted: var(--ink-3);
 
-    /* Health semantics: on track / in progress / at risk */
-    --color-track: #22c55e;
-    --color-warn: #f59e0b;
-    --color-risk: #ef4444;
+    /* Health semantics: on track / in progress / at risk. These paint bars
+       and rings, so they take the -lit fills. */
+    --color-track: var(--vital-lit);
+    --color-warn: var(--flare-lit);
+    --color-risk: var(--critical-lit);
 
     /* ── Status semantics ───────────────────────────────────────────
-       Use these, not raw palette colours. Views currently reach for
-       emerald/red/amber/sky/blue/indigo directly, which is why "info"
-       has five different blues. Values match what is already on screen,
-       so adopting a token changes nothing visually. */
-    --color-success: #10b981;
-    --color-success-soft: #d1fae5;
-    --color-success-ink: #047857;
-    --color-warning: #f59e0b;
-    --color-warning-soft: #fef3c7;
-    --color-warning-ink: #b45309;
-    --color-danger: #ef4444;
-    --color-danger-soft: #fee2e2;
-    --color-danger-ink: #b91c1c;
-    --color-info: #3b82f6;
-    --color-info-soft: #dbeafe;
-    --color-info-ink: #1d4ed8;
-    --color-neutral: #64748b;
-    --color-neutral-soft: #f1f5f9;
+       Use these, not raw palette colours. Mapped onto the ORBIT signal
+       tokens: base = the READ colour, -soft = the tint behind it, -ink =
+       the same read colour (ORBIT has one read value per signal, not two).
+       App\Support\Tone is the server-side half of this same mapping. */
+    --color-success: var(--vital);
+    --color-success-soft: var(--vital-tint);
+    --color-success-ink: var(--vital);
+    --color-warning: var(--flare);
+    --color-warning-soft: var(--flare-tint);
+    --color-warning-ink: var(--flare);
+    --color-danger: var(--critical);
+    --color-danger-soft: var(--critical-tint);
+    --color-danger-ink: var(--critical);
+    --color-info: var(--ion);
+    --color-info-soft: var(--ion-tint);
+    --color-info-ink: var(--ion);
+    --color-neutral: var(--ink-3);
+    --color-neutral-soft: var(--deck);
 
-    /* On-dark variants. The base semantics are tuned for the light canvas and
-       go muddy on the navy strips, so the dashboard reached for red-400 /
-       emerald-400 / blue-400 / amber-400 by hand. Same intent, lighter tint. */
-    --color-success-on-dark: #34d399;
-    --color-warning-on-dark: #fbbf24;
-    --color-danger-on-dark: #f87171;
-    --color-info-on-dark: #60a5fa;
+    /* On-dark variants — used on the chrome bars, where the -lit value is the
+       one that reads. This is the two-golds rule applied to every signal. */
+    --color-success-on-dark: var(--vital-lit);
+    --color-warning-on-dark: var(--flare-lit);
+    --color-danger-on-dark: var(--critical-lit);
+    --color-info-on-dark: var(--ion-lit);
 
     /* ── Type scale ─────────────────────────────────────────────────
        Eight steps replacing the 41 sizes currently in use (31 of them

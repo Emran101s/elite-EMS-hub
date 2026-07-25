@@ -161,7 +161,7 @@
                         </div>
 
                         <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-navy-600">
-                            <input type="checkbox" wire:model.live="guestsOnlyUnassigned" class="h-3.5 w-3.5 rounded border-line text-gold-500 focus:ring-gold-400">
+                            <input type="checkbox" wire:model.live="guestsOnlyUnassigned" class="h-3.5 w-3.5 rounded border-line text-gold-700 focus:ring-gold-400">
                             Unassigned only
                         </label>
 
@@ -240,7 +240,7 @@
                                 <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
                                     <th class="w-10 px-4 py-2">
                                         <input type="checkbox" @checked($allPicked) wire:click="toggleGuestPage({{ json_encode($guestIds) }})"
-                                               class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                               class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
                                     </th>
                                     <th class="px-3 py-2">Guest</th>
                                     <th class="px-3 py-2">Airline</th>
@@ -258,7 +258,7 @@
                                         @class(['border-b border-line last:border-0 cursor-grab transition hover:bg-page/50', 'bg-gold-50/40' => $picked])>
                                         <td class="px-4 py-2">
                                             <input type="checkbox" @checked($picked) wire:click="toggleGuest({{ $g->id }})"
-                                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
                                         </td>
                                         <td class="px-3 py-2">
                                             <span class="flex items-center gap-1.5">
@@ -616,7 +616,7 @@
 
                                             @if ($m->seats() === 0 || $m->manifest->count() < $m->seats())
                                                 <tr class="bg-white/60">
-                                                    <td class="px-4 py-2 text-center text-eyebrow font-bold text-gold-500">{{ $m->manifest->count() + 1 }}</td>
+                                                    <td class="px-4 py-2 text-center text-eyebrow font-bold text-gold-700">{{ $m->manifest->count() + 1 }}</td>
                                                     <td class="px-1 py-2" colspan="7">
                                                         <input type="text" wire:model="newPax.{{ $m->id }}"
                                                                wire:keydown.enter="addPassenger({{ $m->id }})"
@@ -810,7 +810,7 @@
                     </div>
                     <div class="flex items-end">
                         <label class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line px-3 transition hover:border-gold-300">
-                            <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400">
+                            <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400">
                             <span class="text-xs font-semibold text-navy-900">Priority / VIP run</span>
                         </label>
                     </div>

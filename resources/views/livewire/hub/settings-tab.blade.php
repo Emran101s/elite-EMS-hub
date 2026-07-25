@@ -6,27 +6,27 @@
             <nav class="sticky top-[112px] space-y-0.5">
                 <p class="mb-2 px-2 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-300">Event Settings</p>
                 <a href="#s-details" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">01</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">01</span>
                     <span class="truncate">Event Details</span>
                 </a>
                 <a href="#s-ownership" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">02</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">02</span>
                     <span class="truncate">Ownership & Lifecycle</span>
                 </a>
                 <a href="#s-team" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">03</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">03</span>
                     <span class="truncate">Event Team</span>
                 </a>
                 <a href="#s-theme" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">04</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">04</span>
                     <span class="truncate">Avatar & Theme</span>
                 </a>
                 <a href="#s-modules" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">05</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">05</span>
                     <span class="truncate">Enabled Modules</span>
                 </a>
                 <a href="#s-manage" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
-                    <span class="w-4 text-right text-eyebrow font-bold text-gold-500/70">06</span>
+                    <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">06</span>
                     <span class="truncate">Manage Event</span>
                 </a>
             </nav>

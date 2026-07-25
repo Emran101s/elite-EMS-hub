@@ -167,7 +167,7 @@
                             <div class="flex items-center gap-3">
                                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-900 text-eyebrow font-bold text-gold-400">{{ $a->initials() }}</span>
                                 <div class="min-w-0">
-                                    <p class="flex items-center gap-1.5 truncate text-sm font-bold text-navy-900">{{ $a->name }}@if ($a->vip)<span class="text-gold-500" title="VIP">★</span>@endif</p>
+                                    <p class="flex items-center gap-1.5 truncate text-sm font-bold text-navy-900">{{ $a->name }}@if ($a->vip)<span class="text-gold-700" title="VIP">★</span>@endif</p>
                                     <p class="truncate text-micro text-muted">{{ $a->organization ?: $a->email ?: '—' }}</p>
                                 </div>
                             </div>
@@ -248,7 +248,7 @@
                         </div>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2">
-                        <label class="flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model="vip" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400"> ★ VIP</label>
+                        <label class="flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model="vip" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400"> ★ VIP</label>
                         <div>
                             <label class="field-label !mb-1 !text-eyebrow">Dietary / access</label>
                             <input type="text" wire:model="dietary" class="input h-9 text-sm" placeholder="e.g. Vegetarian, wheelchair">

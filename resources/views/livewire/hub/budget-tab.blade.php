@@ -333,7 +333,7 @@
                                         </div>
                                     @empty
                                         <button type="button" wire:click="newLine('{{ $catArg }}')" @disabled($event->budgetLocked()) class="flex w-full items-center gap-2 border-b border-line bg-page/[0.15] px-3 py-2 pl-9 text-left text-micro text-muted transition hover:bg-page/40 hover:text-gold-700 disabled:opacity-50">
-                                            <span class="text-gold-500">＋</span> Add a line to {{ $section['name'] }}
+                                            <span class="text-gold-700">＋</span> Add a line to {{ $section['name'] }}
                                         </button>
                                     @endforelse
                                     @if ($secItems->isNotEmpty() && ! $event->budgetLocked())
@@ -349,7 +349,7 @@
                             {{-- ── add a category ── --}}
                             @unless ($event->budgetLocked())
                                 <button type="button" x-on:click="document.querySelector('[data-newcat]')?.focus()" class="flex w-full items-center gap-1.5 border-b border-line bg-page/30 px-3 py-2.5 text-left text-micro font-bold text-navy-500 transition hover:bg-navy-50/60 hover:text-navy-700">
-                                    <span class="text-gold-500">＋</span> Add New Category
+                                    <span class="text-gold-700">＋</span> Add New Category
                                 </button>
                             @endunless
 
@@ -365,7 +365,7 @@
                             </div>
                             <div class="flex items-center gap-2 border-t border-line bg-gold-50/40 px-3 py-2">
                                 <span class="flex min-w-0 flex-1 items-center gap-1.5">
-                                    <span class="shrink-0 text-micro text-gold-500">⚑</span>
+                                    <span class="shrink-0 text-micro text-gold-700">⚑</span>
                                     <span class="truncate text-xs font-bold text-navy-900">Management fee</span>
                                     <span class="inline-flex shrink-0 items-center rounded-md border border-gold-300 bg-white px-1 text-eyebrow font-bold text-gold-700">
                                         <input type="number" min="0" max="100" step="0.5" wire:model.live.debounce.500ms="feePct" class="w-7 bg-transparent text-center focus:outline-none">%

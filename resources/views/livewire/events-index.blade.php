@@ -114,7 +114,7 @@
                             <input type="checkbox" @checked($allOnPage)
                                    wire:click="toggleSelectPage({{ json_encode($pageIds) }})"
                                    title="Select everything on this page"
-                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
                         </th>
                         <th class="px-3 py-3">Event</th>
                         <th class="px-3 py-3">Client</th>
@@ -136,7 +136,7 @@
                             @class(['group border-b border-line last:border-0 transition hover:bg-page/50', 'bg-gold-50/40' => $ticked])>
                             <td class="px-4 py-3">
                                 <input type="checkbox" @checked($ticked) wire:click="toggleSelect({{ $event->id }})"
-                                       class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
+                                       class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
                             </td>
                             <td class="px-3 py-3">
                                 <a href="{{ route('events.hub', $event) }}" class="block">

@@ -59,7 +59,7 @@
         @endif
 
         <button type="button" wire:click.stop="toggleFavorite({{ $event->id }})"
-                class="absolute right-2 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow ring-1 backdrop-blur transition {{ $favorite ? 'text-gold-500 ring-gold-300' : 'text-navy-300 ring-line hover:text-gold-500' }} {{ $favorite || $selected ? '' : 'opacity-0 group-hover:opacity-100' }}"
+                class="absolute right-2 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow ring-1 backdrop-blur transition {{ $favorite ? 'text-gold-700 ring-gold-300' : 'text-navy-300 ring-line hover:text-gold-700' }} {{ $favorite || $selected ? '' : 'opacity-0 group-hover:opacity-100' }}"
                 aria-label="{{ $favorite ? 'Unstar' : 'Star' }} event">
             <x-icon name="star" class="h-3.5 w-3.5 {{ $favorite ? 'fill-current' : '' }}" />
         </button>

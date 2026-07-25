@@ -12,7 +12,7 @@
         {{-- header: type · ref · menu --}}
         <div class="flex items-center justify-between gap-2">
             <span class="flex items-center gap-1.5 text-3xs font-bold uppercase tracking-[0.16em] text-navy-400">
-                <x-icon name="clipboard" class="h-3 w-3 text-gold-500" /> Task
+                <x-icon name="clipboard" class="h-3 w-3 text-gold-700" /> Task
             </span>
             <div class="flex items-center gap-1.5">
                 <span class="rounded-md bg-navy-50 px-1.5 py-0.5 font-mono text-3xs font-bold text-navy-500">{{ $ref }}</span>

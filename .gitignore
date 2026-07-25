@@ -31,3 +31,7 @@ Thumbs.db
 
 # Local database backups
 storage/backups/
+
+# Local render helper for visual checks (see docs/orbit-migration-plan.md)
+/_render.php
+/public/_preview.html

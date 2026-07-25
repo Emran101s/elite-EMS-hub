@@ -231,7 +231,7 @@
                                         {{-- the next empty room --}}
                                         @if ($b->rooms->count() < $b->rooms_count)
                                             <tr class="bg-white/60">
-                                                <td class="px-4 py-2 text-center text-eyebrow font-bold text-gold-500">{{ $b->rooms->count() + 1 }}</td>
+                                                <td class="px-4 py-2 text-center text-eyebrow font-bold text-gold-700">{{ $b->rooms->count() + 1 }}</td>
                                                 <td class="px-1 py-2" colspan="9">
                                                     <input type="text" wire:model="newGuest.{{ $b->id }}"
                                                            wire:keydown.enter="addRoom({{ $b->id }})"

@@ -349,7 +349,7 @@
                     {{-- Document module --}}
                     <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                         <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-500">01</span>
+                            <span class="pf text-lg font-bold text-gold-700">01</span>
                             <span class="flex-1">
                                 <span class="block text-sm font-bold text-navy-900">Document</span>
                                 <span class="block text-eyebrow text-muted">Title, counterparty and language</span>
@@ -436,7 +436,7 @@
                     {{-- Parties module --}}
                     <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                         <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-500">01</span>
+                            <span class="pf text-lg font-bold text-gold-700">01</span>
                             <span class="flex-1">
                                 <span class="block text-sm font-bold text-navy-900">Parties</span>
                                 <span class="block text-eyebrow text-muted">The client entities and their shares</span>
@@ -478,7 +478,7 @@
                     {{-- Value & schedule module --}}
                     <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                         <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-500">02</span>
+                            <span class="pf text-lg font-bold text-gold-700">02</span>
                             <span class="flex-1">
                                 <span class="block text-sm font-bold text-navy-900">Value &amp; Payments</span>
                                 <span class="block text-eyebrow text-muted">{{ $fmt($est) }} · {{ count($f['payment_schedule'] ?? []) }} installments</span>
@@ -539,7 +539,7 @@
                     {{-- Assumptions module --}}
                     <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                         <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-500">03</span>
+                            <span class="pf text-lg font-bold text-gold-700">03</span>
                             <span class="flex-1">
                                 <span class="block text-sm font-bold text-navy-900">Budget Assumptions</span>
                                 <span class="block text-eyebrow text-muted">What the estimate is based on</span>
@@ -559,7 +559,7 @@
                 {{-- Body module --}}
                 <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                     <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-500">{{ $type === 'client' ? '04' : '02' }}</span>
+                        <span class="pf text-lg font-bold text-gold-700">{{ $type === 'client' ? '04' : '02' }}</span>
                         <span class="flex-1">
                             <span class="block text-sm font-bold text-navy-900">Contract Body</span>
                             <span class="block text-eyebrow text-muted">{{ count($data['blocks'] ?? []) }} clauses · every one editable</span>
@@ -665,7 +665,7 @@
                 {{-- Signatories module --}}
                 <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                     <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-500">{{ $type === 'client' ? '05' : '03' }}</span>
+                        <span class="pf text-lg font-bold text-gold-700">{{ $type === 'client' ? '05' : '03' }}</span>
                         <span class="flex-1">
                             <span class="block text-sm font-bold text-navy-900">Signatories</span>
                             <span class="block text-eyebrow text-muted">{{ $signatories->whereNotNull('signed_at')->count() }} of {{ $signatories->count() }} signed</span>

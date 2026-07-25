@@ -20,7 +20,7 @@
     <ul class="space-y-1">
         @forelse ($data[$key] ?? [] as $i => $line)
             <li wire:key="{{ $key }}-{{ $i }}" class="group flex items-center gap-3">
-                <span class="text-gold-500">▸</span>
+                <span class="text-gold-700">▸</span>
                 <input type="text" wire:model.live.debounce.500ms="data.{{ $key }}.{{ $i }}" class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-1.5 text-sm text-navy-700 transition focus:border-gold-400 focus:outline-none focus:ring-0">
                 <button type="button" wire:click="removeRow('{{ $key }}', {{ $i }})" class="shrink-0 text-micro text-navy-200 opacity-0 transition hover:text-risk group-hover:opacity-100">✕</button>
             </li>

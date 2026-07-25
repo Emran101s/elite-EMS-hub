@@ -120,7 +120,7 @@
                         <input type="number" step="0.01" min="0" wire:model="fee" class="input h-10 text-sm" placeholder="0">
                     </div>
                     <label class="flex items-center gap-2 sm:col-span-2">
-                        <input type="checkbox" wire:model="is_keynote" class="h-4 w-4 rounded border-navy-300 text-gold-500">
+                        <input type="checkbox" wire:model="is_keynote" class="h-4 w-4 rounded border-navy-300 text-gold-700">
                         <span class="text-xs font-semibold text-navy-800">Keynote speaker</span>
                     </label>
                     <div class="sm:col-span-2">

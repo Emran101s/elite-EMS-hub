@@ -81,7 +81,7 @@
         {{-- actions --}}
         <div class="flex shrink-0 items-center gap-1 pr-3">
             <button type="button" wire:click="toggleFavorite({{ $event->id }})"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg transition {{ in_array($event->id, $favoriteIds) ? 'text-gold-500' : 'text-navy-300 hover:text-gold-500' }}"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg transition {{ in_array($event->id, $favoriteIds) ? 'text-gold-700' : 'text-navy-300 hover:text-gold-700' }}"
                     aria-label="Star event"><x-icon name="star" class="h-4 w-4 {{ in_array($event->id, $favoriteIds) ? 'fill-current' : '' }}" /></button>
 
             <details class="relative" wire:key="menu-{{ $event->id }}">

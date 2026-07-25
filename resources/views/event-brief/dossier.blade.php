@@ -46,7 +46,7 @@
     {{-- How-to strip --}}
     @if (! empty($meta['how_to']))
         <div class="flex items-start gap-3 border-b border-line bg-gold-50/50 px-12 py-4">
-            <span class="mt-0.5 text-gold-500">✦</span>
+            <span class="mt-0.5 text-gold-700">✦</span>
             <p class="pf text-[0.8rem] italic leading-relaxed text-navy-500">{{ $meta['how_to'] }}</p>
         </div>
     @endif
@@ -80,7 +80,7 @@
                     <ul class="space-y-2">
                         @foreach ($data[$key] ?? [] as $line)
                             @if (trim($line) !== '')
-                                <li class="flex items-start gap-3"><span class="mt-0.5 text-gold-500">▸</span><span class="text-[0.92rem] text-navy-700">{{ $line }}</span></li>
+                                <li class="flex items-start gap-3"><span class="mt-0.5 text-gold-700">▸</span><span class="text-[0.92rem] text-navy-700">{{ $line }}</span></li>
                             @endif
                         @endforeach
                     </ul>

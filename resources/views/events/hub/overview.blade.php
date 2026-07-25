@@ -371,7 +371,7 @@
 
     <div class="card p-5">
         <div class="mb-3 flex items-center justify-between">
-            <h3 class="flex items-center gap-1.5 pf text-base font-bold text-navy-900"><span class="text-gold-500">✦</span> AI Recommendations</h3>
+            <h3 class="flex items-center gap-1.5 pf text-base font-bold text-navy-900"><span class="text-gold-700">✦</span> AI Recommendations</h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="space-y-2.5 text-xs text-navy-800">

@@ -642,10 +642,10 @@
                             @endif
                         </div>
                         @if (in_array($fam, ['grid'], true))
-                            <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model="seatLabels" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400"> Row labels (A, B, C…)</label>
+                            <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model="seatLabels" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400"> Row labels (A, B, C…)</label>
                         @endif
                         @if ($fam !== 'perimeter')
-                            <label class="mt-2 flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model.live="seatFill" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400"> Fill the room to maximum capacity</label>
+                            <label class="mt-2 flex items-center gap-2 text-xs font-semibold text-navy-700"><input type="checkbox" wire:model.live="seatFill" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400"> Fill the room to maximum capacity</label>
                         @endif
                     @endif
 

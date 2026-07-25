@@ -80,7 +80,7 @@
                         <span class="min-w-0 flex-1">
                             <span class="flex items-center gap-1">
                                 <span class="truncate text-xs font-semibold text-white group-hover:text-gold-300">{{ $event->name }}</span>
-                                @if ($event->radar_vip)<span class="text-3xs text-gold-500" title="VIP">★</span>@endif
+                                @if ($event->radar_vip)<span class="text-3xs text-gold-700" title="VIP">★</span>@endif
                             </span>
                             <span class="block truncate text-3xs text-white/40">{{ $event->radar_status }}</span>
                         </span>

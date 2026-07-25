@@ -91,7 +91,7 @@
             {{-- Cover module --}}
             <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
                 <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                    <span class="pf text-lg font-bold text-gold-500">00</span>
+                    <span class="pf text-lg font-bold text-gold-700">00</span>
                     <span class="flex-1">
                         <span class="block text-sm font-bold text-navy-900">Cover</span>
                         <span class="block text-eyebrow text-muted">Subtitle, parties and how to use this document</span>
@@ -124,7 +124,7 @@
                 @endphp
                 <section x-data="{ open: false }" wire:key="mod-{{ $key }}" class="overflow-hidden rounded-2xl border border-line bg-white">
                     <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-500">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
+                        <span class="pf text-lg font-bold text-gold-700">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
                         <span class="flex-1">
                             <span class="block text-sm font-bold text-navy-900">{{ $title }}</span>
                             <span class="block text-eyebrow text-muted">{{ $summary }}</span>

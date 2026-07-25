@@ -104,12 +104,12 @@
             <div class="rounded-2xl border border-line bg-page/40 p-3.5">
                 <p class="eyebrow mb-2">Quick Actions</p>
                 <div class="space-y-1.5">
-                    <button type="button" wire:click="addTask" class="qa-btn w-full"><x-icon name="clipboard" class="h-3.5 w-3.5 text-gold-500" /> New Task</button>
-                    <button type="button" wire:click="setFocus('mine')" class="qa-btn w-full"><x-icon name="users" class="h-3.5 w-3.5 text-gold-500" /> My Tasks</button>
-                    <button type="button" wire:click="setFocus('overdue')" class="qa-btn w-full"><x-icon name="bell" class="h-3.5 w-3.5 text-gold-500" /> Overdue</button>
-                    <button type="button" wire:click="setView('timeline')" class="qa-btn w-full"><x-icon name="chart" class="h-3.5 w-3.5 text-gold-500" /> Timeline</button>
-                    <a href="{{ route('events.hub', [$event, 'tab' => 'planning']) }}" class="qa-btn w-full"><x-icon name="list" class="h-3.5 w-3.5 text-gold-500" /> Open Plan</a>
-                    <a href="{{ route('events.hub', [$event, 'tab' => 'reports']) }}" class="qa-btn w-full"><x-icon name="archive" class="h-3.5 w-3.5 text-gold-500" /> Reports</a>
+                    <button type="button" wire:click="addTask" class="qa-btn w-full"><x-icon name="clipboard" class="h-3.5 w-3.5 text-gold-700" /> New Task</button>
+                    <button type="button" wire:click="setFocus('mine')" class="qa-btn w-full"><x-icon name="users" class="h-3.5 w-3.5 text-gold-700" /> My Tasks</button>
+                    <button type="button" wire:click="setFocus('overdue')" class="qa-btn w-full"><x-icon name="bell" class="h-3.5 w-3.5 text-gold-700" /> Overdue</button>
+                    <button type="button" wire:click="setView('timeline')" class="qa-btn w-full"><x-icon name="chart" class="h-3.5 w-3.5 text-gold-700" /> Timeline</button>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'planning']) }}" class="qa-btn w-full"><x-icon name="list" class="h-3.5 w-3.5 text-gold-700" /> Open Plan</a>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'reports']) }}" class="qa-btn w-full"><x-icon name="archive" class="h-3.5 w-3.5 text-gold-700" /> Reports</a>
                 </div>
             </div>
         </div>

@@ -66,7 +66,7 @@
 
             {{-- what we need --}}
             <div class="flex items-baseline gap-3 border-b border-navy-900 pb-1.5">
-                <span class="text-lg font-black text-gold-500">01</span>
+                <span class="text-lg font-black text-gold-700">01</span>
                 <h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Vehicles required</h2>
             </div>
             <table class="mt-3 w-full border-collapse">
@@ -96,7 +96,7 @@
 
             {{-- the schedule they're quoting against --}}
             <div class="mt-8 flex items-baseline gap-3 border-b border-navy-900 pb-1.5">
-                <span class="text-lg font-black text-gold-500">02</span>
+                <span class="text-lg font-black text-gold-700">02</span>
                 <h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Movement schedule</h2>
             </div>
             <table class="mt-3 w-full border-collapse">
@@ -126,7 +126,7 @@
             <div class="mt-8 grid grid-cols-2 gap-8">
                 <div>
                     <div class="flex items-baseline gap-3 border-b border-navy-900 pb-1.5">
-                        <span class="text-lg font-black text-gold-500">03</span>
+                        <span class="text-lg font-black text-gold-700">03</span>
                         <h2 class="text-base font-black uppercase tracking-wide text-navy-900">Driver requirements</h2>
                     </div>
                     <ul class="mt-3 list-disc space-y-1.5 pl-5 text-xs text-navy-700">
@@ -138,7 +138,7 @@
                 </div>
                 <div>
                     <div class="flex items-baseline gap-3 border-b border-navy-900 pb-1.5">
-                        <span class="text-lg font-black text-gold-500">04</span>
+                        <span class="text-lg font-black text-gold-700">04</span>
                         <h2 class="text-base font-black uppercase tracking-wide text-navy-900">Terms</h2>
                     </div>
                     <ul class="mt-3 list-disc space-y-1.5 pl-5 text-xs text-navy-700">

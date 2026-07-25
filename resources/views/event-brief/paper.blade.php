@@ -59,7 +59,7 @@
 
             <div class="mb-6 last:mb-0">
                 <div class="break-inside-avoid flex items-baseline gap-3 border-b border-navy-900 pb-1">
-                    <span class="pf text-lg font-black leading-none text-gold-500/50">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
+                    <span class="pf text-lg font-black leading-none text-gold-700/50">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
                     <h3 class="pf text-sm font-black text-navy-900">{{ $title }}</h3>
                 </div>
 

@@ -75,7 +75,7 @@
     <div class="px-14 py-12">
 
         {{-- scope --}}
-        <div class=" flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">01</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Scope</h2></div>
+        <div class=" flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">01</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Scope</h2></div>
         <p class="mt-3 max-w-[62ch] text-sm leading-relaxed text-navy-700">
             This plan covers all ground transportation for {{ $event->name }} across
             {{ $summary['days'] }} {{ \Illuminate\Support\Str::plural('day', $summary['days']) }}:
@@ -87,7 +87,7 @@
         </p>
 
         {{-- movement summary by leg --}}
-        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">02</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Movement summary</h2></div>
+        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">02</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Movement summary</h2></div>
         <div class="mt-3 grid grid-cols-3 gap-4">
             @foreach ($byLeg as $leg)
                 <div class="avoid-break rounded-xl border border-line px-4 py-3">
@@ -99,7 +99,7 @@
         </div>
 
         {{-- routes --}}
-        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">03</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Routes</h2></div>
+        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">03</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Routes</h2></div>
         <table class="mt-3 w-full border-collapse">
             <thead>
                 <tr class="border-b border-line text-left text-3xs font-bold uppercase tracking-wide text-navy-500">
@@ -120,7 +120,7 @@
         </table>
 
         {{-- fleet --}}
-        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">04</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Vehicles</h2></div>
+        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">04</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Vehicles</h2></div>
         <table class="mt-3 w-full border-collapse">
             <thead>
                 <tr class="border-b border-line text-left text-3xs font-bold uppercase tracking-wide text-navy-500">
@@ -148,7 +148,7 @@
 
         {{-- cost — a total only, never a breakdown of margin --}}
         @if ($costCents > 0)
-            <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">05</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Investment</h2></div>
+            <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">05</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Investment</h2></div>
             <div class="mt-3 flex items-center justify-between rounded-xl bg-navy-900 px-6 py-4 text-white">
                 <p class="text-sm font-semibold text-white/70">Estimated transportation cost</p>
                 <p class="text-2xl font-black">{{ $event->money($costCents) }}</p>
@@ -159,7 +159,7 @@
         @endif
 
         {{-- assumptions --}}
-        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-500">{{ $costCents > 0 ? '06' : '05' }}</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Notes & assumptions</h2></div>
+        <div class="mt-10 flex items-baseline gap-3 border-b border-navy-900 pb-1.5"><span class="text-lg font-black text-gold-700">{{ $costCents > 0 ? '06' : '05' }}</span><h2 class="text-lg font-black uppercase tracking-wide text-navy-900">Notes & assumptions</h2></div>
         <ul class="mt-3 max-w-[62ch] list-disc space-y-1.5 pl-5 text-sm text-navy-700">
             <li>Timings follow confirmed flight schedules; airport pickups adjust automatically to actual landing times.</li>
             <li>Vehicle counts assume the passenger numbers known at issue and scale with confirmed attendance.</li>

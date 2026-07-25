@@ -121,7 +121,7 @@
     {{-- ── AI recommendation: radius 22, padding 18 ── --}}
     <div class="mt-4 rounded-[22px] border border-line bg-white p-[18px] shadow-[0_4px_14px_rgba(15,23,42,0.04)]">
         <p class="mb-2.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-navy-900">
-            <span class="text-gold-500">✦</span> AI Recommendation
+            <span class="text-gold-700">✦</span> AI Recommendation
         </p>
         <ul class="space-y-1.5 text-[13px] text-navy-800">
             @forelse (array_slice($ai['attention'], 0, 3) as $point)

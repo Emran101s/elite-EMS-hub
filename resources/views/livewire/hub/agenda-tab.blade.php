@@ -385,7 +385,7 @@
                     {{-- footer --}}
                     <div class="flex items-center justify-end gap-3 rounded-b-[24px] border-t border-line bg-page/60 px-6 py-4">
                         <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold text-navy-700">
-                            <input type="checkbox" wire:model="flagged" class="h-4 w-4 rounded border-line text-gold-500 focus:ring-gold-400">
+                            <input type="checkbox" wire:model="flagged" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400">
                             <span>🚩 Flag</span>
                         </label>
                         @if ($editingId)
