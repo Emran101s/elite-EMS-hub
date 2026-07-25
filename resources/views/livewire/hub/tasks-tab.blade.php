@@ -11,7 +11,7 @@
     </div>
 
     {{-- ══════════ WORKSPACE + CONTROL CENTER ══════════ --}}
-    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_440px]">
 
         {{-- ── left: toolbar + active view ── --}}
         <div class="min-w-0">
