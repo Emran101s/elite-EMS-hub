@@ -1,7 +1,7 @@
-@props(['title' => null, 'subtitle' => null, 'crumbs' => null, 'hideTitleRow' => false])
+@props(['title' => null, 'subtitle' => null, 'crumbs' => null, 'hideTitleRow' => false, 'railNav' => null])
 
 @php
-    // Platform-wide primary navigation — lives on top, every page.
+    // Platform-wide primary navigation — lives in the floating right rail.
     $nav = [
         ['Command Center', 'home', 'home', request()->routeIs('home')],
         ['Events', 'events.index', 'calendar', request()->routeIs('events.*')],
@@ -36,7 +36,7 @@
             <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/50 to-transparent"></div>
             <div class="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.12),transparent_65%)]"></div>
 
-            <div class="relative mx-auto flex h-[68px] max-w-[1680px] items-center gap-4 px-4 lg:px-7">
+            <div class="relative flex h-[68px] items-center gap-4 px-4 lg:px-7">
                 {{-- brand — or the event's own identity when inside an event --}}
                 @isset($identity)
                     {{ $identity }}
@@ -102,34 +102,27 @@
             </div>
         </header>
 
-        {{-- ══ 2. FLOATING TOP NAV DOCK — primary navigation, every page ══ --}}
-        <div class="sticky top-[68px] z-40 bg-page/85 px-4 pb-1 pt-3 backdrop-blur-sm lg:px-7">
-            <div class="mx-auto max-w-[1680px]">
-                {{-- flex-wrap (not overflow-x-auto): a scroll container would clip the
-                     "More" dropdown that hangs below the bar. At 1680px the row fits. --}}
-                <nav class="glass-dock flex flex-wrap items-center gap-1 px-2 py-1.5" aria-label="Primary">
-                    @isset($topnav)
-                        {{-- the event module nav, provided by the hub --}}
-                        {{ $topnav }}
-                    @else
-                        @foreach ($nav as [$label, $route, $icon, $active])
-                            <a href="{{ route($route) }}" @if ($active) aria-current="page" @endif
-                               @class([
-                                   'flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 text-[0.8rem] font-semibold transition-all duration-150',
-                                   'bg-navy-900 text-white shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' => $active,
-                                   'text-navy-500 hover:bg-white hover:text-navy-900' => ! $active,
-                               ])>
-                                <x-icon :name="$icon" @class(['h-4 w-4 shrink-0', 'text-gold-400' => $active, 'text-navy-400' => ! $active]) />
-                                {{ $label }}
-                            </a>
-                        @endforeach
-                    @endisset
-                </nav>
-            </div>
-        </div>
+        {{-- ══ 2. FLOATING RIGHT MODULE RAIL — primary navigation, every page.
+             Icons only, labels fly out on hover; floats a margin off the right
+             edge with a gap from the content (which is padded to clear it). ══ --}}
+        @php
+            // Event pages pass their module list as $railNav; global pages use the
+            // platform nav (route names → hrefs here).
+            $rail = $railNav ?? collect($nav)->map(fn ($n) => [$n[0], route($n[1]), $n[2], $n[3]])->all();
+        @endphp
+        <nav class="glass-dock fixed right-3 top-[84px] z-40 flex max-h-[calc(100vh-6rem)] flex-col items-center gap-1 overflow-y-auto p-1.5 scrollbar-none lg:right-5" aria-label="Primary">
+            @foreach ($rail as [$label, $href, $icon, $active])
+                <a href="{{ $href }}" title="{{ $label }}" @if ($active) aria-current="page" @endif
+                   class="group/rail relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition {{ $active ? 'bg-navy-900 text-gold-400 shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' : 'text-navy-400 hover:bg-white hover:text-navy-900' }}">
+                    <x-icon :name="$icon" class="h-5 w-5" />
+                    {{-- hover label flyout to the left --}}
+                    <span class="pointer-events-none absolute right-full z-50 mr-2.5 whitespace-nowrap rounded-lg bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover/rail:opacity-100">{{ $label }}</span>
+                </a>
+            @endforeach
+        </nav>
 
-        {{-- ══ 3. CONTENT ══ --}}
-        <main class="mx-auto max-w-[1680px] px-4 pb-14 pt-4 lg:px-7">
+        {{-- ══ 3. CONTENT — full-width fluid, padded on the right to clear the rail ══ --}}
+        <main class="px-4 pb-14 pt-4 pr-[70px] lg:px-8 lg:pr-[92px]">
             {{-- breadcrumb — always present for navigation context --}}
             @if ($title && ! request()->routeIs('home'))
                 <div class="{{ $hideTitleRow ? 'mb-3' : 'mb-4' }}">

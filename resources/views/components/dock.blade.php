@@ -27,7 +27,7 @@
             @click="$store.dock.toggle('{{ $id }}')"
             :aria-expanded="$store.dock.is('{{ $id }}')"
             :title="$store.dock.is('{{ $id }}') ? 'Hide {{ $label }}' : 'Show {{ $label }}'"
-            class="pointer-events-auto fixed right-0 z-30 flex h-24 items-center gap-1.5 rounded-l-xl py-4 pl-2 pr-1.5 text-white shadow-float transition-all hover:pl-2.5"
+            class="pointer-events-auto fixed right-[68px] z-30 flex h-24 items-center gap-1.5 rounded-l-xl py-4 pl-2 pr-1.5 text-white shadow-float transition-all hover:pl-2.5"
             style="background: {{ $color }}; top: calc(50% + {{ $order * 104 }}px - 52px)">
         <span class="text-eyebrow font-black uppercase"
               style="writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.14em">{{ $label }}</span>
@@ -48,7 +48,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-x-0 scale-100"
          x-transition:leave-end="opacity-0 translate-x-16 scale-[0.98]"
-         class="pointer-events-auto fixed right-9 top-1/2 z-30 flex max-h-[88vh] max-w-[92vw] -translate-y-1/2 flex-col overflow-hidden rounded-l-2xl border border-r-0 border-line bg-white shadow-overlay"
+         class="pointer-events-auto fixed right-[104px] top-1/2 z-30 flex max-h-[88vh] max-w-[92vw] -translate-y-1/2 flex-col overflow-hidden rounded-l-2xl border border-r-0 border-line bg-white shadow-overlay"
          style="width: {{ $width }}">
 
         @unless ($bare)

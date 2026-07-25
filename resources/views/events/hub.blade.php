@@ -1,7 +1,24 @@
-@php $theme = $event->theme(); @endphp
+@php
+    $theme = $event->theme();
+    // Event module navigation → the floating right rail (icons, all enabled modules).
+    $modNav = [
+        'overview' => ['Overview', 'home'], 'planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'],
+        'budget' => ['Budget', 'currency'], 'agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification'],
+        'venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'],
+        'accommodation' => ['Accommodation', 'home'], 'exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'],
+        'attendees' => ['Attendees', 'users'], 'brief' => ['Event Brief', 'clipboard'], 'contract' => ['Contract', 'identification'],
+        'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification'], 'files' => ['Documents', 'archive'],
+        'reports' => ['Reports', 'chart'], 'ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog'],
+    ];
+    $moduleRail = collect($modNav)
+        ->filter(fn ($m, $k) => in_array($k, ['overview', 'ai', 'settings'], true) || $event->moduleEnabled($k))
+        ->map(fn ($m, $k) => [$m[0], route('events.hub', [$event, 'tab' => $k]), $m[1], $tab === $k])
+        ->values()->all();
+@endphp
 
 <x-layouts.app :title="$event->name . ' — Event Hub'"
                :hide-title-row="true"
+               :rail-nav="$moduleRail"
                :subtitle="str($event->type)->replace('_', ' ')->title() . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))"
                :crumbs="[
                    ['label' => 'Command Center', 'href' => route('home')],
@@ -25,53 +42,6 @@
     </a>
 </x-slot:identity>
 
-{{-- ══ Event module navigation — the top dock ══ --}}
-<x-slot:topnav>
-    @php
-        $modNav = [
-            'overview' => ['Overview', 'home'], 'planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'],
-            'budget' => ['Budget', 'currency'], 'agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification'],
-            'venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'],
-            'accommodation' => ['Accommodation', 'home'], 'exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'],
-            'attendees' => ['Attendees', 'users'], 'brief' => ['Event Brief', 'clipboard'], 'contract' => ['Contract', 'identification'],
-            'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification'], 'files' => ['Documents', 'archive'],
-            'reports' => ['Reports', 'chart'], 'ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog'],
-        ];
-        $always = ['overview', 'ai', 'settings'];
-        $enabledNav = collect($modNav)->filter(fn ($m, $k) => in_array($k, $always, true) || $event->moduleEnabled($k));
-        $primaryNav = $enabledNav->take(10);
-        $overflowNav = $enabledNav->slice(10);
-    @endphp
-    @foreach ($primaryNav as $key => [$label, $icon])
-        <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}" @if ($tab === $key) aria-current="page" @endif
-           @class([
-               'flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-[0.8rem] font-semibold transition-all duration-150',
-               'bg-navy-900 text-white shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' => $tab === $key,
-               'text-navy-500 hover:bg-white hover:text-navy-900' => $tab !== $key,
-           ])>
-            <x-icon :name="$icon" @class(['h-4 w-4 shrink-0', 'text-gold-400' => $tab === $key, 'text-navy-400' => $tab !== $key]) />
-            {{ $label }}
-        </a>
-    @endforeach
-    @if ($overflowNav->isNotEmpty())
-        <details class="relative shrink-0" x-data @click.outside="$el.open = false">
-            <summary class="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-xl px-3 text-[0.8rem] font-semibold transition [&::-webkit-details-marker]:hidden {{ $overflowNav->has($tab) ? 'bg-navy-900 text-white' : 'text-navy-500 hover:bg-white hover:text-navy-900' }}">
-                <span class="text-base leading-none">···</span> More
-            </summary>
-            <div class="absolute right-0 z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-line bg-white p-1 shadow-overlay">
-                @foreach ($overflowNav as $key => [$label, $icon])
-                    <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
-                       @class(['flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition', 'bg-navy-900 text-white' => $tab === $key, 'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => $tab !== $key])>
-                        <x-icon :name="$icon" @class(['h-4 w-4', 'text-gold-400' => $tab === $key, 'text-navy-400' => $tab !== $key]) /> {{ $label }}
-                    </a>
-                @endforeach
-                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}#s-modules" class="mt-0.5 flex items-center gap-2.5 rounded-lg border-t border-line px-3 py-2 text-xs font-semibold text-navy-500 transition hover:bg-gold-50/50 hover:text-navy-900">
-                    <span class="text-sm leading-none">＋</span> Manage modules
-                </a>
-            </div>
-        </details>
-    @endif
-</x-slot:topnav>
 
 {{--
     When a dock opens, the page steps aside instead of being covered — you open
