@@ -454,6 +454,46 @@ class Event extends Model
         return $this->hasMany(EventIncomeItem::class);
     }
 
+    /**
+     * Income streams for the P&L — one source of truth shared by the Budget tab
+     * and the Overview so the money story is identical on both. The client
+     * CONTRACT is the source of truth for the client deal: collected = payments
+     * booked against it, plus any manually logged client income.
+     *
+     * @return array{client:int,sponsors:int,exhibitors:int,other:int,total:int,collected:int,target:int}
+     */
+    public function incomeSummary(): array
+    {
+        $contract = $this->contract;
+        $contractCollected = $contract ? (int) $contract->payments->sum('paid_cents') : 0;
+        $contractValue = $contract
+            ? (int) ($contract->data['financials']['contract_value_cents']
+                ?? $contract->data['financials']['estimated_total_cents'] ?? 0)
+            : 0;
+
+        $items = $this->incomeItems;
+        $manualClient = (int) $items->where('source', 'client')->sum('amount_cents');
+        $other = (int) $items->where('source', '!=', 'client')->sum('amount_cents');
+        $client = $manualClient + $contractCollected;
+        $sponsors = (int) $this->sponsors->sum('amount_cents');
+        $exhibitors = (int) $this->exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents');
+
+        $clientTarget = ($this->client_target_cents ?? 0) ?: $contractValue;
+        $target = $clientTarget + (int) ($this->sponsorship_target_cents ?? 0)
+            + (int) ($this->exhibition_target_cents ?? 0) + $other;
+
+        return [
+            'client' => $client,
+            'sponsors' => $sponsors,
+            'exhibitors' => $exhibitors,
+            'other' => $other,
+            'total' => $client + $sponsors + $exhibitors + $other,
+            'collected' => $contractCollected + $manualClient
+                + (int) $this->sponsors->sum('paid_cents') + (int) $this->exhibitors->sum('paid_cents') + $other,
+            'target' => $target,
+        ];
+    }
+
     public function attendees(): HasMany
     {
         return $this->hasMany(EventAttendee::class);

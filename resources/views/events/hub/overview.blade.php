@@ -271,6 +271,24 @@
                 @endforeach
             </ul>
         </div>
+
+        {{-- P&L strip: income (client contract + sponsors + exhibitors + other) vs cost --}}
+        @php $inc = $event->incomeSummary(); $net = $inc['total'] - $estimated; @endphp
+        <div class="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-center">
+            <div>
+                <p class="text-[0.55rem] font-bold uppercase tracking-wide text-muted">Income</p>
+                <p class="text-xs font-black text-emerald-700">{{ $sym }}{{ $gap }}{{ \Illuminate\Support\Number::abbreviate($inc['total'] / 100) }}</p>
+            </div>
+            <div>
+                <p class="text-[0.55rem] font-bold uppercase tracking-wide text-muted">Cost (est.)</p>
+                <p class="text-xs font-black text-navy-900">{{ $sym }}{{ $gap }}{{ \Illuminate\Support\Number::abbreviate($estimated / 100) }}</p>
+            </div>
+            <div>
+                <p class="text-[0.55rem] font-bold uppercase tracking-wide text-muted">Net</p>
+                <p class="text-xs font-black {{ $net < 0 ? 'text-red-600' : 'text-emerald-700' }}">{{ $net < 0 ? '−' : '+' }}{{ $sym }}{{ $gap }}{{ \Illuminate\Support\Number::abbreviate(abs($net) / 100) }}</p>
+            </div>
+        </div>
+
         <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" class="mt-3 block text-center text-xs font-semibold text-[#3B82F6] hover:underline">View Budget Details →</a>
     </div>
 
