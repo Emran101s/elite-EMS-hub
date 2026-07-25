@@ -21,6 +21,7 @@
     </style>
 </head>
 <body>
+<x-orbit.sprite />
 <div class="wrap">
     <div class="head">
         <div>
@@ -93,6 +94,76 @@
             <x-orbit.stat label="Days left" value="105" foot="Nov 12, 2026" />
             <x-orbit.stat label="Open tasks" value="17" tone="critical" :delta="['dir'=>'down','text'=>'3']" foot="overdue" />
             <x-orbit.stat label="Suppliers" value="42" unit="2 issues" />
+        </div>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">KPI strip — chrome, so it stays dark in both themes</span>
+        <x-orbit.kpi-strip :items="[
+            ['k' => 'Participants', 'v' => '650', 'f' => 'new this week', 'delta' => ['dir' => 'up', 'text' => '12']],
+            ['k' => 'Budget used', 'v' => '61%', 'f' => 'of JD 350,000'],
+            ['k' => 'Open tasks', 'v' => '17', 'f' => 'overdue', 'delta' => ['dir' => 'down', 'text' => '3'], 'tone' => 'critical'],
+            ['k' => 'Days to go', 'v' => '105', 'f' => 'Nov 8, 2026'],
+        ]">
+            <x-slot:cta><x-orbit.btn variant="solid" size="sm">Open hub</x-orbit.btn></x-slot:cta>
+        </x-orbit.kpi-strip>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Arc navigation — positions are computed, never hand-placed</span>
+        <div style="display:flex;gap:26px;align-items:center">
+            <x-orbit.nav-arc current="tasks"
+                :inner="[
+                    ['key' => 'overview', 'label' => 'Overview', 'icon' => 'home'],
+                    ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'task', 'count' => 17],
+                    ['key' => 'agenda', 'label' => 'Agenda', 'icon' => 'cal'],
+                    ['key' => 'budget', 'label' => 'Budget', 'icon' => 'money'],
+                    ['key' => 'suppliers', 'label' => 'Suppliers', 'icon' => 'truck', 'count' => 2],
+                ]"
+                :outer="[
+                    ['key' => 'venue', 'label' => 'Venue', 'icon' => 'venue'],
+                    ['key' => 'speakers', 'label' => 'Speakers', 'icon' => 'mic'],
+                    ['key' => 'sponsors', 'label' => 'Sponsors', 'icon' => 'star'],
+                    ['key' => 'docs', 'label' => 'Documents', 'icon' => 'doc'],
+                ]">
+                <x-slot:core>
+                    <span class="o-eyebrow" style="color:var(--chrome-ink-3)">Summit</span>
+                    <span class="o-metric-sm" style="color:var(--chrome-ink)">105d</span>
+                </x-slot:core>
+            </x-orbit.nav-arc>
+            <p class="o-mute" style="max-width:38ch;margin:0">
+                Inner ring: the five modules touched daily, at r=150 in 30° steps.
+                Outer ring: structure, at r=190 in 32° steps. The angles are identical
+                on every event because the component computes them.
+            </p>
+        </div>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Dock — nine slots, last is always AI</span>
+        <x-orbit.dock current="tasks" :items="[
+            ['key' => 'home', 'label' => 'Home', 'icon' => 'home'],
+            ['key' => 'events', 'label' => 'Events', 'icon' => 'grid'],
+            ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'task', 'count' => 17],
+            ['key' => 'agenda', 'label' => 'Agenda', 'icon' => 'cal'],
+            ['key' => 'money', 'label' => 'Finance', 'icon' => 'money'],
+            ['key' => 'people', 'label' => 'People', 'icon' => 'users'],
+            ['key' => 'docs', 'label' => 'Docs', 'icon' => 'doc'],
+            ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart'],
+            ['key' => 'ai', 'label' => 'AI', 'icon' => 'spark'],
+        ]" />
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Task cards — overdue is the only thing allowed to pulse</span>
+        <div class="g3">
+            <x-orbit.task-card title="Book main stage lighting" module="Venue" due="Jul 20, 2026"
+                               status="in_progress" overdue :progress="20"
+                               :assignees="['Alyona Dolgopolova']" :extra="2" />
+            <x-orbit.task-card title="Confirm interpreter booths" module="Agenda" due="Aug 2, 2026"
+                               status="in_progress" :progress="60" :assignees="['Emran Itan']" />
+            <x-orbit.task-card title="Sign catering agreement" module="Suppliers" due="Aug 14, 2026"
+                               status="pending" :progress="0" :assignees="['Nour Haddad', 'Sara Malki']" />
         </div>
     </div>
 

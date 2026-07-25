@@ -31,6 +31,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">
+    {{-- ORBIT icon defs — once per document; <x-orbit.icon> references them by id. --}}
+    <x-orbit.sprite />
+
     <div class="min-h-screen">
 
         {{-- ══ 1. PREMIUM EXECUTIVE HEADER — dark navy, gold accent ══ --}}
