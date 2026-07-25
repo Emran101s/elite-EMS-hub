@@ -103,9 +103,11 @@
         </header>
 
         {{-- ══ 2. FLOATING TOP NAV DOCK — primary navigation, every page ══ --}}
-        <div class="sticky top-[68px] z-30 bg-page/85 px-4 pb-1 pt-3 backdrop-blur-sm lg:px-7">
+        <div class="sticky top-[68px] z-40 bg-page/85 px-4 pb-1 pt-3 backdrop-blur-sm lg:px-7">
             <div class="mx-auto max-w-[1680px]">
-                <nav class="glass-dock flex items-center gap-1 overflow-x-auto px-2 py-1.5 scrollbar-none" aria-label="Primary">
+                {{-- flex-wrap (not overflow-x-auto): a scroll container would clip the
+                     "More" dropdown that hangs below the bar. At 1680px the row fits. --}}
+                <nav class="glass-dock flex flex-wrap items-center gap-1 px-2 py-1.5" aria-label="Primary">
                     @isset($topnav)
                         {{-- the event module nav, provided by the hub --}}
                         {{ $topnav }}
