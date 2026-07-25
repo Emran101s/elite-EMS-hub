@@ -182,7 +182,7 @@
 <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 
     {{-- Speakers --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="card p-5 transition hover:border-gold-300">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card p-5">
         <div class="flex items-center justify-between">
             <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
             <span class="text-3xs font-bold text-muted">roster</span>
@@ -194,7 +194,7 @@
     </a>
 
     {{-- Brief --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="card p-5 transition hover:border-gold-300">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card p-5">
         <div class="flex items-center justify-between">
             <h3 class="pf text-sm font-bold text-navy-900">Event Brief</h3>
         </div>
@@ -203,7 +203,7 @@
     </a>
 
     {{-- Contract --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="card p-5 transition hover:border-gold-300">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card p-5">
         <div class="flex items-center justify-between">
             <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
             @if ($contract)<span class="text-3xs font-bold text-muted">{{ $contract->reference }}</span>@endif
