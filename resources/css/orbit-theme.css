@@ -1,0 +1,36 @@
+/* Tailwind wiring — import AFTER tailwindcss in app.css.
+   Exposes ORBIT tokens as Tailwind theme values so utilities and
+   components read from one source. */
+
+@theme {
+  --color-canvas:   var(--abyss);
+  --color-surface:  var(--hull);
+  --color-raised:   var(--deck);
+  --color-rim:      var(--rim);
+  --color-rim-hi:   var(--rim-hi);
+  --color-ink:      var(--ink);
+  --color-ink-2:    var(--ink-2);
+  --color-ink-3:    var(--ink-3);
+  --color-ink-4:    var(--ink-4);
+  --color-iris:     var(--iris);
+  --color-iris-2:   var(--iris-2);
+  --color-gold:     var(--gold);
+  --color-vital:    var(--vital);
+  --color-ion:      var(--ion);
+  --color-flare:    var(--flare);
+  --color-critical: var(--critical);
+
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-sans:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --radius-xs: 8px;  --radius-sm: 11px; --radius-md: 16px;
+  --radius-lg: 22px; --radius-xl: 30px;
+}
+
+/* Documents always print light and without chrome. */
+@media print {
+  html { --void:#fff; --abyss:#fff; --hull:#fff; --plate:#fff; --deck:#fff; }
+  .o-dock, .o-arc, .o-topbar, .o-twin__tools, .o-ai { display: none !important; }
+  .o-panel, .o-card { box-shadow: none !important; break-inside: avoid; }
+}
