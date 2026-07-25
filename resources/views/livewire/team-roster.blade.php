@@ -25,51 +25,42 @@
         <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
     @endif
 
-    <div class="card overflow-x-auto">
-        <table class="w-full min-w-[620px]">
-            <thead>
-                <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
-                    <th class="px-5 py-2.5">Member</th>
-                    <th class="px-3 py-2.5">Email</th>
-                    <th class="px-3 py-2.5">Role</th>
-                    <th class="px-3 py-2.5 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($members as $m)
-                    <tr wire:key="m-{{ $m->id }}" wire:click="edit({{ $m->id }})" class="group cursor-pointer border-b border-line last:border-0 hover:bg-page/30">
-                        <td class="px-5 py-3">
-                            <div class="flex items-center gap-3">
-                                <x-user-avatar :user="$m" size="h-10 w-10" text="text-xs" />
-                                <div class="min-w-0">
-                                    <p class="truncate text-sm font-bold text-navy-900">{{ $m->name }}
-                                        @if ($m->id === auth()->id())<span class="ml-1 text-eyebrow font-semibold text-muted">(you)</span>@endif
-                                    </p>
-                                    <p class="truncate text-micro text-muted">{{ $m->title ?: '—' }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-3 py-3 text-xs text-navy-600">{{ $m->email }}</td>
-                        <td class="px-3 py-3">
-                            <span class="rounded-full px-2.5 py-0.5 text-eyebrow font-bold uppercase tracking-wide ring-1 {{ $roleTone[$m->role] ?? 'bg-navy-50 text-navy-500 ring-line' }}">{{ $m->roleLabel() }}</span>
-                        </td>
-                        <td class="px-3 py-3">
-                            <div class="flex items-center justify-end gap-1">
-                                <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
-                                @unless ($m->id === auth()->id())
-                                    <button type="button" wire:click.stop="delete({{ $m->id }})" wire:confirm="Remove {{ $m->name }} from the team?" class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
-                                @endunless
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="4" class="px-5 py-16 text-center">
-                        <p class="text-sm font-semibold text-navy-900">No team members yet</p>
-                        <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Add your first member</button>
-                    </td></tr>
-                @endforelse
-            </tbody>
-        </table>
+    {{-- user cards --}}
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        @forelse ($members as $m)
+            <div wire:key="m-{{ $m->id }}" class="group op-card">
+                <button type="button" wire:click="edit({{ $m->id }})" class="flex flex-1 flex-col p-5 text-left">
+                    <div class="flex items-start gap-3">
+                        <x-user-avatar :user="$m" size="h-12 w-12" text="text-sm" />
+                        <div class="min-w-0 flex-1">
+                            <p class="pf truncate text-sm font-bold text-navy-900">{{ $m->name }}@if ($m->id === auth()->id())<span class="ml-1 text-eyebrow font-semibold text-muted">(you)</span>@endif</p>
+                            <p class="truncate text-micro text-muted">{{ $m->title ?: '—' }}</p>
+                        </div>
+                        <span class="pill shrink-0 {{ $roleTone[$m->role] ?? 'bg-navy-50 text-navy-500 ring-1 ring-line' }}">{{ $m->roleLabel() }}</span>
+                    </div>
+                    @if ($m->email)
+                        <p class="mt-3 flex items-center gap-1.5 truncate text-micro text-navy-600"><x-icon name="identification" class="h-3 w-3 shrink-0 text-navy-300" />{{ $m->email }}</p>
+                    @endif
+                </button>
+
+                {{-- dark navy footer --}}
+                <div class="op-card-foot">
+                    <x-icon name="users" class="h-3 w-3 shrink-0 text-gold-400" />
+                    <span class="truncate text-eyebrow font-semibold text-white/80">{{ $m->roleLabel() }}</span>
+                    <div class="ml-auto flex items-center gap-1">
+                        <button type="button" wire:click="edit({{ $m->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-white/80 opacity-0 transition hover:bg-white/20 group-hover:opacity-100" title="Edit">✎</button>
+                        @unless ($m->id === auth()->id())
+                            <button type="button" wire:click="delete({{ $m->id }})" wire:confirm="Remove {{ $m->name }} from the team?" class="rounded-lg bg-red-400/15 px-1.5 py-1 text-eyebrow font-bold text-red-300 opacity-0 transition hover:bg-red-400/25 group-hover:opacity-100" title="Remove">✕</button>
+                        @endunless
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-span-full card px-6 py-16 text-center">
+                <p class="text-sm font-semibold text-navy-900">No team members yet</p>
+                <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Add your first member</button>
+            </div>
+        @endforelse
     </div>
     <p class="mt-3 text-center text-eyebrow text-muted">{{ $members->count() }} {{ str('member')->plural($members->count()) }}</p>
 
