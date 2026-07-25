@@ -16,21 +16,23 @@
     ];
 @endphp
 
-<div dusk="modal" class="fixed inset-0 z-50 flex overflow-y-auto bg-navy-900/40 p-4 backdrop-blur-sm {{ $align === 'center' ? 'items-center justify-center' : 'items-start justify-center pt-16' }}">
-    <div class="card w-full {{ $widths[$max] ?? $widths['xl'] }} shadow-overlay"
+<div dusk="modal" class="fixed inset-0 z-50 flex overflow-y-auto bg-navy-950/50 p-4 backdrop-blur-sm {{ $align === 'center' ? 'items-center justify-center' : 'items-start justify-center pt-16' }}">
+    <div class="card w-full !rounded-3xl {{ $widths[$max] ?? $widths['xl'] }} shadow-overlay"
          @if ($close) @click.outside="$wire.{{ $close }}" @endif>
 
         @if ($title)
-            <div class="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
-                <div class="min-w-0">
-                    <h3 class="pf text-h2 font-bold text-navy-900">{{ $title }}</h3>
+            {{-- dark navy accent header — the reference modal language --}}
+            <div class="relative flex items-start justify-between gap-4 overflow-hidden rounded-t-3xl bg-gradient-to-br from-navy-900 to-navy-950 px-6 py-4 text-white">
+                <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.24),transparent_70%)]"></div>
+                <div class="relative min-w-0">
+                    <h3 class="pf text-h2 font-bold text-white">{{ $title }}</h3>
                     @if ($subtitle)
-                        <p class="mt-0.5 text-micro text-muted">{{ $subtitle }}</p>
+                        <p class="mt-0.5 text-micro text-white/55">{{ $subtitle }}</p>
                     @endif
                 </div>
                 @if ($close)
                     <button type="button" wire:click="{{ $close }}"
-                            class="-me-1 shrink-0 rounded-md p-1 text-navy-400 transition hover:bg-page hover:text-navy-900"
+                            class="relative -me-1 shrink-0 rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
                             aria-label="Close">✕</button>
                 @endif
             </div>
