@@ -62,6 +62,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', CommandCenter::class)->name('home');
 
+    // ORBIT design system — the living visual source of truth (dark-first v1.0).
+    // Served raw (its CSS has @media/@keyframes that Blade would misparse).
+    Route::get('/design', fn () => response(
+        file_get_contents(resource_path('orbit/orbit-design-system.html'))
+    )->header('Content-Type', 'text/html'))->name('design');
+
     Route::get('/events', EventsIndex::class)->name('events.index');
 
     /*
