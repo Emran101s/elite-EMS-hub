@@ -1,168 +1,196 @@
-# ORBIT v2 — Migration Plan (Phase 0 Audit)
+# ORBIT migration plan — Phase 0 audit
 
-**Repo:** Elite Event Hub (Laravel 13 · Livewire 4 · Alpine · Tailwind v4)
-**Audit date:** 2026-07-25
-**Scope of this document:** Phase 0 only — inventory + mapping + sequenced plan. **No application code was changed.**
+**Design source of truth:** `orbit-system.html` (repo root) · served at `/design`
+**Spec:** `CLAUDE-CODE-BRIEF.md` · **Guardrails:** `CLAUDE.md`
+**Audited:** 25 Jul 2026, on `ops-modules-and-design-system` at `9e6f2c8`
 
----
+This replaces the earlier audit written against the dark-first ORBIT draft. That
+draft is superseded: ORBIT is **light-first**, gold is **two tokens with two
+jobs**, and chrome stays dark in both themes.
 
-## 0. Read-this-first context (important)
-
-Two facts materially affect this migration; both need a decision before Phase 1 starts.
-
-1. **The app already has a full, recently-shipped design system** — a *navy + white-glass + gold* "Command Center" language (tokens in `resources/css/app.css`, component classes `.card` / `.op-card` / `.cc-panel` / `.pill` / `.glass-dock`, plus the `x-*` Blade components). It is guarded by `tests/Feature/DesignSystemTest.php` (type-scale + no-hardcoded-brand-hex rules) and is green. **ORBIT v2 is a different system**, not a refinement of it:
-   - **Action colour:** ORBIT = **iris/indigo** everywhere; current = navy/gold. Gold in ORBIT is *prestige-only, max 3 per viewport*; current uses gold as the primary accent.
-   - **Type:** ORBIT = Inter (UI) + Instrument Serif (display) + **JetBrains Mono (all numbers)**; current = Instrument Sans + Spectral, numbers in the UI face.
-   - **No donuts** in ORBIT (`.o-ring` single value, `.o-meter` splits); current uses donuts/rings in Tasks, Plan, Budget, and the event ribbon.
-   Adopting ORBIT therefore **replaces** the current look, it does not layer onto it. That is consistent with ORBIT's own rule ("ask for a migration, not a redesign"), but the owner should confirm they want to retire the navy/gold system before Phase 1.
-
-2. **The ORBIT CSS is not generated yet.** `setup-orbit.sh` has **not** been run, and the source files live in `docs/orbit-handoff/`, not the repo root. So `resources/css/orbit-tokens.css` and `resources/css/orbit.css` **do not exist**. Session 1/2 both assume they do. **Prerequisite before Phase 1:** copy `orbit-v2-hub-system.html` + `setup-orbit.sh` to the repo root, run the script, add the four `@import` lines to `app.css`, commit. This audit read the tokens/classes directly from the HTML instead.
-
-Extracted from the HTML for reference: **64 design tokens** (`--iris`, `--gold`, `--vital`, `--ion`, `--flare`, `--critical`, `--abyss/hull/deck/rim`, `--ink…ink-4`, spacing `--o-1…o-20`, radii `--r-xs…r-xl`, `--t-body/-sm/-micro`, easings, durations) and **~140 component classes** (`.o-card .o-btn .o-badge .o-ring .o-meter .o-stat .o-kpistrip .o-row .o-table .o-arc .o-dock .o-stepper .o-twin .o-pulse .o-ai .o-alert .o-empty .o-field .o-seg .o-tabs .o-pin .o-metric .o-num …`).
+No application code was changed to produce this document.
 
 ---
 
-## 1. Inventory — every Blade view & Livewire component, grouped by module
+## 1. Inventory
 
-**Totals:** 143 Blade views · 34 Livewire components.
+**150 Blade views · 34 Livewire components.**
 
-### Shell / cross-cutting components
-| File | Type | Notes |
-|---|---|---|
-| `views/components/layouts/app.blade.php` | layout | header + right module rail + full-width main (current) |
-| `views/components/command-spine.blade.php` | component | old left sidebar — now **unused** |
-| `views/components/{brand,user-avatar,crumbs,icon,health-ring,donut,status-badge}.blade.php` | components | brand/atoms |
-| `views/components/{modal,field,empty,page-head,dock}.blade.php` | components | shell primitives |
-| `views/components/avatars/*` (7), `event-crest`, `event-avatar`, `event-card`, `event-preview` | components | generative event art (raw-colour, print-like) |
+### Livewire components by level
 
-### Command Center (portfolio home)
-`app/Livewire/CommandCenter.php` → `views/livewire/*` + `views/livewire/partials/{event-panel, events/detail}.blade.php`
-
-### Events portfolio
-`app/Livewire/EventsIndex.php` → `views/livewire/events-index.blade.php` + `partials/events/{card,detail}.blade.php`
-
-### Event Hub shell + module includes
-`views/events/hub.blade.php` (identity + rail + ribbon) → per-tab includes `views/events/hub/{overview,ai,reports,files,suppliers}.blade.php`
-
-### Per-event modules (Livewire `app/Livewire/Hub/*` + `views/livewire/hub/*`)
-| Module | Component | View(s) |
-|---|---|---|
-| Tasks | `TasksTab` | `tasks-tab` + `partials/tasks-studio/{board,card,control-center,list,timeline,gallery,drawer,actions}` |
-| Planning | `PlanStudio` | `plan-studio` + `partials/plan-studio/{board,card,list,timeline,gallery,drawer,tracks,actions}` |
-| Budget | `BudgetTab` | `budget-tab` |
-| Contract | `ContractTab` | `contract-tab` + `views/event-contract/{paper,paper-pdf,mini,document,contract}` |
-| Brief | `BriefTab` | `brief-tab` + `partials/brief-section` + `views/event-brief/{paper,paper-pdf}` |
-| Agenda | `AgendaTab` | `agenda-tab` |
-| Speakers | `SpeakersTab` | `speakers-tab` |
-| Venue | `VenueTab`, `RoomLayoutBuilder` | `venue-tab`, `room-layout-builder` |
-| Suppliers | (static) | `events/hub/suppliers` |
-| Transport | `TransportationTab`, `TransportDispatch`, `TransportLive` | `transportation-tab`, `transport-dispatch`, `transport-live` |
-| Accommodation | `AccommodationTab` | `accommodation-tab` |
-| Exhibition | `ExhibitionTab`, `ExhibitionFloorPlan` | `exhibition-tab`, `exhibition-floor-plan` |
-| Sponsors | `SponsorsTab` | `sponsors-tab` |
-| Attendees | `AttendeesTab` | `attendees-tab` |
-| Documents | `Hub\ModuleDocuments` | `module-documents` + `partials/document-drawer` |
-| Risks | `RisksTab` | `risks-tab` |
-| Approvals | `ApprovalsTab` | `approvals-tab` |
-| Settings (event) | `Hub\SettingsTab` | `settings-tab` |
-
-### Global / Settings (Livewire)
-`EventCreate`, `CommandPalette`, `VenuesManager`, `TeamRoster`, `ClientsManager`, `CompanySettings`, `DefaultsSettings`, `SponsorPackagesSettings`, `RequirementsCatalog`, `TransportSettings`, `TransportMasterPlan` → `views/modules/{suppliers,settings}` + matching `views/livewire/*`.
-
-### PDF / print views — **out of ORBIT's UI scope** (Chrome-rendered, own paper system)
-`views/events/*-pdf.blade.php` (budget, room-layout, room-equipment, agenda-master/program/timeline, run-of-show, rooming-list, exhibition-floor, transport-*), `views/event-contract/{paper-pdf,document,contract}`, `views/event-brief/paper-pdf`, `views/components/{pdf-header,pdf-footer,agenda-program}`, `views/equipment-pdf`. **~28 views.** These already have a deliberate print design and should be left as-is (ORBIT's `@media print` rules apply, but they are not screen components).
-
----
-
-## 2. Hard-coded colour / font-size / radius / shadow findings
-
-**Headline numbers:** 57 view files contain a hard-coded hex; 146 arbitrary `text-[Nrem|px]` occurrences; arbitrary `shadow-[…]` in ~8 component files. Current `app.css` already defines **47 colour tokens**, so the *brand palette* is largely tokenised — the offenders are inline `style="…"`, generative art, and PDF views.
-
-### 2a. Legitimately raw colour — leave alone (ORBIT's own rules exempt these)
-- **PDF/print views** (top offenders): `events/room-layout-pdf` (40), `event-contract/contract` (30), `event-contract/document` (16), `events/room-equipment-pdf` (18), `events/agenda-master-pdf` (18), `events/agenda-timeline-pdf` (16), `events/run-of-show-pdf` (15), `events/budget-pdf` (14), `events/sponsorship` (14). Chrome-rendered; keep.
-- **Generative event art** (SVG avatars/crests): `components/avatars/{vip-event(22),workshop(19),gala-dinner(19),international-conference(17),festival-outdoor(14)}`, `event-crest`. Raw colour is the point; keep.
-
-### 2b. Real migration targets — interactive views with hard-coded values (file:line)
-| File:line | Value | Becomes (ORBIT) |
-|---|---|---|
-| `livewire/hub/contract-tab.blade.php:4-8` | type-ink gradients `linear-gradient(#1F6FB2,#164e78)` … | tokenised accents or `Tone` |
-| `livewire/hub/contract-tab.blade.php:79-80,144-145` | wax-seal `radial-gradient(#E4C874,#C8A44A,#9c7d2e)`, `text-[#5a4718]` | `--gold` family tokens |
-| `livewire/hub/plan-studio.blade.php:43` | `#F97316` | `--flare` |
-| `livewire/hub/partials/tasks-studio/control-center.blade.php:157` | `from-[#7C5CFF]` (AI) | `--iris`/`--iris-2` |
-| `livewire/event-create.blade.php:3` | stage hex `#94A3B8`,`#06B6D4` | `Tone` / tokens |
-| `livewire/exhibition-floor-plan.blade.php:4-6,247-254,299-301` | booth status + grid hexes | `venue_zones.status` → `Tone` (ties into the twin) |
-| `livewire/room-layout-builder.blade.php:154,166` | canvas `#FBFCFE`,`#FFFFFF` | `--hull`/`--deck` (twin) |
-| 146× `text-[Nrem|px]` across `livewire/**` + `components/**` | arbitrary sizes | ORBIT type tokens `--t-body/-sm/-micro` + `.o-metric*` |
-| 8× `shadow-[…]` (`components/{event-preview,event-card,layouts/app,command-spine}`, `livewire/{event-create,contract-tab}`, `partials/{event-panel,document-drawer}`) | arbitrary shadows | `--lift-1/2/3` |
-
-> A full line-by-line list for every one of the 146 `text-[]` + 57 hex files is mechanical; Phase 1 will drive it to zero via the two acceptance greps in the kickoff. This audit lists the *classes* of offender and the notable interactive ones so the work can be scoped.
-
----
-
-## 3. Current view → ORBIT component mapping
-
-| Current construct (where) | ORBIT component |
+| Level | Components |
 |---|---|
-| `.card` / `.op-card` / `.cc-panel` boxes (everywhere) | `<x-orbit.card>` (`gravity`, `accent`) |
-| `.btn-gold` / `.btn-navy` / `.btn-ghost` / `.btn-danger` | `<x-orbit.btn>` (`variant=iris\|gold\|ghost\|danger`) |
-| `x-status-badge`, `.pill`, `.chip` | `<x-orbit.badge>` (`tone` via `App\Support\Tone`) |
-| `x-health-ring` (single %) | `<x-orbit.ring>` |
-| `x-donut` splits + ribbon gauges (budget/tasks/suppliers) + Tasks/Plan progress donuts | `<x-orbit.meter>` (**donuts removed**) |
-| `cc-tile` KPI tiles, attendee/overview stat cards | `<x-orbit.stat>` / `<x-orbit.kpi-strip>` |
-| Event Hub ribbon (hub hero) + health block | `<x-orbit.kpi-strip>` + `<x-orbit.pulse>` |
-| Supplier/venue/hotel/speaker/user **cards** & sponsor/attendee **tables** | `<x-orbit.row>` (one shared row, used ×5+) and `<x-orbit.table>` |
-| Budget ledger, transport manifests, roster, sponsors tables | `<x-orbit.table>` (right-aligned `.o-num`) |
-| Right module rail / top nav (current) | `<x-orbit.nav-arc>` + `<x-orbit.dock>` |
-| Control Centers' "AI Assistant" + `events/hub/ai` | `<x-orbit.ai-panel>` |
-| Health alerts / feed rows | `<x-orbit.alert>` |
-| Empty states (many `card … text-center`) | `<x-orbit.empty>` (must *teach*, not "No data") |
-| `.input`, `x-field`, `x-modal` | `<x-orbit.field>` + `<x-orbit.modal>` |
-| View switchers / focus toggles (Tasks/Plan) | `<x-orbit.seg>` / `<x-orbit.tabs>` |
-| `CommandPalette` (⌘K) | `<x-orbit.palette>` |
-| Planning/agenda timelines, event stage timeline | `<x-orbit.stepper>` (+ bespoke agenda grid) |
-| `RoomLayoutBuilder`, `ExhibitionFloorPlan` | `<x-orbit.twin>` (needs `venue_zones` — see §5) |
+| Portfolio | `CommandCenter`, `EventsIndex`, `EventCreate`, `CommandPalette`, `TeamRoster` |
+| Event core | `Hub/BriefTab`, `Hub/PlanStudio`, `Hub/TasksTab`, `Hub/AgendaTab` |
+| Money | `Hub/BudgetTab`, `Hub/ApprovalsTab`, `Hub/RisksTab`, `Hub/ContractTab` |
+| Physical | `Hub/VenueTab`, `Hub/ExhibitionTab`, `Hub/TransportationTab`, `Hub/AccommodationTab`, `RoomLayoutBuilder`, `ExhibitionFloorPlan`, `TransportDispatch`, `TransportLive` |
+| People | `Hub/SpeakersTab`, `Hub/AttendeesTab`, `Hub/SponsorsTab`, `ClientsManager`, `VenuesManager` |
+| Documents | `Hub/ModuleDocuments`, `Hub/SettingsTab` |
+| System | `CompanySettings`, `DefaultsSettings`, `TransportSettings`, `SponsorPackagesSettings`, `RequirementsCatalog` |
+
+### Views by directory
+
+| Directory | Count | Contents |
+|---|---|---|
+| `components/` | 23 | `agenda-program, brand, bulk-bar, command-spine, crumbs, dock, donut, empty, event-avatar, event-card, event-crest, event-preview, field, health-ring, icon, layout-element, modal, page-head, pdf-footer, pdf-header, section-head, status-badge, user-avatar` |
+| `components/avatars/` | 6 | SVG event-type illustrations |
+| `components/layouts/` | 2 | `app`, `guest` |
+| `components/orbit/` | 6 | `badge, btn, card, meter, ring, stat` — the new library |
+| `events/hub/` | 21 | one per module tab |
+| `events/` | 20 | 17 of these are PDF documents |
+| `livewire/` | 16 | portfolio + operations screens |
+| `livewire/hub/` | 17 | module tabs |
+| `livewire/hub/partials/` | 18 | plan-studio (8), tasks-studio (8), brief/document (2) |
+| `event-brief/`, `event-contract/` | 8 | document + paper + PDF variants |
+| `modules/` | 7 | portfolio-level stubs |
+| `auth/` | 1 | `login` |
 
 ---
 
-## 4. File-by-file order of work (Phases 1–5) with rough estimates
+## 2. Hard-coded values
 
-> Prereq (0.5 day): run `setup-orbit.sh` from repo root; add the 4 `@import`s; self-host fonts; commit. *Then* the phases below.
+Counted with the brief's own acceptance greps.
 
-### Phase 1 — Tokens & type (~2 days)
-1. `resources/css/app.css` — swap `@theme` to ORBIT tokens; keep tokens generated by the script. (2h)
-2. Self-host Inter / Instrument Serif / JetBrains Mono; wire `--font-*`. (2h)
-3. `components/layouts/app.blade.php` — `data-theme` on `<html>` + Alpine `orbit` store. (1h)
-4. `app/Support/ThemePolicy.php` + `app/Support/Tone.php` (new). (3h)
-5. Drive the two acceptance greps to **0** — replace inline hex/font-size across `livewire/**` + `components/**` (the §2b set + the 146 `text-[]`). (1 day)
-6. Reconcile with `DesignSystemTest` — its rules will need rewriting for ORBIT tokens (or the test retired in favour of the ORBIT contrast CI in Phase 5). (2h)
+| Where | Files | Hex literals | Verdict |
+|---|---|---|---|
+| PDF / print documents | 29 | **355** | **Exempt — see §5.** Standalone documents rendered by headless Chrome. |
+| SVG artwork (`components/avatars/`) | 6 | **142** | **Exempt.** Illustration, not UI. |
+| **Live UI** (`livewire/`, `components/`) | **16** | **113** | **Convert.** This is the real Session 2 job. |
+| Other | 6 | 21 | Convert. |
+| `resources/css/` (excl. generated) | — | 47 | Convert — the navy/gold `@theme` block. |
 
-### Phase 2 — Primitives (~4 days)
-Build under `views/components/orbit/`, six first: `card, btn, badge, ring, meter, stat` → then the `/design` gallery route (auth-gated) → review → then `kpi-strip, row, table, alert, empty, field, seg, tabs, stepper, pulse, ai-panel, nav-arc, dock, palette`. Extract the HTML's SVG sprite to `sprite.blade.php`. (~0.3 day each; gallery 0.5 day)
+`font-size:` literals: **192**, all but a handful inside PDF templates.
 
-### Phase 3 — Navigation (~3 days)
-`nav-arc` (polar-computed nodes) + 1280px icon-rail + 900px bottom `dock`; retire the current right rail / `command-spine` behind flag `orbit_nav`; ⌘K `palette` as Livewire over events/modules/tasks/suppliers; live badge counts. (Riskiest change — flag it.)
+### The 16 live-UI files, heaviest first
 
-### Phase 4 — Screens, one per session (~2 weeks)
-`5a` Command Center → `5b` Event Hub overview → `5c` Venue (**data model first**, then CSS twin) → `5d` Budget (**investigate the JD 0 income vs JD 350k contract P&L bug first**) → `5e` shared `row` across Venue/Suppliers/Attendees/Sponsors/Speakers → `5f` Documents (Brief + Contract, print-clean). One hero card per screen; delete cards that don't earn their place.
+| File | Hex | Note |
+|---|---|---|
+| `components/agenda-program.blade.php` | 31 | Whole palette inlined at lines 10–11 |
+| `components/layout-element.blade.php` | 20 | Room-layout element colours |
+| `livewire/exhibition-floor-plan.blade.php` | 17 | Booth status colours |
+| `components/event-card.blade.php` | 17 | Event-type + status colour maps, lines 5–17 |
+| `components/event-preview.blade.php` | 9 | Navy gradients |
+| `components/command-spine.blade.php` | 4 | `#16294A`, `#0B1F3A`, `#D4AF37` ×2 |
+| `livewire/event-create.blade.php` | 3 | |
+| `livewire/room-layout-builder.blade.php` | 2 | |
+| `livewire/hub/plan-studio.blade.php` | 2 | |
+| `components/brand.blade.php` | 2 | `#D4AF37` ×2 |
+| `livewire/hub/tasks-tab.blade.php` | 1 | |
+| `livewire/hub/partials/tasks-studio/drawer.blade.php` | 1 | |
+| plus `command-center`, `contract-tab`, `event-crest`, `plan-studio/drawer` | 4 | one each |
 
-### Phase 5 — Polish (~1 week)
-`ThemePolicy` → module/phase auto-dark; `prefers-reduced-motion` audit; **CI contrast test** over every token pair (fail < 4.5:1); print-stylesheet verification for Budget/Brief/Contract.
+**The pattern:** almost every literal is a *status or category colour map* built in
+Blade (`$colours = ['confirmed' => '#22C55E', …]`). These are exactly what
+`App\Support\Tone` exists to replace — the fix is one mechanical move per map, not
+16 bespoke rewrites.
 
-**Rough total: ~5.5 weeks** of focused work beyond the prereq.
+**Radii and shadows** are already tokenised through the Tailwind `@theme` block;
+they migrate when that block is repointed at ORBIT tokens, not file by file.
 
 ---
 
-## 5. What ORBIT does not cover (decide before we hit these)
+## 3. Mapping — existing view → ORBIT component
 
-1. **PDF / print document suite (~28 views).** ORBIT has `@media print` rules but no PDF component set. The contract/brief/agenda/transport sheets have a bespoke Chrome-rendered "paper" system (incl. **bilingual EN/AR, RTL, Amiri font**). ORBIT is silent on RTL and on document layout. → Keep the paper system; only theme its on-screen preview.
-2. **Venue digital twin needs a new data model.** `<x-orbit.twin>` assumes a `venue_zones` table + seeded zones that **do not exist**. `RoomLayoutBuilder` and `ExhibitionFloorPlan` are the current, different floor-plan tools. → Session 5c must build the migration/model/seed first; decide whether the twin replaces or augments the existing builders.
-3. **Generative event art** (7 avatar SVGs + crest). Raw colour by design; ORBIT has no equivalent. → Keep.
-4. **Drag-and-drop boards.** Tasks/Plan Kanban + Transport Dispatch lanes use SortableJS. ORBIT specs `card`/`row` but not the DnD interaction. → Reuse cards inside the existing DnD.
-5. **Bespoke operational surfaces** with no ORBIT analogue: Transport **Dispatch board** (time-axis lanes + conflict detection) and **Live ops** (Now/Next/Later), the **"Living Document" editors** (Brief/Contract WYSIWYG), multi-currency **FX** display, the **Contract Deck/Pipeline**. → Style with ORBIT primitives but keep the bespoke layout; flag any that ORBIT wants to delete.
-6. **The just-shipped navy/gold system + its `DesignSystemTest`.** Not a "gap" so much as a collision — see §0.1. Retiring it is a decision, and its guard test must be replaced, not left to fail.
+| Existing | ORBIT | Notes |
+|---|---|---|
+| `components/donut.blade.php` | **delete** → `<x-orbit.meter>` | Donuts are banned by the system. Every caller becomes a meter. |
+| `components/health-ring.blade.php` | `<x-orbit.ring>` | Already the right idea; swap markup, keep callers. |
+| `components/status-badge.blade.php` | `<x-orbit.badge>` | Colour comes from `Tone`, not the current hex map. |
+| `components/event-card.blade.php` | `<x-orbit.card>` + `<x-orbit.badge>` | One shared card for Cards/List/Calendar (session 5b). |
+| `components/field.blade.php` | `<x-orbit.field>` | |
+| `components/empty.blade.php` | `<x-orbit.empty>` | Must teach the concept — session 6c. |
+| `components/modal.blade.php` | `<x-orbit.modal>` | |
+| `components/page-head`, `section-head`, `crumbs` | `<x-orbit.topbar>` + card `__head` | Absorbed by the new chrome. |
+| `components/command-spine.blade.php` | `<x-orbit.nav-arc>` + `<x-orbit.dock>` | The 20-item rail this replaces. |
+| `components/dock.blade.php` | — | Already retired from screens; delete with the old CSS. |
+| `components/bulk-bar.blade.php` | keep, restyle | No ORBIT equivalent; it's a good pattern. |
+| `.card` / `.op-card` / `.cc-panel` (app.css) | `.o-card` / `.o-panel` | The whole navy/gold component layer retires in Phase 5. |
+| `.kanban-head`, `.pill`, `.qa-btn` | `.o-card__head`, `.o-badge`, `.o-btn` | |
+| KPI rows across tabs | `<x-orbit.kpi-strip>` | Dark chrome — `--chrome`, not `--hull`. |
+| Every "Control Center" panel | `<x-orbit.card>` + `<x-orbit.stat>` | These already exist per module and map cleanly. |
+| `CommandPalette` (exists) | `<x-orbit.palette>` | **Already built** — needs restyling and ⌘K binding, not writing. |
 
 ---
 
-## Stop point
+## 4. Order of work
 
-Phase 0 is complete. **No code changed.** Awaiting go-ahead before Phase 1 — and specifically a decision on §0.1 (retire navy/gold for ORBIT?) and §0.2 (run `setup-orbit.sh` prereq).
+Bottom-up. Screens last, because every screen re-skins for free once tokens and
+components land.
+
+| # | Work | Files | Est. |
+|---|---|---|---|
+| **1** | **Tokens** — repoint the `@theme` block at ORBIT; convert the 16 live-UI files' colour maps to `Tone`; `data-theme` from `ThemePolicy` | `resources/css/app.css`, 16 views | **6h** |
+| 2 | Primitives — remaining components from the map, each added to `/design/gallery` in the same commit | `components/orbit/*` (≈24 new) | 14h |
+| 3 | Navigation — `nav-arc`, `dock`, `topbar`, responsive collapse, ⌘K wiring, flag `orbit_nav` | layout, `command-spine` retirement | 10h |
+| 4 | Screens 5a–5n — one per session, 25 modules | `livewire/**`, `events/hub/**` | 60h |
+| 5 | Cross-cutting 6a–6g + polish | auth, empties, errors, print, email, responsive | 24h |
+
+Phase 1 items already done in the bootstrap commit: token files generated, fonts
+self-hosted, `Tone`, `ThemePolicy`, `/design`, `/design/gallery`, six primitives.
+
+### Sequencing risks
+
+- **`DesignSystemTest` (158 lines) currently enforces the navy/gold system.** It will
+  fail the moment Session 2 lands. It must be rewritten to enforce ORBIT's rules
+  (no literals, one hero per screen, gold ≤3 per viewport) in the same commit —
+  not deleted and not left failing.
+- **`Event::HUB_MODULES`** is the single source of module names and already feeds
+  the nav. The arc component should read it rather than re-listing modules.
+- **Plan Studio keeps its own colourful design** by explicit earlier decision. It is
+  the one screen that does not adopt the ORBIT palette wholesale; treat its board
+  as a deliberate exception and confirm before converting.
+
+---
+
+## 5. What ORBIT does not cover
+
+These need a decision rather than a conversion.
+
+1. **PDF and print documents (29 files, 355 literals).** These are standalone
+   documents rendered by headless Chrome, not app screens. Custom properties do
+   work there, but the documents are deliberately paper-like — cream, seals,
+   bilingual Arabic/English type — and are client-facing artefacts. *Recommendation:*
+   generate an `orbit-print.css` from the token file with hex inlined (the same
+   approach the brief mandates for email), and exempt these from the "zero hex"
+   grep rather than pretending they're screens. Session 6e is the right place.
+
+2. **SVG event-type artwork (6 avatars, 142 literals).** Illustration. Leave as-is;
+   exempt from the grep.
+
+3. **The Arabic type stack.** Contracts and briefs are bilingual and use Amiri.
+   ORBIT specifies no Arabic face. *Needs a decision:* pair an Arabic face with
+   Instrument Serif, or keep Amiri as a fourth token.
+
+4. **Floor plans and room layouts** (`RoomLayoutBuilder`, `ExhibitionFloorPlan`,
+   `layout-element`). Interactive spatial canvases with per-element colour. ORBIT's
+   nearest concept is the venue "twin" (a dark module). Their colours should become
+   tokens, but their layout is outside the component map.
+
+5. **The Gantt/timeline views** in Plan Studio and Tasks Studio exist and are richer
+   than `.o-gantt`. ORBIT's gantt is a band timeline; ours has dependencies and
+   drag. *Recommendation:* keep ours, restyle to tokens.
+
+6. **Transport Dispatch Board and Live Operations.** Real-time operational screens
+   with lanes and conflict detection. They map to the dark theme (`transport-board`
+   is already in `DARK_MODULES`) but have no component in the map.
+
+7. **Two animations are permitted system-wide.** The dispatch board and live ops
+   currently animate more than that. They will need an exemption or a redesign —
+   flagging now because it is a genuine conflict with Law 5, not an oversight.
+
+---
+
+## 6. Data issue to resolve before Session 5h
+
+The brief flags a false −JD 214,498 P&L: Contract showed JD 350,000 collected while
+Budget showed income JD 0.
+
+**Already investigated and fixed.** It was a real integration bug, not a display
+bug: `BudgetTab` computed client income from manual budget line items only and never
+read contract payments. `Event::incomeSummary()` now derives client income from
+`contract->payments`, and event 7's P&L reads **+JD 135,502**. No further action
+needed at 5h beyond presenting it.
+
+---
+
+*Session 1 ends here. Session 2 is the token sweep.*
