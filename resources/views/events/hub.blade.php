@@ -184,17 +184,7 @@
 
     <div class="mt-5">
         @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
-
-        {{-- Every module carries its own document drawer, docked to the right
-             edge so it sits beside the tab's own control rail rather than
-             stacking underneath it. The Documents tab is the whole library. --}}
-        @if (array_key_exists($tab, \App\Models\Event::HUB_MODULES) && $tab !== 'files')
-            <livewire:hub.module-documents :event="$event" :module="$tab" :dock="true" :wire:key="'docs-'.$tab" />
-        @endif
-
-        {{-- Every module carries its own task panel; work added there lands on the
-             Tasks board tagged with the module. Excluded: the board itself, the
-             plan (which already feeds it), and read-only/summary tabs. --}}
+        {{-- Documents live only on the Documents tab now — no per-module floating drawer. --}}
     </div>
 </div>
 </x-layouts.app>

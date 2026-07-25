@@ -110,19 +110,29 @@
             // platform nav (route names → hrefs here).
             $rail = $railNav ?? collect($nav)->map(fn ($n) => [$n[0], route($n[1]), $n[2], $n[3]])->all();
         @endphp
-        <nav class="glass-dock fixed right-3 top-[84px] z-40 flex max-h-[calc(100vh-6rem)] flex-col items-center gap-1 overflow-y-auto p-1.5 scrollbar-none lg:right-5" aria-label="Primary">
-            @foreach ($rail as [$label, $href, $icon, $active])
-                <a href="{{ $href }}" title="{{ $label }}" @if ($active) aria-current="page" @endif
-                   class="group/rail relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition {{ $active ? 'bg-navy-900 text-gold-400 shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' : 'text-navy-400 hover:bg-white hover:text-navy-900' }}">
-                    <x-icon :name="$icon" class="h-5 w-5" />
-                    {{-- hover label flyout to the left --}}
-                    <span class="pointer-events-none absolute right-full z-50 mr-2.5 whitespace-nowrap rounded-lg bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover/rail:opacity-100">{{ $label }}</span>
-                </a>
-            @endforeach
+        <nav class="cc-panel fixed right-3 top-[84px] z-40 flex max-h-[calc(100vh-6rem)] w-[13rem] flex-col lg:right-5" aria-label="Primary">
+            <div class="cc-head shrink-0">
+                <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
+                <x-icon name="grid" class="relative h-4 w-4 text-gold-400" />
+                <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Modules</span>
+            </div>
+            <div class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2 scrollbar-none">
+                @foreach ($rail as [$label, $href, $icon, $active])
+                    <a href="{{ $href }}" @if ($active) aria-current="page" @endif
+                       @class([
+                           'flex items-center gap-2.5 rounded-xl px-3 py-2 text-[0.8rem] font-semibold transition',
+                           'bg-navy-900 text-white shadow-[0_6px_16px_-6px_rgba(11,31,58,0.6)]' => $active,
+                           'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => ! $active,
+                       ])>
+                        <x-icon :name="$icon" @class(['h-4 w-4 shrink-0', 'text-gold-400' => $active, 'text-navy-400' => ! $active]) />
+                        <span class="truncate">{{ $label }}</span>
+                    </a>
+                @endforeach
+            </div>
         </nav>
 
-        {{-- ══ 3. CONTENT — full-width fluid, padded on the right to clear the rail ══ --}}
-        <main class="px-4 pb-14 pt-4 pr-[70px] lg:px-8 lg:pr-[92px]">
+        {{-- ══ 3. CONTENT — full-width fluid, padded on the right to clear the module box ══ --}}
+        <main class="px-4 pb-14 pt-4 pr-4 lg:px-8 lg:pr-[15.5rem]">
             {{-- breadcrumb — always present for navigation context --}}
             @if ($title && ! request()->routeIs('home'))
                 <div class="{{ $hideTitleRow ? 'mb-3' : 'mb-4' }}">

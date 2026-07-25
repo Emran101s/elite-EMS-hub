@@ -54,7 +54,7 @@ class DockTest extends TestCase
         $this->movement($event);
 
         $c = Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
-            ->assertSee('Transport Controls')
+            ->assertSee('Transport Control Center')
             ->assertSee('Vehicles required', false);
 
         // The dock keeps the rail inside this component, so wire:click still
@@ -81,23 +81,20 @@ class DockTest extends TestCase
         }
     }
 
-    public function test_both_docks_stack_without_overlapping(): void
+    public function test_hanging_docks_are_gone_controls_inline_documents_only_in_documents_tab(): void
     {
         [$event, $user] = $this->ctx();
 
         $html = $this->actingAs($user)->get(route('events.hub', $event).'?tab=transportation')
             ->assertOk()->getContent();
 
-        $this->assertStringContainsString("dock.toggle('controls')", $html);
-        $this->assertStringContainsString("dock.toggle('documents')", $html);
+        // No more right-edge hanging tabs on a module page.
+        $this->assertStringNotContainsString("dock.toggle('controls')", $html);
+        $this->assertStringNotContainsString("dock.toggle('documents')", $html);
 
-        // Spines are offset by a full spine height, so they cannot sit on top
-        // of each other however many a tab registers.
-        preg_match_all('/top: calc\(50% \+ (\d+)px - 52px\)/', $html, $m);
-        $offsets = array_map('intval', $m[1]);
-
-        $this->assertSame([0, 104], $offsets);
-        $this->assertSame(count($offsets), count(array_unique($offsets)));
+        // Controls now live inline as a Control Center box; documents are only
+        // on the Documents tab.
+        $this->assertStringContainsString('Transport Control Center', $html);
     }
 
     public function test_the_docked_summary_reflects_real_numbers(): void

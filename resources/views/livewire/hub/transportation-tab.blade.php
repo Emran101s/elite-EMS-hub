@@ -707,12 +707,13 @@
 
     </div>
 
-    {{-- ══ controls, docked right ══
-         Moved off the page into the dock so the manifest tables get the full
-         width. The markup stays inside this component, so wire:click actions
-         keep working without routing events through another component. --}}
-    <x-dock id="controls" label="Controls" :color="$moduleColor" icon="truck" :order="0"
-            title="Transport Controls" subtitle="Summary, fleet and actions for this event">
+    {{-- ══ Transport Control Center — inline box (no more hanging dock) ══ --}}
+    <div class="cc-panel mt-6 w-full max-w-sm">
+        <div class="cc-head">
+            <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
+            <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
+            <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Transport Control Center</span>
+        </div>
                 <div class="border-b border-line p-4">
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
                     <div class="space-y-1.5 text-xs">
@@ -756,7 +757,7 @@
                         Manage vehicles &amp; services →
                     </a>
                 </div>
-    </x-dock>
+    </div>
 
     {{-- ══ movement modal ══ --}}
     @if ($showForm)
