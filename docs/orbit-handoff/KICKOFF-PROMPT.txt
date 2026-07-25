@@ -1,0 +1,199 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║  ORBIT v2 — prompts for Claude Code                                   ║
+║  Elite Event Hub · Laravel + Livewire + Alpine + Tailwind             ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+BEFORE YOU START
+  1. Copy into your repo root:  orbit-v2-hub-system.html
+                                CLAUDE-CODE-BRIEF.md
+                                setup-orbit.sh
+  2. git add -A && git commit -m "docs: ORBIT v2 design system"
+  3. ./setup-orbit.sh
+  4. Add the four @import lines it prints to resources/css/app.css
+  5. git add -A && git commit -m "chore: ORBIT v2 tokens and guardrails"
+  6. Open Claude Code and paste SESSION 1 below.
+
+ONE PHASE PER SESSION. Review and merge before starting the next.
+Never paste two sessions at once — the agent will run ahead and you will
+lose the ability to catch a wrong turn cheaply.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION 1 · AUDIT — no code changes
+───────────────────────────────────────────────────────────────────────
+
+Read CLAUDE.md, CLAUDE-CODE-BRIEF.md and orbit-v2-hub-system.html in the
+repo root.
+
+The HTML file is the visual source of truth. Open it and read the CSS in
+its <style> block. Those custom properties and class names are the spec.
+resources/css/orbit-tokens.css and orbit.css are already generated from
+it — do not edit those, and do not retype any value from them.
+
+Do Phase 0 only. Do not change any application code.
+
+Write docs/orbit-migration-plan.md containing:
+  1. Every Blade view and Livewire component in the app, grouped by module
+  2. Every hard-coded colour, font-size, border-radius and box-shadow you
+     find, with file path and line number
+  3. Which ORBIT component each existing view will map to
+  4. A file-by-file order of work for Phases 1-5 with rough hour estimates
+  5. Anything in the current UI that ORBIT does not cover, so we can
+     decide what to do about it
+
+Stop when the plan is written. Ask me before starting Phase 1.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION 2 · TOKENS — make the whole app token-driven
+───────────────────────────────────────────────────────────────────────
+
+Phase 1 from CLAUDE-CODE-BRIEF.md.
+
+The token files already exist and are generated — do not touch them.
+Your job is to make the rest of the app consume them:
+
+  - Replace every hard-coded hex, rgb, font-size, border-radius and
+    box-shadow across resources/views/** and resources/css/** with the
+    matching token from resources/css/orbit-tokens.css.
+  - Self-host the three fonts and wire them up.
+  - Add data-theme to the <html> tag in the layout, defaulting to "light".
+  - Create app/Support/ThemePolicy.php implementing the 70/30 rule
+    described in the brief, and use it to set that attribute.
+  - Create app/Support/Tone.php as specified in the brief.
+
+Acceptance, run these and show me the output before you finish:
+  grep -rE '#[0-9a-fA-F]{3,6}' resources/views/ | grep -v orbit- | wc -l
+  grep -rE 'font-size:\s*[0-9]' resources/views/ | wc -l
+Both must be 0.
+
+Then show me a summary of the diff. Do not restyle any screen yet.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION 3 · PRIMITIVES — build the component library
+───────────────────────────────────────────────────────────────────────
+
+Phase 2 from CLAUDE-CODE-BRIEF.md.
+
+Build the Blade components listed in the component map, under
+resources/views/components/orbit/. Every one is @props-driven with no
+hard-coded content. Read the corresponding section of
+orbit-v2-hub-system.html for the exact markup each one must produce.
+
+Start with these six ONLY: card, btn, badge, ring, meter, stat.
+Then create the /design gallery route rendering them from the real
+components, and show it to me before building the rest.
+
+Rules while you work:
+  - The markup you emit must match the HTML file class-for-class.
+  - Ring: single values only. Meter: splits. No chart library, no donuts.
+  - Status colour comes from Tone. No colour literals in any component.
+  - Extract the SVG sprite from the HTML into a sprite.blade.php partial
+    rendered once in the layout; the icon component references symbols.
+
+Once I approve those six, continue with: kpi-strip, row, table, alert,
+empty, field, seg, tabs, stepper, pulse, ai-panel, nav-arc, dock, twin.
+Add each one to the gallery in the same commit that creates it.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION 4 · NAVIGATION
+───────────────────────────────────────────────────────────────────────
+
+Phase 3 from CLAUDE-CODE-BRIEF.md.
+
+  - Arc orbit navigation (section 05 of the HTML). Angles are constant
+    across every event — precompute node positions from polar coordinates,
+    never hand-place them per event.
+  - Collapse to a 64px icon rail below 1280px, to the bottom dock below
+    900px.
+  - Bottom dock (section 09). It stays dark in both themes.
+  - ⌘K command palette as a Livewire component searching events, modules,
+    tasks and suppliers.
+  - Badge counts come from live queries, never hard-coded.
+
+Put the sidebar retirement behind a feature flag called orbit_nav so we
+can run it internally for a week first.
+
+Acceptance: every module reachable in two keystrokes or fewer.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION 5+ · SCREENS — one screen per session, in this order
+───────────────────────────────────────────────────────────────────────
+
+Phase 4 from CLAUDE-CODE-BRIEF.md. Say only one of these per session:
+
+  5a  Rebuild the Command Center only. Reference: the assembled hub in
+      section 10 of orbit-v2-hub-system.html. Exactly one card carries
+      data-gravity="hero". Delete cards that do not earn their place
+      rather than restyling them. Do not touch any other screen.
+
+  5b  Rebuild the Event Hub overview only. Same rules.
+
+  5c  Venue module. Build the venue_zones migration and model FIRST,
+      per the data contract in the brief. Seed it for the First World
+      Public Summit. Only once zones render from the database, build the
+      <x-orbit.twin> component (Phase 1, CSS-3D isometric, section 06 of
+      the HTML). Do not start Three.js.
+
+  5d  Budget. Note: Contract shows JD 350,000 collected while Budget
+      shows income JD 0, producing a false −JD 214,498 P&L. Investigate
+      and tell me whether that is a display bug or unlogged data BEFORE
+      rebuilding the screen.
+
+  5e  The list modules — Venue, Suppliers, Attendees, Sponsors, Speakers
+      all share one row template. Build it once and use it five times.
+
+  5f  Documents: Event Brief and Contract. These always render light and
+      must print cleanly.
+
+
+───────────────────────────────────────────────────────────────────────
+SESSION N · POLISH
+───────────────────────────────────────────────────────────────────────
+
+Phase 5 from CLAUDE-CODE-BRIEF.md.
+
+  - Wire ThemePolicy to modules and event phase so show days go dark
+    automatically.
+  - prefers-reduced-motion audit across every animation.
+  - Add a CI test that recomputes WCAG contrast for every token pair in
+    both themes and fails the build under 4.5:1 for meaningful colours.
+  - Print stylesheet verification for Budget, Event Brief and Contract.
+
+
+───────────────────────────────────────────────────────────────────────
+IF THE AGENT DRIFTS — corrective prompts
+───────────────────────────────────────────────────────────────────────
+
+It invented a colour:
+    You used a colour that is not a token. Every colour in this codebase
+    comes from resources/css/orbit-tokens.css. Find the closest existing
+    token and use it. If none fits, stop and tell me which token is
+    missing — do not add a literal.
+
+It started restyling screens during Phase 1 or 2:
+    Stop. Phases 1 and 2 do not touch screens. Revert any screen changes
+    and finish the current phase. Screens are Phase 4 and they come last
+    for a reason.
+
+It rebuilt more than one screen:
+    Revert everything except <screen name>. One screen per session so I
+    can review each one properly.
+
+Its markup does not match the design:
+    Open orbit-v2-hub-system.html, find section <N>, and diff your markup
+    against it class by class. The HTML is the spec — match it exactly
+    rather than approximating it.
+
+It skipped the gallery:
+    Every new component goes into the /design gallery in the same commit
+    that creates it. Without that page the system drifts within a quarter.
+    Add the missing entries now.
+
+It wants to build the 3D twin early:
+    Data before renderer. The venue_zones table and seeded zones must
+    exist and render in the CSS isometric view before any Three.js work
+    starts. Phase 2 of the twin is a separate project.
