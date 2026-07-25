@@ -614,10 +614,19 @@ class BudgetTab extends Component
         $exhibitors = $this->event->exhibitors;
         $incomeItems = $this->event->incomeItems;
 
-        // Client / Main Fund: actual = logged client payments; target set on the event.
+        // Client / Main Fund IS the client contract — the single source of truth for
+        // the client deal. Target = the contract value; actual = payments collected
+        // against it (plus any manually logged client income, for edge cases). This
+        // stops the Budget showing income 0 while the Contract records money in.
+        $contract = $this->event->contract;
+        $contractCollected = $contract ? (int) $contract->payments->sum('paid_cents') : 0;
+        $contractValue = $contract
+            ? (int) ($contract->data['financials']['contract_value_cents']
+                ?? $contract->data['financials']['estimated_total_cents'] ?? 0)
+            : 0;
         $clientItems = $incomeItems->where('source', 'client');
-        $clientActual = $clientItems->sum('amount_cents');
-        $clientTargetC = $this->event->client_target_cents ?? 0;
+        $clientActual = $clientItems->sum('amount_cents') + $contractCollected;
+        $clientTargetC = ($this->event->client_target_cents ?? 0) ?: $contractValue;
 
         // Sponsorships (extra): actual = Σ sponsor deals; received = Σ paid.
         $sponsorsIncome = $sponsors->sum('amount_cents');
@@ -676,6 +685,8 @@ class BudgetTab extends Component
             'otherIncomeItems' => $otherIncomeItems,
             'clientActual' => $clientActual,
             'clientTargetC' => $clientTargetC,
+            'contractRef' => $contract?->reference,
+            'contractCollected' => $contractCollected,
             'sponsorsIncome' => $sponsorsIncome,
             'sponsorsReceived' => $sponsorsReceived,
             'sponsorTargetC' => $sponsorTargetC,

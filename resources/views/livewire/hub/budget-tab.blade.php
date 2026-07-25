@@ -101,7 +101,14 @@
                 <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-xs">
                     <div class="min-w-0 flex-1">
                         <p class="font-bold text-navy-900">Client / Main Fund</p>
-                        <p class="text-eyebrow text-muted">Primary income · <button type="button" wire:click="newIncome('client')" class="font-bold text-gold-600 hover:text-gold-700">＋ log payment</button></p>
+                        @if ($contractRef && $contractCollected > 0)
+                            <p class="text-eyebrow text-muted">
+                                <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="font-bold text-gold-600 hover:text-gold-700">{{ $fmt($contractCollected) }} collected via contract {{ $contractRef }}</a>
+                                · <button type="button" wire:click="newIncome('client')" class="font-semibold text-navy-400 hover:text-navy-700">＋ extra</button>
+                            </p>
+                        @else
+                            <p class="text-eyebrow text-muted">Primary income · <button type="button" wire:click="newIncome('client')" class="font-bold text-gold-600 hover:text-gold-700">＋ log payment</button></p>
+                        @endif
                     </div>
                     <div class="{{ $tin }}">
                         <span class="inline-flex items-center gap-0.5 rounded-md border border-line bg-white px-1">
