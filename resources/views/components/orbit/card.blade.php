@@ -1,6 +1,6 @@
 @props([
     'gravity' => null,   // hero | primary | secondary | ambient (only "hero" & "ambient" style differently)
-    'accent' => null,    // solar | vital | ion | flare | critical  (left accent bar)
+    'accent' => null,    // gold | vital | ion | plasma | flare | critical  (left accent bar)
     'title' => null,     // renders a __head; or pass a <x-slot:head>
     'hover' => false,
     'pad' => true,       // wrap slot in __pad

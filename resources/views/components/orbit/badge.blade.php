@@ -1,5 +1,5 @@
 @props([
-    'tone' => null,     // vital | ion | plasma | flare | critical | solar
+    'tone' => null,     // gold | vital | ion | plasma | flare | critical
     'pulse' => false,
     'bare' => false,    // hide the leading dot
 ])

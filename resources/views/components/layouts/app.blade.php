@@ -17,16 +17,17 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ \App\Support\ThemePolicy::for($module ?? null) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title . ' — ' : '' }}{{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=spectral:500,600,700,800&display=swap" rel="stylesheet">
     <link href="https://fonts.bunny.net/css?family=amiri:400,700&display=swap" rel="stylesheet">
-    {{-- ORBIT type: Inter (UI) · Instrument Serif (display) · JetBrains Mono (data) --}}
-    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700|instrument-serif:400,400i|jetbrains-mono:400,500,700&display=swap" rel="stylesheet">
+    {{-- ORBIT type (Inter · Instrument Serif · JetBrains Mono) is self-hosted from
+         @fontsource, bundled through resources/js/app.js — no CDN, no fallback. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">

@@ -1,12 +1,12 @@
-/* ORBIT v1.0 design tokens — available app-wide (dark :root + light [data-theme]).
-   Additive: current navy/gold screens don't reference these yet, so nothing
-   changes visually until components/screens migrate onto them. */
+/* ORBIT — light-first · gold accent.
+   orbit-tokens.css and orbit.css are GENERATED from orbit-system.html by
+   setup-orbit.sh. Never edit them by hand: change the HTML and re-run it.
+   Order matters — tokens, Tailwind, theme wiring, components. */
 @import './orbit-tokens.css';
 
 @import 'tailwindcss';
 
-/* ORBIT v1.0 component classes (.o-*). Scoped by prefix — no global reset —
-   so they only style elements that opt in. Safe to load alongside navy/gold. */
+@import './orbit-theme.css';
 @import './orbit.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

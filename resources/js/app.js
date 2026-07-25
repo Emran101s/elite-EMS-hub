@@ -1,3 +1,16 @@
+// ORBIT typefaces, self-hosted — no CDN, no silent fallback.
+// --font-ui Inter · --font-display Instrument Serif · --font-data JetBrains Mono
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/700.css';
+
 import Sortable from 'sortablejs';
 import * as htmlToImage from 'html-to-image';
 import html2canvas from 'html2canvas';
@@ -13,21 +26,26 @@ window.html2canvas = html2canvas;
 // ── Right-edge docks ──────────────────────────────────────────────────────
 // One store coordinates every dock so only one panel is ever open at a time.
 document.addEventListener('alpine:init', () => {
-    // ── ORBIT theme (dark-first) ──────────────────────────────────────────
-    // Sets data-theme on <html>. Dark is the operations default; light is for
-    // planning/documents. Inert until components read the ORBIT tokens.
-    window.Alpine.store('orbit', {
-        theme: localStorage.orbitTheme ?? 'dark',
-        init() {
-            document.documentElement.dataset.theme = this.theme;
-        },
-        set(t) {
-            this.theme = t === 'light' ? 'light' : 'dark';
-            localStorage.orbitTheme = this.theme;
-            document.documentElement.dataset.theme = this.theme;
+    // ── ORBIT theme (light-first) ─────────────────────────────────────────
+    // Light is home; dark is a mode entered for show days and live operations.
+    // The server decides via App\Support\ThemePolicy and prints data-theme on
+    // <html>; this store only carries a user's manual override for the session.
+    window.Alpine.store('theme', {
+        current: document.documentElement.dataset.theme || 'light',
+        set(v) {
+            this.current = v === 'dark' ? 'dark' : 'light';
+            document.documentElement.dataset.theme = this.current;
+            fetch('/theme-override', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                },
+                body: JSON.stringify({ theme: this.current }),
+            });
         },
         toggle() {
-            this.set(this.theme === 'dark' ? 'light' : 'dark');
+            this.set(this.current === 'dark' ? 'light' : 'dark');
         },
     });
 

@@ -62,11 +62,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', CommandCenter::class)->name('home');
 
-    // ORBIT design system — the living visual source of truth (dark-first v1.0).
+    // ORBIT design system — the visual source of truth (light-first · gold accent).
     // Served raw (its CSS has @media/@keyframes that Blade would misparse).
     Route::get('/design', fn () => response(
-        file_get_contents(resource_path('orbit/orbit-design-system.html'))
+        file_get_contents(base_path('orbit-system.html'))
     )->header('Content-Type', 'text/html'))->name('design');
+
+    // The living gallery — the same components rendered from the real Blade source.
+    // Any new ORBIT component must appear here in the commit that creates it.
+    Route::view('/design/gallery', 'orbit-gallery')->name('design.gallery');
+
+    // A user's manual theme choice, for this session only. ThemePolicy decides
+    // the default per module; this just records that they overrode it.
+    Route::post('/theme-override', function (\Illuminate\Http\Request $request) {
+        \App\Support\ThemePolicy::override((string) $request->input('theme'));
+
+        return response()->noContent();
+    })->name('theme.override');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 

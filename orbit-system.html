@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBIT — Elite Event Hub Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   ORBIT DESIGN SYSTEM — Elite Event Hub
+   Light-first · Gold accent · Orbit navigation
+   ─────────────────────────────────────────────────────────────────────
+   01 · One light source.      Gold marks the action, the position, the
+                               one number. Nothing else.
+   02 · Distance is relevance. Modules orbit the event core.
+   03 · Light is home.         Dark is a mode you enter for show days.
+   04 · Numbers are typography. Every figure in the data face.
+   05 · Stillness is a feature. Motion means state changed.
+
+   TWO GOLDS, and they are not interchangeable:
+     --gold      #8A6209  text, icons, labels. Passes AA on light.
+     --gold-lit  #E8B84B  fills, rings, active states. Dark text on it.
+   Using --gold-lit as text on a light surface gives 1.69:1. Never do it.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── TOKENS · LIGHT (default) ────────────────────────────────────── */
+:root, [data-theme="light"]{
+  --void:   #EFEBE2;
+  --abyss:  #F7F5EF;   /* warm canvas */
+  --hull:   #FFFFFF;   /* panel */
+  --plate:  #FFFFFF;   /* card */
+  --deck:   #FAF8F3;   /* raised / hover */
+  --rim:    #EBE6DB;
+  --rim-hi: #D8D0BF;
+  --scrim:  rgba(20,28,51,.44);
+
+  --ink:   #141C33;
+  --ink-2: #3E4761;
+  --ink-3: #5A6780;
+  --ink-4: #79839B;
+
+  /* GOLD — the accent. Two values, two jobs. */
+  --gold:      #8A6209;   /* text / icon — AA on light */
+  --gold-lit:  #E8B84B;   /* fill / ring / active — dark text on it */
+  --gold-2:    #D4A03C;
+  --gold-3:    #EBD9A8;
+  --gold-tint: #FBF4E3;
+  --gold-glow: rgba(232,184,75,.30);
+  --gold-ink:  #141C33;
+
+  /* SIGNAL — state only. -lit variants are for fills and rings. */
+  --vital:    #0A7A54;   --vital-lit:    #3DBF8B;
+  --ion:      #16679F;   --ion-lit:      #4A7FE8;
+  --plasma:   #6A48D4;   --plasma-lit:   #8B6FF0;
+  --flare:    #9A5C04;   --flare-lit:    #E8A33C;
+  --critical: #C22B2B;   --critical-lit: #E85C5C;
+  --vital-tint:    #E6F5EF;
+  --ion-tint:      #E8F0FB;
+  --plasma-tint:   #F0EBFD;
+  --flare-tint:    #FBF2E3;
+  --critical-tint: #FBECEC;
+
+  /* Chrome — the dark bars. Constant across both themes. */
+  --chrome:     #141C33;
+  --chrome-2:   #1E2947;
+  --chrome-rim: rgba(255,255,255,.09);
+  --chrome-ink: #FFFFFF;
+  --chrome-ink-2: rgba(255,255,255,.66);
+  --chrome-ink-3: rgba(255,255,255,.44);
+
+  --lift-1: 0 1px 2px rgba(20,28,51,.05), 0 1px 1px rgba(20,28,51,.03);
+  --lift-2: 0 8px 24px -10px rgba(20,28,51,.16), 0 2px 6px -2px rgba(20,28,51,.05);
+  --lift-3: 0 28px 64px -22px rgba(20,28,51,.26), 0 6px 16px -6px rgba(20,28,51,.09);
+}
+
+/* ─── TOKENS · DARK (live operations) ─────────────────────────────── */
+[data-theme="dark"]{
+  --void:   #04060C;
+  --abyss:  #080D18;
+  --hull:   #0D1524;
+  --plate:  #131D31;
+  --deck:   #1A2740;
+  --rim:    #24334F;
+  --rim-hi: #3A4E76;
+  --scrim:  rgba(4,6,12,.74);
+
+  --ink:   #F2F5FA;
+  --ink-2: #A9B6CE;
+  --ink-3: #8492AE;
+  --ink-4: #6A7A99;
+
+  --gold:      #F5C562;
+  --gold-lit:  #F5C562;
+  --gold-2:    #E0A93B;
+  --gold-3:    #8C671A;
+  --gold-tint: rgba(245,197,98,.14);
+  --gold-glow: rgba(245,197,98,.26);
+  --gold-ink:  #1A1204;
+
+  --vital:    #3DD9A0;   --vital-lit:    #3DD9A0;
+  --ion:      #56B6F5;   --ion-lit:      #56B6F5;
+  --plasma:   #A98BFA;   --plasma-lit:   #A98BFA;
+  --flare:    #FBB040;   --flare-lit:    #FBB040;
+  --critical: #FB6E6E;   --critical-lit: #FB6E6E;
+  --vital-tint:    rgba(61,217,160,.13);
+  --ion-tint:      rgba(86,182,245,.13);
+  --plasma-tint:   rgba(169,139,250,.13);
+  --flare-tint:    rgba(251,176,64,.13);
+  --critical-tint: rgba(251,110,110,.13);
+
+  --chrome:     #0D1524;
+  --chrome-2:   #131D31;
+  --chrome-rim: rgba(255,255,255,.07);
+  --chrome-ink: #F2F5FA;
+  --chrome-ink-2: rgba(242,245,250,.66);
+  --chrome-ink-3: rgba(242,245,250,.42);
+
+  --lift-1: 0 1px 2px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+  --lift-2: 0 8px 28px -12px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.05);
+  --lift-3: 0 28px 70px -24px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ─── SHARED ──────────────────────────────────────────────────────── */
+:root{
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-data:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+  --t-body:14px/1.55 var(--font-ui);
+  --t-body-sm:13px/1.5 var(--font-ui);
+  --t-micro:11px/1.4 var(--font-ui);
+  --o-1:4px;--o-2:8px;--o-3:12px;--o-4:16px;--o-5:20px;--o-6:24px;
+  --o-8:32px;--o-10:40px;--o-12:48px;--o-16:64px;--o-20:80px;
+  --r-xs:8px;--r-sm:11px;--r-md:16px;--r-lg:22px;--r-xl:30px;--r-full:999px;
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --ease-in-out:cubic-bezier(.6,0,.2,1);
+  --ease-orbit:cubic-bezier(.34,1.3,.44,1);
+  --d-fast:140ms;--d-base:240ms;--d-slow:480ms;
+}
+
+/* ─── RESET ───────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--void);color:var(--ink);font:var(--t-body);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  transition:background var(--d-base) var(--ease-out),color var(--d-base) var(--ease-out)}
+h1,h2,h3,h4,p,figure{margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+ul{margin:0;padding:0;list-style:none}
+table{border-collapse:collapse;width:100%}
+img,svg{display:block;max-width:100%}
+input,select,textarea{font:inherit;color:inherit}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rim-hi);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:2px;border-radius:5px}
+
+/* ─── PRIMITIVES ──────────────────────────────────────────────────── */
+.o-eyebrow{font:600 var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.o-eyebrow--gold{color:var(--gold)}
+.o-display-lg{font:44px/1.02 var(--font-display);letter-spacing:-.02em}
+.o-display{font:32px/1.08 var(--font-display);letter-spacing:-.015em}
+.o-display-sm{font:24px/1.15 var(--font-display);letter-spacing:-.01em}
+.o-num{font-family:var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.o-metric-lg{font:700 46px/1 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.o-metric{font:700 30px/1 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.o-metric-sm{font:600 20px/1 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.o-dim{color:var(--ink-3)}.o-mute{color:var(--ink-2)}
+
+/* ─── SURFACES ────────────────────────────────────────────────────── */
+.o-panel{background:var(--hull);border:1px solid var(--rim);border-radius:var(--r-lg);box-shadow:var(--lift-1)}
+.o-card{position:relative;background:var(--plate);border:1px solid var(--rim);border-radius:var(--r-md);
+  box-shadow:var(--lift-1);transition:border-color var(--d-fast) var(--ease-out),transform var(--d-fast) var(--ease-out),box-shadow var(--d-fast) var(--ease-out)}
+.o-card--hover:hover{border-color:var(--rim-hi);transform:translateY(-2px);box-shadow:var(--lift-2)}
+.o-card[data-gravity="hero"]{
+  background:radial-gradient(120% 170% at 10% -25%, var(--gold-tint), transparent 62%), var(--plate);
+  border-color:var(--gold-3);box-shadow:var(--lift-2)}
+.o-card[data-gravity="ambient"]{background:transparent;border-style:dashed;box-shadow:none}
+.o-card__pad{padding:var(--o-5)}
+.o-card__head{display:flex;align-items:center;justify-content:space-between;gap:var(--o-3);
+  padding:var(--o-4) var(--o-5);border-bottom:1px solid var(--rim)}
+.o-card__title{font:600 14px/1.3 var(--font-ui);letter-spacing:-.01em;display:flex;align-items:center;gap:var(--o-3)}
+.o-card[data-accent]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0}
+.o-card[data-accent="gold"]::before{background:var(--gold-lit)}
+.o-card[data-accent="vital"]::before{background:var(--vital)}
+.o-card[data-accent="ion"]::before{background:var(--ion)}
+.o-card[data-accent="plasma"]::before{background:var(--plasma)}
+.o-card[data-accent="flare"]::before{background:var(--flare)}
+.o-card[data-accent="critical"]::before{background:var(--critical)}
+
+/* Dark chrome surface — KPI strip, dock, command core. Constant in both themes. */
+.o-chrome{background:linear-gradient(135deg,var(--chrome),var(--chrome-2));color:var(--chrome-ink);
+  border:1px solid var(--chrome-rim);border-radius:var(--r-lg);box-shadow:var(--lift-2)}
+
+/* ─── BUTTONS ─────────────────────────────────────────────────────── */
+.o-btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--o-2);
+  height:38px;padding:0 var(--o-4);border-radius:var(--r-sm);
+  font:600 13px/1 var(--font-ui);white-space:nowrap;border:1px solid transparent;
+  transition:all var(--d-fast) var(--ease-out)}
+.o-btn svg{width:15px;height:15px;flex:none}
+.o-btn--gold{background:linear-gradient(180deg,var(--gold-lit),var(--gold-2));color:var(--gold-ink);
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 8px 20px -10px var(--gold-2)}
+.o-btn--gold:hover{filter:brightness(1.05);box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 12px 26px -10px var(--gold-2)}
+.o-btn--dark{background:var(--chrome);color:var(--chrome-ink);border-color:var(--chrome-rim)}
+.o-btn--dark:hover{filter:brightness(1.35)}
+.o-btn--solid{background:var(--deck);color:var(--ink);border-color:var(--rim-hi)}
+.o-btn--solid:hover{background:var(--rim)}
+.o-btn--ghost{color:var(--ink-2);border-color:var(--rim-hi);background:var(--hull)}
+.o-btn--ghost:hover{color:var(--ink);border-color:var(--gold-3);background:var(--deck)}
+.o-btn--quiet{color:var(--ink-2)}
+.o-btn--quiet:hover{color:var(--ink);background:var(--deck)}
+.o-btn--danger{background:var(--critical-tint);color:var(--critical);border-color:color-mix(in srgb,var(--critical) 30%,transparent)}
+.o-btn--sm{height:30px;padding:0 var(--o-3);font-size:12px;border-radius:var(--r-xs)}
+.o-btn--lg{height:46px;padding:0 var(--o-6);font-size:14px;border-radius:var(--r-md)}
+.o-btn--icon{width:38px;padding:0}
+.o-btn--icon.o-btn--sm{width:30px}
+.o-btn:disabled{opacity:.42;pointer-events:none}
+.o-fab{width:40px;height:40px;border-radius:var(--r-md);display:grid;place-items:center;
+  background:var(--chrome);color:var(--chrome-ink);box-shadow:var(--lift-2);
+  transition:all var(--d-fast) var(--ease-out)}
+.o-fab:hover{transform:translateY(-1px) scale(1.04)}
+.o-askai{display:inline-flex;align-items:center;gap:var(--o-2);height:38px;padding:0 var(--o-4);
+  border-radius:var(--r-sm);font:600 13px/1 var(--font-ui);color:var(--ink);
+  background:var(--hull);border:1px solid var(--rim-hi);transition:all var(--d-fast) var(--ease-out)}
+.o-askai:hover{border-color:var(--gold-3);box-shadow:0 0 0 3px var(--gold-glow)}
+.o-askai svg{color:var(--gold)}
+
+/* ─── BADGES ──────────────────────────────────────────────────────── */
+.o-badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:var(--r-full);
+  font:600 11px/1 var(--font-ui);letter-spacing:.05em;text-transform:uppercase;
+  background:var(--deck);color:var(--ink-2);border:1px solid var(--rim)}
+.o-badge::before{content:"";width:5px;height:5px;border-radius:99px;background:currentColor;flex:none}
+.o-badge--bare::before{display:none}
+.o-badge[data-tone="gold"]{background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)}
+.o-badge[data-tone="vital"]{background:var(--vital-tint);color:var(--vital);border-color:color-mix(in srgb,var(--vital) 26%,transparent)}
+.o-badge[data-tone="ion"]{background:var(--ion-tint);color:var(--ion);border-color:color-mix(in srgb,var(--ion) 26%,transparent)}
+.o-badge[data-tone="plasma"]{background:var(--plasma-tint);color:var(--plasma);border-color:color-mix(in srgb,var(--plasma) 26%,transparent)}
+.o-badge[data-tone="flare"]{background:var(--flare-tint);color:var(--flare);border-color:color-mix(in srgb,var(--flare) 26%,transparent)}
+.o-badge[data-tone="critical"]{background:var(--critical-tint);color:var(--critical);border-color:color-mix(in srgb,var(--critical) 28%,transparent)}
+.o-badge--pulse::before{animation:o-pulse 2s var(--ease-in-out) infinite}
+@keyframes o-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+.o-tag{display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:var(--r-xs);
+  font:500 11px/1 var(--font-ui);background:var(--deck);color:var(--ink-3);border:1px solid var(--rim)}
+.o-count{min-width:19px;height:19px;padding:0 5px;border-radius:99px;display:inline-grid;place-items:center;
+  font:700 10.5px/1 var(--font-data);background:var(--critical-lit);color:#fff}
+.o-count[data-tone="gold"]{background:var(--gold-lit);color:var(--gold-ink)}
+.o-count[data-tone="flare"]{background:var(--flare-lit);color:var(--gold-ink)}
+
+/* ─── RINGS & METERS ──────────────────────────────────────────────── */
+.o-ring{position:relative;display:inline-grid;place-items:center;flex:none}
+.o-ring svg{transform:rotate(-90deg)}
+.o-ring__track{fill:none;stroke:var(--rim)}
+.o-ring__value{fill:none;stroke-linecap:round;transition:stroke-dashoffset var(--d-slow) var(--ease-out)}
+.o-ring__center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:1px}
+.o-ring__num{font:700 17px/1 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.o-ring__label{font:600 9px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.o-ring[data-tone="gold"] .o-ring__value{stroke:var(--gold-lit)}
+.o-ring[data-tone="vital"] .o-ring__value{stroke:var(--vital-lit)}
+.o-ring[data-tone="ion"] .o-ring__value{stroke:var(--ion-lit)}
+.o-ring[data-tone="plasma"] .o-ring__value{stroke:var(--plasma-lit)}
+.o-ring[data-tone="flare"] .o-ring__value{stroke:var(--flare-lit)}
+.o-ring[data-tone="critical"] .o-ring__value{stroke:var(--critical-lit)}
+/* on the dark chrome strip the track must lighten */
+.o-chrome .o-ring__track{stroke:rgba(255,255,255,.14)}
+.o-chrome .o-ring__label{color:var(--chrome-ink-3)}
+
+.o-meter{display:flex;gap:2px;height:6px;border-radius:99px;overflow:hidden;background:var(--rim)}
+.o-meter span{display:block;height:100%;transition:width var(--d-slow) var(--ease-out)}
+.o-meter--tall{height:10px}
+.o-legend{display:flex;flex-direction:column;gap:var(--o-2);margin-top:var(--o-3)}
+.o-legend li{display:flex;align-items:center;gap:8px;font:var(--t-body-sm);color:var(--ink-2)}
+.o-legend i{width:8px;height:8px;border-radius:99px;flex:none}
+.o-legend b{margin-left:auto;font-family:var(--font-data);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.o-bar{height:5px;border-radius:99px;background:var(--rim);overflow:hidden}
+.o-bar>i{display:block;height:100%;border-radius:99px;background:var(--gold-lit);transition:width var(--d-slow) var(--ease-out)}
+
+/* ─── KPI STRIP — dark bar across the top ─────────────────────────── */
+.o-kpistrip{display:flex;align-items:stretch;flex-wrap:wrap;overflow:hidden;
+  background:linear-gradient(135deg,var(--chrome),var(--chrome-2));
+  border:1px solid var(--chrome-rim);border-radius:var(--r-lg);box-shadow:var(--lift-2);color:var(--chrome-ink)}
+.o-kpi{flex:1;min-width:126px;padding:var(--o-4) var(--o-5);display:flex;align-items:center;gap:var(--o-3);
+  border-right:1px solid var(--chrome-rim);transition:background var(--d-fast) var(--ease-out)}
+.o-kpi:last-child{border-right:0}
+.o-kpi:hover{background:rgba(255,255,255,.04)}
+.o-kpi__k{font:600 var(--t-micro);letter-spacing:.13em;text-transform:uppercase;color:var(--chrome-ink-3)}
+.o-kpi__v{margin-top:5px;font:700 22px/1 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.o-kpi__f{margin-top:5px;font:500 11.5px/1.3 var(--font-ui);color:var(--chrome-ink-2)}
+.o-kpi--cta{flex:none;padding:var(--o-3);display:grid;place-items:center;border-right:0}
+.o-kpi--cta .o-btn{background:var(--chrome);border-color:var(--chrome-rim);color:var(--chrome-ink)}
+.o-kpi--cta .o-btn:hover{background:rgba(255,255,255,.08)}
+
+/* ─── STAT TILE ───────────────────────────────────────────────────── */
+.o-stat{padding:var(--o-4) var(--o-5);border-radius:var(--r-md);background:var(--plate);
+  border:1px solid var(--rim);transition:border-color var(--d-fast) var(--ease-out)}
+.o-stat:hover{border-color:var(--rim-hi)}
+.o-stat__label{font:600 var(--t-micro);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.o-stat__value{margin-top:var(--o-2);display:flex;align-items:baseline;gap:6px}
+.o-stat__unit{font:500 12px/1 var(--font-ui);color:var(--ink-3)}
+.o-stat__foot{margin-top:var(--o-2);display:flex;align-items:center;gap:6px;font:var(--t-body-sm);color:var(--ink-3)}
+.o-delta{display:inline-flex;align-items:center;gap:3px;font:600 12px/1 var(--font-data)}
+.o-delta--up{color:var(--vital)}.o-delta--down{color:var(--critical)}
+
+/* ─── GREETING BLOCK ──────────────────────────────────────────────── */
+.o-greet{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--o-6);flex-wrap:wrap}
+.o-greet__h{font:32px/1.1 var(--font-display);letter-spacing:-.015em}
+.o-greet__s{margin-top:var(--o-2);font:var(--t-body);color:var(--ink-3)}
+.o-greet__s b{color:var(--ink);font-weight:600}
+
+/* ─── QUICK ADD ───────────────────────────────────────────────────── */
+.o-quick{display:flex;align-items:flex-start;gap:var(--o-4)}
+.o-quick__label{font:600 12px/1 var(--font-ui);color:var(--ink-3);padding-top:14px;white-space:nowrap}
+.o-quick__item{display:grid;justify-items:center;gap:7px;width:60px;
+  transition:transform var(--d-fast) var(--ease-orbit)}
+.o-quick__item:hover{transform:translateY(-2px)}
+.o-quick__ico{width:40px;height:40px;border-radius:var(--r-sm);display:grid;place-items:center;
+  border:1px solid var(--rim);transition:all var(--d-fast) var(--ease-out)}
+.o-quick__item:hover .o-quick__ico{box-shadow:var(--lift-2)}
+.o-quick__t{font:500 10.5px/1 var(--font-ui);color:var(--ink-3)}
+.o-quick__item:hover .o-quick__t{color:var(--ink)}
+
+/* ─── TASK CARD ───────────────────────────────────────────────────── */
+.o-task{position:relative;padding:var(--o-4);border-radius:var(--r-md);background:var(--plate);
+  border:1px solid var(--rim);box-shadow:var(--lift-1);min-width:0;
+  transition:all var(--d-fast) var(--ease-out)}
+.o-task:hover{border-color:var(--rim-hi);transform:translateY(-2px);box-shadow:var(--lift-2)}
+.o-task__flag{display:flex;align-items:center;gap:6px;font:700 10px/1 var(--font-ui);
+  letter-spacing:.13em;text-transform:uppercase}
+.o-task__flag i{width:6px;height:6px;border-radius:99px;background:currentColor}
+.o-task__t{margin-top:var(--o-3);font:600 13.5px/1.35 var(--font-ui);color:var(--ink)}
+.o-task__m{margin-top:3px;font:var(--t-body-sm);color:var(--ink-3)}
+.o-task__d{margin-top:var(--o-3);font:500 12px/1 var(--font-data);color:var(--ink-3)}
+.o-task__foot{margin-top:var(--o-4);display:flex;align-items:center;gap:var(--o-3)}
+.o-task__pct{margin-left:auto;font:600 12px/1 var(--font-data);color:var(--ink-2)}
+.o-task__more{position:absolute;top:var(--o-3);right:var(--o-3);color:var(--ink-4);
+  width:22px;height:22px;border-radius:6px;display:grid;place-items:center}
+.o-task__more:hover{background:var(--deck);color:var(--ink-2)}
+
+/* ─── GANTT TIMELINE ──────────────────────────────────────────────── */
+.o-gantt{position:relative;padding-top:26px}
+.o-gantt__scale{position:absolute;top:0;left:0;right:0;display:flex;border-bottom:1px solid var(--rim);padding-bottom:6px}
+.o-gantt__scale span{flex:1;font:600 var(--t-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}
+.o-gantt__band{position:relative;height:28px;margin-top:8px}
+.o-gantt__bar{position:absolute;top:0;height:28px;border-radius:var(--r-full);display:flex;align-items:center;
+  justify-content:space-between;padding:0 12px;gap:10px;font:600 11.5px/1 var(--font-ui);
+  white-space:nowrap;overflow:hidden;border:1px solid transparent}
+.o-gantt__bar span{font-family:var(--font-data);font-weight:500;opacity:.75;font-size:10.5px}
+.o-gantt__now{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--ink);z-index:2;opacity:.35}
+.o-gantt__now::before{content:"Today";position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+  font:700 9.5px/1 var(--font-ui);letter-spacing:.1em;color:var(--chrome-ink);
+  background:var(--chrome);padding:5px 9px;border-radius:var(--r-full)}
+
+/* ─── LISTS / TABLES ──────────────────────────────────────────────── */
+.o-list{border:1px solid var(--rim);border-radius:var(--r-md);overflow:hidden;background:var(--plate)}
+.o-row{display:grid;align-items:center;gap:var(--o-4);
+  grid-template-columns:36px minmax(0,1fr) auto auto;
+  padding:var(--o-3) var(--o-4);border-bottom:1px solid var(--rim);position:relative;
+  transition:background var(--d-fast) var(--ease-out)}
+.o-row:last-child{border-bottom:0}
+.o-row:hover{background:var(--deck)}
+.o-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background var(--d-fast)}
+.o-row:hover::before{background:var(--gold-lit)}
+.o-row__icon{width:36px;height:36px;border-radius:var(--r-xs);display:grid;place-items:center;
+  background:var(--deck);border:1px solid var(--rim);color:var(--ink-2)}
+.o-row__name{font:600 13.5px/1.3 var(--font-ui);color:var(--ink)}
+.o-row__meta{margin-top:3px;display:flex;flex-wrap:wrap;gap:var(--o-3);font:var(--t-body-sm);color:var(--ink-3)}
+.o-table th{text-align:left;padding:var(--o-3) var(--o-4);font:600 var(--t-micro);
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--rim);white-space:nowrap}
+.o-table td{padding:var(--o-3) var(--o-4);border-bottom:1px solid var(--rim);font:var(--t-body-sm)}
+.o-table tbody tr:hover{background:var(--deck)}
+.o-table .num{text-align:right;font-family:var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ─── AVATARS ─────────────────────────────────────────────────────── */
+.o-av{width:26px;height:26px;border-radius:99px;display:grid;place-items:center;flex:none;
+  font:600 10px/1 var(--font-ui);background:var(--deck);color:var(--ink-2);border:1px solid var(--rim)}
+.o-av--lg{width:38px;height:38px;font-size:13px}
+.o-av--sm{width:22px;height:22px;font-size:9px}
+.o-avs{display:flex}
+.o-avs .o-av+.o-av{margin-left:-8px}
+.o-avs .o-av{box-shadow:0 0 0 2px var(--plate)}
+
+/* ─── FORMS ───────────────────────────────────────────────────────── */
+.o-field{display:grid;gap:6px}
+.o-label{font:600 var(--t-micro);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+.o-input,.o-select,.o-textarea{width:100%;height:38px;padding:0 var(--o-3);border-radius:var(--r-sm);
+  background:var(--deck);border:1px solid var(--rim);color:var(--ink);font:var(--t-body);
+  transition:border-color var(--d-fast),box-shadow var(--d-fast),background var(--d-fast)}
+.o-textarea{height:auto;min-height:90px;padding:10px var(--o-3);resize:vertical;line-height:1.55}
+.o-input::placeholder,.o-textarea::placeholder{color:var(--ink-4)}
+.o-input:focus,.o-select:focus,.o-textarea:focus{outline:none;border-color:var(--gold-2);
+  box-shadow:0 0 0 3px var(--gold-glow);background:var(--hull)}
+.o-input--num{font-family:var(--font-data);font-variant-numeric:tabular-nums;text-align:right}
+.o-inputgroup{display:flex}
+.o-inputgroup .o-affix{display:grid;place-items:center;padding:0 12px;border:1px solid var(--rim);border-right:0;
+  border-radius:var(--r-sm) 0 0 var(--r-sm);background:var(--rim);color:var(--ink-3);font:600 12px/1 var(--font-data)}
+.o-inputgroup .o-input{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.o-help{font:var(--t-body-sm);color:var(--ink-3)}
+.o-switch{position:relative;width:40px;height:23px;border-radius:99px;background:var(--rim-hi);
+  border:1px solid var(--rim-hi);transition:all var(--d-base) var(--ease-out);flex:none}
+.o-switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:99px;
+  background:var(--hull);box-shadow:var(--lift-1);transition:all var(--d-base) var(--ease-orbit)}
+.o-switch[aria-checked="true"]{background:var(--gold-2);border-color:var(--gold-2)}
+.o-switch[aria-checked="true"]::after{left:20px}
+.o-seg{display:inline-flex;padding:3px;gap:2px;background:var(--deck);border:1px solid var(--rim);border-radius:var(--r-sm)}
+.o-seg button{height:28px;padding:0 var(--o-3);border-radius:8px;font:600 12px/1 var(--font-ui);
+  color:var(--ink-3);transition:all var(--d-fast) var(--ease-out)}
+.o-seg button[aria-selected="true"]{background:var(--hull);color:var(--ink);box-shadow:var(--lift-1)}
+.o-tabs{display:flex;gap:var(--o-4);flex-wrap:wrap}
+.o-tabs button{position:relative;height:30px;padding:0 var(--o-3);border-radius:var(--r-full);
+  font:600 12.5px/1 var(--font-ui);color:var(--ink-3);
+  transition:all var(--d-fast) var(--ease-out)}
+.o-tabs button[aria-selected="true"]{color:var(--ink);background:var(--deck);border:1px solid var(--rim)}
+.o-tabs button:hover{color:var(--ink-2)}
+
+/* ─── ALERTS ──────────────────────────────────────────────────────── */
+.o-alert{display:grid;grid-template-columns:auto 1fr auto;gap:var(--o-3);align-items:start;
+  padding:var(--o-3) var(--o-4);border-radius:var(--r-sm);border:1px solid var(--rim);background:var(--plate)}
+.o-alert__dot{width:8px;height:8px;border-radius:99px;margin-top:6px;flex:none}
+.o-alert__ico{width:26px;height:26px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none}
+.o-alert__title{font:600 13px/1.35 var(--font-ui)}
+.o-alert__sub{margin-top:2px;font:var(--t-body-sm);color:var(--ink-3)}
+.o-alert__time{font:500 11px/1 var(--font-data);color:var(--ink-4);white-space:nowrap;padding-top:3px}
+.o-feed{display:grid;gap:2px}
+.o-feed .o-alert{border:0;border-radius:var(--r-xs);background:transparent}
+.o-feed .o-alert:hover{background:var(--deck)}
+
+/* ─── PULSE RAIL ──────────────────────────────────────────────────── */
+.o-pulse{display:grid;gap:1px}
+.o-pulse li{display:flex;align-items:center;gap:var(--o-3);padding:8px var(--o-2);border-radius:var(--r-xs);
+  font:var(--t-body-sm);transition:background var(--d-fast) var(--ease-out)}
+.o-pulse li:hover{background:var(--deck)}
+.o-pulse i{width:8px;height:8px;border-radius:99px;flex:none}
+.o-pulse b{margin-left:auto;font:600 13px/1 var(--font-data);font-variant-numeric:tabular-nums}
+
+/* ─── AI DIRECTOR ─────────────────────────────────────────────────── */
+.o-ai__head{display:flex;align-items:center;gap:var(--o-2);padding:var(--o-4) var(--o-5);border-bottom:1px solid var(--rim)}
+.o-ai__item{display:grid;grid-template-columns:auto 1fr;gap:var(--o-3);padding:10px var(--o-2);border-radius:var(--r-xs);
+  transition:background var(--d-fast) var(--ease-out)}
+.o-ai__item:hover{background:var(--deck)}
+.o-ai__ico{width:24px;height:24px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none}
+.o-ai__t{font:600 12.8px/1.35 var(--font-ui)}
+.o-ai__s{margin-top:2px;font:12px/1.4 var(--font-ui);color:var(--ink-3)}
+.o-chips{display:flex;flex-wrap:wrap;gap:var(--o-2)}
+.o-chip{height:32px;padding:0 var(--o-3);border-radius:var(--r-xs);font:600 12px/1 var(--font-ui);
+  display:inline-flex;align-items:center;color:var(--ink-2);background:var(--deck);
+  border:1px solid var(--rim);transition:all var(--d-fast) var(--ease-out)}
+.o-chip:hover{color:var(--ink);border-color:var(--gold-3);background:var(--gold-tint)}
+.o-ai__prompt{display:flex;align-items:center;gap:var(--o-2);padding:0 6px 0 var(--o-4);height:44px;
+  border-radius:var(--r-sm);background:var(--deck);border:1px solid var(--rim)}
+.o-ai__prompt input{flex:1;background:none;border:0;outline:none;font:var(--t-body-sm)}
+.o-ai__send{width:32px;height:32px;border-radius:var(--r-xs);display:grid;place-items:center;
+  background:var(--chrome);color:var(--chrome-ink)}
+
+/* ─── BOTTOM DOCK ─────────────────────────────────────────────────── */
+.o-dock{display:inline-flex;align-items:center;gap:var(--o-1);padding:var(--o-2) var(--o-3);
+  background:var(--chrome);border-radius:var(--r-xl);box-shadow:var(--lift-3);
+  border:1px solid var(--chrome-rim)}
+.o-dock__item{position:relative;min-width:64px;padding:9px 10px 8px;border-radius:var(--r-lg);
+  display:grid;justify-items:center;gap:5px;color:var(--chrome-ink-2);
+  transition:all var(--d-base) var(--ease-orbit)}
+.o-dock__item:hover{color:var(--chrome-ink);background:rgba(255,255,255,.08)}
+.o-dock__item[aria-current="page"]{color:var(--gold-lit);background:rgba(232,184,75,.14);
+  box-shadow:inset 0 0 0 1px rgba(232,184,75,.34)}
+.o-dock__label{font:600 10px/1 var(--font-ui)}
+.o-dock__item .o-count{position:absolute;top:2px;right:8px;border:2px solid var(--chrome)}
+.o-dock__grip{width:44px;height:4px;border-radius:99px;background:var(--rim-hi);margin:0 auto 8px}
+
+/* ─── ARC ORBIT NAV ───────────────────────────────────────────────── */
+.o-arc{position:relative;width:236px;flex:none;align-self:stretch;min-height:520px;overflow:hidden}
+.o-arc__rings{position:absolute;left:-260px;top:50%;transform:translateY(-50%);width:520px;height:520px;pointer-events:none}
+.o-arc__rings circle{fill:none;stroke:var(--rim-hi);stroke-width:1;opacity:.8}
+.o-arc__rings .dash{stroke:var(--gold-3);stroke-dasharray:2 7;transform-origin:50% 50%;animation:o-spin 140s linear infinite}
+@keyframes o-spin{to{transform:rotate(360deg)}}
+.o-arc__core{position:absolute;left:-88px;top:50%;transform:translateY(-50%);
+  width:176px;height:176px;border-radius:99px;display:grid;place-content:center;text-align:center;gap:3px;
+  padding-left:84px;background:radial-gradient(circle at 62% 38%,var(--chrome-2),#05070E 92%);
+  box-shadow:0 24px 60px -22px rgba(20,28,51,.55), 0 0 0 10px var(--abyss);
+  border:1px solid var(--chrome-rim)}
+.o-arc__core::after{content:"";position:absolute;inset:-1px;border-radius:99px;pointer-events:none;
+  background:conic-gradient(from 186deg,transparent 0 56%,var(--gold-lit) 74%,transparent 90%);
+  -webkit-mask:radial-gradient(circle,transparent 0 calc(50% - 2px),#000 calc(50% - 2px));
+  mask:radial-gradient(circle,transparent 0 calc(50% - 2px),#000 calc(50% - 2px))}
+.o-arc__dots{display:flex;gap:5px;justify-content:center;margin-top:6px}
+.o-arc__dots i{width:5px;height:5px;border-radius:99px;background:rgba(255,255,255,.28)}
+.o-arc__dots i:first-child{background:var(--gold-lit)}
+.o-arc__node{position:absolute;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:5px;width:76px;text-align:center}
+.o-arc__dot{position:relative;width:38px;height:38px;border-radius:var(--r-sm);display:grid;place-items:center;
+  background:var(--hull);border:1px solid var(--rim);color:var(--ink-3);box-shadow:var(--lift-1);
+  transition:all var(--d-base) var(--ease-orbit)}
+.o-arc__node:hover .o-arc__dot{color:var(--gold);border-color:var(--gold-3);transform:translateX(3px) scale(1.06);
+  box-shadow:0 0 0 4px var(--gold-glow),var(--lift-2)}
+.o-arc__node[data-active="true"] .o-arc__dot{background:var(--chrome);color:var(--gold-lit);
+  border-color:var(--chrome);box-shadow:0 0 0 5px var(--gold-glow),0 10px 26px -8px rgba(20,28,51,.5)}
+.o-arc__label{font:600 10.5px/1.2 var(--font-ui);color:var(--ink-3)}
+.o-arc__node:hover .o-arc__label,.o-arc__node[data-active="true"] .o-arc__label{color:var(--ink)}
+.o-arc__dot .o-count{position:absolute;top:-6px;right:-6px;border:2px solid var(--abyss)}
+.o-arc__next{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:30px;height:30px;border-radius:99px;display:grid;place-items:center;
+  background:var(--hull);border:1px solid var(--rim);color:var(--ink-3);box-shadow:var(--lift-1)}
+.o-arc__next:hover{color:var(--gold);border-color:var(--gold-3)}
+
+/* ─── TOPBAR ──────────────────────────────────────────────────────── */
+.o-topbar{height:68px;display:flex;align-items:center;gap:var(--o-4);padding:0 var(--o-5);
+  background:var(--hull);border-bottom:1px solid var(--rim)}
+.o-search{flex:1;max-width:420px;height:40px;display:flex;align-items:center;gap:var(--o-3);
+  padding:0 var(--o-4);border-radius:var(--r-sm);background:var(--deck);border:1px solid var(--rim);
+  color:var(--ink-4);font:var(--t-body-sm);cursor:text;transition:all var(--d-fast) var(--ease-out)}
+.o-search:hover{border-color:var(--rim-hi);background:var(--hull)}
+.o-kbd{font:600 10.5px/1 var(--font-data);padding:4px 6px;border-radius:5px;
+  background:var(--hull);border:1px solid var(--rim);color:var(--ink-3)}
+.o-brandmark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(150deg,var(--gold-lit),var(--gold-2));color:var(--gold-ink);
+  box-shadow:0 6px 18px -8px var(--gold-2)}
+.o-evtsq{width:38px;height:38px;border-radius:11px;display:grid;place-content:center;text-align:center;flex:none;
+  background:linear-gradient(160deg,var(--chrome),var(--chrome-2));color:var(--gold-lit);
+  font:700 8.5px/1.15 var(--font-data);letter-spacing:.02em;border:1px solid var(--chrome-rim)}
+
+/* ─── EMPTY / MODAL / TOAST ───────────────────────────────────────── */
+.o-empty{display:grid;place-items:center;gap:var(--o-4);text-align:center;padding:var(--o-16) var(--o-6);
+  border:1px dashed var(--rim-hi);border-radius:var(--r-lg);background:var(--deck)}
+.o-empty__orb{width:76px;height:76px;border-radius:99px;display:grid;place-items:center;
+  background:var(--hull);border:1px solid var(--rim);color:var(--ink-3);box-shadow:0 0 0 12px var(--abyss)}
+.o-empty h3{font:24px/1.15 var(--font-display)}
+.o-empty p{max-width:46ch;font:var(--t-body);color:var(--ink-3)}
+.o-modal{width:min(560px,92vw);background:var(--hull);border:1px solid var(--rim-hi);
+  border-radius:var(--r-xl);box-shadow:var(--lift-3);overflow:hidden}
+.o-toast{display:flex;align-items:center;gap:var(--o-3);padding:12px var(--o-4);border-radius:var(--r-sm);
+  background:var(--hull);border:1px solid var(--rim-hi);box-shadow:var(--lift-2);font:var(--t-body-sm)}
+
+/* ─── DOC SHELL (this page only — not shipped) ────────────────────── */
+.doc{display:grid;grid-template-columns:262px minmax(0,1fr);min-height:100vh}
+.doc__nav{position:sticky;top:0;height:100vh;overflow-y:auto;padding:var(--o-6) var(--o-4);
+  background:var(--hull);border-right:1px solid var(--rim)}
+.doc__brand{display:flex;align-items:center;gap:var(--o-3);padding:0 var(--o-2) var(--o-6)}
+.doc__navgroup{margin-bottom:var(--o-5)}
+.doc__navlabel{padding:0 var(--o-3) var(--o-2);font:600 var(--t-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
+.doc__navlink{display:flex;align-items:center;gap:var(--o-3);padding:8px var(--o-3);border-radius:var(--r-xs);
+  font:500 13px/1 var(--font-ui);color:var(--ink-2);transition:all var(--d-fast) var(--ease-out)}
+.doc__navlink:hover{background:var(--deck);color:var(--ink)}
+.doc__navlink.is-active{background:var(--gold-tint);color:var(--gold);font-weight:600}
+.doc__navnum{font:600 10px/1 var(--font-data);color:var(--ink-4);width:16px}
+.doc__main{background:var(--abyss);min-width:0}
+.doc__inner{max-width:1320px;margin:0 auto;padding:var(--o-12) var(--o-10) var(--o-20)}
+.doc__section{padding-top:var(--o-12);scroll-margin-top:var(--o-6)}
+.doc__h2{font:32px/1.08 var(--font-display);letter-spacing:-.02em;margin-bottom:var(--o-2)}
+.doc__lede{font:16px/1.6 var(--font-ui);color:var(--ink-2);max-width:72ch}
+.doc__h3{font:600 15px/1.3 var(--font-ui);margin:var(--o-10) 0 var(--o-4);padding-bottom:var(--o-3);
+  border-bottom:1px solid var(--rim);display:flex;align-items:center;justify-content:space-between;gap:var(--o-4)}
+.doc__note{padding:var(--o-4) var(--o-5);border-radius:var(--r-md);background:var(--hull);
+  border:1px solid var(--rim);border-left:3px solid var(--gold-lit);font:var(--t-body);color:var(--ink-2)}
+.doc__note b{color:var(--ink)}
+.doc__grid{display:grid;gap:var(--o-4)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1180px){.g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.doc{grid-template-columns:1fr}.doc__nav{display:none}
+  .g2,.g3,.g4,.g5{grid-template-columns:1fr}.doc__inner{padding:var(--o-8) var(--o-5)}}
+.spec{display:flex;flex-wrap:wrap;align-items:center;gap:var(--o-4);padding:var(--o-5);
+  border:1px solid var(--rim);border-radius:var(--r-md);background:var(--hull)}
+.swatch{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--rim);background:var(--hull)}
+.swatch__chip{height:70px}
+.swatch__meta{padding:10px 12px;display:grid;gap:2px}
+.swatch__name{font:600 12px/1 var(--font-ui)}
+.swatch__hex{font:500 10.5px/1 var(--font-data);color:var(--ink-3)}
+.code{font:500 12.5px/1.7 var(--font-data);background:#0D1524;color:#A9B6CE;
+  border-radius:var(--r-md);padding:var(--o-4) var(--o-5);overflow-x:auto;white-space:pre}
+.code .k{color:#A98BFA}.code .s{color:#3DD9A0}.code .c{color:#6A7A99}.code .v{color:#F5C562}
+.screen{border:1px solid var(--rim-hi);border-radius:var(--r-xl);overflow:hidden;
+  background:var(--abyss);box-shadow:var(--lift-3)}
+.screen__chrome{height:34px;display:flex;align-items:center;gap:7px;padding:0 var(--o-4);
+  background:var(--hull);border-bottom:1px solid var(--rim)}
+.screen__chrome i{width:9px;height:9px;border-radius:99px;background:var(--rim-hi)}
+.screen__url{margin-left:var(--o-3);font:500 11px/1 var(--font-data);color:var(--ink-4)}
+.themeswitch{position:fixed;right:var(--o-6);bottom:var(--o-6);z-index:90;display:flex;gap:2px;padding:4px;
+  background:var(--hull);border:1px solid var(--rim-hi);border-radius:var(--r-full);box-shadow:var(--lift-3)}
+.themeswitch button{width:38px;height:32px;border-radius:99px;display:grid;place-items:center;color:var(--ink-3)}
+.themeswitch button.is-on{background:var(--gold-tint);color:var(--gold)}
+.flex{display:flex}.wrap{flex-wrap:wrap}.items-c{align-items:center}.items-baseline{align-items:baseline}.items-s{align-items:flex-start}
+.between{justify-content:space-between}.center{justify-content:center}
+.gap1{gap:4px}.gap2{gap:8px}.gap3{gap:12px}.gap4{gap:16px}.gap5{gap:20px}.gap6{gap:24px}.gap8{gap:32px}
+.col{display:flex;flex-direction:column}.grow{flex:1}.ml-auto{margin-left:auto}
+.mt1{margin-top:4px}.mt2{margin-top:8px}.mt3{margin-top:12px}.mt4{margin-top:16px}
+.mt5{margin-top:20px}.mt6{margin-top:24px}.mt8{margin-top:32px}.mt10{margin-top:40px}
+.tr{text-align:right}.nowrap{white-space:nowrap}.rel{position:relative}
+.vr{width:1px;align-self:stretch;background:var(--rim);min-height:32px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="i-home"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></g>
+<g id="i-grid"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></g>
+<g id="i-task"><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="m9 13 2 2 4-4"/></g>
+<g id="i-money"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.8 9.6c-.5-.9-1.6-1.4-2.8-1.4-1.7 0-2.8.8-2.8 2.1 0 3 5.6 1.5 5.6 4.4 0 1.3-1.2 2.1-2.8 2.1-1.3 0-2.4-.5-2.9-1.5"/></g>
+<g id="i-cal"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></g>
+<g id="i-mic"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></g>
+<g id="i-venue"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6M8 11h2M14 11h2"/></g>
+<g id="i-truck"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></g>
+<g id="i-star"><path d="m12 3 2.7 5.7 6.3.9-4.6 4.4 1.1 6.2-5.5-3-5.5 3 1.1-6.2L3 9.6l6.3-.9z"/></g>
+<g id="i-users"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 5.2a3.4 3.4 0 0 1 0 6.6M18 14.4A6.5 6.5 0 0 1 21.5 20"/></g>
+<g id="i-doc"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13 3v6h6M9 13h6M9 17h4"/></g>
+<g id="i-note"><path d="M5 4h14v11l-5 5H5z"/><path d="M19 15h-5v5M8 8h8M8 12h5"/></g>
+<g id="i-file"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13 3v6h6"/></g>
+<g id="i-contact"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 16.5a4 4 0 0 1 7 0M15 10h3M15 13.5h3"/></g>
+<g id="i-card"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></g>
+<g id="i-bell"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.5 20a1.8 1.8 0 0 0 3 0"/></g>
+<g id="i-chart"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></g>
+<g id="i-spark"><path d="m12 3 1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/><path d="M18.5 15.5 19.4 18l2.5.9-2.5.9-.9 2.5-.9-2.5L15 18l2.6-.9z"/></g>
+<g id="i-gear"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.5 15a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10.4 4.4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7 2 2 0 1 1 0 4z"/></g>
+<g id="i-search"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g>
+<g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+<g id="i-arrow"><path d="M5 12h14M13 6l6 6-6 6"/></g>
+<g id="i-chevL"><path d="M15 6l-6 6 6 6"/></g>
+<g id="i-chevR"><path d="M9 6l6 6-6 6"/></g>
+<g id="i-chevD"><path d="M6 9l6 6 6-6"/></g>
+<g id="i-warn"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></g>
+<g id="i-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></g>
+<g id="i-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></g>
+<g id="i-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></g>
+<g id="i-orbit"><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-28 12 12)"/><circle cx="12" cy="12" r="3"/></g>
+<g id="i-pulse"><path d="M2 12h4l3-8 4 16 3-8h6"/></g>
+<g id="i-chat"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></g>
+<g id="i-send"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8z"/></g>
+<g id="i-dots"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g>
+<g id="i-sliders"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></g>
+</defs></svg>
+
+<div class="themeswitch" role="group" aria-label="Theme">
+  <button id="thLight" class="is-on" title="Planning (light) — the default"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-sun"/></svg></button>
+  <button id="thDark" title="Show days (dark)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-moon"/></svg></button>
+</div>
+
+<div class="doc">
+  <nav class="doc__nav">
+    <div class="doc__brand">
+      <div class="o-brandmark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-orbit"/></svg></div>
+      <div>
+        <div style="font:600 14px/1.1 var(--font-ui);letter-spacing:-.01em">ORBIT</div>
+        <div class="o-eyebrow" style="margin-top:3px">Elite Event Hub</div>
+      </div>
+    </div>
+    <div class="doc__navgroup">
+      <div class="doc__navlabel">Read first</div>
+      <a class="doc__navlink" href="#what"><span class="doc__navnum">00</span>What this is</a>
+      <a class="doc__navlink" href="#gold"><span class="doc__navnum">01</span>The two golds</a>
+    </div>
+    <div class="doc__navgroup">
+      <div class="doc__navlabel">Components</div>
+      <a class="doc__navlink" href="#core"><span class="doc__navnum">02</span>Core</a>
+      <a class="doc__navlink" href="#kpi"><span class="doc__navnum">03</span>KPI strip</a>
+      <a class="doc__navlink" href="#arc"><span class="doc__navnum">04</span>Arc orbit nav</a>
+      <a class="doc__navlink" href="#work"><span class="doc__navnum">05</span>Greeting, Quick Add, Tasks</a>
+      <a class="doc__navlink" href="#time"><span class="doc__navnum">06</span>Timeline</a>
+      <a class="doc__navlink" href="#rail"><span class="doc__navnum">07</span>Pulse &amp; AI Director</a>
+      <a class="doc__navlink" href="#dock"><span class="doc__navnum">08</span>Bottom dock</a>
+    </div>
+    <div class="doc__navgroup">
+      <div class="doc__navlabel">Assembled</div>
+      <a class="doc__navlink" href="#hub"><span class="doc__navnum">09</span>The full hub</a>
+      <a class="doc__navlink" href="#dark"><span class="doc__navnum">10</span>Show-day dark</a>
+    </div>
+  </nav>
+
+  <main class="doc__main">
+    <div class="doc__inner">
+
+      <header>
+        <div class="o-eyebrow o-eyebrow--gold">Elite Event Hub · Design System</div>
+        <h1 class="o-display-lg mt3" style="max-width:20ch">Everything orbits the&nbsp;event.</h1>
+        <p class="doc__lede mt4">
+          This is the system behind the layout you approved. Light canvas, gold accent, the Command Center
+          disc anchoring an orbit of modules, a dark instrument strip across the top and a floating dock at
+          the bottom. Every pixel below is live CSS driven by tokens — nothing here is a picture.
+        </p>
+        <div class="flex wrap gap2 mt6">
+          <span class="o-badge" data-tone="gold">Gold accent</span>
+          <span class="o-badge" data-tone="vital">Light-first</span>
+          <span class="o-badge" data-tone="ion">Dark for show days</span>
+          <span class="o-badge" data-tone="plasma">WCAG AA verified</span>
+        </div>
+      </header>
+
+      <!-- ═══ 00 ═══ -->
+      <section class="doc__section" id="what">
+        <div class="o-eyebrow">00 · Read first</div>
+        <h2 class="doc__h2 mt2">What this file is for</h2>
+        <p class="doc__lede">It is the specification. Claude Code reads the CSS in this file's
+          <code class="o-num" style="color:var(--gold)">&lt;style&gt;</code> block and builds Blade components
+          that emit exactly this markup. When something looks wrong later, you diff against this page —
+          not against a screenshot.</p>
+
+        <div class="doc__grid g3 mt6">
+          <div class="o-card" data-accent="gold"><div class="o-card__pad">
+            <div class="o-eyebrow o-eyebrow--gold">Law 01</div>
+            <h3 class="mt3" style="font:600 14px/1.3 var(--font-ui)">One light source</h3>
+            <p class="mt2 o-dim" style="font:var(--t-body-sm)">Gold marks three things per screen: the primary action,
+              where you are, and the one number that matters. In your current build it is on ten things, which means
+              it is on none.</p>
+          </div></div>
+          <div class="o-card" data-accent="ion"><div class="o-card__pad">
+            <div class="o-eyebrow o-eyebrow--gold">Law 02</div>
+            <h3 class="mt3" style="font:600 14px/1.3 var(--font-ui)">Distance is relevance</h3>
+            <p class="mt2 o-dim" style="font:var(--t-body-sm)">Five modules you touch daily sit on the inner arc.
+              Structure sits further out and renders smaller. Angles never change between events, so muscle
+              memory carries.</p>
+          </div></div>
+          <div class="o-card" data-accent="plasma"><div class="o-card__pad">
+            <div class="o-eyebrow o-eyebrow--gold">Law 03</div>
+            <h3 class="mt3" style="font:600 14px/1.3 var(--font-ui)">Light is home</h3>
+            <p class="mt2 o-dim" style="font:var(--t-body-sm)">Planning, budgets, documents and anything printed
+              live in light. Dark is a mode you enter on show days — the whole product flips on one attribute.</p>
+          </div></div>
+          <div class="o-card" data-accent="vital"><div class="o-card__pad">
+            <div class="o-eyebrow o-eyebrow--gold">Law 04</div>
+            <h3 class="mt3" style="font:600 14px/1.3 var(--font-ui)">Numbers are typography</h3>
+            <p class="mt2 o-dim" style="font:var(--t-body-sm)">Every figure uses a monospaced tabular face, so
+              <span class="o-num">JD 214,498</span> and <span class="o-num">JD 98,700</span> line up and can be
+              compared without reading them.</p>
+          </div></div>
+          <div class="o-card" data-accent="critical"><div class="o-card__pad">
+            <div class="o-eyebrow o-eyebrow--gold">Law 05</div>
+            <h3 class="mt3" style="font:600 14px/1.3 var(--font-ui)">Stillness is a feature</h3>
+            <p class="mt2 o-dim" style="font:var(--t-body-sm)">Two things loop in the entire system: the overdue
+              pulse and the live-phase breathe. Both mean "this is happening now." Everything else is triggered.</p>
+          </div></div>
+          <div class="o-card" data-gravity="ambient"><div class="o-card__pad">
+            <div class="o-eyebrow">Chrome is constant</div>
+            <p class="mt3 o-dim" style="font:var(--t-body-sm)">The KPI strip, the dock and the Command Center disc
+              stay dark in both themes. Fixed furniture that changes colour when you switch makes the product feel
+              unstable. They are the anchor.</p>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 01 ═══ -->
+      <section class="doc__section" id="gold">
+        <div class="o-eyebrow">01 · Foundations</div>
+        <h2 class="doc__h2 mt2">The two golds</h2>
+        <p class="doc__lede">This is the single most important rule in the file, and the one most likely to be broken.
+          Gold has two values because it has two jobs, and they are not interchangeable.</p>
+
+        <div class="doc__grid g2 mt6">
+          <div class="o-card"><div class="o-card__pad">
+            <div class="flex items-c gap3">
+              <span style="width:44px;height:44px;border-radius:12px;background:var(--gold);flex:none"></span>
+              <div><div style="font:600 14px/1.3 var(--font-ui)">--gold <span class="o-num o-dim" style="font-size:12px">#8A6209</span></div>
+              <div class="o-eyebrow mt1">Text, icons, labels</div></div>
+            </div>
+            <p class="mt4 o-mute" style="font:var(--t-body-sm)">Dark enough to read. <span style="color:var(--gold);font-weight:600">This sentence is --gold on a white card</span> and clears 5.48:1.</p>
+            <div class="flex wrap gap2 mt4">
+              <span class="o-badge" data-tone="gold">VIP</span>
+              <span class="o-eyebrow o-eyebrow--gold">Section label</span>
+            </div>
+          </div></div>
+          <div class="o-card"><div class="o-card__pad">
+            <div class="flex items-c gap3">
+              <span style="width:44px;height:44px;border-radius:12px;background:var(--gold-lit);flex:none"></span>
+              <div><div style="font:600 14px/1.3 var(--font-ui)">--gold-lit <span class="o-num o-dim" style="font-size:12px">#E8B84B</span></div>
+              <div class="o-eyebrow mt1">Fills, rings, active states</div></div>
+            </div>
+            <p class="mt4 o-mute" style="font:var(--t-body-sm)">Bright enough to carry dark text on top — 9.16:1. As
+              text on a light surface it is <b style="color:var(--critical)">1.69:1</b>. Never do that.</p>
+            <div class="flex wrap gap2 mt4">
+              <button class="o-btn o-btn--gold o-btn--sm">Primary action</button>
+              <span class="o-count" data-tone="gold">4</span>
+            </div>
+          </div></div>
+        </div>
+
+        <h3 class="doc__h3">Signal palette <span class="o-tag">state only — never decoration</span></h3>
+        <div class="doc__grid g5">
+          <div class="swatch"><div class="swatch__chip" style="background:var(--vital-lit)"></div><div class="swatch__meta"><span class="swatch__name">Vital</span><span class="swatch__hex">done · healthy · paid</span></div></div>
+          <div class="swatch"><div class="swatch__chip" style="background:var(--ion-lit)"></div><div class="swatch__meta"><span class="swatch__name">Ion</span><span class="swatch__hex">open · in progress</span></div></div>
+          <div class="swatch"><div class="swatch__chip" style="background:var(--plasma-lit)"></div><div class="swatch__meta"><span class="swatch__name">Plasma</span><span class="swatch__hex">planned · upcoming</span></div></div>
+          <div class="swatch"><div class="swatch__chip" style="background:var(--flare-lit)"></div><div class="swatch__meta"><span class="swatch__name">Flare</span><span class="swatch__hex">pending · watch</span></div></div>
+          <div class="swatch"><div class="swatch__chip" style="background:var(--critical-lit)"></div><div class="swatch__meta"><span class="swatch__name">Critical</span><span class="swatch__hex">overdue · risk</span></div></div>
+        </div>
+
+        <div class="doc__note mt5">
+          <b>Each signal also has two values.</b> <code class="o-num" style="color:var(--gold)">--vital</code> for text
+          and <code class="o-num" style="color:var(--gold)">--vital-lit</code> for fills, rings and dots — same
+          reasoning as gold. The <code class="o-num" style="color:var(--gold)">-lit</code> variants are what you see
+          in the ring strokes and legend dots above; the plain ones are what you read.
+        </div>
+      </section>
+
+      <!-- ═══ 02 ═══ -->
+      <section class="doc__section" id="core">
+        <div class="o-eyebrow">02 · Components</div>
+        <h2 class="doc__h2 mt2">Core</h2>
+
+        <h3 class="doc__h3">Buttons</h3>
+        <div class="spec">
+          <button class="o-btn o-btn--gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><use href="#i-plus"/></svg>Create Event</button>
+          <button class="o-btn o-btn--dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg>Event Pulse</button>
+          <button class="o-btn o-btn--solid">Quick Actions</button>
+          <button class="o-btn o-btn--ghost">Export PDF</button>
+          <button class="o-btn o-btn--quiet">Cancel</button>
+          <button class="o-btn o-btn--danger">Delete</button>
+          <button class="o-askai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg>Ask AI</button>
+          <button class="o-fab"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><use href="#i-plus"/></svg></button>
+        </div>
+
+        <h3 class="doc__h3">Status</h3>
+        <div class="spec">
+          <span class="o-badge" data-tone="vital">Good</span>
+          <span class="o-badge" data-tone="ion">Open</span>
+          <span class="o-badge" data-tone="plasma">Upcoming</span>
+          <span class="o-badge" data-tone="flare">Pending</span>
+          <span class="o-badge o-badge--pulse" data-tone="critical">3 Overdue</span>
+          <span class="o-badge" data-tone="gold">VIP</span>
+          <span class="o-badge">Draft</span>
+          <span class="o-tag">FWPS 2026</span>
+          <span class="o-count">9</span>
+          <span class="o-count" data-tone="gold">4</span>
+          <div class="o-avs ml-auto">
+            <span class="o-av" style="background:var(--critical-tint);color:var(--critical)">AD</span>
+            <span class="o-av" style="background:var(--ion-tint);color:var(--ion)">SS</span>
+            <span class="o-av" style="background:var(--plasma-tint);color:var(--plasma)">EA</span>
+            <span class="o-av">+2</span>
+          </div>
+        </div>
+
+        <h3 class="doc__h3">Rings &amp; meters</h3>
+        <div class="spec" style="gap:var(--o-8)">
+          <div class="col items-c gap3">
+            <div class="o-ring" data-tone="vital">
+              <svg width="84" height="84" viewBox="0 0 84 84"><circle class="o-ring__track" cx="42" cy="42" r="36" stroke-width="7"/><circle class="o-ring__value" cx="42" cy="42" r="36" stroke-width="7" stroke-dasharray="226.2" stroke-dashoffset="92.7"/></svg>
+              <div class="o-ring__center"><div class="o-ring__num" style="font-size:19px">59%</div></div>
+            </div><span class="o-eyebrow">Health</span>
+          </div>
+          <div class="col items-c gap3">
+            <div class="o-ring" data-tone="gold">
+              <svg width="84" height="84" viewBox="0 0 84 84"><circle class="o-ring__track" cx="42" cy="42" r="36" stroke-width="7"/><circle class="o-ring__value" cx="42" cy="42" r="36" stroke-width="7" stroke-dasharray="226.2" stroke-dashoffset="88.2"/></svg>
+              <div class="o-ring__center"><div class="o-ring__num" style="font-size:19px">61%</div></div>
+            </div><span class="o-eyebrow">Budget</span>
+          </div>
+          <div class="col items-c gap3">
+            <div class="o-ring" data-tone="ion">
+              <svg width="60" height="60" viewBox="0 0 60 60"><circle class="o-ring__track" cx="30" cy="30" r="25" stroke-width="5"/><circle class="o-ring__value" cx="30" cy="30" r="25" stroke-width="5" stroke-dasharray="157" stroke-dashoffset="30"/></svg>
+              <div class="o-ring__center"><div class="o-ring__num" style="font-size:13px">81%</div></div>
+            </div><span class="o-eyebrow">Compact</span>
+          </div>
+          <div class="vr"></div>
+          <div class="grow" style="min-width:250px">
+            <div class="flex between items-c"><span class="o-eyebrow">Budget · JD 350,000</span><span class="o-badge" data-tone="flare">61% used</span></div>
+            <div class="o-meter o-meter--tall mt3">
+              <span style="width:61.3%;background:var(--plasma-lit)"></span>
+              <span style="width:28.2%;background:var(--ion-lit)"></span>
+              <span style="width:10.5%;background:var(--vital-lit)"></span>
+            </div>
+            <ul class="o-legend">
+              <li><i style="background:var(--plasma-lit)"></i>Spent <b>JD 214,498 (61%)</b></li>
+              <li><i style="background:var(--ion-lit)"></i>Committed <b>JD 98,700 (28%)</b></li>
+              <li><i style="background:var(--vital-lit)"></i>Remaining <b>JD 36,802 (11%)</b></li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="doc__h3">Inputs</h3>
+        <div class="spec">
+          <div class="o-field" style="min-width:210px"><label class="o-label">Event name</label><input class="o-input" value="The First World Public Summit"></div>
+          <div class="o-field" style="width:160px"><label class="o-label">Budget</label><div class="o-inputgroup"><span class="o-affix">JD</span><input class="o-input o-input--num" value="350,000"></div></div>
+          <div class="o-field" style="width:170px"><label class="o-label">Focused</label><input class="o-input" placeholder="Type here…" style="border-color:var(--gold-2);box-shadow:0 0 0 3px var(--gold-glow);background:var(--hull)"></div>
+          <div class="col gap2"><span class="o-label">View</span><div class="o-seg"><button aria-selected="true">Cards</button><button aria-selected="false">List</button><button aria-selected="false">Calendar</button></div></div>
+          <div class="col gap2"><span class="o-label">Sync</span><button class="o-switch" role="switch" aria-checked="true"></button></div>
+        </div>
+      </section>
+
+      <!-- ═══ 03 · KPI STRIP ═══ -->
+      <section class="doc__section" id="kpi">
+        <div class="o-eyebrow">03 · Components</div>
+        <h2 class="doc__h2 mt2">KPI strip</h2>
+        <p class="doc__lede">The dark instrument bar. It stays dark in both themes — it is the event's dashboard,
+          and dark chrome on a light canvas reads as an instrument panel rather than another card.</p>
+
+        <div class="o-kpistrip mt6">
+          <div class="o-kpi">
+            <div class="o-ring" data-tone="gold">
+              <svg width="52" height="52" viewBox="0 0 52 52"><circle class="o-ring__track" cx="26" cy="26" r="22" stroke-width="5"/><circle class="o-ring__value" cx="26" cy="26" r="22" stroke-width="5" stroke-dasharray="138.2" stroke-dashoffset="56.7"/></svg>
+              <div class="o-ring__center"><div class="o-ring__num" style="font-size:12px">59%</div></div>
+            </div>
+            <div><div class="o-kpi__k">Health score</div><div class="o-kpi__v" style="font-size:17px;color:var(--vital-lit)">Good</div><div class="o-kpi__f"><span class="o-delta" style="color:var(--vital-lit)">▲ 8%</span> vs last week</div></div>
+          </div>
+          <div class="o-kpi"><div><div class="o-kpi__k">Participants</div><div class="o-kpi__v">650</div><div class="o-kpi__f"><span class="o-delta" style="color:var(--vital-lit)">▲ 12</span> new</div></div></div>
+          <div class="o-kpi"><div><div class="o-kpi__k">Days left</div><div class="o-kpi__v">105</div><div class="o-kpi__f">Nov 12, 2026</div></div></div>
+          <div class="o-kpi"><div><div class="o-kpi__k">Open tasks</div><div class="o-kpi__v">17</div><div class="o-kpi__f" style="color:var(--critical-lit)">● 3 overdue</div></div></div>
+          <div class="o-kpi">
+            <div class="o-ring" data-tone="gold">
+              <svg width="52" height="52" viewBox="0 0 52 52"><circle class="o-ring__track" cx="26" cy="26" r="22" stroke-width="5"/><circle class="o-ring__value" cx="26" cy="26" r="22" stroke-width="5" stroke-dasharray="138.2" stroke-dashoffset="53.9"/></svg>
+            </div>
+            <div><div class="o-kpi__k">Budget used</div><div class="o-kpi__v">61%</div><div class="o-kpi__f o-num">JD 214,498</div></div>
+          </div>
+          <div class="o-kpi"><div><div class="o-kpi__k">Suppliers</div><div class="o-kpi__v">42</div><div class="o-kpi__f" style="color:var(--critical-lit)">● 2 issues</div></div></div>
+          <div class="o-kpi"><div><div class="o-kpi__k">Approvals</div><div class="o-kpi__v">6</div><div class="o-kpi__f" style="color:var(--flare-lit)">● Pending</div></div></div>
+          <div class="o-kpi o-kpi--cta"><button class="o-btn o-btn--lg" style="background:rgba(255,255,255,.07);border-color:var(--chrome-rim);color:var(--chrome-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-lit)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg>Event Pulse<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevR"/></svg></button></div>
+        </div>
+
+        <div class="doc__note mt5">
+          <b>Rings only where a percentage of a whole exists.</b> Health and budget get rings; counts stay as
+          numbers. In the original mockup two cells carried rings and the rest did not, which made those two read
+          as more important by accident. Now it is deliberate.
+        </div>
+      </section>
+
+      <!-- ═══ 04 · ARC ═══ -->
+      <section class="doc__section" id="arc">
+        <div class="o-eyebrow">04 · Components</div>
+        <h2 class="doc__h2 mt2">Arc orbit navigation</h2>
+        <p class="doc__lede">The signature. The Command Center disc anchors the orbit; modules sit on two arcs at
+          fixed angles. Click a node — the active state follows.</p>
+
+        <div class="o-panel mt6" style="overflow:hidden">
+          <div class="flex" style="background:radial-gradient(80% 100% at 0% 50%, var(--gold-tint), transparent 62%)">
+            <div class="o-arc" id="arcDemo" style="min-height:470px">
+              <svg class="o-arc__rings" viewBox="0 0 520 520" style="width:470px;height:470px;left:-235px" aria-hidden="true">
+                <circle cx="260" cy="260" r="150"/><circle class="dash" cx="260" cy="260" r="190"/><circle cx="260" cy="260" r="112" opacity=".5"/>
+              </svg>
+              <div class="o-arc__core" style="width:160px;height:160px;left:-80px;padding-left:76px">
+                <div class="o-eyebrow" style="color:rgba(255,255,255,.5);font-size:8.5px">Command</div>
+                <div style="font:18px/1.1 var(--font-display);color:#fff">Center</div>
+                <div class="o-eyebrow" style="color:var(--gold-lit);font-size:8.5px;margin-top:2px">Overview</div>
+                <div class="o-arc__dots"><i></i><i></i><i></i></div>
+              </div>
+              <button class="o-arc__next" aria-label="Next ring"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevR"/></svg></button>
+
+              <a class="o-arc__node" href="#" style="left:75px;top:105px"><span class="o-arc__dot"><span class="o-count">17</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg></span><span class="o-arc__label">Tasks</span></a>
+              <a class="o-arc__node" href="#" style="left:130px;top:160px"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg></span><span class="o-arc__label">Agenda</span></a>
+              <a class="o-arc__node" href="#" style="left:150px;top:235px" data-active="true"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-venue"/></svg></span><span class="o-arc__label">Venue</span></a>
+              <a class="o-arc__node" href="#" style="left:130px;top:310px"><span class="o-arc__dot"><span class="o-count" data-tone="flare">2</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg></span><span class="o-arc__label">Suppliers</span></a>
+              <a class="o-arc__node" href="#" style="left:75px;top:365px"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-mic"/></svg></span><span class="o-arc__label">Speakers</span></a>
+
+              <a class="o-arc__node" href="#" style="left:127px;top:94px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Planning</span></a>
+              <a class="o-arc__node" href="#" style="left:182px;top:179px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Exhibition</span></a>
+              <a class="o-arc__node" href="#" style="left:182px;top:291px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-star"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Sponsors</span></a>
+              <a class="o-arc__node" href="#" style="left:127px;top:376px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Documents</span></a>
+            </div>
+            <div class="grow" style="padding:var(--o-8);min-width:0;align-self:center">
+              <div class="o-eyebrow o-eyebrow--gold">How it behaves</div>
+              <ul class="mt4" style="display:grid;gap:var(--o-4)">
+                <li class="flex gap3"><span class="o-num" style="color:var(--gold);font-weight:700">01</span><div><b style="font:600 13px/1.4 var(--font-ui)">Angles never change.</b><div class="o-dim mt1" style="font:var(--t-body-sm)">Venue is always at 3 o'clock, Tasks always top. Across every event in the portfolio.</div></div></li>
+                <li class="flex gap3"><span class="o-num" style="color:var(--gold);font-weight:700">02</span><div><b style="font:600 13px/1.4 var(--font-ui)">Inner arc daily, outer arc structural.</b><div class="o-dim mt1" style="font:var(--t-body-sm)">Five modules close in, the rest further out and smaller. The chevron rotates to the next ring.</div></div></li>
+                <li class="flex gap3"><span class="o-num" style="color:var(--gold);font-weight:700">03</span><div><b style="font:600 13px/1.4 var(--font-ui)">Counts ride on the node.</b><div class="o-dim mt1" style="font:var(--t-body-sm)">17 open tasks and 2 supplier issues, visible before you click anything.</div></div></li>
+                <li class="flex gap3"><span class="o-num" style="color:var(--gold);font-weight:700">04</span><div><b style="font:600 13px/1.4 var(--font-ui)">Positions are computed, never hand-placed.</b><div class="o-dim mt1" style="font:var(--t-body-sm)">Polar coordinates from the core. Adding a module reflows the arc automatically.</div></div></li>
+              </ul>
+              <div class="flex gap2 mt6"><button class="o-btn o-btn--dark o-btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-sliders"/></svg>Customize Hub</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ 05 · WORK ═══ -->
+      <section class="doc__section" id="work">
+        <div class="o-eyebrow">05 · Components</div>
+        <h2 class="doc__h2 mt2">Greeting, Quick Add, task cards</h2>
+
+        <div class="o-panel mt6"><div class="o-card__pad" style="padding:var(--o-6)">
+          <div class="o-greet">
+            <div>
+              <h3 class="o-greet__h">Good morning, Emran 👋</h3>
+              <p class="o-greet__s">Everything is on track. You have <b>17 tasks</b> and <b>6 approvals</b> pending.</p>
+            </div>
+            <div class="o-quick">
+              <span class="o-quick__label">Quick Add</span>
+              <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--ion-tint);color:var(--ion)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg></span><span class="o-quick__t">Task</span></button>
+              <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--flare-tint);color:var(--flare)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-note"/></svg></span><span class="o-quick__t">Note</span></button>
+              <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--plasma-tint);color:var(--plasma)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-file"/></svg></span><span class="o-quick__t">File</span></button>
+              <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--critical-tint);color:var(--critical)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-contact"/></svg></span><span class="o-quick__t">Contact</span></button>
+              <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--vital-tint);color:var(--vital)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-card"/></svg></span><span class="o-quick__t">Payment</span></button>
+            </div>
+          </div>
+
+          <div class="flex between items-c mt8 wrap gap4">
+            <div class="flex items-c gap4 wrap">
+              <span class="o-eyebrow" style="color:var(--ink-2)">My Tasks</span>
+              <div class="o-tabs">
+                <button aria-selected="true">All (17)</button>
+                <button aria-selected="false">Overdue (3)</button>
+                <button aria-selected="false">Today (5)</button>
+                <button aria-selected="false">This Week (7)</button>
+              </div>
+            </div>
+            <a class="o-btn o-btn--quiet o-btn--sm" href="#">View all tasks<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></a>
+          </div>
+
+          <div class="doc__grid g5 mt4" style="gap:var(--o-3)">
+            <article class="o-task">
+              <button class="o-task__more" aria-label="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-dots"/></svg></button>
+              <div class="o-task__flag" style="color:var(--critical)"><i></i>Overdue</div>
+              <div class="o-task__t">Book main stage lighting</div>
+              <div class="o-task__m">Venue</div>
+              <div class="o-task__d">Jul 20, 2026</div>
+              <div class="o-task__foot">
+                <div class="o-avs"><span class="o-av o-av--sm" style="background:var(--critical-tint);color:var(--critical)">AD</span><span class="o-av o-av--sm">+2</span></div>
+                <span class="o-task__pct">20%</span>
+              </div>
+              <div class="o-bar mt2"><i style="width:20%;background:var(--critical-lit)"></i></div>
+            </article>
+            <article class="o-task">
+              <button class="o-task__more" aria-label="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-dots"/></svg></button>
+              <div class="o-task__flag" style="color:var(--ion)"><i></i>Today</div>
+              <div class="o-task__t">Finalize speaker list</div>
+              <div class="o-task__m">Speakers</div>
+              <div class="o-task__d">Aug 15, 2026</div>
+              <div class="o-task__foot">
+                <div class="o-avs"><span class="o-av o-av--sm" style="background:var(--ion-tint);color:var(--ion)">SS</span></div>
+                <span class="o-task__pct">60%</span>
+              </div>
+              <div class="o-bar mt2"><i style="width:60%;background:var(--ion-lit)"></i></div>
+            </article>
+            <article class="o-task">
+              <button class="o-task__more" aria-label="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-dots"/></svg></button>
+              <div class="o-task__flag" style="color:var(--plasma)"><i></i>This week</div>
+              <div class="o-task__t">Review sponsorship deck</div>
+              <div class="o-task__m">Sponsors</div>
+              <div class="o-task__d">Aug 18, 2026</div>
+              <div class="o-task__foot">
+                <div class="o-avs"><span class="o-av o-av--sm" style="background:var(--plasma-tint);color:var(--plasma)">EA</span></div>
+                <span class="o-task__pct">40%</span>
+              </div>
+              <div class="o-bar mt2"><i style="width:40%;background:var(--plasma-lit)"></i></div>
+            </article>
+            <article class="o-task">
+              <button class="o-task__more" aria-label="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-dots"/></svg></button>
+              <div class="o-task__flag" style="color:var(--plasma)"><i></i>This week</div>
+              <div class="o-task__t">Confirm transport schedule</div>
+              <div class="o-task__m">Transport</div>
+              <div class="o-task__d">Aug 19, 2026</div>
+              <div class="o-task__foot">
+                <div class="o-avs"><span class="o-av o-av--sm">MK</span></div>
+                <span class="o-task__pct">0%</span>
+              </div>
+              <div class="o-bar mt2"><i style="width:2%;background:var(--rim-hi)"></i></div>
+            </article>
+            <article class="o-task">
+              <button class="o-task__more" aria-label="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-dots"/></svg></button>
+              <div class="o-task__flag" style="color:var(--ink-3)"><i></i>Upcoming</div>
+              <div class="o-task__t">Exhibition layout approval</div>
+              <div class="o-task__m">Exhibition</div>
+              <div class="o-task__d">Aug 25, 2026</div>
+              <div class="o-task__foot">
+                <div class="o-avs"><span class="o-av o-av--sm">PB</span></div>
+                <span class="o-task__pct">0%</span>
+              </div>
+              <div class="o-bar mt2"><i style="width:2%;background:var(--rim-hi)"></i></div>
+            </article>
+          </div>
+        </div></div>
+
+        <div class="doc__note mt5">
+          <b>One change from the mockup.</b> Task cards carried a coloured progress bar with no label, so 20% on a
+          red bar and 60% on a blue bar were not comparable. The percentage is now stated in the data face next to
+          the avatars, and the bar colour matches the task's state rather than being decorative.
+        </div>
+      </section>
+
+      <!-- ═══ 06 · TIMELINE ═══ -->
+      <section class="doc__section" id="time">
+        <div class="o-eyebrow">06 · Components</div>
+        <h2 class="doc__h2 mt2">Event timeline</h2>
+        <div class="o-panel mt6"><div class="o-card__pad" style="padding:var(--o-6)">
+          <div class="flex between items-c">
+            <span class="o-eyebrow" style="color:var(--ink-2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:inline;vertical-align:-2px;margin-right:6px"><use href="#i-cal"/></svg>Event Timeline</span>
+            <a class="o-btn o-btn--quiet o-btn--sm" href="#">View full timeline<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></a>
+          </div>
+          <div class="o-gantt mt5">
+            <div class="o-gantt__scale"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+            <div class="o-gantt__now" style="left:63%"></div>
+            <div class="o-gantt__band"><div class="o-gantt__bar" style="left:0;width:32%;background:var(--ion-tint);color:var(--ion);border-color:color-mix(in srgb,var(--ion) 26%,transparent)">Planning &amp; Strategy<span>Jun 1 – Jul 20</span></div></div>
+            <div class="o-gantt__band"><div class="o-gantt__bar" style="left:19%;width:38%;background:var(--plasma-tint);color:var(--plasma);border-color:color-mix(in srgb,var(--plasma) 26%,transparent)">Venue &amp; Logistics<span>Jul 10 – Sep 20</span></div></div>
+            <div class="o-gantt__band"><div class="o-gantt__bar" style="left:36%;width:41%;background:var(--vital-tint);color:var(--vital);border-color:color-mix(in srgb,var(--vital) 26%,transparent)">Marketing &amp; Promotion<span>Aug 1 – Oct 10</span></div></div>
+            <div class="o-gantt__band"><div class="o-gantt__bar" style="left:70%;width:30%;background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)">Event Execution<span>Oct 15 – Nov 12</span></div></div>
+          </div>
+        </div></div>
+      </section>
+
+      <!-- ═══ 07 · RAIL ═══ -->
+      <section class="doc__section" id="rail">
+        <div class="o-eyebrow">07 · Components</div>
+        <h2 class="doc__h2 mt2">Event Pulse &amp; AI Director</h2>
+        <p class="doc__lede">Two separate panels on purpose. Pulse is fact; the Director is interpretation. People
+          trust the numbers more when the AI is not sitting inside them.</p>
+
+        <div class="doc__grid g2 mt6">
+          <div class="o-panel">
+            <div class="o-card__head">
+              <div class="o-card__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg>Event Pulse</div>
+              <span class="o-badge o-badge--pulse" data-tone="vital">Live</span>
+            </div>
+            <div class="o-card__pad">
+              <div class="flex items-c gap5">
+                <div class="col items-c gap2">
+                  <span class="o-eyebrow" style="font-size:9px">Overall health</span>
+                  <div class="o-ring" data-tone="gold">
+                    <svg width="92" height="92" viewBox="0 0 92 92"><circle class="o-ring__track" cx="46" cy="46" r="39" stroke-width="7"/><circle class="o-ring__value" cx="46" cy="46" r="39" stroke-width="7" stroke-dasharray="245" stroke-dashoffset="100.5"/></svg>
+                    <div class="o-ring__center"><div class="o-ring__num" style="font-size:21px">59%</div><div class="o-ring__label" style="color:var(--vital)">Good</div></div>
+                  </div>
+                </div>
+                <ul class="o-pulse grow">
+                  <li><i style="background:var(--critical-lit)"></i>Overdue Tasks<b style="color:var(--critical)">10</b></li>
+                  <li><i style="background:var(--ion-lit)"></i>Open Tasks<b>17</b></li>
+                  <li><i style="background:var(--vital-lit)"></i>Completed Tasks<b>41</b></li>
+                  <li><i style="background:var(--gold-lit)"></i>Budget Used<b>61%</b></li>
+                  <li><i style="background:var(--flare-lit)"></i>Approvals Pending<b>6</b></li>
+                  <li><i style="background:var(--critical-lit)"></i>Risks Identified<b>3</b></li>
+                </ul>
+              </div>
+              <button class="o-btn o-btn--ghost mt5" style="width:100%">View full pulse<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+
+          <div class="o-panel">
+            <div class="o-ai__head">
+              <span style="color:var(--gold)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg></span>
+              <span class="o-card__title">AI Event Director</span>
+              <span class="o-badge" data-tone="gold" style="margin-left:auto">Beta</span>
+            </div>
+            <div class="o-card__pad">
+              <div class="o-display-sm">Here's what I found for you</div>
+              <div class="mt4" style="display:grid;gap:2px">
+                <a class="o-ai__item" href="#">
+                  <span class="o-ai__ico" style="background:var(--critical-tint);color:var(--critical)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg></span>
+                  <div><div class="o-ai__t">3 tasks are overdue</div><div class="o-ai__s">These require your attention</div></div>
+                </a>
+                <a class="o-ai__item" href="#">
+                  <span class="o-ai__ico" style="background:var(--flare-tint);color:var(--flare)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-warn"/></svg></span>
+                  <div><div class="o-ai__t">Budget usage is higher than planned</div><div class="o-ai__s">You're 8% over the forecast</div></div>
+                </a>
+                <a class="o-ai__item" href="#">
+                  <span class="o-ai__ico" style="background:var(--vital-tint);color:var(--vital)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg></span>
+                  <div><div class="o-ai__t">2 suppliers have open issues</div><div class="o-ai__s">Check supplier performance</div></div>
+                </a>
+              </div>
+              <div class="o-eyebrow mt5">What would you like me to do?</div>
+              <div class="o-chips mt3">
+                <button class="o-chip">Show me critical tasks</button>
+                <button class="o-chip">Budget forecast</button>
+                <button class="o-chip">Risk analysis</button>
+                <button class="o-chip">Generate report</button>
+              </div>
+              <div class="o-ai__prompt mt4">
+                <input placeholder="Ask anything about your event…" aria-label="Ask AI">
+                <button class="o-ai__send" aria-label="Send"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-send"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc__note mt5">
+          <b>One rule for the AI panel.</b> Every insight links to the record it came from and is phrased as an
+          observation, not a prediction dressed as fact. "Budget usage <em>is</em> higher than planned" is a
+          measurement. "You will go over budget" is a guess — and the first time it is wrong, nobody reads the
+          panel again.
+        </div>
+      </section>
+
+      <!-- ═══ 08 · DOCK ═══ -->
+      <section class="doc__section" id="dock">
+        <div class="o-eyebrow">08 · Components</div>
+        <h2 class="doc__h2 mt2">Bottom dock</h2>
+        <p class="doc__lede">Nine slots, the last always the AI assistant. Dark in both themes — it is furniture, and
+          a light pill floating on a light canvas disappears.</p>
+        <div class="o-panel mt6" style="padding:var(--o-10);display:grid;place-items:center;background:linear-gradient(180deg,var(--deck),var(--hull))">
+          <div class="o-dock__grip"></div>
+          <nav class="o-dock" aria-label="Primary">
+            <button class="o-dock__item" aria-current="page"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg><span class="o-dock__label">Home</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg><span class="o-dock__label">Calendar</span></button>
+            <button class="o-dock__item"><span class="o-count">9</span><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg><span class="o-dock__label">Tasks</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-money"/></svg><span class="o-dock__label">Budget</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-venue"/></svg><span class="o-dock__label">Venue</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-mic"/></svg><span class="o-dock__label">Speakers</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg><span class="o-dock__label">Suppliers</span></button>
+            <button class="o-dock__item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg><span class="o-dock__label">Reports</span></button>
+            <button class="o-dock__item rel"><span style="position:absolute;top:6px;right:12px;width:6px;height:6px;border-radius:99px;background:var(--vital-lit)"></span><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg><span class="o-dock__label">AI Assistant</span></button>
+          </nav>
+        </div>
+      </section>
+
+      <!-- ═══ 09 · FULL HUB ═══ -->
+      <section class="doc__section" id="hub">
+        <div class="o-eyebrow">09 · Assembled</div>
+        <h2 class="doc__h2 mt2">The full hub</h2>
+        <p class="doc__lede">Your layout, rebuilt from the components above. Nothing here is bespoke — every element
+          is a class from this file. This is what Claude Code targets.</p>
+
+        <div class="screen mt6">
+          <div class="screen__chrome"><i></i><i></i><i></i><span class="screen__url">elitebhub.com / events / 33 / overview</span></div>
+
+          <div class="o-topbar">
+            <div class="flex items-c gap3">
+              <div class="o-brandmark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-orbit"/></svg></div>
+              <div>
+                <div style="font:600 13px/1.1 var(--font-ui);letter-spacing:.14em">ELITE</div>
+                <div class="o-eyebrow" style="font-size:8px;margin-top:2px">Events Hub</div>
+              </div>
+            </div>
+            <span class="vr" style="min-height:34px"></span>
+            <button class="o-btn o-btn--quiet o-btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevL"/></svg>Back to Events</button>
+            <div class="flex items-c gap3 ml-auto" style="margin-right:auto;margin-left:var(--o-6)">
+              <span class="o-evtsq">FWPS<br>2026</span>
+              <div>
+                <div class="flex items-c gap2">
+                  <span style="font:24px/1.05 var(--font-display)">The First World Public Summit 2026</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--gold-lit)" stroke="none"><use href="#i-spark"/></svg>
+                </div>
+                <div class="o-dim" style="font:500 11.5px/1.3 var(--font-data);margin-top:3px">Nov 8 – Nov 12, 2026 · St. Regis Amman, Jordan</div>
+              </div>
+            </div>
+            <div class="o-search" style="max-width:230px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-search"/></svg>Search anything…<span class="o-kbd ml-auto">⌘K</span></div>
+            <button class="o-askai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg>Ask AI</button>
+            <button class="o-fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><use href="#i-plus"/></svg></button>
+            <button class="o-btn o-btn--ghost o-btn--icon rel" aria-label="Alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg><span class="o-count" style="position:absolute;top:-6px;right:-6px;border:2px solid var(--hull)">3</span></button>
+            <button class="o-btn o-btn--ghost o-btn--icon rel" aria-label="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chat"/></svg><span class="o-count" data-tone="gold" style="position:absolute;top:-6px;right:-6px;border:2px solid var(--hull)">2</span></button>
+            <div class="flex items-c gap2">
+              <span class="o-av o-av--lg" style="background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)">EA</span>
+              <div><div style="font:600 12.5px/1.2 var(--font-ui)">Emran Aletan</div><div class="o-eyebrow" style="font-size:9px;margin-top:2px">Super Admin</div></div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevD"/></svg>
+            </div>
+          </div>
+
+          <div style="padding:var(--o-5);display:grid;gap:var(--o-4);background:var(--abyss)">
+
+            <div class="o-kpistrip">
+              <div class="o-kpi">
+                <div class="o-ring" data-tone="gold">
+                  <svg width="50" height="50" viewBox="0 0 50 50"><circle class="o-ring__track" cx="25" cy="25" r="21" stroke-width="5"/><circle class="o-ring__value" cx="25" cy="25" r="21" stroke-width="5" stroke-dasharray="131.9" stroke-dashoffset="54.1"/></svg>
+                  <div class="o-ring__center"><div class="o-ring__num" style="font-size:12px">59%</div></div>
+                </div>
+                <div><div class="o-kpi__k">Health score</div><div class="o-kpi__v" style="font-size:16px;color:var(--vital-lit)">Good ✦</div><div class="o-kpi__f"><span style="color:var(--vital-lit)">▲ 8%</span> vs last week</div></div>
+              </div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Participants</div><div class="o-kpi__v">650</div><div class="o-kpi__f"><span style="color:var(--vital-lit)">↑ 12</span> new</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Days left</div><div class="o-kpi__v">105</div><div class="o-kpi__f">Nov 12, 2026</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Open tasks</div><div class="o-kpi__v">17</div><div class="o-kpi__f" style="color:var(--critical-lit)">● 3 overdue</div></div></div>
+              <div class="o-kpi">
+                <div class="o-ring" data-tone="gold">
+                  <svg width="50" height="50" viewBox="0 0 50 50"><circle class="o-ring__track" cx="25" cy="25" r="21" stroke-width="5"/><circle class="o-ring__value" cx="25" cy="25" r="21" stroke-width="5" stroke-dasharray="131.9" stroke-dashoffset="51.4"/></svg>
+                </div>
+                <div><div class="o-kpi__k">Budget used</div><div class="o-kpi__v">61%</div><div class="o-kpi__f o-num">JD 214,498</div></div>
+              </div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Suppliers</div><div class="o-kpi__v">42</div><div class="o-kpi__f" style="color:var(--critical-lit)">● 2 issues</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Approvals</div><div class="o-kpi__v">6</div><div class="o-kpi__f" style="color:var(--flare-lit)">● Pending</div></div></div>
+              <div class="o-kpi o-kpi--cta"><button class="o-btn o-btn--lg" style="background:rgba(255,255,255,.07);border-color:var(--chrome-rim);color:var(--chrome-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-lit)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg>Event Pulse<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevR"/></svg></button></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:236px minmax(0,1fr) 300px;gap:var(--o-4);align-items:start">
+
+              <!-- ARC -->
+              <div style="position:relative">
+                <div class="flex items-c gap2" style="padding:6px 12px;border-radius:var(--r-sm);background:var(--chrome);color:var(--gold-lit);box-shadow:var(--lift-2);width:fit-content;margin-bottom:var(--o-3)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg>
+                  <span style="font:600 12px/1 var(--font-ui)">Overview</span>
+                </div>
+                <div class="o-arc" style="min-height:470px">
+                  <svg class="o-arc__rings" viewBox="0 0 520 520" style="width:470px;height:470px;left:-235px" aria-hidden="true">
+                    <circle cx="260" cy="260" r="150"/><circle class="dash" cx="260" cy="260" r="190"/><circle cx="260" cy="260" r="112" opacity=".5"/>
+                  </svg>
+                  <div class="o-arc__core" style="width:160px;height:160px;left:-80px;padding-left:76px">
+                    <div class="o-eyebrow" style="color:rgba(255,255,255,.5);font-size:8.5px">Command</div>
+                    <div style="font:18px/1.1 var(--font-display);color:#fff">Center</div>
+                    <div class="o-eyebrow" style="color:var(--gold-lit);font-size:8.5px;margin-top:2px">Overview</div>
+                    <div class="o-arc__dots"><i></i><i></i><i></i></div>
+                  </div>
+                  <button class="o-arc__next" aria-label="Next ring"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevR"/></svg></button>
+                  <a class="o-arc__node" href="#" style="left:75px;top:105px"><span class="o-arc__dot"><span class="o-count">17</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg></span><span class="o-arc__label">Tasks</span></a>
+                  <a class="o-arc__node" href="#" style="left:130px;top:160px"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg></span><span class="o-arc__label">Agenda</span></a>
+                  <a class="o-arc__node" href="#" style="left:150px;top:235px" data-active="true"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-venue"/></svg></span><span class="o-arc__label">Venue</span></a>
+                  <a class="o-arc__node" href="#" style="left:130px;top:310px"><span class="o-arc__dot"><span class="o-count" data-tone="flare">2</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg></span><span class="o-arc__label">Suppliers</span></a>
+                  <a class="o-arc__node" href="#" style="left:75px;top:365px"><span class="o-arc__dot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-mic"/></svg></span><span class="o-arc__label">Speakers</span></a>
+                  <a class="o-arc__node" href="#" style="left:127px;top:94px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Planning</span></a>
+                  <a class="o-arc__node" href="#" style="left:182px;top:179px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Exhibition</span></a>
+                  <a class="o-arc__node" href="#" style="left:182px;top:291px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-star"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Sponsors</span></a>
+                  <a class="o-arc__node" href="#" style="left:127px;top:376px"><span class="o-arc__dot" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span><span class="o-arc__label" style="font-size:9.5px">Documents</span></a>
+                </div>
+                <div class="flex gap2 mt3">
+                  <button class="o-btn o-btn--ghost o-btn--sm o-btn--icon" aria-label="Reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></button>
+                  <button class="o-btn o-btn--ghost o-btn--sm o-btn--icon" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-gear"/></svg></button>
+                  <button class="o-btn o-btn--dark o-btn--sm grow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-sliders"/></svg>Customize Hub</button>
+                </div>
+              </div>
+
+              <!-- MAIN -->
+              <div class="o-panel" style="min-width:0">
+                <div class="o-card__pad" style="padding:var(--o-6)">
+                  <div class="o-greet">
+                    <div>
+                      <h3 class="o-greet__h">Good morning, Emran 👋</h3>
+                      <p class="o-greet__s">Everything is on track. You have <b>17 tasks</b> and <b>6 approvals</b> pending.</p>
+                    </div>
+                    <div class="o-quick">
+                      <span class="o-quick__label">Quick Add</span>
+                      <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--ion-tint);color:var(--ion)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg></span><span class="o-quick__t">Task</span></button>
+                      <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--flare-tint);color:var(--flare)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-note"/></svg></span><span class="o-quick__t">Note</span></button>
+                      <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--plasma-tint);color:var(--plasma)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-file"/></svg></span><span class="o-quick__t">File</span></button>
+                      <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--critical-tint);color:var(--critical)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-contact"/></svg></span><span class="o-quick__t">Contact</span></button>
+                      <button class="o-quick__item"><span class="o-quick__ico" style="background:var(--vital-tint);color:var(--vital)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-card"/></svg></span><span class="o-quick__t">Payment</span></button>
+                    </div>
+                  </div>
+
+                  <div style="height:1px;background:var(--rim);margin:var(--o-6) 0"></div>
+
+                  <div class="flex between items-c">
+                    <span class="o-eyebrow" style="color:var(--ink-2)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:inline;vertical-align:-2px;margin-right:6px"><use href="#i-cal"/></svg>Event Timeline</span>
+                    <a class="o-btn o-btn--quiet o-btn--sm" href="#">View full timeline<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></a>
+                  </div>
+                  <div class="o-gantt mt4">
+                    <div class="o-gantt__scale"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+                    <div class="o-gantt__now" style="left:63%"></div>
+                    <div class="o-gantt__band"><div class="o-gantt__bar" style="left:0;width:32%;background:var(--ion-tint);color:var(--ion);border-color:color-mix(in srgb,var(--ion) 26%,transparent)">Planning &amp; Strategy<span>Jun 1 – Jul 20</span></div></div>
+                    <div class="o-gantt__band"><div class="o-gantt__bar" style="left:19%;width:38%;background:var(--plasma-tint);color:var(--plasma);border-color:color-mix(in srgb,var(--plasma) 26%,transparent)">Venue &amp; Logistics<span>Jul 10 – Sep 20</span></div></div>
+                    <div class="o-gantt__band"><div class="o-gantt__bar" style="left:36%;width:41%;background:var(--vital-tint);color:var(--vital);border-color:color-mix(in srgb,var(--vital) 26%,transparent)">Marketing &amp; Promotion<span>Aug 1 – Oct 10</span></div></div>
+                    <div class="o-gantt__band"><div class="o-gantt__bar" style="left:70%;width:30%;background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)">Event Execution<span>Oct 15 – Nov 12</span></div></div>
+                  </div>
+
+                  <div style="height:1px;background:var(--rim);margin:var(--o-6) 0"></div>
+
+                  <div class="flex between items-c wrap gap4">
+                    <div class="flex items-c gap4 wrap">
+                      <span class="o-eyebrow" style="color:var(--ink-2)">My Tasks</span>
+                      <div class="o-tabs">
+                        <button aria-selected="true">All (17)</button><button aria-selected="false">Overdue (3)</button>
+                        <button aria-selected="false">Today (5)</button><button aria-selected="false">This Week (7)</button>
+                      </div>
+                    </div>
+                    <a class="o-btn o-btn--quiet o-btn--sm" href="#">View all tasks<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></a>
+                  </div>
+
+                  <div class="doc__grid g5 mt4" style="gap:var(--o-3)">
+                    <article class="o-task"><div class="o-task__flag" style="color:var(--critical)"><i></i>Overdue</div><div class="o-task__t">Book main stage lighting</div><div class="o-task__m">Venue</div><div class="o-task__d">Jul 20, 2026</div><div class="o-task__foot"><div class="o-avs"><span class="o-av o-av--sm" style="background:var(--critical-tint);color:var(--critical)">AD</span><span class="o-av o-av--sm">+2</span></div><span class="o-task__pct">20%</span></div><div class="o-bar mt2"><i style="width:20%;background:var(--critical-lit)"></i></div></article>
+                    <article class="o-task"><div class="o-task__flag" style="color:var(--ion)"><i></i>Today</div><div class="o-task__t">Finalize speaker list</div><div class="o-task__m">Speakers</div><div class="o-task__d">Aug 15, 2026</div><div class="o-task__foot"><div class="o-avs"><span class="o-av o-av--sm" style="background:var(--ion-tint);color:var(--ion)">SS</span></div><span class="o-task__pct">60%</span></div><div class="o-bar mt2"><i style="width:60%;background:var(--ion-lit)"></i></div></article>
+                    <article class="o-task"><div class="o-task__flag" style="color:var(--plasma)"><i></i>This week</div><div class="o-task__t">Review sponsorship deck</div><div class="o-task__m">Sponsors</div><div class="o-task__d">Aug 18, 2026</div><div class="o-task__foot"><div class="o-avs"><span class="o-av o-av--sm" style="background:var(--plasma-tint);color:var(--plasma)">EA</span></div><span class="o-task__pct">40%</span></div><div class="o-bar mt2"><i style="width:40%;background:var(--plasma-lit)"></i></div></article>
+                    <article class="o-task"><div class="o-task__flag" style="color:var(--plasma)"><i></i>This week</div><div class="o-task__t">Confirm transport schedule</div><div class="o-task__m">Transport</div><div class="o-task__d">Aug 19, 2026</div><div class="o-task__foot"><div class="o-avs"><span class="o-av o-av--sm">MK</span></div><span class="o-task__pct">0%</span></div><div class="o-bar mt2"><i style="width:2%;background:var(--rim-hi)"></i></div></article>
+                    <article class="o-task"><div class="o-task__flag" style="color:var(--ink-3)"><i></i>Upcoming</div><div class="o-task__t">Exhibition layout approval</div><div class="o-task__m">Exhibition</div><div class="o-task__d">Aug 25, 2026</div><div class="o-task__foot"><div class="o-avs"><span class="o-av o-av--sm">PB</span></div><span class="o-task__pct">0%</span></div><div class="o-bar mt2"><i style="width:2%;background:var(--rim-hi)"></i></div></article>
+                  </div>
+
+                  <div class="doc__grid g4 mt6" style="gap:var(--o-3)">
+                    <div class="o-card" data-gravity="hero"><div class="o-card__pad" style="padding:var(--o-4)">
+                      <div class="o-eyebrow">Budget Overview</div>
+                      <div class="flex items-c gap4 mt4">
+                        <div class="o-ring" data-tone="gold">
+                          <svg width="82" height="82" viewBox="0 0 82 82"><circle class="o-ring__track" cx="41" cy="41" r="34" stroke-width="9"/><circle class="o-ring__value" cx="41" cy="41" r="34" stroke-width="9" stroke-dasharray="213.6" stroke-dashoffset="83.3"/></svg>
+                          <div class="o-ring__center"><div class="o-ring__num" style="font-size:15px">JD 350K</div><div class="o-ring__label" style="font-size:8px">Total</div></div>
+                        </div>
+                        <ul class="o-legend grow" style="margin-top:0">
+                          <li><i style="background:var(--plasma-lit)"></i>Spent <b>214,498</b></li>
+                          <li><i style="background:var(--ion-lit)"></i>Committed <b>98,700</b></li>
+                          <li><i style="background:var(--vital-lit)"></i>Remaining <b>36,802</b></li>
+                        </ul>
+                      </div>
+                      <button class="o-btn o-btn--ghost o-btn--sm mt4" style="width:100%">View budget details<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+                    </div></div>
+
+                    <div class="o-card"><div class="o-card__pad" style="padding:var(--o-4)">
+                      <div class="o-eyebrow">Attendee Overview</div>
+                      <div class="flex items-baseline gap2 mt4"><span class="o-metric">650</span><span class="o-dim" style="font:500 13px/1 var(--font-data)">/ 800</span></div>
+                      <div class="flex between items-c mt3"><span class="o-dim" style="font:var(--t-body-sm)">Registered</span><span class="o-num" style="font-size:12px;font-weight:600">81%</span></div>
+                      <div class="o-bar mt2"><i style="width:81%;background:var(--vital-lit)"></i></div>
+                      <ul class="o-legend">
+                        <li><i style="background:var(--vital-lit)"></i>Confirmed <b>420</b></li>
+                        <li><i style="background:var(--flare-lit)"></i>Pending <b>150</b></li>
+                        <li><i style="background:var(--ion-lit)"></i>Waitlist <b>80</b></li>
+                      </ul>
+                      <button class="o-btn o-btn--ghost o-btn--sm mt4" style="width:100%">View attendees<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+                    </div></div>
+
+                    <div class="o-card"><div class="o-card__pad" style="padding:var(--o-4)">
+                      <div class="o-eyebrow">Supplier Status</div>
+                      <div class="flex items-c gap4 mt4">
+                        <div class="o-ring" data-tone="ion">
+                          <svg width="82" height="82" viewBox="0 0 82 82"><circle class="o-ring__track" cx="41" cy="41" r="34" stroke-width="9"/><circle class="o-ring__value" cx="41" cy="41" r="34" stroke-width="9" stroke-dasharray="213.6" stroke-dashoffset="42.7"/></svg>
+                          <div class="o-ring__center"><div class="o-ring__num" style="font-size:19px">42</div><div class="o-ring__label" style="font-size:8px">Total</div></div>
+                        </div>
+                        <ul class="o-legend grow" style="margin-top:0">
+                          <li><i style="background:var(--ion-lit)"></i>Active <b>34</b></li>
+                          <li><i style="background:var(--flare-lit)"></i>Pending <b>6</b></li>
+                          <li><i style="background:var(--critical-lit)"></i>At Risk <b>2</b></li>
+                        </ul>
+                      </div>
+                      <button class="o-btn o-btn--ghost o-btn--sm mt4" style="width:100%">View suppliers<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+                    </div></div>
+
+                    <div class="o-card"><div class="o-card__pad" style="padding:var(--o-4)">
+                      <div class="o-eyebrow">Approvals</div>
+                      <div class="o-metric mt4">6</div>
+                      <div class="o-dim mt2" style="font:var(--t-body-sm)">Pending approvals</div>
+                      <div class="mt4" style="display:grid;gap:10px">
+                        <div class="flex items-c gap3"><span class="o-count" data-tone="flare">2</span><span style="font:var(--t-body-sm)">Budget approvals</span></div>
+                        <div class="flex items-c gap3"><span class="o-count" data-tone="flare">2</span><span style="font:var(--t-body-sm)">Contract approvals</span></div>
+                        <div class="flex items-c gap3"><span class="o-count" data-tone="flare">2</span><span style="font:var(--t-body-sm)">Payment approvals</span></div>
+                      </div>
+                      <button class="o-btn o-btn--ghost o-btn--sm mt4" style="width:100%">View approvals<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+                    </div></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT RAIL -->
+              <div style="display:grid;gap:var(--o-4)">
+                <div class="o-panel">
+                  <div class="o-card__head" style="padding:var(--o-4)">
+                    <div class="o-card__title" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg>Event Pulse</div>
+                    <span class="o-badge o-badge--pulse" data-tone="vital">Live</span>
+                  </div>
+                  <div class="o-card__pad" style="padding:var(--o-4)">
+                    <div class="flex items-c gap4">
+                      <div class="col items-c gap2">
+                        <span class="o-eyebrow" style="font-size:8px">Overall health</span>
+                        <div class="o-ring" data-tone="gold">
+                          <svg width="84" height="84" viewBox="0 0 84 84"><circle class="o-ring__track" cx="42" cy="42" r="35" stroke-width="7"/><circle class="o-ring__value" cx="42" cy="42" r="35" stroke-width="7" stroke-dasharray="219.9" stroke-dashoffset="90.2"/></svg>
+                          <div class="o-ring__center"><div class="o-ring__num" style="font-size:20px">59%</div><div class="o-ring__label" style="color:var(--vital)">Good</div></div>
+                        </div>
+                      </div>
+                      <ul class="o-pulse grow">
+                        <li><i style="background:var(--critical-lit)"></i>Overdue Tasks<b style="color:var(--critical)">10</b></li>
+                        <li><i style="background:var(--ion-lit)"></i>Open Tasks<b>17</b></li>
+                        <li><i style="background:var(--vital-lit)"></i>Completed<b>41</b></li>
+                        <li><i style="background:var(--gold-lit)"></i>Budget Used<b>61%</b></li>
+                        <li><i style="background:var(--flare-lit)"></i>Approvals<b>6</b></li>
+                        <li><i style="background:var(--critical-lit)"></i>Risks<b>3</b></li>
+                      </ul>
+                    </div>
+                    <button class="o-btn o-btn--ghost o-btn--sm mt4" style="width:100%">View full pulse<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg></button>
+                  </div>
+                </div>
+
+                <div class="o-panel">
+                  <div class="o-ai__head" style="padding:var(--o-4)">
+                    <span style="color:var(--gold)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg></span>
+                    <span class="o-card__title" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase">AI Event Director</span>
+                    <span class="o-badge" data-tone="gold" style="margin-left:auto">Beta</span>
+                  </div>
+                  <div class="o-card__pad" style="padding:var(--o-4)">
+                    <div style="font:17px/1.2 var(--font-display)">Here's what I found for you</div>
+                    <div class="mt3" style="display:grid;gap:2px">
+                      <a class="o-ai__item" href="#"><span class="o-ai__ico" style="background:var(--critical-tint);color:var(--critical)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg></span><div><div class="o-ai__t">3 tasks are overdue</div><div class="o-ai__s">These require your attention</div></div></a>
+                      <a class="o-ai__item" href="#"><span class="o-ai__ico" style="background:var(--flare-tint);color:var(--flare)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-warn"/></svg></span><div><div class="o-ai__t">Budget usage is higher than planned</div><div class="o-ai__s">You're 8% over the forecast</div></div></a>
+                      <a class="o-ai__item" href="#"><span class="o-ai__ico" style="background:var(--vital-tint);color:var(--vital)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg></span><div><div class="o-ai__t">2 suppliers have open issues</div><div class="o-ai__s">Check supplier performance</div></div></a>
+                    </div>
+                    <div class="o-eyebrow mt4">What would you like me to do?</div>
+                    <div class="o-chips mt3">
+                      <button class="o-chip">Show me critical tasks</button><button class="o-chip">Budget forecast</button>
+                      <button class="o-chip">Risk analysis</button><button class="o-chip">Generate report</button>
+                    </div>
+                    <div class="o-ai__prompt mt4"><input placeholder="Ask anything about your event…" aria-label="Ask AI"><button class="o-ai__send" aria-label="Send"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-send"/></svg></button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex center items-c" style="padding-top:var(--o-2);position:relative">
+              <div class="themeswitch" style="position:absolute;left:0;bottom:4px;box-shadow:var(--lift-2)">
+                <button class="is-on" aria-label="Light"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-sun"/></svg></button>
+                <button aria-label="Dark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-moon"/></svg></button>
+              </div>
+              <div class="col items-c">
+                <div class="o-dock__grip"></div>
+                <nav class="o-dock" aria-label="Primary">
+                  <button class="o-dock__item" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg><span class="o-dock__label">Home</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg><span class="o-dock__label">Calendar</span></button>
+                  <button class="o-dock__item"><span class="o-count">9</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-task"/></svg><span class="o-dock__label">Tasks</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-money"/></svg><span class="o-dock__label">Budget</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-venue"/></svg><span class="o-dock__label">Venue</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-mic"/></svg><span class="o-dock__label">Speakers</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg><span class="o-dock__label">Suppliers</span></button>
+                  <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg><span class="o-dock__label">Reports</span></button>
+                  <button class="o-dock__item rel"><span style="position:absolute;top:6px;right:12px;width:6px;height:6px;border-radius:99px;background:var(--vital-lit)"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg><span class="o-dock__label">AI Assistant</span></button>
+                </nav>
+              </div>
+              <div style="position:absolute;right:0;bottom:4px" class="flex items-c gap2">
+                <div class="o-btn o-btn--ghost" style="border-radius:var(--r-full);padding-right:8px">Team Chat
+                  <span class="o-avs" style="margin-left:4px"><span class="o-av o-av--sm" style="background:var(--ion-tint);color:var(--ion)">AD</span><span class="o-av o-av--sm" style="background:var(--plasma-tint);color:var(--plasma)">SS</span><span class="o-av o-av--sm">+3</span></span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevD"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ 10 · DARK ═══ -->
+      <section class="doc__section" id="dark">
+        <div class="o-eyebrow">10 · Assembled</div>
+        <h2 class="doc__h2 mt2">Show-day dark</h2>
+        <p class="doc__lede">Identical markup. On Nov 8 the event enters Event Days and the hub flips itself. The KPI
+          strip, dock and Command Center disc do not change — they were already dark. That constancy is what makes
+          the switch feel deliberate rather than like two different products.</p>
+
+        <div class="screen mt6" data-theme="dark" style="background:var(--abyss)">
+          <div class="screen__chrome"><i></i><i></i><i></i><span class="screen__url">elitebhub.com / events / 33 / pulse · LIVE</span></div>
+          <div class="o-topbar">
+            <div class="o-brandmark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-orbit"/></svg></div>
+            <div class="flex items-c gap3">
+              <span class="o-evtsq">FWPS<br>2026</span>
+              <div><div style="font:20px/1.05 var(--font-display)">Day 2 · Live</div><div class="o-dim" style="font:500 11px/1.3 var(--font-data);margin-top:3px">Main Summit Hall · 09:42</div></div>
+            </div>
+            <span class="o-badge o-badge--pulse" data-tone="critical">On air</span>
+            <button class="o-askai ml-auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg>Ask AI</button>
+            <span class="o-av o-av--lg" style="background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)">EA</span>
+          </div>
+          <div style="padding:var(--o-5);display:grid;gap:var(--o-4);background:var(--abyss)">
+            <div class="o-kpistrip">
+              <div class="o-kpi"><div class="o-ring" data-tone="vital"><svg width="50" height="50" viewBox="0 0 50 50"><circle class="o-ring__track" cx="25" cy="25" r="21" stroke-width="5"/><circle class="o-ring__value" cx="25" cy="25" r="21" stroke-width="5" stroke-dasharray="131.9" stroke-dashoffset="17.1"/></svg><div class="o-ring__center"><div class="o-ring__num" style="font-size:12px">87%</div></div></div><div><div class="o-kpi__k">Health</div><div class="o-kpi__v" style="font-size:16px;color:var(--vital-lit)">Excellent</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Checked in</div><div class="o-kpi__v">584</div><div class="o-kpi__f">of 650</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Session</div><div class="o-kpi__v" style="font-size:16px;color:var(--gold-lit)">Plenary II</div><div class="o-kpi__f">ends 10:30</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Open issues</div><div class="o-kpi__v" style="color:var(--critical-lit)">2</div><div class="o-kpi__f" style="color:var(--critical-lit)">● 1 urgent</div></div></div>
+              <div class="o-kpi"><div><div class="o-kpi__k">Crew on site</div><div class="o-kpi__v">48</div><div class="o-kpi__f">8 zones</div></div></div>
+              <div class="o-kpi o-kpi--cta"><button class="o-btn o-btn--gold o-btn--lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-warn"/></svg>Raise issue</button></div>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--o-4)">
+              <div class="o-panel"><div class="o-card__pad">
+                <div class="flex between items-c"><span class="o-eyebrow" style="color:var(--ink-2)">Run of show · Day 2</span><span class="o-badge" data-tone="gold">Live</span></div>
+                <div class="o-gantt mt5">
+                  <div class="o-gantt__scale"><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span></div>
+                  <div class="o-gantt__now" style="left:29%"></div>
+                  <div class="o-gantt__band"><div class="o-gantt__bar" style="left:0;width:26%;background:var(--vital-tint);color:var(--vital);border-color:color-mix(in srgb,var(--vital) 30%,transparent)">Registration &amp; coffee<span>08:00 – 09:30</span></div></div>
+                  <div class="o-gantt__band"><div class="o-gantt__bar" style="left:24%;width:22%;background:var(--gold-tint);color:var(--gold);border-color:var(--gold-3)">Plenary II<span>09:20 – 10:30</span></div></div>
+                  <div class="o-gantt__band"><div class="o-gantt__bar" style="left:46%;width:18%;background:var(--plasma-tint);color:var(--plasma);border-color:color-mix(in srgb,var(--plasma) 30%,transparent)">Breakout tracks<span>11:00 – 12:00</span></div></div>
+                  <div class="o-gantt__band"><div class="o-gantt__bar" style="left:64%;width:30%;background:var(--ion-tint);color:var(--ion);border-color:color-mix(in srgb,var(--ion) 30%,transparent)">Exhibition &amp; networking<span>13:00 – 16:30</span></div></div>
+                </div>
+              </div></div>
+              <div class="o-panel">
+                <div class="o-card__head"><span class="o-card__title">Live feed</span><span class="o-badge o-badge--pulse" data-tone="critical">2</span></div>
+                <div class="o-feed" style="padding:var(--o-2)">
+                  <div class="o-alert"><span class="o-alert__dot" style="background:var(--critical-lit)"></span><div><div class="o-alert__title">Registration queue at 14 minutes</div><div class="o-alert__sub">Threshold is 8 · 2 desks unstaffed</div></div><span class="o-alert__time">now</span></div>
+                  <div class="o-alert"><span class="o-alert__dot" style="background:var(--flare-lit)"></span><div><div class="o-alert__title">11:00 speaker not yet on site</div><div class="o-alert__sub">Dr. Haddad · transport dispatched</div></div><span class="o-alert__time">6m</span></div>
+                  <div class="o-alert"><span class="o-alert__dot" style="background:var(--vital-lit)"></span><div><div class="o-alert__title">Plenary II started on time</div><div class="o-alert__sub">584 in room · AV nominal</div></div><span class="o-alert__time">12m</span></div>
+                  <div class="o-alert"><span class="o-alert__dot" style="background:var(--ion-lit)"></span><div><div class="o-alert__title">Coffee stock replenished</div><div class="o-alert__sub">Networking corridor</div></div><span class="o-alert__time">28m</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="flex center"><nav class="o-dock" aria-label="Primary">
+              <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg><span class="o-dock__label">Home</span></button>
+              <button class="o-dock__item" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pulse"/></svg><span class="o-dock__label">Pulse</span></button>
+              <button class="o-dock__item"><span class="o-count">2</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-warn"/></svg><span class="o-dock__label">Issues</span></button>
+              <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg><span class="o-dock__label">Check-in</span></button>
+              <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg><span class="o-dock__label">Transport</span></button>
+              <button class="o-dock__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg><span class="o-dock__label">AI</span></button>
+            </nav></div>
+          </div>
+        </div>
+
+        <div class="flex wrap gap3 mt10" style="padding-top:var(--o-8);border-top:1px solid var(--rim)">
+          <div class="o-eyebrow">ORBIT · Elite Event Hub</div>
+          <div class="o-eyebrow ml-auto">Toggle theme bottom-right · every pixel here is live CSS</div>
+        </div>
+      </section>
+
+<script>
+(function(){
+  var root=document.documentElement, d=document.getElementById('thDark'), l=document.getElementById('thLight');
+  function set(t){root.dataset.theme=t;d.classList.toggle('is-on',t==='dark');l.classList.toggle('is-on',t==='light')}
+  d.addEventListener('click',function(){set('dark')});
+  l.addEventListener('click',function(){set('light')});
+
+  document.querySelectorAll('.o-arc').forEach(function(arc){
+    arc.querySelectorAll('.o-arc__node').forEach(function(n){
+      n.addEventListener('click',function(e){e.preventDefault();
+        arc.querySelectorAll('.o-arc__node').forEach(function(x){x.removeAttribute('data-active')});
+        n.setAttribute('data-active','true');});
+    });
+  });
+  document.querySelectorAll('.o-dock').forEach(function(dk){
+    dk.querySelectorAll('.o-dock__item').forEach(function(b){
+      b.addEventListener('click',function(){
+        dk.querySelectorAll('.o-dock__item').forEach(function(x){x.removeAttribute('aria-current')});
+        b.setAttribute('aria-current','page');});
+    });
+  });
+  document.querySelectorAll('.o-switch').forEach(function(s){
+    s.addEventListener('click',function(){s.setAttribute('aria-checked',s.getAttribute('aria-checked')==='true'?'false':'true')});
+  });
+  document.querySelectorAll('.o-seg, .o-tabs').forEach(function(g){
+    g.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click',function(){
+        g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-selected','false')});
+        b.setAttribute('aria-selected','true');});
+    });
+  });
+
+  var links=[].slice.call(document.querySelectorAll('.doc__navlink'));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))}).filter(Boolean);
+  var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    links.forEach(function(a){a.classList.toggle('is-active',a.getAttribute('href')==='#'+en.target.id)})}})},
+    {rootMargin:'-12% 0px -74% 0px'});
+  secs.forEach(function(s){io.observe(s)});
+
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    var st=document.createElement('style');
+    st.textContent='*,*::before,*::after{animation:none !important;transition-duration:.01ms !important}';
+    document.head.appendChild(st);
+  }
+})();
+</script>
+
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

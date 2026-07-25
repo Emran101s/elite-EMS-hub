@@ -4,12 +4,15 @@
     'unit' => null,
     'foot' => null,          // plain string; or pass a <x-slot:foot>
     'delta' => null,         // ['dir'=>'up'|'down','text'=>'12']
-    'tone' => null,          // colour the value (critical/flare/vital…)
+    'tone' => null,          // colour the value (critical/flare/vital…) — the READ colour
 ])
+@php
+    $t = $tone instanceof \App\Support\Tone ? $tone : ($tone ? \App\Support\Tone::tryFrom($tone) : null);
+@endphp
 <div {{ $attributes->merge(['class' => 'o-stat']) }}>
     <div class="o-stat__label">{{ $label }}</div>
     <div class="o-stat__value">
-        <span class="o-metric" @if ($tone) style="color:var(--{{ $tone }})" @endif>{{ $value }}</span>
+        <span class="o-metric" @if ($t) style="color:{{ $t->var() }}" @endif>{{ $value }}</span>
         @if ($unit)<span class="o-stat__unit">{{ $unit }}</span>@endif
     </div>
     @if ($delta || $foot || isset($footSlot))

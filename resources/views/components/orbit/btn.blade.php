@@ -1,5 +1,5 @@
 @props([
-    'variant' => 'solid',   // solar | solid | ghost | quiet | danger
+    'variant' => 'ghost',   // gold | dark | solid | ghost | quiet | danger
     'size' => null,         // sm | lg
     'icon' => false,        // icon-only (square)
     'href' => null,
