@@ -72,6 +72,10 @@ Route::middleware('auth')->group(function () {
     // Any new ORBIT component must appear here in the commit that creates it.
     Route::view('/design/gallery', 'orbit-gallery')->name('design.gallery');
 
+    // The ORBIT shell assembled around a real event, for review before the
+    // sidebar is retired. ?tab=venue etc. moves the orbit's active module.
+    Route::view('/design/shell', 'orbit-shell-preview')->name('design.shell');
+
     // A user's manual theme choice, for this session only. ThemePolicy decides
     // the default per module; this just records that they overrode it.
     Route::post('/theme-override', function (\Illuminate\Http\Request $request) {

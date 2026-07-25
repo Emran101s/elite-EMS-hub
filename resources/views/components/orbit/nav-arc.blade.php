@@ -4,6 +4,10 @@
     'outer' => [],       // structure — further out, so quieter
     'current' => null,   // key matched against each item's 'key'
     'core' => null,      // <x-slot:core> for the disc's contents
+    'innerSpan' => 120,  // total degrees the inner ring fans across
+    'outerSpan' => 96,
+    'innerRadius' => 150,
+    'outerRadius' => 190,
 ])
 @php
     /**
@@ -14,14 +18,25 @@
      * at r = 150 in 30° steps and the outer at r = 190 in 32° steps.
      */
     $cx = 0.0;
-    $cy = 235.0;
+    // Centre low enough that the widest ring's top node still clears the box —
+    // half a node (38px) plus its label. Derived, so changing a radius can't
+    // silently clip a module off the top of the arc.
+    $reach = max((float) $innerRadius * sin(deg2rad((float) $innerSpan / 2)), (float) $outerRadius * sin(deg2rad((float) $outerSpan / 2)));
+    $cy = round($reach + 48, 1);
+    $arcHeight = round($cy * 2, 1);
 
-    $place = function (array $items, float $radius, float $step) use ($cx, $cy) {
+    /**
+     * Fan the ring symmetrically about the horizontal across a fixed angular
+     * span, so adding a module re-spaces the ring instead of pushing the last
+     * one off the arc. The defaults reproduce the design exactly: 5 inner nodes
+     * across 120° give 30° steps, 4 outer across 96° give 32°.
+     */
+    $place = function (array $items, float $radius, float $span) use ($cx, $cy) {
         $n = count($items);
         if ($n === 0) {
             return [];
         }
-        // Fan symmetrically about the horizontal: 5 items → -60,-30,0,30,60.
+        $step = $n > 1 ? $span / ($n - 1) : 0.0;
         $first = -$step * ($n - 1) / 2;
 
         return array_map(function ($item, $i) use ($cx, $cy, $radius, $step, $first) {
@@ -33,16 +48,20 @@
         }, $items, array_keys($items));
     };
 
-    $innerNodes = $place($inner, 150.0, 30.0);
-    $outerNodes = $place($outer, 190.0, 32.0);
+    $innerNodes = $place($inner, (float) $innerRadius, (float) $innerSpan);
+    $outerNodes = $place($outer, (float) $outerRadius, (float) $outerSpan);
+
+    // The rings are drawn at the same radii the nodes sit on.
+    $ringBox = ((float) $outerRadius + 70) * 2;
 @endphp
-<nav {{ $attributes->merge(['class' => 'o-arc']) }} aria-label="Modules">
-    <svg class="o-arc__rings" viewBox="0 0 520 520" aria-hidden="true">
-        <circle cx="260" cy="260" r="150"/>
-        <circle cx="260" cy="260" r="190" class="dash"/>
+<nav {{ $attributes->merge(['class' => 'o-arc']) }} aria-label="Modules" style="min-height:{{ $arcHeight }}px">
+    <svg class="o-arc__rings" viewBox="0 0 {{ $ringBox }} {{ $ringBox }}" aria-hidden="true"
+         style="width:{{ $ringBox }}px;height:{{ $ringBox }}px;left:{{ -$ringBox / 2 }}px;top:{{ $cy }}px;transform:translateY(-50%)">
+        <circle cx="{{ $ringBox / 2 }}" cy="{{ $ringBox / 2 }}" r="{{ $innerRadius }}"/>
+        <circle cx="{{ $ringBox / 2 }}" cy="{{ $ringBox / 2 }}" r="{{ $outerRadius }}" class="dash"/>
     </svg>
 
-    <div class="o-arc__core">
+    <div class="o-arc__core" style="top:{{ $cy }}px">
         {{ $core ?? '' }}
         <div class="o-arc__dots"><i></i><i></i><i></i></div>
     </div>

@@ -315,3 +315,77 @@
 @media (prefers-reduced-motion: reduce) {
     .orbit-spin-slow, .orbit-spin-reverse, .core-glow, .dash-flow { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ORBIT SHELL — layout only. Every colour, radius and shadow below is an
+   ORBIT token; this file adds no new design values, only the arrangement
+   described in docs/orbit-ia-brief.md.
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+    .o-shell {
+        min-height: 100vh;
+        background: var(--abyss);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        /* room for the floating dock */
+        padding-bottom: 108px;
+    }
+
+    /* 1 — command ribbon */
+    .o-shell__ribbon { position: sticky; top: 0; z-index: 30; }
+    .o-shell__evt {
+        font: 600 15px/1.2 var(--font-ui);
+        letter-spacing: -.01em;
+        color: var(--ink);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .o-shell__evtmeta { margin-top: 2px; font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap; }
+    .o-shell__ribbonend { margin-left: auto; display: flex; align-items: center; gap: var(--o-3); }
+    .o-shell__ribbonend .o-search { min-width: 200px; }
+    .o-shell__ribbonend .o-search span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 2 — KPI ribbon */
+    .o-shell__kpis { padding: var(--o-4) var(--o-5) 0; }
+
+    /* 3 — orbit · workspace · rails */
+    .o-shell__body {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--o-5);
+        padding: var(--o-4) var(--o-5);
+    }
+    .o-shell__work { flex: 1; min-width: 0; display: grid; gap: var(--o-4); }
+    .o-shell__rails { width: 320px; flex: none; display: grid; gap: var(--o-4); }
+
+    /* The orbit needs more room than the design's 236px once 12 modules ride it:
+       two rings 94px apart keep the 76px node labels from colliding. */
+    .o-shell__body .o-arc { width: 336px; }
+    .o-shell__body .o-arc__core { box-shadow: 0 24px 60px -22px rgba(20,28,51,.55), 0 0 0 10px var(--abyss); }
+
+    /* the disc's label */
+    .o-arc__coretitle {
+        font: 600 10px/1.3 var(--font-ui);
+        letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-ink);
+    }
+    .o-arc__coresub { margin-top: 3px; font: var(--t-body-sm); color: var(--chrome-ink-3); }
+
+    /* 4 — floating dock */
+    .o-shell__dock {
+        position: fixed; left: 50%; bottom: var(--o-5); transform: translateX(-50%);
+        z-index: 40;
+    }
+
+    /* Collapse, per the brief: the arc becomes an icon rail below 1280px and
+       disappears below 900px, where the dock is the only navigation. */
+    @media (max-width: 1400px) { .o-shell__rails { width: 288px; } }
+    @media (max-width: 1279px) {
+        .o-arc { width: 64px; }
+        .o-arc__label, .o-arc__core { display: none; }
+        .o-arc__node { width: 44px; }
+    }
+    @media (max-width: 899px) {
+        .o-arc { display: none; }
+        .o-shell__body { flex-direction: column; }
+        .o-shell__rails { width: 100%; }
+    }
+}

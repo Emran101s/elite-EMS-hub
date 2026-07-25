@@ -94,6 +94,55 @@ class Event extends Model
         return self::STAGE_COLORS[$stage] ?? '#64748B';
     }
 
+    /**
+     * The 12 modules that ride the orbit, split by ORBIT's second law: distance
+     * is relevance. The inner ring is what an event manager opens daily; the
+     * outer ring is structure. Everything else in HUB_MODULES stays reachable
+     * from the dock, ⌘K and cross-links — the orbit is a shortlist, not a menu.
+     *
+     * The ORBIT sprite has its own icon names, so they are mapped here rather
+     * than reusing HUB_MODULES' Heroicon names.
+     *
+     * @return array{inner: array<int, array<string, mixed>>, outer: array<int, array<string, mixed>>}
+     */
+    public static function orbitRings(): array
+    {
+        return [
+            'inner' => [
+                ['key' => 'overview', 'label' => 'Overview', 'icon' => 'home'],
+                ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'task'],
+                ['key' => 'agenda', 'label' => 'Agenda', 'icon' => 'cal'],
+                ['key' => 'venue', 'label' => 'Venue', 'icon' => 'venue'],
+                ['key' => 'suppliers', 'label' => 'Suppliers', 'icon' => 'truck'],
+            ],
+            'outer' => [
+                ['key' => 'planning', 'label' => 'Planning', 'icon' => 'note'],
+                ['key' => 'speakers', 'label' => 'Speakers', 'icon' => 'mic'],
+                ['key' => 'exhibition', 'label' => 'Exhibition', 'icon' => 'grid'],
+                ['key' => 'sponsors', 'label' => 'Sponsors', 'icon' => 'star'],
+                ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart'],
+                ['key' => 'files', 'label' => 'Documents', 'icon' => 'doc'],
+                ['key' => 'settings', 'label' => 'Settings', 'icon' => 'gear'],
+            ],
+        ];
+    }
+
+    /** The floating dock: nine slots, the last always AI. */
+    public static function orbitDock(): array
+    {
+        return [
+            ['key' => 'overview', 'label' => 'Home', 'icon' => 'home'],
+            ['key' => 'agenda', 'label' => 'Calendar', 'icon' => 'cal'],
+            ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'task'],
+            ['key' => 'budget', 'label' => 'Budget', 'icon' => 'money'],
+            ['key' => 'venue', 'label' => 'Venue', 'icon' => 'venue'],
+            ['key' => 'speakers', 'label' => 'Speakers', 'icon' => 'mic'],
+            ['key' => 'suppliers', 'label' => 'Suppliers', 'icon' => 'truck'],
+            ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart'],
+            ['key' => 'ai', 'label' => 'AI', 'icon' => 'spark'],
+        ];
+    }
+
     /** Event-wide papers get the brand navy rather than a module hue. */
     public static function moduleColor(?string $key): string
     {
