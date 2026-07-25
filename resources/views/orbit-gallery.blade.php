@@ -168,6 +168,145 @@
     </div>
 
     <div class="sec">
+        <span class="o-eyebrow">Topbar, search and the event chip</span>
+        <x-orbit.topbar style="border-radius:var(--r-lg);border:1px solid var(--rim)">
+            <x-orbit.search />
+            <x-orbit.event-chip :lines="['FWP', '26']" />
+            <x-orbit.avatar name="Emran Itan" />
+        </x-orbit.topbar>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Greeting + Quick Add — open with something actionable</span>
+        <x-orbit.card>
+            <x-orbit.greeting heading="Good morning, Emran">
+                <x-slot:summary>You have <b>3 approvals</b> waiting and <b>2 suppliers</b> that need chasing before Friday.</x-slot:summary>
+            </x-orbit.greeting>
+            <div style="margin-top:var(--o-5)">
+                <x-orbit.quick-add :items="[
+                    ['label' => 'Task', 'icon' => 'task'],
+                    ['label' => 'Session', 'icon' => 'cal'],
+                    ['label' => 'Supplier', 'icon' => 'truck'],
+                    ['label' => 'Expense', 'icon' => 'money'],
+                    ['label' => 'Note', 'icon' => 'note'],
+                ]" />
+            </div>
+        </x-orbit.card>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">List rows — one template for venues, suppliers, attendees, line items</span>
+        <x-orbit.list>
+            <x-orbit.row icon="venue" name="The St. Regis Amman" :meta="['12 sessions', '650 capacity', 'Amman']" amount="JD 84,000">
+                <x-orbit.badge tone="vital">Confirmed</x-orbit.badge>
+            </x-orbit.row>
+            <x-orbit.row icon="truck" name="Royal Jordanian Transport" :meta="['18 movements', '4 vehicles']" amount="JD 12,400">
+                <x-orbit.badge tone="flare">Awaiting quote</x-orbit.badge>
+            </x-orbit.row>
+            <x-orbit.row icon="mic" name="Dr. Layla Haddad" :meta="['Keynote', 'Day 2 · 09:30']" amount="—">
+                <x-orbit.badge tone="ion">Invited</x-orbit.badge>
+            </x-orbit.row>
+        </x-orbit.list>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Data table — money right-aligned in the data face</span>
+        <x-orbit.card :pad="false">
+            <x-orbit.table
+                :columns="['Category', 'Owner', ['label' => 'Budget', 'num' => true], ['label' => 'Spent', 'num' => true]]"
+                :rows="[
+                    ['Venue and production', 'Emran Itan', ['v' => 'JD 140,000', 'num' => true], ['v' => 'JD 121,480', 'num' => true]],
+                    ['Hospitality', 'Nour Haddad', ['v' => 'JD 86,000', 'num' => true], ['v' => 'JD 52,900', 'num' => true]],
+                    ['Transport', 'Sara Malki', ['v' => 'JD 42,000', 'num' => true], ['v' => 'JD 12,400', 'num' => true]],
+                ]" />
+        </x-orbit.card>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Form fields</span>
+        <div class="g3">
+            <x-orbit.field label="Event name" value="The First World Public Summit" />
+            <x-orbit.field label="Budget" type="number" affix="JD" value="350000" help="Excludes VAT." />
+            <x-orbit.field label="Stage" type="select" :options="['planning' => 'Planning', 'production' => 'Production', 'live' => 'Live']" selected="planning" />
+        </div>
+        <div class="rowflex" style="margin-top:16px">
+            <x-orbit.seg :options="['cards' => 'Cards', 'list' => 'List', 'calendar' => 'Calendar']" selected="cards" />
+            <x-orbit.tabs :options="['all' => 'All', 'overdue' => 'Overdue', 'today' => 'Today', 'week' => 'This week']" selected="overdue" />
+        </div>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Alerts and the activity feed</span>
+        <div class="g3" style="grid-template-columns:1fr 1fr">
+            <x-orbit.card :pad="false">
+                <x-orbit.feed style="padding:var(--o-3)">
+                    <x-orbit.alert tone="critical" icon="warn" title="Catering contract is unsigned" sub="Due in 3 days" time="2h" />
+                    <x-orbit.alert tone="vital" icon="doc" title="Venue agreement countersigned" sub="St. Regis Amman" time="5h" />
+                    <x-orbit.alert tone="flare" icon="clock" title="Transport quote expires Friday" sub="Royal Jordanian" time="1d" />
+                </x-orbit.feed>
+            </x-orbit.card>
+            <x-orbit.ai-panel
+                :insights="[
+                    ['title' => 'Transport is the critical path', 'sub' => '18 movements still unassigned 105 days out.', 'tone' => 'flare', 'icon' => 'warn'],
+                    ['title' => 'Budget is tracking under', 'sub' => 'JD 36,802 remaining at 61% spent.', 'tone' => 'vital', 'icon' => 'money'],
+                ]"
+                :chips="['Draft the supplier brief', 'What is at risk?', 'Summarise this week']" />
+        </div>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Pulse rail and the delivery timeline</span>
+        <div class="g3" style="grid-template-columns:1fr 2fr">
+            <x-orbit.card title="Event Pulse">
+                <x-orbit.pulse :metrics="[
+                    ['label' => 'Tasks on time', 'value' => '88%', 'tone' => 'vital'],
+                    ['label' => 'Budget health', 'value' => '61%', 'tone' => 'ion'],
+                    ['label' => 'Supplier risk', 'value' => '2', 'tone' => 'flare'],
+                    ['label' => 'Overdue', 'value' => '3', 'tone' => 'critical'],
+                ]" />
+            </x-orbit.card>
+            <x-orbit.card title="Delivery journey">
+                <x-orbit.gantt :today="62"
+                    :scale="['Jul', 'Aug', 'Sep', 'Oct', 'Nov']"
+                    :bands="[
+                        ['label' => 'Planning', 'start' => 0, 'end' => 38, 'tone' => 'plasma'],
+                        ['label' => 'Production', 'start' => 30, 'end' => 78, 'tone' => 'ion'],
+                        ['label' => 'Show days', 'start' => 78, 'end' => 92, 'tone' => 'gold', 'note' => 'Nov 8–12'],
+                        ['label' => 'Close-out', 'start' => 92, 'end' => 100, 'tone' => 'vital'],
+                    ]" />
+            </x-orbit.card>
+        </div>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Empty state — it teaches the concept, it never says "No data"</span>
+        <x-orbit.empty icon="truck" title="No movements scheduled yet"
+                       body="A movement is one vehicle taking named guests from A to B at a time. Import your arrivals sheet and we'll build the first day for you.">
+            <div class="rowflex" style="justify-content:center">
+                <x-orbit.btn variant="gold">Import arrivals</x-orbit.btn>
+                <x-orbit.btn variant="ghost">Add one manually</x-orbit.btn>
+            </div>
+        </x-orbit.empty>
+    </div>
+
+    <div class="sec">
+        <span class="o-eyebrow">Modal and toast</span>
+        <div class="rowflex" style="align-items:flex-start;gap:20px">
+            <x-orbit.modal title="Archive this event?">
+                <p class="o-mute" style="margin:0">It disappears from lists and the Operations Hub. Nothing is deleted, and you can restore it at any time.</p>
+                <x-slot:foot>
+                    <x-orbit.btn variant="quiet">Cancel</x-orbit.btn>
+                    <x-orbit.btn variant="gold">Archive</x-orbit.btn>
+                </x-slot:foot>
+            </x-orbit.modal>
+            <div style="display:grid;gap:10px">
+                <x-orbit.toast tone="vital" icon="doc">Contract sent to the client.</x-orbit.toast>
+                <x-orbit.toast tone="critical" icon="warn">Couldn't reach the supplier.</x-orbit.toast>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec">
         <span class="o-eyebrow">Cards — gravity decides what matters</span>
         <div class="g3">
             <x-orbit.card gravity="hero" title="Event Hub">
