@@ -6,7 +6,7 @@
             <h2 class="text-[12px] font-extrabold uppercase tracking-[0.13em] text-cc-navy">Upcoming Milestones</h2>
             <p class="mt-0.5 text-[11px] text-cc-ink-3">Next 7 Days</p>
         </div>
-        <a href="#" class="shrink-0 text-[11px] font-bold text-cc-blue transition hover:text-cc-navy">View All →</a>
+        <a href="{{ route('tasks.index') }}" class="shrink-0 text-[11px] font-bold text-cc-blue transition hover:text-cc-navy">View All →</a>
     </div>
 
     <ul class="mt-4 divide-y divide-cc-line">

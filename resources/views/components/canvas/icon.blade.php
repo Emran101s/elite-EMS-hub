@@ -38,6 +38,7 @@
         'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.3 2"/>',
         'flag' => '<path d="M5 21V4M5 4h11l-2 3.5L16 11H5"/>',
         'check' => '<path d="m5 13 4.5 4.5L19 7"/>',
+        'logout' => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 8 6 12l4 4M6 12h9"/>',
     ];
 @endphp
 <svg width="{{ $size }}" height="{{ $size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"

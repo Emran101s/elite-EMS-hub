@@ -6,7 +6,7 @@
             <h2 class="text-[12px] font-extrabold uppercase tracking-[0.13em] text-cc-navy">Mission Route</h2>
             <p class="mt-0.5 text-[11px] text-cc-ink-3">Company Journey</p>
         </div>
-        <a href="#" class="shrink-0 text-[11px] font-bold text-cc-blue transition hover:text-cc-navy">View Timeline →</a>
+        <a href="{{ route('projects.index') }}" class="shrink-0 text-[11px] font-bold text-cc-blue transition hover:text-cc-navy">View Timeline →</a>
     </div>
 
     <ol class="mt-5 flex items-start gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -106,6 +106,19 @@ class CommandCanvasData
             : self::band((int) round(self::health()->avg('score')));
     }
 
+    /** Badge counts for the header. Real records, never decoration. */
+    public static function headerCounts(): array
+    {
+        $ids = self::all()->pluck('id');
+
+        return [
+            'alerts' => EventApproval::whereIn('event_id', $ids)->where('status', 'pending')->count()
+                + EventRisk::whereIn('event_id', $ids)->whereIn('status', ['open', 'escalated'])->count(),
+            'tasks' => Task::whereIn('event_id', $ids)->whereNotIn('status', ['done', 'cancelled'])
+                ->where('assignee_id', auth()->id())->count(),
+        ];
+    }
+
     // ── Navigation ───────────────────────────────────────────────────────
 
     public static function dock(): array
@@ -113,13 +126,13 @@ class CommandCanvasData
         return [
             ['key' => 'home', 'label' => 'Home', 'icon' => 'home', 'href' => route('home')],
             ['key' => 'events', 'label' => 'Events', 'icon' => 'events', 'href' => route('events.index')],
-            ['key' => 'people', 'label' => 'People', 'icon' => 'people', 'href' => url('/team')],
-            ['key' => 'plan', 'label' => 'Plan', 'icon' => 'plan', 'href' => url('/tasks')],
-            ['key' => 'money', 'label' => 'Money', 'icon' => 'money', 'href' => url('/finance')],
+            ['key' => 'people', 'label' => 'People', 'icon' => 'people', 'href' => route('team.index')],
+            ['key' => 'plan', 'label' => 'Plan', 'icon' => 'plan', 'href' => route('tasks.index')],
+            ['key' => 'money', 'label' => 'Money', 'icon' => 'money', 'href' => route('finance.index')],
             ['key' => 'live', 'label' => 'Live', 'icon' => 'live', 'href' => route('events.index')],
-            ['key' => 'intelligence', 'label' => 'Intelligence', 'icon' => 'intel', 'href' => url('/reports')],
-            ['key' => 'vault', 'label' => 'Vault', 'icon' => 'vault', 'href' => url('/assets')],
-            ['key' => 'settings', 'label' => 'Settings', 'icon' => 'settings', 'href' => url('/settings')],
+            ['key' => 'intelligence', 'label' => 'Intelligence', 'icon' => 'intel', 'href' => route('reports.index')],
+            ['key' => 'vault', 'label' => 'Vault', 'icon' => 'vault', 'href' => route('assets.index')],
+            ['key' => 'settings', 'label' => 'Settings', 'icon' => 'settings', 'href' => route('settings.index')],
         ];
     }
 
@@ -270,7 +283,8 @@ class CommandCanvasData
             foreach ($e->approvals()->where('status', 'pending')->latest()->limit(2)->get() as $a) {
                 $out[] = ['impact' => 'Medium Impact', 'tone' => 'warn', 'title' => $a->title,
                     'context' => $e->name.' · '.str($a->type)->title().' approval',
-                    'time' => $a->created_at->format('h:i A'), 'sort' => $a->created_at->timestamp];
+                    'time' => $a->created_at->format('h:i A'), 'sort' => $a->created_at->timestamp,
+                    'href' => route('events.hub', [$e, 'tab' => 'approvals'])];
             }
             foreach ($e->tasks()->whereNotIn('status', ['done', 'cancelled'])
                 ->whereNotNull('due_on')->whereDate('due_on', '<', now())
@@ -278,7 +292,8 @@ class CommandCanvasData
                 $out[] = ['impact' => 'High Impact', 'tone' => 'risk', 'title' => $t->title,
                     'context' => $e->name.' · due '.$t->due_on->diffForHumans(),
                     // due_on is a date, so a clock time here would always read midnight.
-                    'time' => $t->due_on->format('M j'), 'sort' => $t->due_on->timestamp];
+                    'time' => $t->due_on->format('M j'), 'sort' => $t->due_on->timestamp,
+                    'href' => route('events.hub', [$e, 'tab' => 'tasks'])];
             }
         }
 
@@ -291,15 +306,15 @@ class CommandCanvasData
     {
         return [
             ['label' => 'New Event', 'icon' => 'events', 'href' => route('events.create')],
-            ['label' => 'New Task', 'icon' => 'tasks', 'href' => url('/tasks')],
-            ['label' => 'Add Contact', 'icon' => 'people', 'href' => url('/crm')],
-            ['label' => 'Add Supplier', 'icon' => 'supplier', 'href' => url('/suppliers')],
+            ['label' => 'New Task', 'icon' => 'tasks', 'href' => route('tasks.index')],
+            ['label' => 'Add Contact', 'icon' => 'people', 'href' => route('crm.index')],
+            ['label' => 'Add Supplier', 'icon' => 'supplier', 'href' => route('suppliers.index')],
             ['label' => 'New Contract', 'icon' => 'doc', 'href' => route('events.index')],
-            ['label' => 'New Payment', 'icon' => 'money', 'href' => url('/finance')],
-            ['label' => 'Upload Document', 'icon' => 'upload', 'href' => url('/assets')],
-            ['label' => 'Generate Report', 'icon' => 'report', 'href' => url('/reports')],
-            ['label' => 'Ask AI', 'icon' => 'ai', 'href' => url('/ai-assistant')],
-            ['label' => 'More', 'icon' => 'more', 'href' => url('/settings')],
+            ['label' => 'New Payment', 'icon' => 'money', 'href' => route('finance.index')],
+            ['label' => 'Upload Document', 'icon' => 'upload', 'href' => route('assets.index')],
+            ['label' => 'Generate Report', 'icon' => 'report', 'href' => route('reports.index')],
+            ['label' => 'Ask AI', 'icon' => 'ai', 'href' => route('ai.index')],
+            ['label' => 'More', 'icon' => 'more', 'href' => route('settings.index')],
         ];
     }
 

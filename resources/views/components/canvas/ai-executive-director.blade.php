@@ -18,7 +18,7 @@
     <ol class="mt-4 space-y-2">
         @foreach ($items as $i => $item)
             <li>
-                <a href="#" class="group flex items-center gap-3 rounded-xl border border-cc-line p-2.5 transition hover:border-cc-gold hover:bg-cc-mist/60">
+                <a href="{{ $item['href'] ?? '#' }}" class="group flex items-center gap-3 rounded-xl border border-cc-line p-2.5 transition hover:border-cc-gold hover:bg-cc-mist/60">
                     <span class="cc-hex-flat grid h-8 w-8 shrink-0 place-items-center text-[11px] font-extrabold {{ $tones[$item['tone']] ?? $tones['info'] }}">{{ $i + 1 }}</span>
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-[12.5px] font-bold text-cc-navy">{{ $item['title'] }}</span>
@@ -30,7 +30,7 @@
         @endforeach
     </ol>
 
-    <a href="#" class="mt-4 flex items-center justify-center gap-2 rounded-xl bg-cc-navy py-3 text-[12.5px] font-extrabold text-cc-gold transition hover:bg-cc-navy-2">
+    <a href="{{ route('reports.index') }}" class="mt-4 flex items-center justify-center gap-2 rounded-xl bg-cc-navy py-3 text-[12.5px] font-extrabold text-cc-gold transition hover:bg-cc-navy-2">
         View Full Briefing <x-canvas.icon name="chevR" :size="14" />
     </a>
 </section>

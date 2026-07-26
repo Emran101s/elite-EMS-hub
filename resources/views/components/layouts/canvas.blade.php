@@ -55,11 +55,44 @@
                 frame.addEventListener('pointercancel', stop);
             }
 
-            /* ⌘K focuses the command search. */
+            /* Expand: the arena takes the whole screen. */
+            const arena = document.querySelector('[data-canvas-expand]')?.closest('section');
+            document.querySelector('[data-canvas-expand]')?.addEventListener('click', function () {
+                const on = arena.classList.toggle('cc-full');
+                this.setAttribute('aria-pressed', on);
+                document.body.classList.toggle('overflow-hidden', on);
+            });
+
+            /* Layers: the orbit rings and spokes are a layer you can drop. */
+            const rings = document.querySelector('[data-canvas-rings]');
+            document.querySelector('[data-canvas-layers]')?.addEventListener('click', function () {
+                const on = this.getAttribute('aria-pressed') !== 'true';
+                this.setAttribute('aria-pressed', on);
+                /* Set the style directly: a class only added at runtime is a class
+                   Tailwind never sees, so it never generates the rule. */
+                if (rings) rings.style.opacity = on ? '' : '0';
+            });
+
+            /* <details> menus: only one open, and Escape closes it. */
+            const menus = [...document.querySelectorAll('details[data-menu]')];
+            menus.forEach(m => m.addEventListener('toggle', () => {
+                if (m.open) menus.filter(o => o !== m).forEach(o => o.open = false);
+            }));
+            document.addEventListener('click', e => {
+                menus.filter(m => m.open && !m.contains(e.target)).forEach(m => m.open = false);
+            });
+
             window.addEventListener('keydown', e => {
+                /* ⌘K focuses the command search. */
                 if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                     e.preventDefault();
                     document.querySelector('[data-command-search]')?.focus();
+                }
+                if (e.key === 'Escape') {
+                    menus.forEach(m => m.open = false);
+                    if (arena?.classList.contains('cc-full')) {
+                        document.querySelector('[data-canvas-expand]')?.click();
+                    }
                 }
             });
         });

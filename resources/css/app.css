@@ -489,4 +489,27 @@
     .cc-lift-2 { box-shadow: 0 12px 30px -12px rgba(29, 41, 81, 0.18), 0 2px 6px rgba(29, 41, 81, 0.05); }
     .cc-lift-3 { box-shadow: 0 28px 60px -22px rgba(29, 41, 81, 0.32), 0 6px 16px -8px rgba(29, 41, 81, 0.12); }
     .cc-glow  { box-shadow: 0 0 0 1px rgba(255, 212, 79, 0.5), 0 20px 50px -18px rgba(255, 212, 79, 0.45); }
+
+    /* Expand: the arena leaves the page flow and takes the screen. The field
+       has to grow with it, so the frame claims the leftover height rather than
+       keeping the 740px it is given in the page.
+
+       The !important is load-bearing, not laziness: these rules live in the
+       components layer and the elements carry `rounded-[22px]` and `h-[740px]`
+       from the utilities layer, which is ordered after. Only !important
+       reverses that order — raising specificity cannot. */
+    .cc-full {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        border-radius: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .cc-full [data-canvas-arena] { flex: 1; min-height: 0; }
+    .cc-full [data-canvas-frame] { height: 100% !important; }
+
+    /* The menus are <details>; the native disclosure triangle is not wanted. */
+    summary::-webkit-details-marker { display: none; }
+    summary { list-style: none; }
 }

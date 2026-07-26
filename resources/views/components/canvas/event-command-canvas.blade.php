@@ -24,14 +24,15 @@
                 </span>
                 {{ count($events) + 1 }} events active
             </span>
-            <button type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-cc-line bg-white text-cc-ink-2 transition hover:border-cc-gold hover:text-cc-navy" title="Expand">
+            <button type="button" data-canvas-expand aria-pressed="false" title="Expand to full screen"
+                    class="grid h-9 w-9 place-items-center rounded-xl border border-cc-line bg-white text-cc-ink-2 transition hover:border-cc-gold hover:text-cc-navy">
                 <x-canvas.icon name="expand" :size="16" />
             </button>
         </div>
     </div>
 
     {{-- ══ THE ARENA ══ --}}
-    <div class="relative mt-4 overflow-hidden rounded-[32px] border border-cc-line bg-cc-mist/50">
+    <div data-canvas-arena class="relative mt-4 overflow-hidden rounded-[32px] border border-cc-line bg-cc-mist/50">
 
         {{-- the field: a radial well that falls away from the centre --}}
         <div class="cc-well pointer-events-none absolute inset-0"></div>
@@ -40,8 +41,9 @@
         {{-- canvas controls --}}
         <div class="absolute left-3 top-3 z-30 flex flex-col gap-1 rounded-2xl border border-cc-line bg-white/95 p-1 backdrop-blur cc-lift-1">
             @foreach ([['in', 'zin'], ['out', 'zout'], ['reset', 'center'], [null, 'layers']] as [$act, $icon])
-                <button type="button" @if ($act) data-zoom="{{ $act }}" @endif
-                        class="grid h-8 w-8 place-items-center rounded-xl text-cc-ink-2 transition hover:bg-cc-mist hover:text-cc-navy">
+                <button type="button" @if ($act) data-zoom="{{ $act }}" @else data-canvas-layers aria-pressed="true" @endif
+                        title="{{ $act ? 'Zoom '.$act : 'Toggle orbit rings' }}"
+                        class="grid h-8 w-8 place-items-center rounded-xl text-cc-ink-2 transition hover:bg-cc-mist hover:text-cc-navy aria-[pressed=false]:text-cc-ink-3/50">
                     <x-canvas.icon :name="$icon" :size="16" />
                 </button>
             @endforeach
@@ -63,11 +65,11 @@
         </div>
 
         {{-- the stage: transformed by zoom/pan --}}
-        <div class="relative h-[690px] cursor-grab select-none xl:h-[740px]">
+        <div data-canvas-frame class="relative h-[690px] cursor-grab select-none xl:h-[740px]">
             <div data-canvas-stage class="absolute inset-0 origin-center transition-transform duration-200 ease-out">
 
                 {{-- orbit rings + spokes --}}
-                <svg class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+                <svg data-canvas-rings class="pointer-events-none absolute inset-0 h-full w-full transition-opacity" aria-hidden="true">
                     @foreach ($events as $e)
                         <line x1="50%" y1="50%" x2="{{ $e['x'] + $e['w'] / 2 }}%" y2="{{ $e['y'] + 8 }}%"
                               stroke="currentColor" class="text-cc-gray" stroke-width="1.3" stroke-dasharray="3 7" />
@@ -148,13 +150,14 @@
                 @endif
 
                 {{-- add — a hexagon, like every other object on this field --}}
-                <button type="button" class="group absolute bottom-[7%] right-[9%] grid h-[84px] w-[76px] place-items-center">
+                <a href="{{ route('events.create') }}" title="Create a new event"
+                   class="group absolute bottom-[7%] right-[9%] grid h-[84px] w-[76px] place-items-center">
                     <span class="cc-hex-flat absolute inset-0 border-2 border-dashed border-cc-gray bg-white/70 transition group-hover:border-cc-gold group-hover:bg-cc-gold/10"></span>
                     <span class="relative grid place-items-center gap-1 text-cc-ink-3 transition group-hover:text-cc-navy">
                         <x-canvas.icon name="plus" :size="17" />
                         <span class="text-[9.5px] font-bold">New Event</span>
                     </span>
-                </button>
+                </a>
             </div>
         </div>
     </div>
