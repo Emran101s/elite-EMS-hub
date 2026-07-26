@@ -81,7 +81,7 @@
 {{-- ══ 1b. BREADCRUMB — where you are, as a landmark screen readers can jump to ══ --}}
 <nav aria-label="Breadcrumb" class="o-shell__crumbs">
     @if ($event)
-        <a href="{{ route('home') }}">Command Center</a>
+        <a href="{{ route('home') }}">Command Canvas</a>
         <span aria-hidden="true">›</span>
         <a href="{{ route('events.index') }}">Events</a>
         <span aria-hidden="true">›</span>
@@ -98,7 +98,7 @@
             @endif
         @endforeach
     @else
-        <span aria-current="page">Command Center</span>
+        <span aria-current="page">Command Canvas</span>
     @endif
 </nav>
 

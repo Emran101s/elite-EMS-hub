@@ -59,7 +59,7 @@ class DemoDataTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get('/operations-room')->assertOk()
             ->assertSee('Operations Room')
             ->assertSee('At risk')
             ->assertSee('ICFT 2026'); // the portfolio rail lists the seeded events

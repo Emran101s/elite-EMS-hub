@@ -3,7 +3,7 @@
 @php
     // Platform-wide primary navigation — lives in the floating right rail.
     $nav = [
-        ['Command Center', 'home', 'home', request()->routeIs('home')],
+        ['Command Canvas', 'home', 'home', request()->routeIs('home')],
         ['Events', 'events.index', 'calendar', request()->routeIs('events.*')],
         ['Projects', 'projects.index', 'grid', request()->routeIs('projects.*')],
         ['Tasks', 'tasks.index', 'clipboard', request()->routeIs('tasks.*')],
@@ -160,7 +160,7 @@
             {{-- breadcrumb — always present for navigation context --}}
             @if ($title && ! request()->routeIs('home'))
                 <div class="{{ $hideTitleRow ? 'mb-3' : 'mb-4' }}">
-                    <x-crumbs :items="$crumbs ?? [['label' => 'Command Center', 'href' => route('home')], ['label' => $title]]" />
+                    <x-crumbs :items="$crumbs ?? [['label' => 'Command Canvas', 'href' => route('home')], ['label' => $title]]" />
 
                     {{-- big title block — the hub renders its own identity, so it opts out --}}
                     @unless ($hideTitleRow)

@@ -2,7 +2,7 @@
     /**
      * The one breadcrumb every page shares. Items: [['label' =>, 'href' => |null], …];
      * the last item is the current page and never links. When a page passes
-     * nothing, the layout derives "Command Center → {Title}".
+     * nothing, the layout derives "Command Canvas → {Title}".
      */
     'items' => [],
 ])

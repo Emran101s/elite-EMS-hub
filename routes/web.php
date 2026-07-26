@@ -60,7 +60,14 @@ Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', CommandCenter::class)->name('home');
+    /*
+     * The Elite Command Canvas is the platform's front door — the company-wide
+     * dashboard. Static data for now (App\Support\CommandCanvasData).
+     */
+    Route::view('/', 'command-canvas')->name('home');
+
+    // The previous portfolio dashboard, kept reachable while the Canvas takes over.
+    Route::get('/operations-room', CommandCenter::class)->name('operations-room');
 
     // ORBIT design system — the visual source of truth (light-first · gold accent).
     // Served raw (its CSS has @media/@keyframes that Blade would misparse).
@@ -95,12 +102,6 @@ Route::middleware('auth')->group(function () {
 
         return response()->noContent();
     })->name('theme.override');
-
-    /*
-     * Elite Command Canvas — the company-wide dashboard. Static data for now
-     * (App\Support\CommandCanvasData); no Livewire, no backend coupling.
-     */
-    Route::view('/command-canvas', 'command-canvas')->name('command-canvas');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 

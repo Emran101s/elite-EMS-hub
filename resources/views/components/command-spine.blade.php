@@ -4,7 +4,7 @@
         // "Operations Hub" lived here too, but it only jumped to a section of the Command
         // Center page — two spine entries for one destination. Dropped; the Command Center
         // page still anchors it, and the event header links straight to it.
-        ['label' => 'Command Center', 'route' => 'home', 'active' => request()->routeIs('home')],
+        ['label' => 'Command Canvas', 'route' => 'home', 'active' => request()->routeIs('home')],
         ['label' => 'Events', 'route' => 'events.index', 'active' => request()->routeIs('events.*')],
         ['label' => 'Projects', 'route' => 'projects.index', 'active' => request()->routeIs('projects.*')],
         ['label' => 'Tasks', 'route' => 'tasks.index', 'active' => request()->routeIs('tasks.*')],

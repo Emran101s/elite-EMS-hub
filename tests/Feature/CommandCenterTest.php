@@ -22,7 +22,7 @@ class CommandCenterTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        return $this->actingAs($user)->get('/');
+        return $this->actingAs($user)->get('/operations-room');
     }
 
     public function test_operations_room_renders_its_sections(): void
