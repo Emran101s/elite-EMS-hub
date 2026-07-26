@@ -12,7 +12,6 @@ use App\Models\Task;
 use App\Models\User;
 use App\Services\EventHealthService;
 use Illuminate\Support\Collection;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
@@ -22,7 +21,8 @@ use Livewire\Component;
  * why it fired, and links straight to the tab that fixes it. Clicking an event
  * focuses the whole room on that event; the lens chips filter by kind.
  */
-#[Layout('components.layouts.app', ['title' => 'Operations Room', 'subtitle' => 'Everything that needs you, across every event.'])]
+// The layout is chosen at render time — see the end of render() — because the
+// ORBIT shell replaces it wholesale when config('orbit.nav') is on.
 class CommandCenter extends Component
 {
     /** Filter the stream to a single event (null = the whole portfolio). */
@@ -90,7 +90,14 @@ class CommandCenter extends Component
             ],
             'week' => $events->filter(fn (Event $e) => $e->starts_at
                 && $e->starts_at->copy()->startOfDay()->between($today, $today->copy()->addDays(14)))->values(),
-        ]);
+        ])->layout(
+            // The dashboard is the portfolio level of the same instrument, so it
+            // takes the ORBIT shell without an event: no arc, portfolio dock.
+            \App\Support\OrbitShell::enabled() ? 'components.layouts.orbit' : 'components.layouts.app',
+            \App\Support\OrbitShell::enabled()
+                ? ['module' => 'home', 'kpis' => \App\Support\OrbitShell::portfolioKpis(), 'title' => 'Operations Room']
+                : ['title' => 'Operations Room', 'subtitle' => 'Everything that needs you, across every event.']
+        );
     }
 
     /**

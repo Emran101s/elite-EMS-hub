@@ -19,6 +19,50 @@ class OrbitShell
         return (bool) config('orbit.nav', false);
     }
 
+    /** The portfolio dock — the same nine-slot shape, one level up. */
+    public static function portfolioDock(): array
+    {
+        return [
+            ['key' => 'home', 'label' => 'Home', 'icon' => 'home', 'href' => route('home')],
+            ['key' => 'events', 'label' => 'Events', 'icon' => 'grid', 'href' => route('events.index')],
+            ['key' => 'projects', 'label' => 'Projects', 'icon' => 'note', 'href' => url('/projects')],
+            ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'task', 'href' => url('/tasks')],
+            ['key' => 'finance', 'label' => 'Finance', 'icon' => 'money', 'href' => url('/finance')],
+            ['key' => 'sponsors', 'label' => 'Sponsors', 'icon' => 'star', 'href' => url('/sponsors')],
+            ['key' => 'team', 'label' => 'Team', 'icon' => 'users', 'href' => url('/team')],
+            ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart', 'href' => url('/reports')],
+            ['key' => 'ai', 'label' => 'AI', 'icon' => 'spark', 'href' => url('/ai')],
+        ];
+    }
+
+    /**
+     * The portfolio ribbon. Same shape as the per-event one, one level up: what
+     * an owner needs to know about every live event at a glance.
+     */
+    public static function portfolioKpis(): array
+    {
+        $events = Event::query()->whereNull('archived_at');
+        $total = (clone $events)->count();
+        $active = (clone $events)->whereIn('stage', ['planning', 'production', 'live', 'confirmed'])->count();
+
+        $openTasks = \App\Models\Task::query()->whereNotIn('status', ['done', 'cancelled'])->count();
+        $overdue = \App\Models\Task::query()->whereNotIn('status', ['done', 'cancelled'])
+            ->whereNotNull('due_on')->whereDate('due_on', '<', now())->count();
+
+        $budget = (int) (clone $events)->sum('budget_cents');
+
+        $atRisk = (clone $events)->get()
+            ->filter(fn (Event $e) => $e->healthGroup() === 'risk')
+            ->count();
+
+        return [
+            ['k' => 'Events', 'v' => (string) $total, 'f' => $active.' active'],
+            ['k' => 'At risk', 'v' => (string) $atRisk, 'f' => $atRisk > 0 ? 'need attention' : 'all healthy', 'tone' => $atRisk > 0 ? 'critical' : 'vital'],
+            ['k' => 'Open tasks', 'v' => (string) $openTasks, 'f' => $overdue > 0 ? $overdue.' overdue' : 'none overdue', 'tone' => $overdue > 0 ? 'flare' : null],
+            ['k' => 'Portfolio budget', 'v' => 'JD '.number_format($budget / 100), 'f' => 'committed'],
+        ];
+    }
+
     /** The dark ribbon: Health · Participants · Days left · Tasks · Budget · Suppliers · Approvals. */
     public static function kpis(Event $event): array
     {

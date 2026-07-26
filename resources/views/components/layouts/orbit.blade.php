@@ -70,8 +70,8 @@
 </header>
 
 {{-- ══ 1b. BREADCRUMB — where you are, as a landmark screen readers can jump to ══ --}}
-@if ($event)
-    <nav aria-label="Breadcrumb" class="o-shell__crumbs">
+<nav aria-label="Breadcrumb" class="o-shell__crumbs">
+    @if ($event)
         <a href="{{ route('home') }}">Command Center</a>
         <span aria-hidden="true">›</span>
         <a href="{{ route('events.index') }}">Events</a>
@@ -79,8 +79,10 @@
         <a href="{{ route('events.hub', $event) }}">{{ $event->name }}</a>
         <span aria-hidden="true">›</span>
         <span aria-current="page">{{ \App\Models\Event::moduleLabel($module) }}</span>
-    </nav>
-@endif
+    @else
+        <span aria-current="page">Command Center</span>
+    @endif
+</nav>
 
 {{-- ══ 2. KPI RIBBON — the real-time snapshot ══ --}}
 @if ($kpis)
@@ -121,11 +123,13 @@
 </div>
 
 {{-- ══ 4. COMMAND DOCK ══ --}}
-@if ($event)
-    <div class="o-shell__dock">
+<div class="o-shell__dock">
+    @if ($event)
         <x-orbit.dock :current="$module" :items="collect(\App\Models\Event::orbitDock())->map(fn ($m) => $m + ['href' => route('events.hub', [$event, 'tab' => $m['key']])])->all()" />
-    </div>
-@endif
+    @else
+        <x-orbit.dock :current="$module" :items="\App\Support\OrbitShell::portfolioDock()" />
+    @endif
+</div>
 
 @livewireScripts
 </body>
