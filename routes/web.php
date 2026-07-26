@@ -67,6 +67,10 @@ Route::middleware('auth')->group(function () {
     // The Operations Room — the same portfolio, arranged as a worklist.
     Route::get('/operations-room', CommandCenter::class)->name('operations-room');
 
+    // Design prototype. Real records, a proposed visual language; nothing in
+    // the platform depends on it, so it can be kept or deleted whole.
+    Route::get('/concept/signal-board', \App\Http\Controllers\SignalBoardController::class)->name('concept.signal-board');
+
     Route::get('/events', EventsIndex::class)->name('events.index');
 
     /*
