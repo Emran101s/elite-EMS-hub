@@ -24,15 +24,6 @@
         /* Small, dependency-free behaviour. No Livewire, no Alpine on this page. */
         document.addEventListener('DOMContentLoaded', () => {
 
-            /* View switcher — Canvas / List / Calendar */
-            const views = document.querySelectorAll('[data-view-btn]');
-            const panes = document.querySelectorAll('[data-view-pane]');
-            views.forEach(btn => btn.addEventListener('click', () => {
-                const target = btn.dataset.viewBtn;
-                views.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-                panes.forEach(p => p.hidden = p.dataset.viewPane !== target);
-            }));
-
             /* Canvas zoom + pan. Transform only, so nothing reflows. */
             const stage = document.querySelector('[data-canvas-stage]');
             if (stage) {

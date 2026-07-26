@@ -1,6 +1,6 @@
 @props(['items' => [], 'current' => 'home'])
 {{-- A floating tool dock, not a sidebar. Icons with small labels, gold marks position. --}}
-<nav aria-label="Primary" class="sticky top-4 z-20 flex shrink-0 flex-row gap-1 overflow-x-auto rounded-[22px] border border-cc-line bg-white p-2 cc-lift-2 lg:flex-col lg:overflow-visible">
+<nav aria-label="Primary" class="sticky top-4 z-20 flex shrink-0 flex-row gap-1 overflow-x-auto rounded-[22px] border border-cc-line bg-white p-2 cc-lift-2 2xl:flex-col 2xl:overflow-visible">
     @foreach ($items as $item)
         @php $active = $item['key'] === $current; @endphp
         <a href="#" @if ($active) aria-current="page" @endif

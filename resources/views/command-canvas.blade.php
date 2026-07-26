@@ -9,7 +9,13 @@
         <x-canvas.company-pulse-strip :items="D::pulse()" :health="D::health()" />
 
         {{-- 3 · dock  ·  4 · canvas  ·  5–7 · right panels --}}
-        <div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start">
+        {{-- Measured, not guessed: the radial arena needs ~845px for a hexagon
+             flanked by two pods. With the panel column alongside, only a 1536px
+             screen (the width the reference is drawn at) leaves that much — at
+             1280 the canvas gets 722px and the ring collapses. So the panels sit
+             beside the canvas from 2xl and drop beneath it below that, where the
+             canvas takes the full width instead of being crushed. --}}
+        <div class="mt-5 flex flex-col gap-5 2xl:flex-row 2xl:items-start">
 
             <x-canvas.left-command-dock :items="D::dock()" current="home" />
 
@@ -18,7 +24,7 @@
             </div>
 
             {{-- On tablet this column drops below the canvas; on mobile it stacks. --}}
-            <aside class="flex w-full shrink-0 flex-col gap-5 lg:w-[330px] xl:w-[356px]">
+            <aside class="grid w-full shrink-0 grid-cols-1 gap-5 md:grid-cols-2 2xl:w-[356px] 2xl:grid-cols-1">
                 <x-canvas.ai-executive-director :items="D::aiRoute()" />
                 <x-canvas.live-signals-panel :items="D::signals()" />
                 <x-canvas.quick-actions-panel :items="D::quickActions()" />

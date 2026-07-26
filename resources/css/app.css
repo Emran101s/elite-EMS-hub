@@ -474,6 +474,11 @@
             radial-gradient(circle at 50% 50%, rgba(255, 212, 79, 0.10) 1.2px, transparent 1.3px);
         background-size: 22px 22px;
     }
+    /* The arena's radial well — brightens toward the centre of gravity. Lives
+       here with the other field textures rather than as an inline gradient. */
+    .cc-well {
+        background: radial-gradient(60% 60% at 50% 50%, var(--color-white) 0%, transparent 72%);
+    }
     .cc-map {
         background-image:
             radial-gradient(circle at 50% 50%, var(--color-cc-line) 1.1px, transparent 1.2px);
