@@ -33,7 +33,7 @@ class EventHubController extends Controller
 
         // The ORBIT shell is a swap of the chrome, not of the modules: both views
         // include the same events.hub.{tab} partial.
-        $view = \App\Support\OrbitShell::enabled() ? 'events.hub-orbit' : 'events.hub';
+        $view = \App\Support\OrbitShell::enabled() ? 'events.hub-canvas' : 'events.hub';
 
         return view($view, [
             'event' => $event,

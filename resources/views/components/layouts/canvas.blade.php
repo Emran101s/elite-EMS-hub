@@ -18,6 +18,11 @@
     @vite(['resources/css/app.css'])
 </head>
 <body class="min-h-full bg-cc-mist font-canvas text-cc-ink antialiased">
+    {{-- The event modules still render ORBIT components inside this shell, and
+         their icons resolve against the ORBIT sprite. Without it every icon in
+         a module partial renders as an empty box. --}}
+    <x-orbit.sprite />
+
     {{ $slot }}
 
     <script>
