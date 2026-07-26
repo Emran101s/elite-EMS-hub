@@ -3,6 +3,9 @@
     'module' => 'overview',
     'kpis' => [],        // the dark ribbon — see App\Support\OrbitShell::kpis()
     'title' => null,
+    'heading' => null,   // portfolio pages: the page's own name
+    'subtitle' => null,
+    'crumbs' => null,    // [['label'=>..,'href'=>..], ..] — overrides the default trail
 ])
 {{--
     The ORBIT shell. Structure per docs/orbit-ia-brief.md:
@@ -60,7 +63,13 @@
                 <span>{{ $event->projectManager->name }}</span>
             </span>
         @endif
-        <x-orbit.search />
+        {{-- The real ⌘K palette, not a decorative search box: it owns the
+             keybinding and the results view. Its own trigger is hidden here so
+             the ribbon shows the ORBIT search affordance instead. --}}
+        <div class="o-shell__palette">
+            <x-orbit.search @click="$dispatch('open-palette')" />
+            <livewire:command-palette />
+        </div>
         <x-orbit.btn variant="ghost" size="sm"><x-orbit.icon name="spark" :size="15" /> Ask AI</x-orbit.btn>
         <x-orbit.btn variant="gold" icon aria-label="Create"><x-orbit.icon name="plus" :size="17" /></x-orbit.btn>
         <button type="button" class="o-btn o-btn--quiet o-btn--icon" aria-label="Notifications"><x-orbit.icon name="bell" :size="17" /></button>
@@ -79,6 +88,15 @@
         <a href="{{ route('events.hub', $event) }}">{{ $event->name }}</a>
         <span aria-hidden="true">›</span>
         <span aria-current="page">{{ \App\Models\Event::moduleLabel($module) }}</span>
+    @elseif ($crumbs)
+        @foreach ($crumbs as $i => $crumb)
+            @if ($i > 0)<span aria-hidden="true">›</span>@endif
+            @if (! empty($crumb['href']) && ! $loop->last)
+                <a href="{{ $crumb['href'] }}">{{ $crumb['label'] }}</a>
+            @else
+                <span @if ($loop->last) aria-current="page" @endif>{{ $crumb['label'] }}</span>
+            @endif
+        @endforeach
     @else
         <span aria-current="page">Command Center</span>
     @endif
@@ -115,7 +133,15 @@
         </x-orbit.nav-arc>
     @endif
 
-    <main class="o-shell__work">{{ $slot }}</main>
+    <main class="o-shell__work">
+        @if ($heading)
+            <div class="o-shell__pagehead">
+                <h2 class="o-display-sm">{{ $heading }}</h2>
+                @if ($subtitle)<p class="o-mute" style="margin:4px 0 0">{{ $subtitle }}</p>@endif
+            </div>
+        @endif
+        {{ $slot }}
+    </main>
 
     @isset($rails)
         <aside class="o-shell__rails">{{ $rails }}</aside>

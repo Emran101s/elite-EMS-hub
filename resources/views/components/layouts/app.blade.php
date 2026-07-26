@@ -16,6 +16,24 @@
         + \App\Models\EventRisk::whereIn('status', ['open', 'escalated'])->count();
 @endphp
 
+{{--
+    ORBIT delegation. Every portfolio page still declares this layout, so routing
+    the swap through here migrates all of them at once instead of editing 23
+    call sites — and flipping ORBIT_NAV off restores the old chrome everywhere in
+    one move. The event hub does not come through here: it picks its own view.
+--}}
+@if (\App\Support\OrbitShell::enabled())
+    <x-layouts.orbit
+        :title="$title"
+        :heading="$hideTitleRow ? null : $title"
+        :subtitle="$hideTitleRow ? null : $subtitle"
+        :crumbs="$crumbs"
+        :kpis="\App\Support\OrbitShell::portfolioKpis()"
+        module="home">
+        {{ $slot }}
+    </x-layouts.orbit>
+@else
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ \App\Support\ThemePolicy::for($module ?? null) }}">
 <head>
@@ -169,3 +187,4 @@
     </div>
 </body>
 </html>
+@endif

@@ -341,6 +341,11 @@
     }
     .o-shell__evtmeta { margin-top: 2px; font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap; }
     .o-shell__ribbonend { margin-left: auto; display: flex; align-items: center; gap: var(--o-3); }
+    /* The palette component still renders its own trigger; the ribbon supplies
+       the ORBIT one, so hide the legacy button and keep the overlay. */
+    .o-shell__palette { display: flex; align-items: center; }
+    .o-shell__palette > div > button:first-of-type { display: none !important; }
+
     .o-shell__owner {
         display: flex; align-items: center; gap: 7px;
         font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap;
