@@ -54,7 +54,9 @@
                     @endif
 
                     @unless ($hideTitleRow)
-                        <h1 class="pf truncate text-[30px] font-bold leading-tight text-navy-900">{{ $title ?? config('app.name') }}</h1>
+                        {{-- Wraps on a phone; truncating a 30px serif in a 300px column
+                             turned "Welcome back, Emran" into "Welcom…". --}}
+                        <h1 class="pf text-[24px] font-bold leading-tight text-navy-900 sm:truncate sm:text-[30px]">{{ $title ?? config('app.name') }}</h1>
                         @if ($subtitle)
                             <p class="mt-1 text-[15px] text-muted">{{ $subtitle }}</p>
                         @endif

@@ -2,7 +2,7 @@
     :title="'Welcome back, ' . str(auth()->user()->name)->before(' ') . ' 👋'"
     subtitle="Here's what's happening across your events and projects.">
 
-    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
 
         {{-- ════════ Main column ════════ --}}
         <div class="min-w-0 space-y-5">
@@ -11,18 +11,18 @@
             <div class="strip-dark px-6 py-5">
                 <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
 
-                <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
+                {{-- A grid on small screens: five 122px tiles in a flex row forced the
+                     whole page to scroll sideways on a phone. --}}
+                <div class="relative grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:items-center">
                     @foreach ([
-                        ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region'],
-                        ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running'],
-                        ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 2), 'hint' => 'committed to events'],
-                        ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress'],
-                        ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'risk' => $stats['atRisk'] > 0],
+                        ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region', 'href' => route('events.index')],
+                        ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running', 'href' => route('projects.index')],
+                        ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 1), 'hint' => 'committed to events', 'href' => route('finance.index')],
+                        ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress', 'href' => route('tasks.index')],
+                        ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'risk' => $stats['atRisk'] > 0, 'href' => '#live-alerts'],
                     ] as $i => $kpi)
-                        @if ($i > 0)
-                            <span class="hidden h-11 w-px bg-white/10 lg:block" aria-hidden="true"></span>
-                        @endif
-                        <div class="flex min-w-[122px] flex-1 items-center gap-2.5">
+                        <a href="{{ $kpi['href'] }}"
+                           class="group flex min-w-0 items-center gap-2.5 rounded-xl transition hover:opacity-80">
                             <span @class([
                                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1',
                                 'bg-red-400/10 text-red-300 ring-red-400/30' => $kpi['risk'] ?? false,
@@ -32,10 +32,10 @@
                             </span>
                             <div class="min-w-0">
                                 <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $kpi['label'] }}</p>
-                                <p class="pf mt-0.5 text-[26px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
+                                <p class="pf mt-0.5 truncate text-[22px] font-bold leading-none xl:text-[26px] {{ ($kpi['risk'] ?? false) ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
                                 <p class="mt-1 truncate text-[0.6rem] text-white/40">{{ $kpi['hint'] }}</p>
                             </div>
-                        </div>
+                        </a>
                     @endforeach
                 </div>
             </div>
@@ -165,9 +165,9 @@
                 {{-- Stacked fallback (< lg) --}}
                 <div class="grid gap-3 p-4 sm:grid-cols-2 lg:hidden">
                     @foreach ($islands as $event)
-                        <a href="{{ route('events.hub', $event) }}" class="flex items-center gap-3 rounded-2xl border border-line p-3">
-                            <x-event-avatar :event="$event" size="md" :percent="$event->health_score" :group="$event->health_group" />
-                            <span class="min-w-0">
+                        <a href="{{ route('events.hub', $event) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-line p-3">
+                            <x-event-avatar :event="$event" size="md" :percent="$event->health_score" :group="$event->health_group" class="shrink-0" />
+                            <span class="min-w-0 flex-1">
                                 <span class="block truncate text-xs font-bold text-navy-900">{{ $event->name }}</span>
                                 <span class="block truncate text-[0.65rem] text-muted">{{ $event->city }}, {{ $event->country }}</span>
                             </span>
@@ -278,7 +278,7 @@
         {{-- ════════ Right rail ════════ --}}
         <div class="space-y-5">
 
-            <div class="card p-5">
+            <div id="live-alerts" class="card scroll-mt-6 p-5">
                 <div class="mb-4 flex items-center justify-between">
                     <h3 class="pf text-base font-bold text-navy-900">Live Alerts</h3>
                     <a href="{{ route('events.index') }}" class="text-xs font-semibold text-gold-600 hover:text-gold-700">View all</a>
@@ -360,7 +360,29 @@
                         </li>
                     @endforeach
                 </ul>
-                <p class="mt-3 text-[0.65rem] text-muted">Grouped by event health — spend tracking arrives with Finance (Phase 3).</p>
+                {{-- Real spend, from the budget lines the events already carry. --}}
+                @if ($spend['lines'] > 0)
+                    @php $spendPct = $spend['estimated'] > 0 ? min(100, (int) round($spend['actual'] / $spend['estimated'] * 100)) : 0; @endphp
+                    <div class="mt-4 border-t border-line pt-3">
+                        <div class="mb-1 flex items-center justify-between text-xs">
+                            <span class="font-medium text-navy-800">Spend to date</span>
+                            <span class="font-bold text-navy-900">${{ \Illuminate\Support\Number::abbreviate($spend['actual'] / 100, 2) }}
+                                <span class="font-medium text-muted">of ${{ \Illuminate\Support\Number::abbreviate($spend['estimated'] / 100, 2) }}</span>
+                            </span>
+                        </div>
+                        <div class="h-1.5 overflow-hidden rounded-full bg-navy-50">
+                            <div @class([
+                                    'h-full rounded-full',
+                                    'bg-risk' => $spendPct >= 90,
+                                    'bg-gold-500' => $spendPct >= 70 && $spendPct < 90,
+                                    'bg-track' => $spendPct < 70,
+                                ]) style="width: {{ $spendPct }}%"></div>
+                        </div>
+                        <p class="mt-1 text-[0.65rem] text-muted">{{ $spendPct }}% of estimate across {{ $spend['lines'] }} budget {{ \Illuminate\Support\Str::plural('line', $spend['lines']) }}</p>
+                    </div>
+                @else
+                    <p class="mt-3 text-[0.65rem] text-muted">Grouped by event health. Add budget lines in an event's Budget tab to track spend here.</p>
+                @endif
             </div>
         </div>
     </div>

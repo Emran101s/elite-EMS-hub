@@ -21,6 +21,39 @@ class CommandCenterService
 {
     public function __construct(private EventHealthService $healthService) {}
 
+    /**
+     * Scoring one event walks ten relations, and this dashboard scores the
+     * portfolio five times over. Load the events once, with those relations
+     * eager-loaded, and remember each score — the difference is ~250 queries
+     * a page against ~60. The service lives for one request, so nothing can
+     * go stale underneath the memo.
+     */
+    private ?Collection $eventsMemo = null;
+
+    /** @var array<int, array> */
+    private array $healthMemo = [];
+
+    private function allEvents(): Collection
+    {
+        return $this->eventsMemo ??= Event::whereNull('archived_at')
+            ->with(EventHealthService::RELATIONS)
+            ->orderBy('starts_at')
+            ->get();
+    }
+
+    /** The same set Event::active() returns, filtered in memory. */
+    private function activeEvents(): Collection
+    {
+        return $this->allEvents()
+            ->reject(fn (Event $event) => in_array($event->stage, ['completed', 'closed', 'cancelled'], true))
+            ->values();
+    }
+
+    private function healthFor(Event $event): array
+    {
+        return $this->healthMemo[$event->id] ??= $this->healthService->breakdown($event);
+    }
+
     /** Average open tasks a team member can carry before being "fully utilized". */
     private const MEMBER_TASK_CAPACITY = 12;
 
@@ -33,12 +66,12 @@ class CommandCenterService
     public function stats(): array
     {
         return [
-            'events' => Event::whereNull('archived_at')->count(),
+            'events' => $this->allEvents()->count(),
             'projects' => Project::where('status', 'active')->count(),
-            'budget' => (int) Event::whereNull('archived_at')->sum('budget_cents'),
+            'budget' => (int) $this->allEvents()->sum('budget_cents'),
             'openTasks' => Task::whereNot('status', 'done')->count(),
-            'atRisk' => Event::active()->get()
-                ->filter(fn (Event $e) => in_array($this->healthService->breakdown($e)['status'], ['at_risk', 'behind'], true))
+            'atRisk' => $this->activeEvents()
+                ->filter(fn (Event $e) => in_array($this->healthFor($e)['status'], ['at_risk', 'behind'], true))
                 ->count(),
         ];
     }
@@ -49,8 +82,7 @@ class CommandCenterService
      */
     public function islands(): Collection
     {
-        $events = Event::with(['venue', 'tasks', 'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals'])
-            ->active()->orderBy('starts_at')->get();
+        $events = $this->activeEvents();
         $count = max($events->count(), 1);
 
         return $events->values()->map(function (Event $event, int $i) use ($count) {
@@ -72,7 +104,7 @@ class CommandCenterService
             $event->ctrl_y = round($my + ($dx / $len) * 9, 2);
 
             // Islands show the same computed health score as the Event Hub.
-            $health = $this->healthService->breakdown($event);
+            $health = $this->healthFor($event);
             $event->health_score = $health['score'];
             $event->health_group = $health['group'];
             $event->health_status = $health['status'];
@@ -112,13 +144,53 @@ class CommandCenterService
     }
 
     /**
+     * Equipment readiness across the active portfolio. Every room's equipment
+     * lines move needed → requested → confirmed → onsite; a line counts as
+     * ready once it is confirmed or on site.
+     */
+    private function equipmentReadiness(): array
+    {
+        $lines = $this->activeEvents()
+            ->flatMap(fn (Event $event) => $event->rooms->flatMap(
+                fn ($room) => collect($room->equipment ?? [])->values()
+            ));
+
+        if ($lines->isEmpty()) {
+            return ['pct' => null, 'hint' => 'no equipment listed on any room yet'];
+        }
+
+        $ready = $lines->filter(fn ($line) => in_array($line['status'] ?? 'needed', ['confirmed', 'onsite'], true))->count();
+
+        return [
+            'pct' => (int) round($ready / $lines->count() * 100),
+            'hint' => $ready.' of '.$lines->count().' lines confirmed or on site',
+        ];
+    }
+
+    /**
+     * Portfolio spend against estimate, from the budget lines the events
+     * already carry — the Budget module tracks both, no new source needed.
+     */
+    public function portfolioSpend(): array
+    {
+        $items = $this->allEvents()->flatMap->budgetItems;
+
+        return [
+            'estimated' => (int) $items->sum('estimated_cents'),
+            'actual' => (int) $items->sum('actual_cents'),
+            'lines' => $items->count(),
+        ];
+    }
+
+    /**
      * The intelligence core: one health picture across every active event,
      * from the same engine each hub shows.
      */
     public function platformCore(): array
     {
-        $events = Event::active()->get();
-        $breakdowns = $events->map(fn ($e) => $this->healthService->breakdown($e));
+        $events = $this->activeEvents();
+        // avg() skips nulls, so unscored events don't drag the platform average down.
+        $breakdowns = $events->map(fn ($e) => $this->healthFor($e));
 
         $tasks = Task::whereHas('event', fn ($q) => $q->active())->get();
         $open = $tasks->filter->isOpen();
@@ -167,9 +239,8 @@ class CommandCenterService
         $alerts = collect();
 
         // Health is computed, never stored — the same score the Event Hub shows.
-        foreach (Event::whereNull('archived_at')->orderBy('starts_at')
-            ->with(EventHealthService::RELATIONS)->get() as $event) {
-            $health = $this->healthService->breakdown($event);
+        foreach ($this->allEvents() as $event) {
+            $health = $this->healthFor($event);
             if (! in_array($health['status'], ['at_risk', 'behind'], true)) {
                 continue;
             }
@@ -252,8 +323,9 @@ class CommandCenterService
             ->whereBetween('starts_at', [now(), now()->addDays(self::VENUE_WINDOW_DAYS)]))->count();
 
         $suppliersTotal = max(Supplier::count(), 1);
-        $engagements = Event::active()
-            ->withCount('suppliers')->get()->sum('suppliers_count');
+        $engagements = $this->activeEvents()->sum(fn (Event $e) => $e->suppliers->count());
+
+        $equipment = $this->equipmentReadiness();
 
         return [
             [
@@ -273,8 +345,8 @@ class CommandCenterService
             ],
             [
                 'label' => 'Equipment',
-                'pct' => null, // Assets module lands in Phase 4
-                'hint' => 'available once Assets goes live',
+                'pct' => $equipment['pct'],
+                'hint' => $equipment['hint'],
             ],
         ];
     }
@@ -288,8 +360,8 @@ class CommandCenterService
         // not committed yet, and must never be reported as money at risk.
         $groups = ['track' => 0, 'warn' => 0, 'risk' => 0, 'neutral' => 0];
 
-        foreach (Event::whereNull('archived_at')->get() as $event) {
-            $groups[$this->healthService->breakdown($event)['group']] += $event->budget_cents;
+        foreach ($this->allEvents() as $event) {
+            $groups[$this->healthFor($event)['group']] += $event->budget_cents;
         }
 
         $total = max(array_sum($groups), 1);
@@ -333,15 +405,14 @@ class CommandCenterService
     public function statusBars(): array
     {
         // Event health is computed, never stored; the lifecycle lives on `stage`.
-        $active = Event::active()->get();
-        $groups = $active->groupBy(fn (Event $e) => $this->healthService->breakdown($e)['group']);
+        $groups = $this->activeEvents()->groupBy(fn (Event $e) => $this->healthFor($e)['group']);
 
         $counts = [
             'On Track' => $groups->get('track', collect())->count(),
             'In Progress' => $groups->get('warn', collect())->count(),
             'At Risk' => $groups->get('risk', collect())->count(),
             'Not Started' => $groups->get('neutral', collect())->count(),
-            'Completed' => Event::whereNull('archived_at')->whereIn('stage', ['completed', 'closed'])->count(),
+            'Completed' => $this->allEvents()->whereIn('stage', ['completed', 'closed'])->count(),
         ];
 
         return [

@@ -15,6 +15,7 @@ class CommandCenterController extends Controller
             'alerts' => $pulse->alerts(),
             'utilization' => $pulse->utilization(),
             'budget' => $pulse->budgetByHealth(),
+            'spend' => $pulse->portfolioSpend(),
             'taskCounts' => $pulse->taskCounts(),
             'deadlines' => $pulse->deadlines(),
             'topSuppliers' => $pulse->topSuppliers(),
