@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
 
     // Design prototype. Real records, a proposed visual language; nothing in
     // the platform depends on it, so it can be kept or deleted whole.
-    Route::get('/concept/signal-board', \App\Http\Controllers\SignalBoardController::class)->name('concept.signal-board');
+    Route::get('/concept/flow', \App\Http\Controllers\FlowBoardController::class)->name('concept.flow');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 

@@ -3,22 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\User;
 use App\Services\CommandCenterService;
 use App\Services\EventHealthService;
 use Illuminate\View\View;
 
 /**
- * The Signal Board — a design prototype, not a shipped screen.
+ * The Flow — a design prototype, not a shipped screen.
  *
- * Real records, new visual language: navy as a line rather than a slab, events
- * as aligned channel strips rather than cards, and a board you can drive.
- * Lives on its own route so nothing in the platform depends on it.
+ * Real records on a proposed visual language: no dark panel, navigation as
+ * pills on top, events as soft cards in lanes with their route drawn between
+ * them. Its own route, so nothing in the platform depends on it.
  */
-class SignalBoardController extends Controller
+class FlowBoardController extends Controller
 {
     public function __invoke(CommandCenterService $pulse, EventHealthService $healthService): View
     {
-        $channels = $pulse->islands()->map(function (Event $event) use ($healthService) {
+        $channels = $pulse->islands()->load('teamMembers')->map(function (Event $event) use ($healthService) {
             $health = $healthService->breakdown($event);
             $open = $event->tasks->filter->isOpen();
 
@@ -48,10 +49,22 @@ class SignalBoardController extends Controller
                 'risks' => $event->open_risks,
                 'budget' => (int) $event->budget_cents,
                 'currency' => $event->currencySymbol(),
+                // The people on it — the reference boards lead with faces.
+                'team' => $event->teamMembers->take(4)->map(fn (User $u) => [
+                    'initials' => str($u->name)->explode(' ')->take(2)->map(fn ($p) => str($p)->substr(0, 1))->implode(''),
+                    'name' => $u->name,
+                ])->values()->all(),
+                'teamMore' => max(0, $event->teamMembers->count() - 4),
+                // Which of the three lanes this event sits in.
+                'lane' => match ($event->stage) {
+                    'draft', 'proposal' => 0,
+                    'confirmed', 'planning' => 1,
+                    default => 2,
+                },
             ];
         })->values();
 
-        return view('concept.signal-board', [
+        return view('concept.flow', [
             'channels' => $channels,
             'stats' => $pulse->stats(),
             'spend' => $pulse->portfolioSpend(),
