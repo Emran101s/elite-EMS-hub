@@ -456,7 +456,7 @@
     --color-cc-warn: #E9A13B;
     --color-cc-risk: #E2544C;
     --color-cc-info: #3D5CA0;
-    --color-cc-plan: #7C8BB5;
+    --color-cc-plan: #7A6BD8;      /* planning — the violet dot in the reference */
 }
 
 @layer components {
