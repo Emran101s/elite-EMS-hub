@@ -230,6 +230,12 @@
             <x-orbit.field label="Stage" type="select" :options="['planning' => 'Planning', 'production' => 'Production', 'live' => 'Live']" selected="planning" />
         </div>
         <div class="rowflex" style="margin-top:16px">
+            <x-orbit.chips>
+                <x-orbit.chip>Draft the supplier brief</x-orbit.chip>
+                <x-orbit.chip>What is at risk?</x-orbit.chip>
+            </x-orbit.chips>
+        </div>
+        <div class="rowflex" style="margin-top:16px">
             <x-orbit.seg :options="['cards' => 'Cards', 'list' => 'List', 'calendar' => 'Calendar']" selected="cards" />
             <x-orbit.tabs :options="['all' => 'All', 'overdue' => 'Overdue', 'today' => 'Today', 'week' => 'This week']" selected="overdue" />
         </div>

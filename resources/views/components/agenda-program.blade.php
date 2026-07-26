@@ -18,7 +18,7 @@
         .apg-head:after{ content:""; position:absolute; right:-40px; top:-60px; width:210px; height:210px; border-radius:50%;
             background:radial-gradient(circle,var(--gold-glow),transparent 70%); }
         .apg-eyebrow{ font-family:'Inter',system-ui,sans-serif; font-size:9.5px; font-weight:700; letter-spacing:.3em;
-            text-transform:uppercase; color:var(--gold-lit); }
+            text-transform:uppercase; color:var(--gold-lit); /* on-chrome */ }
         .apg-h1{ font-size:22px; font-weight:800; margin:7px 0 5px; letter-spacing:.2px; }
         .apg-sub{ font-size:12.5px; color:var(--chrome-ink-2); max-width:640px; line-height:1.55; position:relative; z-index:1; }
         .apg-legend{ display:flex; flex-wrap:wrap; gap:14px; margin-top:14px; position:relative; z-index:1; }
