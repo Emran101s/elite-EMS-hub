@@ -274,9 +274,22 @@
                     </x-slot:actions>
                 </x-empty>
             @else
-                <div class="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                {{-- One card, shared with the Command Canvas: the same health scale
+                     and the same hexagon instrument, so a score reads identically
+                     wherever you meet it. --}}
+                <div class="grid items-start gap-4 xl:grid-cols-2 2xl:grid-cols-3">
                     @foreach ($events as $event)
-                        @include('livewire.partials.events.card', ['event' => $event])
+                        <x-canvas.event-card :event="$event" :health="$health[$event->id] ?? null"
+                                             :open="$expandedId === $event->id"
+                                             wire:key="ec-{{ $event->id }}"
+                                             @class(['xl:col-span-2 2xl:col-span-3' => $expandedId === $event->id])>
+                            {{-- Blade renders slot content eagerly, so this has to be
+                                 guarded here: the detail payload only exists for the
+                                 one expanded event. --}}
+                            @if ($expandedId === $event->id)
+                                @include('livewire.partials.events.detail', ['event' => $event, 'expanded' => $expanded])
+                            @endif
+                        </x-canvas.event-card>
                     @endforeach
                 </div>
             @endif
