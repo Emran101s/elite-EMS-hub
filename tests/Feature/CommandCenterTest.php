@@ -29,7 +29,10 @@ class CommandCenterTest extends TestCase
     {
         $this->dashboard()->assertOk()
             ->assertSee('Operations Room')
-            ->assertSee('Portfolio · click to focus')
+            // The portfolio card now carries an explicit per-row Focus button
+            // rather than a "click to focus" hint on the heading.
+            ->assertSee('Portfolio')
+            ->assertSee('Focus')
             ->assertSee('Overdue')
             ->assertSee('Approvals')
             ->assertSee('Money');
