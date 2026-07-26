@@ -1,61 +1,13 @@
-@php
-    $theme = $event->theme();
-    // Event module navigation → the floating right rail (icons, all enabled modules).
-    $modNav = [
-        'overview' => ['Overview', 'home'], 'planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'],
-        'budget' => ['Budget', 'currency'], 'agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification'],
-        'venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'],
-        'accommodation' => ['Accommodation', 'home'], 'exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'],
-        'attendees' => ['Attendees', 'users'], 'brief' => ['Event Brief', 'clipboard'], 'contract' => ['Contract', 'identification'],
-        'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification'], 'files' => ['Documents', 'archive'],
-        'reports' => ['Reports', 'chart'], 'ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog'],
-    ];
-    $moduleRail = collect($modNav)
-        ->filter(fn ($m, $k) => in_array($k, ['overview', 'ai', 'settings'], true) || $event->moduleEnabled($k))
-        ->map(fn ($m, $k) => [$m[0], route('events.hub', [$event, 'tab' => $k]), $m[1], $tab === $k])
-        ->values()->all();
-@endphp
+@php $theme = $event->theme(); @endphp
 
 <x-layouts.app :title="$event->name . ' — Event Hub'"
-               :hide-title-row="true"
-               :rail-nav="$moduleRail"
                :subtitle="str($event->type)->replace('_', ' ')->title() . '  |  ' . $event->city . ', ' . $event->country . '  |  ' . $event->starts_at?->format('M j') . ' – ' . ($event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y'))"
                :crumbs="[
                    ['label' => 'Command Center', 'href' => route('home')],
                    ['label' => 'Events', 'href' => route('events.index')],
-                   ['label' => $event->name, 'href' => $tab === 'overview' ? null : route('events.hub', $event)],
-                   ...($tab === 'overview' ? [] : [['label' => \App\Models\Event::HUB_MODULES[$tab][0] ?? str($tab)->title()->toString()]]),
+                   ['label' => $event->name, 'href' => route('events.hub', $event)],
+                   ['label' => \App\Models\Event::moduleLabel($tab)],
                ]">
-
-{{-- ══ Event identity — sits in the top executive header ══ --}}
-<x-slot:identity>
-    <a href="{{ route('events.hub', $event) }}" class="flex min-w-0 shrink-0 items-center gap-3" title="{{ $event->name }}">
-        <x-event-avatar :event="$event" :ring="false" size="md"
-                        class="[&>span]:h-11 [&>span]:w-11 [&>span]:rounded-xl [&>span]:ring-1 [&>span]:ring-white/15" />
-        <div class="min-w-0">
-            <p class="text-[0.5rem] font-bold uppercase tracking-[0.24em] text-gold-300">◆ Elite Event Hub</p>
-            <p class="pf flex items-center gap-1.5 text-[1.05rem] font-bold leading-tight text-white">
-                <span class="max-w-[15rem] truncate">{{ $event->name }}</span><span class="shrink-0 text-gold-400">✦</span>
-            </p>
-            <p class="truncate text-[0.6rem] text-white/55">{{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y') }} · {{ $event->city }}, {{ $event->country }}</p>
-        </div>
-    </a>
-</x-slot:identity>
-
-
-{{--
-    When a dock opens, the page steps aside instead of being covered — you open
-    Controls to read the fleet count *while* looking at the movements, so hiding
-    them defeats the point. Hero and nav shift with the content, otherwise the
-    header stays full width while the body narrows and the page looks broken.
-
-    Only from xl up: below that, 380px is too much of the screen to give away,
-    so the panel overlays as before.
---}}
-<div x-data
-     data-dock-shift
-     :class="$store.dock.open ? 'xl:pr-[432px]' : ''"
-     class="transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
 
     {{-- ══ Hero — command strip ══ --}}
     @php
@@ -63,24 +15,25 @@
         $daysLeft = $event->starts_at ? ($event->starts_at->isPast() ? 'Started' : (int) now()->diffInDays($event->starts_at).'d left') : '—';
         $healthWord = $hs === null ? 'No data' : ($health['group'] === 'risk' ? 'Behind' : ($health['group'] === 'warn' ? 'At Watch' : 'On Track'));
     @endphp
-    {{-- No overflow-hidden here: it would clip the Quick Actions menu. The glow
-         is clipped by its own layer instead, so the strip keeps its soft corners. --}}
-    <div class="relative z-30 rounded-[22px] bg-gradient-to-br from-navy-900 via-navy-950 to-[#050F1E] shadow-[0_24px_60px_-24px_rgba(11,31,58,0.65)] ring-1 ring-white/[0.06]">
+    <div class="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-900 via-navy-950 to-[#050F1E] shadow-[0_24px_60px_-24px_rgba(11,31,58,0.65)] ring-1 ring-white/[0.06]">
         {{-- ambience --}}
-        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[22px]">
+        <div class="pointer-events-none absolute inset-0">
             <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/70 to-transparent"></div>
             <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.16),transparent_65%)]"></div>
         </div>
 
         <div class="relative flex flex-wrap items-center gap-x-7 gap-y-4 px-5 py-4">
 
-            {{-- Health (identity/logo now lives in the top header) --}}
+            {{-- Identity: avatar + health --}}
             <div class="flex shrink-0 items-center gap-3.5">
+                <x-event-avatar :event="$event" :ring="false" size="md"
+                                class="[&>span]:h-[54px] [&>span]:w-[78px] [&>span]:rounded-xl [&>span]:ring-1 [&>span]:ring-white/15" />
+                <div class="h-10 w-px bg-white/10"></div>
                 <div class="flex items-center gap-2.5">
                     <span class="relative inline-flex h-11 w-11 items-center justify-center">
                         <x-health-ring :percent="$hs ?? 0" :group="$health['group']" size="h-11 w-11" :label="false" />
                         <span class="absolute font-bold text-white">
-                            <span class="text-2xs">{{ $hs ?? '—' }}</span><span class="text-[0.45rem] text-white/50">%</span>
+                            <span class="text-[0.7rem]">{{ $hs ?? '—' }}</span><span class="text-[0.45rem] text-white/50">%</span>
                         </span>
                     </span>
                     <div class="leading-tight">
@@ -95,9 +48,9 @@
             {{-- Meta --}}
             <div class="min-w-0">
                 <div class="mb-2 flex flex-wrap items-center gap-1.5">
-                    <span class="rounded-full bg-gold-400/15 px-2.5 py-0.5 text-3xs font-bold uppercase tracking-wide text-gold-300 ring-1 ring-gold-400/30">{{ str($event->stage)->replace('_', ' ')->title() }}</span>
+                    <span class="rounded-full bg-gold-400/15 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-gold-300 ring-1 ring-gold-400/30">{{ str($event->stage)->replace('_', ' ')->title() }}</span>
                     @if ($health['pending_approvals'] > 0)
-                        <span class="rounded-full bg-blue-400/15 px-2.5 py-0.5 text-3xs font-bold text-blue-300 ring-1 ring-blue-400/30">{{ $health['pending_approvals'] }} pending</span>
+                        <span class="rounded-full bg-blue-400/15 px-2.5 py-0.5 text-[0.6rem] font-bold text-blue-300 ring-1 ring-blue-400/30">{{ $health['pending_approvals'] }} pending</span>
                     @endif
                     <a href="{{ route('home') }}" class="ml-1 inline-flex items-center gap-1 text-[0.62rem] font-bold text-white/45 transition hover:text-gold-300">
                         <x-icon name="sparkles" class="h-3 w-3 shrink-0" /> Operations Hub →
@@ -152,13 +105,11 @@
                 <div class="flex items-center gap-2">
                     <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}"
                        class="flex h-9 items-center rounded-xl bg-white/[0.06] px-3 text-xs font-semibold text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white">✎ Edit</a>
-                    {{-- <details> stays open on outside clicks by itself — close it. --}}
-                    <details class="group relative" x-data
-                             @click.outside="$el.open = false" @keydown.escape.window="$el.open = false">
+                    <details class="group relative">
                         <summary class="flex h-9 w-fit cursor-pointer list-none items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3.5 text-xs font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition hover:brightness-105 [&::-webkit-details-marker]:hidden">
                             ⚡ Quick Actions ▾
                         </summary>
-                        <div class="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-xl border border-white/10 bg-navy-950 shadow-2xl ring-1 ring-black/20">
+                        <div class="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-xl border border-white/10 bg-navy-950 shadow-2xl ring-1 ring-black/20">
                             @foreach ([
                                 ['tasks', '＋ Add Task', 'clipboard'],
                                 ['budget', '＋ Add Budget Line', 'currency'],
@@ -170,9 +121,14 @@
                                     <x-icon :name="$icon" class="h-4 w-4 text-gold-400/80" /> {{ $label }}
                                 </a>
                             @endforeach
-                            @if ($event->moduleEnabled('agenda'))
+                            @if ($event->moduleEnabled('planning') || $event->moduleEnabled('agenda'))
                                 <div class="border-t border-white/10">
-                                    <a href="{{ route('events.agenda.program.pdf', $event) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"><x-icon name="calendar" class="h-4 w-4 text-gold-400/80" /> Export Programme PDF</a>
+                                    @if ($event->moduleEnabled('planning'))
+                                        <a href="{{ route('events.planning.pdf', $event) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"><x-icon name="chart" class="h-4 w-4 text-gold-400/80" /> Export Planning PDF</a>
+                                    @endif
+                                    @if ($event->moduleEnabled('agenda'))
+                                        <a href="{{ route('events.agenda.master.pdf', $event) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"><x-icon name="calendar" class="h-4 w-4 text-gold-400/80" /> Export Agenda PDF</a>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -182,9 +138,44 @@
         </div>
     </div>
 
+    {{-- ══ Module rail: grouped pills that wrap — every enabled module stays visible, nothing scrolls away ══ --}}
+    @php
+        // Grouped so the rail reads as a control panel, not a run-on list.
+        $groups = [
+            'Event' => ['overview' => ['Overview', 'home'], 'brief' => ['Brief', 'clipboard'], 'contract' => ['Contract', 'identification']],
+            'Plan' => ['planning' => ['Planning', 'list'], 'tasks' => ['Tasks', 'clipboard'], 'budget' => ['Budget', 'currency'], 'risks' => ['Risks', 'bell'], 'approvals' => ['Approvals', 'identification']],
+            'Programme' => ['agenda' => ['Agenda', 'calendar'], 'speakers' => ['Speakers', 'identification']],
+            'Logistics' => ['venue' => ['Venue', 'building'], 'suppliers' => ['Suppliers', 'truck'], 'transportation' => ['Transport', 'truck'], 'accommodation' => ['Stay', 'home']],
+            'Commercial' => ['exhibition' => ['Exhibition', 'grid'], 'sponsors' => ['Sponsors', 'star'], 'attendees' => ['Attendees', 'users']],
+            'Grow' => ['files' => ['Files', 'archive'], 'reports' => ['Reports', 'chart']],
+            'System' => ['ai' => ['AI', 'sparkles'], 'settings' => ['Settings', 'cog']],
+        ];
+    @endphp
+    <div class="sticky top-0 z-20 mt-3">
+        <nav class="flex flex-wrap items-center gap-1.5 rounded-2xl border border-line bg-gradient-to-b from-white to-page/60 px-2.5 py-2 shadow-[0_8px_24px_-10px_rgba(11,31,58,0.18)] backdrop-blur-sm" aria-label="Event modules">
+            @foreach ($groups as $groupName => $tabs)
+                @php $visible = collect($tabs)->filter(fn ($t, $key) => $event->moduleEnabled($key)); @endphp
+                @continue ($visible->isEmpty())
+
+                {{-- one segmented cluster per group — it wraps as a whole, never splitting mid-group --}}
+                <div class="flex items-center gap-0.5 rounded-xl bg-navy-50/70 p-[3px] ring-1 ring-line/70" role="group" aria-label="{{ $groupName }}">
+                    @foreach ($visible as $key => [$label, $icon])
+                        <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}" title="{{ $groupName }} · {{ $label }}"
+                           @class([
+                               'flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-[9px] px-2.5 text-[12px] font-semibold tracking-tight transition-all duration-150',
+                               'bg-navy-900 text-white shadow-[0_4px_12px_-4px_rgba(11,31,58,0.55)]' => $tab === $key,
+                               'text-navy-500 hover:bg-white hover:text-navy-900 hover:shadow-sm' => $tab !== $key,
+                           ])>
+                            <x-icon :name="$icon" @class(['h-3.5 w-3.5 shrink-0', 'text-gold-400' => $tab === $key, 'text-navy-400' => $tab !== $key]) />
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
+            @endforeach
+        </nav>
+    </div>
+
     <div class="mt-5">
         @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
-        {{-- Documents live only on the Documents tab now — no per-module floating drawer. --}}
     </div>
-</div>
 </x-layouts.app>

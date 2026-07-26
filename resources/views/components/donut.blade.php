@@ -1,6 +1,7 @@
 @props(['segments', 'size' => 'h-36 w-36'])
 
-{{-- $segments: array of ['pct' => float 0–100, 'class' => 'stroke-*'] --}}
+{{-- $segments: array of ['pct' => float 0–100] plus either 'class' => 'stroke-*'
+     or 'hex' => '#RRGGBB' for palettes that come from the database. --}}
 @php $offset = 0; @endphp
 
 <span {{ $attributes->merge(['class' => "relative inline-flex items-center justify-center {$size}"]) }}>
@@ -11,7 +12,8 @@
                 <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="4"
                         stroke-dasharray="{{ $segment['pct'] }} {{ 100 - $segment['pct'] }}"
                         stroke-dashoffset="{{ -$offset }}"
-                        class="{{ $segment['class'] }}" />
+                        @isset($segment['hex']) stroke="{{ $segment['hex'] }}" @endisset
+                        class="{{ $segment['class'] ?? '' }}" />
                 @php $offset += $segment['pct']; @endphp
             @endif
         @endforeach

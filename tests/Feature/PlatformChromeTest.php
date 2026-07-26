@@ -32,7 +32,7 @@ class PlatformChromeTest extends TestCase
         $this->actingAs($user)->get(route('suppliers.index'))
             ->assertOk()
             ->assertSee('aria-label="Breadcrumb"', false)
-            ->assertSee('Command Canvas');
+            ->assertSee('Command Center');
     }
 
     public function test_the_event_hub_breadcrumb_names_event_and_module(): void
@@ -42,7 +42,7 @@ class PlatformChromeTest extends TestCase
         $res = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']));
         $res->assertOk()
             ->assertSee('aria-label="Breadcrumb"', false)
-            ->assertSeeInOrder(['Command Canvas', 'Events', $event->name, 'Budget']);
+            ->assertSeeInOrder(['Command Center', 'Events', $event->name, 'Budget']);
     }
 
     public function test_the_command_palette_finds_things_across_the_workspace(): void

@@ -182,8 +182,6 @@ class EventHubTest extends TestCase
 
         // Requesting a disabled tab silently shows Overview (no agenda tab link).
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'agenda']))
-            ->assertOk()// The overview's identity is now the timeline + Quick Add, not a card
-            // called "Event Overview".
-            ->assertSee('Event timeline');
+            ->assertOk()->assertSee('Event Overview');
     }
 }

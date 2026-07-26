@@ -11,33 +11,24 @@
     </div>
 
     {{-- ══════════ WORKSPACE + CONTROL CENTER ══════════ --}}
-    {{-- The ORBIT shell owns the right edge (Event Pulse + AI Director), so the
-         Control Center runs full-width beneath the board rather than competing
-         with the rails for the same 440px. --}}
-    <div style="display:grid;gap:var(--o-4)">
+    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_440px]">
 
+        {{-- ── left: toolbar + active view ── --}}
         <div class="min-w-0">
-            {{-- toolbar: what am I looking at, and how --}}
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--o-3);margin-bottom:var(--o-4)">
-                <input type="text" class="o-input" style="width:210px"
-                       wire:model.live.debounce.300ms="search" placeholder="Search tasks…">
+            {{-- slim toolbar --}}
+            <div class="mb-3 flex flex-wrap items-center gap-2.5">
+                <div class="relative">
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search tasks…" class="input h-9 w-48 pl-8 text-xs">
+                    <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
+                </div>
 
-                {{-- The brief's filter tabs. Overdue is the only one that ever pulses. --}}
-                <div class="o-tabs" role="tablist">
-                    @foreach (['all' => 'All', 'mine' => 'Mine', 'overdue' => 'Overdue', 'today' => 'Today', 'week' => 'This week'] as $fk => $flabel)
-                        <button type="button" role="tab" wire:click="setFocus('{{ $fk }}')"
-                                aria-selected="{{ $focus === $fk ? 'true' : 'false' }}">{{ $flabel }}</button>
+                <div class="flex rounded-xl border border-line bg-white p-0.5 shadow-sm">
+                    @foreach (['all' => 'All', 'mine' => 'Mine', 'overdue' => 'Overdue'] as $fk => $flabel)
+                        <button type="button" wire:click="setFocus('{{ $fk }}')" @class(['rounded-lg px-2.5 py-1.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $focus === $fk, 'text-navy-400 hover:text-navy-700' => $focus !== $fk])>{{ $flabel }}</button>
                     @endforeach
                 </div>
 
-                <div class="o-seg" role="tablist" style="margin-left:auto">
-                    @foreach ($views as $vk => [$vlabel, $vicon])
-                        <button type="button" role="tab" wire:click="setView('{{ $vk }}')"
-                                aria-selected="{{ $view === $vk ? 'true' : 'false' }}">{{ $vlabel }}</button>
-                    @endforeach
-                </div>
-
-                <x-orbit.btn variant="gold" wire:click="addTask">New task</x-orbit.btn>
+                <button type="button" wire:click="addTask" class="ml-auto flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-4 text-xs font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition hover:brightness-105">＋ New task</button>
             </div>
 
             {{-- module filter --}}
@@ -47,7 +38,7 @@
                 @foreach ($moduleCounts as $slug => $count)
                     @php [$mlabel, $mhex] = \App\Models\Task::MODULES[$slug] ?? [ucfirst($slug), 'var(--color-neutral)']; @endphp
                     <button type="button" wire:click="filterByModule('{{ $slug }}')" @class(['flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterArea === $slug, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterArea !== $slug]) @style(['background: '.$mhex => $filterArea === $slug])>
-                        <span class="h-2 w-2 rounded-full" style="background: {{ $filterArea === $slug ? 'var(--chrome-ink)' : $mhex }}"></span>{{ $mlabel }} <span class="opacity-60">{{ $count }}</span>
+                        <span class="h-2 w-2 rounded-full" style="background: {{ $filterArea === $slug ? '#fff' : $mhex }}"></span>{{ $mlabel }} <span class="opacity-60">{{ $count }}</span>
                     </button>
                 @endforeach
             </div>
@@ -58,7 +49,10 @@
             </div>
         </div>
 
-        @include('livewire.hub.partials.tasks-studio.control-center')
+        {{-- ── right: Task Control Center ── --}}
+        <div class="xl:sticky xl:top-4">
+            @include('livewire.hub.partials.tasks-studio.control-center')
+        </div>
     </div>
 
     {{-- ══════════ DRAWER ══════════ --}}

@@ -16,7 +16,8 @@ class PlanStudio extends Component
     public Event $event;
 
     /** board | timeline | list | gallery */
-    public string $view = 'board';
+    /** The Gantt is the plan people actually read; the board is a click away. */
+    public string $view = 'timeline';
 
     // ── filters ──
     public string $search = '';
@@ -348,7 +349,14 @@ class PlanStudio extends Component
             'progress' => $all->count() ? (int) round($all->avg(fn ($i) => $i->progress())) : 0,
         ];
 
+        // Everyone who actually owns something, with their load — the filter row
+        // is a roster of the people on this plan, not of the whole workspace.
+        $owners = $all->flatMap->owners->groupBy('id')
+            ->map(fn ($rows) => ['id' => $rows->first()->id, 'user' => $rows->first(), 'count' => $rows->count()])
+            ->sortByDesc('count')->values()->all();
+
         return view('livewire.hub.plan-studio', [
+            'owners' => $owners,
             'tracks' => $tracks,
             'items' => $items,
             'byStatus' => collect(PlanItem::statuses())->mapWithKeys(fn ($s) => [$s => $items->where('status', $s)->sortBy('position')->values()]),

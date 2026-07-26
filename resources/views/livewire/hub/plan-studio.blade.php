@@ -1,54 +1,74 @@
 <div>
     @php $views = ['board' => ['Board', 'grid'], 'timeline' => ['Timeline', 'chart'], 'list' => ['List', 'list'], 'gallery' => ['Gallery', 'archive']]; @endphp
 
-    {{-- ══════════ COMMAND HEADER ══════════ --}}
+    {{-- ══════════ COUNTDOWN TO EVENT DAY ══════════
+         The plan's headline is how long is left, not how many gates exist. --}}
+    @php
+        $pct = $stats['total'] ? (int) round($stats['done'] / $stats['total'] * 100) : 0;
+        $daysLeft = $event->starts_at ? (int) now()->startOfDay()->diffInDays($event->starts_at->startOfDay(), false) : null;
+    @endphp
     <div class="mb-4 flex flex-wrap items-stretch gap-3">
-        <div class="strip-dark relative flex min-w-0 flex-1 flex-wrap items-center gap-x-8 gap-y-4 overflow-hidden px-5 py-4">
+        <div class="strip-dark relative flex min-w-0 flex-1 flex-wrap items-center gap-x-10 gap-y-4 overflow-hidden px-5 py-4">
             <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.25),transparent_70%)]"></div>
 
-            {{-- overall progress ring --}}
-            @php $ring = 2 * M_PI * 26; @endphp
-            <div class="relative flex shrink-0 items-center gap-3">
-                <div class="relative">
-                    <svg class="h-[70px] w-[70px] -rotate-90" viewBox="0 0 60 60">
-                        <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
-                        <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-gold-500)" stroke-width="6" stroke-linecap="round" stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * $stats['progress'] / 100) }}"/>
-                    </svg>
-                    <span class="absolute inset-0 flex items-center justify-center text-sm font-black text-white">{{ $stats['progress'] }}%</span>
-                </div>
-                <div>
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-300">Plan Studio</p>
-                    <p class="pf text-2xl font-black leading-none text-white">{{ $stats['done'] }}<span class="text-base text-white/40">/{{ $stats['total'] }}</span></p>
-                    <p class="mt-0.5 text-eyebrow font-semibold text-white/55">deliverables done</p>
-                </div>
+            <div class="relative shrink-0">
+                <p class="eyebrow-gold">Countdown to Event Day</p>
+                <p class="mt-1 flex items-baseline gap-2">
+                    <span class="pf text-[42px] font-black leading-none text-gold-400">{{ $daysLeft !== null ? max($daysLeft, 0) : '—' }}</span>
+                    <span class="text-sm font-semibold text-white/70">{{ $daysLeft !== null && $daysLeft < 0 ? 'days ago' : 'days to go' }}</span>
+                </p>
+                <p class="mt-1 text-micro text-white/45">{{ $event->starts_at?->format('l, j F Y') ?? 'No date set' }}</p>
             </div>
 
-            {{-- gate pipeline rail --}}
-            <div class="relative flex min-w-0 flex-1 items-center gap-1.5">
-                @foreach (\App\Models\PlanItem::STATUSES as $sv => [$slabel, $shex])
-                    <div class="flex min-w-0 flex-1 flex-col items-center gap-1">
-                        <div class="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.06] py-1.5 ring-1 ring-white/10">
-                            <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $shex }}"></span>
-                            <span class="text-sm font-black text-white">{{ $gateCounts[$sv] ?? 0 }}</span>
-                        </div>
-                        <span class="w-full truncate text-center text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ $slabel }}</span>
-                    </div>
-                    @if (! $loop->last)<span class="shrink-0 text-white/20">→</span>@endif
-                @endforeach
-            </div>
-
-            {{-- risk chips --}}
-            <div class="relative flex shrink-0 gap-2">
-                <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
-                    <span class="text-xl font-black leading-none" style="color: {{ $stats['needApproval'] > 0 ? 'var(--flare-lit)' : 'var(--chrome-ink-3)' }}">{{ $stats['needApproval'] }}</span>
-                    <span class="mt-1 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Awaiting sign-off</span>
+            <div class="relative min-w-[220px] flex-1">
+                <p class="text-micro font-semibold text-white/70">{{ $stats['done'] }} / {{ $stats['total'] }} done</p>
+                <div class="mt-1.5 flex items-center gap-3">
+                    <span class="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
+                        <span class="block h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-500" style="width: {{ $pct }}%"></span>
+                    </span>
+                    <span class="shrink-0 text-xs font-bold text-gold-300">{{ $pct }}%</span>
                 </div>
-                <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
-                    <span class="text-xl font-black leading-none" style="color: {{ $stats['overdue'] > 0 ? 'var(--color-danger-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $stats['overdue'] }}</span>
-                    <span class="mt-1 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Overdue</span>
-                </div>
+                @if ($stats['overdue'] > 0)
+                    <p class="mt-1.5 text-micro font-semibold text-red-300">⚠ {{ $stats['overdue'] }} overdue {{ str('task')->plural($stats['overdue']) }}</p>
+                @elseif ($stats['needApproval'] > 0)
+                    <p class="mt-1.5 text-micro font-semibold text-amber-300">{{ $stats['needApproval'] }} awaiting sign-off</p>
+                @else
+                    <p class="mt-1.5 text-micro font-semibold text-emerald-300">Nothing overdue</p>
+                @endif
             </div>
         </div>
+
+        <div class="flex shrink-0 items-center gap-2">
+            <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="btn-ghost h-11">
+                <x-icon name="chart" class="h-4 w-4" /> Export PDF
+            </a>
+            <button type="button" wire:click="addItem" class="btn-gold h-11">＋ Add task</button>
+        </div>
+    </div>
+
+    {{-- ══════════ OWNER FILTER ══════════ --}}
+    <div class="mb-3 flex flex-wrap items-center gap-1.5">
+        <span class="eyebrow mr-1">Owner</span>
+        <button type="button" wire:click="filterByOwner" @class(['h-8 rounded-lg px-3 text-micro font-bold transition', 'bg-navy-900 text-white' => ! $filterOwner, 'bg-white text-navy-500 ring-1 ring-line hover:text-navy-800' => $filterOwner])>Everyone</button>
+        @foreach ($owners as $owner)
+            <button type="button" wire:click="filterByOwner({{ $owner['id'] }})"
+                    @class(['flex h-8 items-center gap-1.5 rounded-lg pl-1 pr-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $filterOwner === $owner['id'], 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterOwner !== $owner['id']])>
+                <x-user-avatar :user="$owner['user']" size="h-6 w-6" />
+                {{ str($owner['user']->name)->before(' ') }}
+                <span @class(['text-navy-300' => $filterOwner !== $owner['id'], 'text-white/50' => $filterOwner === $owner['id']])>{{ $owner['count'] }}</span>
+            </button>
+        @endforeach
+    </div>
+
+    {{-- ══════════ LEGEND ══════════ --}}
+    <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        @foreach (\App\Models\PlanItem::STATUSES as $sv => [$slabel, $shex])
+            <span class="flex items-center gap-1.5 text-micro font-semibold text-navy-500">
+                <span class="h-2.5 w-2.5 rounded-full" style="background: {{ $shex }}"></span>{{ $slabel }}
+                <span class="text-navy-300">{{ $gateCounts[$sv] ?? 0 }}</span>
+            </span>
+        @endforeach
+        <span class="ml-auto text-micro text-navy-300">Click a task to edit · ▸ expand for subtasks</span>
     </div>
 
     {{-- ══════════ TOOLBAR: view switcher + filters + add ══════════ --}}
@@ -71,7 +91,7 @@
             <button type="button" wire:click="filterByTrack" @class(['h-8 rounded-lg px-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => ! $filterTrack, 'bg-white text-navy-500 ring-1 ring-line hover:text-navy-800' => $filterTrack])>All tracks</button>
             @foreach ($tracks as $t)
                 <button type="button" wire:click="filterByTrack({{ $t->id }})" @class(['flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterTrack === $t->id, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterTrack !== $t->id]) @style(['background: '.$t->color => $filterTrack === $t->id])>
-                    <span class="h-2 w-2 rounded-full" style="background: {{ $filterTrack === $t->id ? 'var(--chrome-ink)' : $t->color }}"></span>{{ \Illuminate\Support\Str::limit($t->name, 16) }}
+                    <span class="h-2 w-2 rounded-full" style="background: {{ $filterTrack === $t->id ? '#ffffff' : $t->color }}"></span>{{ \Illuminate\Support\Str::limit($t->name, 16) }}
                 </button>
             @endforeach
         </div>
@@ -79,12 +99,6 @@
         <div class="ml-auto flex items-center gap-2">
             <button type="button" wire:click="$set('showTracks', true)" class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-micro font-bold text-navy-600 shadow-sm transition hover:text-navy-900" title="Manage tracks and goals">
                 <x-icon name="columns" class="h-3.5 w-3.5" /> Tracks
-            </button>
-            <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-micro font-bold text-navy-600 shadow-sm transition hover:text-navy-900">
-                <x-icon name="chart" class="h-3.5 w-3.5" /> Export PDF
-            </a>
-            <button type="button" wire:click="addItem" class="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-4 text-xs font-bold text-navy-950 shadow-sm transition hover:brightness-105">
-                ＋ New item
             </button>
         </div>
     </div>

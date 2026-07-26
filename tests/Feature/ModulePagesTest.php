@@ -33,8 +33,7 @@ class ModulePagesTest extends TestCase
     {
         $user = User::factory()->create(['name' => 'Emran Ahmed']);
 
-        $this->actingAs($user)->get('/')->assertOk()// The greeting is time-aware now ("Good morning/afternoon/evening, Emran"),
-            // so assert the shape rather than one moment's copy.
-            ->assertSeeInOrder(['Good', 'Emran']);
+        $this->actingAs($user)->get('/')->assertOk()
+            ->assertSeeInOrder(['Welcome back', 'Emran']);
     }
 }

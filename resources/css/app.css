@@ -1,115 +1,89 @@
-/* ORBIT — light-first · gold accent.
-   orbit-tokens.css and orbit.css are GENERATED from orbit-system.html by
-   setup-orbit.sh. Never edit them by hand: change the HTML and re-run it.
-   Order matters — tokens, Tailwind, theme wiring, components. */
-@import './orbit-tokens.css';
+/* Elite Business Hub — the platform design system.
+   Light canvas, navy strips, gold accent, Playfair titles.
 
+   This is the original palette. It was briefly repointed at a dark-first
+   token set (ORBIT); the token NAMES below outlived that experiment because
+   ~1,500 utility usages depend on them, so the names stayed and only the
+   values came home. */
 @import 'tailwindcss';
-
-@import './orbit-theme.css';
-
-/* Into the components layer on purpose. orbit.css carries a global reset
-   (`button{color:inherit}`, `a{color:inherit}`), and Tailwind v4 puts its
-   utilities in a cascade layer — unlayered CSS beats every layered rule
-   regardless of specificity, so an unlayered import silently overrides
-   text-* on every button and link. Layering it restores the normal order:
-   ORBIT's reset sits under Tailwind's utilities, not over them. */
-@import './orbit.css' layer(components);
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/livewire/src/**/*.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    /* ORBIT type. Numbers use --font-mono so currency columns align. */
-    --font-sans: var(--font-ui);
-    --font-serif: var(--font-display);
-    --font-mono: var(--font-data);
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* ── Brand → ORBIT ──────────────────────────────────────────────
-       These names are kept so 1,700 existing utility classes keep working,
-       but every value now resolves to an ORBIT token. Change a colour in
-       orbit-system.html and re-run setup-orbit.sh — never here.
+    /* Brand — Elite Business Hub */
+    --color-navy-50: #eef2f8;
+    --color-navy-100: #d8e0ee;
+    --color-navy-200: #b3c2dd;
+    --color-navy-300: #869cc4;
+    --color-navy-400: #5877a5;
+    --color-navy-500: #3a5885;
+    --color-navy-600: #2a4368;
+    --color-navy-700: #1e3352;
+    --color-navy-800: #142842;
+    --color-navy-900: #0b1f3a;
+    --color-navy-950: #061426;
 
-       The scale is mapped by LUMINANCE, not by name: navy-900 is the
-       darkest thing on screen, so it becomes --chrome; navy-50 is the
-       lightest fill, so it becomes --deck. Both themes define the same
-       names, so this inverts correctly when data-theme flips. */
-    --color-navy-50: var(--deck);
-    --color-navy-100: var(--rim);
-    --color-navy-200: var(--rim-hi);
-    --color-navy-300: var(--ink-4);
-    --color-navy-400: var(--ink-4);
-    --color-navy-500: var(--ink-3);
-    --color-navy-600: var(--ink-3);
-    --color-navy-700: var(--ink-2);
-    --color-navy-800: var(--chrome-2);
-    --color-navy-900: var(--chrome);
-    --color-navy-950: var(--chrome);
-
-    /* THE TWO GOLDS. 50–400 are FILLS and gold-on-dark text; 500–900 are
-       READ colours for text and icons on a light surface. --gold-lit as
-       text on light is 1.69:1, so it never appears above gold-400. */
-    --color-gold-50: var(--gold-tint);
-    --color-gold-100: var(--gold-tint);
-    --color-gold-200: var(--gold-3);
-    --color-gold-300: var(--gold-lit);
-    --color-gold-400: var(--gold-lit);
-    --color-gold-500: var(--gold-2);
-    --color-gold-600: var(--gold);
-    --color-gold-700: var(--gold);
-    --color-gold-800: var(--gold);
-    --color-gold-900: var(--gold);
+    --color-gold-50: #fbf7ea;
+    --color-gold-100: #f5ebc8;
+    --color-gold-200: #ecda94;
+    --color-gold-300: #e3c766;
+    --color-gold-400: #dbba4a;
+    --color-gold-500: #d4af37;
+    --color-gold-600: #b8942c;
+    --color-gold-700: #937423;
+    --color-gold-800: #6f571c;
+    --color-gold-900: #4c3b14;
 
     /* Surfaces & lines */
-    --color-page: var(--abyss);
-    --color-line: var(--rim);
+    --color-page: #eff3f8;
+    --color-line: #e2e8f0;
+    --color-fill: #e8edf4; /* gray-filled inputs (wizard/forms) */
+    --color-ink: #0b1f3a;
+    --color-muted: #64748b;
 
-    /* Micro type scale — use these instead of arbitrary text-[0.Nrem] values. */
-    --text-2xs: 0.7rem;
-    --text-2xs--line-height: 1rem;
-    --text-3xs: 0.6rem;
-    --text-3xs--line-height: 0.85rem;
-    --color-fill: var(--deck); /* gray-filled inputs (wizard/forms) */
-    --color-ink: var(--ink);
-    --color-muted: var(--ink-3);
-
-    /* Health semantics: on track / in progress / at risk. These paint bars
-       and rings, so they take the -lit fills. */
-    --color-track: var(--vital-lit);
-    --color-warn: var(--flare-lit);
-    --color-risk: var(--critical-lit);
+    /* Health semantics: on track / in progress / at risk */
+    --color-track: #22c55e;
+    --color-warn: #f59e0b;
+    --color-risk: #ef4444;
 
     /* ── Status semantics ───────────────────────────────────────────
-       Use these, not raw palette colours. Mapped onto the ORBIT signal
-       tokens: base = the READ colour, -soft = the tint behind it, -ink =
-       the same read colour (ORBIT has one read value per signal, not two).
-       App\Support\Tone is the server-side half of this same mapping. */
-    --color-success: var(--vital);
-    --color-success-soft: var(--vital-tint);
-    --color-success-ink: var(--vital);
-    --color-warning: var(--flare);
-    --color-warning-soft: var(--flare-tint);
-    --color-warning-ink: var(--flare);
-    --color-danger: var(--critical);
-    --color-danger-soft: var(--critical-tint);
-    --color-danger-ink: var(--critical);
-    --color-info: var(--ion);
-    --color-info-soft: var(--ion-tint);
-    --color-info-ink: var(--ion);
-    --color-neutral: var(--ink-3);
-    --color-neutral-soft: var(--deck);
+       Use these, not raw palette colours. base = the READ colour on a
+       light surface, -soft = the tint behind it, -on-dark = the value
+       that reads on a navy strip. App\Support\Tone is the server-side
+       half of the same mapping. */
+    --color-success: #16a34a;
+    --color-success-soft: #dcfce7;
+    --color-success-ink: #15803d;
+    --color-warning: #b45309;
+    --color-warning-soft: #fef3c7;
+    --color-warning-ink: #92400e;
+    --color-danger: #dc2626;
+    --color-danger-soft: #fee2e2;
+    --color-danger-ink: #b91c1c;
+    --color-info: #2563eb;
+    --color-info-soft: #dbeafe;
+    --color-info-ink: #1d4ed8;
+    --color-neutral: #64748b;
+    --color-neutral-soft: #eef2f8;
 
-    /* On-dark variants — used on the chrome bars, where the -lit value is the
-       one that reads. This is the two-golds rule applied to every signal. */
-    --color-success-on-dark: var(--vital-lit);
-    --color-warning-on-dark: var(--flare-lit);
-    --color-danger-on-dark: var(--critical-lit);
-    --color-info-on-dark: var(--ion-lit);
+    --color-success-on-dark: #4ade80;
+    --color-warning-on-dark: #fbbf24;
+    --color-danger-on-dark: #f87171;
+    --color-info-on-dark: #60a5fa;
 
     /* ── Type scale ─────────────────────────────────────────────────
-       Eight steps replacing the 41 sizes currently in use (31 of them
-       arbitrary values like text-[0.62rem], which appears 273 times). */
+       Named steps, so the platform stops inventing text-[0.62rem]. */
+    --text-3xs: 0.6rem;
+    --text-3xs--line-height: 0.85rem;
+    --text-2xs: 0.7rem;
+    --text-2xs--line-height: 1rem;
     --text-eyebrow: 0.625rem;
     --text-eyebrow--line-height: 0.9rem;
     --text-micro: 0.6875rem;
@@ -122,16 +96,45 @@
     --text-display--line-height: 2rem;
 
     /* ── Radius ─────────────────────────────────────────────────────
-       Four steps replacing eight. lg is the card/panel radius. */
+       lg is the card/panel radius — the 22px the whole platform uses. */
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
     --radius-lg: 1.375rem;
 
-    /* ── Elevation ──────────────────────────────────────────────────
-       Three levels replacing 34 distinct arbitrary shadow values. */
+    /* ── Elevation ──────────────────────────────────────────────────  */
     --shadow-raise: 0 10px 30px rgba(15, 23, 42, 0.06);
     --shadow-float: 0 18px 45px -20px rgba(11, 31, 58, 0.5);
     --shadow-overlay: 0 24px 60px -20px rgba(11, 31, 58, 0.5);
+}
+
+/* ── ORBIT compatibility shim ────────────────────────────────────────────
+   Twenty live views write these names into inline style="" attributes — the
+   pass that removed colour literals from the UI put them there. The names
+   outlived the system that defined them, so they are aliased onto this
+   palette rather than edited out of twenty files. Do not author new CSS
+   against these; use the brand tokens above. */
+:root {
+    --abyss: #eff3f8;   --hull: #ffffff;    --plate: #ffffff;   --deck: #eef2f8;
+    --rim: #e2e8f0;     --rim-hi: #d8e0ee;
+    --chrome: #0b1f3a;  --chrome-2: #16294a;
+    --chrome-ink: #ffffff;
+    --chrome-ink-2: rgba(255, 255, 255, 0.65);
+    --chrome-ink-3: rgba(255, 255, 255, 0.4);
+    --ink: #0b1f3a;     --ink-2: #1e3352;   --ink-3: #64748b;   --ink-4: #869cc4;
+
+    --gold: #b8942c;    --gold-2: #d4af37;  --gold-3: #ecda94;
+    --gold-lit: #d4af37;
+    --gold-tint: #fbf7ea;
+
+    --vital: #16a34a;   --vital-lit: #22c55e;   --vital-tint: #dcfce7;
+    --ion: #2563eb;     --ion-lit: #60a5fa;     --ion-tint: #dbeafe;
+    --plasma: #7c3aed;  --plasma-lit: #a78bfa;
+    --flare: #b45309;   --flare-lit: #f59e0b;   --flare-tint: #fef3c7;
+    --critical: #dc2626; --critical-lit: #ef4444; --critical-tint: #fee2e2;
+
+    --font-ui: var(--font-sans);
+    --font-display: var(--font-serif);
+    --font-data: var(--font-mono);
 }
 
 @layer base {
@@ -168,16 +171,16 @@
        One look, one feel. Use these instead of re-styling per page.   */
 
     /* Display serif — every title across the platform. */
-    .pf { font-family: 'Spectral', Georgia, 'Times New Roman', serif; }
+    .pf { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
 
     /* Micro label above a value or section. */
-    .eyebrow { @apply text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400; }
-    .eyebrow-gold { @apply text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-600; }
+    .eyebrow { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-navy-400; }
+    .eyebrow-gold { @apply text-[0.55rem] font-bold uppercase tracking-[0.2em] text-gold-600; }
 
     /* The premium accent surface — navy, matching the Planning countdown strip.
        Deliberately NOT near-black: that reads too heavy on a light canvas. */
     .strip-dark {
-        @apply relative overflow-hidden rounded-lg bg-gradient-to-br from-navy-900 to-navy-800 text-white shadow-float;
+        @apply relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-900 to-[#16294A] text-white shadow-[0_18px_45px_-20px_rgba(11,31,58,0.5)];
     }
 
     /* Pills / chips. */
@@ -185,7 +188,7 @@
     .chip-gold { @apply inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-eyebrow font-bold text-gold-700 ring-1 ring-gold-200; }
 
     .card {
-        @apply rounded-2xl border border-line bg-white shadow-raise;
+        @apply rounded-[22px] border border-line bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)];
     }
 
     .btn-navy {
@@ -262,7 +265,7 @@
     .cc-tile {
         @apply rounded-xl border border-line bg-page/40 px-3 py-2.5 transition hover:border-gold-200 hover:bg-white;
     }
-    .cc-kpi { @apply text-xl font-black leading-none text-navy-900; font-family: 'Spectral', Georgia, serif; }
+    .cc-kpi { @apply text-xl font-black leading-none text-navy-900; font-family: 'Playfair Display', Georgia, serif; }
     .cc-kpi-label { @apply mt-1 block text-[0.6rem] font-bold uppercase tracking-[0.1em] text-navy-400; }
 
     /* Quick-action button in a Control Center. */
@@ -314,202 +317,4 @@
 .dash-flow { animation: dash-flow 3s linear infinite; }
 @media (prefers-reduced-motion: reduce) {
     .orbit-spin-slow, .orbit-spin-reverse, .core-glow, .dash-flow { animation: none; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   ORBIT SHELL — layout only. Every colour, radius and shadow below is an
-   ORBIT token; this file adds no new design values, only the arrangement
-   described in docs/orbit-ia-brief.md.
-   ═══════════════════════════════════════════════════════════════════════ */
-@layer components {
-    .o-shell {
-        min-height: 100vh;
-        background: var(--abyss);
-        color: var(--ink);
-        font-family: var(--font-ui);
-        /* room for the floating dock */
-        padding-bottom: 108px;
-    }
-
-    /* 1 — command ribbon */
-    .o-shell__ribbon { position: sticky; top: 0; z-index: 30; }
-    .o-shell__evt {
-        font: 600 15px/1.2 var(--font-ui);
-        letter-spacing: -.01em;
-        color: var(--ink);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .o-shell__evtmeta { margin-top: 2px; font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap; }
-    .o-shell__ribbonend { margin-left: auto; display: flex; align-items: center; gap: var(--o-3); }
-    /* The palette component still renders its own trigger; the ribbon supplies
-       the ORBIT one, so hide the legacy button and keep the overlay. */
-    .o-shell__palette { display: flex; align-items: center; }
-    .o-shell__palette > div > button:first-of-type { display: none !important; }
-
-    .o-shell__owner {
-        display: flex; align-items: center; gap: 7px;
-        font: var(--t-body-sm); color: var(--ink-3); white-space: nowrap;
-    }
-    @media (max-width: 1400px) { .o-shell__owner span:last-child { display: none; } }
-    .o-shell__ribbonend .o-search { min-width: 200px; }
-    .o-shell__ribbonend .o-search span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* 1b — breadcrumb */
-    .o-shell__crumbs {
-        display: flex; align-items: center; gap: var(--o-2); flex-wrap: wrap;
-        padding: var(--o-3) var(--o-5) 0;
-        font: var(--t-body-sm); color: var(--ink-3);
-    }
-    .o-shell__crumbs a { color: var(--ink-3); transition: color var(--d-fast) var(--ease-out); }
-    .o-shell__crumbs a:hover { color: var(--ink); }
-    .o-shell__crumbs [aria-current="page"] { color: var(--ink); font-weight: 600; }
-
-    /* 2 — KPI ribbon */
-    .o-shell__kpis { padding: var(--o-4) var(--o-5) 0; }
-
-    /* 3 — orbit · workspace · rails */
-    .o-shell__body {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--o-5);
-        padding: var(--o-4) var(--o-5);
-    }
-    .o-shell__work { flex: 1; min-width: 0; display: grid; gap: var(--o-4); }
-    .o-shell__rails { width: 320px; flex: none; display: grid; gap: var(--o-4); }
-
-    /* The orbit needs more room than the design's 236px once 12 modules ride it:
-       two rings 94px apart keep the 76px node labels from colliding. */
-    .o-shell__body .o-arc { width: 336px; }
-    .o-shell__body .o-arc__core { box-shadow: 0 24px 60px -22px rgba(20,28,51,.55), 0 0 0 10px var(--abyss); }
-
-    /* the disc's label */
-    .o-arc__coretitle {
-        font: 600 10px/1.3 var(--font-ui);
-        letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-ink);
-    }
-    .o-arc__coresub { margin-top: 3px; font: var(--t-body-sm); color: var(--chrome-ink-3); }
-
-    /* 4 — floating dock */
-    .o-shell__dock {
-        position: fixed; left: 50%; bottom: var(--o-5); transform: translateX(-50%);
-        z-index: 40;
-    }
-
-    /* Collapse, per the brief: the arc becomes an icon rail below 1280px and
-       disappears below 900px, where the dock is the only navigation. */
-    @media (max-width: 1600px) { .o-shell__rails { width: 296px; } }
-    /* The arc costs 336px and the rails ~300px, so the workspace only has room
-       for the full orbit on a wide screen. Below that it becomes the icon rail
-       the brief specifies — same information architecture, 64px instead. */
-    @media (max-width: 1599px) {
-        /* Nodes are absolutely placed on the arc, and .o-arc clips overflow — so
-           collapsing has to unset that positioning, not just narrow the box, or
-           half the modules would be clipped away and unreachable. */
-        .o-shell__body .o-arc {
-            width: 56px; min-height: 0 !important;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            padding: var(--o-2) 0;
-            background: var(--hull); border: 1px solid var(--rim); border-radius: var(--r-lg);
-        }
-        .o-arc__rings, .o-arc__core, .o-arc__next, .o-arc__label { display: none; }
-        .o-arc__node {
-            position: static !important; transform: none !important;
-            left: auto !important; top: auto !important; width: auto;
-        }
-        .o-arc__node:hover .o-arc__dot { transform: none; }
-    }
-    @media (max-width: 1099px) {
-        .o-shell__body { flex-wrap: wrap; }
-        .o-shell__rails { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-    }
-    @media (max-width: 899px) {
-        .o-arc { display: none; }
-        .o-shell__body { flex-direction: column; }
-        .o-shell__rails { width: 100%; }
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   ELITE COMMAND CANVAS — brand palette
-   Registered as Tailwind theme tokens so no view ever holds a hex, and the
-   whole identity can be retuned from one place.
-   ═══════════════════════════════════════════════════════════════════════ */
-@theme {
-    --font-canvas: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
-
-    --color-cc-navy: #1D2951;        /* deep navy — command surfaces */
-    --color-cc-navy-2: #16203F;      /* gradient partner, deeper */
-    --color-cc-navy-3: #0F1730;      /* deepest, for the hex core */
-    --color-cc-gold: #FFD44F;        /* the accent */
-    --color-cc-gold-2: #E8B62F;      /* gold, pressed/darker */
-    --color-cc-blue: #3D5CA0;        /* medium blue — secondary data */
-    --color-cc-blue-2: #6E8AC9;      /* lighter blue for fills on navy */
-    --color-cc-gray: #C6C6C6;        /* light gray — rules, muted */
-    --color-cc-mist: #F4F6FA;        /* the light canvas ground */
-    --color-cc-ink: #1A2240;         /* body text on light */
-    --color-cc-ink-2: #5B6584;       /* secondary text */
-    --color-cc-ink-3: #8D95AC;       /* meta text */
-    --color-cc-line: #E6E9F0;        /* hairlines on light */
-
-    /* Status — event stage and signal severity */
-    --color-cc-ok: #17A673;
-    --color-cc-warn: #E9A13B;
-    --color-cc-risk: #E2544C;
-    --color-cc-info: #3D5CA0;
-    --color-cc-plan: #7A6BD8;      /* planning — the violet dot in the reference */
-}
-
-@layer components {
-    /* Hexagon language. clip-path keeps it a real hexagon at any size, and
-       degrades to a rounded rect where clip-path is unsupported. */
-    .cc-hex {
-        clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
-    }
-    .cc-hex-flat {
-        clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-    }
-    /* The honeycomb texture behind the KPI strip and the canvas. */
-    .cc-honey {
-        background-image:
-            radial-gradient(circle at 50% 50%, rgba(255, 212, 79, 0.10) 1.2px, transparent 1.3px);
-        background-size: 22px 22px;
-    }
-    /* The arena's radial well — brightens toward the centre of gravity. Lives
-       here with the other field textures rather than as an inline gradient. */
-    .cc-well {
-        background: radial-gradient(60% 60% at 50% 50%, var(--color-white) 0%, transparent 72%);
-    }
-    .cc-map {
-        background-image:
-            radial-gradient(circle at 50% 50%, var(--color-cc-line) 1.1px, transparent 1.2px);
-        background-size: 26px 26px;
-    }
-    /* Soft executive elevation — three steps, nothing harsher. */
-    .cc-lift-1 { box-shadow: 0 2px 8px rgba(29, 41, 81, 0.05), 0 1px 2px rgba(29, 41, 81, 0.04); }
-    .cc-lift-2 { box-shadow: 0 12px 30px -12px rgba(29, 41, 81, 0.18), 0 2px 6px rgba(29, 41, 81, 0.05); }
-    .cc-lift-3 { box-shadow: 0 28px 60px -22px rgba(29, 41, 81, 0.32), 0 6px 16px -8px rgba(29, 41, 81, 0.12); }
-    .cc-glow  { box-shadow: 0 0 0 1px rgba(255, 212, 79, 0.5), 0 20px 50px -18px rgba(255, 212, 79, 0.45); }
-
-    /* Expand: the arena leaves the page flow and takes the screen. The field
-       has to grow with it, so the frame claims the leftover height rather than
-       keeping the 740px it is given in the page.
-
-       The !important is load-bearing, not laziness: these rules live in the
-       components layer and the elements carry `rounded-[22px]` and `h-[740px]`
-       from the utilities layer, which is ordered after. Only !important
-       reverses that order — raising specificity cannot. */
-    .cc-full {
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        border-radius: 0 !important;
-        display: flex;
-        flex-direction: column;
-    }
-    .cc-full [data-canvas-arena] { flex: 1; min-height: 0; }
-    .cc-full [data-canvas-frame] { height: 100% !important; }
-
-    /* The menus are <details>; the native disclosure triangle is not wanted. */
-    summary::-webkit-details-marker { display: none; }
-    summary { list-style: none; }
 }

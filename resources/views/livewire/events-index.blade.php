@@ -114,7 +114,7 @@
                             <input type="checkbox" @checked($allOnPage)
                                    wire:click="toggleSelectPage({{ json_encode($pageIds) }})"
                                    title="Select everything on this page"
-                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
+                                   class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
                         </th>
                         <th class="px-3 py-3">Event</th>
                         <th class="px-3 py-3">Client</th>
@@ -136,7 +136,7 @@
                             @class(['group border-b border-line last:border-0 transition hover:bg-page/50', 'bg-gold-50/40' => $ticked])>
                             <td class="px-4 py-3">
                                 <input type="checkbox" @checked($ticked) wire:click="toggleSelect({{ $event->id }})"
-                                       class="h-4 w-4 cursor-pointer rounded border-line text-gold-700 focus:ring-gold-400">
+                                       class="h-4 w-4 cursor-pointer rounded border-line text-gold-500 focus:ring-gold-400">
                             </td>
                             <td class="px-3 py-3">
                                 <a href="{{ route('events.hub', $event) }}" class="block">
@@ -274,22 +274,9 @@
                     </x-slot:actions>
                 </x-empty>
             @else
-                {{-- One card, shared with the Command Canvas: the same health scale
-                     and the same hexagon instrument, so a score reads identically
-                     wherever you meet it. --}}
-                <div class="grid items-start gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+                <div class="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
                     @foreach ($events as $event)
-                        <x-canvas.event-card :event="$event" :health="$health[$event->id] ?? null"
-                                             :open="$expandedId === $event->id"
-                                             wire:key="ec-{{ $event->id }}"
-                                             @class(['xl:col-span-2 2xl:col-span-3' => $expandedId === $event->id])>
-                            {{-- Blade renders slot content eagerly, so this has to be
-                                 guarded here: the detail payload only exists for the
-                                 one expanded event. --}}
-                            @if ($expandedId === $event->id)
-                                @include('livewire.partials.events.detail', ['event' => $event, 'expanded' => $expanded])
-                            @endif
-                        </x-canvas.event-card>
+                        @include('livewire.partials.events.card', ['event' => $event])
                     @endforeach
                 </div>
             @endif

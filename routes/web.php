@@ -60,48 +60,12 @@ Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->
 
 Route::middleware('auth')->group(function () {
 
-    /*
-     * The Elite Command Canvas is the platform's front door — the company-wide
-     * dashboard. Static data for now (App\Support\CommandCanvasData).
-     */
-    Route::view('/', 'command-canvas')->name('home');
+    // The Command Center is the platform's front door: the KPI strip, the
+    // Operations Hub, and the live rails down the right.
+    Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
 
-    // The previous portfolio dashboard, kept reachable while the Canvas takes over.
+    // The Operations Room — the same portfolio, arranged as a worklist.
     Route::get('/operations-room', CommandCenter::class)->name('operations-room');
-
-    // ORBIT design system — the visual source of truth (light-first · gold accent).
-    // Served raw (its CSS has @media/@keyframes that Blade would misparse).
-    Route::get('/design', fn () => response(
-        file_get_contents(base_path('orbit-system.html'))
-    )->header('Content-Type', 'text/html'))->name('design');
-
-    // The living gallery — the same components rendered from the real Blade source.
-    // Any new ORBIT component must appear here in the commit that creates it.
-    Route::view('/design/gallery', 'orbit-gallery')->name('design.gallery');
-
-    // The ORBIT shell assembled around a real event, for review before the
-    // sidebar is retired. ?tab=venue etc. moves the orbit's active module.
-    Route::view('/design/shell', 'orbit-shell-preview')->name('design.shell');
-
-    /*
-     * Bake-off: the same screen and the same real figures, three genuinely
-     * different design directions. Throwaway prototypes — they share no CSS
-     * with the app or with each other, so each is a real alternative rather
-     * than a reskin. Pick one, bin the other two.
-     */
-    Route::get('/bakeoff/{variant}', function (string $variant) {
-        abort_unless(in_array($variant, ['a', 'b', 'c'], true), 404);
-
-        return view('bakeoff.'.$variant, \App\Support\BakeoffData::get());
-    })->name('bakeoff');
-
-    // A user's manual theme choice, for this session only. ThemePolicy decides
-    // the default per module; this just records that they overrode it.
-    Route::post('/theme-override', function (\Illuminate\Http\Request $request) {
-        \App\Support\ThemePolicy::override((string) $request->input('theme'));
-
-        return response()->noContent();
-    })->name('theme.override');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 

@@ -8,7 +8,7 @@ return [
 
     'nav' => [
         'command-center' => [
-            'label' => 'Command Canvas',
+            'label' => 'Command Center',
             'path' => '/',
             'route' => 'home',
             'icon' => 'home',
