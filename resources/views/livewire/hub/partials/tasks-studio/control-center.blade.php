@@ -44,18 +44,9 @@
         </button>
     </div>
 
-    <div class="flex flex-col gap-4 p-4">
-        {{-- view switcher --}}
-        <div>
-            <p class="eyebrow mb-1.5">View</p>
-            <div class="grid grid-cols-4 gap-1.5">
-                @foreach ($views as $vk => [$vlabel, $vicon])
-                    <button type="button" wire:click="setView('{{ $vk }}')" @class(['flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-3xs font-bold transition', 'border-navy-900 bg-navy-900 text-white shadow-sm' => $view === $vk, 'border-line bg-page/40 text-navy-400 hover:text-navy-700' => $view !== $vk])>
-                        <x-icon :name="$vicon" @class(['h-4 w-4', 'text-gold-400' => $view === $vk]) /> {{ $vlabel }}
-                    </button>
-                @endforeach
-            </div>
-        </div>
+    <div class="grid gap-4 p-4" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+        {{-- The view switcher moved to the toolbar, where it sits beside the
+             filters it changes. --}}
 
         {{-- task overview KPIs --}}
         <div>

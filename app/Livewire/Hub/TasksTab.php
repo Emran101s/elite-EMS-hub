@@ -31,7 +31,8 @@ class TasksTab extends Component
 
     public ?int $filterAssignee = null;
 
-    public string $focus = 'all';   // all | mine | overdue
+    /** all | mine | overdue | today | week — the brief's filter tabs. */
+    public string $focus = 'all';
 
     public string $search = '';
 
@@ -238,7 +239,7 @@ class TasksTab extends Component
     /* ── Filters ── */
     public function setFocus(string $focus): void
     {
-        $this->focus = in_array($focus, ['all', 'mine', 'overdue'], true) ? $focus : 'all';
+        $this->focus = in_array($focus, ['all', 'mine', 'overdue', 'today', 'week'], true) ? $focus : 'all';
         $this->filterAssignee = $focus === 'mine' ? auth()->id() : null;
     }
 
@@ -268,6 +269,11 @@ class TasksTab extends Component
             ->when($this->filterTrack, fn ($c) => $c->where('track_id', $this->filterTrack))
             ->when($this->focus === 'mine', fn ($c) => $c->where('assignee_id', auth()->id()))
             ->when($this->focus === 'overdue', fn ($c) => $c->filter(fn ($t) => $t->isOverdue()))
+            // "Due today" and "due this week" mean open work with a date in range —
+            // a closed task that happened to be due today is not what you're asking for.
+            ->when($this->focus === 'today', fn ($c) => $c->filter(fn ($t) => $t->isOpen() && $t->due_on?->isToday()))
+            ->when($this->focus === 'week', fn ($c) => $c->filter(fn ($t) => $t->isOpen() && $t->due_on
+                && $t->due_on->betweenIncluded(now()->startOfDay(), now()->endOfWeek())))
             ->when($this->search !== '', fn ($c) => $c->filter(fn ($t) => str_contains(mb_strtolower($t->title), mb_strtolower($this->search))))
             ->values();
 
