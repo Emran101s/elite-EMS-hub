@@ -163,7 +163,7 @@
                                 @if ($h)
                                     <span class="flex items-center gap-1.5 text-xs font-bold text-navy-900">
                                         <x-health-ring :percent="$h['score']" :group="$h['group']" size="h-6 w-6" />
-                                        {{ $h['score'] }}%
+                                        {{ $h['score'] !== null ? $h['score'].'%' : 'Not started' }}
                                     </span>
                                 @else
                                     <span class="text-xs text-muted">—</span>

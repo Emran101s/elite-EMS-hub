@@ -51,6 +51,7 @@
                         <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-track"></span> On Track</span>
                         <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-warn"></span> In Progress</span>
                         <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-risk"></span> At Risk</span>
+                        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-navy-200"></span> Not Started</span>
                     </div>
                 </div>
 
@@ -93,8 +94,12 @@
                     {{-- Event Circle Cards --}}
                     @foreach ($islands as $event)
                         @php
-                            $ringColor = ['track' => '#22C55E', 'warn' => '#F59E0B', 'risk' => '#EF4444'][$event->health_group];
+                            $ringColor = ['track' => '#22C55E', 'warn' => '#F59E0B', 'risk' => '#EF4444',
+                                          'neutral' => '#B3C2DD'][$event->health_group];
                             $statusLabel = str($event->health_status)->replace('_', ' ')->title();
+                            // Draft and proposal events carry no score; the ring stays
+                            // empty and the pill reads "—" rather than a damning 0%.
+                            $scored = $event->health_score !== null;
                         @endphp
                         <a href="{{ route('events.hub', $event) }}"
                            class="group absolute z-10 flex w-40 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center"
@@ -106,7 +111,7 @@
                                     <circle cx="50" cy="50" r="45" fill="#FFFFFF" />
                                     <circle cx="50" cy="50" r="45" fill="none" stroke="#E2E8F0" stroke-width="5" />
                                     <circle cx="50" cy="50" r="45" fill="none" stroke="{{ $ringColor }}" stroke-width="5"
-                                            stroke-linecap="round" stroke-dasharray="{{ $event->health_score * 2.827 }} 283" />
+                                            stroke-linecap="round" stroke-dasharray="{{ $scored ? $event->health_score * 2.827 : 0 }} 283" />
                                 </svg>
                                 {{-- avatar inside the ring --}}
                                 <span class="absolute inset-[11px] overflow-hidden rounded-full bg-[radial-gradient(circle,#FFFFFF,#EEF2F8)] ring-1 ring-white">
@@ -115,7 +120,7 @@
                                 </span>
                                 {{-- health % pill --}}
                                 <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-white px-2 py-0.5 text-[0.7rem] font-bold shadow ring-1 ring-line"
-                                      style="color: {{ $ringColor }}">{{ $event->health_score }}%</span>
+                                      style="color: {{ $ringColor }}">{{ $scored ? $event->health_score.'%' : '—' }}</span>
                                 {{-- status pill --}}
                                 <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-white shadow"
                                       style="background: {{ $ringColor }}">{{ $statusLabel }}</span>
@@ -251,6 +256,7 @@
                             ['label' => 'On Track', 'bar' => 'bg-track'],
                             ['label' => 'In Progress', 'bar' => 'bg-warn'],
                             ['label' => 'At Risk', 'bar' => 'bg-risk'],
+                            ['label' => 'Not Started', 'bar' => 'bg-navy-200'],
                             ['label' => 'Completed', 'bar' => 'bg-navy-300'],
                         ] as $row)
                             @php $count = $statusBars['counts'][$row['label']]; @endphp
@@ -330,6 +336,7 @@
                         'class' => match ($segment['group']) {
                             'risk' => 'stroke-risk',
                             'warn' => 'stroke-warn',
+                            'neutral' => 'stroke-navy-200',
                             default => 'stroke-track',
                         },
                     ])->all()" size="h-32 w-32">
@@ -345,8 +352,9 @@
                                     'bg-track' => $segment['group'] === 'track',
                                     'bg-warn' => $segment['group'] === 'warn',
                                     'bg-risk' => $segment['group'] === 'risk',
+                                    'bg-navy-200' => $segment['group'] === 'neutral',
                                 ])></span>
-                            <span class="text-muted">{{ ['track' => 'On-track events', 'warn' => 'In-progress events', 'risk' => 'At-risk events'][$segment['group']] }}</span>
+                            <span class="text-muted">{{ ['track' => 'On-track events', 'warn' => 'In-progress events', 'risk' => 'At-risk events', 'neutral' => 'Not started yet'][$segment['group']] }}</span>
                             <span class="ml-auto font-bold text-navy-900">${{ \Illuminate\Support\Number::abbreviate($segment['cents'] / 100, 2) }}</span>
                             <span class="text-muted">{{ round($segment['pct']) }}%</span>
                         </li>

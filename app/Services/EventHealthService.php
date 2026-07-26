@@ -15,9 +15,25 @@ use App\Models\Event;
  * so a freshly created event is not punished for empty tabs.
  * Bands: 81–100 on_track · 61–80 in_progress · 41–60 at_risk · 0–40 behind.
  * Override: any open risk with severity ≥ 20/25 caps the event at at_risk.
+ *
+ * Draft and proposal events are NOT scored at all: score is null and the status
+ * is not_started. Nothing is committed at those stages, so there is no schedule
+ * to be behind on — scoring them made an untouched proposal read exactly like a
+ * collapsing project, and three portfolio panels inherited that lie.
  */
 class EventHealthService
 {
+    /**
+     * Stages before the work is committed. An event here has no health, and
+     * portfolio rollups must count it separately rather than as "at risk".
+     */
+    public const UNSCORED_STAGES = ['draft', 'proposal'];
+
+    public static function isScored(Event $event): bool
+    {
+        return ! in_array($event->stage, self::UNSCORED_STAGES, true);
+    }
+
     /**
      * The relations breakdown() reads. Eager-load these before scoring a set of
      * events, or each score silently costs one query per relation per event.
@@ -41,6 +57,20 @@ class EventHealthService
 
     public function breakdown(Event $event): array
     {
+        if (! self::isScored($event)) {
+            return [
+                'score' => null,
+                'status' => 'not_started',
+                'group' => 'neutral',
+                // The meters still render, so the tabs read as "no data yet"
+                // rather than vanishing the moment a stage changes.
+                'components' => array_fill_keys(array_keys(self::WEIGHTS), null),
+                'weights' => self::WEIGHTS,
+                'critical_risk' => null,
+                'pending_approvals' => $event->approvals->where('status', 'pending')->count(),
+            ];
+        }
+
         $components = [
             'tasks' => $this->taskScore($event),
             'budget' => $this->budgetScore($event),
@@ -127,7 +157,9 @@ class EventHealthService
         $statusLabel = str($health['status'])->replace('_', ' ')->title();
 
         return [
-            'headline' => "{$event->name} is {$health['score']}% — {$statusLabel}.",
+            'headline' => $health['score'] === null
+                ? "{$event->name} is not scored yet — it is still at {$event->stage} stage."
+                : "{$event->name} is {$health['score']}% — {$statusLabel}.",
             'attention' => array_slice($attention, 0, 5),
             'recommendation' => $attention[0] ?? 'No blockers detected — keep executing the plan.',
             'health' => $health,

@@ -343,7 +343,8 @@ class EventsIndex extends Component
         });
 
         $sorted = match ($this->sort) {
-            'health' => $all->sortByDesc(fn (Event $event) => $health[$event->id]['score']),
+            // Unscored events sort last rather than as a zero.
+            'health' => $all->sortByDesc(fn (Event $event) => $health[$event->id]['score'] ?? -1),
             'budget' => $all->sortByDesc(fn (Event $event) => $metrics[$event->id]['budget_used'] ?? -1),
             default => $all->sortBy('starts_at'),
         };

@@ -50,7 +50,7 @@
             @endforeach
             <li class="flex items-center justify-between border-t border-line pt-2">
                 <span class="font-semibold text-navy-900">Weighted score</span>
-                <span class="font-bold text-gold-600">{{ $health['score'] }}%</span>
+                <span class="font-bold text-gold-600">{{ $health['score'] !== null ? $health['score'].'%' : '—' }}</span>
             </li>
         </ul>
     </div>

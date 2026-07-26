@@ -69,10 +69,10 @@
 
         <div class="scrollbar-none max-h-[240px] space-y-0.5 overflow-y-auto">
             @forelse ($radar->take(6) as $event)
-                    @php $dot = ['track' => 'bg-track', 'warn' => 'bg-warn', 'risk' => 'bg-risk'][$event->radar_group]; @endphp
+                    @php $dot = ['track' => 'bg-track', 'warn' => 'bg-warn', 'risk' => 'bg-risk', 'neutral' => 'bg-navy-300'][$event->radar_group]; @endphp
                     <a href="{{ route('events.hub', $event) }}"
                        class="group flex h-12 items-center gap-2.5 rounded-xl px-2 transition hover:-translate-y-px hover:bg-white/5"
-                       title="{{ $event->name }} — {{ $event->radar_score }}% · {{ $event->radar_status }}">
+                       title="{{ $event->name }} — {{ $event->radar_score !== null ? $event->radar_score.'%' : 'not scored' }} · {{ $event->radar_status }}">
                         <span class="relative flex shrink-0">
                             <span class="h-2.5 w-2.5 rounded-full {{ $dot }}"></span>
                             <span class="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full {{ $dot }} opacity-60 [animation-duration:2.5s]"></span>

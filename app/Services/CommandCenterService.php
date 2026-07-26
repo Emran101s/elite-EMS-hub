@@ -284,7 +284,9 @@ class CommandCenterService
      */
     public function budgetByHealth(): array
     {
-        $groups = ['track' => 0, 'warn' => 0, 'risk' => 0];
+        // 'neutral' is budget sitting on draft/proposal events — money that is
+        // not committed yet, and must never be reported as money at risk.
+        $groups = ['track' => 0, 'warn' => 0, 'risk' => 0, 'neutral' => 0];
 
         foreach (Event::whereNull('archived_at')->get() as $event) {
             $groups[$this->healthService->breakdown($event)['group']] += $event->budget_cents;
@@ -338,6 +340,7 @@ class CommandCenterService
             'On Track' => $groups->get('track', collect())->count(),
             'In Progress' => $groups->get('warn', collect())->count(),
             'At Risk' => $groups->get('risk', collect())->count(),
+            'Not Started' => $groups->get('neutral', collect())->count(),
             'Completed' => Event::whereNull('archived_at')->whereIn('stage', ['completed', 'closed'])->count(),
         ];
 
