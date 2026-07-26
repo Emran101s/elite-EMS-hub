@@ -22,7 +22,7 @@
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cc-ok opacity-60"></span>
                     <span class="relative inline-flex h-2 w-2 rounded-full bg-cc-ok"></span>
                 </span>
-                {{ count($events) + 1 }} events live
+                {{ count($events) + 1 }} events active
             </span>
             <button type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-cc-line bg-white text-cc-ink-2 transition hover:border-cc-gold hover:text-cc-navy" title="Expand">
                 <x-canvas.icon name="expand" :size="16" />
@@ -84,7 +84,22 @@
                     </div>
                 @endforeach
 
-                {{-- the primary event — the one dark hexagon at the centre of gravity --}}
+                {{-- the primary event — the one dark hexagon at the centre of gravity.
+                     With no events at all, the centre teaches the concept instead. --}}
+                @if (empty($primary))
+                    <div class="absolute left-1/2 top-1/2 w-[300px] -translate-x-1/2 -translate-y-1/2 text-center">
+                        <span class="cc-hex-flat mx-auto grid h-[86px] w-[78px] place-items-center bg-white text-cc-ink-3 cc-lift-2">
+                            <x-canvas.icon name="events" :size="26" />
+                        </span>
+                        <h3 class="mt-4 text-[17px] font-extrabold tracking-tight text-cc-navy">No active events yet</h3>
+                        <p class="mx-auto mt-2 max-w-[34ch] text-[12.5px] leading-relaxed text-cc-ink-2">
+                            The canvas puts the event you are running at the centre and orbits the rest around it. Create your first event to bring it to life.
+                        </p>
+                        <a href="{{ route('events.create') }}" class="mt-4 inline-flex items-center gap-2 rounded-full bg-cc-gold px-5 py-2.5 text-[12px] font-extrabold text-cc-navy transition hover:bg-cc-gold-2">
+                            Create an event <x-canvas.icon name="chevR" :size="14" />
+                        </a>
+                    </div>
+                @else
                 <div class="absolute left-1/2 top-1/2 w-[268px] -translate-x-1/2 -translate-y-1/2">
                     <div class="group relative">
                         {{-- a soft halo so the centre reads as the well of the field --}}
@@ -123,12 +138,14 @@
                             <p class="mt-4 text-[9.5px] font-bold uppercase tracking-[0.16em] text-white/45">Next Action</p>
                             <p class="mt-1 text-[12px] font-bold text-cc-gold">{{ $primary['nextAction'] }}</p>
 
-                            <a href="#" class="mt-4 inline-flex items-center gap-2 rounded-full bg-cc-gold px-5 py-2.5 text-[12px] font-extrabold text-cc-navy transition hover:bg-cc-gold-2">
+                            <a href="{{ $primary['href'] ?? '#' }}" class="mt-4 inline-flex items-center gap-2 rounded-full bg-cc-gold px-5 py-2.5 text-[12px] font-extrabold text-cc-navy transition hover:bg-cc-gold-2">
                                 Enter Control Room <x-canvas.icon name="chevR" :size="14" />
                             </a>
                         </div>
                     </div>
                 </div>
+
+                @endif
 
                 {{-- add — a hexagon, like every other object on this field --}}
                 <button type="button" class="group absolute bottom-[7%] right-[9%] grid h-[84px] w-[76px] place-items-center">

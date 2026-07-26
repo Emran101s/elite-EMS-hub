@@ -23,7 +23,7 @@
     body. The hexagon finally carries information rather than decorating a box,
     and the capsule holds text at a width text is readable at.
 --}}
-<a href="#" class="group relative block pl-[38px]">
+<a href="{{ $event['href'] ?? '#' }}" class="group relative block pl-[38px]">
 
     {{-- hexagon badge — the health instrument --}}
     <span class="absolute left-0 top-1/2 z-10 grid h-[74px] w-[68px] -translate-y-1/2 place-items-center

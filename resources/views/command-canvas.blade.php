@@ -6,7 +6,7 @@
     <div class="px-4 pb-10 xl:px-6">
 
         {{-- 2 · Company pulse --}}
-        <x-canvas.company-pulse-strip :items="D::pulse()" :health="D::health()" />
+        <x-canvas.company-pulse-strip :items="D::pulse()" :health="D::health_()" />
 
         {{-- 3 · dock  ·  4 · canvas  ·  5–7 · right panels --}}
         {{-- Measured, not guessed: the radial arena needs ~845px for a hexagon

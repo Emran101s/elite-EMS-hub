@@ -14,10 +14,9 @@
                 <div class="min-w-0">
                     <p class="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{{ $item['label'] }}</p>
                     <p class="mt-1 whitespace-nowrap text-[22px] font-extrabold leading-none tracking-tight text-white">{{ $item['value'] }}</p>
-                    @if (! empty($item['delta']))
-                        <p class="mt-1.5 flex flex-wrap items-center gap-x-1 whitespace-nowrap text-[11px] font-semibold {{ $item['dir'] === 'up' ? 'text-cc-ok' : 'text-cc-risk' }}">
-                            {{ $item['dir'] === 'up' ? '↑' : '↓' }} {{ $item['delta'] }}
-                            <span class="font-normal text-white/40">vs last month</span>
+                    @if (! empty($item['foot']))
+                        <p class="mt-1.5 whitespace-nowrap text-[11px] font-semibold {{ ($item['tone'] ?? null) === 'risk' ? 'text-cc-risk' : 'text-white/45' }}">
+                            {{ $item['foot'] }}
                         </p>
                     @elseif (! empty($item['badge']))
                         <p class="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-cc-gold">
