@@ -1,0 +1,45 @@
+@props(['name', 'size' => 18, 'stroke' => 1.7])
+@php
+    $paths = [
+        'home' => '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+        'events' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        'people' => '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 11.5a3 3 0 1 0-1.5-5.6M18 20a5.5 5.5 0 0 0-3-4.9"/>',
+        'plan' => '<path d="M8 4h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9.5 9h7M9.5 13h7M9.5 17h4"/>',
+        'money' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 0 1 0 3.6h-3a1.8 1.8 0 0 0 0 3.6h4"/>',
+        'live' => '<circle cx="12" cy="12" r="3"/><path d="M6.5 6.5a8 8 0 0 0 0 11M17.5 17.5a8 8 0 0 0 0-11M3.5 3.5a12 12 0 0 0 0 17M20.5 20.5a12 12 0 0 0 0-17"/>',
+        'intel' => '<circle cx="12" cy="12" r="3.2"/><ellipse cx="12" cy="12" rx="9.5" ry="4.4" transform="rotate(-28 12 12)"/>',
+        'vault' => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3.6"/><path d="M12 6.2v2.2M12 15.6v2.2M6.2 12h2.2M15.6 12h2.2"/>',
+        'settings' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.9 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4 13.9H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z"/>',
+        'tasks' => '<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M9 9.5l1.6 1.6L14 7.8M9 16h6"/>',
+        'risk' => '<path d="M12 3.5 21 19.5H3z"/><path d="M12 10v4M12 17h.01"/>',
+        'approve' => '<path d="M9 12.5l2.2 2.2L15.5 10"/><rect x="3.5" y="4" width="17" height="16" rx="2.5"/>',
+        'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+        'bell' => '<path d="M18 8.5a6 6 0 1 0-12 0c0 5.5-2 7-2 7h16s-2-1.5-2-7"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/>',
+        'chat' => '<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
+        'cal' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        'plus' => '<path d="M12 5v14M5 12h14"/>',
+        'chev' => '<path d="m6 9 6 6 6-6"/>',
+        'chevR' => '<path d="m9 6 6 6-6 6"/>',
+        'star' => '<path d="m12 3.5 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 10l6.1-.9z"/>',
+        'ai' => '<path d="M12 3.2 13.7 8l4.8 1.7-4.8 1.7L12 16.2 10.3 11.4 5.5 9.7l4.8-1.7z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
+        'expand' => '<path d="M9 3H3v6M15 3h6v6M9 21H3v-6M15 21h6v-6"/>',
+        'layers' => '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5M3 16.5l9 5 9-5"/>',
+        'zin' => '<circle cx="11" cy="11" r="7"/><path d="M11 8.5v5M8.5 11h5M20 20l-3.6-3.6"/>',
+        'zout' => '<circle cx="11" cy="11" r="7"/><path d="M8.5 11h5M20 20l-3.6-3.6"/>',
+        'center' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/>',
+        'list' => '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+        'grid' => '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
+        'pin' => '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>',
+        'supplier' => '<path d="M3 8h11v9H3z"/><path d="M14 11h4l3 3v3h-7z"/><circle cx="7" cy="18.5" r="1.8"/><circle cx="17" cy="18.5" r="1.8"/>',
+        'doc' => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+        'upload' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M12 15V3M7.5 7.5 12 3l4.5 4.5"/>',
+        'report' => '<path d="M4 20V9M10 20V4M16 20v-7M22 20H2"/>',
+        'more' => '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+        'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.3 2"/>',
+        'flag' => '<path d="M5 21V4M5 4h11l-2 3.5L16 11H5"/>',
+        'check' => '<path d="m5 13 4.5 4.5L19 7"/>',
+    ];
+@endphp
+<svg width="{{ $size }}" height="{{ $size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="{{ $stroke }}" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" {{ $attributes }}>{!! $paths[$name] ?? $paths['grid'] !!}</svg>

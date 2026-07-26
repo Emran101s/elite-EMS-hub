@@ -76,6 +76,18 @@ Route::middleware('auth')->group(function () {
     // sidebar is retired. ?tab=venue etc. moves the orbit's active module.
     Route::view('/design/shell', 'orbit-shell-preview')->name('design.shell');
 
+    /*
+     * Bake-off: the same screen and the same real figures, three genuinely
+     * different design directions. Throwaway prototypes — they share no CSS
+     * with the app or with each other, so each is a real alternative rather
+     * than a reskin. Pick one, bin the other two.
+     */
+    Route::get('/bakeoff/{variant}', function (string $variant) {
+        abort_unless(in_array($variant, ['a', 'b', 'c'], true), 404);
+
+        return view('bakeoff.'.$variant, \App\Support\BakeoffData::get());
+    })->name('bakeoff');
+
     // A user's manual theme choice, for this session only. ThemePolicy decides
     // the default per module; this just records that they overrode it.
     Route::post('/theme-override', function (\Illuminate\Http\Request $request) {
@@ -83,6 +95,12 @@ Route::middleware('auth')->group(function () {
 
         return response()->noContent();
     })->name('theme.override');
+
+    /*
+     * Elite Command Canvas — the company-wide dashboard. Static data for now
+     * (App\Support\CommandCanvasData); no Livewire, no backend coupling.
+     */
+    Route::view('/command-canvas', 'command-canvas')->name('command-canvas');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 

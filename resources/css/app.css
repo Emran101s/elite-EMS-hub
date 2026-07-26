@@ -428,3 +428,60 @@
         .o-shell__rails { width: 100%; }
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ELITE COMMAND CANVAS — brand palette
+   Registered as Tailwind theme tokens so no view ever holds a hex, and the
+   whole identity can be retuned from one place.
+   ═══════════════════════════════════════════════════════════════════════ */
+@theme {
+    --font-canvas: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+
+    --color-cc-navy: #1D2951;        /* deep navy — command surfaces */
+    --color-cc-navy-2: #16203F;      /* gradient partner, deeper */
+    --color-cc-navy-3: #0F1730;      /* deepest, for the hex core */
+    --color-cc-gold: #FFD44F;        /* the accent */
+    --color-cc-gold-2: #E8B62F;      /* gold, pressed/darker */
+    --color-cc-blue: #3D5CA0;        /* medium blue — secondary data */
+    --color-cc-blue-2: #6E8AC9;      /* lighter blue for fills on navy */
+    --color-cc-gray: #C6C6C6;        /* light gray — rules, muted */
+    --color-cc-mist: #F4F6FA;        /* the light canvas ground */
+    --color-cc-ink: #1A2240;         /* body text on light */
+    --color-cc-ink-2: #5B6584;       /* secondary text */
+    --color-cc-ink-3: #8D95AC;       /* meta text */
+    --color-cc-line: #E6E9F0;        /* hairlines on light */
+
+    /* Status — event stage and signal severity */
+    --color-cc-ok: #17A673;
+    --color-cc-warn: #E9A13B;
+    --color-cc-risk: #E2544C;
+    --color-cc-info: #3D5CA0;
+    --color-cc-plan: #7C8BB5;
+}
+
+@layer components {
+    /* Hexagon language. clip-path keeps it a real hexagon at any size, and
+       degrades to a rounded rect where clip-path is unsupported. */
+    .cc-hex {
+        clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+    }
+    .cc-hex-flat {
+        clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    }
+    /* The honeycomb texture behind the KPI strip and the canvas. */
+    .cc-honey {
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(255, 212, 79, 0.10) 1.2px, transparent 1.3px);
+        background-size: 22px 22px;
+    }
+    .cc-map {
+        background-image:
+            radial-gradient(circle at 50% 50%, var(--color-cc-line) 1.1px, transparent 1.2px);
+        background-size: 26px 26px;
+    }
+    /* Soft executive elevation — three steps, nothing harsher. */
+    .cc-lift-1 { box-shadow: 0 2px 8px rgba(29, 41, 81, 0.05), 0 1px 2px rgba(29, 41, 81, 0.04); }
+    .cc-lift-2 { box-shadow: 0 12px 30px -12px rgba(29, 41, 81, 0.18), 0 2px 6px rgba(29, 41, 81, 0.05); }
+    .cc-lift-3 { box-shadow: 0 28px 60px -22px rgba(29, 41, 81, 0.32), 0 6px 16px -8px rgba(29, 41, 81, 0.12); }
+    .cc-glow  { box-shadow: 0 0 0 1px rgba(255, 212, 79, 0.5), 0 20px 50px -18px rgba(255, 212, 79, 0.45); }
+}
