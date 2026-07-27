@@ -40,7 +40,6 @@ class ClientsManagerTest extends TestCase
         Livewire::actingAs($user)->test(ClientsManager::class)
             ->set('name', 'Aramco Events')
             ->set('organization', 'Energy')
-            ->set('contact_name', 'Sara N.')
             ->set('email', 'sara@aramco.test')
             ->set('logo', UploadedFile::fake()->image('logo.png'))
             ->call('save')

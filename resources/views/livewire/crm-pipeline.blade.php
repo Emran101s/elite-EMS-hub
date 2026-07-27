@@ -50,11 +50,11 @@
             {{-- ══════════ THE PIPELINE ══════════ --}}
             <div class="mb-3 flex flex-wrap items-baseline gap-2">
                 <h2 class="pf text-h1 font-bold text-navy-900">Pipeline</h2>
-                <span class="text-xs text-muted">click a deal to inspect · move it with the stage buttons</span>
+                <span class="text-xs text-muted">click a deal to inspect · drag it to another lane, or use the stage button</span>
             </div>
 
             <div class="scrollbar-none -mx-1 overflow-x-auto px-1">
-                <div class="grid min-w-[860px] grid-cols-4 gap-4">
+                <div class="grid min-w-[860px] grid-cols-4 gap-4" data-pipeline>
                     @foreach ($lanes as $lane)
                         <div>
                             <div class="mb-2.5 flex items-center gap-2">
@@ -63,8 +63,9 @@
                                 <span class="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-white px-1.5 text-[10.5px] font-bold text-navy-600 ring-1 ring-line">{{ $lane['deals']->count() }}</span>
                             </div>
 
+                            <div data-lane="{{ $lane['key'] }}" class="min-h-[60px]">
                             @forelse ($lane['deals'] as $deal)
-                                <div wire:key="deal-{{ $deal->id }}"
+                                <div wire:key="deal-{{ $deal->id }}" data-deal="{{ $deal->id }}"
                                      @class([
                                          'mb-3 rounded-2xl border bg-white p-3.5 transition',
                                          'border-gold-400 ring-1 ring-gold-300' => $selected?->id === $deal->id,
@@ -114,8 +115,9 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11px] text-muted">Nothing here.</p>
+                                <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11px] text-muted">Drop a deal here.</p>
                             @endforelse
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -175,16 +177,21 @@
                         @foreach ([
                             ['Value', $money($selected->value_cents, $selected->currency)],
                             ['Weighted', $money($selected->weightedCents(), $selected->currency)],
-                            ['Client', $selected->client?->name ?? '—'],
+                            ['Client', $selected->client?->name ?? '—', $selected->client ? route('crm.client', $selected->client) : null],
                             ['Contact', $selected->contact?->name ?? 'None set'],
                             ['Owner', $selected->owner?->name ?? 'Unassigned'],
                             ['Decision by', $selected->expected_close_on?->format('d M Y') ?? '—'],
                             ['Event date', $selected->expected_event_on?->format('d M Y') ?? '—'],
                             ['Source', $selected->source ?? '—'],
-                        ] as [$k, $v])
+                        ] as $row)
+                            @php [$k, $v] = $row; $href = $row[2] ?? null; @endphp
                             <div class="flex justify-between gap-3 border-b border-line/70 pb-2 text-[12px] last:border-0">
                                 <span class="text-muted">{{ $k }}</span>
-                                <span class="truncate font-semibold text-navy-900">{{ $v }}</span>
+                                @if ($href)
+                                    <a href="{{ $href }}" class="truncate font-semibold text-gold-700 transition hover:text-gold-800">{{ $v }} →</a>
+                                @else
+                                    <span class="truncate font-semibold text-navy-900">{{ $v }}</span>
+                                @endif
                             </div>
                         @endforeach
 
@@ -277,6 +284,30 @@
             @endif
         </aside>
     </div>
+
+    @script
+    <script>
+        /* Drag a deal to another lane. The stage buttons on each card do the same
+           thing and stay the accessible path — this is a shortcut, not the only
+           way through. Winning is deliberately NOT draggable: it creates an event
+           and redirects, which is too much to trigger by accident. */
+        const wire = $wire;
+        document.querySelectorAll('[data-lane]').forEach(lane => {
+            if (lane.dataset.sortable) return;
+            lane.dataset.sortable = '1';
+            new Sortable(lane, {
+                group: 'pipeline',
+                animation: 150,
+                ghostClass: 'opacity-40',
+                onAdd(event) {
+                    const id = event.item.dataset.deal;
+                    const stage = event.to.dataset.lane;
+                    if (id && stage) wire.moveTo(Number(id), stage);
+                },
+            });
+        });
+    </script>
+    @endscript
 
     {{-- ══════════ Deal form ══════════ --}}
     @if ($showForm)

@@ -183,6 +183,74 @@ class CrmPipelineTest extends TestCase
         $this->assertFalse($activity->follow_up_done);
     }
 
+    public function test_the_client_record_shows_people_deals_and_delivered_work(): void
+    {
+        $user = User::factory()->create();
+        $deal = $this->deal();
+        $client = $deal->client;
+        Contact::create(['client_id' => $client->id, 'name' => 'Layla Haddad', 'title' => 'Head of Events', 'is_primary' => true]);
+
+        Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+            ->assertSee('Layla Haddad')
+            ->assertSee('Head of Events')
+            ->assertSee('Regional Summit 2027')
+            ->assertSee('Lifetime value')
+            ->assertSee('Win rate');
+    }
+
+    public function test_archived_events_are_not_counted_as_delivered_work(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $deal = $this->deal();
+
+        $event = app(DealPipeline::class)->win($deal->fresh());
+        $live = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $deal->client]);
+        $this->assertSame(1, $live->viewData('stats')['events']);
+
+        // Archiving it means it was not delivered — the record must stop counting it.
+        $event->update(['archived_at' => now()]);
+        $after = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $deal->client]);
+        $this->assertSame(0, $after->viewData('stats')['events']);
+        $this->assertSame(0, $after->viewData('stats')['lifetime']);
+    }
+
+    public function test_the_first_contact_added_becomes_primary_and_the_role_moves_on_delete(): void
+    {
+        $user = User::factory()->create();
+        $client = Client::create(['name' => 'Deep Root']);
+
+        $record = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+            ->set('c_name', 'Mustafa Sultan')->call('saveContact');
+
+        $first = $client->contacts()->firstOrFail();
+        $this->assertTrue($first->is_primary, 'the first person on a client is its primary');
+
+        $record->set('c_name', 'Rania Odeh')->call('saveContact');
+        $second = $client->contacts()->where('name', 'Rania Odeh')->firstOrFail();
+        $this->assertFalse($second->fresh()->is_primary);
+
+        // Deleting the primary must hand the role on, not leave the client without one.
+        $record->call('deleteContact', $first->id);
+        $this->assertTrue($second->fresh()->is_primary);
+    }
+
+    public function test_an_activity_can_be_logged_against_a_client_with_no_deal(): void
+    {
+        $user = User::factory()->create();
+        $client = Client::create(['name' => 'World People Assembly']);
+
+        Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+            ->set('a_type', 'meeting')
+            ->set('a_subject', 'Coffee with the new director')
+            ->call('logActivity');
+
+        $activity = DealActivity::firstWhere('subject', 'Coffee with the new director');
+        $this->assertNotNull($activity);
+        $this->assertNull($activity->deal_id, 'a relationship does not pause between opportunities');
+        $this->assertSame($client->id, $activity->client_id);
+    }
+
     public function test_a_client_can_hold_several_contacts(): void
     {
         $client = Client::create(['name' => 'Ernst & Young MENA']);

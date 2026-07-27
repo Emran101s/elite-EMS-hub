@@ -227,6 +227,7 @@ Route::middleware('auth')->group(function () {
 
     // The pipeline: the half of the business that happens before an event.
     Route::get('/crm', \App\Livewire\CrmPipeline::class)->name('crm.index');
+    Route::get('/crm/clients/{client}', \App\Livewire\ClientRecord::class)->name('crm.client');
 
     // Modules still awaiting their build phase render the generic stub.
     foreach (['finance', 'assets', 'reports', 'ai-assistant'] as $key) {

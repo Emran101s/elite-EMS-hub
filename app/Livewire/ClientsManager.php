@@ -20,8 +20,6 @@ class ClientsManager extends Component
 
     public string $organization = '';
 
-    public string $contact_name = '';
-
     public string $email = '';
 
     public string $phone = '';
@@ -37,7 +35,7 @@ class ClientsManager extends Component
 
     public function newItem(): void
     {
-        $this->reset(['editingId', 'name', 'organization', 'contact_name', 'email', 'phone', 'website', 'notes', 'logo']);
+        $this->reset(['editingId', 'name', 'organization', 'email', 'phone', 'website', 'notes', 'logo']);
         $this->resetValidation();
         $this->showForm = true;
     }
@@ -48,7 +46,6 @@ class ClientsManager extends Component
         $this->editingId = $c->id;
         $this->name = $c->name;
         $this->organization = $c->organization ?? '';
-        $this->contact_name = $c->contact_name ?? '';
         $this->email = $c->email ?? '';
         $this->phone = $c->phone ?? '';
         $this->website = $c->website ?? '';
@@ -63,7 +60,6 @@ class ClientsManager extends Component
         $this->validate([
             'name' => ['required', 'string', 'max:160'],
             'organization' => ['nullable', 'string', 'max:160'],
-            'contact_name' => ['nullable', 'string', 'max:160'],
             'email' => ['nullable', 'email', 'max:190'],
             'phone' => ['nullable', 'string', 'max:60'],
             'website' => ['nullable', 'string', 'max:190'],
@@ -74,7 +70,6 @@ class ClientsManager extends Component
         $data = [
             'name' => trim($this->name),
             'organization' => trim($this->organization) ?: null,
-            'contact_name' => trim($this->contact_name) ?: null,
             'email' => trim($this->email) ?: null,
             'phone' => trim($this->phone) ?: null,
             'website' => trim($this->website) ?: null,
@@ -107,7 +102,8 @@ class ClientsManager extends Component
         $clients = Client::when($this->search !== '', fn ($q) => $q
             ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')
                 ->orWhere('organization', 'like', '%'.$this->search.'%')
-                ->orWhere('contact_name', 'like', '%'.$this->search.'%')))
+                ->orWhereHas('contacts', fn ($c) => $c->where('name', 'like', '%'.$this->search.'%'))))
+            ->with('primaryContact')
             ->withCount('events')
             ->orderBy('name')->get();
 

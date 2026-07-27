@@ -42,7 +42,7 @@
                             </div>
                         </td>
                         <td class="px-3 py-3">
-                            <p class="text-xs font-semibold text-navy-700">{{ $c->contact_name ?: '—' }}</p>
+                            <p class="text-xs font-semibold text-navy-700">{{ $c->primaryContact?->name ?: '—' }}</p>
                             <p class="text-micro text-muted">{{ $c->email ?: $c->phone ?: '' }}</p>
                         </td>
                         <td class="px-3 py-3 text-center">
@@ -50,6 +50,10 @@
                         </td>
                         <td class="px-3 py-3">
                             <div class="flex items-center justify-end gap-1">
+                                {{-- The record is where people, deals and history live;
+                                     this form only edits the organisation itself. --}}
+                                <a href="{{ route('crm.client', $c) }}" wire:click.stop
+                                   class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 transition hover:bg-navy-900 hover:text-white">Record →</a>
                                 <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
                                 <button type="button" wire:click.stop="delete({{ $c->id }})"
                                         wire:confirm="Delete {{ $c->name }}?{{ $c->events_count ? ' '.$c->events_count.' event(s) will be unlinked.' : '' }}"
@@ -106,15 +110,11 @@
                         </div>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Primary contact</label>
-                            <input type="text" wire:model="contact_name" class="input h-10 text-sm" placeholder="e.g. Noura Al-Sayed">
-                        </div>
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Website</label>
-                            <input type="text" wire:model="website" class="input h-10 text-sm" placeholder="e.g. qta.gov.qa">
-                        </div>
+                    {{-- People live on the client record now, where a client can
+                         have several of them. This form is the organisation only. --}}
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow">Website</label>
+                        <input type="text" wire:model="website" class="input h-10 text-sm" placeholder="e.g. qta.gov.qa">
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
