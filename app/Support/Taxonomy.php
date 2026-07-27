@@ -111,20 +111,54 @@ class Taxonomy
     /**
      * key => label, ready for a select. Falls back to the constant while the
      * table is empty, so a fresh install and a seeded one behave the same.
+     *
+     * Ordered as the list is displayed: each parent followed by its children.
+     * Hiding a parent hides its branch — a sub-category of something you no
+     * longer offer is not something you offer either. label() still resolves
+     * every one of them, so records keep reading correctly.
      */
     public static function options(string $taxonomy): array
     {
-        $terms = self::terms($taxonomy);
-
-        return $terms->isEmpty()
-            ? self::defaults($taxonomy)
-            : $terms->pluck('label', 'key')->all();
+        return collect(self::optionRows($taxonomy))->pluck('label', 'key')->all();
     }
 
     /** Just the values, for a free-text field's datalist. */
     public static function values(string $taxonomy): array
     {
         return array_keys(self::options($taxonomy));
+    }
+
+    /**
+     * The list walked in display order, parents followed by their children.
+     *
+     * This is what a <select> renders from when a list has sub-categories:
+     * `depth` says how far to indent, and a parent is still selectable — you
+     * can book against Production without saying which part of it.
+     *
+     * @return array<int,array{key:string,label:string,depth:int,color:?string}>
+     */
+    public static function optionRows(string $taxonomy, bool $withInactive = false): array
+    {
+        $terms = self::terms($taxonomy, $withInactive);
+
+        if ($terms->isEmpty()) {
+            return collect(self::defaults($taxonomy))
+                ->map(fn ($label, $key) => ['key' => (string) $key, 'label' => $label, 'depth' => 0, 'color' => null])
+                ->values()->all();
+        }
+
+        $byParent = $terms->groupBy('parent_id');
+        $rows = [];
+
+        foreach ($byParent->get('', $byParent->get(null, collect())) as $root) {
+            $rows[] = ['key' => $root->key, 'label' => $root->label, 'depth' => 0, 'color' => $root->color];
+
+            foreach ($byParent->get($root->id, collect()) as $child) {
+                $rows[] = ['key' => $child->key, 'label' => $child->label, 'depth' => 1, 'color' => $child->color ?: $root->color];
+            }
+        }
+
+        return $rows;
     }
 
     /**

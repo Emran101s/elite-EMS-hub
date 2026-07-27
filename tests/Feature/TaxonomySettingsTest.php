@@ -223,6 +223,112 @@ class TaxonomySettingsTest extends TestCase
         $this->assertSame('gala_dinner', $event->fresh()->type);
     }
 
+    /** Make a term and hand it back, since most of these start with one. */
+    private function add(User $user, string $taxonomy, string $label, ?int $parentId = null): TaxonomyTerm
+    {
+        Livewire::actingAs($user)->test(TaxonomySettings::class)
+            ->call('pick', $taxonomy)
+            ->call('newTerm', $parentId)
+            ->set('label', $label)
+            ->call('save');
+
+        Taxonomy::forget();
+
+        return TaxonomyTerm::in($taxonomy)->where('key', Taxonomy::deriveKey($taxonomy, $label))->firstOrFail();
+    }
+
+    public function test_a_term_can_sit_under_another_and_is_offered_beneath_it(): void
+    {
+        $user = $this->boot();
+
+        $parent = $this->add($user, 'supplier_category', 'Production Services');
+        $child = $this->add($user, 'supplier_category', 'Rigging', $parent->id);
+
+        $this->assertSame($parent->id, $child->parent_id);
+
+        // A sub-category is a real option, offered directly after its parent.
+        $rows = collect(Taxonomy::optionRows('supplier_category'));
+        $at = $rows->search(fn ($r) => $r['key'] === $parent->key);
+
+        $this->assertSame(0, $rows[$at]['depth']);
+        $this->assertSame($child->key, $rows[$at + 1]['key'], 'a child follows its parent');
+        $this->assertSame(1, $rows[$at + 1]['depth']);
+        $this->assertArrayHasKey($child->key, Taxonomy::options('supplier_category'));
+    }
+
+    /**
+     * Nesting is one level deep. Everything that would make it deeper — or
+     * circular — flattens rather than erroring, so the screen cannot be used
+     * to build a tree nobody can read.
+     */
+    public function test_nesting_never_goes_more_than_one_level_deep(): void
+    {
+        $user = $this->boot();
+
+        $parent = $this->add($user, 'supplier_category', 'Production Services');
+        $child = $this->add($user, 'supplier_category', 'Rigging', $parent->id);
+
+        // A grandchild: parented to something that is already a child.
+        $grandchild = $this->add($user, 'supplier_category', 'Truss Hire', $child->id);
+        $this->assertNull($grandchild->parent_id, 'a child cannot itself be a parent');
+
+        // A term parented to itself.
+        Livewire::actingAs($user)->test(TaxonomySettings::class)
+            ->call('pick', 'supplier_category')
+            ->call('edit', $parent->id)
+            ->set('parent_id', $parent->id)
+            ->call('save');
+
+        $this->assertNull($parent->fresh()->parent_id, 'a term cannot be its own parent');
+
+        // A term that already has children being made into one.
+        $other = $this->add($user, 'supplier_category', 'Logistics Services');
+
+        Livewire::actingAs($user)->test(TaxonomySettings::class)
+            ->call('pick', 'supplier_category')
+            ->call('edit', $parent->id)
+            ->set('parent_id', $other->id)
+            ->call('save');
+
+        $this->assertNull($parent->fresh()->parent_id, 'a term with children stays at the top');
+    }
+
+    public function test_hiding_a_parent_hides_the_branch_but_labels_still_resolve(): void
+    {
+        $user = $this->boot();
+
+        $parent = $this->add($user, 'supplier_category', 'Production Services');
+        $child = $this->add($user, 'supplier_category', 'Rigging', $parent->id);
+
+        Livewire::actingAs($user)->test(TaxonomySettings::class)->call('toggleActive', $parent->id);
+        Taxonomy::forget();
+
+        $offered = Taxonomy::options('supplier_category');
+        $this->assertArrayNotHasKey($parent->key, $offered);
+        $this->assertArrayNotHasKey($child->key, $offered, 'a sub-category of something you no longer offer is not offered');
+
+        // But every record on either of them still reads correctly.
+        $this->assertSame('Rigging', Taxonomy::label('supplier_category', $child->key));
+        $this->assertSame('Production Services', Taxonomy::label('supplier_category', $parent->key));
+    }
+
+    public function test_deleting_a_parent_promotes_its_children_rather_than_taking_them_with_it(): void
+    {
+        $user = $this->boot();
+
+        $parent = $this->add($user, 'supplier_category', 'Production Services');
+        $child = $this->add($user, 'supplier_category', 'Rigging', $parent->id);
+
+        // Neither is a system term and nothing uses them, so the parent goes.
+        Livewire::actingAs($user)->test(TaxonomySettings::class)
+            ->call('pick', 'supplier_category')
+            ->call('delete', $parent->id);
+
+        $this->assertNull(TaxonomyTerm::find($parent->id));
+        $this->assertModelExists($child->fresh());
+        $this->assertNull($child->fresh()->parent_id, 'the child is still a real value on real records');
+    }
+
     public function test_the_screens_render_and_settings_links_to_them(): void
     {
         $user = $this->boot();
