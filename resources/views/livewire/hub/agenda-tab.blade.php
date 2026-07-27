@@ -14,45 +14,29 @@
     @endphp
 
     {{-- ══════════ COMMAND HEADER ══════════ --}}
-    <div class="mb-4 flex flex-wrap items-stretch gap-3">
-        <div class="strip-dark relative flex min-w-0 flex-1 flex-wrap items-center gap-x-8 gap-y-4 overflow-hidden px-5 py-4">
-            <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.25),transparent_70%)]"></div>
-            <div class="relative flex shrink-0 items-center gap-3">
-                <div class="relative">
-                    <svg class="h-[70px] w-[70px] -rotate-90" viewBox="0 0 60 60">
-                        <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
-                        <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-gold-500)" stroke-width="6" stroke-linecap="round" stroke-dasharray="{{ $hdrRing }}" stroke-dashoffset="{{ $hdrRing - ($hdrRing * $confPct / 100) }}"/>
-                    </svg>
-                    <span class="absolute inset-0 flex items-center justify-center text-sm font-black text-white">{{ $confPct }}%</span>
-                </div>
-                <div>
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-300">Agenda</p>
-                    <p class="pf text-2xl font-black leading-none text-white">{{ $settled }}<span class="text-base text-white/40">/{{ $totalSessions }}</span></p>
-                    <p class="mt-0.5 text-eyebrow font-semibold text-white/55">sessions confirmed</p>
-                </div>
+    <x-module-head eyebrow="Agenda"
+                   :ring="$confPct"
+                   :lead="$settled.' / '.$totalSessions"
+                   lead-note="sessions confirmed"
+                   lead-tone="text-white"
+                   :figures="[
+                       ['Days', $days->count(), 'text-white'],
+                       ['Hours', $agendaHours, 'text-white'],
+                       ['Speakers', $speakerTotal, 'text-white'],
+                       ['Rooms', $roomTotal, 'text-white'],
+                   ]">
+        <x-slot:actions>
+            {{-- The two numbers that mean someone has work to do. --}}
+            <div class="flex h-[52px] min-w-[5.4rem] flex-col justify-center rounded-xl bg-black/20 px-2.5 text-center ring-1 ring-white/10">
+                <span class="text-lg font-black leading-none" style="color: {{ $unconfirmed > 0 ? 'var(--color-warning-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $unconfirmed }}</span>
+                <span class="mt-0.5 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Unconfirmed</span>
             </div>
-
-            <div class="relative flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                @foreach ([['Days', $days->count()], ['Sessions', $totalSessions], ['Hours', $agendaHours], ['Speakers', $speakerTotal], ['Rooms', $roomTotal]] as [$lbl, $val])
-                    <div class="flex min-w-[3.6rem] flex-1 flex-col items-center rounded-lg bg-white/[0.06] py-1.5 ring-1 ring-white/10">
-                        <span class="text-base font-black text-white">{{ $val }}</span>
-                        <span class="text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ $lbl }}</span>
-                    </div>
-                @endforeach
+            <div class="flex h-[52px] min-w-[5.4rem] flex-col justify-center rounded-xl bg-black/20 px-2.5 text-center ring-1 ring-white/10">
+                <span class="text-lg font-black leading-none" style="color: {{ $flaggedCount > 0 ? 'var(--color-danger-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $flaggedCount }}</span>
+                <span class="mt-0.5 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Flagged</span>
             </div>
-
-            <div class="relative flex shrink-0 gap-2">
-                <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
-                    <span class="text-xl font-black leading-none" style="color: {{ $unconfirmed > 0 ? 'var(--color-warning-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $unconfirmed }}</span>
-                    <span class="mt-1 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Unconfirmed</span>
-                </div>
-                <div class="flex h-[62px] w-[4.4rem] flex-col justify-center rounded-xl bg-black/20 px-2 text-center ring-1 ring-white/10">
-                    <span class="text-xl font-black leading-none" style="color: {{ $flaggedCount > 0 ? 'var(--color-danger-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $flaggedCount }}</span>
-                    <span class="mt-1 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Flagged</span>
-                </div>
-            </div>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-module-head>
 
     {{-- ══ Toolbar ══ --}}
     <div class="mb-4 flex flex-wrap items-center gap-2">

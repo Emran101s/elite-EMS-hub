@@ -244,7 +244,9 @@ class BudgetSellPriceTest extends TestCase
             ->assertSee('Cost to us')
             ->assertSee('Charged to client')
             ->assertSee('Gross margin')
-            ->assertSee('Margin %');
+            // The margin percentage is the ring in the shared module header.
+            ->assertSee('Margin')
+            ->assertSee('How it was priced');
     }
 
     /**

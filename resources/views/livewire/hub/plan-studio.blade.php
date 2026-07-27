@@ -7,44 +7,24 @@
         $pct = $stats['total'] ? (int) round($stats['done'] / $stats['total'] * 100) : 0;
         $daysLeft = $event->starts_at ? (int) now()->startOfDay()->diffInDays($event->starts_at->startOfDay(), false) : null;
     @endphp
-    <div class="mb-4 flex flex-wrap items-stretch gap-3">
-        <div class="strip-dark relative flex min-w-0 flex-1 flex-wrap items-center gap-x-10 gap-y-4 overflow-hidden px-5 py-4">
-            <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.25),transparent_70%)]"></div>
-
-            <div class="relative shrink-0">
-                <p class="eyebrow-gold">Countdown to Event Day</p>
-                <p class="mt-1 flex items-baseline gap-2">
-                    <span class="pf text-[42px] font-black leading-none text-gold-400">{{ $daysLeft !== null ? max($daysLeft, 0) : '—' }}</span>
-                    <span class="text-sm font-semibold text-white/70">{{ $daysLeft !== null && $daysLeft < 0 ? 'days ago' : 'days to go' }}</span>
-                </p>
-                <p class="mt-1 text-micro text-white/45">{{ $event->starts_at?->format('l, j F Y') ?? 'No date set' }}</p>
-            </div>
-
-            <div class="relative min-w-[220px] flex-1">
-                <p class="text-micro font-semibold text-white/70">{{ $stats['done'] }} / {{ $stats['total'] }} done</p>
-                <div class="mt-1.5 flex items-center gap-3">
-                    <span class="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
-                        <span class="block h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-500" style="width: {{ $pct }}%"></span>
-                    </span>
-                    <span class="shrink-0 text-xs font-bold text-gold-300">{{ $pct }}%</span>
-                </div>
-                @if ($stats['overdue'] > 0)
-                    <p class="mt-1.5 text-micro font-semibold text-red-300">⚠ {{ $stats['overdue'] }} overdue {{ str('task')->plural($stats['overdue']) }}</p>
-                @elseif ($stats['needApproval'] > 0)
-                    <p class="mt-1.5 text-micro font-semibold text-amber-300">{{ $stats['needApproval'] }} awaiting sign-off</p>
-                @else
-                    <p class="mt-1.5 text-micro font-semibold text-emerald-300">Nothing overdue</p>
-                @endif
-            </div>
-        </div>
-
-        <div class="flex shrink-0 items-center gap-2">
-            <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="btn-ghost h-11">
-                <x-icon name="chart" class="h-4 w-4" /> Export PDF
+    <x-module-head eyebrow="Countdown to Event Day"
+                   :lead="$daysLeft !== null ? max($daysLeft, 0) : '—'"
+                   :lead-note="($daysLeft !== null && $daysLeft < 0 ? 'days ago' : 'days to go').' · '.($event->starts_at?->format('l, j F Y') ?? 'No date set')"
+                   :ring="$pct"
+                   :ring-label="$pct.'%'"
+                   :figures="[
+                       ['Done', $stats['done'].' / '.$stats['total'], 'text-white'],
+                       [$stats['overdue'] > 0 ? 'Overdue' : 'Awaiting sign-off',
+                        $stats['overdue'] > 0 ? $stats['overdue'] : $stats['needApproval'],
+                        $stats['overdue'] > 0 ? 'text-red-300' : ($stats['needApproval'] > 0 ? 'text-amber-300' : 'text-emerald-300')],
+                   ]">
+        <x-slot:actions>
+            <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="btn-ghost btn-sm">
+                <x-icon name="chart" class="h-3.5 w-3.5" /> Export PDF
             </a>
-            <button type="button" wire:click="addItem" class="btn-gold h-11">＋ Add task</button>
-        </div>
-    </div>
+            <button type="button" wire:click="addItem" class="btn-gold btn-sm">＋ Add task</button>
+        </x-slot:actions>
+    </x-module-head>
 
     {{-- ══════════ OWNER FILTER ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-1.5">
