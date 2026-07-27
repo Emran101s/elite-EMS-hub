@@ -5,6 +5,7 @@ use App\Http\Controllers\AgendaTimelinePdfController;
 use App\Http\Controllers\AttendeeTemplateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BudgetPdfController;
+use App\Http\Controllers\CommandCenterController;
 use App\Http\Controllers\ContractDocumentPdfController;
 use App\Http\Controllers\DailyMovementSchedulePdfController;
 use App\Http\Controllers\DriverTripSheetPdfController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\EventContractPdfController;
 use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
+use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\MasterSchedulePdfController;
 use App\Http\Controllers\PlanStudioPdfController;
 use App\Http\Controllers\RoomEquipmentPdfController;
@@ -29,26 +31,38 @@ use App\Http\Controllers\TransportManifestTemplateController;
 use App\Http\Controllers\TransportMasterPlanPdfController;
 use App\Http\Controllers\TransportPlanTemplateController;
 use App\Http\Controllers\VipTransferSheetPdfController;
+use App\Livewire\ClientRecord;
 use App\Livewire\ClientsManager;
 use App\Livewire\CommandCenter;
 use App\Livewire\CompanySettings;
+use App\Livewire\CrmPipeline;
 use App\Livewire\DefaultsSettings;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
+use App\Livewire\FinanceOverview;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\SponsorPackagesSettings;
+use App\Livewire\TaxonomySettings;
 use App\Livewire\TeamRoster;
 use App\Livewire\TransportDispatch;
 use App\Livewire\TransportLive;
 use App\Livewire\TransportSettings;
 use App\Livewire\VenuesManager;
+use App\Models\Client;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventSponsor;
 use App\Models\Project;
+use App\Models\Requirement;
 use App\Models\Supplier;
 use App\Models\Task;
+use App\Models\TaxonomyTerm;
+use App\Models\TransportDriver;
+use App\Models\TransportVehicle;
+use App\Models\User;
+use App\Models\Venue;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -62,14 +76,14 @@ Route::middleware('auth')->group(function () {
 
     // The Command Center is the platform's front door: the KPI strip, the
     // Operations Hub, and the live rails down the right.
-    Route::get('/', \App\Http\Controllers\CommandCenterController::class)->name('home');
+    Route::get('/', CommandCenterController::class)->name('home');
 
     // The Operations Room — the same portfolio, arranged as a worklist.
     Route::get('/operations-room', CommandCenter::class)->name('operations-room');
 
     // Design prototype. Real records, a proposed visual language; nothing in
     // the platform depends on it, so it can be kept or deleted whole.
-    Route::get('/concept/flow', \App\Http\Controllers\FlowBoardController::class)->name('concept.flow');
+    Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 
@@ -217,20 +231,38 @@ Route::middleware('auth')->group(function () {
         'total' => EventSponsor::sum('amount_cents'),
     ]))->name('sponsors.index');
 
-    // Workspace Settings — hub + live master-data sections.
-    Route::view('/settings', 'modules.settings')->name('settings.index');
+    /*
+     * Workspace Settings — the hub, plus the live master-data sections.
+     *
+     * The counts are the point of the hub: a library index that does not say
+     * how much is in each library is just a menu you have to open to read.
+     */
+    Route::get('/settings', fn () => view('modules.settings', [
+        'counts' => [
+            'taxonomies.index' => TaxonomyTerm::where('is_active', true)->count(),
+            'defaults.index' => count(CompanyProfile::current()->budgetCategories()),
+            'team.index' => User::count(),
+            'clients.index' => Client::count(),
+            'suppliers.index' => Supplier::count(),
+            'venues.index' => Venue::count(),
+            'requirements.index' => Requirement::count(),
+            'sponsor-packages.index' => count(CompanyProfile::current()->sponsorPackages()),
+            'transport-settings.index' => TransportVehicle::count() + TransportDriver::count(),
+        ],
+    ]))->name('settings.index');
     Route::get('/settings/clients', ClientsManager::class)->name('clients.index');
     Route::get('/settings/company', CompanySettings::class)->name('company.index');
+    Route::get('/settings/types', TaxonomySettings::class)->name('taxonomies.index');
     Route::get('/settings/defaults', DefaultsSettings::class)->name('defaults.index');
     Route::get('/settings/transport', TransportSettings::class)->name('transport-settings.index');
     Route::get('/settings/sponsor-packages', SponsorPackagesSettings::class)->name('sponsor-packages.index');
 
     // The pipeline: the half of the business that happens before an event.
-    Route::get('/crm', \App\Livewire\CrmPipeline::class)->name('crm.index');
-    Route::get('/crm/clients/{client}', \App\Livewire\ClientRecord::class)->name('crm.client');
+    Route::get('/crm', CrmPipeline::class)->name('crm.index');
+    Route::get('/crm/clients/{client}', ClientRecord::class)->name('crm.client');
 
     // Money across the book — the layer above each event's own budget.
-    Route::get('/finance', \App\Livewire\FinanceOverview::class)->name('finance.index');
+    Route::get('/finance', FinanceOverview::class)->name('finance.index');
 
     // Modules still awaiting their build phase render the generic stub.
     foreach (['assets', 'reports', 'ai-assistant'] as $key) {

@@ -65,6 +65,21 @@
                     <input id="st-newclient" type="text" wire:model="new_client" class="input h-10 text-sm" placeholder="Creates on save">
                 </div>
                 <div>
+                    {{-- The type sets the crest and was previously fixed at creation.
+                         The options come from Settings → Types & lists. --}}
+                    <label class="field-label !mb-1 !text-eyebrow" for="st-type">Event type</label>
+                    <select id="st-type" wire:model="type" class="input h-10 text-sm">
+                        @foreach (\App\Support\Taxonomy::options('event_type') as $tv => $tl)
+                            <option value="{{ $tv }}">{{ $tl }}</option>
+                        @endforeach
+                        {{-- A type that has since been retired must still show as this event's. --}}
+                        @unless (array_key_exists($event->type, \App\Support\Taxonomy::options('event_type')))
+                            <option value="{{ $event->type }}">{{ \App\Support\Taxonomy::label('event_type', $event->type) }}</option>
+                        @endunless
+                    </select>
+                    @error('type') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label class="field-label !mb-1 !text-eyebrow" for="st-part">Expected participants</label>
                     <input id="st-part" type="number" min="0" wire:model="expected_participants" class="input h-10 text-sm" placeholder="e.g. 400">
                     @error('expected_participants') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror

@@ -3,7 +3,7 @@
 @endphp
 <div>
     <datalist id="room-categories">
-        @foreach (\App\Models\EventAccommodation::CATEGORIES as $c)<option value="{{ $c }}"></option>@endforeach
+        @foreach (\App\Support\Taxonomy::values('room_category') as $c)<option value="{{ $c }}"></option>@endforeach
     </datalist>
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-4">

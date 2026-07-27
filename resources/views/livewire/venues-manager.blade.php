@@ -90,7 +90,7 @@
                 <x-field label="Type">
                     <input type="text" wire:model="type" class="input h-10 text-sm" placeholder="Hotel" list="venue-types">
                     <datalist id="venue-types">
-                        @foreach (\App\Models\Venue::TYPES as $t)<option value="{{ $t }}"></option>@endforeach
+                        @foreach (\App\Support\Taxonomy::values('venue_type') as $t)<option value="{{ $t }}"></option>@endforeach
                     </datalist>
                 </x-field>
                 <x-field label="Capacity" :error="$errors->first('capacity')">

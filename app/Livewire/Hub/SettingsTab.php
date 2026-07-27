@@ -6,8 +6,10 @@ use App\Models\Client;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
+use App\Support\Taxonomy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -53,6 +55,9 @@ class SettingsTab extends Component
 
     public string $stage = 'planning';
 
+    /** The kind of event. It sets the crest, and it was previously fixed at creation. */
+    public string $type = 'conference';
+
     // Ownership
     public ?int $project_manager_id = null;
 
@@ -93,6 +98,7 @@ class SettingsTab extends Component
         $this->budget = $e->budget_cents ? (string) ($e->budget_cents / 100) : '';
         $this->currency = $e->currency ?? 'USD';
         $this->stage = $e->stage;
+        $this->type = $e->type;
         $this->project_manager_id = $e->project_manager_id;
         $this->venue_id = $e->venue_id;
         $theme = $e->theme();
@@ -169,6 +175,9 @@ class SettingsTab extends Component
             'budget' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['required', 'in:'.implode(',', array_keys(Event::CURRENCIES))],
             'stage' => ['required', 'in:'.implode(',', Event::STAGES)],
+            // Any term still offered, plus whatever this event already is: an
+            // event whose type was later retired must still be saveable.
+            'type' => ['required', Rule::in(array_merge(array_keys(Taxonomy::options('event_type')), [$this->event->type]))],
             'project_manager_id' => ['nullable', 'exists:users,id'],
             'venue_id' => ['nullable', 'exists:venues,id'],
             'cover' => ['nullable', 'image', 'max:8192'],
@@ -191,6 +200,7 @@ class SettingsTab extends Component
             'budget_cents' => (int) round((float) ($this->budget ?: 0) * 100),
             'currency' => $this->currency,
             'stage' => $this->stage,
+            'type' => $this->type,
             'project_manager_id' => $this->project_manager_id,
             'venue_id' => $this->venue_id,
             'cover_path' => $this->cover ? 'storage/'.$this->cover->store('event-covers', 'public') : $this->event->cover_path,

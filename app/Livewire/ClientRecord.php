@@ -6,8 +6,8 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\DealActivity;
+use App\Support\Taxonomy;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
@@ -17,7 +17,6 @@ use Livewire\Component;
  * we know there, what have we done for them, and what did they pay". Without it
  * the CRM is a list of deals that happen to share a name.
  */
-
 class ClientRecord extends Component
 {
     public Client $client;
@@ -129,7 +128,7 @@ class ClientRecord extends Component
     public function logActivity(): void
     {
         $data = $this->validate([
-            'a_type' => ['required', Rule::in(array_keys(DealActivity::TYPES))],
+            'a_type' => ['required', Rule::in(array_keys(Taxonomy::options('activity_type')))],
             'a_subject' => ['required', 'string', 'max:160'],
             'a_body' => ['nullable', 'string'],
             'a_contact_id' => ['nullable', 'exists:contacts,id'],

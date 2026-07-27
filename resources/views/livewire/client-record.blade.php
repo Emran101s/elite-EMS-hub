@@ -168,7 +168,7 @@
                 @if ($showActivity)
                     <div class="space-y-2 border-b border-line bg-page/50 p-4">
                         <div class="flex gap-1">
-                            @foreach (\App\Models\DealActivity::TYPES as $tv => [$tl, $ti])
+                            @foreach (\App\Support\Taxonomy::options('activity_type') as $tv => $tl)
                                 <button type="button" wire:click="$set('a_type', '{{ $tv }}')"
                                         @class(['flex-1 rounded-lg border py-1.5 text-[10.5px] font-bold transition',
                                                 'border-navy-900 bg-navy-900 text-white' => $a_type === $tv,

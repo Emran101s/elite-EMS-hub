@@ -8,6 +8,7 @@ use App\Models\Deal;
 use App\Models\DealActivity;
 use App\Models\User;
 use App\Services\DealPipeline;
+use App\Support\Taxonomy;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -199,7 +200,7 @@ class CrmPipeline extends Component
         $deal = Deal::findOrFail($this->selectedId);
 
         $data = $this->validate([
-            'a_type' => ['required', Rule::in(array_keys(DealActivity::TYPES))],
+            'a_type' => ['required', Rule::in(array_keys(Taxonomy::options('activity_type')))],
             'a_subject' => ['required', 'string', 'max:160'],
             'a_body' => ['nullable', 'string'],
             'a_follow_up_on' => ['nullable', 'date'],

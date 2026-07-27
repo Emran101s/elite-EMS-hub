@@ -14,7 +14,7 @@
             <div>
                 <label class="field-label !mb-1 !text-eyebrow" for="r-cat">Category</label>
                 <select id="r-cat" wire:model="category" class="input h-10 text-sm">
-                    @foreach (\App\Models\EventRisk::CATEGORIES as $categoryOption)<option value="{{ $categoryOption }}">{{ str($categoryOption)->replace('_', ' ')->title() }}</option>@endforeach
+                    @foreach (\App\Support\Taxonomy::options('risk_category') as $cv => $cl)<option value="{{ $cv }}">{{ $cl }}</option>@endforeach
                 </select>
             </div>
             <div>

@@ -5,6 +5,7 @@ namespace App\Livewire\Hub;
 use App\Models\Event;
 use App\Models\EventRisk;
 use App\Models\User;
+use App\Support\Taxonomy;
 use Livewire\Component;
 
 class RisksTab extends Component
@@ -36,7 +37,7 @@ class RisksTab extends Component
     {
         $this->validate([
             'title' => ['required', 'string', 'max:160'],
-            'category' => ['required', 'in:'.implode(',', EventRisk::CATEGORIES)],
+            'category' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('risk_category')))],
             'probability' => ['required', 'integer', 'between:1,5'],
             'impact' => ['required', 'integer', 'between:1,5'],
             'mitigation' => ['nullable', 'string', 'max:500'],

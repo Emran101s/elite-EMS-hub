@@ -1,39 +1,73 @@
-<x-layouts.app title="Settings" subtitle="Workspace master data & platform configuration — the libraries every event draws from.">
+<x-layouts.app title="Settings" subtitle="Everything the platform draws from — your company, your libraries, your lists.">
     @php
-        $sections = [
-            ['glyph' => '🎛', 'title' => 'Equipment Catalog', 'desc' => 'Reusable equipment & prices for venues and events.', 'route' => 'requirements.index', 'live' => true],
-            ['glyph' => '📍', 'title' => 'Venues & Locations', 'desc' => 'Your library of hotels, halls and sites — reused by every event.', 'route' => 'venues.index', 'live' => true],
-            ['glyph' => '🚚', 'title' => 'Suppliers', 'desc' => 'Supplier directory shared across all events.', 'route' => 'suppliers.index', 'live' => true],
-            ['glyph' => '👥', 'title' => 'Team & Roles', 'desc' => 'Members, roles and profile photos.', 'route' => 'team.index', 'live' => true],
-            ['glyph' => '🤝', 'title' => 'Clients', 'desc' => 'Your client directory — events attach to a client.', 'route' => 'clients.index', 'live' => true],
-            ['glyph' => '🏆', 'title' => 'Sponsorship Packages', 'desc' => 'Default sponsorship tiers, prices, slots & benefits.', 'route' => 'sponsor-packages.index', 'live' => true],
-            ['glyph' => '🏢', 'title' => 'Company Profile', 'desc' => 'Brand, logo, default currency & timezone.', 'route' => 'company.index', 'live' => true],
-            ['glyph' => '⚙️', 'title' => 'Defaults & Templates', 'desc' => 'Default budget categories & management fee for new events.', 'route' => 'defaults.index', 'live' => true],
-            ['glyph' => '🚐', 'title' => 'Transport Types', 'desc' => 'Vehicles and their capacity, plus the services you offer.', 'route' => 'transport-settings.index', 'live' => true],
+        // Grouped, because eleven equal cards make you read all eleven to find
+        // one. Every label is the destination page's own title, so the link and
+        // the page it opens agree.
+        $groups = [
+            [
+                'title' => 'Workspace',
+                'note' => 'Who you are, and what every new event inherits.',
+                'items' => [
+                    ['Company Profile', 'Brand, logo, address, default currency, timezone and management fee.', 'company.index', 'cog', null],
+                    ['Types & Lists', 'Event types, session types, supplier and risk categories, deal sources — the lists every dropdown draws from.', 'taxonomies.index', 'grid', 'terms'],
+                    ['Defaults & Templates', 'The budget categories, ticket types and fee a new event starts with.', 'defaults.index', 'clipboard', 'categories'],
+                    ['Team & Roles', 'Members, their roles and profile photos.', 'team.index', 'users', 'members'],
+                ],
+            ],
+            [
+                'title' => 'Directories',
+                'note' => 'The libraries events pull from instead of retyping.',
+                'items' => [
+                    ['Clients', 'Every client, their people, and the record of what you have done together.', 'clients.index', 'identification', 'clients'],
+                    ['Suppliers', 'The supplier directory shared across all events.', 'suppliers.index', 'truck', 'suppliers'],
+                    ['Venues & Locations', 'Hotels, halls and sites — reused by every event.', 'venues.index', 'building', 'venues'],
+                ],
+            ],
+            [
+                'title' => 'Catalogues',
+                'note' => 'Priced things you offer or hire, ready to drop into an event.',
+                'items' => [
+                    ['Equipment Catalog', 'Reusable equipment and prices for venues and events.', 'requirements.index', 'archive', 'items'],
+                    ['Sponsorship Packages', 'Default tiers, prices, slots and benefits.', 'sponsor-packages.index', 'star', 'tiers'],
+                    ['Transport Catalogue', 'Vehicles, capacities, drivers and the services you offer.', 'transport-settings.index', 'truck', 'vehicles & drivers'],
+                ],
+            ],
         ];
     @endphp
 
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        @foreach ($sections as $s)
-            @php $href = $s['route'] ? route($s['route']) : null; @endphp
-            <a @if ($href) href="{{ $href }}" @endif
-                class="group flex items-start gap-4 rounded-2xl border border-line bg-white p-5 shadow-sm transition duration-200 {{ $href ? 'cursor-pointer hover:-translate-y-1 hover:border-gold-200 hover:shadow-[0_22px_46px_-20px_rgba(11,31,58,0.5)]' : 'cursor-default opacity-70' }}">
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-xl transition group-hover:bg-gold-50">{{ $s['glyph'] }}</span>
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2">
-                        <h2 class="pf text-base font-bold text-navy-900">{{ $s['title'] }}</h2>
-                        @if ($s['live'])
-                            <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200">Live</span>
-                        @else
-                            <span class="rounded-full bg-navy-50 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-navy-400">Soon</span>
-                        @endif
-                    </div>
-                    <p class="mt-1 text-xs text-muted">{{ $s['desc'] }}</p>
-                    @if ($href)
-                        <span class="mt-2 inline-block text-[0.68rem] font-semibold text-gold-700 transition group-hover:text-gold-600">Open →</span>
-                    @endif
+    <div class="space-y-6">
+        @foreach ($groups as $group)
+            <section>
+                <div class="mb-3">
+                    <h2 class="pf text-h1 font-bold text-navy-900">{{ $group['title'] }}</h2>
+                    <p class="mt-0.5 text-xs text-muted">{{ $group['note'] }}</p>
                 </div>
-            </a>
+
+                <div class="card divide-y divide-line overflow-hidden">
+                    @foreach ($group['items'] as [$title, $desc, $route, $icon, $unit])
+                        @continue (! \Illuminate\Support\Facades\Route::has($route))
+                        @php $n = $counts[$route] ?? null; @endphp
+                        <a href="{{ route($route) }}" class="group flex items-center gap-4 px-4 py-3.5 transition hover:bg-page/50">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-500 transition group-hover:bg-gold-50 group-hover:text-gold-700">
+                                <x-icon :name="$icon" class="h-4 w-4" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-[13.5px] font-bold text-navy-900">{{ $title }}</span>
+                                <span class="block truncate text-[11.5px] text-muted">{{ $desc }}</span>
+                            </span>
+                            {{-- What is actually in there. A library index that
+                                 makes you open each one to find out is a menu. --}}
+                            @isset ($n)
+                                <span class="hidden shrink-0 text-right sm:block">
+                                    <span class="block text-[15px] font-bold tabular-nums leading-none {{ $n ? 'text-navy-900' : 'text-navy-300' }}">{{ number_format($n) }}</span>
+                                    <span class="mt-0.5 block text-[10px] text-muted">{{ $unit }}</span>
+                                </span>
+                            @endisset
+                            <span class="shrink-0 text-navy-200 transition group-hover:translate-x-0.5 group-hover:text-gold-600">→</span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
         @endforeach
     </div>
 </x-layouts.app>
