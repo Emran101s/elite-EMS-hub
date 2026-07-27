@@ -8,31 +8,15 @@
     @php
         $f = $forecast;
         $tiles = [
-            ['Open deals', $f['count'], 'folder', $f['count'] ? 100 : 0, 'bg-navy-400'],
-            ['Pipeline value', $money($f['value']), 'currency', 100, 'bg-gold-500'],
-            ['Weighted', $money($f['weighted']), 'chart', $f['value'] ? (int) round($f['weighted'] / max($f['value'], 1) * 100) : 0, 'bg-track'],
-            ['Won this month', $f['wonThisMonth'], 'star', min(100, $f['wonThisMonth'] * 25), 'bg-track'],
-            ['Going stale', $f['stale'], 'bell', min(100, $f['stale'] * 25), $f['stale'] ? 'bg-risk' : 'bg-navy-200'],
+            ['Open deals', $f['count'], 'folder', null, null, 'still in play'],
+            ['Pipeline value', $money($f['value']), 'currency', null, null, 'if every one lands'],
+            ['Weighted', $money($f['weighted']), 'chart', $f['value'] ? (int) round($f['weighted'] / max($f['value'], 1) * 100) : 0, 'bg-track', 'by chance of winning'],
+            ['Won this month', $f['wonThisMonth'], 'star', null, null, 'closed and became events'],
+            ['Going stale', $f['stale'], 'bell', null, null, $f['stale'] ? 'nobody has touched them' : 'everything is moving',
+                $f['stale'] ? 'text-risk' : 'text-navy-900'],
         ];
     @endphp
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        @foreach ($tiles as [$label, $value, $icon, $pct, $tone])
-            <div class="rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)]">
-                <div class="flex items-center gap-2">
-                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500">
-                        <x-icon :name="$icon" class="h-3.5 w-3.5" />
-                    </span>
-                    <p class="eyebrow truncate">{{ $label }}</p>
-                </div>
-                <p class="pf mt-2.5 truncate text-[28px] font-bold leading-none text-navy-900">{{ $value }}</p>
-                <div class="mt-3 flex gap-[3px]">
-                    @for ($i = 0; $i < 14; $i++)
-                        <span @class(['h-1 flex-1 rounded-full', $tone => $i < round($pct / 100 * 14), 'bg-navy-50' => $i >= round($pct / 100 * 14)])></span>
-                    @endfor
-                </div>
-            </div>
-        @endforeach
-    </div>
+    <x-stat-strip :stats="$tiles" />
 
     {{-- ══════════ Toolbar ══════════ --}}
     <div class="mt-4 flex flex-wrap items-center gap-2.5">

@@ -26,32 +26,14 @@
             ['Owed to you', $money($t['receivable']), 'bell', 100 - $collectedPct, $t['receivable'] ? 'bg-warn' : 'bg-navy-200', $money($t['collected']).' collected'],
             ['Cost', $money($t['cost']), 'archive', 100, 'bg-gold-500', $money($t['payable']).' unpaid'],
             ['Net', $money($t['net']), 'chart', max(0, (int) ($t['margin'] ?? 0)), $t['net'] >= 0 ? 'bg-track' : 'bg-risk',
-                $t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin on what is priced'],
+                $t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin on what is priced',
+                $t['net'] < 0 ? 'text-risk' : 'text-navy-900'],
         ];
     @endphp
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        @foreach ($tiles as [$label, $value, $icon, $pct, $tone, $hint])
-            <div class="rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)]">
-                <div class="flex items-center gap-2">
-                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500">
-                        <x-icon :name="$icon" class="h-3.5 w-3.5" />
-                    </span>
-                    <p class="eyebrow truncate">{{ $label }}</p>
-                </div>
-                <p class="pf mt-2.5 truncate text-[26px] font-bold leading-none {{ $label === 'Net' && $t['net'] < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $value }}</p>
-                <div class="mt-3 flex gap-[3px]">
-                    @for ($i = 0; $i < 14; $i++)
-                        <span @class(['h-1 flex-1 rounded-full', $tone => $i < round($pct / 100 * 14), 'bg-navy-50' => $i >= round($pct / 100 * 14)])></span>
-                    @endfor
-                </div>
-                <p class="mt-2 truncate text-[11px] text-muted">{{ $hint }}</p>
-            </div>
-        @endforeach
-    </div>
+    <x-stat-strip :stats="$tiles" />
 
     <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div class="min-w-0 space-y-4">
-
             {{-- ══════════ P&L by event ══════════ --}}
             <section class="card overflow-hidden">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
