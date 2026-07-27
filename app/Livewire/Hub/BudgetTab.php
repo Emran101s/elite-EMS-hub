@@ -11,6 +11,7 @@ use App\Services\CurrencyService;
 use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -43,7 +44,15 @@ class BudgetTab extends Component
     /** Note for the current approval submission. */
     public string $approvalNote = '';
 
-    /** Workspace mode: 'build' (plan budgeted amounts) | 'track' (budget vs actual/paid/saved). */
+    /**
+     * Workspace mode:
+     *   build — plan budgeted amounts, quantity × unit
+     *   track — budget vs actual and paid, where you saved or overspent
+     *   price — cost vs what the client is charged, and the margin between
+     *
+     * In the URL so a mode can be linked to — "look at the pricing on this".
+     */
+    #[Url(as: 'mode')]
     public string $view = 'build';
 
     // ── line form ──────────────────────────────────────────────
@@ -67,6 +76,18 @@ class BudgetTab extends Component
 
     #[Validate('nullable|numeric|min:0')]
     public string $paid = '';
+
+    // ── What the client is charged for this line ──
+    /** A price typed by hand. Blank means "work it out". */
+    #[Validate('nullable|numeric|min:0')]
+    public string $sell = '';
+
+    /** Cost plus this much. Blank means the event's management fee. */
+    #[Validate('nullable|numeric|min:-100|max:1000')]
+    public string $markup = '';
+
+    /** Off for a line you absorb: it still costs, it is just not invoiced. */
+    public bool $billable = true;
 
     #[Validate('nullable|string|max:60')]
     public string $invoice_number = '';
@@ -108,8 +129,11 @@ class BudgetTab extends Component
         $this->clientTarget = $this->event->client_target_cents ? (string) ($this->event->client_target_cents / 100) : '';
         $this->sponsorshipTarget = $this->event->sponsorship_target_cents ? (string) ($this->event->sponsorship_target_cents / 100) : '';
         $this->exhibitionTarget = $this->event->exhibition_target_cents ? (string) ($this->event->exhibition_target_cents / 100) : '';
-        // Start in Build while planning; switch to Track once real costs are recorded.
-        $this->view = $this->event->budgetItems()->where('actual_cents', '>', 0)->exists() ? 'track' : 'build';
+        // Start in Build while planning; switch to Track once real costs are
+        // recorded. A mode asked for in the URL wins — it was chosen on purpose.
+        if (! in_array(request('mode'), ['build', 'track', 'price'], true)) {
+            $this->view = $this->event->budgetItems()->where('actual_cents', '>', 0)->exists() ? 'track' : 'build';
+        }
         if (request('action') === 'add') {
             $this->newLine();
         }
@@ -244,7 +268,7 @@ class BudgetTab extends Component
 
     public function newLine(?string $category = null): void
     {
-        $this->reset(['editingId', 'description', 'vendor', 'unit', 'actual', 'paid', 'invoice_number', 'due_on', 'notes']);
+        $this->reset(['editingId', 'description', 'vendor', 'unit', 'actual', 'paid', 'sell', 'markup', 'billable', 'invoice_number', 'due_on', 'notes']);
         $this->quantity = 1;
         $this->category = $category ?: (string) ($this->event->budgetCategories()->value('name') ?? 'Other');
         // Open the destination category so the new line is visible after saving.
@@ -268,10 +292,60 @@ class BudgetTab extends Component
         $this->unit = $item->unit_cents ? (string) ($item->unit_cents / 100) : '';
         $this->actual = $item->actual_cents ? (string) ($item->actual_cents / 100) : '';
         $this->paid = $item->paid_cents ? (string) ($item->paid_cents / 100) : '';
+        $this->sell = $item->sell_cents !== null ? (string) ($item->sell_cents / 100) : '';
+        $this->markup = $item->markup_pct !== null ? (string) $item->markup_pct : '';
+        $this->billable = $item->billable ?? true;
         $this->invoice_number = $item->invoice_number ?? '';
         $this->due_on = $item->due_on?->format('Y-m-d') ?? '';
         $this->notes = $item->notes ?? '';
         $this->showForm = true;
+    }
+
+    /**
+     * Price a whole category at once.
+     *
+     * Pricing line by line is right when a line has its own deal; most of the
+     * time a category is one decision — "production goes out at cost plus 25".
+     * A line with a price typed by hand is left alone: that price was a
+     * decision too, and a bulk action should not quietly overwrite it.
+     */
+    public function markupCategory(string $category, float $pct): void
+    {
+        if (! $this->ensureUnlocked()) {
+            return;
+        }
+
+        $touched = $this->event->budgetItems()
+            ->where('category', $category)
+            ->whereNull('sell_cents')
+            ->update(['markup_pct' => $pct]);
+
+        session()->flash('status', $touched
+            ? $category.' priced at cost plus '.rtrim(rtrim(number_format($pct, 2), '0'), '.').'%.'
+            : 'Every line in '.$category.' already has a price of its own.');
+    }
+
+    /** Send a category back to the event's fee — the "undo my pricing" path. */
+    public function clearCategoryPricing(string $category): void
+    {
+        if (! $this->ensureUnlocked()) {
+            return;
+        }
+
+        $this->event->budgetItems()->where('category', $category)
+            ->update(['markup_pct' => null, 'sell_cents' => null]);
+
+        session()->flash('status', $category.' is back on the management fee.');
+    }
+
+    public function toggleBillable(int $id): void
+    {
+        if (! $this->ensureUnlocked()) {
+            return;
+        }
+
+        $item = $this->event->budgetItems()->findOrFail($id);
+        $item->update(['billable' => ! ($item->billable ?? true)]);
     }
 
     public function save(): void
@@ -288,7 +362,16 @@ class BudgetTab extends Component
         $unitCents = (int) round((float) ($this->unit ?: 0) * 100);
         $actualCents = (int) round((float) ($this->actual ?: 0) * 100);
         $paidCents = (int) round((float) ($this->paid ?: 0) * 100);
-        $estimatedCents = $this->quantity * $unitCents;
+
+        $existing = $this->editingId ? $this->event->budgetItems()->find($this->editingId) : null;
+
+        // The estimate is quantity × unit — except on a line that arrived with
+        // an estimate and no unit cost (an import, a seed, a module sync). The
+        // form shows a blank unit for those, so deriving from it would zero the
+        // estimate the moment someone edited the vendor and saved.
+        $estimatedCents = $unitCents > 0
+            ? $this->quantity * $unitCents
+            : (int) ($existing?->estimated_cents ?? 0);
 
         $data = [
             'category' => $this->category,
@@ -299,6 +382,11 @@ class BudgetTab extends Component
             'estimated_cents' => $estimatedCents,
             'actual_cents' => $actualCents,
             'paid_cents' => $paidCents,
+            // Blank is meaningful here: it means "no price of its own", which
+            // is what sends the line back to the management fee.
+            'sell_cents' => $this->sell === '' ? null : (int) round((float) $this->sell * 100),
+            'markup_pct' => $this->markup === '' ? null : (float) $this->markup,
+            'billable' => $this->billable,
             'invoice_number' => $this->invoice_number ?: null,
             'due_on' => $this->due_on ?: null,
             'notes' => $this->notes ?: null,

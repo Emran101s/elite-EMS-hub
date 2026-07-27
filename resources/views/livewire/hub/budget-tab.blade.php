@@ -9,6 +9,10 @@
     $paidPct = $cap > 0 ? min(100, round($paidTotal / $cap * 100)) : 0;
     $remaining = $cap - $grandForecast;
     $track = $view === 'track';
+    // Price mode answers the question the budget could not: this cost me X,
+    // what am I charging for it?
+    $price = $view === 'price';
+    $feePct = (float) ($event->management_fee_pct ?? \App\Models\EventBudgetItem::DEFAULT_FEE_PCT);
     $money = 'w-24 shrink-0 text-right';
     // Per-category colour + icon, cycled by position — a distinct chip like the builder concept.
     $catPalette = [
@@ -25,12 +29,25 @@
         <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
 
         <div class="relative flex flex-wrap items-center gap-x-6 gap-y-5">
-            @foreach ([
-                ['Total budget', $fmt($cap), 'text-white'],
-                ['Forecast', $fmt($grandForecast), $grandForecast > $cap && $cap > 0 ? 'text-red-300' : 'text-white'],
-                ['Paid', $paidTotal ? $fmt($paidTotal) : '—', $paidTotal ? 'text-emerald-300' : 'text-white/30'],
-                [$remaining < 0 ? 'Over budget' : 'Remaining', $fmt(abs($remaining)), $remaining < 0 ? 'text-red-300' : 'text-gold-300'],
-            ] as $i => [$lbl, $val, $tone])
+@php
+                // Price mode is asking a different question, so the strip
+                // answers that one instead of repeating the budget's.
+                $sellSummary = $price ? $event->sellSummary() : null;
+                $figures = $price
+                    ? [
+                        ['Cost to us', $fmt($sellSummary['cost']), 'text-white'],
+                        ['Charged to client', $fmt($sellSummary['sell']), 'text-white'],
+                        ['Gross margin', ($sellSummary['margin'] >= 0 ? '' : '−').$fmt(abs($sellSummary['margin'])), $sellSummary['margin'] < 0 ? 'text-red-300' : 'text-emerald-300'],
+                        ['Margin %', $sellSummary['marginPct'] === null ? '—' : $sellSummary['marginPct'].'%', 'text-gold-300'],
+                    ]
+                    : [
+                        ['Total budget', $fmt($cap), 'text-white'],
+                        ['Forecast', $fmt($grandForecast), $grandForecast > $cap && $cap > 0 ? 'text-red-300' : 'text-white'],
+                        ['Paid', $paidTotal ? $fmt($paidTotal) : '—', $paidTotal ? 'text-emerald-300' : 'text-white/30'],
+                        [$remaining < 0 ? 'Over budget' : 'Remaining', $fmt(abs($remaining)), $remaining < 0 ? 'text-red-300' : 'text-gold-300'],
+                    ];
+            @endphp
+            @foreach ($figures as $i => [$lbl, $val, $tone])
                 @if ($i > 0)
                     <span class="hidden h-11 w-px bg-white/10 sm:block" aria-hidden="true"></span>
                 @endif
@@ -40,6 +57,21 @@
                 </div>
             @endforeach
 
+            @if ($price)
+                {{-- How much of this is a decision and how much is the default. --}}
+                <div class="ml-auto min-w-[200px] flex-1 text-right">
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-300/80">How it was priced</p>
+                    <p class="mt-1.5 text-xs font-semibold text-white/80">
+                        {{ $sellSummary['priced'] }} of {{ $sellSummary['lines'] }} {{ str('line')->plural($sellSummary['lines']) }} priced by hand
+                    </p>
+                    <p class="mt-0.5 text-eyebrow text-white/45">
+                        The rest charge cost plus the {{ rtrim(rtrim(number_format($sellSummary['fee'], 2), '0'), '.') }}% management fee.
+                        @if ($sellSummary['absorbed'] > 0)
+                            {{ $fmt($sellSummary['absorbed']) }} absorbed.
+                        @endif
+                    </p>
+                </div>
+            @else
             {{-- usage bar --}}
             <div class="ml-auto min-w-[200px] flex-1">
                 <div class="mb-1.5 flex items-baseline justify-between">
@@ -55,6 +87,7 @@
                     <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-gold-400"></span> Committed</span>
                 </p>
             </div>
+            @endif
         </div>
     </div>
 
@@ -202,15 +235,19 @@
 
                 <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
-                        <div class="{{ $track ? 'min-w-[680px]' : 'min-w-[380px]' }}">
+                        <div class="{{ $track || $price ? 'min-w-[680px]' : 'min-w-[380px]' }}">
                             {{-- column labels --}}
                             <div class="flex items-center gap-2 border-b border-line bg-page/40 px-3 py-2.5 text-eyebrow font-bold uppercase tracking-wide text-muted">
                                 <span class="flex-1">Category / Line item</span>
-                                <span class="{{ $money }}">{{ $track ? 'Budget' : 'Estimated cost' }}</span>
+                                <span class="{{ $money }}">{{ match ($view) { 'track' => 'Budget', 'price' => 'Cost', default => 'Estimated cost' } }}</span>
                                 @if ($track)
                                     <span class="{{ $money }}">Actual</span>
                                     <span class="{{ $money }}">Paid</span>
                                     <span class="{{ $money }}">Saved / Over</span>
+                                @elseif ($price)
+                                    <span class="{{ $money }}">Charged</span>
+                                    <span class="{{ $money }}">Margin</span>
+                                    <span class="w-12 shrink-0 text-right">%</span>
                                 @endif
                             </div>
 
@@ -254,6 +291,19 @@
                                             </button>
                                             @unless ($event->budgetLocked())
                                                 <span class="hidden shrink-0 items-center gap-1 group-hover/cat:flex">
+                                                    @if ($price)
+                                                        {{-- Pricing line by line is right when a line has its
+                                                             own deal; most of the time a category is one
+                                                             decision. Lines already quoted are left alone. --}}
+                                                        @foreach ([10, 15, 20, 25] as $pct)
+                                                            <button type="button" wire:click="markupCategory('{{ $catArg }}', {{ $pct }})"
+                                                                    class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-gold-100 hover:text-gold-700"
+                                                                    title="Charge every unquoted line in {{ $section['name'] }} at cost plus {{ $pct }}%">+{{ $pct }}%</button>
+                                                        @endforeach
+                                                        <button type="button" wire:click="clearCategoryPricing('{{ $catArg }}')"
+                                                                wire:confirm="Put every line in “{{ $section['name'] }}” back on the {{ rtrim(rtrim(number_format($feePct, 2), '0'), '.') }}% management fee? Any prices typed by hand are cleared."
+                                                                class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 hover:bg-navy-100" title="Back to the management fee">↺</button>
+                                                    @endif
                                                     <button type="button" wire:click="newLine('{{ $catArg }}')" class="rounded bg-gold-50 px-1.5 py-0.5 text-eyebrow font-bold text-gold-700 hover:bg-gold-100" title="Add line">＋ line</button>
                                                     @if ($section['id'])
                                                         <button type="button" wire:click="startRenameCategory({{ $section['id'] }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Rename category">✎</button>
@@ -262,8 +312,19 @@
                                                 </span>
                                             @endunless
                                             <button type="button" wire:click="newLine('{{ $catArg }}')" class="shrink-0 text-xs font-bold text-gold-600 hover:text-gold-700 group-hover/cat:hidden" title="Add line to this category">＋</button>
-                                            <span class="{{ $money }} text-xs font-bold text-navy-900">{{ $catEst ? $fmt($catEst) : '—' }}</span>
-                                            @if ($track)
+                                            @php $catShown = $price ? $secItems->sum(fn ($i) => $i->costCents()) : $catEst; @endphp
+                                            <span class="{{ $money }} text-xs font-bold text-navy-900">{{ $catShown ? $fmt($catShown) : '—' }}</span>
+                                            @if ($price)
+                                                @php
+                                                    $catCost = $secItems->sum(fn ($i) => $i->costCents());
+                                                    $catSell = $secItems->sum(fn ($i) => $i->sellCents($feePct));
+                                                    $catMargin = $catSell - $catCost;
+                                                    $catMarginPct = $catSell > 0 ? (int) round($catMargin / $catSell * 100) : null;
+                                                @endphp
+                                                <span class="{{ $money }} text-xs font-bold text-navy-700">{{ $catSell ? $fmt($catSell) : '—' }}</span>
+                                                <span class="{{ $money }} text-xs font-bold {{ $catMargin < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $catCost || $catSell ? ($catMargin >= 0 ? '+' : '−').$fmt(abs($catMargin)) : '—' }}</span>
+                                                <span class="w-12 shrink-0 text-right text-xs font-bold {{ $catMarginPct === null ? 'text-navy-300' : ($catMarginPct < 0 ? 'text-risk' : 'text-navy-500') }}">{{ $catMarginPct === null ? '—' : $catMarginPct.'%' }}</span>
+                                            @elseif ($track)
                                                 @php $secCosted = $secItems->where('actual_cents', '>', 0); $secSaved = $secCosted->sum('estimated_cents') - $secCosted->sum('actual_cents'); @endphp
                                                 <span class="{{ $money }} text-xs font-bold {{ $catAct > $catEst && $catEst > 0 ? 'text-risk' : 'text-navy-700' }}">{{ $catAct ? $fmt($catAct) : '—' }}</span>
                                                 <span class="{{ $money }} text-xs font-bold text-emerald-700">{{ $catPaid ? $fmt($catPaid) : '—' }}</span>
@@ -310,8 +371,26 @@
                                                     <p class="truncate text-eyebrow text-gold-600/70 group-hover/edit:text-gold-700">Click to set quantity &amp; unit cost →</p>
                                                 @endif
                                             </button>
-                                            <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="{{ $money }} text-micro font-semibold {{ $item->estimated_cents ? 'text-navy-900' : 'text-gold-600 hover:text-gold-700' }}">{{ $item->estimated_cents ? $fmt($item->estimated_cents) : '＋ set' }}</button>
-                                            @if ($track)
+                                            @php $lineCostShown = $price ? $item->costCents() : $item->estimated_cents; @endphp
+                                            <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="{{ $money }} text-micro font-semibold {{ $lineCostShown ? 'text-navy-900' : 'text-gold-600 hover:text-gold-700' }}">{{ $lineCostShown ? $fmt($lineCostShown) : '＋ set' }}</button>
+                                            @if ($price)
+                                                @php
+                                                    $lineSell = $item->sellCents($feePct);
+                                                    $lineMargin = $item->marginCents($feePct);
+                                                    $linePct = $item->marginPct($feePct);
+                                                    // How this line got its price — the difference between a
+                                                    // quote and a default is worth seeing at a glance.
+                                                    $how = $item->sell_cents !== null ? 'quoted' : ($item->markup_pct !== null ? '+'.rtrim(rtrim(number_format($item->markup_pct, 1), '0'), '.').'%' : null);
+                                                @endphp
+                                                <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked())
+                                                        class="{{ $money }} text-micro font-semibold {{ $item->billable === false ? 'text-navy-300 line-through' : 'text-navy-900' }}"
+                                                        title="{{ $how ? 'Priced by hand ('.$how.')' : 'Charged at the '.$feePct.'% management fee' }}">
+                                                    {{ $item->billable === false ? '—' : $fmt($lineSell) }}
+                                                    @if ($how)<span class="ms-0.5 text-[9px] font-bold text-gold-600">{{ $how }}</span>@endif
+                                                </button>
+                                                <span class="{{ $money }} text-micro font-semibold {{ $lineMargin < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ ($lineMargin >= 0 ? '+' : '−').$fmt(abs($lineMargin)) }}</span>
+                                                <span class="w-12 shrink-0 text-right text-micro font-semibold {{ $linePct === null ? 'text-navy-300' : ($linePct < 0 ? 'text-risk' : 'text-navy-500') }}">{{ $linePct === null ? '—' : $linePct.'%' }}</span>
+                                            @elseif ($track)
                                                 @php $lineSaved = $item->actual_cents > 0 ? $item->estimated_cents - $item->actual_cents : null; @endphp
                                                 <span class="{{ $money }} text-micro font-semibold {{ $item->actual_cents > $item->estimated_cents && $item->estimated_cents > 0 ? 'text-risk' : 'text-navy-900' }}">{{ $item->actual_cents ? $fmt($item->actual_cents) : '—' }}</span>
                                                 <span class="{{ $money }} text-micro font-semibold text-emerald-700">{{ $item->paid_cents ? $fmt($item->paid_cents) : '—' }}</span>
@@ -408,8 +487,13 @@
                     <div class="flex rounded-xl border border-line bg-page/40 p-1">
                         <button type="button" wire:click="$set('view', 'build')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">🧱 Build</button>
                         <button type="button" wire:click="$set('view', 'track')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">📊 Track</button>
+                        <button type="button" wire:click="$set('view', 'price')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">💰 Price</button>
                     </div>
-                    <p class="mt-2 text-eyebrow leading-snug text-muted">{{ $view === 'build' ? 'Plan budgeted amounts — quantity × unit from your own estimates.' : 'Track budget vs actual & paid — see where you saved or overspent.' }}</p>
+                    <p class="mt-2 text-eyebrow leading-snug text-muted">{{ match ($view) {
+                        'build' => 'Plan budgeted amounts — quantity × unit from your own estimates.',
+                        'track' => 'Track budget vs actual & paid — see where you saved or overspent.',
+                        'price' => 'What each line costs you against what the client is charged for it.',
+                    } }}</p>
                 </div>
 
                 {{-- total budget + fee + currency --}}
@@ -585,6 +669,43 @@
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Paid to date ({{ $event->currency }})</label>
                         <input type="number" step="0.01" min="0" wire:model="paid" class="input h-10 text-sm" placeholder="0">
+                    </div>
+
+                    {{-- ── What the client is charged ──
+                         Leaving both blank is the normal case: the line falls
+                         back to the event's management fee, which is what
+                         every line did before this existed. --}}
+                    <div class="sm:col-span-2 rounded-xl border border-line bg-page/40 p-3">
+                        <div class="mb-2 flex items-center justify-between gap-3">
+                            <p class="text-eyebrow font-bold uppercase tracking-wide text-navy-500">What the client is charged</p>
+                            <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-navy-500">
+                                <input type="checkbox" wire:model.live="billable" class="h-3.5 w-3.5 rounded border-navy-300 text-navy-900 focus:ring-gold-400">
+                                Billable
+                            </label>
+                        </div>
+
+                        @if ($billable)
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label class="field-label !mb-1 !text-eyebrow">Charge ({{ $event->currency }})</label>
+                                    <input type="number" step="0.01" min="0" wire:model="sell" class="input h-10 text-sm" placeholder="quoted price">
+                                    @error('sell') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="field-label !mb-1 !text-eyebrow">…or markup %</label>
+                                    <input type="number" step="0.5" wire:model="markup" class="input h-10 text-sm" placeholder="{{ $event->management_fee_pct ?? 15 }}">
+                                    @error('markup') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                            <p class="mt-1.5 text-eyebrow leading-snug text-muted">
+                                Both blank charges cost plus the event's {{ rtrim(rtrim(number_format((float) ($event->management_fee_pct ?? 15), 2), '0'), '.') }}% management fee.
+                                A charge typed here wins over a markup.
+                            </p>
+                        @else
+                            <p class="text-eyebrow leading-snug text-muted">
+                                This line is not on the client's invoice. It still costs — it comes out of your margin.
+                            </p>
+                        @endif
                     </div>
 
                     <div>
