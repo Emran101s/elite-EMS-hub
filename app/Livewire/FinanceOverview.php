@@ -39,6 +39,7 @@ class FinanceOverview extends Component
         $sorted = match ($this->sort) {
             // Unmeasurable margin sorts last rather than as zero.
             'margin' => $rows->sortByDesc(fn (array $r) => $r['margin'] ?? -1),
+            'charged' => $rows->sortByDesc('charged'),
             'income' => $rows->sortByDesc('income'),
             'cost' => $rows->sortByDesc('cost'),
             default => $rows->sortByDesc('net'),

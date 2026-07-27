@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventContractPayment;
@@ -20,6 +21,47 @@ class PortfolioFinance
     /** Loaded once: a P&L touches income, budget lines and contract payments. */
     private ?Collection $eventsMemo = null;
 
+    /** Rates into the base currency, worked out once per run. */
+    private array $rates = [];
+
+    private ?string $baseMemo = null;
+
+    public function __construct(private readonly CurrencyService $fx) {}
+
+    /**
+     * The currency the whole book is reported in — the company's own.
+     *
+     * Events are run in whatever currency the client pays in, so a portfolio
+     * that added JD to $ was adding numbers that are not the same thing. Every
+     * figure below is converted into this one before it meets another.
+     */
+    public function baseCurrency(): string
+    {
+        return $this->baseMemo ??= strtoupper(CompanyProfile::current()->default_currency ?: 'USD');
+    }
+
+    /** Cents in an event's own currency, as cents in the base currency. */
+    private function toBase(int $cents, ?string $from): int
+    {
+        $from = strtoupper($from ?: $this->baseCurrency());
+
+        if ($from === $this->baseCurrency()) {
+            return $cents;
+        }
+
+        $rate = $this->rates[$from] ??= $this->fx->rate($from, $this->baseCurrency());
+
+        return (int) round($cents * $rate);
+    }
+
+    /** True when more than one currency is in play — worth saying on screen. */
+    public function isMixed(): bool
+    {
+        return $this->events()
+            ->map(fn (Event $e) => strtoupper($e->currency ?: $this->baseCurrency()))
+            ->unique()->count() > 1;
+    }
+
     private function events(): Collection
     {
         return $this->eventsMemo ??= Event::whereNull('archived_at')
@@ -37,21 +79,38 @@ class PortfolioFinance
     {
         return $this->events()->map(function (Event $event) {
             $income = $event->incomeSummary();
+            $priced = $event->sellSummary();
+            $cur = strtoupper($event->currency ?: $this->baseCurrency());
+            $in = fn (int $cents) => $this->toBase($cents, $cur);
 
-            $estimated = (int) $event->budgetItems->sum('estimated_cents');
-            $actual = (int) $event->budgetItems->sum('actual_cents');
+            $estimated = $in((int) $event->budgetItems->sum('estimated_cents'));
+            $actual = $in((int) $event->budgetItems->sum('actual_cents'));
             // Committed cost: the real figure where one exists, the estimate
             // until then. Spending you have agreed to counts even unpaid.
-            $cost = (int) $event->budgetItems->sum(fn (EventBudgetItem $i) => $i->actual_cents ?: $i->estimated_cents);
-            $paid = (int) $event->budgetItems->sum('paid_cents');
+            $cost = $in($priced['cost']);
+            $paid = $in((int) $event->budgetItems->sum('paid_cents'));
 
-            $net = $income['total'] - $cost;
+            $booked = $in($income['total']);
+            $charged = $in($priced['sell']);
+            $net = $booked - $cost;
 
             return [
                 'event' => $event,
-                'income' => $income['total'],
-                'collected' => $income['collected'],
-                'receivable' => max(0, $income['total'] - $income['collected']),
+                'currency' => $cur,
+                // What has actually been contracted and sold.
+                'income' => $booked,
+                'collected' => $in($income['collected']),
+                'receivable' => max(0, $booked - $in($income['collected'])),
+                // What the work is priced at, line by line. Not the same
+                // question: an event can be fully priced and have billed none
+                // of it, and the gap between the two is the invoice you owe.
+                'charged' => $charged,
+                // Only the CLIENT's income is comparable with what the budget
+                // is priced at: sponsorship and exhibition money never came
+                // from a cost line, so measuring the priced work against total
+                // income would say you had over-billed by 300%.
+                'clientIncome' => $in($income['client']),
+                'unbilled' => max(0, $charged - $in($income['client'])),
                 'estimated' => $estimated,
                 'actual' => $actual,
                 'cost' => $cost,
@@ -60,7 +119,10 @@ class PortfolioFinance
                 'net' => $net,
                 // Margin against income, not against budget — the question is
                 // what share of what you charge you keep.
-                'margin' => $income['total'] > 0 ? (int) round($net / $income['total'] * 100) : null,
+                'margin' => $booked > 0 ? (int) round($net / $booked * 100) : null,
+                // The same sum against the priced figure: what the work is
+                // worth, whether or not it has been billed yet.
+                'pricedMargin' => $charged > 0 ? (int) round(($charged - $cost) / $charged * 100) : null,
                 'overrun' => $estimated > 0 && $actual > $estimated
                     ? (int) round(($actual - $estimated) / $estimated * 100)
                     : null,
@@ -76,15 +138,23 @@ class PortfolioFinance
         $income = (int) $rows->sum('income');
         $cost = (int) $rows->sum('cost');
 
+        $charged = (int) $rows->sum('charged');
+
         return [
+            'currency' => $this->baseCurrency(),
+            'mixed' => $this->isMixed(),
             'income' => $income,
+            'clientIncome' => (int) $rows->sum('clientIncome'),
             'collected' => (int) $rows->sum('collected'),
             'receivable' => (int) $rows->sum('receivable'),
+            'charged' => $charged,
+            'unbilled' => (int) $rows->sum('unbilled'),
             'cost' => $cost,
             'paid' => (int) $rows->sum('paid'),
             'payable' => (int) $rows->sum('payable'),
             'net' => $income - $cost,
             'margin' => $income > 0 ? (int) round(($income - $cost) / $income * 100) : null,
+            'pricedMargin' => $charged > 0 ? (int) round(($charged - $cost) / $charged * 100) : null,
             'events' => $rows->count(),
         ];
     }
@@ -125,14 +195,21 @@ class PortfolioFinance
      */
     public function costByCategory(): Collection
     {
+        // Walked from the events rather than from the lines, so each line's
+        // currency comes from the event already in memory instead of a
+        // lazy-loaded belongsTo per line.
         return $this->events()
-            ->flatMap->budgetItems
+            ->flatMap(fn (Event $event) => $event->budgetItems->map(fn (EventBudgetItem $i) => [
+                'category' => $i->category,
+                'label' => $i->categoryLabel(),
+                'cost' => $this->toBase($i->costCents(), $event->currency),
+            ]))
             ->groupBy('category')
-            ->map(fn (Collection $items, string $category) => [
+            ->map(fn (Collection $lines, string $category) => [
                 'category' => $category,
-                'label' => $items->first()->categoryLabel(),
-                'cost' => (int) $items->sum(fn (EventBudgetItem $i) => $i->actual_cents ?: $i->estimated_cents),
-                'lines' => $items->count(),
+                'label' => $lines->first()['label'],
+                'cost' => (int) $lines->sum('cost'),
+                'lines' => $lines->count(),
             ])
             ->sortByDesc('cost')
             ->values();

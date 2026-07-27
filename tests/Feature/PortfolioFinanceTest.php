@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Livewire\FinanceOverview;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventIncomeItem;
 use App\Models\User;
+use App\Services\CurrencyService;
 use App\Services\PortfolioFinance;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -152,6 +154,88 @@ class PortfolioFinanceTest extends TestCase
 
         $screen->call('sortBy', 'cost');
         $this->assertSame('cost', $screen->get('sort'));
+    }
+
+    /**
+     * The portfolio used to add JD to $ as though they were the same number.
+     * Every figure is now converted into the company's own currency before it
+     * meets another one.
+     */
+    public function test_events_in_another_currency_are_converted_before_they_are_added_up(): void
+    {
+        CompanyProfile::current()->update(['default_currency' => 'USD']);
+
+        $home = $this->eventWithCost(estimated: 100_000);
+        $home->update(['currency' => 'USD']);
+
+        $abroad = $this->eventWithCost(estimated: 100_000);
+        $abroad->update(['currency' => 'JOD']);
+
+        $finance = app(PortfolioFinance::class);
+        $rate = app(CurrencyService::class)->rate('JOD', 'USD');
+
+        $this->assertSame('USD', $finance->baseCurrency());
+        $this->assertTrue($finance->isMixed(), 'two currencies are in play');
+
+        $rows = $finance->statement()->keyBy(fn ($r) => $r['event']->id);
+
+        $this->assertSame(100_000, $rows[$home->id]['cost'], 'already in the base currency');
+        $this->assertSame((int) round(100_000 * $rate), $rows[$abroad->id]['cost']);
+        $this->assertNotSame(100_000, $rows[$abroad->id]['cost'], 'a dinar is not a dollar');
+
+        $totals = $finance->totals();
+        $this->assertSame('USD', $totals['currency']);
+        $this->assertTrue($totals['mixed']);
+        $this->assertSame(100_000 + (int) round(100_000 * $rate), $totals['cost']);
+    }
+
+    public function test_one_currency_everywhere_is_not_reported_as_mixed(): void
+    {
+        CompanyProfile::current()->update(['default_currency' => 'JOD']);
+        $this->eventWithCost(estimated: 100_000)->update(['currency' => 'JOD']);
+
+        $finance = app(PortfolioFinance::class);
+
+        $this->assertFalse($finance->isMixed());
+        $this->assertSame(100_000, $finance->totals()['cost'], 'no conversion to do');
+    }
+
+    /**
+     * Charged and billed are different questions, and the gap between them is
+     * an invoice somebody has not sent.
+     */
+    public function test_the_portfolio_reports_what_is_priced_as_well_as_what_is_billed(): void
+    {
+        $event = $this->eventWithCost(estimated: 100_000, income: 50_000);
+        $event->update(['management_fee_pct' => 20]);
+
+        $row = app(PortfolioFinance::class)->statement()->first();
+
+        $this->assertSame(120_000, $row['charged'], 'cost plus the 20% fee');
+        $this->assertSame(50_000, $row['clientIncome'], 'only part of it has reached an invoice');
+        $this->assertSame(70_000, $row['unbilled']);
+
+        $this->assertSame(17, $row['pricedMargin'], '20,000 of a 120,000 charge');
+        $this->assertSame(-100, $row['margin'], 'against what was actually billed, it is under water');
+    }
+
+    /**
+     * Sponsorship and exhibition money never came from a priced cost line, so
+     * measuring what the budget is charged at against total income would have
+     * reported over-billing by 300% on an event that sells sponsorships.
+     */
+    public function test_sponsorship_income_does_not_count_as_billing_the_priced_work(): void
+    {
+        $event = $this->eventWithCost(estimated: 100_000, income: 40_000);
+        $event->update(['management_fee_pct' => 0]);
+        $event->sponsors()->create(['name' => 'Headline Sponsor', 'package' => 'Platinum Partner', 'amount_cents' => 900_000, 'paid_cents' => 0]);
+
+        $row = app(PortfolioFinance::class)->statement()->first();
+
+        $this->assertSame(100_000, $row['charged']);
+        $this->assertSame(40_000, $row['clientIncome'], 'the client has been billed 40,000');
+        $this->assertSame(60_000, $row['unbilled'], 'the sponsor money is not billing for the work');
+        $this->assertSame(940_000, $row['income'], 'but it is still income, and it still counts towards net');
     }
 
     public function test_the_portfolio_never_disagrees_with_the_event_it_links_to(): void

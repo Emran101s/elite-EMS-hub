@@ -1,8 +1,11 @@
 @php
-    $money = fn (int $cents, string $cur = 'JD') => $cur.' '.(abs($cents) >= 100000
+    // The whole book is reported in the company's own currency; events run in
+    // whatever the client pays in and are converted before they meet.
+    $sym = \App\Models\Event::CURRENCIES[$totals['currency']][0] ?? $totals['currency'];
+    $money = fn (int $cents, ?string $cur = null) => ($cur ?? $sym).' '.(abs($cents) >= 100000
         ? rtrim(rtrim(number_format($cents / 100000, 1), '0'), '.').'K'
         : number_format($cents / 100));
-    $full = fn (int $cents, string $cur = 'JD') => $cur.' '.number_format($cents / 100);
+    $full = fn (int $cents, ?string $cur = null) => ($cur ?? $sym).' '.number_format($cents / 100);
 @endphp
 
 <div>
@@ -11,13 +14,19 @@
         $t = $totals;
         $collectedPct = $t['income'] > 0 ? (int) round($t['collected'] / $t['income'] * 100) : 0;
         $spentPct = $t['cost'] > 0 ? (int) round($t['paid'] / $t['cost'] * 100) : 0;
+        // Against the client's own income, not the whole book — sponsorship
+        // and exhibition money never came from a priced cost line.
+        $billedPct = $t['charged'] > 0 ? (int) round($t['clientIncome'] / $t['charged'] * 100) : 0;
         $tiles = [
-            ['Income', $money($t['income']), 'currency', 100, 'bg-navy-400', $t['events'].' active '.str('event')->plural($t['events'])],
-            ['Collected', $money($t['collected']), 'star', $collectedPct, 'bg-track', $collectedPct.'% of income'],
-            ['Owed to you', $money($t['receivable']), 'bell', 100 - $collectedPct, $t['receivable'] ? 'bg-warn' : 'bg-navy-200', 'still to come in'],
-            ['Cost', $money($t['cost']), 'clipboard', 100, 'bg-gold-500', $money($t['payable']).' unpaid'],
+            // What the work is priced at, line by line — not the same question
+            // as what has been billed, and the gap between them is an invoice.
+            ['Charged', $money($t['charged']), 'currency', 100, 'bg-navy-400',
+                $t['unbilled'] > 0 ? $money($t['unbilled']).' not yet billed' : $t['events'].' active '.str('event')->plural($t['events'])],
+            ['Billed to client', $money($t['clientIncome']), 'clipboard', min(100, $billedPct), 'bg-navy-500', $billedPct.'% of what is priced'],
+            ['Owed to you', $money($t['receivable']), 'bell', 100 - $collectedPct, $t['receivable'] ? 'bg-warn' : 'bg-navy-200', $money($t['collected']).' collected'],
+            ['Cost', $money($t['cost']), 'archive', 100, 'bg-gold-500', $money($t['payable']).' unpaid'],
             ['Net', $money($t['net']), 'chart', max(0, (int) ($t['margin'] ?? 0)), $t['net'] >= 0 ? 'bg-track' : 'bg-risk',
-                $t['margin'] === null ? 'no income yet' : $t['margin'].'% margin'],
+                $t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin on what is priced'],
         ];
     @endphp
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
@@ -48,10 +57,18 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
                     <div>
                         <p class="eyebrow">Profit &amp; loss</p>
-                        <p class="text-[11px] text-muted">Cost counts what you have committed — the real figure where one exists, the estimate until then.</p>
+                        <p class="text-[11px] text-muted">
+                            Charged is what the budget is priced at, line by line; billed to client is what the client has been
+                            contracted for. Sponsorship and exhibition income sit outside both — they never came from a cost line —
+                            but they do count towards net.
+                            Cost counts what you have committed — the real figure where one exists, the estimate until then.
+                            @if ($totals['mixed'])
+                                Events run in other currencies are converted to {{ $totals['currency'] }}.
+                            @endif
+                        </p>
                     </div>
                     <div class="flex items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
-                        @foreach (['net' => 'Net', 'margin' => 'Margin', 'income' => 'Income', 'cost' => 'Cost'] as $key => $label)
+                        @foreach (['net' => 'Net', 'margin' => 'Margin', 'charged' => 'Charged', 'income' => 'Billed', 'cost' => 'Cost'] as $key => $label)
                             <button type="button" wire:click="sortBy('{{ $key }}')"
                                     @class(['rounded-lg px-2.5 py-1 text-[11px] font-bold transition',
                                             'bg-navy-900 text-white' => $sort === $key,
@@ -65,8 +82,8 @@
                         <thead>
                             <tr class="border-b border-line bg-page/60 text-[9px] font-bold uppercase tracking-[0.14em] text-navy-300">
                                 <th class="px-4 py-2">Event</th>
-                                <th class="px-3 py-2 text-right">Income</th>
-                                <th class="px-3 py-2 text-right">Collected</th>
+                                <th class="px-3 py-2 text-right">Charged</th>
+                                <th class="px-3 py-2 text-right">Billed to client</th>
                                 <th class="px-3 py-2 text-right">Cost</th>
                                 <th class="px-3 py-2 text-right">Net</th>
                                 <th class="px-3 py-2 text-right">Margin</th>
@@ -82,10 +99,17 @@
                                             <span class="block truncate text-[10.5px] text-muted">{{ $e->client?->name ?? 'No client' }} · {{ $e->starts_at?->format('M Y') ?? 'no date' }}</span>
                                         </a>
                                     </td>
-                                    <td class="px-3 py-2.5 text-right text-[12px] tabular-nums text-navy-700">{{ $money($row['income']) }}</td>
+                                    <td class="px-3 py-2.5 text-right text-[12px] tabular-nums text-navy-700">
+                                        {{ $money($row['charged']) }}
+                                        @if ($row['currency'] !== $totals['currency'])
+                                            <span class="block text-[10px] text-muted" title="Run in {{ $row['currency'] }}, converted">from {{ $row['currency'] }}</span>
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2.5 text-right text-[12px] tabular-nums">
-                                        <span class="{{ $row['receivable'] > 0 ? 'text-warn' : 'text-track' }}">{{ $money($row['collected']) }}</span>
-                                        @if ($row['receivable'] > 0)
+                                        <span class="{{ $row['receivable'] > 0 ? 'text-warn' : 'text-track' }}">{{ $money($row['clientIncome']) }}</span>
+                                        @if ($row['unbilled'] > 0)
+                                            <span class="block text-[10px] text-muted">{{ $money($row['unbilled']) }} to bill</span>
+                                        @elseif ($row['receivable'] > 0)
                                             <span class="block text-[10px] text-muted">{{ $money($row['receivable']) }} owed</span>
                                         @endif
                                     </td>
@@ -97,13 +121,17 @@
                                     </td>
                                     <td class="px-3 py-2.5 text-right text-[12.5px] font-bold tabular-nums {{ $row['net'] < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $money($row['net']) }}</td>
                                     <td class="px-3 py-2.5 text-right">
-                                        @if ($row['margin'] === null)
+                                        @php $m = $row['pricedMargin'] ?? $row['margin']; @endphp
+                                        @if ($m === null)
                                             <span class="text-[11px] text-navy-300">—</span>
                                         @else
                                             <span @class(['text-[12px] font-bold tabular-nums',
-                                                'text-track' => $row['margin'] >= 25,
-                                                'text-warn' => $row['margin'] >= 10 && $row['margin'] < 25,
-                                                'text-risk' => $row['margin'] < 10])>{{ $row['margin'] }}%</span>
+                                                'text-track' => $m >= 25,
+                                                'text-warn' => $m >= 10 && $m < 25,
+                                                'text-risk' => $m < 10])>{{ $m }}%</span>
+                                            @if ($row['margin'] !== null && $row['margin'] !== $m)
+                                                <span class="block text-[10px] text-muted" title="Margin on what has actually been billed">{{ $row['margin'] }}% billed</span>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>
