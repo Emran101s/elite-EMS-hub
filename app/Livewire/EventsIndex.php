@@ -39,15 +39,43 @@ class EventsIndex extends Component
 
     public string $tab = 'all';
 
-    public string $view = 'cards';
+    /** lanes · list · calendar. Lanes replaced the card grid. */
+    public string $view = 'lanes';
+
+    /** Where each stage sits on the board. */
+    public const LANES = [
+        0 => ['title' => 'Pipeline', 'note' => 'bidding · not committed', 'stages' => ['draft', 'proposal']],
+        1 => ['title' => 'In production', 'note' => 'signed · being built', 'stages' => ['confirmed', 'planning', 'production']],
+        2 => ['title' => 'Delivering', 'note' => 'live · on the ground', 'stages' => ['live']],
+    ];
+
+    public static function laneFor(string $stage): int
+    {
+        foreach (self::LANES as $key => $lane) {
+            if (in_array($stage, $lane['stages'], true)) {
+                return $key;
+            }
+        }
+
+        return 1;
+    }
 
     /** The card opened in place to show its full detail. */
     public ?int $expandedId = null;
 
+    /**
+     * Selecting an event opens it in the Inspector. It used to expand the card
+     * in place, which shoved every other card down the page.
+     */
     public function toggleExpand(int $id): void
     {
         $this->expandedId = $this->expandedId === $id ? null : $id;
         $this->selectedId = $this->expandedId ?? $this->selectedId;
+    }
+
+    public function closeInspector(): void
+    {
+        $this->expandedId = null;
     }
 
     public string $sort = 'date';
@@ -68,7 +96,9 @@ class EventsIndex extends Component
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
-        $this->view = in_array(request('view'), ['cards', 'calendar'], true) ? request('view') : 'cards';
+        // ?view=cards still works — it was the board's name before the lanes.
+        $requested = request('view') === 'cards' ? 'lanes' : request('view');
+        $this->view = in_array($requested, ['lanes', 'list', 'calendar'], true) ? $requested : 'lanes';
         $this->selectedId = request()->integer('selected') ?: null;
         $this->calMonth = now()->format('Y-m');
     }
@@ -382,6 +412,14 @@ class EventsIndex extends Component
             'selectedHealth' => $selected ? $health[$selected->id] : null,
             'ai' => $selected ? $pulse->aiSummary($selected) : null,
             'calendar' => $this->view === 'calendar' ? $this->buildCalendar($all) : null,
+            // The board shows every matching event, not a page of them: lanes
+            // only mean something when the whole pipeline is on screen.
+            'lanes' => $this->view === 'lanes'
+                ? collect(self::LANES)->map(fn ($lane, $key) => $lane + [
+                    'key' => $key,
+                    'events' => $sorted->filter(fn (Event $e) => self::laneFor($e->stage) === $key)->values(),
+                ])->values()
+                : null,
             'expandedId' => $this->expandedId,
             'expanded' => $this->expandedId && ($ex = $all->firstWhere('id', $this->expandedId))
                 ? $this->cardDetail($ex, $health[$ex->id])

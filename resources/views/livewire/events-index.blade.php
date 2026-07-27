@@ -66,9 +66,9 @@
                 <option value="budget">Sort: Budget used</option>
             </select>
 
-            {{-- view toggle: Cards | List | Calendar --}}
+            {{-- view toggle: Lanes | List | Calendar --}}
             <div class="flex h-9 shrink-0 items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
-                @foreach (['cards' => 'grid', 'list' => 'list', 'calendar' => 'calendar'] as $mode => $icon)
+                @foreach (['lanes' => 'columns', 'list' => 'list', 'calendar' => 'calendar'] as $mode => $icon)
                     <button type="button" wire:click="$set('view', '{{ $mode }}')"
                             @class([
                                 'flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-bold capitalize transition',
@@ -141,8 +141,9 @@
                             <td class="px-3 py-3">
                                 <a href="{{ route('events.hub', $event) }}" class="block">
                                     <span class="block truncate text-sm font-bold text-navy-900 group-hover:text-gold-700">{{ $event->name }}</span>
-                                    <span class="mt-0.5 block text-eyebrow text-muted">
-                                        {{ str($event->type)->replace('_', ' ')->title() }} · {{ $event->city }}{{ $event->country ? ', '.$event->country : '' }}
+                                    <span class="mt-0.5 block truncate text-eyebrow text-muted">
+                                        {{ str($event->type)->replace('_', ' ')->title() }} ·
+                                        {{ $event->venue?->name ?? trim($event->city.($event->country ? ', '.$event->country : ''), ', ') ?: 'Venue TBC' }}
                                     </span>
                                 </a>
                             </td>
@@ -192,11 +193,11 @@
         @endif
     @endif
 
-    {{-- ══════════ CARDS VIEW ══════════ --}}
-    @if ($view === 'cards')
+    {{-- ══════════ LANES VIEW ══════════ --}}
+    @if ($view === 'lanes')
 
         {{-- Next Up — cinematic hero for whatever is live or nearest --}}
-        @if ($nextUp && $events->currentPage() === 1)
+        @if ($nextUp)
             @php
                 $nuStage = \App\Models\Event::stageColor($nextUp->stage);
                 $nuStart = $nextUp->starts_at?->copy()->startOfDay();
@@ -259,43 +260,138 @@
             </div>
         @endif
 
-        {{-- the deck --}}
-        <div>
-            <div class="mb-3 flex items-baseline gap-2">
-                <h2 class="pf text-h1 font-bold text-navy-900">Portfolio</h2>
-                <span class="text-xs text-muted">{{ $events->total() }} {{ str('event')->plural($events->total()) }} · click a card for full detail</span>
+        {{-- ══ THE BOARD ══
+             Every event on its way to the floor. Lanes replaced the card grid:
+             a grid says nothing about where an event is, and the board is the
+             only view where the shape of the pipeline is visible at a glance.
+             The route between lanes is drawn from the real column positions
+             after layout, so it stays true at any width. ══ --}}
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div class="min-w-0">
+                <div class="mb-3 flex flex-wrap items-baseline gap-2">
+                    <h2 class="pf text-h1 font-bold text-navy-900">The Board</h2>
+                    <span class="text-xs text-muted">{{ $events->total() }} {{ str('event')->plural($events->total()) }} · hover to trace a route · click to inspect</span>
+                </div>
+
+                @if ($events->total() === 0)
+                    <x-empty icon="calendar" title="No events match these filters"
+                             hint="Clear the search or filters, or create a new event to get started.">
+                        <x-slot:actions>
+                            <a href="{{ route('events.create') }}" class="btn-gold btn-sm">＋ Create Event</a>
+                        </x-slot:actions>
+                    </x-empty>
+                @else
+                    <div class="relative" data-board>
+                        <svg data-wires class="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true"></svg>
+
+                        <div class="relative z-10 grid gap-5 md:grid-cols-3">
+                            @foreach ($lanes as $lane)
+                                <div data-lane="{{ $lane['key'] }}">
+                                    <div class="mb-2.5 flex items-center gap-2" data-lane-head>
+                                        <span @class([
+                                            'h-2.5 w-2.5 shrink-0 rounded-full',
+                                            'bg-navy-200' => $lane['key'] === 0,
+                                            'bg-gold-500' => $lane['key'] === 1,
+                                            'bg-track' => $lane['key'] === 2,
+                                        ])></span>
+                                        <b class="text-xs font-bold text-navy-900">{{ $lane['title'] }}</b>
+                                        <span class="hidden text-[10px] text-muted lg:inline">{{ $lane['note'] }}</span>
+                                        <span class="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-white px-1.5 text-[10.5px] font-bold text-navy-600 ring-1 ring-line">{{ $lane['events']->count() }}</span>
+                                    </div>
+
+                                    @forelse ($lane['events'] as $event)
+                                        @include('livewire.partials.events.lane-card', [
+                                            'event' => $event,
+                                            'h' => $health[$event->id] ?? null,
+                                            'm' => $metrics[$event->id] ?? [],
+                                            'isFav' => in_array($event->id, $favoriteIds, true),
+                                            'isOpen' => $expandedId === $event->id,
+                                        ])
+                                    @empty
+                                        <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11px] text-muted">Nothing here.</p>
+                                    @endforelse
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
-            @if ($events->isEmpty())
-                <x-empty icon="calendar" title="No events match these filters"
-                         hint="Clear the search or filters, or create a new event to get started.">
-                    <x-slot:actions>
-                        <a href="{{ route('events.create') }}" class="btn-gold btn-sm">＋ Create Event</a>
-                    </x-slot:actions>
-                </x-empty>
-            @else
-                <div class="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
-                    @foreach ($events as $event)
-                        @include('livewire.partials.events.card', ['event' => $event])
-                    @endforeach
-                </div>
-            @endif
-
-            @if ($events->hasPages())
-                <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
-                    <span>Showing {{ $events->firstItem() ?? 0 }}–{{ $events->lastItem() ?? 0 }} of {{ $events->total() }}</span>
-                    <span class="flex items-center gap-1.5">
-                        <button type="button" wire:click="previousPage" @disabled($events->onFirstPage()) class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">‹</button>
-                        @foreach (range(1, $events->lastPage()) as $page)
-                            <button type="button" wire:click="gotoPage({{ $page }})"
-                                    @class(['rounded-lg px-3 py-1.5 font-semibold transition', 'bg-gold-50 text-gold-700 ring-1 ring-gold-300' => $events->currentPage() === $page, 'border border-line bg-white text-navy-600 hover:border-gold-300' => $events->currentPage() !== $page])>{{ $page }}</button>
-                        @endforeach
-                        <button type="button" wire:click="nextPage" @disabled(! $events->hasMorePages()) class="rounded-lg border border-line bg-white px-2.5 py-1.5 font-semibold text-navy-600 transition enabled:hover:border-gold-300 disabled:opacity-40">›</button>
-                    </span>
-                </div>
-            @endif
+            {{-- ══ INSPECTOR — replaces the card that used to expand in place ══ --}}
+            <aside class="self-start xl:sticky xl:top-[92px]">
+                @if ($expanded && $selected)
+                    <div class="card overflow-hidden">
+                        <div class="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="eyebrow">Inspector</p>
+                                <p class="pf mt-1 truncate text-[17px] font-bold text-navy-900">{{ $selected?->name }}</p>
+                            </div>
+                            <button type="button" wire:click="closeInspector"
+                                    class="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-navy-400 transition hover:bg-navy-50 hover:text-navy-900" aria-label="Close">✕</button>
+                        </div>
+                        <div class="p-4">
+                            @include('livewire.partials.events.detail', ['event' => $selected, 'expanded' => $expanded])
+                        </div>
+                    </div>
+                @else
+                    <div class="card p-5 text-center">
+                        <p class="eyebrow">Inspector</p>
+                        <p class="mt-3 text-[12.5px] leading-relaxed text-muted">
+                            Pick an event from the board. It opens here — nothing expands, nothing moves.
+                        </p>
+                    </div>
+                @endif
+            </aside>
         </div>
     @endif
+
+    @script
+    <script>
+        /* The connectors. Measured from the live lane positions so they stay
+           true at any width, and redrawn when Livewire replaces the board. */
+        const draw = () => {
+            const board = document.querySelector('[data-board]');
+            const svg = board?.querySelector('[data-wires]');
+            if (!board || !svg) return;
+
+            const box = board.getBoundingClientRect();
+            svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+
+            const heads = [...board.querySelectorAll('[data-lane-head]')].map(h => {
+                const r = h.getBoundingClientRect();
+                return { l: r.left - box.left, r: r.right - box.left, y: r.top - box.top + r.height / 2 };
+            });
+            if (heads.length < 2 || heads[0].y !== heads[1].y) { svg.innerHTML = ''; return; }
+
+            let out = `<defs><marker id="ev-arw" viewBox="0 0 10 10" refX="8" refY="5"
+                        markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0 1 L9 5 L0 9 z" fill="#0B1F3A" fill-opacity=".34"/></marker></defs>`;
+
+            for (let i = 0; i < heads.length - 1; i++) {
+                const a = heads[i], b = heads[i + 1], y = a.y;
+                out += `<path d="M${a.r + 6} ${y} C${a.r + 16} ${y - 14}, ${b.l - 16} ${y - 14}, ${b.l - 6} ${y}"
+                         fill="none" stroke="#0B1F3A" stroke-opacity=".26" stroke-width="1.5"
+                         stroke-dasharray="5 4" marker-end="url(#ev-arw)"/>`;
+            }
+
+            board.querySelectorAll('[data-card]').forEach(el => {
+                const r = el.getBoundingClientRect();
+                const lane = el.closest('[data-lane]');
+                const h = heads[[...board.querySelectorAll('[data-lane]')].indexOf(lane)];
+                if (!h) return;
+                const x = r.left - box.left + 22, y = r.top - box.top;
+                out += `<path d="M${h.l + 5} ${h.y + 8} C${h.l + 5} ${(h.y + y) / 2}, ${x} ${(h.y + y) / 2}, ${x} ${y - 3}"
+                         fill="none" stroke="#B8942C" stroke-opacity=".22" stroke-width="1.2"/>`;
+            });
+
+            svg.innerHTML = out;
+        };
+
+        requestAnimationFrame(draw);
+        addEventListener('resize', draw);
+        Livewire.hook('morph.updated', () => requestAnimationFrame(draw));
+    </script>
+    @endscript
 
     {{-- ══════════ CALENDAR VIEW ══════════ --}}
     @if ($view === 'calendar' && $calendar)

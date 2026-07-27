@@ -108,14 +108,14 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The rebuilt page: light KPI strip, portfolio deck, only Card + Calendar views.
+        // The rebuilt page: light KPI strip, then the lane board.
         $this->actingAs($user)->get('/events')->assertOk()
             ->assertSee('Total Events')->assertSee('At Risk')
             ->assertSee('ICFT 2026')
-            ->assertSee('Portfolio');
+            ->assertSee('The Board');
 
-        // Filters narrow the card grid. Asserted through the component's paginator,
-        // since the Command Spine radar always lists every event in the page HTML.
+        // Filters narrow the board. Asserted through the component's paginator,
+        // since the Event Radar always lists every event in the page HTML.
         $names = function (array $sets) use ($user) {
             $c = Livewire::actingAs($user)->test(EventsIndex::class);
             foreach ($sets as $k => $v) {
@@ -129,8 +129,8 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // A removed view falls back to Cards rather than erroring.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Portfolio');
+        // An unknown view falls back to the board rather than erroring.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('The Board');
     }
 
     public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void

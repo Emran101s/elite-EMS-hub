@@ -68,13 +68,13 @@ class EventsPageTest extends TestCase
         $this->assertCount(Event::whereNull('archived_at')->where('name', 'like', '%ICFT%')->count(), $selected);
     }
 
-    public function test_expanding_a_card_reveals_its_full_detail_in_place(): void
+    public function test_selecting_a_card_opens_its_detail_in_the_inspector(): void
     {
         $user = $this->actor();
         $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         $c = Livewire::actingAs($user)->test(EventsIndex::class)
-            ->assertSet('view', 'cards')
+            ->assertSet('view', 'lanes')
             ->assertSee('ICFT 2026')
             ->assertDontSee('Event Control Room'); // collapsed: detail is hidden
 
