@@ -272,7 +272,7 @@
                                                 {{-- Category is what turns one list into the VIP, speaker and shuttle sheets. --}}
                                                 <select wire:change="updatePassenger({{ $g->id }}, 'category', $event.target.value)"
                                                         class="h-5 w-auto rounded border-0 bg-transparent p-0 pr-4 text-eyebrow font-semibold text-muted hover:text-navy-800 focus:ring-0">
-                                                    @foreach (\App\Models\EventTransportPassenger::CATEGORIES as $key => $label)
+                                                    @foreach (\App\Support\Taxonomy::options('passenger_category') as $key => $label)
                                                         <option value="{{ $key }}" @selected($g->category === $key)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>

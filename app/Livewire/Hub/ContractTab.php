@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Hub;
 
-use App\Models\ContractSignatory;
 use App\Models\Event;
 use App\Models\EventContract;
 use App\Support\ContractClauses;
 use App\Support\ContractTemplates;
+use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -178,7 +178,7 @@ class ContractTab extends Component
         if (! in_array($field, ['name', 'email', 'role'], true)) {
             return;
         }
-        if ($field === 'role' && ! isset(ContractSignatory::ROLES[$value])) {
+        if ($field === 'role' && ! isset(Taxonomy::options('signatory_role')[$value])) {
             return;
         }
 

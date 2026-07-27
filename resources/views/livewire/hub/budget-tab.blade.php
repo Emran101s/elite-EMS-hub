@@ -168,7 +168,7 @@
                 {{-- quick-add other income sources (client fund is its own stream above) --}}
                 <div class="flex flex-wrap items-center gap-1.5 border-t border-line bg-page/20 px-3 py-2">
                     <span class="text-eyebrow font-semibold uppercase tracking-wide text-muted">Add income:</span>
-                    @foreach (\App\Models\EventIncomeItem::SOURCES as $key => $label)
+                    @foreach (\App\Support\Taxonomy::options('income_source') as $key => $label)
                         @continue ($key === 'client')
                         <button type="button" wire:click="newIncome('{{ $key }}')" class="rounded-full border border-line bg-white px-2.5 py-0.5 text-eyebrow font-semibold text-navy-700 transition hover:border-gold-400 hover:text-gold-700">＋ {{ $label }}</button>
                     @endforeach
@@ -630,7 +630,7 @@
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Source</label>
                         <select wire:model="incomeSource" class="input h-10 text-sm">
-                            @foreach (\App\Models\EventIncomeItem::SOURCES as $key => $lbl)<option value="{{ $key }}">{{ $lbl }}</option>@endforeach
+                            @foreach (\App\Support\Taxonomy::options('income_source') as $key => $lbl)<option value="{{ $key }}">{{ $lbl }}</option>@endforeach
                         </select>
                     </div>
                     <div>

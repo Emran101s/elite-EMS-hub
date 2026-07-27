@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Event;
 use App\Models\EventTransport;
-use App\Models\EventTransportPassenger;
+use App\Support\Taxonomy;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -211,7 +211,7 @@ class TransportLive extends Component
                 ->whereDate('depart_at', $this->day)
                 ->whereNull('driver_id')
                 ->whereNotIn('status', ['completed', 'cancelled'])->count(),
-            'categories' => EventTransportPassenger::CATEGORIES,
+            'categories' => Taxonomy::options('passenger_category'),
         ]);
     }
 }

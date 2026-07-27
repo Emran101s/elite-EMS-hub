@@ -7,6 +7,7 @@ use App\Models\EventAgendaSession;
 use App\Models\User;
 use App\Services\AgendaProgram;
 use App\Services\AgendaTimeline;
+use App\Support\Taxonomy;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -147,7 +148,7 @@ class AgendaTab extends Component
         foreach (array_values($this->speakerRows) as $i => $row) {
             $name = trim((string) ($row['name'] ?? ''));
             $role = $row['role'] ?? 'panelist';
-            if ($name === '' || ! isset(EventAgendaSession::SPEAKER_ROLES[$role])) {
+            if ($name === '' || ! isset(Taxonomy::options('speaker_role')[$role])) {
                 continue;
             }
 
@@ -272,13 +273,13 @@ class AgendaTab extends Component
             'agenda_day_id' => ['required', 'exists:event_agenda_days,id'],
             'room_id' => ['nullable', 'exists:event_rooms,id'],
             'type' => ['required', 'string', 'max:40'],   // built-in or a custom label
-            'format' => ['required', 'in:'.implode(',', array_keys(EventAgendaSession::FORMATS))],
+            'format' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('session_format')))],
             'status' => ['required', 'in:'.implode(',', EventAgendaSession::STATUSES)],
             'capacity' => ['nullable', 'integer', 'min:0'],
             'starts_at' => ['required'],
             'ends_at' => ['required'],
             'speakerRows.*.name' => ['nullable', 'string', 'max:120'],
-            'speakerRows.*.role' => ['required', 'in:'.implode(',', array_keys(EventAgendaSession::SPEAKER_ROLES))],
+            'speakerRows.*.role' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('speaker_role')))],
         ]);
 
         // Type a room → create it on the fly.
@@ -517,9 +518,9 @@ class AgendaTab extends Component
             'speakerOptions' => $this->event->speakers()->pluck('name')
                 ->merge(User::orderBy('name')->pluck('name'))
                 ->unique()->filter()->values(),
-            'roles' => EventAgendaSession::SPEAKER_ROLES,
+            'roles' => Taxonomy::options('speaker_role'),
             // Built-in types + any custom ones already used, prettified for the datalist.
-            'typeOptions' => collect(EventAgendaSession::TYPES)
+            'typeOptions' => collect(Taxonomy::labels('session_type'))
                 ->merge($this->event->agendaSessions()->distinct()->pluck('type'))
                 ->map(fn ($t) => str($t)->replace('_', ' ')->title()->toString())
                 ->unique()->sort()->values(),

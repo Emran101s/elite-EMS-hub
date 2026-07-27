@@ -285,7 +285,7 @@
                         <div>
                             <label class="field-label !mb-1.5">Format</label>
                             <div class="grid grid-cols-3 gap-2.5">
-                                @foreach (\App\Models\EventAgendaSession::FORMATS as $val => $lbl)
+                                @foreach (\App\Support\Taxonomy::options('session_format') as $val => $lbl)
                                     <button type="button" wire:click="$set('format', '{{ $val }}')"
                                             @class([
                                                 'rounded-2xl border py-2.5 text-sm font-bold transition',

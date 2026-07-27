@@ -3,24 +3,28 @@
     {{-- ══════════ Which list ══════════ --}}
     <aside class="self-start lg:sticky lg:top-[92px]">
         <div class="card overflow-hidden">
-            <div class="border-b border-line px-4 py-3"><p class="eyebrow">Lists</p></div>
-            <div class="p-1.5">
-                @foreach ($lists as $list)
-                    <button type="button" wire:click="pick('{{ $list['key'] }}')"
-                            @class([
-                                'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition',
-                                'bg-navy-900 text-white' => $taxonomy === $list['key'],
-                                'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => $taxonomy !== $list['key'],
-                            ])>
-                        <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{{ $list['label'] }}</span>
-                        <span @class([
-                            'shrink-0 rounded-full px-1.5 text-[10px] font-bold tabular-nums',
-                            'bg-white/15 text-white' => $taxonomy === $list['key'],
-                            'bg-navy-50 text-navy-500' => $taxonomy !== $list['key'],
-                        ])>{{ $list['count'] }}</span>
-                    </button>
-                @endforeach
-            </div>
+            @foreach ($groups as $groupName => $lists)
+                <div class="border-b border-line px-4 py-2 {{ $loop->first ? '' : 'border-t' }}">
+                    <p class="eyebrow">{{ $groupName }}</p>
+                </div>
+                <div class="p-1.5">
+                    @foreach ($lists as $list)
+                        <button type="button" wire:click="pick('{{ $list['key'] }}')"
+                                @class([
+                                    'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left transition',
+                                    'bg-navy-900 text-white' => $taxonomy === $list['key'],
+                                    'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => $taxonomy !== $list['key'],
+                                ])>
+                            <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{{ $list['label'] }}</span>
+                            <span @class([
+                                'shrink-0 rounded-full px-1.5 text-[10px] font-bold tabular-nums',
+                                'bg-white/15 text-white' => $taxonomy === $list['key'],
+                                'bg-navy-50 text-navy-500' => $taxonomy !== $list['key'],
+                            ])>{{ $list['count'] }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
     </aside>
 

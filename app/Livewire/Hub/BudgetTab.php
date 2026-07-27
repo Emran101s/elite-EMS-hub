@@ -8,6 +8,7 @@ use App\Models\EventBudgetItem;
 use App\Models\EventIncomeItem;
 use App\Services\BudgetSync;
 use App\Services\CurrencyService;
+use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
@@ -353,7 +354,7 @@ class BudgetTab extends Component
     public function newIncome(?string $source = null): void
     {
         $this->reset(['editingIncomeId', 'incomeDesc', 'incomeAmount']);
-        $this->incomeSource = $source && array_key_exists($source, EventIncomeItem::SOURCES) ? $source : 'client';
+        $this->incomeSource = $source && array_key_exists($source, Taxonomy::options('income_source')) ? $source : 'client';
         $this->incomeStatus = 'expected';
         $this->showIncomeForm = true;
     }
@@ -372,7 +373,7 @@ class BudgetTab extends Component
     public function saveIncome(): void
     {
         $this->validate([
-            'incomeSource' => 'required|in:'.implode(',', array_keys(EventIncomeItem::SOURCES)),
+            'incomeSource' => 'required|in:'.implode(',', array_keys(Taxonomy::options('income_source'))),
             'incomeDesc' => 'nullable|string|max:160',
             'incomeAmount' => 'required|numeric|min:0',
             'incomeStatus' => 'required|in:'.implode(',', EventIncomeItem::STATUSES),

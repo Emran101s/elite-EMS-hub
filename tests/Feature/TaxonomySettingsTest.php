@@ -2,13 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Hub\BudgetTab;
 use App\Livewire\Hub\SettingsTab;
 use App\Livewire\TaxonomySettings;
 use App\Models\Event;
+use App\Models\Supplier;
 use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Support\Taxonomy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -327,6 +330,105 @@ class TaxonomySettingsTest extends TestCase
         $this->assertNull(TaxonomyTerm::find($parent->id));
         $this->assertModelExists($child->fresh());
         $this->assertNull($child->fresh()->parent_id, 'the child is still a real value on real records');
+    }
+
+    /**
+     * Every list must actually be wired to something. A list nobody's screen
+     * reads from is a table, not a setting — and the `on` pair is what makes
+     * the usage count (and therefore the delete guard) real.
+     */
+    public function test_every_list_points_at_a_column_that_exists(): void
+    {
+        $this->boot();
+
+        foreach (Taxonomy::LISTS as $key => $meta) {
+            [$table, $column] = $meta['on'];
+
+            $this->assertTrue(
+                Schema::hasColumn($table, $column),
+                "{$key} claims to be stored on {$table}.{$column}, which does not exist"
+            );
+
+            $this->assertNotEmpty(Taxonomy::defaults($key), "{$key} has no seed");
+            $this->assertContains($meta['stores'], ['key', 'label'], "{$key} must say how records store it");
+        }
+    }
+
+    /**
+     * The key a new term gets has to match the shape the list was written in,
+     * or it will never match a record. This checks both shapes at once.
+     */
+    public function test_a_new_term_takes_the_shape_of_the_list_it_joins(): void
+    {
+        $user = $this->boot();
+
+        // Income sources are machine keys: 'Sponsor Rebate' => sponsor_rebate.
+        $keyed = $this->add($user, 'income_source', 'Sponsor Rebate');
+        $this->assertSame('sponsor_rebate', $keyed->key);
+
+        // Bedroom grades are the words themselves: records hold "Presidential".
+        $worded = $this->add($user, 'room_category', 'Presidential');
+        $this->assertSame('Presidential', $worded->key);
+    }
+
+    public function test_a_new_income_source_is_offered_on_the_budget_screen(): void
+    {
+        $user = $this->boot();
+        // fresh() so the column defaults the factory does not set (currency,
+        // stage) are on the instance the screen is handed.
+        $event = Event::factory()->create(['stage' => 'planning'])->fresh();
+
+        $this->add($user, 'income_source', 'Sponsor Rebate');
+
+        Livewire::actingAs($user)->test(BudgetTab::class, ['event' => $event])
+            ->assertSee('Sponsor Rebate')
+            ->set('incomeSource', 'sponsor_rebate')
+            ->set('incomeDesc', 'Rebate from the headline sponsor')
+            ->set('incomeAmount', '1200')
+            ->call('saveIncome')
+            ->assertHasNoErrors();
+
+        $this->assertSame('sponsor_rebate', $event->incomeItems()->latest('id')->first()->source);
+    }
+
+    /**
+     * A value in the data with no term of its own is invisible in Settings,
+     * uncounted, and unprotected by the guard that stops you deleting
+     * something in use. The constants had drifted — suppliers were filed under
+     * thirteen categories Supplier::CATEGORIES never listed — so adopt()
+     * takes on whatever the records actually hold.
+     */
+    public function test_a_value_already_in_the_data_gets_a_term_of_its_own(): void
+    {
+        $this->boot();
+
+        // A category no constant ever named, written straight to the column.
+        Supplier::factory()->create(['category' => 'drone_operations']);
+        $this->assertSame(1, Taxonomy::adopt(), 'exactly the one value with no term');
+
+        $adopted = TaxonomyTerm::in('supplier_category')->where('key', 'drone_operations')->first();
+
+        $this->assertNotNull($adopted, 'a value the data uses must be offered');
+        $this->assertSame('Drone Operations', $adopted->label);
+        $this->assertFalse($adopted->is_system, 'the platform never named it — the data did');
+        $this->assertSame(1, Taxonomy::usage('supplier_category')['drone_operations']);
+    }
+
+    /**
+     * Sessions are saved through str()->snake(), so this list is stored as
+     * keys. It was seeded as words once, and every existing session stopped
+     * resolving — nothing errored, the labels just went blank.
+     */
+    public function test_session_types_are_stored_in_the_shape_the_agenda_form_saves(): void
+    {
+        $this->boot();
+
+        $this->assertSame('key', Taxonomy::meta('session_type', 'stores'));
+        $this->assertArrayHasKey('gala_dinner', Taxonomy::options('session_type'));
+        $this->assertSame('Gala Dinner', Taxonomy::label('session_type', 'gala_dinner'));
+
+        // The datalist offers the words; the form snake-cases them back.
+        $this->assertContains('Gala Dinner', Taxonomy::labels('session_type'));
     }
 
     public function test_the_screens_render_and_settings_links_to_them(): void

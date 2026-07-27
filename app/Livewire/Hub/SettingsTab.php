@@ -229,7 +229,7 @@ class SettingsTab extends Component
     /** Assign a workspace member to this event with a role. */
     public function addTeamMember(): void
     {
-        if (! $this->teamUserId || ! in_array($this->teamRole, Event::TEAM_ROLES, true)) {
+        if (! $this->teamUserId || ! array_key_exists($this->teamRole, Taxonomy::options('team_role'))) {
             return;
         }
         // Unique (event, user, role) makes this idempotent — no duplicate assignments.
@@ -285,7 +285,7 @@ class SettingsTab extends Component
             'clients' => Client::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
             'team' => $this->event->teamMembers()->orderBy('name')->get(),
-            'roleLabels' => Event::TEAM_ROLE_LABELS,
+            'roleLabels' => Taxonomy::options('team_role'),
             'venues' => Venue::orderBy('name')->get(),
             'palettes' => self::PALETTES,
             'hubModules' => Event::HUB_MODULES,

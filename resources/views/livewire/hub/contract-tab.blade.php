@@ -684,7 +684,7 @@
                                     <div class="flex items-center gap-2 px-1.5">
                                         <select wire:change="updateSignatory({{ $s->id }}, 'role', $event.target.value)" @disabled($s->isSigned())
                                                 class="border-0 bg-transparent p-0 text-eyebrow font-semibold text-muted focus:ring-0 disabled:opacity-70">
-                                            @foreach (\App\Models\ContractSignatory::ROLES as $rk => $rl)<option value="{{ $rk }}" @selected($s->role === $rk)>{{ $rl }}</option>@endforeach
+                                            @foreach (\App\Support\Taxonomy::options('signatory_role') as $rk => $rl)<option value="{{ $rk }}" @selected($s->role === $rk)>{{ $rl }}</option>@endforeach
                                         </select>
                                         @if ($s->isSigned())
                                             <span class="text-eyebrow font-semibold text-emerald-700">✓ {{ $s->signed_at->format('j M Y · H:i') }}</span>

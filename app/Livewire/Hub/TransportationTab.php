@@ -4,12 +4,12 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\EventTransport;
-use App\Models\EventTransportPassenger;
 use App\Models\Supplier;
 use App\Models\TransportDriver;
 use App\Models\TransportServiceType;
 use App\Models\TransportVehicle;
 use App\Models\VehicleType;
+use App\Support\Taxonomy;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -985,7 +985,7 @@ class TransportationTab extends Component
         }
 
         // An unknown category would quietly drop someone out of every filter.
-        if ($field === 'category' && ! isset(EventTransportPassenger::CATEGORIES[$value])) {
+        if ($field === 'category' && ! isset(Taxonomy::options('passenger_category')[$value])) {
             return;
         }
 

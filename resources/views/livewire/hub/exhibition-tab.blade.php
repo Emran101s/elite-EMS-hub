@@ -136,7 +136,7 @@
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Package</label>
                         <select wire:model="package" class="input h-10 text-sm">
-                            @foreach (\App\Models\EventExhibitor::PACKAGES as $p)<option value="{{ $p }}">{{ ucfirst($p) }}</option>@endforeach
+                            @foreach (\App\Support\Taxonomy::options('exhibitor_package') as $pk => $pl)<option value="{{ $pk }}">{{ $pl }}</option>@endforeach
                         </select>
                     </div>
                     <div>

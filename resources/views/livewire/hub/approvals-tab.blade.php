@@ -14,7 +14,7 @@
             <div>
                 <label class="field-label !mb-1 !text-eyebrow" for="a-type">Type</label>
                 <select id="a-type" wire:model="type" class="input h-10 text-sm">
-                    @foreach (\App\Models\EventApproval::TYPES as $typeOption)<option value="{{ $typeOption }}">{{ str($typeOption)->title() }}</option>@endforeach
+                    @foreach (\App\Support\Taxonomy::options('approval_type') as $tk => $tl)<option value="{{ $tk }}">{{ $tl }}</option>@endforeach
                 </select>
             </div>
             <div>

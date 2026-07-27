@@ -189,18 +189,20 @@ class TaxonomySettings extends Component
 
     public function render()
     {
-        [$label, $description, $usesColor] = Taxonomy::LISTS[$this->taxonomy];
-        $storesLabel = Taxonomy::LISTS[$this->taxonomy][3] === 'label';
-
         $all = TaxonomyTerm::in($this->taxonomy)->get();
         $usage = Taxonomy::usage($this->taxonomy);
 
+        // Eighteen lists is too many to scan as one column, so the picker is
+        // grouped — and the counts come from one query rather than eighteen.
+        $counts = TaxonomyTerm::query()->active()
+            ->selectRaw('taxonomy, count(*) as n')->groupBy('taxonomy')->pluck('n', 'taxonomy');
+
         return view('livewire.taxonomy-settings', [
-            'lists' => collect(Taxonomy::LISTS)->map(fn ($meta, $key) => [
-                'key' => $key,
-                'label' => $meta[0],
-                'count' => TaxonomyTerm::in($key)->active()->count(),
-            ])->values(),
+            'groups' => Taxonomy::groups()->map(fn ($lists) => $lists->map(fn ($meta) => [
+                'key' => $meta['key'],
+                'label' => $meta['label'],
+                'count' => (int) ($counts[$meta['key']] ?? 0),
+            ])->values()),
             // Roots with their children, in one query pair — the screen is
             // the tree, so it is fetched as one.
             'terms' => TaxonomyTerm::in($this->taxonomy)->roots()->with('children')->get(),
@@ -216,10 +218,10 @@ class TaxonomySettings extends Component
             // Only roots can be a parent: nesting is one level deep.
             'parents' => $all->whereNull('parent_id')
                 ->when($this->editingId, fn ($c) => $c->where('id', '!=', $this->editingId)),
-            'listLabel' => $label,
-            'listDescription' => $description,
-            'usesColor' => $usesColor,
-            'storesLabel' => $storesLabel,
+            'listLabel' => Taxonomy::meta($this->taxonomy, 'label'),
+            'listDescription' => Taxonomy::meta($this->taxonomy, 'note'),
+            'usesColor' => (bool) Taxonomy::meta($this->taxonomy, 'color'),
+            'storesLabel' => Taxonomy::meta($this->taxonomy, 'stores') === 'label',
         ])->layout('components.layouts.app', [
             'title' => 'Types & lists',
             'subtitle' => 'The lists every event, deal and budget draws from — yours to change.',

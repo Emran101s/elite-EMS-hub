@@ -3,7 +3,7 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
-use App\Models\EventApproval;
+use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -28,7 +28,7 @@ class ApprovalsTab extends Component
     {
         $this->validate([
             'title' => ['required', 'string', 'max:160'],
-            'type' => ['required', 'in:'.implode(',', EventApproval::TYPES)],
+            'type' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('approval_type')))],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 

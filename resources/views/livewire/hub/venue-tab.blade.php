@@ -1,7 +1,7 @@
 @php
-    $roomTypeLabels = ['main_hall' => 'Main Hall', 'breakout' => 'Breakout', 'exhibition' => 'Exhibition', 'registration' => 'Registration', 'vip' => 'VIP', 'catering' => 'Catering'];
+    $roomTypeLabels = \App\Support\Taxonomy::options('venue_room_type');
     // Built-in labels + any custom room types already used — suggestions for the datalist.
-    $roomTypeOptions = collect($roomTypeLabels)->values()
+    $roomTypeOptions = collect(\App\Support\Taxonomy::labels('venue_room_type'))
         ->merge($rooms->pluck('type')->map(fn ($t) => str($t)->replace('_', ' ')->title()))
         ->unique()->sort()->values();
     $typeMeta = [
