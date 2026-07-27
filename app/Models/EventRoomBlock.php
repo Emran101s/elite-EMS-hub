@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['event_id', 'supplier_id', 'hotel', 'room_type', 'occupancy', 'rooms_count', 'rate_cents',
+#[Fillable(['event_id', 'supplier_id', 'hotel', 'venue_id', 'room_type', 'occupancy', 'rooms_count', 'rate_cents',
     'check_in', 'check_out', 'status', 'confirmation_number', 'cutoff_on', 'notes', 'position'])]
 class EventRoomBlock extends Model
 {
@@ -109,5 +109,16 @@ class EventRoomBlock extends Model
         $rooms = $this->relationLoaded('rooms') ? $this->rooms : $this->rooms()->get();
 
         return $rooms->filter(fn ($r) => filled($r->guest))->sum(fn ($r) => $r->roomNights());
+    }
+
+    /**
+     * The hotel, when it is one of yours from the directory.
+     *
+     * `hotel` stays alongside it as the name this row was made with — a
+     * rooming list printed last month should keep reading the same.
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'block_id', 'hotel', 'guest', 'attendee_id', 'guest_email', 'guest_phone', 'sharing_with', 'room_type', 'occupancy', 'rooms', 'check_in', 'arrival_time', 'arrival_note', 'check_out', 'departure_time', 'departure_note', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes', 'position'])]
+#[Fillable(['event_id', 'block_id', 'hotel', 'venue_id', 'guest', 'attendee_id', 'guest_email', 'guest_phone', 'sharing_with', 'room_type', 'occupancy', 'rooms', 'check_in', 'arrival_time', 'arrival_note', 'check_out', 'departure_time', 'departure_note', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes', 'position'])]
 class EventAccommodation extends Model
 {
     protected $table = 'event_accommodations';
@@ -72,5 +72,16 @@ class EventAccommodation extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * The hotel, when it is one of yours from the directory.
+     *
+     * `hotel` stays alongside it as the name this row was made with — a
+     * rooming list printed last month should keep reading the same.
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
     }
 }

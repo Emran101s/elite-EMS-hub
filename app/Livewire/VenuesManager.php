@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Venue;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -113,16 +114,29 @@ class VenuesManager extends Component
         Venue::whereKey($id)->delete();
     }
 
+    /** all | hotels | other — hotels are the half the accommodation module uses. */
+    #[Url(as: 'show')]
+    public string $filter = 'all';
+
     public function render()
     {
-        $venues = Venue::when($this->search !== '', fn ($q) => $q
-            ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')
-                ->orWhere('city', 'like', '%'.$this->search.'%')
-                ->orWhere('country', 'like', '%'.$this->search.'%')
-                ->orWhere('type', 'like', '%'.$this->search.'%')))
+        $venues = Venue::when($this->filter === 'hotels', fn ($q) => $q->hotels())
+            ->when($this->filter === 'other', fn ($q) => $q->whereNot(fn ($w) => $w->where('type', 'like', '%Hotel%')))
+            ->when($this->search !== '', fn ($q) => $q
+                ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('city', 'like', '%'.$this->search.'%')
+                    ->orWhere('country', 'like', '%'.$this->search.'%')
+                    ->orWhere('type', 'like', '%'.$this->search.'%')))
             ->withCount('events')
             ->orderBy('name')->get();
 
-        return view('livewire.venues-manager', ['venues' => $venues]);
+        return view('livewire.venues-manager', [
+            'venues' => $venues,
+            'counts' => [
+                'all' => Venue::count(),
+                'hotels' => Venue::hotels()->count(),
+                'other' => Venue::whereNot(fn ($w) => $w->where('type', 'like', '%Hotel%'))->count(),
+            ],
+        ]);
     }
 }

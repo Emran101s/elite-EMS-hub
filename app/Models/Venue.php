@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,5 +36,21 @@ class Venue extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
+    }
+
+    /**
+     * Venues that are places people sleep.
+     *
+     * The type is free text and editable in Settings, so this matches on the
+     * word rather than an id — someone may well rename it to "Hotel / Resort".
+     */
+    public function scopeHotels(Builder $query): Builder
+    {
+        return $query->where('type', 'like', '%Hotel%');
+    }
+
+    public function isHotel(): bool
+    {
+        return str_contains(mb_strtolower((string) $this->type), 'hotel');
     }
 }

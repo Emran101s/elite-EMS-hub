@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventAccommodation;
 use App\Models\EventRoomBlock;
 use App\Models\Supplier;
+use App\Models\Venue;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -43,8 +44,17 @@ class AccommodationTab extends Component
     public string $importMsg = '';
 
     // ── Block form ──────────────────────────────────────────────
-    #[Validate('required|string|max:160')]
+    #[Validate('nullable|string|max:160')]
     public string $hotel = '';
+
+    /**
+     * The hotel from the Venues directory, when it is one of yours.
+     *
+     * $hotel stays alongside it as the name this block was made with, so a
+     * rooming list printed last month keeps reading the same.
+     */
+    #[Validate('nullable|integer|exists:venues,id')]
+    public ?int $venue_id = null;
 
     #[Validate('nullable|integer|exists:suppliers,id')]
     public ?int $supplier_id = null;
@@ -90,7 +100,7 @@ class AccommodationTab extends Component
 
     public function newBlock(): void
     {
-        $this->reset(['editingId', 'hotel', 'supplier_id', 'room_type', 'occupancy', 'rate',
+        $this->reset(['editingId', 'hotel', 'venue_id', 'supplier_id', 'room_type', 'occupancy', 'rate',
             'check_in', 'check_out', 'cutoff_on', 'confirmation_number', 'notes']);
         $this->rooms_count = 10;
         $this->status = 'held';
@@ -105,6 +115,7 @@ class AccommodationTab extends Component
         $b = $this->event->roomBlocks()->findOrFail($id);
         $this->editingId = $b->id;
         $this->hotel = $b->hotel;
+        $this->venue_id = $b->venue_id;
         $this->supplier_id = $b->supplier_id;
         $this->room_type = $b->room_type ?? '';
         $this->occupancy = $b->occupancy ?? '';
@@ -124,8 +135,22 @@ class AccommodationTab extends Component
         Gate::authorize('write');
         $this->validate();
 
+        // Picking a hotel from the directory names the block; typing one still
+        // works for a hotel that is not in it yet.
+        $venue = $this->venue_id ? Venue::find($this->venue_id) : null;
+
+        // A block has to say where it is, one way or the other. Checked here
+        // rather than with required_without, which counts a present-but-null
+        // venue_id as present and would let a nameless block through.
+        if (! $venue && trim($this->hotel) === '') {
+            $this->addError('hotel', 'Pick a hotel from the directory, or type its name.');
+
+            return;
+        }
+
         $data = [
-            'hotel' => $this->hotel,
+            'hotel' => $venue?->name ?: $this->hotel,
+            'venue_id' => $venue?->id,
             'supplier_id' => $this->supplier_id,
             'room_type' => $this->room_type ?: null,
             'occupancy' => $this->occupancy ?: null,
@@ -480,6 +505,10 @@ class AccommodationTab extends Component
             'blocks' => $blocks,
             'loose' => $loose,
             'hotels' => Supplier::orderBy('name')->get(['id', 'name']),
+            // The directory, hotels first — this is what makes a hotel a thing
+            // you pick rather than a string you retype on every event.
+            'venues' => Venue::orderByRaw("case when lower(type) like '%hotel%' then 0 else 1 end")
+                ->orderBy('name')->get(['id', 'name', 'type', 'city']),
             // Names to autocomplete against; empty means "go build the list first".
             'attendees' => $this->event->attendees()->orderBy('name')->get(['id', 'name', 'ticket_type']),
             'roomsHeld' => $blocks->sum('rooms_count'),

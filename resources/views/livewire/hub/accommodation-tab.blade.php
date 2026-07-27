@@ -372,11 +372,32 @@
                  subtitle="The deal with the hotel. Guest names come after."
                  close="$set('showForm', false)">
             <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
+                    {{-- Pick the hotel from the directory. Typing one still works
+                         for a hotel that is not in it yet — a name is only
+                         required when nothing was picked. --}}
                     <div class="sm:col-span-2">
-                        <label class="field-label !mb-1 !text-eyebrow">Hotel</label>
-                        <input type="text" wire:model="hotel" class="input h-10 text-sm" placeholder="Fairmont Amman">
-                        @error('hotel')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                        <label class="field-label !mb-1 !text-eyebrow" for="ab-venue">Hotel</label>
+                        <select id="ab-venue" wire:model.live="venue_id" class="input h-10 text-sm">
+                            <option value="">— type a name below —</option>
+                            @foreach ($venues as $v)
+                                <option value="{{ $v->id }}">{{ $v->name }}@if ($v->city) · {{ $v->city }}@endif</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-eyebrow text-muted">
+                            Not there yet?
+                            <a href="{{ route('venues.index') }}" class="font-semibold text-gold-700 hover:underline">Add it to Venues</a>
+                            so every event can reuse it.
+                        </p>
+                        @error('venue_id')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                     </div>
+
+                    @unless ($venue_id)
+                        <div class="sm:col-span-2">
+                            <label class="field-label !mb-1 !text-eyebrow" for="ab-hotel">…or type the name</label>
+                            <input id="ab-hotel" type="text" wire:model="hotel" class="input h-10 text-sm" placeholder="Fairmont Amman">
+                            @error('hotel')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                        </div>
+                    @endunless
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Supplier</label>
                         <select wire:model="supplier_id" class="input h-10 text-sm">

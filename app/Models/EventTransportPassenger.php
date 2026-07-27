@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['event_id', 'transport_id', 'attendee_id', 'name', 'category', 'direction', 'airline', 'phone', 'email', 'flight_no',
-    'arrival_on', 'arrival_time', 'pickup_time', 'pickup_point', 'drop_point', 'hotel', 'notes', 'luggage_note',
+    'arrival_on', 'arrival_time', 'pickup_time', 'pickup_point', 'drop_point', 'hotel', 'venue_id', 'notes', 'luggage_note',
     'protocol_note', 'no_show_at', 'position', 'vehicle_no'])]
 class EventTransportPassenger extends Model
 {
@@ -125,5 +125,16 @@ class EventTransportPassenger extends Model
     public function attendee(): BelongsTo
     {
         return $this->belongsTo(EventAttendee::class, 'attendee_id');
+    }
+
+    /**
+     * The hotel, when it is one of yours from the directory.
+     *
+     * `hotel` stays alongside it as the name this row was made with — a
+     * rooming list printed last month should keep reading the same.
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
     }
 }

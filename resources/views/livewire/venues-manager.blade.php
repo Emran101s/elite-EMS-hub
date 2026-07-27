@@ -19,6 +19,26 @@
         <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
     @endif
 
+    {{-- Hotels are the half the accommodation and transport modules pick from,
+         so they are one click away rather than mixed into the whole list. --}}
+    <div class="mt-4 flex flex-wrap items-center gap-1.5">
+        @foreach (['all' => 'All venues', 'hotels' => 'Hotels', 'other' => 'Halls & sites'] as $key => $label)
+            <button type="button" wire:click="$set('filter', '{{ $key }}')"
+                    @class([
+                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition',
+                        'bg-navy-900 text-white' => $filter === $key,
+                        'bg-white text-navy-500 ring-1 ring-line hover:text-navy-900' => $filter !== $key,
+                    ])>
+                {{ $label }}
+                <span @class([
+                    'rounded-full px-1.5 text-[10px] tabular-nums',
+                    'bg-white/15' => $filter === $key,
+                    'bg-navy-50 text-navy-400' => $filter !== $key,
+                ])>{{ $counts[$key] }}</span>
+            </button>
+        @endforeach
+    </div>
+
     {{-- ══ list ══ --}}
     <div class="mt-5">
         @if ($venues->isEmpty())
