@@ -8,6 +8,7 @@ return [
 
     'nav' => [
         'command-center' => [
+            'primary' => true,
             'label' => 'Command Center',
             'path' => '/',
             'route' => 'home',
@@ -16,6 +17,7 @@ return [
             'blurb' => 'Real-time overview of your events ecosystem — KPIs, the Operations Hub map, live alerts, resource utilization and budget.',
         ],
         'events' => [
+            'primary' => true,
             'label' => 'Events',
             'path' => '/events',
             'route' => 'events.index',
@@ -24,6 +26,7 @@ return [
             'blurb' => 'Conferences, galas, workshops, expos and private dinners — across Jordan, Bahrain, UAE, Qatar and KSA.',
         ],
         'projects' => [
+            'primary' => false,
             'label' => 'Projects',
             'path' => '/projects',
             'route' => 'projects.index',
@@ -32,6 +35,7 @@ return [
             'blurb' => 'Project workspaces that tie events, tasks and budgets together.',
         ],
         'tasks' => [
+            'primary' => true,
             'label' => 'Tasks',
             'path' => '/tasks',
             'route' => 'tasks.index',
@@ -40,6 +44,7 @@ return [
             'blurb' => 'Everything on the to-do list — completed, in progress and pending.',
         ],
         'crm' => [
+            'primary' => true,
             'label' => 'CRM',
             'path' => '/crm',
             'route' => 'crm.index',
@@ -48,6 +53,7 @@ return [
             'blurb' => 'Clients, contacts and relationships across all your events.',
         ],
         'finance' => [
+            'primary' => true,
             'label' => 'Finance',
             'path' => '/finance',
             'route' => 'finance.index',
@@ -56,6 +62,7 @@ return [
             'blurb' => 'Budgets, spend, commitments and revenue — the money view.',
         ],
         'suppliers' => [
+            'primary' => false,
             'label' => 'Suppliers',
             'path' => '/suppliers',
             'route' => 'suppliers.index',
@@ -64,6 +71,7 @@ return [
             'blurb' => 'Your supplier network — catering, AV & lighting, production, support — with ratings.',
         ],
         'venues' => [
+            'primary' => false,
             'label' => 'Venues',
             'path' => '/venues',
             'route' => 'venues.index',
@@ -72,6 +80,7 @@ return [
             'blurb' => 'Venues and spaces, availability and utilization.',
         ],
         'team' => [
+            'primary' => false,
             'label' => 'Team',
             'path' => '/team',
             'route' => 'team.index',
@@ -80,6 +89,7 @@ return [
             'blurb' => 'Team members, roles and workload.',
         ],
         'assets' => [
+            'primary' => false,
             'label' => 'Assets',
             'path' => '/assets',
             'route' => 'assets.index',
@@ -88,6 +98,7 @@ return [
             'blurb' => 'Equipment and asset inventory, allocation and condition.',
         ],
         'reports' => [
+            'primary' => false,
             'label' => 'Reports',
             'path' => '/reports',
             'route' => 'reports.index',
@@ -96,6 +107,7 @@ return [
             'blurb' => 'Exports and analytics across events, finance and operations.',
         ],
         'ai-assistant' => [
+            'primary' => false,
             'label' => 'AI Assistant',
             'path' => '/ai-assistant',
             'route' => 'ai.index',
@@ -104,6 +116,7 @@ return [
             'blurb' => 'Ask anything about your operations.',
         ],
         'settings' => [
+            'primary' => false,
             'label' => 'Settings',
             'path' => '/settings',
             'route' => 'settings.index',

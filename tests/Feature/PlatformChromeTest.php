@@ -35,6 +35,23 @@ class PlatformChromeTest extends TestCase
             ->assertSee('Command Center');
     }
 
+    public function test_every_module_in_the_registry_is_reachable_from_the_chrome(): void
+    {
+        [, $user] = $this->ctx();
+
+        $page = $this->actingAs($user)->get(route('home'))->assertOk();
+
+        // The nav used to be a second list kept by hand, and it drifted: CRM was
+        // built and never added, so it and four others could not be reached.
+        foreach (config('modules.nav') as $key => $module) {
+            if (! \Illuminate\Support\Facades\Route::has($module['route'])) {
+                continue;
+            }
+
+            $page->assertSee('href="'.route($module['route']).'"', false);
+        }
+    }
+
     public function test_the_event_hub_breadcrumb_names_event_and_module(): void
     {
         [$event, $user] = $this->ctx();

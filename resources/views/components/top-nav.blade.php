@@ -6,15 +6,18 @@
     // The two things the spine carried besides links — the Event Radar and the
     // AI Command Core — did not survive as panels, so they live here as an
     // icon-button dropdown and a gold Ask AI pill. Nothing was dropped.
-    $nav = [
-        ['Command Center', 'home', request()->routeIs('home')],
-        ['Events', 'events.index', request()->routeIs('events.*')],
-        ['Projects', 'projects.index', request()->routeIs('projects.*')],
-        ['Tasks', 'tasks.index', request()->routeIs('tasks.*')],
-        ['Finance', 'finance.index', request()->routeIs('finance.*')],
-        ['Sponsors', 'sponsors.index', request()->routeIs('sponsors.*')],
-        ['Reports', 'reports.index', request()->routeIs('reports.*')],
-    ];
+    // Driven by config/modules.php, not a second list kept here by hand. The
+    // hand-kept one drifted: CRM was built and never added, so it — along with
+    // Suppliers, Venues, Team and Assets — was unreachable from the chrome.
+    $modules = collect(config('modules.nav'))
+        ->filter(fn ($m) => \Illuminate\Support\Facades\Route::has($m['route']))
+        ->map(fn ($m) => $m + [
+            'active' => request()->routeIs(str($m['route'])->before('.')->toString().'.*')
+                || request()->routeIs($m['route']),
+        ]);
+
+    $pills = $modules->filter(fn ($m) => $m['primary'] ?? false);
+    $more = $modules->reject(fn ($m) => $m['primary'] ?? false);
 
     $alertCount = \App\Models\EventApproval::where('status', 'pending')->count()
         + \App\Models\EventRisk::whereIn('status', ['open', 'escalated'])->count();
@@ -36,15 +39,39 @@
 
         {{-- the pills --}}
         <nav class="scrollbar-none order-last flex w-full min-w-0 items-center gap-0.5 overflow-x-auto lg:order-none lg:w-auto lg:flex-1" aria-label="Primary">
-            @foreach ($nav as [$label, $route, $active])
-                <a href="{{ route($route) }}"
-                   @if ($active) aria-current="page" @endif
+            @foreach ($pills as $m)
+                <a href="{{ route($m['route']) }}"
+                   @if ($m['active']) aria-current="page" @endif
                    @class([
                        'inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[12.5px] transition',
-                       'bg-navy-900 font-semibold text-white' => $active,
-                       'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $active,
-                   ])>{{ $label }}</a>
+                       'bg-navy-900 font-semibold text-white' => $m['active'],
+                       'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $m['active'],
+                   ])>{{ $m['label'] }}</a>
             @endforeach
+
+            {{-- Everything else, so nothing in the registry is unreachable. --}}
+            @if ($more->isNotEmpty())
+                @php $inMore = $more->contains(fn ($m) => $m['active']); @endphp
+                <details class="group relative shrink-0" data-menu>
+                    <summary @class([
+                        'inline-flex h-9 cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-full px-3 text-[12.5px] transition [&::-webkit-details-marker]:hidden',
+                        'bg-navy-900 font-semibold text-white' => $inMore,
+                        'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $inMore,
+                    ])>More <x-icon name="chevron" class="h-3 w-3" /></summary>
+                    <div class="absolute left-0 z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white py-1.5 shadow-lg">
+                        @foreach ($more as $m)
+                            <a href="{{ route($m['route']) }}"
+                               @class([
+                                   'flex items-center gap-2.5 px-4 py-2 text-[12.5px] transition hover:bg-navy-50',
+                                   'font-bold text-navy-900' => $m['active'],
+                                   'font-medium text-navy-700' => ! $m['active'],
+                               ])>
+                                <x-icon :name="$m['icon']" class="h-3.5 w-3.5 text-navy-300" />{{ $m['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </details>
+            @endif
         </nav>
 
         {{-- tools --}}
