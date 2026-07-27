@@ -45,10 +45,10 @@
 
                 {{-- dark navy footer --}}
                 <div class="op-card-foot">
-                    <x-icon name="users" class="h-3 w-3 shrink-0 text-gold-400" />
-                    <span class="truncate text-eyebrow font-semibold text-white/80">{{ $m->roleLabel() }}</span>
+                    <x-icon name="users" class="h-3 w-3 shrink-0 text-gold-600" />
+                    <span class="truncate text-eyebrow font-semibold text-navy-700">{{ $m->roleLabel() }}</span>
                     <div class="ml-auto flex items-center gap-1">
-                        <button type="button" wire:click="edit({{ $m->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-white/80 opacity-0 transition hover:bg-white/20 group-hover:opacity-100" title="Edit">✎</button>
+                        <button type="button" wire:click="edit({{ $m->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-navy-700 opacity-0 transition hover:bg-white/20 group-hover:opacity-100" title="Edit">✎</button>
                         @unless ($m->id === auth()->id())
                             <button type="button" wire:click="delete({{ $m->id }})" wire:confirm="Remove {{ $m->name }} from the team?" class="rounded-lg bg-red-400/15 px-1.5 py-1 text-eyebrow font-bold text-red-300 opacity-0 transition hover:bg-red-400/25 group-hover:opacity-100" title="Remove">✕</button>
                         @endunless

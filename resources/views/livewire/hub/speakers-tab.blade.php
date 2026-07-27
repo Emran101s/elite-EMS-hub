@@ -41,12 +41,12 @@
 
                     {{-- dark navy footer: fee + hover actions --}}
                     <div class="op-card-foot">
-                        <span class="truncate text-eyebrow font-semibold text-white/80">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
+                        <span class="truncate text-eyebrow font-semibold text-navy-700">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
                         <div class="ml-auto flex items-center gap-1 opacity-0 transition group-hover/sp:opacity-100">
                             @if ($s->status !== 'confirmed')
                                 <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-400/20 px-2 py-1 text-eyebrow font-bold text-emerald-300 hover:bg-emerald-400/30">✓ Confirm</button>
                             @endif
-                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-white/80 hover:bg-white/20">✎</button>
+                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-navy-700 hover:bg-white/20">✎</button>
                             <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-red-400/15 px-1.5 py-1 text-eyebrow font-bold text-red-300 hover:bg-red-400/25">✕</button>
                         </div>
                     </div>
@@ -60,9 +60,8 @@
         <div class="xl:sticky xl:top-4 xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
-                    <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Speakers Control Center</span>
+                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Speakers Control Center</span>
                 </div>
                 <div class="border-b border-line p-4">
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>

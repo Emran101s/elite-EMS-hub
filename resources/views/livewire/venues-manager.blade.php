@@ -67,9 +67,9 @@
 
                         {{-- dark navy footer: capacity + events --}}
                         <div class="op-card-foot">
-                            <x-icon name="building" class="h-3 w-3 shrink-0 text-gold-400" />
-                            <span class="text-eyebrow font-semibold text-white/80">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
-                            <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
+                            <x-icon name="building" class="h-3 w-3 shrink-0 text-gold-600" />
+                            <span class="text-eyebrow font-semibold text-navy-700">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
+                            <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-navy-400">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
                         </div>
                     </div>
                 @endforeach

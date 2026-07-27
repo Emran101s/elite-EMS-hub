@@ -68,9 +68,8 @@
         <div class="xl:sticky xl:top-[76px] xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
-                    <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Exhibition Control Center</span>
+                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Exhibition Control Center</span>
                 </div>
                 {{-- target vs actual --}}
                 <div class="border-b border-line p-4">

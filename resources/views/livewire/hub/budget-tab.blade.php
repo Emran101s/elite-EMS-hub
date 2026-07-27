@@ -397,10 +397,9 @@
             <div class="cc-panel">
                 {{-- control-center header --}}
                 <div class="cc-head">
-                    <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28),transparent_70%)]"></div>
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-400" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Budget Control Center</span>
-                    <a href="{{ route('events.budget.pdf', $event) }}" class="relative ml-auto flex items-center gap-1 rounded-lg bg-white/[0.08] px-2 py-1 text-3xs font-bold text-white/70 ring-1 ring-white/10 transition hover:text-white {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ PDF</a>
+                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Budget Control Center</span>
+                    <a href="{{ route('events.budget.pdf', $event) }}" class="relative ml-auto flex items-center gap-1 rounded-lg border border-line bg-white px-2 py-1 text-3xs font-bold text-navy-600 transition hover:border-gold-300 hover:text-gold-700 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ PDF</a>
                 </div>
 
                 {{-- mode --}}

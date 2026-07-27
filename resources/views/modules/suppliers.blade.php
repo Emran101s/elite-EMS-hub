@@ -18,9 +18,9 @@
                     </div>
                 </div>
                 <div class="op-card-foot">
-                    <x-icon name="truck" class="h-3 w-3 shrink-0 text-gold-400" />
-                    <span class="truncate text-eyebrow font-semibold text-white/80">Working on {{ $supplier->events_count }} {{ str('event')->plural($supplier->events_count) }}</span>
-                    <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-white/45">{{ str($supplier->category)->replace('_', ' ')->title() }}</span>
+                    <x-icon name="truck" class="h-3 w-3 shrink-0 text-gold-600" />
+                    <span class="truncate text-eyebrow font-semibold text-navy-700">Working on {{ $supplier->events_count }} {{ str('event')->plural($supplier->events_count) }}</span>
+                    <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-navy-400">{{ str($supplier->category)->replace('_', ' ')->title() }}</span>
                 </div>
             </div>
         @empty
