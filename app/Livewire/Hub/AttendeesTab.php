@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventAttendee;
+use App\Support\Badge;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -69,6 +70,7 @@ class AttendeesTab extends Component
         $this->ticket_type = CompanyProfile::current()->ticketTypes()[0] ?? 'Delegate';
         $this->registrationCapacity = (string) ($this->event->registration_capacity ?? '');
         $this->registrationNote = (string) ($this->event->registration_note ?? '');
+        $this->badge = Badge::template($this->event);
     }
 
     private function ticketTypes(): array
@@ -342,6 +344,59 @@ class AttendeesTab extends Component
         ]);
 
         session()->flash('status', 'Registration settings saved.');
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Badges
+    // ══════════════════════════════════════════════════════════════════════
+
+    public bool $showBadge = false;
+
+    /** The event's badge template, edited live so the preview keeps up. */
+    public array $badge = [];
+
+    public function saveBadge(): void
+    {
+        Gate::authorize('write');
+
+        $this->validate([
+            'badge.size' => ['required', Rule::in(array_keys(Badge::SIZES))],
+            'badge.accent' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'badge.footer' => ['nullable', 'string', 'max:80'],
+        ], ['badge.accent.regex' => 'A colour must be a hex value like #D4AF37.']);
+
+        // Only the keys the template declares, so nothing from a browser can
+        // put arbitrary JSON on the event.
+        $this->event->update([
+            'badge_template' => array_intersect_key($this->badge, Badge::DEFAULTS),
+        ]);
+
+        session()->flash('status', 'Badge design saved.');
+    }
+
+    public function resetBadge(): void
+    {
+        Gate::authorize('write');
+
+        $this->event->update(['badge_template' => null]);
+        $this->badge = Badge::DEFAULTS;
+
+        session()->flash('status', 'Badge design back to the default.');
+    }
+
+    /**
+     * Somebody real to preview against, so the design is judged on a name that
+     * has to fit rather than on "Jane Smith".
+     */
+    public function badgeSample(): EventAttendee
+    {
+        return $this->event->attendees()->where('status', '!=', 'cancelled')->orderByDesc('id')->first()
+            ?? new EventAttendee([
+                'name' => 'Abdulrahman Al-Khalifa',
+                'organization' => 'Jordan Investment Commission',
+                'job_title' => 'Head of Investor Relations',
+                'ticket_type' => 'VIP',
+            ]);
     }
 
     public function render()

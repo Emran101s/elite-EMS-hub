@@ -131,6 +131,7 @@
                 <span class="h-1.5 w-1.5 rounded-full {{ $event->registration_open ? 'bg-emerald-500' : 'bg-navy-300' }}"></span>
                 {{ $event->registration_open ? 'Registration open' : 'Registration closed' }}
             </button>
+            <button type="button" wire:click="$toggle('showBadge')" class="flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 transition hover:border-gold-300">▣ Badges</button>
             <button type="button" wire:click="$toggle('showImport')" class="flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⇪ Import</button>
             <button type="button" wire:click="newItem" class="btn-navy h-10 gap-1.5 px-4 text-xs"><span class="text-gold-400">＋</span> Add attendee</button>
         </div>
@@ -138,6 +139,90 @@
 
     @if (session('status'))
         <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
+    @endif
+
+    {{-- ══════════ Badge design ══════════ --}}
+    @if ($showBadge)
+        @include('events.partials.badge-css')
+        <div class="card mb-4 p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h3 class="pf text-base font-bold text-navy-900">Badge design</h3>
+                    <p class="mt-0.5 max-w-[56ch] text-xs text-muted">
+                        The preview is the badge — the same markup prints, so what you see here is what comes
+                        off the printer. The QR opens a check-in page for that person on any phone camera.
+                    </p>
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                    <a href="{{ route('events.badges.pdf', $event) }}" target="_blank" class="btn-ghost btn-sm">Print all ↗</a>
+                    @if ($this->selectedCount())
+                        <a href="{{ route('events.badges.pdf', [$event, 'ids' => implode(',', $selected)]) }}" target="_blank" class="btn-navy btn-sm">
+                            Print {{ $this->selectedCount() }} selected ↗
+                        </a>
+                    @endif
+                    <button type="button" wire:click="saveBadge" class="btn-gold btn-sm">Save</button>
+                </div>
+            </div>
+
+            <div class="mt-4 grid gap-5 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+                {{-- ── the controls ── --}}
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="field-label !mb-1 !text-eyebrow">Size</span>
+                        <select wire:model.live="badge.size" class="input h-10 text-sm">
+                            @foreach (\App\Support\Badge::SIZES as $key => [$label, $w, $h])
+                                <option value="{{ $key }}">{{ $label }} — {{ $w }} × {{ $h }} mm</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label class="block">
+                        <span class="field-label !mb-1 !text-eyebrow">Accent</span>
+                        <input type="color" wire:model.live="badge.accent" class="input h-10 w-full p-1">
+                        @error('badge.accent')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                        <span class="mt-1 block text-eyebrow text-muted">Leave as the event's own accent unless the badge needs its own.</span>
+                    </label>
+
+                    <div class="space-y-1.5 rounded-xl border border-line p-3">
+                        <p class="eyebrow mb-1">Show on the badge</p>
+                        @foreach ([
+                            'show_logo' => 'Event logo',
+                            'show_organisation' => 'Organisation',
+                            'show_job_title' => 'Job title',
+                            'show_ticket' => 'Ticket type',
+                            'show_qr' => 'QR code',
+                            'show_reference' => 'Reference',
+                        ] as $key => $label)
+                            <label class="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold text-navy-700">
+                                <input type="checkbox" wire:model.live="badge.{{ $key }}" class="h-3.5 w-3.5 rounded border-navy-300 text-navy-900 focus:ring-gold-400">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <label class="block">
+                        <span class="field-label !mb-1 !text-eyebrow">Footer line</span>
+                        <input type="text" wire:model.live.debounce.400ms="badge.footer" maxlength="80" class="input h-10 text-sm" placeholder="e.g. Wear at all times">
+                        @error('badge.footer')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                    </label>
+
+                    <button type="button" wire:click="resetBadge" wire:confirm="Put the badge design back to the default?" class="btn-ghost btn-xs">Reset to default</button>
+                </div>
+
+                {{-- ── the preview ── --}}
+                <div class="flex min-w-0 items-start justify-center rounded-2xl bg-page/70 p-6">
+                    @php $sample = $this->badgeSample(); @endphp
+                    @include('events.partials.badge', [
+                        'event' => $event,
+                        'attendee' => $sample,
+                        'template' => array_merge(\App\Support\Badge::DEFAULTS, $badge),
+                        'qr' => ($badge['show_qr'] ?? true) && $sample->exists
+                            ? \App\Support\Badge::qr(\App\Support\Badge::checkInUrl($sample))
+                            : null,
+                    ])
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- ══════════ Public registration ══════════ --}}

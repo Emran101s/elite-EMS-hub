@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
-    'registration_token', 'registration_open', 'registration_capacity', 'registration_note',
+    'registration_token', 'registration_open', 'registration_capacity', 'registration_note', 'badge_template',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
 ])]
 class Event extends Model
@@ -192,6 +192,7 @@ class Event extends Model
             'budget_cents' => 'integer',
             'registration_open' => 'boolean',
             'registration_capacity' => 'integer',
+            'badge_template' => 'array',
             'client_target_cents' => 'integer',
             'sponsorship_target_cents' => 'integer',
             'exhibition_target_cents' => 'integer',
@@ -604,18 +605,37 @@ class Event extends Model
     // ══════════════════════════════════════════════════════════════════════
 
     /**
-     * The token in the public link, made on first use.
+     * The token in the public link.
      *
      * A token rather than the id, because this is the one URL a stranger is
      * meant to reach and it should not also tell them how many events you run.
+     *
+     * Minted when the event is created, not on first use. Lazily is worse than
+     * it sounds: two instances of the same event would each mint one and the
+     * second would overwrite the first, quietly breaking a link that had
+     * already been shared. The fallback here is only for rows that predate the
+     * column, and the migration filled those in.
      */
     public function registrationToken(): string
     {
         if (! $this->registration_token) {
-            $this->forceFill(['registration_token' => Str::lower(Str::random(24))])->save();
+            $this->forceFill(['registration_token' => self::newRegistrationToken()])->save();
         }
 
         return $this->registration_token;
+    }
+
+    public static function newRegistrationToken(): string
+    {
+        return Str::lower(Str::random(24));
+    }
+
+    protected static function booted(): void
+    {
+        // Every event has its link from the moment it exists.
+        static::creating(function (self $event) {
+            $event->registration_token ??= self::newRegistrationToken();
+        });
     }
 
     public function registrationUrl(): string

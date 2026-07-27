@@ -4,6 +4,7 @@ use App\Http\Controllers\AgendaProgramPdfController;
 use App\Http\Controllers\AgendaTimelinePdfController;
 use App\Http\Controllers\AttendeeTemplateController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BadgeSheetPdfController;
 use App\Http\Controllers\BudgetPdfController;
 use App\Http\Controllers\CommandCenterController;
 use App\Http\Controllers\ContractDocumentPdfController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\TransportManifestTemplateController;
 use App\Http\Controllers\TransportMasterPlanPdfController;
 use App\Http\Controllers\TransportPlanTemplateController;
 use App\Http\Controllers\VipTransferSheetPdfController;
+use App\Livewire\CheckInScan;
 use App\Livewire\ClientRecord;
 use App\Livewire\ClientsManager;
 use App\Livewire\CommandCenter;
@@ -81,6 +83,15 @@ Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->
  * how many events there are or invite anyone to walk the others.
  */
 Route::get('/register/{token}', PublicRegistration::class)->name('register.show');
+
+/*
+ * What a badge's QR opens. Unauthenticated for the same reason as the
+ * registration page — the person on the door may be a volunteer with a
+ * borrowed phone. It is protected by being unguessable (the event's token AND
+ * the attendee's reference) and by being able to do only one thing: mark
+ * somebody present. It cannot read the list or say who else is coming.
+ */
+Route::get('/checkin/{token}/{reference}', CheckInScan::class)->name('checkin.scan');
 
 Route::middleware('auth')->group(function () {
 
@@ -143,6 +154,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/events/{event}/attendees/template.xlsx', AttendeeTemplateController::class)
         ->whereNumber('event')->name('events.attendees.template');
+
+    // Badges, laid out to fill A4 with cut lines. ?ids= prints a selection.
+    Route::get('/events/{event}/badges.pdf', BadgeSheetPdfController::class)
+        ->whereNumber('event')->name('events.badges.pdf');
 
     Route::get('/events/{event}/transport/{transport}/template.xlsx', TransportManifestTemplateController::class)
         ->whereNumber('event')->whereNumber('transport')->name('events.transport.template');
