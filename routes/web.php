@@ -225,8 +225,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/transport', TransportSettings::class)->name('transport-settings.index');
     Route::get('/settings/sponsor-packages', SponsorPackagesSettings::class)->name('sponsor-packages.index');
 
+    // The pipeline: the half of the business that happens before an event.
+    Route::get('/crm', \App\Livewire\CrmPipeline::class)->name('crm.index');
+
     // Modules still awaiting their build phase render the generic stub.
-    foreach (['crm', 'finance', 'assets', 'reports', 'ai-assistant'] as $key) {
+    foreach (['finance', 'assets', 'reports', 'ai-assistant'] as $key) {
         $module = config("modules.nav.{$key}");
 
         Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))

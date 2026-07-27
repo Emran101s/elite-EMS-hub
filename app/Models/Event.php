@@ -344,6 +344,12 @@ class Event extends Model
         return $this->logo_path ? asset($this->logo_path) : null;
     }
 
+    /** The deal this event was won from, when it came through the pipeline. */
+    public function deal(): HasOne
+    {
+        return $this->hasOne(Deal::class);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

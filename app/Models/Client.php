@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['name', 'logo_path', 'organization', 'contact_name', 'email', 'phone', 'website', 'notes'])]
 class Client extends Model
@@ -12,6 +13,26 @@ class Client extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    public function primaryContact(): HasOne
+    {
+        return $this->hasOne(Contact::class)->where('is_primary', true);
+    }
+
+    public function deals(): HasMany
+    {
+        return $this->hasMany(Deal::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(DealActivity::class)->latest('happened_at');
     }
 
     /** Up-to-two-letter initials for the logo fallback chip. */
