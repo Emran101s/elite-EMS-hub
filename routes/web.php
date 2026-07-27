@@ -229,8 +229,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/crm', \App\Livewire\CrmPipeline::class)->name('crm.index');
     Route::get('/crm/clients/{client}', \App\Livewire\ClientRecord::class)->name('crm.client');
 
+    // Money across the book — the layer above each event's own budget.
+    Route::get('/finance', \App\Livewire\FinanceOverview::class)->name('finance.index');
+
     // Modules still awaiting their build phase render the generic stub.
-    foreach (['finance', 'assets', 'reports', 'ai-assistant'] as $key) {
+    foreach (['assets', 'reports', 'ai-assistant'] as $key) {
         $module = config("modules.nav.{$key}");
 
         Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))
