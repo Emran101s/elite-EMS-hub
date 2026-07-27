@@ -65,7 +65,8 @@
                 </div>
             @endif
 
-            {{ $slot }}
+            {{-- Every module works on the same surface. --}}
+            <x-workspace>{{ $slot }}</x-workspace>
         </main>
     </div>
 </body>
