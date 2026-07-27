@@ -196,68 +196,68 @@
     {{-- ══════════ LANES VIEW ══════════ --}}
     @if ($view === 'lanes')
 
-        {{-- Next Up — cinematic hero for whatever is live or nearest --}}
+        {{-- ══ Next up ══
+             This was the page's own navy slab — a 110px hero for one event,
+             above a board that shows every event. It is now the same light bar
+             the event hub wears, with the crest carrying the navy. One thing
+             still shouts: a live event turns its countdown gold. ══ --}}
         @if ($nextUp)
             @php
-                $nuStage = \App\Models\Event::stageColor($nextUp->stage);
                 $nuStart = $nextUp->starts_at?->copy()->startOfDay();
                 $nuDays = $nuStart ? (int) round(now()->startOfDay()->diffInDays($nuStart, false)) : null;
             @endphp
-            <div class="strip-dark p-0.5">
-                <div class="relative flex flex-col gap-5 overflow-hidden rounded-[1.25rem] p-6 md:flex-row md:items-center">
-                    {{-- ambient glow in the stage colour --}}
-                    <div class="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl" style="background: {{ $nuStage }}"></div>
+            <a href="{{ route('events.hub', $nextUp) }}"
+               class="mb-4 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-line bg-white px-4 py-2.5 shadow-[0_10px_26px_-20px_rgba(11,31,58,0.4)] transition hover:border-gold-300">
 
-                    {{-- crest --}}
-                    <a href="{{ route('events.hub', $nextUp) }}" class="relative z-10 h-24 w-32 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/15">
-                        @if ($nextUp->cover_path)
-                            <x-event-avatar :event="$nextUp" :ring="false" size="lg" class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
-                        @else
-                            <x-event-crest :event="$nextUp" class="h-full w-full" />
+                {{-- crest — the navy on this bar --}}
+                <span class="h-11 w-14 shrink-0 overflow-hidden rounded-lg ring-1 ring-line">
+                    @if ($nextUp->cover_path)
+                        <x-event-avatar :event="$nextUp" :ring="false" size="lg" class="h-full w-full [&>span]:h-full [&>span]:w-full [&>span]:rounded-none [&>span]:!bg-transparent [&>span]:ring-0" />
+                    @else
+                        <x-event-crest :event="$nextUp" class="h-full w-full" />
+                    @endif
+                </span>
+
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-2">
+                        <span class="eyebrow-gold">{{ $nextUpLive ? 'Happening now' : 'Next up' }}</span>
+                        @if ($nextUpLive)
+                            <span class="flex items-center gap-1 rounded-md bg-gold-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-navy-950">
+                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-navy-950"></span>Live
+                            </span>
                         @endif
-                    </a>
+                    </span>
+                    <span class="pf mt-0.5 block truncate text-[16px] font-bold text-navy-900">{{ $nextUp->name }}</span>
+                    <span class="scrollbar-none mt-0.5 flex items-center gap-x-3 overflow-hidden whitespace-nowrap text-[11.5px] text-muted">
+                        <span>{{ $nextUp->client?->name ?? str($nextUp->type)->replace('_', ' ')->title() }}</span>
+                        @if ($nextUp->venue)<span class="flex items-center gap-1"><x-icon name="building" class="h-3 w-3 shrink-0 text-navy-300" />{{ $nextUp->venue->name }}</span>@endif
+                        @if ($nextUp->starts_at)<span class="flex items-center gap-1"><x-icon name="calendar" class="h-3 w-3 shrink-0 text-navy-300" />{{ $nextUp->starts_at->format('j M Y') }}</span>@endif
+                    </span>
+                </span>
 
-                    {{-- identity --}}
-                    <div class="relative z-10 min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="eyebrow-gold">{{ $nextUpLive ? 'Happening now' : 'Next up' }}</span>
-                            @if ($nextUpLive)<span class="flex items-center gap-1 rounded-md bg-gold-400 px-1.5 py-0.5 text-eyebrow font-black uppercase tracking-wider text-navy-950"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-navy-950"></span>Live</span>@endif
-                        </div>
-                        <a href="{{ route('events.hub', $nextUp) }}" class="pf mt-1 block truncate text-2xl font-black text-white hover:text-gold-200">{{ $nextUp->name }}</a>
-                        <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-micro text-white/55">
-                            <span>{{ $nextUp->client?->name ?? str($nextUp->type)->replace('_', ' ')->title() }}</span>
-                            @if ($nextUp->city)<span class="flex items-center gap-1"><x-icon name="pin" class="h-3 w-3" />{{ $nextUp->city }}</span>@endif
-                            @if ($nextUp->starts_at)<span class="flex items-center gap-1"><x-icon name="calendar" class="h-3 w-3" />{{ $nextUp->starts_at->format('j M Y') }}</span>@endif
-                            @if ($nextUp->venue)<span class="truncate">{{ $nextUp->venue->name }}</span>@endif
-                        </p>
-                    </div>
+                <span class="flex shrink-0 items-center gap-x-5">
+                    @foreach ([
+                        ['Guests', $nextUpMetrics['participants'] ? number_format($nextUpMetrics['participants']) : '—'],
+                        ['Sponsors', $nextUpMetrics['sponsors'] ?: '—'],
+                        ['Budget', $nextUpMetrics['budget_used'] !== null ? $nextUpMetrics['budget_used'].'%' : '—'],
+                    ] as [$l, $v])
+                        <span class="hidden text-center sm:block">
+                            <span class="pf block text-[17px] font-bold leading-none text-navy-900">{{ $v }}</span>
+                            <span class="mt-1 block text-[9px] font-bold uppercase tracking-wider text-navy-300">{{ $l }}</span>
+                        </span>
+                    @endforeach
 
-                    {{-- stats --}}
-                    <div class="relative z-10 flex flex-wrap items-center gap-x-6 gap-y-3">
-                        @foreach ([
-                            ['Guests', $nextUpMetrics['participants'] ? number_format($nextUpMetrics['participants']) : '—'],
-                            ['Sponsors', $nextUpMetrics['sponsors'] ?: '—'],
-                            ['Budget', $nextUpMetrics['budget_used'] !== null ? $nextUpMetrics['budget_used'].'%' : '—'],
-                        ] as [$l, $v])
-                            <div class="text-center">
-                                <p class="pf text-2xl font-black leading-none text-white">{{ $v }}</p>
-                                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wider text-white/45">{{ $l }}</p>
-                            </div>
-                        @endforeach
-                        <div class="hidden h-12 w-px bg-white/10 sm:block"></div>
-                        <div class="hidden items-center gap-3 sm:flex">
-                            @if ($nuDays !== null)
-                                <div class="text-center">
-                                    <p class="pf text-2xl font-black leading-none {{ $nextUpLive ? 'text-gold-300' : 'text-white' }}">{{ $nextUpLive ? 'LIVE' : ($nuDays > 0 ? $nuDays : abs($nuDays)) }}</p>
-                                    <p class="mt-1 text-eyebrow font-bold uppercase tracking-wider text-white/45">{{ $nextUpLive ? 'now' : ($nuDays > 0 ? 'days to go' : 'days ago') }}</p>
-                                </div>
-                            @endif
-                            <x-health-ring :percent="$nextUpHealth['score']" :group="$nextUpHealth['group']" size="h-14 w-14" :dark="true" />
-                        </div>
-                        <a href="{{ route('events.hub', $nextUp) }}" class="btn-gold btn-sm shrink-0">Open hub →</a>
-                    </div>
-                </div>
-            </div>
+                    @if ($nuDays !== null)
+                        <span class="border-l border-line pl-5 text-center">
+                            <span class="pf block text-[17px] font-bold leading-none {{ $nextUpLive ? 'text-gold-600' : 'text-navy-900' }}">{{ $nextUpLive ? 'LIVE' : abs($nuDays) }}</span>
+                            <span class="mt-1 block text-[9px] font-bold uppercase tracking-wider text-navy-300">{{ $nextUpLive ? 'now' : ($nuDays > 0 ? 'days to go' : 'days ago') }}</span>
+                        </span>
+                    @endif
+
+                    <x-health-ring :percent="$nextUpHealth['score']" :group="$nextUpHealth['group']" size="h-9 w-9" textSize="text-[9px]" />
+                    <span class="btn-gold btn-sm shrink-0">Open hub →</span>
+                </span>
+            </a>
         @endif
 
         {{-- ══ THE BOARD ══
