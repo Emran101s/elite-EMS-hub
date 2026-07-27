@@ -8,34 +8,33 @@
     <aside class="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-[0_0_80px_-10px_rgba(11,31,58,0.6)]">
 
         {{-- header --}}
-        <div class="relative shrink-0 overflow-hidden bg-gradient-to-br from-navy-900 to-[var(--color-navy-950)] px-5 pb-4 pt-4 text-white">
-            <div class="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.3),transparent_70%)]"></div>
+        <div class="relative shrink-0 border-b border-line bg-page/60 px-5 pb-4 pt-4 text-navy-900">
             <div class="relative flex items-start justify-between gap-2">
                 <div class="min-w-0 flex-1">
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-400">Deliverable</p>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-600">Deliverable</p>
                     <input type="text" wire:model.blur="title" placeholder="Untitled item"
-                           class="mt-1 w-full border-0 border-b border-white/15 bg-transparent px-0 pb-1 text-lg font-black text-white placeholder:text-white/25 focus:border-gold-400 focus:outline-none focus:ring-0" style="font-family:'Spectral',Georgia,serif">
-                    @error('title')<p class="mt-1 text-eyebrow text-red-300">{{ $message }}</p>@enderror
+                           class="pf mt-1 w-full border-0 border-b border-line bg-transparent px-0 pb-1 text-lg font-bold text-navy-900 placeholder:text-navy-300 focus:border-gold-400 focus:outline-none focus:ring-0">
+                    @error('title')<p class="mt-1 text-eyebrow text-risk">{{ $message }}</p>@enderror
                 </div>
-                <button type="button" wire:click="closeDrawer" class="-mr-1 -mt-1 shrink-0 text-white/40 transition hover:text-white">✕</button>
+                <button type="button" wire:click="closeDrawer" class="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-navy-400 transition hover:bg-navy-50 hover:text-navy-900">✕</button>
             </div>
 
             {{-- status gates --}}
             <div class="relative mt-3 flex flex-wrap gap-1.5">
                 @foreach (\App\Models\PlanItem::STATUSES as $sv => [$sl, $sh])
                     <button type="button" wire:click="setStatus({{ $selected->id }}, '{{ $sv }}')"
-                            class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $selected->status === $sv ? 'text-white shadow' : 'text-white/45 ring-1 ring-white/15 hover:text-white/80' }}"
-                            style="{{ $selected->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $selected->status === $sv ? 'var(--chrome-ink)' : $sh }}"></span>{{ $sl }}</button>
+                            class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $selected->status === $sv ? 'text-white shadow' : 'text-navy-500 ring-1 ring-line hover:text-navy-900' }}"
+                            style="{{ $selected->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $selected->status === $sv ? '#ffffff' : $sh }}"></span>{{ $sl }}</button>
                 @endforeach
             </div>
 
             {{-- approval seal --}}
             @if ($selected->isSigned())
-                <div class="relative mt-3 flex items-center gap-2.5 rounded-xl bg-gold-400/15 px-3 py-2 ring-1 ring-gold-400/30">
-                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-sm font-black text-navy-900 shadow ring-2 ring-white/40">✓</span>
+                <div class="relative mt-3 flex items-center gap-2.5 rounded-xl bg-gold-50 px-3 py-2 ring-1 ring-gold-200">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-sm font-black text-navy-900 shadow ring-2 ring-white">✓</span>
                     <div class="min-w-0">
-                        <p class="text-eyebrow font-black uppercase tracking-wider text-gold-200">Signed off · Approved</p>
-                        <p class="truncate text-micro text-white/70">{{ $selected->approver?->name ?? 'Team' }} · {{ $selected->approved_at?->format('d M Y') }}</p>
+                        <p class="text-eyebrow font-black uppercase tracking-wider text-gold-700">Signed off · Approved</p>
+                        <p class="truncate text-micro text-navy-600">{{ $selected->approver?->name ?? 'Team' }} · {{ $selected->approved_at?->format('d M Y') }}</p>
                     </div>
                 </div>
             @endif

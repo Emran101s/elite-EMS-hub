@@ -8,21 +8,20 @@
     <div class="absolute inset-0 bg-navy-950/40" wire:click="closeTask"></div>
     <aside class="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-[0_0_80px_-10px_rgba(11,31,58,0.6)]">
 
-        <div class="relative shrink-0 overflow-hidden bg-gradient-to-br from-navy-900 to-[var(--color-navy-950)] px-5 pb-4 pt-4 text-white">
-            <div class="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.3),transparent_70%)]"></div>
+        <div class="relative shrink-0 border-b border-line bg-page/60 px-5 pb-4 pt-4 text-navy-900">
             <div class="relative flex items-start justify-between gap-2">
                 <div class="min-w-0 flex-1">
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-400">Task</p>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-600">Task</p>
                     <input type="text" value="{{ $detail->title }}" @change="$wire.patch('title', $event.target.value)" placeholder="Untitled task"
-                           class="mt-1 w-full border-0 border-b border-white/15 bg-transparent px-0 pb-1 text-lg font-black text-white placeholder:text-white/25 focus:border-gold-400 focus:outline-none focus:ring-0" style="font-family:'Spectral',Georgia,serif">
+                           class="pf mt-1 w-full border-0 border-b border-line bg-transparent px-0 pb-1 text-lg font-bold text-navy-900 placeholder:text-navy-300 focus:border-gold-400 focus:outline-none focus:ring-0">
                 </div>
-                <button type="button" wire:click="closeTask" class="-mr-1 -mt-1 shrink-0 text-white/40 transition hover:text-white">✕</button>
+                <button type="button" wire:click="closeTask" class="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-navy-400 transition hover:bg-navy-50 hover:text-navy-900">✕</button>
             </div>
             <div class="relative mt-3 flex flex-wrap gap-1.5">
                 @foreach (\App\Models\Task::STAGES as $sv => [$sl, $sh])
                     <button type="button" wire:click="moveTask({{ $detail->id }}, '{{ $sv }}')"
-                            class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $detail->status === $sv ? 'text-white shadow' : 'text-white/45 ring-1 ring-white/15 hover:text-white/80' }}"
-                            style="{{ $detail->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $detail->status === $sv ? 'var(--chrome-ink)' : $sh }}"></span>{{ $sl }}</button>
+                            class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $detail->status === $sv ? 'text-white shadow' : 'text-navy-500 ring-1 ring-line hover:text-navy-900' }}"
+                            style="{{ $detail->status === $sv ? 'background:'.$sh : '' }}"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $detail->status === $sv ? '#ffffff' : $sh }}"></span>{{ $sl }}</button>
                 @endforeach
             </div>
         </div>

@@ -21,18 +21,19 @@
          @if ($close) @click.outside="$wire.{{ $close }}" @endif>
 
         @if ($title)
-            {{-- dark navy accent header — the reference modal language --}}
-            <div class="relative flex items-start justify-between gap-4 overflow-hidden rounded-t-3xl bg-gradient-to-br from-navy-900 to-navy-950 px-6 py-4 text-white">
-                <div class="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.24),transparent_70%)]"></div>
-                <div class="relative min-w-0">
-                    <h3 class="pf text-h2 font-bold text-white">{{ $title }}</h3>
+            {{-- The header used to be a navy gradient. A modal already reads as
+                 the front-most thing on screen — the backdrop does that work —
+                 so it does not need a dark bar to announce itself as well. --}}
+            <div class="flex items-start justify-between gap-4 rounded-t-3xl border-b border-line bg-page/60 px-6 py-4">
+                <div class="min-w-0">
+                    <h3 class="pf text-h2 font-bold text-navy-900">{{ $title }}</h3>
                     @if ($subtitle)
-                        <p class="mt-0.5 text-micro text-white/55">{{ $subtitle }}</p>
+                        <p class="mt-0.5 text-micro text-muted">{{ $subtitle }}</p>
                     @endif
                 </div>
                 @if ($close)
                     <button type="button" wire:click="{{ $close }}"
-                            class="relative -me-1 shrink-0 rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+                            class="-me-1 shrink-0 rounded-lg p-1 text-navy-400 transition hover:bg-navy-50 hover:text-navy-900"
                             aria-label="Close">✕</button>
                 @endif
             </div>
