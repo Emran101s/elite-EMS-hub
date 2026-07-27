@@ -419,6 +419,46 @@ class Event extends Model
         return $this->hasMany(EventBudgetItem::class);
     }
 
+    /**
+     * The two sides of every line, added up: what the event costs, and what it
+     * is being charged at.
+     *
+     * This is the number a quote is made of, and it is not the same as income.
+     * Income is what has arrived; this is what the work is priced at. An event
+     * can be fully priced and have collected nothing.
+     *
+     * With nothing priced by hand it reproduces what the budget always showed:
+     * every unpriced line falls back to the management fee, and subtotal plus
+     * fee is exactly what summing those lines gives (bar a cent or two of
+     * per-line rounding).
+     *
+     * @return array{cost:int,sell:int,margin:int,marginPct:?int,fee:float,priced:int,absorbed:int,lines:int}
+     */
+    public function sellSummary(): array
+    {
+        $pct = (float) ($this->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT);
+        $items = $this->budgetItems;
+
+        $cost = (int) $items->sum(fn (EventBudgetItem $i) => $i->costCents());
+        $sell = (int) $items->sum(fn (EventBudgetItem $i) => $i->sellCents($pct));
+
+        return [
+            'cost' => $cost,
+            'sell' => $sell,
+            'margin' => $sell - $cost,
+            // Against the charge, the way a P&L reads it. Null on nothing sold.
+            'marginPct' => $sell > 0 ? (int) round(($sell - $cost) / $sell * 100) : null,
+            'fee' => $pct,
+            // How much of this was priced deliberately rather than by the fee —
+            // the difference between a quote and a default.
+            'priced' => $items->filter(fn (EventBudgetItem $i) => $i->sell_cents !== null || $i->markup_pct !== null)->count(),
+            // Cost you are carrying yourself, on lines that are not billable.
+            'absorbed' => (int) $items->reject(fn (EventBudgetItem $i) => $i->billable ?? true)
+                ->sum(fn (EventBudgetItem $i) => $i->costCents()),
+            'lines' => $items->count(),
+        ];
+    }
+
     public function budgetVersions(): HasMany
     {
         return $this->hasMany(EventBudgetVersion::class)->orderByDesc('version');

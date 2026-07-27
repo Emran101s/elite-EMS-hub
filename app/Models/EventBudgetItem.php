@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'source_type', 'source_id', 'room_id', 'category', 'description', 'quantity', 'unit_cents', 'estimated_cents', 'approved_cents', 'actual_cents', 'paid_cents', 'supplier_id', 'vendor', 'payment_status', 'flagged', 'invoice_number', 'due_on', 'notes'])]
+#[Fillable(['event_id', 'source_type', 'source_id', 'room_id', 'category', 'description', 'quantity', 'unit_cents', 'estimated_cents', 'approved_cents', 'actual_cents', 'paid_cents', 'sell_cents', 'markup_pct', 'billable', 'supplier_id', 'vendor', 'payment_status', 'flagged', 'invoice_number', 'due_on', 'notes'])]
 class EventBudgetItem extends Model
 {
     /**
@@ -142,6 +142,9 @@ class EventBudgetItem extends Model
             'approved_cents' => 'integer',
             'actual_cents' => 'integer',
             'paid_cents' => 'integer',
+            'sell_cents' => 'integer',
+            'markup_pct' => 'float',
+            'billable' => 'boolean',
             'flagged' => 'boolean',
             'due_on' => 'date',
         ];
@@ -156,6 +159,70 @@ class EventBudgetItem extends Model
     public function categoryGroup(): string
     {
         return self::CATEGORY_META[$this->category][1] ?? 'Overheads';
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Cost, charge, margin
+    //
+    //  Cost is what this line takes out of the business; charge is what it
+    //  puts back in. Everything else here is those two subtracted.
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * What this line costs: the actual once it is known, the estimate until then.
+     *
+     * Same rule the Budget tab and the portfolio have always used, named once
+     * so the three of them cannot drift.
+     */
+    public function costCents(): int
+    {
+        return (int) ($this->actual_cents ?: $this->estimated_cents);
+    }
+
+    /**
+     * What the client is charged for this line.
+     *
+     * Three ways of saying it, in the order they win:
+     *   1. a price typed by hand — "we quoted 12,000 for this"
+     *   2. a markup on cost — "this one is cost plus 20%"
+     *   3. nothing said, so the event's management fee applies, which is what
+     *      the platform did for every line before any of this existed
+     *
+     * A line that is not billable charges nothing. It still costs.
+     */
+    public function sellCents(?float $defaultFeePct = null): int
+    {
+        if (! ($this->billable ?? true)) {
+            return 0;
+        }
+
+        if ($this->sell_cents !== null) {
+            return (int) $this->sell_cents;
+        }
+
+        $pct = $this->markup_pct ?? $defaultFeePct ?? $this->event?->management_fee_pct ?? self::DEFAULT_FEE_PCT;
+
+        return (int) round($this->costCents() * (1 + $pct / 100));
+    }
+
+    /** What the line earns. Negative means it is being sold below cost. */
+    public function marginCents(?float $defaultFeePct = null): int
+    {
+        return $this->sellCents($defaultFeePct) - $this->costCents();
+    }
+
+    /**
+     * Margin as a share of the charge, the way a P&L reads it.
+     *
+     * Null rather than zero when nothing is charged: a line you absorb has no
+     * margin to speak of, and calling that 0% would put it in the same bucket
+     * as one sold at exactly cost.
+     */
+    public function marginPct(?float $defaultFeePct = null): ?int
+    {
+        $sell = $this->sellCents($defaultFeePct);
+
+        return $sell > 0 ? (int) round($this->marginCents($defaultFeePct) / $sell * 100) : null;
     }
 
     /** Outstanding = actual (or estimated if no actual) minus paid. */
