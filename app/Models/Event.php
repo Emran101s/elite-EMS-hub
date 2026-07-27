@@ -13,11 +13,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
+    'registration_token', 'registration_open', 'registration_capacity', 'registration_note',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
 ])]
 class Event extends Model
@@ -188,6 +190,8 @@ class Event extends Model
             'starts_at' => 'date',
             'ends_at' => 'date',
             'budget_cents' => 'integer',
+            'registration_open' => 'boolean',
+            'registration_capacity' => 'integer',
             'client_target_cents' => 'integer',
             'sponsorship_target_cents' => 'integer',
             'exhibition_target_cents' => 'integer',
@@ -593,6 +597,50 @@ class Event extends Model
     public function attendees(): HasMany
     {
         return $this->hasMany(EventAttendee::class);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Public registration
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * The token in the public link, made on first use.
+     *
+     * A token rather than the id, because this is the one URL a stranger is
+     * meant to reach and it should not also tell them how many events you run.
+     */
+    public function registrationToken(): string
+    {
+        if (! $this->registration_token) {
+            $this->forceFill(['registration_token' => Str::lower(Str::random(24))])->save();
+        }
+
+        return $this->registration_token;
+    }
+
+    public function registrationUrl(): string
+    {
+        return route('register.show', $this->registrationToken());
+    }
+
+    /** Everyone who has not withdrawn — what a capacity is measured against. */
+    public function registeredCount(): int
+    {
+        return $this->attendees()->where('status', '!=', 'cancelled')->count();
+    }
+
+    public function registrationIsFull(): bool
+    {
+        return $this->registration_capacity !== null
+            && $this->registeredCount() >= $this->registration_capacity;
+    }
+
+    /** Open, not full, and not an event that has already happened. */
+    public function registrationIsLive(): bool
+    {
+        return (bool) $this->registration_open
+            && ! $this->registrationIsFull()
+            && ! $this->archived_at;
     }
 
     public function sponsors(): HasMany

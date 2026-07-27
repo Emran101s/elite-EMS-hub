@@ -124,6 +124,13 @@
         </select>
         <div class="ml-auto flex items-center gap-2">
             <button type="button" wire:click="toggleCheckinMode" class="flex h-10 items-center gap-1.5 rounded-xl border border-gold-300 bg-gold-50 px-3 text-xs font-bold text-gold-800 transition hover:bg-gold-100" title="Full-screen arrival flow for show day">✓ Check-in mode</button>
+            <button type="button" wire:click="$toggle('showRegistration')"
+                    @class(['flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition',
+                            'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' => $event->registration_open,
+                            'border-line bg-white text-navy-700 hover:border-gold-300' => ! $event->registration_open])>
+                <span class="h-1.5 w-1.5 rounded-full {{ $event->registration_open ? 'bg-emerald-500' : 'bg-navy-300' }}"></span>
+                {{ $event->registration_open ? 'Registration open' : 'Registration closed' }}
+            </button>
             <button type="button" wire:click="$toggle('showImport')" class="flex h-10 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⇪ Import</button>
             <button type="button" wire:click="newItem" class="btn-navy h-10 gap-1.5 px-4 text-xs"><span class="text-gold-400">＋</span> Add attendee</button>
         </div>
@@ -131,6 +138,63 @@
 
     @if (session('status'))
         <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
+    @endif
+
+    {{-- ══════════ Public registration ══════════ --}}
+    @if ($showRegistration)
+        <div class="card mb-4 p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h3 class="pf text-base font-bold text-navy-900">Public registration</h3>
+                    <p class="mt-0.5 max-w-[56ch] text-xs text-muted">
+                        Share this link and people fill the form themselves. Everyone who registers lands in
+                        this list, ready for a badge — nobody retypes anything.
+                    </p>
+                </div>
+                <button type="button" wire:click="toggleRegistration"
+                        class="{{ $event->registration_open ? 'btn-ghost' : 'btn-gold' }} btn-sm shrink-0">
+                    {{ $event->registration_open ? 'Close registration' : 'Open registration' }}
+                </button>
+            </div>
+
+            {{-- The link. Selectable rather than behind a copy button that may
+                 not have clipboard permission on an unsecured origin. --}}
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                <input type="text" readonly value="{{ $event->registrationUrl() }}"
+                       onfocus="this.select()"
+                       class="input h-10 min-w-0 flex-1 bg-page/60 font-mono text-[12px] text-navy-600">
+                <a href="{{ $event->registrationUrl() }}" target="_blank" class="btn-ghost btn-sm shrink-0">Open ↗</a>
+                <button type="button" wire:click="newRegistrationLink"
+                        wire:confirm="Make a new link? The current one stops working immediately. Everyone who has already registered keeps their place."
+                        class="btn-ghost btn-sm shrink-0" title="Use this if the link has been shared somewhere it should not have been">New link</button>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-[160px_minmax(0,1fr)]">
+                <label class="block">
+                    <span class="field-label !mb-1 !text-eyebrow">Capacity</span>
+                    <input type="number" min="1" wire:model="registrationCapacity" class="input h-10 text-sm" placeholder="no limit">
+                    @error('registrationCapacity')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                </label>
+                <label class="block">
+                    <span class="field-label !mb-1 !text-eyebrow">What they should know</span>
+                    <input type="text" wire:model="registrationNote" class="input h-10 text-sm" placeholder="e.g. Doors open at 08:30. Please bring photo ID.">
+                </label>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between gap-3">
+                {{-- Note the space before every @if: Blade will not recognise a
+                     directive glued to a word character, but it will recognise
+                     the @endif, which then closes the wrong block. --}}
+                <p class="text-eyebrow text-muted">
+                    {{ $stats['registered'] }} registered
+                    @if ($event->registration_capacity) of {{ $event->registration_capacity }} @endif
+                    @if ($event->registrationIsFull())
+                        · <span class="font-bold text-warn">Full — the form is refusing new names.</span>
+                    @endif
+                </p>
+                <button type="button" wire:click="saveRegistrationSettings" class="btn-navy btn-sm">Save</button>
+            </div>
+        </div>
     @endif
 
     @if ($showImport)

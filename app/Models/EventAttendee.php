@@ -32,6 +32,27 @@ class EventAttendee extends Model
         ];
     }
 
+    /**
+     * The short code on the badge, and what a check-in scan looks up.
+     *
+     * Derived from the id rather than stored: it cannot drift, cannot collide,
+     * and there is no column to backfill for the thousands of attendees who
+     * were imported before badges existed. Base 36 keeps it short enough to
+     * read aloud down a phone when a scanner will not cooperate.
+     */
+    public function reference(): string
+    {
+        return strtoupper(str_pad(base_convert((string) $this->id, 10, 36), 4, '0', STR_PAD_LEFT));
+    }
+
+    /** Find an attendee of this event by the code on their badge. */
+    public static function findByReference(int $eventId, string $reference): ?self
+    {
+        $id = (int) base_convert(ltrim(strtolower(trim($reference)), '0') ?: '0', 36, 10);
+
+        return $id > 0 ? self::where('event_id', $eventId)->find($id) : null;
+    }
+
     public function statusMeta(): array
     {
         return self::STATUS_META[$this->status] ?? self::STATUS_META['registered'];

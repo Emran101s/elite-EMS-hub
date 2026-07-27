@@ -1,4 +1,9 @@
-@props(['title' => null])
+@props([
+    'title' => null,
+    // Sign-in wants a narrow card; a registration form has two-column rows and
+    // needs the room, so the page says which it is.
+    'width' => 'max-w-md',
+])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -14,7 +19,7 @@
         <div class="pointer-events-none absolute -top-40 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-gold-500/10 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-52 left-1/4 h-96 w-96 rounded-full bg-navy-500/20 blur-3xl"></div>
 
-        <div class="relative w-full max-w-md">
+        <div class="relative w-full {{ $width }}">
             <div class="mb-8 flex justify-center">
                 <x-brand dark />
             </div>

@@ -41,6 +41,7 @@ use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\FinanceOverview;
+use App\Livewire\PublicRegistration;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\SponsorPackagesSettings;
@@ -73,6 +74,13 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+/*
+ * Public registration — the one page in the platform a stranger is meant to
+ * reach. Found by token rather than by event id, so the URL does not also say
+ * how many events there are or invite anyone to walk the others.
+ */
+Route::get('/register/{token}', PublicRegistration::class)->name('register.show');
 
 Route::middleware('auth')->group(function () {
 

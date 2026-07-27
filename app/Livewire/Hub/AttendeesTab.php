@@ -6,6 +6,8 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventAttendee;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -55,11 +57,18 @@ class AttendeesTab extends Component
     // import
     public bool $showImport = false;
 
+    /** Mirrors of the event's own registration settings, for the form. */
+    public string $registrationCapacity = '';
+
+    public string $registrationNote = '';
+
     public $importFile;
 
     public function mount(): void
     {
         $this->ticket_type = CompanyProfile::current()->ticketTypes()[0] ?? 'Delegate';
+        $this->registrationCapacity = (string) ($this->event->registration_capacity ?? '');
+        $this->registrationNote = (string) ($this->event->registration_note ?? '');
     }
 
     private function ticketTypes(): array
@@ -285,6 +294,54 @@ class AttendeesTab extends Component
         }
 
         return $rows;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Public registration
+    // ══════════════════════════════════════════════════════════════════════
+
+    public bool $showRegistration = false;
+
+    public function toggleRegistration(): void
+    {
+        Gate::authorize('write');
+
+        $this->event->update(['registration_open' => ! $this->event->registration_open]);
+
+        session()->flash('status', $this->event->registration_open
+            ? 'Registration is open. Share the link.'
+            : 'Registration is closed. The link now says so rather than 404ing.');
+    }
+
+    /**
+     * A new link, when the old one has been shared somewhere it should not
+     * have been. Everyone who already registered keeps their place; only the
+     * URL changes.
+     */
+    public function newRegistrationLink(): void
+    {
+        Gate::authorize('write');
+
+        $this->event->update(['registration_token' => Str::lower(Str::random(24))]);
+
+        session()->flash('status', 'New registration link. The old one no longer opens anything.');
+    }
+
+    public function saveRegistrationSettings(): void
+    {
+        Gate::authorize('write');
+
+        $data = $this->validate([
+            'registrationCapacity' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'registrationNote' => ['nullable', 'string', 'max:600'],
+        ]);
+
+        $this->event->update([
+            'registration_capacity' => $data['registrationCapacity'] !== '' ? (int) $data['registrationCapacity'] : null,
+            'registration_note' => $data['registrationNote'] ?: null,
+        ]);
+
+        session()->flash('status', 'Registration settings saved.');
     }
 
     public function render()
