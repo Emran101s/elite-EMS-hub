@@ -7,8 +7,8 @@
     @if (! request()->routeIs('login'))
         {{-- The header trigger — looks like the old search box, but works. --}}
         <button type="button" @click="open = true; $nextTick(() => $refs.q.focus())"
-                class="input relative hidden h-11 w-80 cursor-text items-center !rounded-full pl-11 pr-4 text-left text-[13px] text-muted lg:flex xl:w-96">
-            <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-navy-400"><x-icon name="search" class="h-4.5 w-4.5" /></span>
+                class="input relative hidden h-10 w-44 cursor-text items-center !rounded-full pl-10 pr-3 text-left text-[12.5px] text-muted lg:flex xl:w-56">
+            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400"><x-icon name="search" class="h-4 w-4" /></span>
             Search events, tasks, suppliers…
             <span class="ml-auto rounded-md border border-line bg-page px-1.5 py-0.5 font-sans text-eyebrow font-bold text-navy-400">⌘K</span>
         </button>
@@ -23,7 +23,7 @@
              class="absolute left-1/2 top-[14vh] w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-page shadow-2xl">
 
             <div class="relative border-b border-line bg-white">
-                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-navy-400"><x-icon name="search" class="h-4.5 w-4.5" /></span>
+                <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400"><x-icon name="search" class="h-4 w-4" /></span>
                 <input x-ref="q" type="text" wire:model.live.debounce.250ms="q"
                        placeholder="Search events, tasks, speakers, suppliers, venues, people…"
                        class="h-13 w-full border-0 bg-transparent py-4 pl-11 pr-4 text-sm text-navy-900 outline-none placeholder:text-muted">

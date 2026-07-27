@@ -7,37 +7,55 @@
         {{-- ════════ Main column ════════ --}}
         <div class="min-w-0 space-y-5">
 
-            {{-- KPI command strip --}}
-            <div class="strip-dark px-6 py-5">
-                <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
-
-                {{-- A grid on small screens: five 122px tiles in a flex row forced the
-                     whole page to scroll sideways on a phone. --}}
-                <div class="relative grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:items-center">
-                    @foreach ([
-                        ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'], 'hint' => 'across the region', 'href' => route('events.index')],
-                        ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'], 'hint' => 'portfolios running', 'href' => route('projects.index')],
-                        ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 1), 'hint' => 'committed to events', 'href' => route('finance.index')],
-                        ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'], 'hint' => 'pending + in progress', 'href' => route('tasks.index')],
-                        ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'], 'hint' => 'needs attention', 'risk' => $stats['atRisk'] > 0, 'href' => '#live-alerts'],
-                    ] as $i => $kpi)
-                        <a href="{{ $kpi['href'] }}"
-                           class="group flex min-w-0 items-center gap-2.5 rounded-xl transition hover:opacity-80">
+            {{-- KPI cards. This was the platform's second navy slab; the numbers
+                 and the links are unchanged, the mass is gone, and each card
+                 carries a meter so the figure has a scale to sit against. --}}
+            @php
+                $spendPct = $spend['estimated'] > 0 ? min(100, (int) round($spend['actual'] / $spend['estimated'] * 100)) : 0;
+                $kpis = [
+                    ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'],
+                     'hint' => 'across the region', 'href' => route('events.index'), 'pct' => 100, 'tone' => 'bg-track'],
+                    ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'],
+                     'hint' => 'portfolios running', 'href' => route('projects.index'), 'pct' => 100, 'tone' => 'bg-navy-400'],
+                    ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$'.\Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 1),
+                     'hint' => $spendPct.'% of estimate spent', 'href' => route('finance.index'), 'pct' => $spendPct, 'tone' => 'bg-gold-500'],
+                    ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'],
+                     'hint' => 'pending + in progress', 'href' => route('tasks.index'), 'pct' => min(100, $stats['openTasks'] * 3), 'tone' => 'bg-warn'],
+                    ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'],
+                     'hint' => $stats['atRisk'] ? 'needs attention' : 'all clear', 'href' => '#live-alerts',
+                     'risk' => $stats['atRisk'] > 0, 'pct' => $stats['atRisk'] * 25, 'tone' => 'bg-risk'],
+                ];
+            @endphp
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                @foreach ($kpis as $kpi)
+                    <a href="{{ $kpi['href'] }}"
+                       class="group rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)] transition hover:-translate-y-0.5 hover:border-gold-200 hover:shadow-[0_18px_36px_-22px_rgba(11,31,58,0.45)]">
+                        <div class="flex items-center gap-2">
                             <span @class([
-                                'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1',
-                                'bg-red-400/10 text-red-300 ring-red-400/30' => $kpi['risk'] ?? false,
-                                'bg-white/[0.07] text-gold-400 ring-white/10' => ! ($kpi['risk'] ?? false),
+                                'grid h-7 w-7 shrink-0 place-items-center rounded-lg',
+                                'bg-risk/10 text-risk' => $kpi['risk'] ?? false,
+                                'bg-navy-50 text-navy-500' => ! ($kpi['risk'] ?? false),
                             ])>
-                                <x-icon :name="$kpi['icon']" class="h-4 w-4" />
+                                <x-icon :name="$kpi['icon']" class="h-3.5 w-3.5" />
                             </span>
-                            <div class="min-w-0">
-                                <p class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $kpi['label'] }}</p>
-                                <p class="pf mt-0.5 truncate text-[22px] font-bold leading-none xl:text-[26px] {{ ($kpi['risk'] ?? false) ? 'text-red-300' : 'text-white' }}">{{ $kpi['value'] }}</p>
-                                <p class="mt-1 truncate text-[0.6rem] text-white/40">{{ $kpi['hint'] }}</p>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
+                            <p class="eyebrow truncate">{{ $kpi['label'] }}</p>
+                        </div>
+
+                        <p class="pf mt-2.5 truncate text-[28px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
+
+                        <div class="mt-3 flex gap-[3px]">
+                            @for ($i = 0; $i < 14; $i++)
+                                <span @class([
+                                    'h-1 flex-1 rounded-full',
+                                    $kpi['tone'] => $i < round($kpi['pct'] / 100 * 14),
+                                    'bg-navy-50' => $i >= round($kpi['pct'] / 100 * 14),
+                                ])></span>
+                            @endfor
+                        </div>
+
+                        <p class="mt-2 truncate text-[11px] text-muted">{{ $kpi['hint'] }}</p>
+                    </a>
+                @endforeach
             </div>
 
             {{-- Operations Hub — circular event ecosystem --}}

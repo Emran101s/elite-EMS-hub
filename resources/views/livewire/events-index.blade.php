@@ -31,9 +31,9 @@
     </div>
 
     {{-- ══════════ Toolbar ══════════ --}}
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         {{-- type filter --}}
-        <div class="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1">
+        <div class="scrollbar-none -mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1">
             @foreach ($typeTabs as $key => $label)
                 <button type="button" wire:click="setTab('{{ $key }}')"
                         @class([
@@ -54,7 +54,7 @@
         </div>
 
         {{-- search · sort · view · create --}}
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <div class="relative">
                 <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
                 <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search events, clients, venues…"
