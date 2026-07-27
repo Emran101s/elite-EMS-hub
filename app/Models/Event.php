@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Services\EventHealthService;
+use App\Support\Workflow;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -91,7 +92,7 @@ class Event extends Model
 
     public static function stageColor(?string $stage): string
     {
-        return self::STAGE_COLORS[$stage] ?? '#64748B';
+        return Workflow::color('event_stage', $stage);
     }
 
     /**

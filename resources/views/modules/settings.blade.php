@@ -10,6 +10,7 @@
                 'items' => [
                     ['Company Profile', 'Brand, logo, address, default currency, timezone and management fee.', 'company.index', 'cog', null],
                     ['Types & Lists', 'Event types, session types, supplier and risk categories, deal sources — the lists every dropdown draws from.', 'taxonomies.index', 'grid', 'terms'],
+                    ['Statuses & Colours', 'What the platform calls each step — event stages, task columns, pipeline lanes — and the colour it wears.', 'workflows.index', 'chart', 'states'],
                     ['Defaults & Templates', 'The budget categories, ticket types and fee a new event starts with.', 'defaults.index', 'clipboard', 'categories'],
                     ['Team & Roles', 'Members, their roles and profile photos.', 'team.index', 'users', 'members'],
                 ],

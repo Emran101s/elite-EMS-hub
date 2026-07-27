@@ -50,6 +50,7 @@ use App\Livewire\TransportDispatch;
 use App\Livewire\TransportLive;
 use App\Livewire\TransportSettings;
 use App\Livewire\VenuesManager;
+use App\Livewire\WorkflowSettings;
 use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Event;
@@ -63,6 +64,7 @@ use App\Models\TransportDriver;
 use App\Models\TransportVehicle;
 use App\Models\User;
 use App\Models\Venue;
+use App\Support\Workflow;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -239,7 +241,8 @@ Route::middleware('auth')->group(function () {
      */
     Route::get('/settings', fn () => view('modules.settings', [
         'counts' => [
-            'taxonomies.index' => TaxonomyTerm::where('is_active', true)->count(),
+            'taxonomies.index' => TaxonomyTerm::where('is_active', true)->where('taxonomy', 'not like', 'state:%')->count(),
+            'workflows.index' => collect(Workflow::SETS)->sum(fn ($s) => count($s['states'])),
             'defaults.index' => count(CompanyProfile::current()->budgetCategories()),
             'team.index' => User::count(),
             'clients.index' => Client::count(),
@@ -253,6 +256,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/clients', ClientsManager::class)->name('clients.index');
     Route::get('/settings/company', CompanySettings::class)->name('company.index');
     Route::get('/settings/types', TaxonomySettings::class)->name('taxonomies.index');
+    Route::get('/settings/statuses', WorkflowSettings::class)->name('workflows.index');
     Route::get('/settings/defaults', DefaultsSettings::class)->name('defaults.index');
     Route::get('/settings/transport', TransportSettings::class)->name('transport-settings.index');
     Route::get('/settings/sponsor-packages', SponsorPackagesSettings::class)->name('sponsor-packages.index');

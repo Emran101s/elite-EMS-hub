@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Workflow;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -50,7 +51,7 @@ class EventTransport extends Model
 
     public function statusLabel(): string
     {
-        return self::STATUS_META[$this->status]['label'] ?? ucfirst((string) $this->status);
+        return Workflow::label('transport_status', $this->status);
     }
 
     public function statusClass(): string

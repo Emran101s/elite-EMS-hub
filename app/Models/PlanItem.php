@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -60,12 +61,12 @@ class PlanItem extends Model
 
     public function statusLabel(): string
     {
-        return (self::STATUSES[$this->status] ?? self::STATUSES['todo'])[0];
+        return Workflow::label('plan_status', $this->status ?: 'todo');
     }
 
     public function statusHex(): string
     {
-        return (self::STATUSES[$this->status] ?? self::STATUSES['todo'])[1];
+        return Workflow::color('plan_status', $this->status ?: 'todo');
     }
 
     public function priorityLabel(): string

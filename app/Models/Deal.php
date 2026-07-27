@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -95,12 +96,12 @@ class Deal extends Model
 
     public function stageLabel(): string
     {
-        return self::STAGES[$this->stage][0] ?? ucfirst($this->stage);
+        return Workflow::label('deal_stage', $this->stage);
     }
 
     public function stageHex(): string
     {
-        return self::STAGES[$this->stage][2] ?? '#94A3B8';
+        return Workflow::color('deal_stage', $this->stage);
     }
 
     /** Value weighted by the chance of winning — what a forecast is made of. */

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Workflow;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -77,12 +78,12 @@ class Task extends Model
 
     public function stageLabel(): string
     {
-        return self::STAGES[$this->status][0] ?? ucfirst($this->status);
+        return Workflow::label('task_stage', $this->status);
     }
 
     public function stageHex(): string
     {
-        return self::STAGES[$this->status][1] ?? '#64748B';
+        return Workflow::color('task_stage', $this->status);
     }
 
     /** Live work — not done, not cancelled. */
@@ -98,12 +99,12 @@ class Task extends Model
 
     public function priorityLabel(): string
     {
-        return self::PRIORITIES[$this->priority][0] ?? 'Normal';
+        return Workflow::label('task_priority', $this->priority);
     }
 
     public function priorityHex(): string
     {
-        return self::PRIORITIES[$this->priority][1] ?? '#3B82F6';
+        return Workflow::color('task_priority', $this->priority);
     }
 
     /** The module a task belongs to (stored in `area`). */

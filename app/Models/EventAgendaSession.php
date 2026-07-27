@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,7 +29,7 @@ class EventAgendaSession extends Model
 
     public function statusHex(): string
     {
-        return self::STATUS_META[$this->status][2] ?? '#94A3B8';
+        return Workflow::color('session_status', $this->status);
     }
 
     /** A settled session is agreed and safe to put in front of a delegate. */
@@ -39,7 +40,7 @@ class EventAgendaSession extends Model
 
     public function statusLabel(): string
     {
-        return self::STATUS_META[$this->status][0] ?? ucfirst((string) $this->status);
+        return Workflow::label('session_status', $this->status);
     }
 
     /** Speaking roles on a session, in billing order (moderator leads the panel). */
