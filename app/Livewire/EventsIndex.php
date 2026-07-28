@@ -9,6 +9,7 @@ use App\Models\PlanItem;
 use App\Models\PlanTrack;
 use App\Models\Task;
 use App\Services\EventHealthService;
+use App\Services\EventJourney;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -39,8 +40,8 @@ class EventsIndex extends Component
 
     public string $tab = 'all';
 
-    /** grid · lanes · list · calendar. Grid is the portfolio wall. */
-    public string $view = 'grid';
+    /** journey · grid · lanes · list · calendar. Journey is where you land. */
+    public string $view = 'journey';
 
     /** Where each stage sits on the board. */
     public const LANES = [
@@ -98,7 +99,7 @@ class EventsIndex extends Component
         $this->exactType = request('type') ?: null;
         // ?view=cards still works — it was the grid's name before the lanes.
         $requested = request('view') === 'cards' ? 'grid' : request('view');
-        $this->view = in_array($requested, ['grid', 'lanes', 'list', 'calendar'], true) ? $requested : 'grid';
+        $this->view = in_array($requested, ['journey', 'grid', 'lanes', 'list', 'calendar'], true) ? $requested : 'journey';
         $this->selectedId = request()->integer('selected') ?: null;
         $this->calMonth = now()->format('Y-m');
     }
@@ -563,6 +564,41 @@ class EventsIndex extends Component
         };
     }
 
+    /**
+     * The lifecycle board: a card's worth of facts, plus where the event is in
+     * its own life. Reuses the wall's payload so a row and a card can never
+     * disagree about the same event.
+     */
+    private function journeyRows(Collection $events, Collection $health): Collection
+    {
+        $journey = app(EventJourney::class);
+
+        return $this->cards($events, $health)
+            ->map(fn (array $card) => $card + ['track' => $journey->for($card['event'])]);
+    }
+
+    /**
+     * The second line under a figure.
+     *
+     * Where a record carries a date we can compare two windows and say which
+     * way it is going. Where it does not, the slot says something true rather
+     * than a trend that was never measured.
+     */
+    private function trend(string $model, string $column = 'created_at'): ?array
+    {
+        $now = Carbon::today();
+        $recent = $model::whereBetween($column, [$now->copy()->subDays(30), $now->copy()->endOfDay()])->count();
+        $prior = $model::whereBetween($column, [$now->copy()->subDays(60), $now->copy()->subDays(30)])->count();
+
+        if ($prior === 0) {
+            return $recent > 0 ? ['up' => true, 'label' => '+'.$recent.' in 30d'] : null;
+        }
+
+        $delta = (int) round(($recent - $prior) / $prior * 100);
+
+        return ['up' => $delta >= 0, 'label' => ($delta >= 0 ? '↑ ' : '↓ ').abs($delta).'%'];
+    }
+
     private function baseQuery()
     {
         return Event::query()
@@ -661,22 +697,31 @@ class EventsIndex extends Component
             // The grid shows every matching event: a wall of five cards paged
             // at eight is a page-two nobody reaches.
             'cards' => $this->view === 'grid' ? $this->cards($sorted->values(), $health) : null,
-            'timeline' => $this->view === 'grid' ? $this->timeline($all) : null,
+            'journey' => $this->view === 'journey' ? $this->journeyRows($sorted->values(), $health) : null,
+            'phases' => EventJourney::PHASES,
+            'regions' => $this->view === 'journey' ? app(EventJourney::class)->regions($all) : null,
+            'timeline' => in_array($this->view, ['grid', 'journey'], true) ? $this->timeline($all) : null,
             'todayActions' => $this->todayActions($all),
             'upcoming' => $this->upcoming($all),
             'healthSplit' => $this->healthSplit($all, $health),
             'kpis' => [
                 ['label' => 'Total Events', 'note' => 'All time', 'icon' => 'calendar', 'tone' => 'navy',
-                    'value' => Event::whereNull('archived_at')->count()],
+                    'value' => Event::whereNull('archived_at')->count(), 'trend' => null],
                 ['label' => 'Active Events', 'note' => 'Running now', 'icon' => 'folder', 'tone' => 'green',
-                    'value' => Event::whereNull('archived_at')->whereIn('stage', ['confirmed', 'planning', 'production', 'live'])->count()],
+                    'value' => Event::whereNull('archived_at')->whereIn('stage', ['confirmed', 'planning', 'production', 'live'])->count(),
+                    'trend' => $this->trend(Event::class)],
                 ['label' => 'Open Tasks', 'note' => 'Across all events', 'icon' => 'clipboard', 'tone' => 'blue',
-                    'value' => Task::whereNotIn('status', ['done', 'approved', 'cancelled'])->count()],
+                    'value' => Task::whereNotIn('status', ['done', 'approved', 'cancelled'])->count(),
+                    'trend' => $this->trend(Task::class)],
                 // Computed health, not a stored flag — the same number the hub shows.
                 ['label' => 'Events at Risk', 'note' => 'Needs attention', 'icon' => 'bell', 'tone' => 'red',
-                    'value' => $this->atRiskCount($health)],
+                    'value' => $this->atRiskCount($health),
+                    'trend' => ($behind = $health->filter(fn ($h) => $h['status'] === 'behind')->count())
+                        ? ['up' => false, 'label' => $behind.' behind'] : null],
                 ['label' => 'Pending Approvals', 'note' => 'Awaiting your review', 'icon' => 'identification', 'tone' => 'gold',
-                    'value' => EventApproval::where('status', 'pending')->count()],
+                    'value' => EventApproval::where('status', 'pending')->count(),
+                    'trend' => ($oldest = EventApproval::where('status', 'pending')->min('created_at'))
+                        ? ['up' => false, 'label' => 'oldest '.(int) Carbon::parse($oldest)->diffInDays(now()).'d'] : null],
             ],
         ]);
     }

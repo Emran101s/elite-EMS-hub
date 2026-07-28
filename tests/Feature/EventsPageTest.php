@@ -73,9 +73,9 @@ class EventsPageTest extends TestCase
         $user = $this->actor();
         $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        // The grid is the landing view; the inspector belongs to the lanes.
+        // The journey is the landing view; the inspector belongs to the lanes.
         $c = Livewire::actingAs($user)->test(EventsIndex::class)
-            ->assertSet('view', 'grid')
+            ->assertSet('view', 'journey')
             ->assertSee('ICFT 2026')
             ->set('view', 'lanes')
             ->assertDontSee('Event Control Room'); // collapsed: detail is hidden

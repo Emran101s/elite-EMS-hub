@@ -108,16 +108,22 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The rebuilt page: the five figures, the wall of cards, and the rail
-        // of portfolio news beside it.
+        // The rebuilt page lands on the journey: the five figures, every event
+        // across its lifecycle, and the rail of portfolio news beside it.
         $this->actingAs($user)->get('/events')->assertOk()
             ->assertSee('Total Events')->assertSee('Events at Risk')
-            ->assertSee('All events')
+            ->assertSee('Event journey')
+            ->assertSee('Identify &amp; Evaluate', false)
             ->assertSee('ICFT 2026')
             ->assertSee('Open Command Center')
+            ->assertSee('Events by region')
             ->assertSee('Timeline overview')
             ->assertSee("Today's actions", false)
             ->assertSee('Event health overview');
+
+        // The wall is one click away and carries the same events.
+        $this->actingAs($user)->get('/events?view=grid')->assertOk()
+            ->assertSee('All events')->assertSee('ICFT 2026');
 
         // Filters narrow the board. Asserted through the component's paginator,
         // since the Event Radar always lists every event in the page HTML.
@@ -134,9 +140,9 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // An unknown view falls back to the wall rather than erroring, and the
-        // board is still one click away.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('All events');
+        // An unknown view falls back to the journey rather than erroring, and
+        // the board is still one click away.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Event journey');
         $this->actingAs($user)->get('/events?view=lanes')->assertOk()->assertSee('The Board');
     }
 
