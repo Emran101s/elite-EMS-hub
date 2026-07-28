@@ -35,3 +35,5 @@ storage/backups/
 # Local render helper for visual checks (see docs/orbit-migration-plan.md)
 /_render.php
 /public/_preview.html
+# _render.php output — scratch pages for visual checking, never source
+/public/*.html

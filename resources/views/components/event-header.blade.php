@@ -45,11 +45,16 @@
          generated crest, blown up and dimmed — every event has a mark, so no
          event gets a grey rectangle. It fades to white before it reaches the
          title, which is the only reason text over a photo is ever readable. --}}
-    <div class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-[68%]" aria-hidden="true">
+    <div class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-[72%]" aria-hidden="true">
         @if ($event->coverUrl())
-            <img src="{{ $event->coverUrl() }}" alt="" class="h-full w-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-white/35"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-white/30"></div>
+            <img src="{{ $event->coverUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 38%">
+            {{-- The veil has to be finished before the photo starts, not spread
+                 across it: a wash over the whole frame does not make the title
+                 readable, it only makes the photograph look broken. Solid white
+                 under the words, gone by two-thirds, the picture untouched. --}}
+            <div class="absolute inset-0" style="background: linear-gradient(to right,
+                #fff 0%, rgba(255,255,255,0.97) 18%, rgba(255,255,255,0.62) 38%,
+                rgba(255,255,255,0.16) 60%, rgba(255,255,255,0) 74%)"></div>
         @else
             {{-- No photo: a wash in the event's own accent rather than a grey
                  rectangle. The crest is not repeated here — at this size it is
@@ -175,7 +180,7 @@
     {{-- how big — across the whole card rather than inside the title column,
          which at any real width leaves the last figure orphaned on its own
          line under the action card. --}}
-    <div class="relative border-t border-line/80 bg-white/70 px-5 py-3 backdrop-blur-sm lg:px-6">
+    <div class="relative border-t border-line/80 bg-white px-5 py-3 lg:px-6">
         <div class="flex flex-wrap items-center gap-x-7 gap-y-3">
             @foreach ($header['scale'] as $stat)
                 @if (! $loop->first)
