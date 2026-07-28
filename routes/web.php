@@ -18,6 +18,7 @@ use App\Http\Controllers\EventHubController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
 use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\MasterSchedulePdfController;
+use App\Http\Controllers\NavConceptController;
 use App\Http\Controllers\PlanStudioPdfController;
 use App\Http\Controllers\RoomEquipmentPdfController;
 use App\Http\Controllers\RoomingListPdfController;
@@ -105,6 +106,7 @@ Route::middleware('auth')->group(function () {
     // Design prototype. Real records, a proposed visual language; nothing in
     // the platform depends on it, so it can be kept or deleted whole.
     Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
+    Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 
