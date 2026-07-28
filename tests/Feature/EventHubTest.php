@@ -184,4 +184,44 @@ class EventHubTest extends TestCase
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'agenda']))
             ->assertOk()->assertSee('Event Overview');
     }
+
+    public function test_the_header_reports_scale_readiness_and_what_needs_a_person(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $event->load(\App\Services\EventCommandHeader::RELATIONS);
+
+        $header = app(\App\Services\EventCommandHeader::class)->for($event);
+
+        // Every figure is counted, so it has to agree with the records.
+        $this->assertSame($event->speakers->count(), (int) collect($header['scale'])->firstWhere('label', 'Speakers')['value']);
+        $this->assertSame($event->sponsors->count(), (int) collect($header['scale'])->firstWhere('label', 'Sponsors')['value']);
+
+        // Readiness is gates met over gates that apply — never over gates the
+        // event has no data for.
+        $this->assertNotEmpty($header['readiness']['gates']);
+        $this->assertSame(
+            (int) round($header['readiness']['met'] / $header['readiness']['total'] * 100),
+            $header['readiness']['pct'],
+        );
+
+        $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
+            ->assertSee('Next critical action')
+            ->assertSee('Readiness to Go Live')
+            ->assertSee('Live status');
+    }
+
+    public function test_a_name_with_an_edition_splits_and_a_plain_name_does_not(): void
+    {
+        $this->actor();
+        $service = app(\App\Services\EventCommandHeader::class);
+
+        $split = $service->title(new Event(['name' => 'The First World Public Summit . Arab World']));
+        $this->assertSame('The First World Public Summit', $split['lead']);
+        $this->assertSame('Arab World', $split['tail']);
+
+        $plain = $service->title(new Event(['name' => 'ICFT 2026']));
+        $this->assertSame('ICFT 2026', $plain['lead']);
+        $this->assertNull($plain['tail']);
+    }
 }

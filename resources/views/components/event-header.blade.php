@@ -1,0 +1,243 @@
+@props(['event', 'header'])
+
+{{--
+    The event hub's header.
+
+    What it replaces was one white bar: crest, name, three meters, dates. It
+    confirmed the event existed. What you actually open an event to find out is
+    how big it is, how close it is, whether it is ready, and what the one thing
+    is that needs you today — so that is what it says now, in four blocks:
+
+        the hero      identity, scale, and the next critical action
+        the strip     module by module, with the count behind each percentage
+        the tabs      where to go
+        the live bar  what is true right now
+
+    Every figure comes from EventCommandHeader, counted off the event's own
+    records, so the header cannot disagree with the tab you click through to.
+--}}
+
+@php
+    $title = $header['title'];
+    $health = $header['health'];
+    $critical = $header['critical'];
+    $readiness = $header['readiness'];
+    $live = $header['live'];
+
+    $healthWord = $health['score'] === null ? 'Not scored'
+        : match ($health['group']) { 'risk' => 'Behind', 'warn' => 'At watch', default => 'Healthy' };
+
+    $readyWord = match (true) {
+        $readiness['pct'] >= 90 => 'Excellent',
+        $readiness['pct'] >= 70 => 'On track',
+        $readiness['pct'] >= 40 => 'Gaps remain',
+        default => 'Not ready',
+    };
+    $readyGroup = match (true) {
+        $readiness['pct'] >= 70 => 'ok', $readiness['pct'] >= 40 => 'warn', default => 'risk',
+    };
+@endphp
+
+{{-- ══════════ HERO ══════════ --}}
+<div class="relative isolate overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_18px_44px_-30px_rgba(11,31,58,0.5)]">
+
+    {{-- The field. An uploaded cover if there is one; otherwise the event's own
+         generated crest, blown up and dimmed — every event has a mark, so no
+         event gets a grey rectangle. It fades to white before it reaches the
+         title, which is the only reason text over a photo is ever readable. --}}
+    <div class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-[68%]" aria-hidden="true">
+        @if ($event->coverUrl())
+            <img src="{{ $event->coverUrl() }}" alt="" class="h-full w-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-white/35"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-white/30"></div>
+        @else
+            {{-- No photo: a wash in the event's own accent rather than a grey
+                 rectangle. The crest is not repeated here — at this size it is
+                 one letterform four hundred pixels tall, and it is already the
+                 medallion three inches to the left. --}}
+            <div class="h-full w-full" style="background:
+                radial-gradient(120% 90% at 82% 8%, {{ $event->accent_color ?: 'rgba(212,175,55,0.30)' }} 0%, transparent 62%),
+                radial-gradient(90% 80% at 100% 100%, rgba(11,31,58,0.16) 0%, transparent 60%)"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-white via-white/55 to-transparent"></div>
+        @endif
+    </div>
+
+    <div class="flex flex-wrap items-start gap-x-6 gap-y-5 p-5 lg:p-6">
+
+        {{-- crest --}}
+        <span class="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-full bg-navy-950 ring-2 ring-gold-400/70 ring-offset-4 ring-offset-white lg:h-[104px] lg:w-[104px]">
+            @if ($event->logoUrl())
+                <img src="{{ $event->logoUrl() }}" alt="{{ $event->name }}" class="h-full w-full object-cover">
+            @else
+                <x-event-crest :event="$event" class="h-full w-full" />
+            @endif
+        </span>
+
+        {{-- identity --}}
+        <div class="min-w-0 flex-1">
+            <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-600">
+                <span class="h-px w-4 bg-gold-400"></span>Event Hub
+            </p>
+
+            <h1 class="pf mt-1.5 max-w-[16ch] text-[30px] font-black leading-[1.05] text-navy-950 lg:text-[40px]">{{ $title['lead'] }}</h1>
+
+            @if ($title['tail'])
+                {{-- The edition, set under a rule rather than run on: it is how
+                     the name is actually written down. --}}
+                <div class="mt-2 flex items-center gap-3">
+                    <span class="h-px w-10 bg-gold-400/70"></span>
+                    <span class="pf text-[19px] font-bold tracking-wide text-gold-700 lg:text-[22px]">{{ $title['tail'] }}</span>
+                    <span class="h-px w-10 bg-gold-400/70"></span>
+                </div>
+            @endif
+
+            {{-- where, when, and in what building --}}
+            <div class="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] font-medium text-navy-700">
+                @if ($event->city || $event->country)
+                    <span class="flex items-center gap-1.5"><x-icon name="pin" class="h-3.5 w-3.5 text-navy-300" />{{ collect([$event->city, $event->country])->filter()->implode(', ') }}</span>
+                @endif
+                @if ($event->starts_at)
+                    <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 text-navy-300" />{{ $event->starts_at->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at->format('Y') }}</span>
+                @endif
+                @if ($event->venue)
+                    <span class="flex items-center gap-1.5"><x-icon name="building" class="h-3.5 w-3.5 text-navy-300" />{{ $event->venue->name }}</span>
+                @endif
+                {{-- Who it is for and who runs it. The reference does not carry
+                     these, but it is a mock of one event — in a book of them,
+                     the client and the PM are two of the first four facts. --}}
+                @if ($event->client)
+                    <span class="flex items-center gap-1.5"><x-icon name="identification" class="h-3.5 w-3.5 text-navy-300" />{{ $event->client->name }}</span>
+                @endif
+                @if ($event->projectManager)
+                    <span class="flex items-center gap-1.5"><x-icon name="users" class="h-3.5 w-3.5 text-navy-300" />{{ $event->projectManager->name }}</span>
+                @endif
+                <span class="chip">{{ str($event->stage)->replace('_', ' ')->title() }}</span>
+            </div>
+
+        </div>
+
+        {{-- ── next critical action ──
+             One card, always in the same place, so "what needs me" is a glance
+             rather than a tour of seven tabs. --}}
+        <div class="w-full shrink-0 rounded-2xl border border-line bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(11,31,58,0.55)] backdrop-blur sm:w-[298px]">
+            <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.18em] text-navy-400">
+                Next critical action
+                <x-icon name="flag" class="ms-auto h-3.5 w-3.5 {{ $critical ? 'text-gold-600' : 'text-navy-200' }}" />
+            </p>
+
+            @if ($critical)
+                <div class="mt-3 flex items-start gap-2.5">
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy-950 text-gold-400">
+                        <x-icon name="calendar" class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                        <p class="pf line-clamp-2 text-[14px] font-bold leading-snug text-navy-950">{{ $critical['title'] }}</p>
+                        <p class="mt-0.5 truncate text-[11.5px] text-muted">{{ $critical['where'] }}</p>
+                    </div>
+                </div>
+
+                <dl class="mt-3 space-y-1.5 border-t border-line pt-3 text-[11.5px]">
+                    @foreach ([['Due', $critical['due']], ['Owner', $critical['owner']]] as [$term, $value])
+                        <div class="flex items-baseline justify-between gap-3">
+                            <dt class="text-muted">{{ $term }}</dt>
+                            <dd class="truncate font-semibold text-navy-900">{{ $value }}</dd>
+                        </div>
+                    @endforeach
+                    <div class="flex items-baseline justify-between gap-3">
+                        <dt class="text-muted">Risk level</dt>
+                        <dd>
+                            <span @class([
+                                'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                                'bg-risk/10 text-red-700' => $critical['level'] === 'Critical',
+                                'bg-warn/15 text-amber-700' => $critical['level'] === 'High',
+                                'bg-gold-50 text-gold-800' => $critical['level'] === 'Medium',
+                                'bg-navy-50 text-navy-500' => $critical['level'] === 'Low',
+                            ])>{{ $critical['level'] }}</span>
+                        </dd>
+                    </div>
+                </dl>
+
+                <a href="{{ route('events.hub', [$event, 'tab' => $critical['tab']]) }}"
+                   class="mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-950 text-[12.5px] font-bold text-white transition hover:bg-navy-800">
+                    {{ $critical['cta'] }} →
+                </a>
+            @else
+                <p class="pf mt-3 text-[14px] font-bold text-navy-950">Nothing is waiting on you</p>
+                <p class="mt-1 text-[11.5px] text-muted">No open risk, no pending approval, no dated task still to do.</p>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}"
+                   class="mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-50 text-[12.5px] font-bold text-navy-700 transition hover:bg-navy-100">
+                    Open the task board →
+                </a>
+            @endif
+        </div>
+    </div>
+
+    {{-- how big — across the whole card rather than inside the title column,
+         which at any real width leaves the last figure orphaned on its own
+         line under the action card. --}}
+    <div class="relative border-t border-line/80 bg-white/70 px-5 py-3 backdrop-blur-sm lg:px-6">
+        <div class="flex flex-wrap items-center gap-x-7 gap-y-3">
+            @foreach ($header['scale'] as $stat)
+                @if (! $loop->first)
+                    <span class="hidden h-8 w-px bg-line sm:block" aria-hidden="true"></span>
+                @endif
+                <div class="flex items-center gap-2">
+                    <x-icon :name="$stat['icon']" class="h-4 w-4 shrink-0 text-navy-300" />
+                    <span class="leading-tight">
+                        <span class="pf block text-[20px] font-black {{ $stat['tone'] ?? 'text-navy-950' }}">{{ $stat['value'] }}</span>
+                        <span class="block text-[10.5px] font-semibold text-muted">{{ $stat['label'] }}</span>
+                    </span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+{{-- ══════════ HEALTH STRIP ══════════
+     A ring at each end and the modules between them. The two rings are not the
+     same number twice: health is how the work is going, readiness is whether
+     the gates to go live are met — an event can be healthy and not ready. --}}
+<div class="mt-3 overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_10px_30px_-24px_rgba(11,31,58,0.45)]">
+    <div class="flex items-stretch divide-x divide-line overflow-x-auto scrollbar-none">
+
+        <div class="flex shrink-0 items-center gap-2.5 px-4 py-3.5">
+            <span class="max-w-[64px] text-eyebrow font-bold uppercase leading-tight tracking-[0.14em] text-navy-400">Event Health Score</span>
+            <span class="text-center">
+                <x-health-ring :percent="$health['score']" :group="$health['group']" size="h-14 w-14" textSize="text-[13px]" />
+                <span class="mt-1 block text-[10.5px] font-bold text-navy-600">{{ $healthWord }}</span>
+            </span>
+        </div>
+
+        @foreach ($header['meters'] as $meter)
+            <div class="min-w-[118px] flex-1 shrink-0 px-3.5 py-3">
+                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                    <x-icon :name="$meter['icon']" class="h-3.5 w-3.5 text-navy-300" />{{ $meter['label'] }}
+                </p>
+                <p class="pf mt-1 text-[22px] font-black leading-none text-navy-950">
+                    {{ $meter['pct'] === null ? '—' : $meter['pct'].'%' }}
+                </p>
+                <div class="mt-2 h-[3px] overflow-hidden rounded-full bg-navy-50">
+                    <div @class([
+                        'h-full rounded-full',
+                        'bg-track' => $meter['pct'] !== null && $meter['pct'] >= 81,
+                        'bg-warn' => $meter['pct'] !== null && $meter['pct'] >= 61 && $meter['pct'] < 81,
+                        'bg-risk' => $meter['pct'] !== null && $meter['pct'] < 61,
+                        'bg-navy-100' => $meter['pct'] === null,
+                    ]) style="width: {{ $meter['pct'] ?? 100 }}%"></div>
+                </div>
+                <p class="mt-1.5 truncate text-[10.5px] text-muted" title="{{ $meter['detail'] }}">{{ $meter['detail'] }}</p>
+            </div>
+        @endforeach
+
+        {{-- The gates are named in the tooltip: a readiness number you cannot
+             take apart is a number you have to believe. --}}
+        <div class="flex shrink-0 items-center gap-2.5 px-4 py-3.5"
+             title="{{ collect($readiness['gates'])->map(fn ($g) => ($g['met'] ? '✓ ' : '✗ ').$g['label'].' — '.$g['note'])->implode("\n") }}">
+            <span class="max-w-[64px] text-right text-eyebrow font-bold uppercase leading-tight tracking-[0.14em] text-navy-400">Readiness to Go Live</span>
+            <span class="text-center">
+                <x-health-ring :percent="$readiness['pct']" :group="$readyGroup" size="h-14 w-14" textSize="text-[13px]" />
+                <span class="mt-1 block text-[10.5px] font-bold text-navy-600">{{ $readyWord }}</span>
+            </span>
+        </div>
+    </div>
+</div>

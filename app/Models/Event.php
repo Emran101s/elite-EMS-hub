@@ -65,6 +65,42 @@ class Event extends Model
     ];
 
     /**
+     * The hub's tab strip: key => [short label, what it is for, icon].
+     *
+     * Separate from HUB_MODULES because this is a different job. HUB_MODULES
+     * says what a module IS (name, category, icon) and is what Settings and
+     * the document folders read. This says how it is LABELLED in a strip of
+     * twenty-one, where "Accommodation" costs the width of two tabs and the
+     * caption only ever renders on the one you are in.
+     *
+     * Overview, AI and Settings are here and not in HUB_MODULES because they
+     * are always on — there is nothing to toggle.
+     */
+    public const HUB_TABS = [
+        'overview' => ['Overview', 'Command centre', 'home'],
+        'brief' => ['Brief', 'Scope & objectives', 'clipboard'],
+        'contract' => ['Contract', 'Terms & signatures', 'identification'],
+        'planning' => ['Planning', 'Strategy & timeline', 'list'],
+        'tasks' => ['Tasks', 'Work & execution', 'clipboard'],
+        'budget' => ['Budget', 'Cost & margin', 'currency'],
+        'risks' => ['Risks', 'What could go wrong', 'bell'],
+        'approvals' => ['Approvals', 'Decisions pending', 'identification'],
+        'agenda' => ['Agenda', 'Sessions & schedule', 'calendar'],
+        'speakers' => ['Speakers', 'Line-up & billing', 'sparkles'],
+        'venue' => ['Venue', 'Rooms & layouts', 'building'],
+        'suppliers' => ['Suppliers', 'Vendors & orders', 'truck'],
+        'transportation' => ['Transport', 'Movements & drivers', 'truck'],
+        'accommodation' => ['Stay', 'Hotels & rooming', 'home'],
+        'exhibition' => ['Exhibition', 'Floor & stands', 'grid'],
+        'sponsors' => ['Sponsors', 'Partnerships', 'star'],
+        'attendees' => ['Attendees', 'Registrations & badges', 'users'],
+        'files' => ['Files', 'Documents & assets', 'archive'],
+        'reports' => ['Reports', 'Analytics & insights', 'chart'],
+        'ai' => ['AI', 'Assistant & insights', 'sparkles'],
+        'settings' => ['Settings', 'Modules & details', 'cog'],
+    ];
+
+    /**
      * A colour per module, used for document folders and module chips.
      *
      * Grouped by the HUB_MODULES category so the palette reads as a system —

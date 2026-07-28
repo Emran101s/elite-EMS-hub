@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use Illuminate\View\View;
 
@@ -14,7 +15,7 @@ class EventHubController extends Controller
         'attendees', 'files', 'risks', 'approvals', 'reports', 'ai', 'settings',
     ];
 
-    public function show(Event $event, EventHealthService $healthService): View
+    public function show(Event $event, EventHealthService $healthService, EventCommandHeader $headerService): View
     {
         $tab = in_array(request('tab'), self::TABS, true) ? request('tab') : 'overview';
 
@@ -25,8 +26,9 @@ class EventHubController extends Controller
 
         $event->load([
             'client', 'venue', 'projectManager', 'project',
-            'rooms', 'agendaDays.sessions.room', 'agendaSessions',
+            'rooms', 'agendaDays.sessions.room', 'agendaSessions.day',
             'tasks.assignee', 'budgetItems.supplier', 'suppliers',
+            'attendees', 'transport.manifest',
             'sponsors', 'risks.owner', 'approvals.requester', 'approvals.decider',
             'teamMembers', 'speakers', 'brief', 'contract',
         ]);
@@ -35,6 +37,8 @@ class EventHubController extends Controller
             'event' => $event,
             'tab' => $tab,
             'health' => $healthService->breakdown($event),
+            // Everything the header says, counted off this event's own records.
+            'header' => $headerService->for($event),
             'ai' => $healthService->aiSummary($event),
             'alerts' => $this->liveAlerts($event),
             'workload' => $this->teamWorkload($event),
