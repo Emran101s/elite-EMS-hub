@@ -1,5 +1,5 @@
 <x-layouts.app title="Team" subtitle="The people running your operations.">
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         @forelse ($members as $member)
             <div class="card flex items-center gap-4 p-6">
                 <x-user-avatar :user="$member" size="h-12 w-12" />

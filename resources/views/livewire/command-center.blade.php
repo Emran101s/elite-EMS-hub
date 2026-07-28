@@ -51,7 +51,7 @@
         $nextPct = $w['nextTotal'] ? (int) round($w['nextDone'] / $w['nextTotal'] * 100) : 0;
     @endphp
 
-    <div class="mb-4 grid gap-4 xl:grid-cols-4">
+    <div class="mb-4 grid gap-4 2xl:grid-cols-4">
 
         {{-- 1 · Countdown --}}
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-navy-900 to-[var(--color-navy-950)] p-5 text-white">
@@ -173,7 +173,7 @@
     </div>
 
     {{-- ══════════ SECOND ROW ══════════ --}}
-    <div class="mb-4 grid gap-4 xl:grid-cols-4">
+    <div class="mb-4 grid gap-4 2xl:grid-cols-4">
 
         {{-- 5 · Priority pyramid --}}
         <div class="rounded-2xl border border-line bg-white p-5">

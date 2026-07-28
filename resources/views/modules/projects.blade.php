@@ -1,5 +1,5 @@
 <x-layouts.app title="Projects" subtitle="Portfolios that group events, tasks and budgets.">
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         @forelse ($projects as $project)
             <div class="card p-6">
                 <div class="flex items-start justify-between gap-3">

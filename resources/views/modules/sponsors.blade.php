@@ -24,7 +24,7 @@
                         <p class="text-xs text-muted">{{ $event->sponsors->count() }} {{ str('sponsor')->plural($event->sponsors->count()) }} · ${{ number_format($event->sponsors->sum('amount_cents') / 100) }}</p>
                     </div>
                 </div>
-                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                     @foreach ($event->sponsors->sortByDesc('amount_cents') as $sponsor)
                         <div class="flex items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3">
                             <div class="flex items-center gap-3">

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\CommandPalette;
 use App\Models\Event;
 use App\Models\User;
+use App\Support\NavPanel;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -36,44 +37,84 @@ class PlatformChromeTest extends TestCase
             ->assertSee('Command Center');
     }
 
+    /**
+     * Nothing in the registry is unreachable.
+     *
+     * The nav is two tiers now: the rail carries areas and each area's panel
+     * carries what is inside it, so Suppliers is no longer a link on the home
+     * page — it is a link on the Library page. The property worth holding is
+     * unchanged though, just measured across the areas rather than on one
+     * screen: every module the platform has built must be reachable from the
+     * chrome somewhere. The hand-kept pill list drifted once and left CRM,
+     * Suppliers, Venues, Team and Assets with no way in at all.
+     */
     public function test_every_module_in_the_registry_is_reachable_from_the_chrome(): void
     {
         [, $user] = $this->ctx();
 
-        $page = $this->actingAs($user)->get(route('home'))->assertOk();
+        // Every area's landing page, which is every panel there is.
+        $chrome = collect(NavPanel::AREAS)->pluck('route')
+            ->push(NavPanel::SETTINGS['route'])
+            ->filter(fn (string $route) => Route::has($route))
+            ->map(fn (string $route) => $this->actingAs($user)->get(route($route))->assertOk()->getContent())
+            ->implode("\n");
 
-        // The nav used to be a second list kept by hand, and it drifted: CRM was
-        // built and never added, so it and four others could not be reached.
         foreach (config('modules.nav') as $key => $module) {
             if (! Route::has($module['route'])) {
                 continue;
             }
 
-            $page->assertSee('href="'.route($module['route']).'"', false);
+            $this->assertStringContainsString(
+                'href="'.route($module['route']).'"',
+                $chrome,
+                $key.' is built but nothing in the chrome links to it'
+            );
         }
     }
 
     /**
-     * The More menu is not inside the scrolling pill row.
+     * Every area is ON the rail, rather than five of them behind a menu.
      *
-     * It was, and overflow-x-auto makes a clipping box, so the menu opened
-     * correctly and then had 310px of itself cut off — which looks exactly
-     * like a button that does nothing. A reachability test cannot catch that:
-     * the links were all in the HTML, just invisible. This asserts the one
-     * structural fact that made them invisible.
+     * The menu they were behind spent months opening into a clipping box,
+     * which nobody noticed because nobody could see it.
      */
-    public function test_the_more_menu_sits_outside_the_scrolling_pill_row(): void
+    public function test_every_area_is_on_the_rail(): void
+    {
+        [, $user] = $this->ctx();
+
+        $page = $this->actingAs($user)->get(route('home'))->assertOk();
+
+        foreach (NavPanel::AREAS as $key => $area) {
+            if (! Route::has($area['route'])) {
+                continue;
+            }
+
+            $page->assertSee('title="'.$area['label'].'"', false);
+        }
+
+        $page->assertSee('title="Settings"', false);
+    }
+
+    /**
+     * The rail must not be a clipping box.
+     *
+     * Its hover labels are painted OUTSIDE it (absolute, left-full), so any
+     * overflow that is not visible swallows them — which is exactly what
+     * happened to the More menu inside the scrolling pill row, and what
+     * happened again to these labels an hour after that was fixed. A test,
+     * because twice is a pattern.
+     */
+    public function test_the_rail_does_not_clip_the_labels_that_hang_off_it(): void
     {
         [, $user] = $this->ctx();
 
         $html = $this->actingAs($user)->get(route('home'))->assertOk()->getContent();
 
-        $nav = str($html)->after('<nav')->before('</nav>');
+        $rail = str($html)->after('aria-label="Areas"')->before('</nav>');
 
-        $this->assertStringContainsString('overflow-x-auto', (string) $nav, 'the pills still scroll');
-        $this->assertStringNotContainsString('data-menu', (string) $nav,
-            'the More menu must not live inside a scroll container — it gets clipped');
-        $this->assertStringContainsString('data-menu', $html, 'but it is still on the page');
+        $this->assertStringContainsString('left-full', (string) $rail, 'the labels still hang off the rail');
+        $this->assertStringNotContainsString('overflow-hidden', (string) $rail,
+            'the rail clips, so its hover labels are painted where nobody can see them');
     }
 
     public function test_the_event_hub_breadcrumb_names_event_and_module(): void

@@ -17,8 +17,8 @@
     // Written out rather than interpolated: a class name built at runtime is
     // never in the source Tailwind scans, so it would simply not exist.
     $columns = [
-        2 => 'lg:grid-cols-2', 3 => 'lg:grid-cols-3', 4 => 'lg:grid-cols-4',
-        5 => 'lg:grid-cols-5', 6 => 'lg:grid-cols-6',
+        2 => '2xl:grid-cols-2', 3 => '2xl:grid-cols-3', 4 => '2xl:grid-cols-4',
+        5 => '2xl:grid-cols-5', 6 => '2xl:grid-cols-6',
     ][min(6, max(2, count($stats)))];
 @endphp
 

@@ -1,5 +1,5 @@
 <x-layouts.app title="Suppliers" subtitle="Your supplier network, rated and categorized.">
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         @forelse ($suppliers as $supplier)
             <div class="group op-card">
                 <div class="flex flex-1 flex-col p-5">

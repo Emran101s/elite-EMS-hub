@@ -30,7 +30,7 @@
          together, and the one thing that is not an area sits apart.
     ══════════════════════════════════════════════════════════════════ --}}
     <div class="flex shrink-0 flex-col gap-3">
-        <nav class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-hidden rounded-[22px] bg-navy-900 p-2.5 shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)]"
+        <nav class="flex min-h-0 flex-1 flex-col items-center gap-1 rounded-[22px] bg-navy-900 p-2.5 shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)]"
              aria-label="Areas">
 
             {{-- brand --}}

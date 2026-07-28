@@ -14,20 +14,36 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-page font-sans text-ink antialiased">
-    <div class="min-h-screen">
 
-        {{-- Navigation: a row of pills across the top. The Command Spine sidebar
-             is gone — it was the largest dark mass in the platform and it held
-             292px hostage on every screen. --}}
-        <x-top-nav />
+{{--
+    Two tiers: a rail that says which area you are in, a panel that says what
+    is inside it, and the work to the right of both.
 
-        <header class="px-4 pb-4 pt-6 lg:px-7">
+    The pill row this replaces could only ever show the top level, which is how
+    five modules ended up behind a More menu — and that menu then spent months
+    opening into a clipping box, which nobody noticed because nobody could see
+    it. Everything is on the rail now.
+
+    h-screen rather than min-h-screen so the panel scrolls its own list instead
+    of making the page tall and pushing Settings off the bottom.
+--}}
+<div class="flex h-screen gap-3 overflow-hidden p-3 lg:gap-4 lg:p-4">
+
+    <x-app-rail />
+    <x-app-panel />
+
+    <main class="scrollbar-none min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-navy-900/[0.045] p-4 lg:p-6">
+
+        <x-app-tools />
+
+        <header class="mb-5">
             @php
-                // Home is the root, so it wears the brand eyebrow; every other
-                // page gets a trail back to it, derived when none was passed.
+                // The rail already says which area you are in, so a trail back
+                // to the Command Center is a hop nobody needs. What is worth
+                // saying is where you are inside the area.
                 $crumbs ??= request()->routeIs('home') || ! $title
                     ? null
-                    : [['label' => 'Command Center', 'href' => route('home')], ['label' => $title]];
+                    : [['label' => \App\Support\NavPanel::areaLabel(\App\Support\NavPanel::currentArea())], ['label' => $title]];
             @endphp
 
             @if ($crumbs)
@@ -51,23 +67,21 @@
             @endif
 
             @unless ($hideTitleRow)
-                <h1 class="pf text-[26px] font-bold leading-tight text-navy-900 sm:text-[34px]">{{ $title ?? config('app.name') }}</h1>
+                <h1 class="pf text-[26px] font-bold leading-tight text-navy-900 sm:text-[32px]">{{ $title ?? config('app.name') }}</h1>
                 @if ($subtitle)
-                    <p class="mt-1 text-[15px] text-muted">{{ $subtitle }}</p>
+                    <p class="mt-1 text-[14px] text-muted">{{ $subtitle }}</p>
                 @endif
             @endunless
         </header>
 
-        <main class="px-4 pb-12 lg:px-7">
-            @if (session('status'))
-                <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">
-                    {{ session('status') }}
-                </div>
-            @endif
+        @if (session('status'))
+            <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">
+                {{ session('status') }}
+            </div>
+        @endif
 
-            {{-- Every module works on the same surface. --}}
-            <x-workspace>{{ $slot }}</x-workspace>
-        </main>
-    </div>
+        <div class="pb-6">{{ $slot }}</div>
+    </main>
+</div>
 </body>
 </html>

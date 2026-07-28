@@ -14,7 +14,7 @@
 
     {{-- ══════════ Command strip — light, tinted KPI tiles ══════════ --}}
     <div class="card p-1.5">
-        <div class="grid grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
+        <div class="grid grid-cols-2 gap-1 md:grid-cols-3 2xl:grid-cols-6">
             @foreach ($kpis as $k)
                 @php [$soft, $ink] = $tone[$k['tone']] ?? $tone['blue']; @endphp
                 <div class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-page/60">

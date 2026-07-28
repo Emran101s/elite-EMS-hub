@@ -44,7 +44,7 @@
             ['Win rate', $stats['winRate'] === null ? '—' : $stats['winRate'].'%', 'star', $stats['winRate'] === null ? 'nothing closed yet' : count($closedDeals).' closed'],
         ];
     @endphp
-    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
         @foreach ($tiles as [$label, $value, $icon, $hint])
             <div class="rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)]">
                 <div class="flex items-center gap-2">

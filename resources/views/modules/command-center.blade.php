@@ -26,7 +26,7 @@
                      'risk' => $stats['atRisk'] > 0, 'pct' => $stats['atRisk'] * 25, 'tone' => 'bg-risk'],
                 ];
             @endphp
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                 @foreach ($kpis as $kpi)
                     <a href="{{ $kpi['href'] }}"
                        class="group rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)] transition hover:-translate-y-0.5 hover:border-gold-200 hover:shadow-[0_18px_36px_-22px_rgba(11,31,58,0.45)]">

@@ -49,7 +49,7 @@
                 </x-slot:actions>
             </x-empty>
         @else
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 @foreach ($venues as $venue)
                     <div wire:key="venue-{{ $venue->id }}" class="group op-card">
                         <div class="flex flex-1 flex-col p-4">

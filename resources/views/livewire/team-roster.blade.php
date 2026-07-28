@@ -26,7 +26,7 @@
     @endif
 
     {{-- user cards --}}
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
         @forelse ($members as $m)
             <div wire:key="m-{{ $m->id }}" class="group op-card">
                 <button type="button" wire:click="edit({{ $m->id }})" class="flex flex-1 flex-col p-5 text-left">
