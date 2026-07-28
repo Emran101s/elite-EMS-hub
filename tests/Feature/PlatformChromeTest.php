@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -44,12 +45,35 @@ class PlatformChromeTest extends TestCase
         // The nav used to be a second list kept by hand, and it drifted: CRM was
         // built and never added, so it and four others could not be reached.
         foreach (config('modules.nav') as $key => $module) {
-            if (! \Illuminate\Support\Facades\Route::has($module['route'])) {
+            if (! Route::has($module['route'])) {
                 continue;
             }
 
             $page->assertSee('href="'.route($module['route']).'"', false);
         }
+    }
+
+    /**
+     * The More menu is not inside the scrolling pill row.
+     *
+     * It was, and overflow-x-auto makes a clipping box, so the menu opened
+     * correctly and then had 310px of itself cut off — which looks exactly
+     * like a button that does nothing. A reachability test cannot catch that:
+     * the links were all in the HTML, just invisible. This asserts the one
+     * structural fact that made them invisible.
+     */
+    public function test_the_more_menu_sits_outside_the_scrolling_pill_row(): void
+    {
+        [, $user] = $this->ctx();
+
+        $html = $this->actingAs($user)->get(route('home'))->assertOk()->getContent();
+
+        $nav = str($html)->after('<nav')->before('</nav>');
+
+        $this->assertStringContainsString('overflow-x-auto', (string) $nav, 'the pills still scroll');
+        $this->assertStringNotContainsString('data-menu', (string) $nav,
+            'the More menu must not live inside a scroll container — it gets clipped');
+        $this->assertStringContainsString('data-menu', $html, 'but it is still on the page');
     }
 
     public function test_the_event_hub_breadcrumb_names_event_and_module(): void

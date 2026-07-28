@@ -44,3 +44,26 @@ document.addEventListener('alpine:init', () => {
         },
     });
 });
+
+// ── Disclosure menus ──────────────────────────────────────────────────────
+// A native <details> opens and closes on its own summary and nothing else, so
+// a dropdown built from one stays open until you click it again — including
+// while you read the page behind it. These two listeners give every
+// details[data-menu] the behaviour a menu is expected to have.
+document.addEventListener('click', (e) => {
+    document.querySelectorAll('details[data-menu][open]').forEach((menu) => {
+        if (! menu.contains(e.target)) {
+            menu.open = false;
+        }
+    });
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+
+    document.querySelectorAll('details[data-menu][open]').forEach((menu) => {
+        menu.open = false;
+        // Put focus back where it came from, or the next Tab starts at the top.
+        menu.querySelector('summary')?.focus();
+    });
+});

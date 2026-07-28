@@ -37,17 +37,26 @@
             </span>
         </a>
 
-        {{-- the pills --}}
-        <nav class="scrollbar-none order-last flex w-full min-w-0 items-center gap-0.5 overflow-x-auto lg:order-none lg:w-auto lg:flex-1" aria-label="Primary">
-            @foreach ($pills as $m)
-                <a href="{{ route($m['route']) }}"
-                   @if ($m['active']) aria-current="page" @endif
-                   @class([
-                       'inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[12.5px] transition',
-                       'bg-navy-900 font-semibold text-white' => $m['active'],
-                       'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $m['active'],
-                   ])>{{ $m['label'] }}</a>
-            @endforeach
+        {{--
+            The pills scroll; More does not.
+
+            More used to live INSIDE this <nav>, and overflow-x-auto makes a
+            clipping box — so the menu opened correctly and then had 310px of
+            itself cut off, which looks exactly like a button that does nothing.
+            Only the pills belong in the scroll region.
+        --}}
+        <div class="order-last flex w-full min-w-0 items-center gap-0.5 lg:order-none lg:w-auto lg:flex-1">
+            <nav class="scrollbar-none flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto" aria-label="Primary">
+                @foreach ($pills as $m)
+                    <a href="{{ route($m['route']) }}"
+                       @if ($m['active']) aria-current="page" @endif
+                       @class([
+                           'inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[12.5px] transition',
+                           'bg-navy-900 font-semibold text-white' => $m['active'],
+                           'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $m['active'],
+                       ])>{{ $m['label'] }}</a>
+                @endforeach
+            </nav>
 
             {{-- Everything else, so nothing in the registry is unreachable. --}}
             @if ($more->isNotEmpty())
@@ -57,8 +66,8 @@
                         'inline-flex h-9 cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-full px-3 text-[12.5px] transition [&::-webkit-details-marker]:hidden',
                         'bg-navy-900 font-semibold text-white' => $inMore,
                         'font-medium text-navy-600 hover:bg-white hover:text-navy-900' => ! $inMore,
-                    ])>More <x-icon name="chevron" class="h-3 w-3" /></summary>
-                    <div class="absolute left-0 z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white py-1.5 shadow-lg">
+                    ])>More <x-icon name="chevron" class="h-3 w-3 transition group-open:rotate-180" /></summary>
+                    <div class="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white py-1.5 shadow-lg lg:left-0 lg:right-auto">
                         @foreach ($more as $m)
                             <a href="{{ route($m['route']) }}"
                                @class([
@@ -72,7 +81,7 @@
                     </div>
                 </details>
             @endif
-        </nav>
+        </div>
 
         {{-- tools --}}
         <div class="ml-auto flex shrink-0 items-center gap-2">
