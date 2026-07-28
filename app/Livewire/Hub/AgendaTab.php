@@ -38,6 +38,9 @@ class AgendaTab extends Component
     /** Programme audience: 'internal' (everything) or 'public' (delegate-facing). */
     public string $audience = 'internal';
 
+    /** Filters the venue rail. A room list you have to scroll is a room list you scan. */
+    public string $venueSearch = '';
+
     // Modal
     public bool $showForm = false;
 
@@ -492,7 +495,9 @@ class AgendaTab extends Component
      */
     private function venueRail(Collection $sessions, array $conflicts): Collection
     {
-        return $this->event->rooms()->orderBy('name')->get()->map(function (EventRoom $room) use ($sessions, $conflicts) {
+        return $this->event->rooms()
+            ->when(trim($this->venueSearch) !== '', fn ($q) => $q->where('name', 'like', '%'.trim($this->venueSearch).'%'))
+            ->orderBy('name')->get()->map(function (EventRoom $room) use ($sessions, $conflicts) {
             $mine = $sessions->where('room_id', $room->id);
 
             // Booked past what the room seats — the "capacity risk" signal.

@@ -310,4 +310,28 @@ class AgendaConflictTest extends TestCase
 
         $this->assertSame($venue->id, $event->fresh()->venue_id);
     }
+
+    public function test_the_venue_rail_can_be_searched(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        $rooms = $event->rooms()->orderBy('name')->pluck('name');
+        $this->assertGreaterThan(1, $rooms->count(), 'needs at least two rooms to prove the filter');
+
+        Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
+            ->assertSee($rooms->first())
+            ->assertSee($rooms->last())
+            ->set('venueSearch', $rooms->first())
+            ->assertSee($rooms->first())
+            ->assertDontSee($rooms->last());
+    }
+
+    public function test_a_search_that_matches_no_room_says_so(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
+            ->set('venueSearch', 'zzzz-no-such-room')
+            ->assertSee('No room matches');
+    }
 }

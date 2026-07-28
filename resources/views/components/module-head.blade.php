@@ -7,7 +7,8 @@
     'leadNote' => null,       // what it means, under the lead
     'leadTone' => 'text-gold-400',
 
-    // The row of supporting figures: [label, value, tone]
+    // The row of supporting figures: [label, value, tone, note?]
+    // The note is the line under the number that says which way it is moving.
     'figures' => [],
 ])
 
@@ -61,13 +62,17 @@
     @endif
 
     {{-- ── the supporting figures ── --}}
-    @foreach ($figures as $i => [$label, $value, $tone])
+    @foreach ($figures as $i => $figure)
+        @php [$label, $value, $tone, $note] = array_pad(array_slice($figure, 0, 4), 4, null); @endphp
         @if ($i > 0 || $ring !== null || $lead !== null)
             <span class="hidden h-11 w-px bg-white/10 sm:block" aria-hidden="true"></span>
         @endif
         <div class="relative min-w-[104px]">
             <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-300/80">{{ $label }}</p>
             <p class="pf mt-1 text-[22px] font-bold leading-none {{ $tone ?: 'text-white' }}">{{ $value }}</p>
+            @if ($note)
+                <p class="mt-1 text-[10px] font-semibold text-white/45">{{ $note }}</p>
+            @endif
         </div>
     @endforeach
 

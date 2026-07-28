@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Event;
+use App\Models\EventAgendaSession;
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,7 @@ class FlagshipEventSeeder extends Seeder
         $this->speakers($event, 24);
         $this->sponsors($event);
         $this->spend($event);
+        $this->agenda($event);
 
         $this->command?->info('Done.');
     }
@@ -223,6 +225,65 @@ class FlagshipEventSeeder extends Seeder
     }
 
     /** Put real spend against the budget so the money screens have something to say. */
+    /**
+     * The agenda, brought up to the state a real one is in the week before.
+     *
+     * A board where every session is an unstatused, unbilled draft can only
+     * ever draw one colour and one number — the module looks broken when what
+     * is empty is the data. Sessions that speak get speakers, sessions that
+     * are settled say so, and rooms that seat people get a headcount.
+     *
+     * Deterministic from the session id, so re-running lands on the same
+     * agenda rather than reshuffling it.
+     */
+    private function agenda(Event $event): void
+    {
+        // Roughly the mix a week out: most confirmed, a handful still waiting
+        // on a speaker to say yes, a couple in review, a couple still drafts.
+        $statuses = ['confirmed', 'confirmed', 'confirmed', 'final', 'confirmed',
+            'waiting_speaker', 'confirmed', 'needs_review', 'confirmed', 'draft'];
+
+        // What actually has somebody on stage. A coffee break does not.
+        $billed = [
+            'opening' => 'keynote', 'keynote' => 'keynote', 'closing' => 'keynote',
+            'panel' => 'moderator', 'workshop' => 'facilitator', 'gala_dinner' => 'host',
+        ];
+
+        $speakers = $event->speakers()->orderBy('id')->get();
+
+        $event->agendaSessions()->with('room')->get()->each(function (EventAgendaSession $s, int $i) use ($statuses, $billed, $speakers) {
+            $s->status = $statuses[$s->id % count($statuses)];
+
+            // Sessions in a room that seats people carry an expected headcount,
+            // one of them deliberately over what the room holds so the capacity
+            // warning has something to warn about.
+            if ($s->room?->capacity) {
+                $s->capacity = $s->id % 11 === 0
+                    ? (int) round($s->room->capacity * 1.15)
+                    : (int) round($s->room->capacity * (0.55 + ($s->id % 7) / 20));
+            }
+
+            $s->save();
+
+            if ($speakers->isEmpty() || ! isset($billed[$s->type]) || $s->speakers()->exists()) {
+                return;
+            }
+
+            $lead = $speakers[$s->id % $speakers->count()];
+            $rows = [$lead->id => ['role' => $billed[$s->type], 'sort' => 0]];
+
+            // A panel is a moderator and the people they are moderating.
+            if ($s->type === 'panel') {
+                foreach ([1, 2] as $n) {
+                    $panelist = $speakers[($s->id + $n * 5) % $speakers->count()];
+                    $rows[$panelist->id] ??= ['role' => 'panelist', 'sort' => $n];
+                }
+            }
+
+            $s->speakers()->syncWithoutDetaching($rows);
+        });
+    }
+
     private function spend(Event $event): void
     {
         if ($event->budgetItems()->sum('actual_cents') > 0) {
