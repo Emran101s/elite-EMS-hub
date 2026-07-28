@@ -38,14 +38,17 @@
     };
 @endphp
 
-{{-- ══════════ HERO ══════════ --}}
-<div class="relative isolate overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_18px_44px_-30px_rgba(11,31,58,0.5)]">
+{{-- ══════════ HERO ══════════
+     No card. The reference runs the photograph to the edge of the work area
+     and sets the identity straight on the page, so the negative margins here
+     cancel main's padding rather than drawing a box inside it. --}}
+<div class="relative isolate -mx-4 -mt-1 overflow-hidden bg-white lg:-mx-6">
 
     {{-- The field. An uploaded cover if there is one; otherwise the event's own
          generated crest, blown up and dimmed — every event has a mark, so no
          event gets a grey rectangle. It fades to white before it reaches the
          title, which is the only reason text over a photo is ever readable. --}}
-    <div class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-[72%]" aria-hidden="true">
+    <div class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full sm:w-[64%]" aria-hidden="true">
         @if ($event->coverUrl())
             <img src="{{ $event->coverUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 38%">
             {{-- The veil has to be finished before the photo starts, not spread
@@ -67,7 +70,7 @@
         @endif
     </div>
 
-    <div class="flex flex-wrap items-start gap-x-6 gap-y-5 p-5 lg:p-6">
+    <div class="flex flex-wrap items-start gap-x-6 gap-y-5 px-4 py-6 lg:px-6 lg:py-8 xl:pe-[340px]">
 
         {{-- crest --}}
         <span class="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-full bg-navy-950 ring-2 ring-gold-400/70 ring-offset-4 ring-offset-white lg:h-[104px] lg:w-[104px]">
@@ -96,27 +99,34 @@
                 </div>
             @endif
 
-            {{-- where, when, and in what building --}}
-            <div class="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] font-medium text-navy-700">
-                @if ($event->city || $event->country)
-                    <span class="flex items-center gap-1.5"><x-icon name="pin" class="h-3.5 w-3.5 text-navy-300" />{{ collect([$event->city, $event->country])->filter()->implode(', ') }}</span>
-                @endif
-                @if ($event->starts_at)
-                    <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 text-navy-300" />{{ $event->starts_at->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at->format('Y') }}</span>
-                @endif
-                @if ($event->venue)
-                    <span class="flex items-center gap-1.5"><x-icon name="building" class="h-3.5 w-3.5 text-navy-300" />{{ $event->venue->name }}</span>
-                @endif
-                {{-- Who it is for and who runs it. The reference does not carry
-                     these, but it is a mock of one event — in a book of them,
-                     the client and the PM are two of the first four facts. --}}
-                @if ($event->client)
-                    <span class="flex items-center gap-1.5"><x-icon name="identification" class="h-3.5 w-3.5 text-navy-300" />{{ $event->client->name }}</span>
-                @endif
-                @if ($event->projectManager)
-                    <span class="flex items-center gap-1.5"><x-icon name="users" class="h-3.5 w-3.5 text-navy-300" />{{ $event->projectManager->name }}</span>
-                @endif
-                <span class="chip">{{ str($event->stage)->replace('_', ' ')->title() }}</span>
+            {{-- Where, when, and in what building — divided by rules rather
+                 than run together, as drawn. The client, the PM and the stage
+                 are not lost: they are on the Overview beneath this. --}}
+            <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] font-medium text-navy-700">
+                @foreach (array_filter([
+                    ($event->city || $event->country) ? ['pin', collect([$event->city, $event->country])->filter()->implode(', ')] : null,
+                    $event->starts_at ? ['calendar', $event->starts_at->format('M j').' – '.($event->ends_at?->format('M j, Y') ?? $event->starts_at->format('Y'))] : null,
+                    $event->venue ? ['building', $event->venue->name] : null,
+                ]) as [$icon, $text])
+                    @if (! $loop->first)<span class="h-4 w-px bg-line" aria-hidden="true"></span>@endif
+                    <span class="flex items-center gap-1.5"><x-icon :name="$icon" class="h-4 w-4 text-navy-300" />{{ $text }}</span>
+                @endforeach
+            </div>
+
+            {{-- how big --}}
+            <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+                @foreach ($header['scale'] as $stat)
+                    @if (! $loop->first)
+                        <span class="h-9 w-px bg-line" aria-hidden="true"></span>
+                    @endif
+                    <div class="flex items-center gap-2">
+                        <x-icon :name="$stat['icon']" class="h-4 w-4 shrink-0 text-navy-300" />
+                        <span class="leading-tight">
+                            <span class="pf block text-[21px] font-black {{ $stat['tone'] ?? 'text-navy-950' }}">{{ $stat['value'] }}</span>
+                            <span class="block text-[11px] font-semibold text-muted">{{ $stat['label'] }}</span>
+                        </span>
+                    </div>
+                @endforeach
             </div>
 
         </div>
@@ -124,7 +134,7 @@
         {{-- ── next critical action ──
              One card, always in the same place, so "what needs me" is a glance
              rather than a tour of seven tabs. --}}
-        <div class="w-full shrink-0 rounded-2xl border border-line bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(11,31,58,0.55)] backdrop-blur sm:w-[298px]">
+        <div class="w-full shrink-0 rounded-2xl border border-line bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(11,31,58,0.55)] backdrop-blur sm:w-[298px] xl:absolute xl:end-6 xl:top-8">
             <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.18em] text-navy-400">
                 Next critical action
                 <x-icon name="flag" class="ms-auto h-3.5 w-3.5 {{ $critical ? 'text-gold-600' : 'text-navy-200' }}" />
@@ -177,32 +187,13 @@
         </div>
     </div>
 
-    {{-- how big — across the whole card rather than inside the title column,
-         which at any real width leaves the last figure orphaned on its own
-         line under the action card. --}}
-    <div class="relative border-t border-line/80 bg-white px-5 py-3 lg:px-6">
-        <div class="flex flex-wrap items-center gap-x-7 gap-y-3">
-            @foreach ($header['scale'] as $stat)
-                @if (! $loop->first)
-                    <span class="hidden h-8 w-px bg-line sm:block" aria-hidden="true"></span>
-                @endif
-                <div class="flex items-center gap-2">
-                    <x-icon :name="$stat['icon']" class="h-4 w-4 shrink-0 text-navy-300" />
-                    <span class="leading-tight">
-                        <span class="pf block text-[20px] font-black {{ $stat['tone'] ?? 'text-navy-950' }}">{{ $stat['value'] }}</span>
-                        <span class="block text-[10.5px] font-semibold text-muted">{{ $stat['label'] }}</span>
-                    </span>
-                </div>
-            @endforeach
-        </div>
-    </div>
 </div>
 
 {{-- ══════════ HEALTH STRIP ══════════
      A ring at each end and the modules between them. The two rings are not the
      same number twice: health is how the work is going, readiness is whether
      the gates to go live are met — an event can be healthy and not ready. --}}
-<div class="mt-3 overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_10px_30px_-24px_rgba(11,31,58,0.45)]">
+<div class="mt-4 overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_10px_30px_-24px_rgba(11,31,58,0.45)]">
     <div class="flex items-stretch divide-x divide-line overflow-x-auto scrollbar-none">
 
         <div class="flex shrink-0 items-center gap-2.5 px-4 py-3.5">

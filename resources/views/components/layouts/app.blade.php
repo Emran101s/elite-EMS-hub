@@ -42,45 +42,36 @@
     --}}
     <main class="scrollbar-none min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-navy-900/[0.045] px-4 pb-4 lg:px-6 lg:pb-6">
 
-        <div class="pt-4 lg:pt-6"><x-app-tools /></div>
+        @php
+            // The rail already says which area you are in, so a trail back to
+            // the Command Center is a hop nobody needs. What is worth saying is
+            // where you are inside the area. $crumbs is an array of
+            // ['label' => …, 'href' => …?]; the last is where you are, so it
+            // never links anywhere.
+            $crumbs ??= request()->routeIs('home') || ! $title
+                ? null
+                : collect([\App\Support\NavPanel::areaLabel(\App\Support\NavPanel::currentArea()), $title])
+                    // "Events › Events" is a trail to where you already are.
+                    ->unique()->map(fn (string $label) => ['label' => $label])->values()->all();
+        @endphp
 
-        <header class="mb-5">
-            @php
-                // The rail already says which area you are in, so a trail back
-                // to the Command Center is a hop nobody needs. What is worth
-                // saying is where you are inside the area.
-                $crumbs ??= request()->routeIs('home') || ! $title
-                    ? null
-                    : [['label' => \App\Support\NavPanel::areaLabel(\App\Support\NavPanel::currentArea())], ['label' => $title]];
-            @endphp
+        <div class="pt-4 lg:pt-6"><x-app-tools :crumbs="$crumbs" /></div>
 
-            @if ($crumbs)
-                {{-- $crumbs is an array of ['label' => …, 'href' => …?]; the last
-                     one is where you are, so it never links anywhere. --}}
-                <nav aria-label="Breadcrumb" class="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-                    @foreach ($crumbs as $crumb)
-                        @if (! $loop->first)<span class="text-navy-200">›</span>@endif
-                        @if (($crumb['href'] ?? null) && ! $loop->last)
-                            <a href="{{ $crumb['href'] }}" class="transition hover:text-navy-900">{{ $crumb['label'] }}</a>
-                        @else
-                            <span class="font-semibold text-navy-700">{{ $crumb['label'] }}</span>
-                        @endif
-                    @endforeach
-                </nav>
-            @else
-                <div class="mb-1 flex items-center gap-2">
-                    <span class="h-px w-6 bg-gold-400"></span>
-                    <span class="eyebrow-gold">Elite Business Hub</span>
-                </div>
-            @endif
+        @unless ($hideTitleRow)
+            <header class="mb-5">
+                @unless ($crumbs)
+                    <div class="mb-1 flex items-center gap-2">
+                        <span class="h-px w-6 bg-gold-400"></span>
+                        <span class="eyebrow-gold">Elite Business Hub</span>
+                    </div>
+                @endunless
 
-            @unless ($hideTitleRow)
                 <h1 class="pf text-[26px] font-bold leading-tight text-navy-900 sm:text-[32px]">{{ $title ?? config('app.name') }}</h1>
                 @if ($subtitle)
                     <p class="mt-1 text-[14px] text-muted">{{ $subtitle }}</p>
                 @endif
-            @endunless
-        </header>
+            </header>
+        @endunless
 
         @if (session('status'))
             <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">

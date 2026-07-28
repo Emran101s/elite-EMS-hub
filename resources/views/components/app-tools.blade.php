@@ -1,3 +1,5 @@
+@props(['crumbs' => null])
+
 @php
     $alertCount = \App\Models\EventApproval::where('status', 'pending')->count()
         + \App\Models\EventRisk::whereIn('status', ['open', 'escalated'])->count();
@@ -11,6 +13,22 @@
     these belong with the thing you are looking at.
 --}}
 <div class="mb-4 flex items-center gap-2">
+
+    {{-- Where you are, on the same line as the tools. It used to sit on its own
+         row above the page title, which is a whole line of chrome to say what
+         the line beside it had room for. --}}
+    @if ($crumbs)
+        <nav aria-label="Breadcrumb" class="hidden min-w-0 flex-1 items-center gap-1.5 text-[12.5px] lg:flex">
+            @foreach ($crumbs as $crumb)
+                @if (! $loop->first)<span class="shrink-0 text-navy-200">›</span>@endif
+                @if (($crumb['href'] ?? null) && ! $loop->last)
+                    <a href="{{ $crumb['href'] }}" class="shrink-0 truncate text-muted transition hover:text-navy-900">{{ $crumb['label'] }}</a>
+                @else
+                    <span class="truncate font-bold text-navy-900">{{ $crumb['label'] }}</span>
+                @endif
+            @endforeach
+        </nav>
+    @endif
 
     {{-- On a narrow screen the panel is gone, so the areas come back as a
          scrollable row rather than disappearing with it. --}}
