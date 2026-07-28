@@ -719,7 +719,7 @@
             </div>
 
             {{-- ══════════ RIGHT · the living paper ══════════ --}}
-            <div class="xl:sticky xl:top-[112px]">
+            <div class="xl:sticky xl:top-12">
                 <div class="rounded-3xl bg-navy-900/[0.05] p-3 ring-1 ring-line sm:p-5">
                     <div class="mb-2 flex items-center justify-between px-1">
                         <span class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-500">

@@ -318,7 +318,7 @@
             </div>
 
             {{-- ══ INSPECTOR — replaces the card that used to expand in place ══ --}}
-            <aside class="self-start xl:sticky xl:top-[92px]">
+            <aside class="self-start xl:sticky xl:top-4">
                 @if ($expanded && $selected)
                     <div class="card overflow-hidden">
                         <div class="flex items-start justify-between gap-3 border-b border-line px-4 py-3">

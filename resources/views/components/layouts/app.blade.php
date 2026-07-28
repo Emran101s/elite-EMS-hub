@@ -32,9 +32,17 @@
     <x-app-rail />
     <x-app-panel />
 
-    <main class="scrollbar-none min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-navy-900/[0.045] p-4 lg:p-6">
+    {{--
+        main is the scroll container, so it is also what every sticky header
+        inside a page measures against. The top padding therefore lives on the
+        first child rather than on main itself: padding on the scroller pushes
+        a sticky element down by that much and leaves a slot above it for the
+        page to scroll through, which is exactly what the hub's tab strip was
+        doing.
+    --}}
+    <main class="scrollbar-none min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-navy-900/[0.045] px-4 pb-4 lg:px-6 lg:pb-6">
 
-        <x-app-tools />
+        <div class="pt-4 lg:pt-6"><x-app-tools /></div>
 
         <header class="mb-5">
             @php

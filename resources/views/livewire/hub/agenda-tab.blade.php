@@ -108,139 +108,399 @@
             <button type="button" wire:click="addDay" class="btn-gold mt-4 h-9 px-4 text-xs">＋ Add Day</button>
         </div>
     @else
-        {{-- ══ Day tabs + stats ══ --}}
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap gap-2.5">
-                @foreach ($days as $d)
-                    <button type="button" wire:click="selectDay({{ $d->id }})"
-                            @class([
-                                'w-32 rounded-2xl border px-3.5 py-2.5 text-left transition',
-                                'border-navy-900 bg-navy-900 text-white' => $day && $day->id === $d->id,
-                                'border-line bg-white text-navy-600 hover:border-navy-200' => ! ($day && $day->id === $d->id),
-                            ])>
-                        <p class="text-eyebrow font-bold uppercase tracking-widest {{ $day && $day->id === $d->id ? 'text-gold-400' : 'text-muted' }}">Day {{ $loop->iteration }}</p>
-                        <p class="mt-0.5 text-sm font-bold">{{ $d->date?->format('D, j M') }}</p>
-                        <p class="text-eyebrow {{ $day && $day->id === $d->id ? 'text-white/60' : 'text-muted' }}">{{ $d->sessions->count() }} {{ str('session')->plural($d->sessions->count()) }}</p>
-                    </button>
-                @endforeach
-                <button type="button" wire:click="addDay" class="flex w-11 items-center justify-center rounded-2xl border border-dashed border-line text-navy-400 transition hover:border-gold-300 hover:text-gold-600" title="Add day">+</button>
-            </div>
+        {{-- ══════════ DAY STRIP ══════════
+             Each day carries how settled it is, so the strip says which day
+             still needs work rather than only which one you are looking at. --}}
+        <div class="scrollbar-none mb-4 flex items-stretch gap-2.5 overflow-x-auto pb-1">
+            @foreach ($dayCards as $card)
+                @php $d = $card['model']; $on = $day && $day->id === $d->id; $r = 2 * M_PI * 13; @endphp
+                <button type="button" wire:click="selectDay({{ $d->id }})"
+                        @class([
+                            'flex w-[152px] shrink-0 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition',
+                            'border-navy-900 bg-navy-900 text-white shadow-[0_10px_24px_-16px_rgba(11,31,58,0.9)]' => $on,
+                            'border-line bg-white text-navy-700 hover:border-navy-200' => ! $on,
+                        ])>
+                    <span class="min-w-0 flex-1">
+                        <span class="block text-[9px] font-bold uppercase tracking-[0.18em] {{ $on ? 'text-gold-400' : 'text-navy-300' }}">Day {{ $loop->iteration }}</span>
+                        <span class="mt-0.5 block truncate text-[12.5px] font-bold">{{ $d->date?->format('D, j M') ?? $d->label }}</span>
+                        <span class="block text-[10px] {{ $on ? 'text-white/55' : 'text-muted' }}">{{ $card['sessions'] }} {{ str('session')->plural($card['sessions']) }}</span>
+                    </span>
 
-            @if ($day)
-                @php $dayUnconfirmed = $day->sessions->reject(fn ($s) => $s->isSettled())->count(); @endphp
-                <div class="flex items-center gap-2 text-xs">
-                    <span class="text-micro text-muted"><b class="text-navy-900">{{ $day->sessions->count() }}</b> {{ \Illuminate\Support\Str::plural('session', $day->sessions->count()) }} this day</span>
-                    @if ($dayUnconfirmed > 0)
-                        <button type="button" wire:click="confirmDay"
-                                wire:confirm="Confirm all {{ $dayUnconfirmed }} unconfirmed {{ \Illuminate\Support\Str::plural('session', $dayUnconfirmed) }} on this day?"
-                                class="rounded-lg border border-gold-300 bg-gold-50 px-2.5 py-1.5 font-semibold text-gold-800 transition hover:bg-gold-100"
-                                title="{{ $dayUnconfirmed }} session(s) still unconfirmed">✓ Confirm day ({{ $dayUnconfirmed }})</button>
-                    @endif
-                    <button type="button" wire:click="duplicateDay({{ $day->id }})" class="btn-ghost btn-xs">Copy day →</button>
-                </div>
-            @endif
+                    <span class="relative grid h-9 w-9 shrink-0 place-items-center">
+                        <svg class="h-9 w-9 -rotate-90" viewBox="0 0 30 30" aria-hidden="true">
+                            <circle cx="15" cy="15" r="13" fill="none" stroke="{{ $on ? 'rgba(255,255,255,.14)' : 'var(--color-navy-100)' }}" stroke-width="3" />
+                            <circle cx="15" cy="15" r="13" fill="none" stroke="var(--color-gold-500)" stroke-width="3" stroke-linecap="round"
+                                    stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $r - ($r * $card['pct'] / 100) }}" />
+                        </svg>
+                        <span class="absolute text-[9px] font-black {{ $on ? 'text-white' : 'text-navy-700' }}">{{ $card['pct'] }}%</span>
+                    </span>
+                </button>
+            @endforeach
+
+            <button type="button" wire:click="addDay"
+                    class="flex w-[92px] shrink-0 items-center justify-center gap-1 rounded-2xl border border-dashed border-line text-[11.5px] font-semibold text-navy-400 transition hover:border-gold-300 hover:text-gold-600">
+                ＋ Add Day
+            </button>
         </div>
 
-        {{-- Conflict banner --}}
-        @php $conflictCount = collect($conflicts)->count(); @endphp
-        @if ($conflictCount > 0)
-            <div class="mb-4 rounded-2xl border border-risk/30 bg-risk/5 px-4 py-3">
-                <p class="flex items-center gap-2 text-xs font-semibold text-red-700">
-                    <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-risk/10">⚠</span>
-                    {{ $conflictCount }} scheduling {{ str('conflict')->plural($conflictCount) }} detected on this day
-                </p>
-                <ul class="mt-1.5 space-y-0.5 pl-8 text-micro text-red-600">
-                    @foreach (collect($conflicts)->flatten() as $reason)<li>• {{ $reason }}</li>@endforeach
-                </ul>
-            </div>
-        @endif
+        {{-- ══════════ THE BOARD ══════════
+             Venues on the left, the timeline in the middle, what needs a person
+             on the right. Three columns only where there is room for three —
+             below that the rails fold under rather than squeezing the board. --}}
+        <div class="grid gap-3 xl:grid-cols-[196px_minmax(0,1fr)] 2xl:grid-cols-[196px_minmax(0,1fr)_262px]">
 
-        {{-- ══ Programme board ══ --}}
-        @if ($view === 'program')
-            <div class="card overflow-hidden p-5">
-                <x-agenda-program :days="$programDays" :legend="false" />
-            </div>
-        @else
-
-        {{-- ══ Timeline ══ --}}
-        <div class="card overflow-hidden">
-            @if ($timeline)
-                {{-- Legend --}}
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-3.5">
-                    <span class="text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-300">Type</span>
-                    @foreach ($legend as [$label, $hex])
-                        <span class="flex items-center gap-1.5 text-micro font-medium text-navy-700"><span class="h-3 w-4 rounded" style="background: {{ $hex }}"></span> {{ $label }}</span>
-                    @endforeach
-                    <span class="ml-auto hidden items-center gap-1.5 text-eyebrow text-muted sm:flex">✥ Drag a block to reschedule · hover for 🚩 / ✕ · click to edit</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-line/60 px-5 pb-2.5 pt-2">
-                    <span class="text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-300">Status</span>
-                    @foreach (\App\Models\EventAgendaSession::STATUS_META as [$slbl, $ssettled, $shex])
-                        <span class="flex items-center gap-1.5 text-eyebrow font-medium text-navy-600"><span class="h-2 w-2 rounded-full" style="background: {{ $shex }}"></span>{{ $slbl }}</span>
-                    @endforeach
-                    <span class="text-eyebrow italic text-navy-300">dashed outline = not yet confirmed</span>
+            {{-- ── VENUES ── --}}
+            <aside class="card flex flex-col overflow-hidden">
+                <div class="border-b border-line px-3.5 py-3">
+                    <p class="eyebrow">Venues</p>
+                    <p class="mt-0.5 text-[10.5px] text-muted">{{ $venues->count() }} {{ str('room')->plural($venues->count()) }} · {{ $venues->sum('sessions') }} booked today</p>
                 </div>
 
-                <div class="overflow-x-auto p-3">
-                    <div class="min-w-[820px]" data-agenda-timeline data-start-min="{{ $timeline['startMin'] }}" data-span-min="{{ $timeline['span'] }}">
-                        <div class="relative ml-[150px] h-7 border-b border-line">
-                            @foreach ($timeline['hours'] as $hour)
-                                <span class="absolute top-1.5 -translate-x-1/2 text-eyebrow font-semibold text-navy-300" style="left: {{ $hour['left'] }}%">{{ $hour['label'] }}</span>
-                            @endforeach
-                        </div>
-                        @foreach ($timeline['lanes'] as $lane)
-                            <div class="flex items-stretch border-b border-line last:border-b-0">
-                                <div class="flex w-[150px] shrink-0 flex-col justify-center gap-0.5 px-3 py-4">
-                                    <p class="flex items-center gap-1.5 text-xs font-bold text-navy-900"><x-icon name="pin" class="h-3.5 w-3.5 text-navy-300" /> {{ $lane['room'] }}</p>
-                                    <p class="pl-5 text-eyebrow text-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
-                                </div>
-                                <div class="relative flex-1" data-room-track data-room-id="{{ $lane['room_id'] }}">
-                                    @foreach ($timeline['hours'] as $hour)
-                                        <span class="absolute inset-y-0 w-px bg-line/70" style="left: {{ $hour['left'] }}%"></span>
-                                    @endforeach
-                                    <div class="relative py-3" style="min-height: 66px">
-                                        @foreach ($lane['blocks'] as $b)
-                                            @php $hasConflict = isset($conflicts[$b['session']->id]); $sess = $b['session']; @endphp
-                                            <div wire:key="blk-{{ $sess->id }}"
-                                                 class="agenda-block group/blk absolute top-3 flex h-[46px] cursor-grab touch-none select-none flex-col justify-center rounded-xl px-2.5 text-left text-white shadow-sm transition hover:brightness-95 hover:ring-2 hover:ring-white/40 {{ $hasConflict ? 'ring-2 ring-risk ring-offset-1' : '' }}"
-                                                 data-session-id="{{ $sess->id }}" data-start-min="{{ $b['startMin'] }}" data-dur-min="{{ $b['durMin'] }}" data-room-id="{{ $lane['room_id'] }}"
-                                                 style="left: {{ $b['left'] }}%; width: {{ $b['width'] }}%; background: {{ $b['hex'] }}{{ $sess->isSettled() ? '' : '; outline: 2px dashed rgba(255,255,255,.55); outline-offset: -3px' }}"
-                                                 title="{{ $sess->title }} · {{ substr($sess->starts_at, 0, 5) }}–{{ substr($sess->ends_at, 0, 5) }} · {{ $sess->statusLabel() }} — drag to reschedule, click to edit">
-                                                <span class="pointer-events-none flex items-center gap-1 overflow-hidden text-micro font-bold leading-tight">
-                                                    @if ($sess->flagged)<span class="shrink-0">🚩</span>@endif
-                                                    <span class="truncate">{{ $sess->title }}</span>
-                                                </span>
-                                                <span class="pointer-events-none flex items-center gap-1.5 overflow-hidden text-eyebrow text-white/80">
-                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-white/60" style="background: {{ $sess->statusHex() }}" title="{{ $sess->statusLabel() }}"></span>
-                                                    <span class="truncate">{{ substr($sess->starts_at, 0, 5) }}–{{ substr($sess->ends_at, 0, 5) }}</span>
-                                                </span>
-
-                                                {{-- hover quick actions --}}
-                                                <span class="absolute -top-2.5 right-1 z-10 hidden items-center gap-1 group-hover/blk:flex">
-                                                    <button type="button" data-block-action wire:click.stop="toggleFlag({{ $sess->id }})"
-                                                            class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-eyebrow shadow ring-1 ring-black/5 transition hover:bg-white {{ $sess->flagged ? '' : 'grayscale' }}"
-                                                            title="{{ $sess->flagged ? 'Remove flag' : 'Flag' }}">🚩</button>
-                                                    <button type="button" data-block-action wire:click.stop="deleteSession({{ $sess->id }})" wire:confirm="Delete “{{ $sess->title }}”?"
-                                                            class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-micro font-bold text-red-600 shadow ring-1 ring-black/5 transition hover:bg-white" title="Delete session">✕</button>
-                                                </span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
+                <div class="scrollbar-none max-h-[520px] min-h-0 flex-1 divide-y divide-line overflow-y-auto">
+                    @forelse ($venues as $v)
+                        @php
+                            [$dot, $note] = match ($v['state']) {
+                                'conflict' => ['bg-risk', $v['conflicts'].' '.str('conflict')->plural($v['conflicts'])],
+                                'warning' => ['bg-warn', $v['over'].' over capacity'],
+                                default => ['bg-track', 'No issues'],
+                            };
+                        @endphp
+                        <div class="flex items-start gap-2.5 px-3.5 py-2.5">
+                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-500">
+                                <x-icon name="building" class="h-3.5 w-3.5" />
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-[12px] font-bold text-navy-900">{{ $v['room']->name }}</p>
+                                <p class="text-[10px] text-muted">
+                                    @if ($v['room']->capacity) Capacity {{ number_format($v['room']->capacity) }} · @endif
+                                    {{ $v['sessions'] }} {{ str('session')->plural($v['sessions']) }}
+                                </p>
+                                <p class="mt-1 flex items-center gap-1.5 text-[10px] font-semibold {{ $v['state'] === 'clear' ? 'text-muted' : 'text-navy-700' }}">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>{{ $note }}
+                                </p>
                             </div>
+                        </div>
+                    @empty
+                        <p class="px-3.5 py-6 text-center text-[11.5px] text-muted">No rooms yet. Add them on the Venue tab.</p>
+                    @endforelse
+                </div>
+
+                @if (\Illuminate\Support\Facades\Route::has('events.hub'))
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}"
+                       class="border-t border-line px-3.5 py-2.5 text-center text-[11.5px] font-semibold text-navy-500 transition hover:text-gold-700">＋ Add Venue</a>
+                @endif
+            </aside>
+
+            {{-- ── THE TIMELINE ── --}}
+            <div class="card min-w-0 overflow-hidden">
+                @if ($view === 'program')
+                    <div class="p-5"><x-agenda-program :days="$programDays" :legend="false" /></div>
+                @elseif ($timeline)
+                    {{-- filters --}}
+                    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-line px-4 py-2.5">
+                        <span class="eyebrow">Filters</span>
+                        @foreach ($legend as [$label, $hex])
+                            <span class="flex items-center gap-1.5 text-[11px] font-medium text-navy-700">
+                                <span class="h-2 w-2 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
+                            </span>
                         @endforeach
+                        <span class="ms-auto text-[10px] italic text-navy-300">dashed = not confirmed</span>
+                    </div>
+
+                    {{-- The board marks conflicts with a pin and a red ring, but a
+                         pin cannot say WHAT is wrong. The reasons stay on screen
+                         rather than hiding in a tooltip nobody hovers. --}}
+                    @if ($conflicts)
+                        <div class="border-b border-risk/25 bg-risk/5 px-4 py-2">
+                            <p class="text-[11px] font-bold text-red-700">
+                                ⚠ {{ count($conflicts) }} scheduling {{ str('conflict')->plural(count($conflicts)) }} on this day
+                            </p>
+                            <ul class="mt-0.5 space-y-0.5 ps-4 text-[10.5px] text-red-600">
+                                @foreach (collect($conflicts)->flatten()->unique()->take(6) as $reason)
+                                    <li>· {{ $reason }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @php
+                        // The board is drawn wider than its column and scrolls,
+                        // which is the only way a 30-minute break is still a
+                        // readable block: at column width a 13-hour day gives a
+                        // coffee break 26px, which can hold nothing.
+                        $tlWidth = max(900, (int) ceil($timeline['span'] / 60) * 112);
+
+                        // The now-marker only means something on the day that is
+                        // actually today; on any other day it would be a lie.
+                        $isToday = $day?->date?->isToday();
+                        $nowMin = (int) now()->format('H') * 60 + (int) now()->format('i');
+                        $nowLeft = $isToday && $nowMin >= $timeline['startMin'] && $nowMin <= $timeline['startMin'] + $timeline['span']
+                            ? round(($nowMin - $timeline['startMin']) / $timeline['span'] * 100, 3)
+                            : null;
+                    @endphp
+
+                    <div class="scrollbar-none overflow-x-auto p-3">
+                        <div style="min-width: {{ $tlWidth }}px" data-agenda-timeline data-tl-body
+                             data-tl-base="{{ $tlWidth }}"
+                             data-start-min="{{ $timeline['startMin'] }}" data-span-min="{{ $timeline['span'] }}">
+
+                            {{-- time axis --}}
+                            <div class="relative ms-[132px] h-8 border-b border-line">
+                                <span class="absolute left-0 top-2 text-[9px] font-bold uppercase tracking-[0.16em] text-navy-300" style="margin-left: -132px">Time</span>
+                                @foreach ($timeline['hours'] as $hour)
+                                    <span class="absolute top-2 -translate-x-1/2 text-[10px] font-semibold text-navy-300" style="left: {{ $hour['left'] }}%">{{ $hour['label'] }}</span>
+                                @endforeach
+
+                                {{-- the conflict pins sit on the axis, above the block they belong to --}}
+                                @foreach ($timeline['lanes']->flatMap->blocks as $b)
+                                    @if (isset($conflicts[$b['session']->id]))
+                                        <span class="absolute top-0 z-20 -translate-x-1/2 text-[11px] leading-none text-risk"
+                                              style="left: {{ $b['left'] }}%"
+                                              title="{{ implode(' · ', $conflicts[$b['session']->id]) }}">⚠</span>
+                                    @endif
+                                @endforeach
+
+                                @if ($nowLeft !== null)
+                                    <span class="absolute -top-0.5 z-30 -translate-x-1/2 rounded-md bg-gold-500 px-1.5 py-0.5 text-[9px] font-black text-navy-950 shadow"
+                                          style="left: {{ $nowLeft }}%">{{ now()->format('H:i') }}</span>
+                                @endif
+                            </div>
+
+                            {{-- lanes --}}
+                            <div class="relative">
+                                @if ($nowLeft !== null)
+                                    {{-- One line down the whole board, so "now" reads
+                                         against every room at once. --}}
+                                    <span class="pointer-events-none absolute inset-y-0 z-20 w-px border-l border-dashed border-gold-500/70"
+                                          style="left: calc(132px + (100% - 132px) * {{ $nowLeft / 100 }})"></span>
+                                @endif
+
+                                @foreach ($timeline['lanes'] as $lane)
+                                    <div class="flex items-stretch border-b border-line last:border-b-0">
+                                        <div class="flex w-[132px] shrink-0 flex-col justify-center gap-0.5 px-2.5 py-3">
+                                            <p class="flex items-center gap-1.5 text-[11.5px] font-bold text-navy-900">
+                                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-navy-300"></span>
+                                                <span class="truncate">{{ $lane['room'] }}</span>
+                                            </p>
+                                            <p class="ps-3 text-[10px] text-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
+                                        </div>
+
+                                        <div class="relative flex-1" data-room-track data-room-id="{{ $lane['room_id'] }}">
+                                            @foreach ($timeline['hours'] as $hour)
+                                                <span class="absolute inset-y-0 w-px bg-line/70" style="left: {{ $hour['left'] }}%"></span>
+                                            @endforeach
+
+                                            <div class="relative py-2.5" style="min-height: 74px">
+                                                @foreach ($lane['blocks'] as $b)
+                                                    @php
+                                                        $sess = $b['session'];
+                                                        $hasConflict = isset($conflicts[$sess->id]);
+                                                        $lead = $sess->speakers->first();
+                                                        $roomCap = $sess->room?->capacity ?: 0;
+                                                        $fill = $roomCap > 0 && $sess->capacity ? (int) round($sess->capacity / $roomCap * 100) : null;
+                                                    @endphp
+                                                    <div wire:key="blk-{{ $sess->id }}"
+                                                         class="agenda-block group/blk absolute top-2.5 flex cursor-grab touch-none select-none flex-col justify-between rounded-xl p-2 text-left text-white shadow-sm transition hover:brightness-95 hover:ring-2 hover:ring-white/40 {{ $hasConflict ? 'ring-2 ring-risk ring-offset-1' : '' }}"
+                                                         data-session-id="{{ $sess->id }}" data-start-min="{{ $b['startMin'] }}" data-dur-min="{{ $b['durMin'] }}" data-room-id="{{ $lane['room_id'] }}"
+                                                         style="left: {{ $b['left'] }}%; width: {{ $b['width'] }}%; height: 62px; background: {{ $b['hex'] }}{{ $sess->isSettled() ? '' : '; outline: 2px dashed rgba(255,255,255,.55); outline-offset: -3px' }}"
+                                                         title="{{ $sess->title }} · {{ substr($sess->starts_at, 0, 5) }}–{{ substr($sess->ends_at, 0, 5) }} · {{ $sess->statusLabel() }} — drag to reschedule, click to edit">
+
+                                                        <span class="pointer-events-none min-w-0">
+                                                            <span class="flex items-center gap-1 text-[10.5px] font-bold leading-tight">
+                                                                @if ($sess->flagged)<span class="shrink-0">🚩</span>@endif
+                                                                <span class="truncate">{{ $sess->title }}</span>
+                                                            </span>
+                                                            <span class="mt-0.5 block truncate text-[9.5px] text-white/75">{{ substr($sess->starts_at, 0, 5) }}–{{ substr($sess->ends_at, 0, 5) }}</span>
+                                                        </span>
+
+                                                        <span class="pointer-events-none flex items-center gap-1.5 overflow-hidden text-[9px] text-white/85">
+                                                            @if ($lead)
+                                                                <span class="grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full bg-white/25 text-[7px] font-bold">{{ mb_substr($lead->name, 0, 1) }}</span>
+                                                                <span class="truncate">{{ str($lead->name)->limit(14) }}</span>
+                                                            @endif
+                                                            @if ($sess->capacity)
+                                                                <span class="ms-auto shrink-0 whitespace-nowrap">{{ number_format($sess->capacity) }}@if ($fill !== null) · {{ $fill }}%@endif</span>
+                                                            @endif
+                                                        </span>
+
+                                                        {{-- hover quick actions --}}
+                                                        <span class="absolute -top-2.5 right-1 z-10 hidden items-center gap-1 group-hover/blk:flex">
+                                                            <button type="button" data-block-action wire:click.stop="toggleFlag({{ $sess->id }})"
+                                                                    class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-eyebrow shadow ring-1 ring-black/5 transition hover:bg-white {{ $sess->flagged ? '' : 'grayscale' }}"
+                                                                    title="{{ $sess->flagged ? 'Remove flag' : 'Flag' }}">🚩</button>
+                                                            <button type="button" data-block-action wire:click.stop="deleteSession({{ $sess->id }})" wire:confirm="Delete “{{ $sess->title }}”?"
+                                                                    class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-micro font-bold text-red-600 shadow ring-1 ring-black/5 transition hover:bg-white" title="Delete session">✕</button>
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- what the warnings on the board mean, and how big to draw it --}}
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-4 py-2.5">
+                        @foreach ([
+                            ['text-risk', 'Speaker conflict'],
+                            ['text-warn', 'Room capacity risk'],
+                            ['text-navy-400', 'Overlapping session'],
+                            ['text-navy-300', 'Missing presentation'],
+                        ] as [$tone, $label])
+                            <span class="flex items-center gap-1.5 text-[10.5px] text-muted"><span class="{{ $tone }}">⚠</span>{{ $label }}</span>
+                        @endforeach
+
+                        <div class="ms-auto flex items-center gap-1.5">
+                            <button type="button" data-tl-fit class="btn-ghost btn-xs">⤢ Fit to screen</button>
+                            <button type="button" data-tl-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg border border-line text-navy-500 transition hover:bg-page">−</button>
+                            <span data-tl-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-navy-600">100%</span>
+                            <button type="button" data-tl-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg border border-line text-navy-500 transition hover:bg-page">+</button>
+                        </div>
+                    </div>
+                @else
+                    <div class="flex flex-col items-center px-8 py-16 text-center">
+                        <h3 class="pf text-base font-bold text-navy-900">Nothing scheduled for this day</h3>
+                        <p class="mt-1 max-w-md text-xs text-muted">Add a session and it'll plot on the timeline here.</p>
+                        <button type="button" wire:click="newSession" class="btn-gold mt-4 h-9 px-4 text-xs">＋ Add Session</button>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ── LIVE INSIGHTS ── --}}
+            <aside class="space-y-3 xl:col-span-2 2xl:col-span-1">
+                <div class="card p-4">
+                    <p class="eyebrow">Live insights</p>
+                    <p class="mt-0.5 text-[11px] text-muted">{{ $day?->date?->format('l, j M') ?? 'No day selected' }}</p>
+
+                    @php $r = 2 * M_PI * 26; $done = 0; @endphp
+                    <div class="mt-3 flex items-center gap-3.5">
+                        <span class="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
+                            <svg class="h-[74px] w-[74px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
+                                <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-navy-50)" stroke-width="7" />
+                                @foreach ($insights['byStatus'] as $row)
+                                    @php
+                                        $slice = $insights['total'] ? $row['count'] / $insights['total'] : 0;
+                                        $offset = $r - ($r * $slice);
+                                    @endphp
+                                    <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $row['hex'] }}" stroke-width="7"
+                                            stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $offset }}"
+                                            transform="rotate({{ $done * 360 }} 30 30)" />
+                                    @php $done += $slice; @endphp
+                                @endforeach
+                            </svg>
+                            <span class="absolute text-center">
+                                <span class="block text-[15px] font-black leading-none text-navy-900">{{ $insights['total'] }}</span>
+                            </span>
+                        </span>
+
+                        <ul class="min-w-0 flex-1 space-y-1">
+                            @forelse ($insights['byStatus'] as $row)
+                                <li class="flex items-center gap-1.5 text-[11px]">
+                                    <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $row['hex'] }}"></span>
+                                    <span class="w-4 shrink-0 font-bold tabular-nums text-navy-900">{{ $row['count'] }}</span>
+                                    <span class="truncate text-muted">{{ $row['label'] }}</span>
+                                </li>
+                            @empty
+                                <li class="text-[11px] text-muted">Nothing scheduled.</li>
+                            @endforelse
+                        </ul>
                     </div>
                 </div>
-            @else
-                <div class="flex flex-col items-center px-8 py-16 text-center">
-                    <h3 class="pf text-base font-bold text-navy-900">Nothing scheduled for this day</h3>
-                    <p class="mt-1 max-w-md text-xs text-muted">Add a session and it'll plot on the timeline here.</p>
-                    <button type="button" wire:click="newSession" class="btn-gold mt-4 h-9 px-4 text-xs">＋ Add Session</button>
+
+                {{-- Three things that each need a person to do something. --}}
+                @foreach ([
+                    ['count' => $insights['awaitingSpeakers'], 'label' => 'Awaiting speakers', 'tone' => 'navy'],
+                    ['count' => $insights['capacityRisks'], 'label' => 'Capacity risks', 'tone' => 'warn'],
+                    ['count' => $insights['doubleBookings'], 'label' => 'Scheduling conflicts', 'tone' => 'risk'],
+                ] as $alert)
+                    @php
+                        [$ring, $ink] = $alert['count'] === 0
+                            ? ['ring-line', 'text-navy-300']
+                            : match ($alert['tone']) {
+                                'risk' => ['ring-risk/30 bg-risk/5', 'text-risk'],
+                                'warn' => ['ring-warn/30 bg-warn/5', 'text-warn'],
+                                default => ['ring-line', 'text-navy-700'],
+                            };
+                    @endphp
+                    <div class="card flex items-center gap-3 px-3.5 py-2.5 ring-1 {{ $ring }}">
+                        <span class="pf text-[20px] font-black leading-none {{ $ink }}">{{ $alert['count'] }}</span>
+                        <span class="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-navy-700">{{ $alert['label'] }}</span>
+                    </div>
+                @endforeach
+
+                <div class="card p-3.5">
+                    <div class="flex items-baseline justify-between">
+                        <span class="pf text-[20px] font-black leading-none text-navy-900">{{ $insights['pct'] }}%</span>
+                        <span class="text-[11px] font-semibold text-muted">Agenda complete</span>
+                    </div>
+                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-50">
+                        <div class="h-full rounded-full bg-track" style="width: {{ $insights['pct'] }}%"></div>
+                    </div>
+                    <p class="mt-1.5 text-[10.5px] text-muted">{{ $insights['settled'] }} of {{ $insights['total'] }} confirmed on this day</p>
                 </div>
-            @endif
+
+                {{-- What is on next, but only on the day that is actually today. --}}
+                @if ($insights['next'])
+                    @php $n = $insights['next']; [$nLegend, $nHex] = \App\Livewire\Hub\AgendaTab::PALETTE[$n->type] ?? ['Session', '#3B82F6']; @endphp
+                    <div class="card p-3.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="eyebrow">Up next</p>
+                            @if ($insights['nextIn'] !== null && $insights['nextIn'] > 0)
+                                <span class="text-[10px] font-semibold text-muted">in {{ $insights['nextIn'] }} min</span>
+                            @endif
+                        </div>
+                        <span class="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background: {{ $nHex }}">{{ $nLegend }}</span>
+                        <p class="pf mt-1.5 text-[13.5px] font-bold leading-snug text-navy-900">{{ $n->title }}</p>
+                        <p class="mt-1 text-[11px] text-muted">{{ substr($n->starts_at, 0, 5) }}–{{ substr($n->ends_at, 0, 5) }}@if ($n->room) · {{ $n->room->name }}@endif</p>
+                        @if ($n->speakers->isNotEmpty())
+                            <p class="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-navy-700">
+                                <span class="grid h-5 w-5 place-items-center rounded-full bg-navy-900 text-[9px] font-bold text-gold-400">{{ mb_substr($n->speakers->first()->name, 0, 1) }}</span>
+                                {{ $n->speakers->first()->name }}
+                            </p>
+                        @endif
+                    </div>
+                @endif
+
+                <a href="{{ route('events.run-of-show', $event) }}"
+                   class="flex h-11 items-center justify-center gap-2 rounded-2xl bg-navy-900 text-[12.5px] font-bold text-white transition hover:bg-navy-800">
+                    View Run of Show →
+                </a>
+            </aside>
         </div>
-        @endif
     @endif
+
+    @script
+    <script>
+        /* The board is drawn in percentages inside a min-width container, so
+           zoom is that width — no re-layout, and the drag maths keeps working
+           because every block is still positioned as a share of the track. */
+        const tl = () => document.querySelector('[data-tl-body]');
+        let level = 100;
+
+        const apply = () => {
+            const el = tl();
+            if (! el) return;
+            // The base is the day's own width — an hour is always the same
+            // number of pixels, whatever the day is long.
+            const base = Number(el.dataset.tlBase) || 900;
+            el.style.minWidth = Math.round(base * level / 100) + 'px';
+            const out = document.querySelector('[data-tl-level]');
+            if (out) out.textContent = level + '%';
+        };
+
+        document.querySelectorAll('[data-tl-zoom]').forEach((b) => b.addEventListener('click', () => {
+            level = Math.min(300, Math.max(60, level + Number(b.dataset.tlZoom) * 20));
+            apply();
+        }));
+
+        document.querySelector('[data-tl-fit]')?.addEventListener('click', () => {
+            level = 100;
+            apply();
+        });
+    </script>
+    @endscript
 
     {{-- ══════════ Add / Edit Session modal ══════════ --}}
     @if ($showForm)

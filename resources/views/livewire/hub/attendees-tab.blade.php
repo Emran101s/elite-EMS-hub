@@ -53,7 +53,7 @@
             </div>
 
             {{-- Walk-in --}}
-            <div class="card h-fit p-4 xl:sticky xl:top-[112px]">
+            <div class="card h-fit p-4 xl:sticky xl:top-12">
                 <p class="field-label !mb-2">Walk-in registration</p>
                 <form wire:submit="walkIn" class="space-y-2">
                     <input type="text" wire:model="walkinName" class="input h-10 text-sm" placeholder="Full name">

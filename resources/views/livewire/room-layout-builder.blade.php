@@ -500,7 +500,7 @@
             </div>
 
             {{-- RIGHT · totals rail --}}
-            <div class="xl:sticky xl:top-[76px] xl:h-fit">
+            <div class="xl:sticky xl:top-12 xl:h-fit">
                 <div class="card overflow-hidden">
                     <div class="border-b border-line bg-navy-900 px-4 py-3">
                         <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Cost Summary</span>

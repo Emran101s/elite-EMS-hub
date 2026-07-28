@@ -184,7 +184,7 @@
         </div>
 
         {{-- ══════════ Who owes whom ══════════ --}}
-        <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-[92px]">
+        <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-4">
             <section class="card overflow-hidden">
                 <div class="border-b border-line px-4 py-3">
                     <p class="eyebrow">Contract instalments due</p>

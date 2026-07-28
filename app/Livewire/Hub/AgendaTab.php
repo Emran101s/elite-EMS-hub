@@ -4,11 +4,13 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\EventAgendaSession;
+use App\Models\EventRoom;
 use App\Models\User;
 use App\Services\AgendaProgram;
 use App\Services\AgendaTimeline;
 use App\Support\Taxonomy;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -481,6 +483,82 @@ class AgendaTab extends Component
     }
 
     /**
+     * The venue rail: every room the event has, what it is carrying today, and
+     * whether it is in trouble.
+     *
+     * A room list that does not say which room is double-booked is a room list.
+     * Three states, worst first: a conflict (something is wrong), a warning (a
+     * session is booked past what the room seats), or clear.
+     */
+    private function venueRail(Collection $sessions, array $conflicts): Collection
+    {
+        return $this->event->rooms()->orderBy('name')->get()->map(function (EventRoom $room) use ($sessions, $conflicts) {
+            $mine = $sessions->where('room_id', $room->id);
+
+            // Booked past what the room seats — the "capacity risk" signal.
+            $over = $mine->filter(fn ($s) => $room->capacity > 0 && $s->capacity > $room->capacity);
+
+            return [
+                'room' => $room,
+                'sessions' => $mine->count(),
+                'conflicts' => $mine->filter(fn ($s) => isset($conflicts[$s->id]))->count(),
+                'over' => $over->count(),
+                'state' => match (true) {
+                    $mine->contains(fn ($s) => isset($conflicts[$s->id])) => 'conflict',
+                    $over->isNotEmpty() => 'warning',
+                    default => 'clear',
+                },
+            ];
+        });
+    }
+
+    /**
+     * What the right-hand rail reports: where today stands, what is waiting on
+     * somebody, and what is on next.
+     *
+     * Every figure is counted from the sessions in front of you rather than
+     * stored, so it cannot go stale against the board it sits beside.
+     */
+    private function insights(Collection $sessions, array $conflicts): array
+    {
+        $now = now();
+        $today = $sessions->filter(fn ($s) => $s->day?->date?->isToday());
+
+        $byStatus = collect(EventAgendaSession::STATUS_META)
+            ->map(fn (array $meta, string $key) => [
+                'key' => $key,
+                'label' => $meta[0],
+                'hex' => $meta[2] ?? '#94A3B8',
+                'count' => $sessions->where('status', $key)->count(),
+            ])
+            ->filter(fn (array $row) => $row['count'] > 0)
+            ->values();
+
+        // The next session that has not started yet, on a day that is today.
+        $next = $today
+            ->filter(fn ($s) => $s->day?->date?->setTimeFromTimeString($s->starts_at)?->isFuture())
+            ->sortBy('starts_at')
+            ->first();
+
+        return [
+            'byStatus' => $byStatus,
+            'settled' => $sessions->filter->isSettled()->count(),
+            'total' => $sessions->count(),
+            'pct' => $sessions->count()
+                ? (int) round($sessions->filter->isSettled()->count() / $sessions->count() * 100)
+                : 0,
+            // Three things that each need a person to do something.
+            'awaitingSpeakers' => $sessions->where('status', 'waiting_speaker')->count(),
+            'capacityRisks' => $sessions->filter(fn ($s) => $s->room && $s->room->capacity > 0 && $s->capacity > $s->room->capacity)->count(),
+            'doubleBookings' => collect($conflicts)->count(),
+            'next' => $next,
+            'nextIn' => $next && $next->day?->date
+                ? $now->diffInMinutes($next->day->date->copy()->setTimeFromTimeString($next->starts_at), false)
+                : null,
+        ];
+    }
+
+    /**
      * Timeline geometry for the selected day: room lanes with time-positioned blocks.
      */
     private function buildTimeline($sessions): ?array
@@ -491,7 +569,7 @@ class AgendaTab extends Component
     public function render()
     {
         $days = $this->event->agendaDays()
-            ->with(['sessions' => fn ($q) => $q->orderBy('starts_at'), 'sessions.room', 'sessions.speakers'])
+            ->with(['sessions' => fn ($q) => $q->orderBy('starts_at'), 'sessions.room', 'sessions.speakers', 'sessions.day'])
             ->orderBy('date')->orderBy('id')->get();
 
         $day = $days->firstWhere('id', $this->selectedDayId) ?? $days->first();
@@ -507,7 +585,22 @@ class AgendaTab extends Component
             'program' => app(AgendaProgram::class)->forDay($sessions, $this->audience),
         ]] : [];
 
+        $conflicts = $this->detectConflicts($sessions);
+
         return view('livewire.hub.agenda-tab', [
+            // Every day with how settled it is, so the day strip says which one
+            // still needs work rather than only which one you are looking at.
+            'dayCards' => $days->map(fn ($d) => [
+                'model' => $d,
+                'sessions' => $d->sessions->count(),
+                'pct' => $d->sessions->count()
+                    ? (int) round($d->sessions->filter->isSettled()->count() / $d->sessions->count() * 100)
+                    : 0,
+            ]),
+            // The venue rail: what is in each room today, and whether it is in
+            // trouble. A room list without its trouble is a room list.
+            'venues' => $this->venueRail($sessions, $conflicts),
+            'insights' => $this->insights($sessions, $conflicts),
             'days' => $days,
             'day' => $day,
             'programDays' => $programDays,

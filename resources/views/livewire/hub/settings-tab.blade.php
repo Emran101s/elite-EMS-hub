@@ -3,7 +3,7 @@
     <div class="flex gap-6">
         {{-- section rail --}}
         <aside class="hidden w-52 shrink-0 lg:block">
-            <nav class="sticky top-[112px] space-y-0.5">
+            <nav class="sticky top-12 space-y-0.5">
                 <p class="mb-2 px-2 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-300">Event Settings</p>
                 <a href="#s-details" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
                     <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">01</span>

@@ -1,7 +1,7 @@
 <div class="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
 
     {{-- ══════════ Which list ══════════ --}}
-    <aside class="self-start lg:sticky lg:top-[92px]">
+    <aside class="self-start lg:sticky lg:top-4">
         <div class="card overflow-hidden">
             @foreach ($groups as $groupName => $lists)
                 <div class="border-b border-line px-4 py-2 {{ $loop->first ? '' : 'border-t' }}">

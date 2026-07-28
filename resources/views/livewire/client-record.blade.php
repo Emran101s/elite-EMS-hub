@@ -158,7 +158,7 @@
         </div>
 
         {{-- ══════════ Activity ══════════ --}}
-        <aside class="self-start xl:sticky xl:top-[92px]">
+        <aside class="self-start xl:sticky xl:top-4">
             <section class="card overflow-hidden">
                 <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
                     <p class="eyebrow">Activity</p>

@@ -148,7 +148,7 @@
             'ai' => 'AI', 'settings' => 'Settings',
         ];
     @endphp
-    <div class="sticky top-[68px] z-20 -mx-1 mt-3 border-b border-line bg-page/90 px-1 backdrop-blur">
+    <div class="sticky top-0 z-20 -mx-1 mt-3 border-b border-line bg-page/90 px-1 backdrop-blur">
         <nav class="scrollbar-none flex items-center gap-1 overflow-x-auto" aria-label="Event modules">
             @foreach ($modules as $key => $label)
                 @continue (! $event->moduleEnabled($key))

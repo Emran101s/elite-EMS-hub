@@ -136,7 +136,7 @@
         </div>
 
         {{-- ══════════ INSPECTOR ══════════ --}}
-        <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-[92px]">
+        <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-4">
             @if ($selected)
                 <div class="card overflow-hidden">
                     <div class="flex items-start justify-between gap-3 border-b border-line px-4 py-3">

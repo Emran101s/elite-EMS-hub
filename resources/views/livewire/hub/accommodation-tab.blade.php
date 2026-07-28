@@ -342,7 +342,7 @@
         </div>
 
         {{-- ══ control rail ══ --}}
-        <div class="xl:sticky xl:top-[76px] xl:h-fit">
+        <div class="xl:sticky xl:top-12 xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
                     <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
