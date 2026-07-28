@@ -108,11 +108,16 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The rebuilt page: light KPI strip, then the lane board.
+        // The rebuilt page: the five figures, the wall of cards, and the rail
+        // of portfolio news beside it.
         $this->actingAs($user)->get('/events')->assertOk()
-            ->assertSee('Total Events')->assertSee('At Risk')
+            ->assertSee('Total Events')->assertSee('Events at Risk')
+            ->assertSee('All events')
             ->assertSee('ICFT 2026')
-            ->assertSee('The Board');
+            ->assertSee('Open Command Center')
+            ->assertSee('Timeline overview')
+            ->assertSee("Today's actions", false)
+            ->assertSee('Event health overview');
 
         // Filters narrow the board. Asserted through the component's paginator,
         // since the Event Radar always lists every event in the page HTML.
@@ -129,8 +134,10 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // An unknown view falls back to the board rather than erroring.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('The Board');
+        // An unknown view falls back to the wall rather than erroring, and the
+        // board is still one click away.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('All events');
+        $this->actingAs($user)->get('/events?view=lanes')->assertOk()->assertSee('The Board');
     }
 
     public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void

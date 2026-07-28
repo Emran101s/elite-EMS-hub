@@ -39,8 +39,8 @@ class EventsIndex extends Component
 
     public string $tab = 'all';
 
-    /** lanes · list · calendar. Lanes replaced the card grid. */
-    public string $view = 'lanes';
+    /** grid · lanes · list · calendar. Grid is the portfolio wall. */
+    public string $view = 'grid';
 
     /** Where each stage sits on the board. */
     public const LANES = [
@@ -96,9 +96,9 @@ class EventsIndex extends Component
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
-        // ?view=cards still works — it was the board's name before the lanes.
-        $requested = request('view') === 'cards' ? 'lanes' : request('view');
-        $this->view = in_array($requested, ['lanes', 'list', 'calendar'], true) ? $requested : 'lanes';
+        // ?view=cards still works — it was the grid's name before the lanes.
+        $requested = request('view') === 'cards' ? 'grid' : request('view');
+        $this->view = in_array($requested, ['grid', 'lanes', 'list', 'calendar'], true) ? $requested : 'grid';
         $this->selectedId = request()->integer('selected') ?: null;
         $this->calMonth = now()->format('Y-m');
     }
@@ -331,6 +331,238 @@ class EventsIndex extends Component
         ];
     }
 
+    /**
+     * The portfolio wall: one payload per event card.
+     *
+     * Everything the card shows is counted here rather than in the template, so
+     * a card cannot say 67% while the bar under it draws something else.
+     *
+     * @return Collection<int,array>
+     */
+    private function cards(Collection $events, Collection $health): Collection
+    {
+        $today = Carbon::today();
+
+        return $events->map(function (Event $event) use ($health, $today) {
+            $h = $health[$event->id];
+
+            $live = $event->starts_at
+                && $event->starts_at->copy()->startOfDay()->lte($today)
+                && ($event->ends_at ?? $event->starts_at)->copy()->endOfDay()->gte($today);
+
+            // One status decides the whole card: the chip, the ring, the tint
+            // behind the title and the button at the bottom. A card whose ring
+            // is gold and whose chip is red is two opinions about one event.
+            //
+            //   [label, chip, ring hex, tint, button]
+            [$status, $chip, $hex, $tint, $button] = match (true) {
+                $live => ['Live', 'bg-gold-400 text-navy-950', 'var(--color-gold-500)',
+                    'rgba(212,175,55,0.28)', 'bg-navy-950 text-white hover:bg-navy-800'],
+                ! EventHealthService::isScored($event) => ['Planning', 'bg-violet-100 text-violet-700', '#8B5CF6',
+                    'rgba(139,92,246,0.16)', 'border border-violet-300 text-violet-700 hover:bg-violet-50'],
+                $h['group'] === 'risk' => ['At risk', 'bg-red-100 text-red-700', '#EF4444',
+                    'rgba(239,68,68,0.14)', 'border border-red-300 text-red-700 hover:bg-red-50'],
+                $h['group'] === 'warn' => ['At watch', 'bg-amber-100 text-amber-700', '#F59E0B',
+                    'rgba(245,158,11,0.16)', 'border border-amber-300 text-amber-700 hover:bg-amber-50'],
+                default => ['On track', 'bg-emerald-100 text-emerald-700', '#10B981',
+                    'rgba(16,185,129,0.14)', 'border border-emerald-300 text-emerald-700 hover:bg-emerald-50'],
+            };
+
+            $tasks = $event->tasks->where('status', '!=', 'cancelled');
+            $done = $tasks->whereIn('status', ['done', 'approved'])->count();
+
+            $budget = (int) ($event->budget_cents ?: $event->budgetItems->sum('estimate_cents'));
+            $spent = (int) $event->budgetItems->sum('actual_cents');
+
+            return [
+                'event' => $event,
+                'live' => $live,
+                'status' => $status,
+                'chip' => $chip,
+                'hex' => $hex,
+                'tint' => $tint,
+                'button' => $button,
+                // Only the event that is happening gets the dark treatment. It
+                // is the one you would look up first in a room of five.
+                'dark' => $live,
+                'progress' => $h['score'] ?? $event->progress,
+                'group' => $h['group'],
+                'where' => collect([$event->venue?->name, $event->city])->filter()->implode(', ') ?: 'Venue TBC',
+                'when' => $event->starts_at
+                    ? $event->starts_at->format('j M').' – '.($event->ends_at?->format('j M Y') ?? $event->starts_at->format('Y'))
+                    : 'Dates TBC',
+                'stats' => [
+                    ['users', $event->attendees->count() ?: (int) $event->expected_participants, 'Participants'],
+                    ['sparkles', $event->speakers->count(), 'Speakers'],
+                    ['star', $event->sponsors->count(), 'Sponsors'],
+                    ['building', $event->rooms->count(), 'Venues'],
+                ],
+                'budgetPct' => $budget > 0 ? min(100, (int) round($spent / $budget * 100)) : null,
+                'budgetLine' => $budget > 0
+                    ? self::shortMoney($spent, $event->currency).' / '.self::shortMoney($budget, $event->currency)
+                    : 'No budget set',
+                'tasksDone' => $done,
+                'tasksTotal' => $tasks->count(),
+                'tasksPct' => $tasks->count() ? (int) round($done / $tasks->count() * 100) : null,
+                'risks' => $event->risks->filter->isOpen()->count(),
+                'health' => $h['score'] === null ? 'Not scored'
+                    : match ($h['group']) { 'risk' => 'At risk', 'warn' => 'At watch', default => 'Healthy' },
+                'team' => $event->teamMembers->take(3),
+                'teamMore' => max(0, $event->teamMembers->count() - 3),
+            ];
+        })->values();
+    }
+
+    /**
+     * Every event on one month scale, so a clash of two builds in the same week
+     * is something you see rather than something you work out.
+     *
+     * @return array{months:array,rows:array}|null
+     */
+    private function timeline(Collection $events): ?array
+    {
+        $dated = $events->filter->starts_at;
+
+        if ($dated->isEmpty()) {
+            return null;
+        }
+
+        $from = $dated->min(fn (Event $e) => $e->starts_at)->copy()->startOfMonth();
+        $to = $dated->max(fn (Event $e) => ($e->ends_at ?? $e->starts_at))->copy()->endOfMonth();
+
+        // A one-month window is a bar with nothing to compare it to.
+        if ($from->diffInMonths($to) < 2) {
+            $to = $from->copy()->addMonths(2)->endOfMonth();
+        }
+
+        $span = max(1, $from->diffInDays($to));
+        $months = [];
+        for ($m = $from->copy(); $m <= $to; $m->addMonth()) {
+            $months[] = [
+                'label' => $m->format('M Y'),
+                'left' => round($from->diffInDays($m) / $span * 100, 3),
+            ];
+        }
+
+        $rows = $dated->sortBy('starts_at')->map(function (Event $e) use ($from, $span) {
+            $start = $e->starts_at->copy()->startOfDay();
+            $end = ($e->ends_at ?? $e->starts_at)->copy()->endOfDay();
+
+            return [
+                'event' => $e,
+                'left' => round($from->diffInDays($start) / $span * 100, 3),
+                // A one-day event still needs to be clickable, hence the floor.
+                'width' => max(2.2, round($start->diffInDays($end) / $span * 100, 3)),
+                'label' => $start->format('j M').($end->isSameDay($start) ? '' : ' – '.$end->format('j M')),
+                'hex' => \App\Support\Workflow::color('event_stage', $e->stage) ?: '#3B82F6',
+            ];
+        })->values()->all();
+
+        return ['months' => $months, 'rows' => $rows];
+    }
+
+    /**
+     * Today's actions: what is dated today or already late, across the book.
+     * Approvals first — somebody else is blocked until one is decided.
+     */
+    private function todayActions(Collection $events): Collection
+    {
+        $today = Carbon::today();
+        $ids = $events->pluck('id')->all();
+
+        $approvals = EventApproval::whereIn('event_id', $ids)->where('status', 'pending')->with('event')
+            ->orderBy('created_at')->get()
+            ->map(fn (EventApproval $a) => [
+                'title' => $a->title,
+                'where' => $a->event?->name ?? 'Unassigned',
+                'when' => $a->created_at->diffForHumans(null, true).' waiting',
+                'late' => $a->created_at->lt($today->copy()->subDays(3)),
+                'icon' => 'identification',
+                'href' => $a->event ? route('events.hub', [$a->event, 'tab' => 'approvals']) : null,
+            ]);
+
+        $tasks = Task::whereIn('event_id', $ids)
+            ->whereNotIn('status', ['done', 'approved', 'cancelled'])
+            ->whereNotNull('due_on')->whereDate('due_on', '<=', $today)
+            ->with('event')->orderBy('due_on')->get()
+            ->map(fn (Task $t) => [
+                'title' => $t->title,
+                'where' => $t->event?->name ?? 'No event',
+                'when' => $t->due_on->isToday() ? 'Due today' : (int) $t->due_on->diffInDays($today).'d overdue',
+                'late' => $t->due_on->isPast() && ! $t->due_on->isToday(),
+                'icon' => 'clipboard',
+                'href' => $t->event ? route('events.hub', [$t->event, 'tab' => 'tasks']) : null,
+            ]);
+
+        return $approvals->concat($tasks)->take(6)->values();
+    }
+
+    /**
+     * The next thirty days, in the order they land.
+     */
+    private function upcoming(Collection $events): Collection
+    {
+        $today = Carbon::today();
+        $horizon = $today->copy()->addDays(30);
+
+        return $events
+            ->filter(fn (Event $e) => $e->starts_at
+                && ($e->ends_at ?? $e->starts_at)->copy()->endOfDay()->gte($today)
+                && $e->starts_at->copy()->startOfDay()->lte($horizon))
+            ->sortBy('starts_at')
+            ->map(fn (Event $e) => [
+                'event' => $e,
+                'when' => $e->starts_at->format('j M').($e->ends_at && ! $e->ends_at->isSameDay($e->starts_at) ? ' – '.$e->ends_at->format('j M') : ''),
+                'where' => $e->venue?->name ?? $e->city ?? '—',
+                'live' => $e->starts_at->copy()->startOfDay()->lte($today),
+            ])
+            ->take(6)->values();
+    }
+
+    /**
+     * The book split by how each event is doing, for the donut.
+     *
+     * Unscored events are their own slice rather than folded into "on track" —
+     * nothing is committed at proposal stage, so there is nothing to be on
+     * track with, and counting them as healthy is the lie this avoids.
+     */
+    private function healthSplit(Collection $events, Collection $health): array
+    {
+        $rows = [
+            ['key' => 'ok', 'label' => 'On track', 'hex' => '#10B981', 'count' => 0],
+            ['key' => 'warn', 'label' => 'At watch', 'hex' => '#F59E0B', 'count' => 0],
+            ['key' => 'risk', 'label' => 'At risk', 'hex' => '#EF4444', 'count' => 0],
+            ['key' => 'planning', 'label' => 'Planning', 'hex' => '#94A3B8', 'count' => 0],
+        ];
+
+        foreach ($events as $event) {
+            $key = EventHealthService::isScored($event)
+                ? match ($health[$event->id]['group']) { 'risk' => 'risk', 'warn' => 'warn', default => 'ok' }
+                : 'planning';
+
+            foreach ($rows as $i => $row) {
+                if ($row['key'] === $key) {
+                    $rows[$i]['count']++;
+                }
+            }
+        }
+
+        return ['total' => $events->count(), 'rows' => $rows];
+    }
+
+    /** Short money, because a card has no room for 350,000.00. */
+    public static function shortMoney(int $cents, ?string $currency): string
+    {
+        $symbol = Event::CURRENCIES[$currency ?? 'JOD'][0] ?? '';
+        $value = $cents / 100;
+
+        return $symbol.match (true) {
+            abs($value) >= 1_000_000 => round($value / 1_000_000, 1).'M',
+            abs($value) >= 1_000 => round($value / 1_000).'K',
+            default => number_format($value),
+        };
+    }
+
     private function baseQuery()
     {
         return Event::query()
@@ -354,6 +586,8 @@ class EventsIndex extends Component
         $relations = [
             'venue', 'client', 'projectManager', 'tasks',
             'budgetItems', 'suppliers', 'rooms', 'agendaSessions', 'risks', 'approvals', 'sponsors', 'teamMembers',
+            // The wall's cards count people and speakers, not just tasks.
+            'attendees', 'speakers',
         ];
 
         $all = $this->baseQuery()->with($relations)->get();
@@ -424,20 +658,25 @@ class EventsIndex extends Component
             'expanded' => $this->expandedId && ($ex = $all->firstWhere('id', $this->expandedId))
                 ? $this->cardDetail($ex, $health[$ex->id])
                 : null,
+            // The grid shows every matching event: a wall of five cards paged
+            // at eight is a page-two nobody reaches.
+            'cards' => $this->view === 'grid' ? $this->cards($sorted->values(), $health) : null,
+            'timeline' => $this->view === 'grid' ? $this->timeline($all) : null,
+            'todayActions' => $this->todayActions($all),
+            'upcoming' => $this->upcoming($all),
+            'healthSplit' => $this->healthSplit($all, $health),
             'kpis' => [
-                ['label' => 'Total Events', 'value' => Event::whereNull('archived_at')->count(), 'icon' => 'calendar', 'tone' => 'blue',
-                    'trend' => '↑ '.Event::whereNull('archived_at')->whereMonth('created_at', now()->month)->count().' added this month', 'up' => true],
-                ['label' => 'Active Events', 'value' => Event::whereNull('archived_at')->whereIn('stage', ['confirmed', 'planning', 'production'])->count(), 'icon' => 'folder', 'tone' => 'green',
-                    'trend' => '↑ '.Event::whereNull('archived_at')->where('stage', 'production')->count().' in production', 'up' => true],
-                ['label' => 'Live Events', 'value' => Event::whereNull('archived_at')->where('stage', 'live')->count(), 'icon' => 'sparkles', 'tone' => 'gold',
-                    'trend' => 'happening today', 'up' => true],
-                // Derived from the same computed health the hub shows — not a stored flag.
-                ['label' => 'At Risk', 'value' => $this->atRiskCount($health), 'icon' => 'bell', 'tone' => 'red',
-                    'trend' => '↓ needs attention', 'up' => false],
-                ['label' => 'Open Tasks', 'value' => Task::whereNot('status', 'done')->count(), 'icon' => 'clipboard', 'tone' => 'green',
-                    'trend' => '↑ across all events', 'up' => true],
-                ['label' => 'Pending Approvals', 'value' => EventApproval::where('status', 'pending')->count(), 'icon' => 'identification', 'tone' => 'gold',
-                    'trend' => '↑ awaiting decision', 'up' => true],
+                ['label' => 'Total Events', 'note' => 'All time', 'icon' => 'calendar', 'tone' => 'navy',
+                    'value' => Event::whereNull('archived_at')->count()],
+                ['label' => 'Active Events', 'note' => 'Running now', 'icon' => 'folder', 'tone' => 'green',
+                    'value' => Event::whereNull('archived_at')->whereIn('stage', ['confirmed', 'planning', 'production', 'live'])->count()],
+                ['label' => 'Open Tasks', 'note' => 'Across all events', 'icon' => 'clipboard', 'tone' => 'blue',
+                    'value' => Task::whereNotIn('status', ['done', 'approved', 'cancelled'])->count()],
+                // Computed health, not a stored flag — the same number the hub shows.
+                ['label' => 'Events at Risk', 'note' => 'Needs attention', 'icon' => 'bell', 'tone' => 'red',
+                    'value' => $this->atRiskCount($health)],
+                ['label' => 'Pending Approvals', 'note' => 'Awaiting your review', 'icon' => 'identification', 'tone' => 'gold',
+                    'value' => EventApproval::where('status', 'pending')->count()],
             ],
         ]);
     }

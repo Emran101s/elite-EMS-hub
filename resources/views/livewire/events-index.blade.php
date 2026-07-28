@@ -1,29 +1,33 @@
 @php
-    // KPI tone → soft/ink token pair, so the strip stays light with tinted chips.
+    // KPI tone → the tile's fill and its ink. The reference gives each figure a
+    // solid coloured tile rather than a tinted chip: five numbers in a row need
+    // something to tell them apart at a glance.
     $tone = [
-        'blue'  => ['var(--color-info-soft)', 'var(--color-info-ink)'],
-        'green' => ['var(--color-success-soft)', 'var(--color-success-ink)'],
-        'gold'  => ['var(--color-gold-100)', 'var(--color-gold-700)'],
-        'red'   => ['var(--color-danger-soft)', 'var(--color-danger-ink)'],
+        'navy'  => ['bg-navy-950', 'text-gold-400'],
+        'green' => ['bg-emerald-500', 'text-white'],
+        'blue'  => ['bg-blue-500', 'text-white'],
+        'red'   => ['bg-red-500', 'text-white'],
+        'gold'  => ['bg-gold-500', 'text-navy-950'],
     ];
-    $typeTabs = ['all' => 'All', 'conference' => 'Conferences', 'workshop' => 'Workshops',
+    $typeTabs = ['all' => 'All Events', 'conference' => 'Conferences', 'workshop' => 'Workshops',
         'exhibition' => 'Exhibitions', 'gala' => 'Galas', 'vip' => 'VIP', 'outdoor' => 'Outdoor'];
 @endphp
 
-<div class="space-y-5">
+<div class="space-y-4">
 
-    {{-- ══════════ Command strip — light, tinted KPI tiles ══════════ --}}
-    <div class="card p-1.5">
-        <div class="grid grid-cols-2 gap-1 md:grid-cols-3 2xl:grid-cols-6">
+    {{-- ══════════ The five figures ══════════ --}}
+    <div class="card overflow-hidden">
+        <div class="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 xl:grid-cols-5 xl:divide-y-0">
             @foreach ($kpis as $k)
-                @php [$soft, $ink] = $tone[$k['tone']] ?? $tone['blue']; @endphp
-                <div class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-page/60">
-                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style="background: {{ $soft }}; color: {{ $ink }}">
-                        <x-icon :name="$k['icon']" class="h-4 w-4" />
+                @php [$fill, $ink] = $tone[$k['tone']] ?? $tone['blue']; @endphp
+                <div class="flex items-center gap-3.5 px-4 py-4">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl {{ $fill }} {{ $ink }}">
+                        <x-icon :name="$k['icon']" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0">
-                        <p class="text-h2 font-black leading-none text-navy-900">{{ $k['value'] }}</p>
-                        <p class="mt-0.5 truncate text-eyebrow font-bold uppercase tracking-wider text-muted">{{ $k['label'] }}</p>
+                        <p class="pf text-[26px] font-black leading-none text-navy-950">{{ $k['value'] }}</p>
+                        <p class="mt-1 truncate text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-500">{{ $k['label'] }}</p>
+                        <p class="truncate text-[10.5px] text-muted">{{ $k['note'] }}</p>
                     </div>
                 </div>
             @endforeach
@@ -31,14 +35,22 @@
     </div>
 
     {{-- ══════════ Toolbar ══════════ --}}
-    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        {{-- type filter --}}
-        <div class="scrollbar-none -mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1">
+    {{-- The wall on the left, the portfolio's own news on the right. The rail
+         only rides the grid: lanes and the calendar need the whole width. --}}
+    <div @class(['grid gap-4', '2xl:grid-cols-[minmax(0,1fr)_324px]' => $view === 'grid'])>
+    <div class="min-w-0 space-y-4">
+
+    {{-- ══════════ Toolbar ══════════
+         Filters on the left, how you are looking at them on the right — in one
+         bar, wrapping onto a second line before it ever squeezes. --}}
+    <div class="card flex flex-wrap items-center gap-x-3 gap-y-2.5 px-3 py-2.5">
+
+        <div class="scrollbar-none -mx-1 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-1">
             @foreach ($typeTabs as $key => $label)
                 <button type="button" wire:click="setTab('{{ $key }}')"
                         @class([
                             'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition',
-                            'bg-navy-900 text-white shadow-raise' => $tab === $key && ! $starred,
+                            'bg-navy-950 text-white' => $tab === $key && ! $starred,
                             'text-navy-500 hover:bg-navy-50 hover:text-navy-900' => ! ($tab === $key && ! $starred),
                         ])>{{ $label }}</button>
             @endforeach
@@ -53,29 +65,29 @@
             </button>
         </div>
 
-        {{-- search · sort · view · create --}}
         <div class="flex flex-wrap items-center gap-2">
             <div class="relative">
                 <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
                 <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search events, clients, venues…"
-                       class="input h-9 w-44 !rounded-xl !py-0 !ps-9 text-xs sm:w-56">
+                       class="input h-9 w-44 !rounded-xl !py-0 !ps-9 text-xs sm:w-52">
             </div>
-            <select wire:model.live="sort" class="input h-9 w-auto !rounded-xl !py-0 text-xs">
+
+            <select wire:model.live="sort" class="input h-9 w-auto shrink-0 !rounded-xl !py-0 text-xs">
                 <option value="date">Sort: Date</option>
                 <option value="health">Sort: Health</option>
                 <option value="budget">Sort: Budget used</option>
             </select>
 
-            {{-- view toggle: Lanes | List | Calendar --}}
+            {{-- Grid | Lanes | List | Calendar --}}
             <div class="flex h-9 shrink-0 items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
-                @foreach (['lanes' => 'columns', 'list' => 'list', 'calendar' => 'calendar'] as $mode => $icon)
-                    <button type="button" wire:click="$set('view', '{{ $mode }}')"
+                @foreach (['grid' => 'grid', 'lanes' => 'columns', 'list' => 'list', 'calendar' => 'calendar'] as $mode => $icon)
+                    <button type="button" wire:click="$set('view', '{{ $mode }}')" title="{{ ucfirst($mode) }}"
                             @class([
-                                'flex h-full items-center gap-1.5 rounded-lg px-3 text-xs font-bold capitalize transition',
-                                'bg-navy-900 text-white' => $view === $mode,
+                                'flex h-full items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold capitalize transition',
+                                'bg-navy-950 text-white' => $view === $mode,
                                 'text-navy-500 hover:text-navy-900' => $view !== $mode,
                             ])>
-                        <x-icon :name="$icon" class="h-3.5 w-3.5" />{{ $mode }}
+                        <x-icon :name="$icon" class="h-3.5 w-3.5" /><span class="hidden 2xl:inline">{{ $mode }}</span>
                     </button>
                 @endforeach
             </div>
@@ -450,4 +462,330 @@
             </div>
         </div>
     @endif
+
+    {{-- ══════════ GRID — the portfolio wall ══════════ --}}
+    @if ($view === 'grid')
+        <div class="flex items-center gap-2.5">
+            <h2 class="pf text-[17px] font-bold text-navy-950">All events</h2>
+            <span class="chip">{{ $cards->where('live', true)->count() ?: $cards->count() }} {{ $cards->where('live', true)->count() ? 'live' : str('event')->plural($cards->count()) }}</span>
+            <a href="{{ route('home') }}" class="ms-auto text-[12px] font-semibold text-navy-500 transition hover:text-navy-900">Operations Room →</a>
+        </div>
+
+        @if ($cards->isEmpty())
+            <x-empty icon="calendar" title="No events match"
+                     hint="Clear the filters, or create the first event of this kind." />
+        @else
+            {{-- Six columns so the first two cards run half-width and the rest
+                 run in threes, as drawn. --}}
+            <div class="@container/wall">
+            <div class="grid gap-4 @2xl/wall:grid-cols-2 @6xl/wall:grid-cols-6">
+                @foreach ($cards as $i => $c)
+                    @php
+                        $e = $c['event'];
+                        $span = $i < 2 ? '@6xl/wall:col-span-3' : '@6xl/wall:col-span-2';
+                        $ring = 2 * M_PI * 26;
+                        $pct = max(0, min(100, (int) $c['progress']));
+                    @endphp
+                    <article wire:key="card-{{ $e->id }}" class="@container/card card relative flex flex-col overflow-hidden {{ $span }}">
+
+                        {{-- ── the band ──
+                             Dark only for the event that is actually happening;
+                             every other card is a light wash of its own status,
+                             so the wall reads at a glance without five dark
+                             rectangles competing for the same attention. --}}
+                        <div class="relative isolate">
+                            <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+                                @if ($e->coverUrl())
+                                    <img src="{{ $e->coverUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 40%">
+                                    <div class="absolute inset-0" style="background: {{ $c['dark']
+                                        ? 'linear-gradient(100deg, rgba(6,17,33,.94) 0%, rgba(6,17,33,.80) 46%, rgba(6,17,33,.42) 100%)'
+                                        : 'linear-gradient(100deg, rgba(255,255,255,.94) 0%, rgba(255,255,255,.80) 46%, rgba(255,255,255,.38) 100%)' }}"></div>
+                                @elseif ($c['dark'])
+                                    <div class="h-full w-full bg-navy-950" style="background-image:
+                                        radial-gradient(120% 120% at 88% 0%, {{ $c['tint'] }} 0%, transparent 58%)"></div>
+                                @else
+                                    <div class="h-full w-full bg-white" style="background-image:
+                                        radial-gradient(130% 130% at 92% 0%, {{ $c['tint'] }} 0%, transparent 62%)"></div>
+                                @endif
+                            </div>
+
+                            {{-- the card's own menu, where every card carries one --}}
+                            <details class="absolute end-2 top-2 z-20" data-menu>
+                                <summary class="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-lg text-[15px] leading-none transition {{ $c['dark'] ? 'text-white/60 hover:bg-white/10 hover:text-white' : 'text-navy-300 hover:bg-navy-50 hover:text-navy-700' }} [&::-webkit-details-marker]:hidden">⋮</summary>
+                                <div class="absolute end-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg">
+                                    <a href="{{ route('events.hub', $e) }}" class="block px-3 py-2 text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">Open command center</a>
+                                    <button type="button" wire:click="toggleFavorite({{ $e->id }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">
+                                        {{ in_array($e->id, $favoriteIds, true) ? 'Unstar' : 'Star' }} this event
+                                    </button>
+                                    <button type="button" wire:click="duplicate({{ $e->id }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">Duplicate</button>
+                                    <button type="button" wire:click="archive({{ $e->id }})" wire:confirm="Archive “{{ $e->name }}”? It leaves every board and list."
+                                            class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-600 transition hover:bg-red-50">Archive</button>
+                                </div>
+                            </details>
+
+                            <div class="flex items-start gap-3 p-4 pe-10">
+                                <div class="min-w-0 flex-1">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.14em] {{ $c['chip'] }}">
+                                        @if ($c['dark'])<span class="h-1.5 w-1.5 rounded-full bg-navy-950/70"></span>@endif{{ $c['status'] }}
+                                    </span>
+
+                                    <h3 class="pf mt-2 line-clamp-2 text-[21px] font-black leading-[1.12] {{ $c['dark'] ? 'text-white' : 'text-navy-950' }}">
+                                        <a href="{{ route('events.hub', $e) }}" class="transition hover:opacity-80">{{ $e->name }}</a>
+                                    </h3>
+
+                                    <p class="mt-2 flex items-center gap-1.5 truncate text-[11.5px] {{ $c['dark'] ? 'text-white/75' : 'text-navy-600' }}">
+                                        <x-icon name="pin" class="h-3.5 w-3.5 shrink-0 {{ $c['dark'] ? 'text-white/45' : 'text-navy-300' }}" />{{ $c['where'] }}
+                                    </p>
+                                    <p class="mt-1 flex items-center gap-1.5 truncate text-[11.5px] {{ $c['dark'] ? 'text-white/75' : 'text-navy-600' }}">
+                                        <x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 {{ $c['dark'] ? 'text-white/45' : 'text-navy-300' }}" />{{ $c['when'] }}
+                                    </p>
+                                </div>
+
+                                {{-- The ring takes the card's colour too. --}}
+                                <span class="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
+                                    <svg class="h-[74px] w-[74px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
+                                        <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $c['dark'] ? 'rgba(255,255,255,.18)' : 'var(--color-navy-100)' }}" stroke-width="5" />
+                                        <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $c['hex'] }}" stroke-width="5" stroke-linecap="round"
+                                                stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * $pct / 100) }}" />
+                                    </svg>
+                                    <span class="absolute text-center leading-none">
+                                        <span class="block text-[16px] font-black {{ $c['dark'] ? 'text-white' : 'text-navy-950' }}">{{ $pct }}%</span>
+                                        <span class="mt-0.5 block text-[7px] font-bold uppercase tracking-[0.16em] {{ $c['dark'] ? 'text-white/55' : 'text-navy-400' }}">Progress</span>
+                                    </span>
+                                </span>
+                            </div>
+
+                            {{-- On the dark card the figures stay in the band, as
+                                 drawn: it is one dark plate, not a plate and a
+                                 stripe. --}}
+                            @if ($c['dark'])
+                                <div class="grid grid-cols-2 gap-y-3 border-t border-white/10 px-4 py-3 @sm/card:grid-cols-4">
+                                    @foreach ($c['stats'] as [$icon, $value, $label])
+                                        <div class="min-w-0">
+                                            <span class="flex items-center gap-1.5">
+                                                <x-icon :name="$icon" class="h-3.5 w-3.5 shrink-0 text-white/40" />
+                                                <span class="pf text-[17px] font-black leading-none text-white">{{ number_format($value) }}</span>
+                                            </span>
+                                            <span class="mt-1 block truncate text-[9.5px] text-white/55">{{ $label }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        @unless ($c['dark'])
+                            <div class="grid grid-cols-2 gap-y-3 border-t border-line px-4 py-3 @sm/card:grid-cols-4">
+                                @foreach ($c['stats'] as [$icon, $value, $label])
+                                    <div class="min-w-0">
+                                        <span class="flex items-center gap-1.5">
+                                            <x-icon :name="$icon" class="h-3.5 w-3.5 shrink-0 text-navy-300" />
+                                            <span class="pf text-[17px] font-black leading-none text-navy-950">{{ number_format($value) }}</span>
+                                        </span>
+                                        <span class="mt-1 block truncate text-[9.5px] text-muted">{{ $label }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endunless
+
+                        {{-- ── how it is going: every number over the bar it came from ── --}}
+                        <div class="grid flex-1 grid-cols-2 divide-x divide-y divide-line border-t border-line @sm/card:grid-cols-4 @sm/card:divide-y-0">
+                            @foreach ([
+                                ['Budget', $c['budgetPct'] === null ? '—' : $c['budgetPct'].'% used', $c['budgetLine'], $c['budgetPct'], 'bg-emerald-500'],
+                                ['Tasks', $c['tasksTotal'] ? $c['tasksDone'].' / '.$c['tasksTotal'] : '—', 'Open tasks', $c['tasksPct'], 'bg-blue-500'],
+                                ['Risks', (string) $c['risks'], 'Active risks', $c['risks'] ? 100 : 0, $c['risks'] ? 'bg-red-500' : 'bg-navy-100'],
+                            ] as [$label, $value, $note, $barPct, $barTone])
+                                <div class="px-3.5 py-3">
+                                    <p class="text-[10.5px] font-semibold text-navy-500">{{ $label }}</p>
+                                    <p class="mt-1 truncate text-[12.5px] font-bold text-navy-950">{{ $value }}</p>
+                                    <p class="truncate text-[10px] text-muted" title="{{ $note }}">{{ $note }}</p>
+                                    <div class="mt-2 h-[3px] overflow-hidden rounded-full bg-navy-50">
+                                        <div class="h-full rounded-full {{ $barTone }}" style="width: {{ max(0, min(100, (int) $barPct)) }}%"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="px-3.5 py-3">
+                                <p class="text-[10.5px] font-semibold text-navy-500">Health</p>
+                                <p @class([
+                                    'mt-1 flex items-center gap-1.5 text-[12.5px] font-bold',
+                                    'text-red-600' => $c['group'] === 'risk',
+                                    'text-amber-600' => $c['group'] === 'warn',
+                                    'text-navy-300' => $c['group'] === 'neutral',
+                                    'text-emerald-600' => ! in_array($c['group'], ['risk', 'warn', 'neutral'], true),
+                                ])>
+                                    <x-icon name="bell" class="h-3.5 w-3.5 shrink-0" />{{ $c['health'] }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- ── who is on it, and the way in ── --}}
+                        <div class="flex items-center gap-2 border-t border-line px-4 py-3">
+                            <div class="flex -space-x-2">
+                                @forelse ($c['team'] as $member)
+                                    <x-user-avatar :user="$member" size="h-7 w-7" class="ring-2 ring-white" />
+                                @empty
+                                    <span class="text-[11px] text-muted">No team assigned</span>
+                                @endforelse
+                                @if ($c['teamMore'])
+                                    <span class="grid h-7 w-7 place-items-center rounded-full bg-navy-50 text-[9.5px] font-bold text-navy-500 ring-2 ring-white">+{{ $c['teamMore'] }}</span>
+                                @endif
+                            </div>
+
+                            <a href="{{ route('events.hub', $e) }}"
+                               class="ms-auto flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-[11.5px] font-bold transition {{ $c['button'] }}">
+                                Open Command Center →
+                            </a>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+            </div>
+        @endif
+
+        {{-- ══ Timeline Overview ══
+             Every event on one month scale. Two builds in the same week is
+             something you should see, not something you work out. --}}
+        @if ($timeline)
+            <div class="card overflow-hidden">
+                <div class="flex flex-wrap items-baseline gap-x-3 border-b border-line px-4 py-3">
+                    <h3 class="pf text-[15px] font-bold text-navy-950">Timeline overview</h3>
+                    <p class="text-[11.5px] text-muted">All events schedule at a glance</p>
+                </div>
+
+                <div class="scrollbar-none overflow-x-auto p-4">
+                    <div style="min-width: {{ max(640, count($timeline['months']) * 130) }}px">
+                        {{-- month scale --}}
+                        <div class="relative ms-[164px] h-6 border-b border-line">
+                            @foreach ($timeline['months'] as $m)
+                                <span class="absolute top-0 text-[10px] font-bold uppercase tracking-[0.12em] text-navy-400" style="left: {{ $m['left'] }}%">{{ $m['label'] }}</span>
+                            @endforeach
+                        </div>
+
+                        <div class="relative">
+                            @foreach ($timeline['rows'] as $row)
+                                <div class="flex items-center border-b border-line/70 last:border-b-0">
+                                    <a href="{{ route('events.hub', $row['event']) }}"
+                                       class="flex w-[164px] shrink-0 items-center gap-2 py-2.5 pe-3 text-[12px] font-semibold text-navy-800 transition hover:text-gold-700">
+                                        <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $row['hex'] }}"></span>
+                                        <span class="truncate">{{ $row['event']->name }}</span>
+                                    </a>
+
+                                    <div class="relative flex-1 py-2.5">
+                                        @foreach ($timeline['months'] as $m)
+                                            <span class="absolute inset-y-0 w-px bg-line/60" style="left: {{ $m['left'] }}%"></span>
+                                        @endforeach
+                                        <a href="{{ route('events.hub', $row['event']) }}"
+                                           class="relative flex h-7 items-center gap-1.5 overflow-hidden rounded-full px-2.5 text-[10.5px] font-bold text-white transition hover:brightness-110"
+                                           style="margin-left: {{ $row['left'] }}%; width: {{ $row['width'] }}%; min-width: 92px; background: {{ $row['hex'] }}"
+                                           title="{{ $row['event']->name }} · {{ $row['label'] }}">
+                                            <span class="truncate">{{ $row['label'] }}</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
+
+    </div>{{-- /main column --}}
+
+    @if ($view === 'grid')
+        {{-- ══════════ THE RAIL ══════════ --}}
+        <aside class="space-y-4">
+
+            <div class="card overflow-hidden">
+                <div class="flex items-center gap-2 border-b border-line px-4 py-3">
+                    <h3 class="pf text-[14px] font-bold text-navy-950">Today's actions</h3>
+                    <a href="{{ route('tasks.index') }}" class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-navy-900">View all</a>
+                </div>
+                <div class="divide-y divide-line">
+                    @forelse ($todayActions as $a)
+                        <a href="{{ $a['href'] ?? route('tasks.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-page/60">
+                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500">
+                                <x-icon :name="$a['icon']" class="h-3.5 w-3.5" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-[12.5px] font-bold text-navy-900">{{ $a['title'] }}</span>
+                                <span class="block truncate text-[10.5px] text-muted">{{ $a['where'] }}</span>
+                            </span>
+                            <span class="flex shrink-0 items-center gap-1.5 pt-0.5 text-[10px] font-semibold {{ $a['late'] ? 'text-red-600' : 'text-muted' }}">
+                                {{ $a['when'] }}
+                                <span class="h-1.5 w-1.5 rounded-full {{ $a['late'] ? 'bg-risk' : 'bg-track' }}"></span>
+                            </span>
+                        </a>
+                    @empty
+                        <p class="px-4 py-6 text-center text-[11.5px] text-muted">Nothing is dated today, and nothing is late.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="card overflow-hidden">
+                <div class="flex items-baseline gap-2 border-b border-line px-4 py-3">
+                    <h3 class="pf text-[14px] font-bold text-navy-950">Event calendar</h3>
+                    <span class="text-[10.5px] text-muted">Next 30 days</span>
+                    <button type="button" wire:click="$set('view', 'calendar')" class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-navy-900">View all</button>
+                </div>
+                <div class="divide-y divide-line">
+                    @forelse ($upcoming as $u)
+                        <a href="{{ route('events.hub', $u['event']) }}" class="flex items-start gap-3 px-4 py-2.5 transition hover:bg-page/60">
+                            <span class="w-[62px] shrink-0 pt-0.5 text-[11px] font-bold text-navy-700">{{ $u['when'] }}</span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-[12.5px] font-bold text-navy-900">{{ $u['event']->name }}</span>
+                                <span class="block truncate text-[10.5px] text-muted">{{ $u['where'] }}</span>
+                            </span>
+                            <span @class([
+                                'shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide',
+                                'bg-gold-400 text-navy-950' => $u['live'],
+                                'bg-track/12 text-emerald-700' => ! $u['live'],
+                            ])>{{ $u['live'] ? 'Live' : 'Upcoming' }}</span>
+                        </a>
+                    @empty
+                        <p class="px-4 py-6 text-center text-[11.5px] text-muted">Nothing in the next thirty days.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="card overflow-hidden">
+                <div class="flex items-center gap-2 border-b border-line px-4 py-3">
+                    <h3 class="pf text-[14px] font-bold text-navy-950">Event health overview</h3>
+                </div>
+                <div class="flex items-center gap-4 px-4 py-4">
+                    @php $r = 2 * M_PI * 26; $done = 0; @endphp
+                    <span class="relative grid h-[92px] w-[92px] shrink-0 place-items-center">
+                        <svg class="h-[92px] w-[92px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
+                            <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-navy-50)" stroke-width="7" />
+                            @foreach ($healthSplit['rows'] as $row)
+                                @continue (! $row['count'])
+                                @php $slice = $healthSplit['total'] ? $row['count'] / $healthSplit['total'] : 0; @endphp
+                                <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $row['hex'] }}" stroke-width="7"
+                                        stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $r - ($r * $slice) }}"
+                                        transform="rotate({{ $done * 360 }} 30 30)" />
+                                @php $done += $slice; @endphp
+                            @endforeach
+                        </svg>
+                        <span class="absolute text-center leading-none">
+                            <span class="pf block text-[20px] font-black text-navy-950">{{ $healthSplit['total'] }}</span>
+                            <span class="mt-1 block text-[8.5px] font-bold uppercase tracking-[0.1em] text-muted">Total events</span>
+                        </span>
+                    </span>
+
+                    <ul class="min-w-0 flex-1 space-y-1.5">
+                        @foreach ($healthSplit['rows'] as $row)
+                            <li class="flex items-center gap-2 text-[11.5px]">
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-sm" style="background: {{ $row['hex'] }}"></span>
+                                <span class="w-4 shrink-0 font-bold tabular-nums text-navy-900">{{ $row['count'] }}</span>
+                                <span class="truncate text-muted">{{ $row['label'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    @endif
+
+    </div>{{-- /shell --}}
+
 </div>
