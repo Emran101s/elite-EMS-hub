@@ -343,21 +343,27 @@ class EventsIndex extends Component
 
         $health = $all->mapWithKeys(fn (Event $event) => [$event->id => $pulse->breakdown($event)]);
 
-        $sorted = (match ($this->sort) {
-            'health' => $all->sortByDesc(fn (Event $e) => $health[$e->id]['score'] ?? -1),
-            'budget' => $all->sortByDesc(fn (Event $e) => (int) $e->budgetItems->sum('actual_cents')),
-            default => $all->sortBy('starts_at'),
-        })->values();
+        // The Deck is a line you walk along, so it is ALWAYS chronological:
+        // left is earlier, right is later, and stepping right moves forward in
+        // time. Sorting it by health or budget would make "next" meaningless.
+        // The List keeps the sort control; the Deck ignores it by design.
+        $sorted = $this->view === 'deck'
+            ? $all->sortBy(fn (Event $e) => $e->starts_at?->timestamp ?? PHP_INT_MAX)->values()
+            : (match ($this->sort) {
+                'health' => $all->sortByDesc(fn (Event $e) => $health[$e->id]['score'] ?? -1),
+                'budget' => $all->sortByDesc(fn (Event $e) => (int) $e->budgetItems->sum('actual_cents')),
+                default => $all->sortBy('starts_at'),
+            })->values();
 
         // One description per event, shared by all three views. A card and the
         // row beneath it cannot disagree if neither of them did the counting.
         $deck = $missions->all($sorted);
 
-        // The active mission: what you picked, else what is on the floor, else
-        // the next one in. Never nothing, while there is anything.
+        // Where the deck opens. You picked one, or — since the deck runs left
+        // to right in date order — it opens on the middle of the run, with as
+        // much of the book behind you as ahead of you.
         $active = $deck->firstWhere('id', $this->activeId)
-            ?? $deck->first(fn (array $m) => $m['live'])
-            ?? $deck->first(fn (array $m) => ($m['daysOut'] ?? -1) >= 0)
+            ?? $deck->get(intdiv(max(0, $deck->count() - 1), 2))
             ?? $deck->first();
 
         $at = $active ? $deck->search(fn (array $m) => $m['id'] === $active['id']) : null;

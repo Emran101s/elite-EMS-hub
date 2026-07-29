@@ -116,18 +116,30 @@ const DECK_SHADOW_HERO = '0 46px 90px -40px rgba(30,27,75,.55), 0 8px 24px -12px
 const DECK_SHADOW_SIDE = '0 24px 50px -30px rgba(30,27,75,.45)';
 
 function mountDeck(stage) {
-    if (stage.dataset.deckMounted) return;
-    stage.dataset.deckMounted = '1';
-
     const cards = [...stage.querySelectorAll('[data-deck-card]')];
     if (! cards.length) return;
+
+    // A Livewire re-render — a filter, a search, a star — morphs the cards and
+    // takes the inline transforms with them, which drops the whole deck into
+    // normal flow. So mounting is repeatable: the previous mount's listeners
+    // are aborted and the arrangement is written again over the new nodes.
+    stage.__deckAbort?.abort();
+    const bin = new AbortController();
+    stage.__deckAbort = bin;
+    const on = (el, type, fn, opts = {}) => el.addEventListener(type, fn, { ...opts, signal: bin.signal });
+
+    // The index survives the re-render: you were looking at a mission, not at
+    // a position in a list.
+    const wasOn = stage.dataset.deckAt ? Number(stage.dataset.deckAt) : null;
 
     const root = stage.closest('[data-deck-root]') || document;
     const dots = [...root.querySelectorAll('[data-deck-dot]')];
     const prev = root.querySelector('[data-deck-prev]');
     const next = root.querySelector('[data-deck-next]');
 
-    let index = Math.max(0, cards.findIndex((c) => c.dataset.active === '1'));
+    let index = cards.findIndex((c) => c.dataset.id === String(wasOn));
+    if (index < 0) index = Math.max(0, cards.findIndex((c) => c.dataset.active === '1'));
+    if (index < 0) index = Math.floor((cards.length - 1) / 2);
     let heroW = DECK_REF;
     let k = 1;
     let hovering = -1;
@@ -198,6 +210,9 @@ function mountDeck(stage) {
 
         if (prev) prev.disabled = index === 0;
         if (next) next.disabled = index === cards.length - 1;
+
+        // Remembered on the element, so a re-render can put you back.
+        stage.dataset.deckAt = cards[index].dataset.id;
     };
 
     // Promoted for the length of the move, then the layers are released.
@@ -226,15 +241,18 @@ function mountDeck(stage) {
         void arriving.offsetWidth;              // restart the animation
         arriving.classList.add('is-arriving');
 
-        // Tell the server which mission is active, without waiting for it.
+        // Deferred deliberately: the deck must not cause a render, or the morph
+        // would replace the very cards this transition is animating. The third
+        // argument tells Livewire to carry the value on the next round-trip
+        // instead — so the List and the Flight Path still open on this mission.
         const host = stage.closest('[wire\\:id]');
         window.Livewire?.find(host?.getAttribute('wire:id'))
-            ?.call('activate', Number(cards[index].dataset.id));
+            ?.$set('activeId', Number(cards[index].dataset.id), false);
     };
 
-    prev?.addEventListener('click', () => go(index - 1));
-    next?.addEventListener('click', () => go(index + 1));
-    dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
+    if (prev) on(prev, 'click', () => go(index - 1));
+    if (next) on(next, 'click', () => go(index + 1));
+    dots.forEach((dot, i) => on(dot, 'click', () => go(i)));
 
     // ── a card at the edge IS the control that brings it in ──
     // It stays clickable; only its own links and buttons are inert, in the CSS.
@@ -243,21 +261,21 @@ function mountDeck(stage) {
     let swallowClick = false;
 
     cards.forEach((card, i) => {
-        card.addEventListener('click', (e) => {
+        on(card, 'click', (e) => {
             if (swallowClick) { e.preventDefault(); e.stopPropagation(); return; }
             if (i === index || e.target.closest('[data-deck-keep]')) return;
             e.preventDefault();
             go(i);
         });
 
-        card.addEventListener('pointerenter', () => {
+        on(card, 'pointerenter', () => {
             if (i === index || drag) return;
             hovering = i;
             moving();
             place();
         });
 
-        card.addEventListener('pointerleave', () => {
+        on(card, 'pointerleave', () => {
             if (hovering !== i) return;
             hovering = -1;
             moving();
@@ -270,7 +288,7 @@ function mountDeck(stage) {
     // Rather than leave the mouse guessing, the stage itself takes any click
     // that missed a card and reads it as "go that way" — which is the mental
     // model anyway, and a target the width of half the stage.
-    stage.addEventListener('click', (e) => {
+    on(stage, 'click', (e) => {
         if (swallowClick || e.target.closest('[data-deck-card]')) return;
 
         const hero = cards[index].getBoundingClientRect();
@@ -278,7 +296,7 @@ function mountDeck(stage) {
         go(index + (e.clientX < mid ? -1 : 1));
     });
 
-    stage.addEventListener('keydown', (e) => {
+    on(stage, 'keydown', (e) => {
         const step = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: cards.length - 1 }[e.key];
         if (step === undefined) return;
         e.preventDefault();
@@ -294,13 +312,13 @@ function mountDeck(stage) {
         if (drag) place(drag.dx * 0.55);
     };
 
-    stage.addEventListener('pointerdown', (e) => {
+    on(stage, 'pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest('[data-deck-keep]')) return;
         drag = { x: e.clientX, y: e.clientY, dx: 0, moved: false, id: e.pointerId };
         swallowClick = false;
     });
 
-    stage.addEventListener('pointermove', (e) => {
+    on(stage, 'pointermove', (e) => {
         if (! drag) return;
         const dx = e.clientX - drag.x;
 
@@ -344,12 +362,12 @@ function mountDeck(stage) {
         else place();
     };
 
-    stage.addEventListener('pointerup', release);
-    stage.addEventListener('pointercancel', release);
+    on(stage, 'pointerup', release);
+    on(stage, 'pointercancel', release);
 
     // ── trackpad ──
     let wheelAt = 0;
-    stage.addEventListener('wheel', (e) => {
+    on(stage, 'wheel', (e) => {
         if (Math.abs(e.deltaX) < Math.abs(e.deltaY) || Math.abs(e.deltaX) < 12) return;
         e.preventDefault();
         if (Date.now() - wheelAt < 380) return;  // one card per gesture
@@ -362,7 +380,7 @@ function mountDeck(stage) {
     cards[index]?.classList.add('is-arriving');
 
     let resizeAt;
-    window.addEventListener('resize', () => {
+    on(window, 'resize', () => {
         clearTimeout(resizeAt);
         resizeAt = setTimeout(() => { measure(); place(); }, 120);
     });
@@ -396,10 +414,17 @@ const mountEventViews = () => {
     document.querySelectorAll('[data-fp-canvas]').forEach(mountFlightPath);
 };
 
+// morph.updated fires once per changed element; remounting on each of those
+// would tear the deck down and build it again a dozen times for one update.
+let remount = 0;
+const mountEventViewsSoon = () => {
+    cancelAnimationFrame(remount);
+    remount = requestAnimationFrame(mountEventViews);
+};
+
 document.addEventListener('DOMContentLoaded', mountEventViews);
 document.addEventListener('livewire:navigated', mountEventViews);
 document.addEventListener('livewire:init', () => {
-    // A Livewire re-render replaces the cards, so the deck is mounted again.
-    window.Livewire.hook('morph.updated', mountEventViews);
+    window.Livewire.hook('morph.updated', mountEventViewsSoon);
 });
 mountEventViews();

@@ -183,7 +183,11 @@ class EventsPageTest extends TestCase
         $user = $this->actor();
         $pulse = app(EventHealthService::class);
 
-        $component = Livewire::actingAs($user)->test(EventsIndex::class)->set('sort', 'health');
+        // Sorting belongs to the List. The Deck is a line you walk along, so
+        // it is always chronological — "next" has to mean later, not sicker.
+        $component = Livewire::actingAs($user)->test(EventsIndex::class)
+            ->call('setView', 'list')
+            ->set('sort', 'health');
 
         // The rows are missions now — one description of an event, shared by
         // all three views — so the score is read off the event inside it.
