@@ -94,8 +94,16 @@ document.addEventListener('keydown', (e) => {
         than they save.
    ══════════════════════════════════════════════════════════════════════════ */
 
-// Quoted for a 1920px screen against a 980px hero, then scaled by the stage's
-// own width so the proportions survive a laptop.
+// The card is a portrait plate: taller than it is wide, at every window size.
+// Width and height come from one ratio so a wide screen cannot flatten it into
+// a landscape card — which is what happens the moment width is driven by the
+// column alone.
+const DECK_RATIO = 0.66;        // width ÷ height
+const DECK_H_MIN = 520;
+const DECK_H_MAX = 900;
+
+// The neighbours' distances were quoted against a 980px hero; they are applied
+// as a share of whatever the hero actually is, so the arrangement holds shape.
 const DECK_REF = 980;
 const DECK_MS = 520;
 const DECK_RANKS = [
@@ -125,17 +133,29 @@ function mountDeck(stage) {
     let hovering = -1;
 
     const measure = () => {
-        // The hero takes ~58% of the stage — inside the range the design calls
-        // for — and every distance scales with it.
-        heroW = Math.max(300, Math.min(DECK_REF, Math.round(stage.clientWidth * 0.58)));
+        // Height first, from the window, then width from the ratio — so the
+        // card is portrait by construction. Only if that width will not fit the
+        // column does width lead, and the height follows it back down.
+        let h = Math.min(DECK_H_MAX, Math.max(DECK_H_MIN, Math.round(window.innerHeight * 0.74)));
+        let w = Math.round(h * DECK_RATIO);
+
+        const room = Math.round(stage.clientWidth * 0.62);
+        if (w > room) {
+            w = Math.max(280, room);
+            h = Math.round(w / DECK_RATIO);
+        }
+
+        heroW = w;
         k = heroW / DECK_REF;
 
         cards.forEach((card) => {
             card.style.width = `${heroW}px`;
             card.style.marginLeft = `${-heroW / 2}px`;
+            card.style.setProperty('--deck-h', `${h}px`);
         });
 
-        stage.style.height = `${Math.round((cards[index]?.offsetHeight || 540) + 40)}px`;
+        // Room for the hero plus the lift its tilted neighbours need.
+        stage.style.height = `${h + 40}px`;
     };
 
     const place = (drag = 0) => {

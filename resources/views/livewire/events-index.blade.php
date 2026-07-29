@@ -181,7 +181,7 @@
                              class="deck-card overflow-hidden rounded-[26px] border border-white/60 bg-white ring-1 ring-indigo-500/5">
 
                         {{-- 1 · the cover ── first thing to change on a step --}}
-                        <div class="relative isolate h-[186px] overflow-hidden" data-deck-part="cover">
+                        <div class="relative isolate overflow-hidden" data-deck-part="cover">
                             @if ($m['cover'])
                                 <img src="{{ $m['cover'] }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" style="object-position: 50% 38%">
                             @else

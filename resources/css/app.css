@@ -196,6 +196,11 @@
         left: 50%;
         display: flex;
         flex-direction: column;
+        /* Taller than it is wide, always. The JS sets both from one ratio; the
+           cover below absorbs whatever height the rest of the card does not
+           use, so a mission card is a portrait plate at any window size rather
+           than a landscape one on a big screen and a portrait one on a small.  */
+        height: var(--deck-h, auto);
         transform-origin: 50% 50%;
         backface-visibility: hidden;
         transition:
@@ -206,6 +211,10 @@
     /* Promoted only while the deck is actually moving. A permanent will-change
        is a permanent layer, and twenty of those cost more than they save. */
     .deck-stage.is-moving .deck-card { will-change: transform, opacity; }
+
+    /* The photograph is the flexible part: it grows into the height left over
+       once the numbers, the milestone and the dock have taken theirs. */
+    .deck-card [data-deck-part='cover'] { flex: 1 1 auto; min-height: 150px; }
 
     /* While a pointer is down the deck must track it exactly, so the easing is
        suspended and restored on release. */
