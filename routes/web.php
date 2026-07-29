@@ -45,6 +45,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\FinanceOverview;
 use App\Livewire\PublicRegistration;
+use App\Livewire\AiAssistant;
 use App\Livewire\ReportsOverview;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
@@ -297,8 +298,11 @@ Route::middleware('auth')->group(function () {
     // Reports: the book read across, rather than one event at a time.
     Route::get('/reports', ReportsOverview::class)->name('reports.index');
 
+    // The briefing: what needs a person today, and where to find it.
+    Route::get('/ai-assistant', AiAssistant::class)->name('ai.index');
+
     // Modules still awaiting their build phase render the generic stub.
-    foreach (['assets', 'ai-assistant'] as $key) {
+    foreach (['assets'] as $key) {
         $module = config("modules.nav.{$key}");
 
         Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))
