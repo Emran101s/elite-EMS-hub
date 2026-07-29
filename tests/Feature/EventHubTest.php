@@ -108,22 +108,24 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The rebuilt page lands on the journey: the five figures, every event
-        // across its lifecycle, and the rail of portfolio news beside it.
+        // The portfolio has three views and no more: the Deck to browse it,
+        // the List to work it, the Flight Path to plan it.
         $this->actingAs($user)->get('/events')->assertOk()
-            ->assertSee('Total Events')->assertSee('Events at Risk')
-            ->assertSee('Event journey')
-            ->assertSee('Identify &amp; Evaluate', false)
+            ->assertSee('Projects &amp; Events', false)
+            ->assertSee('Deck View')->assertSee('List View')->assertSee('Flight Path')
+            ->assertSee('Active mission')
             ->assertSee('ICFT 2026')
-            ->assertSee('Open Command Center')
-            ->assertSee('Events by region')
-            ->assertSee('Timeline overview')
-            ->assertSee("Today's actions", false)
-            ->assertSee('Event health overview');
+            ->assertSee('Next milestone')
+            ->assertSee('AI insight');
 
-        // The wall is one click away and carries the same events.
-        $this->actingAs($user)->get('/events?view=grid')->assertOk()
-            ->assertSee('All events')->assertSee('ICFT 2026');
+        $this->actingAs($user)->get('/events?view=list')->assertOk()
+            ->assertSee('Operational management')
+            ->assertSee('Quick actions')
+            ->assertSee('ICFT 2026');
+
+        $this->actingAs($user)->get('/events?view=path')->assertOk()
+            ->assertSee('Strategic event timeline')
+            ->assertSee('ICFT 2026');
 
         // Filters narrow the board. Asserted through the component's paginator,
         // since the Event Radar always lists every event in the page HTML.
@@ -140,10 +142,8 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // An unknown view falls back to the journey rather than erroring, and
-        // the board is still one click away.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Event journey');
-        $this->actingAs($user)->get('/events?view=lanes')->assertOk()->assertSee('The Board');
+        // Anything else falls back to the Deck rather than erroring.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Active mission');
     }
 
     public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void

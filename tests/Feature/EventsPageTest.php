@@ -68,29 +68,31 @@ class EventsPageTest extends TestCase
         $this->assertCount(Event::whereNull('archived_at')->where('name', 'like', '%ICFT%')->count(), $selected);
     }
 
-    public function test_selecting_a_card_opens_its_detail_in_the_inspector(): void
+    public function test_the_deck_opens_on_a_mission_and_steps_through_the_book(): void
     {
         $user = $this->actor();
         $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        // The journey is the landing view; the inspector belongs to the lanes.
         $c = Livewire::actingAs($user)->test(EventsIndex::class)
-            ->assertSet('view', 'journey')
+            ->assertSet('view', 'deck')
+            ->assertSee('Active mission');
+
+        // Picking a card brings it into the centre; the detail travels with it.
+        $c->call('activate', $icft->id)
+            ->assertSet('activeId', $icft->id)
             ->assertSee('ICFT 2026')
-            ->set('view', 'lanes')
-            ->assertDontSee('Event Control Room'); // collapsed: detail is hidden
+            ->assertSee('Next milestone');
 
-        $c->call('toggleExpand', $icft->id)
-            ->assertSet('expandedId', $icft->id)
-            ->assertSee('AI Recommendation')
-            ->assertSee('Health breakdown')
-            ->assertSee('Delivery phases')
-            ->assertSee('Event Control Room');
+        $deck = $c->viewData('deck');
+        $at = $c->viewData('activeAt');
 
-        // Clicking the same card again closes it.
-        $c->call('toggleExpand', $icft->id)
-            ->assertSet('expandedId', null)
-            ->assertDontSee('Event Control Room');
+        // Stepping moves along the order on screen, not the database order.
+        $c->call('step', 1);
+        $this->assertSame($deck[min($deck->count() - 1, $at + 1)]['id'], $c->get('activeId'));
+
+        // And it stops at the ends rather than wrapping round.
+        $c->call('step', -1)->call('step', -1)->call('step', -1)->call('step', -1)->call('step', -1);
+        $this->assertSame($deck->first()['id'], $c->get('activeId'));
     }
 
     public function test_manager_can_permanently_delete_an_event_and_the_audit_trail_survives(): void
@@ -183,26 +185,34 @@ class EventsPageTest extends TestCase
 
         $component = Livewire::actingAs($user)->test(EventsIndex::class)->set('sort', 'health');
 
-        $events = $component->viewData('events')->items();
-        $scores = collect($events)->map(fn ($e) => $pulse->breakdown($e)['score'])->all();
+        // The rows are missions now — one description of an event, shared by
+        // all three views — so the score is read off the event inside it.
+        $scores = collect($component->viewData('rows')->items())
+            ->map(fn (array $m) => $pulse->breakdown($m['event'])['score'])->all();
 
         $this->assertSame($scores, collect($scores)->sortDesc()->values()->all());
     }
 
-    public function test_calendar_view_renders_month_grid(): void
+    public function test_the_flight_path_lays_missions_out_in_lanes_and_months(): void
     {
         $user = $this->actor();
 
-        Livewire::actingAs($user)->test(EventsIndex::class)
-            ->set('view', 'calendar')
-            ->set('calMonth', '2026-10')
-            ->assertSee('October 2026')
-            ->assertSee('ICFT 2026'); // Oct 19–21 falls in this month
+        $c = Livewire::actingAs($user)->test(EventsIndex::class)->call('setView', 'path');
 
-        Livewire::actingAs($user)->test(EventsIndex::class)
-            ->set('view', 'calendar')
-            ->set('calMonth', '2026-10')
-            ->call('nextMonth')
-            ->assertSee('November 2026');
+        $months = $c->viewData('months');
+        $lanes = $c->viewData('lanes');
+
+        // Months run left to right and every mission falls inside them.
+        $this->assertNotEmpty($months['list']);
+        $this->assertGreaterThanOrEqual(4, count($months['list']));
+
+        // A lane is only drawn when something flies in it.
+        $this->assertNotEmpty($lanes);
+        foreach ($lanes as $lane) {
+            $this->assertNotEmpty($lane['missions']);
+        }
+
+        // The old calendar URL lands here rather than on a blank page.
+        $this->actingAs($user)->get('/events?view=calendar')->assertOk()->assertSee('Flight Path');
     }
 }
