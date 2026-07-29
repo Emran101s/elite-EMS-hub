@@ -1,14 +1,4 @@
 @php
-    // KPI tone → the tile's fill and its ink. The reference gives each figure a
-    // solid coloured tile rather than a tinted chip: five numbers in a row need
-    // something to tell them apart at a glance.
-    $tone = [
-        'navy'  => ['bg-navy-950', 'text-gold-400'],
-        'green' => ['bg-emerald-500', 'text-white'],
-        'blue'  => ['bg-blue-500', 'text-white'],
-        'red'   => ['bg-red-500', 'text-white'],
-        'gold'  => ['bg-gold-500', 'text-navy-950'],
-    ];
     $typeTabs = ['all' => 'All Events', 'conference' => 'Conferences', 'workshop' => 'Workshops',
         'exhibition' => 'Exhibitions', 'gala' => 'Galas', 'vip' => 'VIP', 'outdoor' => 'Outdoor'];
 @endphp
@@ -16,34 +6,7 @@
 <div class="space-y-4">
 
     {{-- ══════════ The five figures ══════════ --}}
-    <div class="card overflow-hidden">
-        <div class="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 xl:grid-cols-5 xl:divide-y-0">
-            @foreach ($kpis as $k)
-                @php [$fill, $ink] = $tone[$k['tone']] ?? $tone['blue']; @endphp
-                <div class="flex items-center gap-3.5 px-4 py-4">
-                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl {{ $fill }} {{ $ink }}">
-                        <x-icon :name="$k['icon']" class="h-5 w-5" />
-                    </span>
-                    <div class="min-w-0">
-                        <p class="pf text-[26px] font-black leading-none text-navy-950">{{ $k['value'] }}</p>
-                        <p class="mt-1 truncate text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-500">{{ $k['label'] }}</p>
-                        <p class="truncate text-[10.5px] text-muted">{{ $k['note'] }}</p>
-                    </div>
-                    @if ($k['trend'])
-                        {{-- Two windows compared, where the record carries a date
-                             to compare them with. Never a trend nobody measured. --}}
-                        <span @class([
-                            'ms-auto shrink-0 self-start text-[11px] font-bold',
-                            'text-emerald-600' => $k['trend']['up'],
-                            'text-navy-400' => ! $k['trend']['up'],
-                        ])>{{ $k['trend']['label'] }}</span>
-                    @else
-                        <span class="ms-auto shrink-0 self-start text-[11px] font-bold text-navy-200">—</span>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    </div>
+    <x-figure-strip :figures="$kpis" />
 
     {{-- ══════════ Toolbar ══════════ --}}
     {{-- The work on the left, the portfolio's own news on the right. The rail

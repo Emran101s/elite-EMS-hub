@@ -63,6 +63,38 @@ class NavPanel
             'clients.*', 'transport-settings.*', 'sponsor-packages.*'],
     ];
 
+    /**
+     * The one gold button in the tools bar.
+     *
+     * It is contextual because that is what the references draw: Create Event
+     * where you are looking at events, Ask AI where you are looking at one. A
+     * primary action that means the same thing everywhere means very little
+     * anywhere.
+     *
+     * @return array{label:string,icon:string,href:string}|null
+     */
+    public static function primaryAction(): ?array
+    {
+        $candidates = match (self::currentArea()) {
+            'events' => [['＋ Create Event', 'sparkles', 'events.create']],
+            'crm' => [['＋ New Client', 'identification', 'clients.index']],
+            'library' => [['＋ Add Venue', 'building', 'venues.index']],
+            default => [],
+        };
+
+        // Ask AI is the fallback everywhere else, and the last resort if the
+        // area's own action points at a route that does not exist yet.
+        $candidates[] = ['✦ Ask AI', 'sparkles', 'ai.index'];
+
+        foreach ($candidates as [$label, $icon, $route]) {
+            if (Route::has($route)) {
+                return ['label' => $label, 'icon' => $icon, 'href' => route($route)];
+            }
+        }
+
+        return null;
+    }
+
     /** Which area the current request is in. Falls back to the workspace. */
     public static function currentArea(): string
     {

@@ -7,56 +7,25 @@
         {{-- ════════ Main column ════════ --}}
         <div class="min-w-0 space-y-5">
 
-            {{-- KPI cards. This was the platform's second navy slab; the numbers
-                 and the links are unchanged, the mass is gone, and each card
-                 carries a meter so the figure has a scale to sit against. --}}
+            {{-- The same row of figures the Events page opens with — one
+                 card divided, a coloured tile per figure. It used to be five
+                 separate cards with fourteen-segment meters, which is a lot of
+                 chrome to carry one number each. --}}
             @php
                 $spendPct = $spend['estimated'] > 0 ? min(100, (int) round($spend['actual'] / $spend['estimated'] * 100)) : 0;
-                $kpis = [
-                    ['label' => 'Total Events', 'icon' => 'calendar', 'value' => $stats['events'],
-                     'hint' => 'across the region', 'href' => route('events.index'), 'pct' => 100, 'tone' => 'bg-track'],
-                    ['label' => 'Active Projects', 'icon' => 'folder', 'value' => $stats['projects'],
-                     'hint' => 'portfolios running', 'href' => route('projects.index'), 'pct' => 100, 'tone' => 'bg-navy-400'],
-                    ['label' => 'Total Budget', 'icon' => 'currency', 'value' => '$'.\Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 1),
-                     'hint' => $spendPct.'% of estimate spent', 'href' => route('finance.index'), 'pct' => $spendPct, 'tone' => 'bg-gold-500'],
-                    ['label' => 'Open Tasks', 'icon' => 'clipboard', 'value' => $stats['openTasks'],
-                     'hint' => 'pending + in progress', 'href' => route('tasks.index'), 'pct' => min(100, $stats['openTasks'] * 3), 'tone' => 'bg-warn'],
-                    ['label' => 'At Risk', 'icon' => 'bell', 'value' => $stats['atRisk'],
-                     'hint' => $stats['atRisk'] ? 'needs attention' : 'all clear', 'href' => '#live-alerts',
-                     'risk' => $stats['atRisk'] > 0, 'pct' => $stats['atRisk'] * 25, 'tone' => 'bg-risk'],
-                ];
             @endphp
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-                @foreach ($kpis as $kpi)
-                    <a href="{{ $kpi['href'] }}"
-                       class="group rounded-[20px] border border-line bg-white p-4 shadow-[0_10px_26px_-18px_rgba(11,31,58,0.35)] transition hover:-translate-y-0.5 hover:border-gold-200 hover:shadow-[0_18px_36px_-22px_rgba(11,31,58,0.45)]">
-                        <div class="flex items-center gap-2">
-                            <span @class([
-                                'grid h-7 w-7 shrink-0 place-items-center rounded-lg',
-                                'bg-risk/10 text-risk' => $kpi['risk'] ?? false,
-                                'bg-navy-50 text-navy-500' => ! ($kpi['risk'] ?? false),
-                            ])>
-                                <x-icon :name="$kpi['icon']" class="h-3.5 w-3.5" />
-                            </span>
-                            <p class="eyebrow truncate">{{ $kpi['label'] }}</p>
-                        </div>
-
-                        <p class="pf mt-2.5 truncate text-[28px] font-bold leading-none {{ ($kpi['risk'] ?? false) ? 'text-risk' : 'text-navy-900' }}">{{ $kpi['value'] }}</p>
-
-                        <div class="mt-3 flex gap-[3px]">
-                            @for ($i = 0; $i < 14; $i++)
-                                <span @class([
-                                    'h-1 flex-1 rounded-full',
-                                    $kpi['tone'] => $i < round($kpi['pct'] / 100 * 14),
-                                    'bg-navy-50' => $i >= round($kpi['pct'] / 100 * 14),
-                                ])></span>
-                            @endfor
-                        </div>
-
-                        <p class="mt-2 truncate text-[11px] text-muted">{{ $kpi['hint'] }}</p>
-                    </a>
-                @endforeach
-            </div>
+            <x-figure-strip :figures="[
+                ['label' => 'Total Events', 'note' => 'Across the region', 'value' => $stats['events'],
+                 'icon' => 'calendar', 'tone' => 'navy', 'href' => route('events.index')],
+                ['label' => 'Active Projects', 'note' => 'Portfolios running', 'value' => $stats['projects'],
+                 'icon' => 'folder', 'tone' => 'green', 'href' => route('projects.index')],
+                ['label' => 'Total Budget', 'note' => $spendPct . '% of estimate spent', 'value' => '$' . \Illuminate\Support\Number::abbreviate($stats['budget'] / 100, 1),
+                 'icon' => 'currency', 'tone' => 'gold', 'href' => route('finance.index')],
+                ['label' => 'Open Tasks', 'note' => 'Pending + in progress', 'value' => $stats['openTasks'],
+                 'icon' => 'clipboard', 'tone' => 'blue', 'href' => route('tasks.index')],
+                ['label' => 'At Risk', 'note' => $stats['atRisk'] ? 'Needs attention' : 'All clear', 'value' => $stats['atRisk'],
+                 'icon' => 'bell', 'tone' => 'red', 'href' => '#live-alerts'],
+            ]" />
 
             {{-- Operations Hub — circular event ecosystem --}}
             <div id="operations-hub" class="card scroll-mt-6 overflow-hidden">

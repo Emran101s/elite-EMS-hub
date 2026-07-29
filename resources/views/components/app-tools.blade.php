@@ -52,10 +52,12 @@
 
         <x-event-radar />
 
-        @if (\Illuminate\Support\Facades\Route::has('ai.index'))
-            <a href="{{ route('ai.index') }}"
-               class="hidden h-10 items-center gap-1.5 rounded-full bg-gold-500 px-3.5 text-[12.5px] font-bold text-navy-950 shadow-[0_6px_16px_-8px_rgba(212,175,55,0.9)] transition hover:bg-gold-400 sm:inline-flex">
-                ✦<span class="hidden xl:inline">Ask AI</span>
+        {{-- The one gold button, and what it does depends on where you are. --}}
+        @php $primary = \App\Support\NavPanel::primaryAction(); @endphp
+        @if ($primary)
+            <a href="{{ $primary['href'] }}" title="{{ str($primary['label'])->after(' ') }}"
+               class="hidden h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-gold-500 px-3.5 text-[12.5px] font-bold text-navy-950 shadow-[0_6px_16px_-8px_rgba(212,175,55,0.9)] transition hover:bg-gold-400 sm:inline-flex">
+                {{ str($primary['label'])->before(' ') }}<span class="hidden xl:inline">{{ str($primary['label'])->after(' ') }}</span>
             </a>
         @endif
 
