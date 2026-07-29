@@ -167,6 +167,72 @@
 }
 
 @layer components {
+    /* ── The Deck's stage ────────────────────────────────────────────────
+       A spatial deck: every mission is in the DOM at once and the arrangement
+       is a 3D transform per card. The JS in the Events page writes the
+       transform; everything that has to be the same on every card — the
+       timing, the easing, the shape — lives here.
+
+       One duration, one curve, no bounce. A deck that springs is a toy.       */
+    .deck-stage {
+        position: relative;
+        transform-style: preserve-3d;
+        outline: none;
+        touch-action: pan-y;          /* let the page scroll; we own the X axis */
+        cursor: grab;
+        user-select: none;
+    }
+
+    .deck-stage.is-dragging { cursor: grabbing; }
+
+    .deck-card {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        display: flex;
+        flex-direction: column;
+        transform-origin: 50% 50%;
+        backface-visibility: hidden;
+        will-change: transform, opacity, filter;
+        transition:
+            transform   var(--deck-ms, 520ms) var(--deck-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+            opacity     var(--deck-ms, 520ms) var(--deck-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+            filter      var(--deck-ms, 520ms) var(--deck-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+            box-shadow  var(--deck-ms, 520ms) var(--deck-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    }
+
+    /* While a finger or the pointer is down the deck must track it exactly,
+       so the easing is suspended and re-applied on release. */
+    .deck-stage.is-dragging .deck-card { transition: none; }
+
+    /* The card you are on is the only one you can click into. */
+    .deck-card:not(.is-active) { pointer-events: none; }
+    .deck-card:not(.is-active) [data-deck-keep] { pointer-events: none; }
+    .deck-card.is-active { pointer-events: auto; }
+
+    /* ── The staggered arrival ──
+       When a card becomes the hero its parts land in the order you read them:
+       cover, then title, then the numbers, then the line about them. The dock
+       is deliberately absent — furniture that moves is furniture you cannot
+       aim at.                                                                 */
+    .deck-card.is-arriving [data-deck-part] {
+        animation: deck-part var(--deck-ms, 520ms) var(--deck-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+    }
+    .deck-card.is-arriving [data-deck-part='cover']   { animation-delay: 0ms; }
+    .deck-card.is-arriving [data-deck-part='title']   { animation-delay: 70ms; }
+    .deck-card.is-arriving [data-deck-part='kpis']    { animation-delay: 140ms; }
+    .deck-card.is-arriving [data-deck-part='insight'] { animation-delay: 210ms; }
+
+    @keyframes deck-part {
+        from { opacity: 0; transform: translateY(9px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .deck-card { transition-duration: 1ms; }
+        .deck-card.is-arriving [data-deck-part] { animation: none; }
+    }
+
     /* ── Design system ─────────────────────────────────────────────
        One look, one feel. Use these instead of re-styling per page.   */
 

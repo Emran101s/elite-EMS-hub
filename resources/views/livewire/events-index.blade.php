@@ -137,140 +137,142 @@
         </x-empty>
 
     {{-- ══════════════════════════════════════════════════════════════
+    {{-- ══════════════════════════════════════════════════════════════
          DECK VIEW — premium portfolio browsing
 
-         One mission in the centre at full strength, its neighbours held at
-         the edges. You move THROUGH the book rather than scanning a grid of
-         equals, which is the whole difference between a deck and a table.
+         A spatial deck, not a carousel and not a grid. Every mission is in the
+         DOM at once and the arrangement happens on the client in 3D: the one
+         you are on comes toward you, its neighbours fall back and turn away.
+
+         It has to be client-side. A server round-trip per step cannot produce a
+         520ms transition, and re-rendering would tear down the very elements
+         the transition is animating — so the deck owns its own index and only
+         tells Livewire which mission is active for the sake of deep links.
          ══════════════════════════════════════════════════════════════ --}}
     @elseif ($view === 'deck')
-        <div class="relative">
-            {{-- the field the deck floats on --}}
+        <div class="relative" data-deck-root>
+            {{-- the field the deck floats in --}}
             <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[28px]" aria-hidden="true">
                 <div class="absolute inset-0 bg-gradient-to-b from-indigo-50/70 via-white to-page/50"></div>
                 <div class="absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.10),transparent_70%)]"></div>
                 <div class="absolute -right-24 top-1/4 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.12),transparent_70%)]"></div>
             </div>
 
-            <div class="grid items-start gap-4 px-1 py-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)_minmax(0,1fr)]">
+            <div class="flex items-center justify-between px-1 pb-1 pt-4">
+                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
+                    <span class="h-px w-4 bg-navy-200"></span>Past missions
+                </p>
+                <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-indigo-500">Active mission</p>
+                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
+                    Future missions<span class="h-px w-4 bg-navy-200"></span>
+                </p>
+            </div>
 
-                {{-- ── past missions ── --}}
-                <div class="order-2 xl:order-1">
-                    <p class="mb-2.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
-                        <span class="h-px w-4 bg-navy-200"></span>Past missions
-                    </p>
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                        @forelse ($past as $m)
-                            <x-mission.side-card :mission="$m" :starred="in_array($m['id'], $favoriteIds, true)" />
-                        @empty
-                            <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11.5px] text-muted">Nothing behind this one.</p>
-                        @endforelse
-                    </div>
-                </div>
+            {{-- ── the stage ──
+                 perspective on the stage, transforms on the cards. Dragging
+                 anywhere on it moves the deck. --}}
+            <div class="deck-stage" data-deck-stage
+                 style="perspective: 1800px; perspective-origin: 50% 42%"
+                 tabindex="0" role="group" aria-label="Event mission deck"
+                 aria-roledescription="spatial deck">
 
-                {{-- ── the active mission ── --}}
-                <div class="order-1 xl:order-2">
-                    <p class="mb-2.5 text-center text-eyebrow font-bold uppercase tracking-[0.24em] text-indigo-500">Active mission</p>
+                @foreach ($deck as $i => $m)
+                    <article wire:key="deck-{{ $m['id'] }}" data-deck-card data-index="{{ $i }}" data-id="{{ $m['id'] }}" data-active="{{ $active && $m['id'] === $active['id'] ? 1 : 0 }}"
+                             class="deck-card overflow-hidden rounded-[26px] border border-white/60 bg-white ring-1 ring-indigo-500/5">
 
-                    <article wire:key="hero-{{ $active['id'] }}"
-                             class="relative overflow-hidden rounded-[26px] border border-white/60 bg-white shadow-[0_34px_80px_-40px_rgba(30,27,75,0.55)] ring-1 ring-indigo-500/5">
-
-                        <div class="relative isolate h-[190px] overflow-hidden lg:h-[218px]">
-                            @if ($active['cover'])
-                                <img src="{{ $active['cover'] }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" style="object-position: 50% 38%">
+                        {{-- 1 · the cover ── first thing to change on a step --}}
+                        <div class="relative isolate h-[186px] overflow-hidden" data-deck-part="cover">
+                            @if ($m['cover'])
+                                <img src="{{ $m['cover'] }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" style="object-position: 50% 38%">
                             @else
-                                <x-event-crest :event="$active['event']" class="absolute inset-0 -z-10 h-full w-full" />
+                                <x-event-crest :event="$m['event']" class="absolute inset-0 -z-10 h-full w-full" />
                             @endif
                             <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/55 via-transparent to-navy-950/25"></div>
 
                             <div class="flex items-start justify-between p-4">
-                                <x-mission.badge :mission="$active" class="!bg-white/95 shadow-sm !ring-white/50" />
+                                <x-mission.badge :mission="$m" class="!bg-white/95 shadow-sm !ring-white/50" />
 
-                                <button type="button" wire:click="toggleFavorite({{ $active['id'] }})"
+                                <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" data-deck-keep
                                         class="grid h-9 w-9 place-items-center rounded-full bg-navy-950/70 text-white backdrop-blur transition hover:bg-navy-950"
-                                        title="{{ in_array($active['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }} this event">
-                                    <x-icon name="star" class="h-4 w-4 {{ in_array($active['id'], $favoriteIds, true) ? 'fill-gold-400 text-gold-400' : '' }}" />
+                                        title="{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }} this event">
+                                    <x-icon name="star" class="h-4 w-4 {{ in_array($m['id'], $favoriteIds, true) ? 'fill-gold-400 text-gold-400' : '' }}" />
                                 </button>
                             </div>
                         </div>
 
-                        {{-- the identity, lifted over the cover --}}
-                        <div class="relative -mt-8 flex flex-wrap items-start gap-4 px-4 pb-4 lg:px-5">
-                            <div class="grid w-[86px] shrink-0 place-items-center rounded-2xl border border-line bg-white py-3 text-center shadow-lg">
-                                <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $active['month'] ?? '—' }}</span>
-                                <span class="pf text-[30px] font-black leading-none text-navy-950">{{ $active['day'] ?? '··' }}</span>
-                                <span class="text-[10.5px] text-muted">{{ $active['year'] }}</span>
+                        {{-- 2 · the title block --}}
+                        <div class="relative -mt-8 flex flex-wrap items-start gap-4 px-4 pb-3.5 lg:px-5" data-deck-part="title">
+                            <div class="grid w-[84px] shrink-0 place-items-center rounded-2xl border border-line bg-white py-3 text-center shadow-lg">
+                                <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $m['month'] ?? '—' }}</span>
+                                <span class="pf text-[29px] font-black leading-none text-navy-950">{{ $m['day'] ?? '··' }}</span>
+                                <span class="text-[10.5px] text-muted">{{ $m['year'] }}</span>
                             </div>
 
                             <div class="min-w-0 flex-1 pt-9">
-                                <h2 class="pf text-[23px] font-black leading-tight text-navy-950 lg:text-[26px]">
-                                    <a href="{{ route('events.hub', $active['event']) }}" class="transition hover:text-indigo-600">{{ $active['name'] }}</a>
+                                <h2 class="pf line-clamp-2 text-[22px] font-black leading-tight text-navy-950">
+                                    <a href="{{ route('events.hub', $m['event']) }}" data-deck-keep class="transition hover:text-indigo-600">{{ $m['name'] }}</a>
                                 </h2>
-                                <p class="mt-2 flex items-center gap-1.5 text-[12px] text-navy-600"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-navy-300" />{{ $active['where'] }}</p>
-                                <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-navy-600">
-                                    <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-navy-300" />{{ $active['dates'] }}</span>
-                                    <span class="text-navy-200">•</span>{{ number_format($active['attendees']) }} {{ strtolower($active['attendeeWord']) }}
+                                <p class="mt-1.5 flex items-center gap-1.5 truncate text-[12px] text-navy-600"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-navy-300" />{{ $m['where'] }}</p>
+                                <p class="mt-1 flex flex-wrap items-center gap-x-2 text-[12px] text-navy-600">
+                                    <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-navy-300" />{{ $m['dates'] }}</span>
+                                    <span class="text-navy-200">•</span>{{ number_format($m['attendees']) }} {{ strtolower($m['attendeeWord']) }}
                                 </p>
                             </div>
 
-                            <x-mission.ring :percent="$active['progress']" :hex="$active['statusHex']" :size="88" label="Overall" class="mt-9" />
+                            <x-mission.ring :percent="$m['progress']" :hex="$m['statusHex']" :size="84" label="Overall" class="mt-9" />
                         </div>
 
-                        <x-mission.kpis :mission="$active" class="border-y border-line" />
+                        {{-- 3 · the numbers ── 4 · the faces travel with them --}}
+                        <div data-deck-part="kpis">
+                            <x-mission.kpis :mission="$m" class="border-y border-line" />
+                        </div>
 
-                        <div class="grid divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+                        {{-- 5 · what is next, and what the rules make of it --}}
+                        <div class="grid divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0" data-deck-part="insight">
                             <div class="px-4 py-3">
                                 <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">Next milestone</p>
-                                <p class="pf mt-1 truncate text-[13.5px] font-bold text-navy-950">{{ $active['milestone']['title'] }}</p>
-                                <p class="mt-0.5 text-[11px] {{ $active['milestone']['overdue'] ? 'font-semibold text-red-600' : 'text-muted' }}">{{ $active['milestone']['due'] }}</p>
+                                <p class="pf mt-1 truncate text-[13.5px] font-bold text-navy-950">{{ $m['milestone']['title'] }}</p>
+                                <p class="mt-0.5 text-[11px] {{ $m['milestone']['overdue'] ? 'font-semibold text-red-600' : 'text-muted' }}">{{ $m['milestone']['due'] }}</p>
                             </div>
                             <div class="px-4 py-3">
                                 <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
                                     AI insight <x-icon name="sparkles" class="ms-auto h-3.5 w-3.5 text-indigo-500" />
                                 </p>
-                                <p class="mt-1 text-[12px] leading-relaxed text-navy-700">{{ $active['insight'] }}</p>
+                                <p class="mt-1 line-clamp-2 text-[12px] leading-relaxed text-navy-700">{{ $m['insight'] }}</p>
                             </div>
                         </div>
 
-                        <x-mission.dock :mission="$active" />
+                        {{-- 6 · the dock, which does not animate: furniture that
+                             moves is furniture you cannot aim at --}}
+                        <x-mission.dock :mission="$m" class="mt-auto" />
                     </article>
-
-                    {{-- stepping through the deck --}}
-                    <div class="mt-4 flex items-center justify-center gap-3">
-                        <button type="button" wire:click="step(-1)" @disabled($activeAt === 0)
-                                class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-30"
-                                aria-label="Previous mission">‹</button>
-
-                        <div class="flex items-center gap-1.5">
-                            @foreach ($deck as $i => $m)
-                                <button type="button" wire:click="activate({{ $m['id'] }})"
-                                        class="h-1.5 rounded-full transition-all {{ $i === $activeAt ? 'w-7 bg-navy-950' : 'w-1.5 bg-navy-200 hover:bg-navy-400' }}"
-                                        title="{{ $m['name'] }}" aria-label="{{ $m['name'] }}"></button>
-                            @endforeach
-                        </div>
-
-                        <button type="button" wire:click="step(1)" @disabled($activeAt === $deck->count() - 1)
-                                class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-30"
-                                aria-label="Next mission">›</button>
-                    </div>
-                    <p class="mt-2 text-center text-[11px] text-muted">Use the arrows, or pick a card either side, to move through the deck</p>
-                </div>
-
-                {{-- ── future missions ── --}}
-                <div class="order-3">
-                    <p class="mb-2.5 flex items-center justify-end gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
-                        Future missions<span class="h-px w-4 bg-navy-200"></span>
-                    </p>
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                        @forelse ($future as $m)
-                            <x-mission.side-card :mission="$m" :starred="in_array($m['id'], $favoriteIds, true)" />
-                        @empty
-                            <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11.5px] text-muted">Nothing after this one.</p>
-                        @endforelse
-                    </div>
-                </div>
+                @endforeach
             </div>
+
+            {{-- ── the controls ── --}}
+            <div class="mt-5 flex items-center justify-center gap-3">
+                <button type="button" data-deck-prev
+                        class="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-[19px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        aria-label="Previous mission">‹</button>
+
+                <div class="flex items-center gap-1.5" data-deck-dots>
+                    @foreach ($deck as $i => $m)
+                        <button type="button" data-deck-dot data-index="{{ $i }}"
+                                class="h-1.5 w-1.5 rounded-full bg-navy-200 transition-all hover:bg-navy-400"
+                                title="{{ $m['name'] }}" aria-label="{{ $m['name'] }}"></button>
+                    @endforeach
+                </div>
+
+                <button type="button" data-deck-next
+                        class="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-[19px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        aria-label="Next mission">›</button>
+            </div>
+
+            <p class="mt-2 text-center text-[11px] text-muted">
+                Drag the deck, swipe, use ← →, or pick a card at the edge
+            </p>
         </div>
+
 
     {{-- ══════════════════════════════════════════════════════════════
          LIST VIEW — operational management
@@ -497,29 +499,4 @@
         </div>
     @endif
 
-    @script
-    <script>
-        /* The canvas is drawn in percentages inside a min-width box, so zoom is
-           that width: no re-layout, and every card keeps its own date. */
-        const canvas = () => document.querySelector('[data-fp-canvas]');
-        let level = 100;
-
-        const apply = () => {
-            const el = canvas();
-            if (! el) return;
-            el.style.minWidth = Math.round((Number(el.dataset.fpBase) || 880) * level / 100) + 'px';
-            const out = document.querySelector('[data-fp-level]');
-            if (out) out.textContent = level + '%';
-        };
-
-        document.querySelectorAll('[data-fp-zoom]').forEach((b) => b.addEventListener('click', () => {
-            level = Math.min(240, Math.max(60, level + Number(b.dataset.fpZoom) * 20));
-            apply();
-        }));
-
-        document.querySelector('[data-fp-today]')?.addEventListener('click', () => {
-            document.querySelector('[data-fp-line]')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        });
-    </script>
-    @endscript
 </div>
