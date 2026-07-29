@@ -73,24 +73,39 @@ document.addEventListener('keydown', (e) => {
 
    A spatial deck, not a carousel. Every mission is already in the DOM; this
    only decides where each one sits in space — the card you are on comes toward
-   you at full size, its neighbours fall back and turn away, and anything past
-   the second rank is parked out of sight rather than removed.
+   you at full size, its neighbours fall back, turn away and blur.
 
    It lives here rather than in the page because a server round-trip cannot
    produce a 520ms transition, and re-rendering would tear down the very
-   elements the transition is animating. The deck owns its index; the server is
-   told which mission is active only so a reload or a jump to another view
-   lands on the same one.
+   elements the transition is animating.
+
+   Three rules keep it smooth, and they are the whole reason it is smooth:
+
+     1. Only transform and opacity are transitioned. Those two the compositor
+        can run on its own thread. filter and box-shadow cannot be, and
+        animating them on a card this size repaints every frame — which is
+        exactly what "not smooth" feels like. Both are set instantly instead,
+        under cover of the movement.
+     2. Pointer moves are coalesced to one placement per animation frame. A
+        mouse reports far more often than the screen refreshes, and the work
+        done between two frames never reaches a pixel.
+     3. will-change is added while the deck moves and dropped when it settles.
+        A permanent hint is a permanent layer, and twenty of those cost more
+        than they save.
    ══════════════════════════════════════════════════════════════════════════ */
 
-// The geometry is quoted for a 1920px screen, against a 980px hero, and scaled
-// from the stage's own width so the arrangement holds on a laptop.
+// Quoted for a 1920px screen against a 980px hero, then scaled by the stage's
+// own width so the proportions survive a laptop.
 const DECK_REF = 980;
+const DECK_MS = 520;
 const DECK_RANKS = [
     { scale: 1,   rotate: 0,  x: 0,   z: 120,  opacity: 1,    blur: 0,   layer: 40 },
     { scale: 0.8, rotate: 12, x: 420, z: -80,  opacity: 0.85, blur: 0.6, layer: 30 },
     { scale: 0.6, rotate: 18, x: 700, z: -180, opacity: 0.4,  blur: 2,   layer: 20 },
 ];
+
+const DECK_SHADOW_HERO = '0 46px 90px -40px rgba(30,27,75,.55), 0 8px 24px -12px rgba(30,27,75,.25)';
+const DECK_SHADOW_SIDE = '0 24px 50px -30px rgba(30,27,75,.45)';
 
 function mountDeck(stage) {
     if (stage.dataset.deckMounted) return;
@@ -107,6 +122,7 @@ function mountDeck(stage) {
     let index = Math.max(0, cards.findIndex((c) => c.dataset.active === '1'));
     let heroW = DECK_REF;
     let k = 1;
+    let hovering = -1;
 
     const measure = () => {
         // The hero takes ~58% of the stage — inside the range the design calls
@@ -119,7 +135,6 @@ function mountDeck(stage) {
             card.style.marginLeft = `${-heroW / 2}px`;
         });
 
-        // Tall enough for the hero plus the room the tilted neighbours need.
         stage.style.height = `${Math.round((cards[index]?.offsetHeight || 540) + 40)}px`;
     };
 
@@ -131,18 +146,23 @@ function mountDeck(stage) {
             const far = Math.abs(offset) > 2;
 
             // A card to the LEFT turns toward you (+rotateY); one to the right
-            // turns the other way. The hero sits square on.
+            // turns away. The hero sits square on. Hovering a neighbour lifts
+            // it toward you — added into the same transform so a CSS hover can
+            // never fight the one the deck is writing.
+            const lift = i === hovering && offset !== 0 ? 26 : 0;
             const x = (offset === 0 ? 0 : side * rank.x) * k + drag;
             const rotate = offset === 0 ? 0 : -side * rank.rotate;
 
             card.style.transform =
-                `translate3d(${x}px, 0, ${rank.z * k}px) rotateY(${rotate}deg) scale(${rank.scale})`;
+                `translate3d(${x}px, 0, ${rank.z * k + lift}px) rotateY(${rotate}deg) scale(${rank.scale})`;
             card.style.opacity = far ? 0 : rank.opacity;
-            card.style.filter = rank.blur ? `blur(${rank.blur}px)` : 'none';
             card.style.zIndex = far ? 0 : rank.layer;
-            card.style.boxShadow = offset === 0
-                ? '0 46px 90px -40px rgba(30,27,75,.55), 0 8px 24px -12px rgba(30,27,75,.25)'
-                : '0 24px 50px -30px rgba(30,27,75,.45)';
+
+            // Set, never transitioned: a repaint per frame is what jank is.
+            card.style.filter = rank.blur ? `blur(${rank.blur}px)` : 'none';
+            card.style.boxShadow = offset === 0 ? DECK_SHADOW_HERO : DECK_SHADOW_SIDE;
+            card.style.visibility = far ? 'hidden' : 'visible';
+
             card.classList.toggle('is-active', offset === 0);
             card.setAttribute('aria-hidden', far ? 'true' : 'false');
         });
@@ -160,6 +180,14 @@ function mountDeck(stage) {
         if (next) next.disabled = index === cards.length - 1;
     };
 
+    // Promoted for the length of the move, then the layers are released.
+    let settle;
+    const moving = () => {
+        stage.classList.add('is-moving');
+        clearTimeout(settle);
+        settle = setTimeout(() => stage.classList.remove('is-moving'), DECK_MS + 80);
+    };
+
     let arriving = null;
 
     const go = (to) => {
@@ -167,11 +195,12 @@ function mountDeck(stage) {
         if (target === index) return place();
 
         index = target;
+        hovering = -1;
+        moving();
         measure();
         place();
 
-        // The parts of the new hero land in reading order: cover, title,
-        // numbers, then the line about them. The dock never moves.
+        // The parts of the new hero land in reading order.
         arriving?.classList.remove('is-arriving');
         arriving = cards[index];
         void arriving.offsetWidth;              // restart the animation
@@ -179,20 +208,55 @@ function mountDeck(stage) {
 
         // Tell the server which mission is active, without waiting for it.
         const host = stage.closest('[wire\\:id]');
-        const id = host && window.Livewire?.find(host.getAttribute('wire:id'));
-        id?.call('activate', Number(cards[index].dataset.id));
+        window.Livewire?.find(host?.getAttribute('wire:id'))
+            ?.call('activate', Number(cards[index].dataset.id));
     };
 
     prev?.addEventListener('click', () => go(index - 1));
     next?.addEventListener('click', () => go(index + 1));
     dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
 
-    // A card at the edge is a button: clicking it brings it in.
-    cards.forEach((card, i) => card.addEventListener('click', (e) => {
-        if (i === index || e.target.closest('[data-deck-keep]')) return;
-        e.preventDefault();
-        go(i);
-    }));
+    // ── a card at the edge IS the control that brings it in ──
+    // It stays clickable; only its own links and buttons are inert, in the CSS.
+    // A click that is really the tail of a drag is swallowed, or one gesture
+    // would move the deck twice.
+    let swallowClick = false;
+
+    cards.forEach((card, i) => {
+        card.addEventListener('click', (e) => {
+            if (swallowClick) { e.preventDefault(); e.stopPropagation(); return; }
+            if (i === index || e.target.closest('[data-deck-keep]')) return;
+            e.preventDefault();
+            go(i);
+        });
+
+        card.addEventListener('pointerenter', () => {
+            if (i === index || drag) return;
+            hovering = i;
+            moving();
+            place();
+        });
+
+        card.addEventListener('pointerleave', () => {
+            if (hovering !== i) return;
+            hovering = -1;
+            moving();
+            place();
+        });
+    });
+
+    // A rotated card's clickable region is the projected quad, not its bounding
+    // box, so its outer edge slants and part of what LOOKS clickable is not.
+    // Rather than leave the mouse guessing, the stage itself takes any click
+    // that missed a card and reads it as "go that way" — which is the mental
+    // model anyway, and a target the width of half the stage.
+    stage.addEventListener('click', (e) => {
+        if (swallowClick || e.target.closest('[data-deck-card]')) return;
+
+        const hero = cards[index].getBoundingClientRect();
+        const mid = hero.left + hero.width / 2;
+        go(index + (e.clientX < mid ? -1 : 1));
+    });
 
     stage.addEventListener('keydown', (e) => {
         const step = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: cards.length - 1 }[e.key];
@@ -203,34 +267,60 @@ function mountDeck(stage) {
 
     // ── drag and swipe ──
     let drag = null;
+    let frame = 0;
+
+    const draw = () => {
+        frame = 0;
+        if (drag) place(drag.dx * 0.55);
+    };
 
     stage.addEventListener('pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest('[data-deck-keep]')) return;
-        drag = { x: e.clientX, y: e.clientY, dx: 0, moved: false };
-        stage.setPointerCapture(e.pointerId);
+        drag = { x: e.clientX, y: e.clientY, dx: 0, moved: false, id: e.pointerId };
+        swallowClick = false;
     });
 
     stage.addEventListener('pointermove', (e) => {
         if (! drag) return;
         const dx = e.clientX - drag.x;
-        if (! drag.moved && Math.abs(dx) < 6) return;
-        // A mostly-vertical gesture is the page scrolling, not the deck.
-        if (! drag.moved && Math.abs(dx) < Math.abs(e.clientY - drag.y)) { drag = null; return; }
 
-        drag.moved = true;
+        if (! drag.moved) {
+            if (Math.abs(dx) < 6) return;
+            // A mostly-vertical gesture is the page scrolling, not the deck.
+            if (Math.abs(dx) < Math.abs(e.clientY - drag.y)) { drag = null; return; }
+
+            drag.moved = true;
+            hovering = -1;
+            stage.classList.add('is-dragging', 'is-moving');
+            // Captured only once the gesture has committed, so a plain click
+            // still reaches the card underneath.
+            try { stage.setPointerCapture(drag.id); } catch { /* already gone */ }
+        }
+
         drag.dx = dx;
-        stage.classList.add('is-dragging');
-        place(dx * 0.6);                        // follows the finger, damped
+        if (! frame) frame = requestAnimationFrame(draw);
     });
 
-    const release = () => {
+    const release = (e) => {
         if (! drag) return;
-        const { dx, moved } = drag;
+        const { dx, moved, id } = drag;
         drag = null;
+
+        if (frame) { cancelAnimationFrame(frame); frame = 0; }
+        if (stage.hasPointerCapture?.(id)) stage.releasePointerCapture(id);
+
+        if (! moved) return;
+
+        // The click that follows a drag is the same gesture; ignore it.
+        swallowClick = true;
+        setTimeout(() => { swallowClick = false; }, 0);
+
         stage.classList.remove('is-dragging');
+        void stage.offsetWidth;                 // let the easing take effect
+        moving();
 
         // A tenth of the hero's width is enough to mean it.
-        if (moved && Math.abs(dx) > heroW * 0.1) go(index + (dx < 0 ? 1 : -1));
+        if (Math.abs(dx) > heroW * 0.1) go(index + (dx < 0 ? 1 : -1));
         else place();
     };
 
