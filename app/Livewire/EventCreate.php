@@ -15,10 +15,38 @@ use Livewire\WithFileUploads;
  * watch the event build itself on the right. Picking a type sets the crest and
  * the modules that type usually needs — all still editable before you commit.
  */
-#[Layout('components.layouts.app', ['title' => 'Create Event', 'subtitle' => 'Answer a few questions — the event builds itself as you type.'])]
+/**
+ * Event Studio.
+ *
+ * Not a form. A form asks you to fill it, save it, and find out later what you
+ * made; the studio shows you the event taking shape beside you while you define
+ * it, so the thing you are deciding about is on screen the whole time.
+ *
+ * Five rooms, and a preview that is never stale:
+ *
+ *   1 Identity        who it is for, what kind of thing it is
+ *   2 When & where     the dates everything else hangs off
+ *   3 Modules          which of the twenty-one it needs
+ *   4 Details          the numbers and the sentence
+ *   5 Review & launch  what is about to be built
+ *
+ * Nothing is written until Launch. Until then the preview IS the event.
+ */
+#[Layout('components.layouts.app', ['title' => 'Event Studio', 'hideTitleRow' => true])]
 class EventCreate extends Component
 {
     use WithFileUploads;
+
+    /** The five rooms: key => [label, what it settles]. */
+    public const STEPS = [
+        1 => ['Event Identity', 'Who it is for, and what kind of thing it is'],
+        2 => ['When & Where', 'The dates everything else hangs off'],
+        3 => ['Modules & Tools', 'Which parts of the platform it needs'],
+        4 => ['Additional Details', 'The numbers, and the sentence about it'],
+        5 => ['Review & Launch', 'What is about to be built'],
+    ];
+
+    public int $step = 1;
 
     /** Type templates: key => [label, event type, icon, default modules]. */
     public const TEMPLATES = [
@@ -61,6 +89,23 @@ class EventCreate extends Component
 
     public string $city = '';
 
+    public string $country = '';
+
+    public ?int $venue_id = null;
+
+    // ── Details ──
+    public string $description = '';
+
+    public string $expected_participants = '';
+
+    public string $budget = '';
+
+    public string $currency = '';
+
+    public ?int $project_manager_id = null;
+
+    public string $priority = 'normal';
+
     // ── Shape ──
     public string $statusPill = 'lead';
 
@@ -72,8 +117,41 @@ class EventCreate extends Component
     {
         $company = CompanyProfile::current();
         $this->timezone = $company->default_timezone;
-        $this->city = (string) ($company->city ?: '');
-        $this->modules = self::TEMPLATES['conference'][3];
+        $this->country = (string) ($company->country ?: '');
+        $this->currency = (string) $company->default_currency;
+
+        // No modules and no type until you choose one. The studio used to open
+        // with a conference's seven already ticked while no type tile was lit —
+        // the launch bar said "7 selected" and the workspace said nothing was
+        // picked. An empty studio should look empty.
+    }
+
+    /**
+     * Move between rooms. You can jump to any room you have already reached —
+     * the studio is a workspace, not a queue — but not past a gate that has
+     * not been answered.
+     */
+    public function goTo(int $step): void
+    {
+        $this->step = max(1, min(count(self::STEPS), $step));
+    }
+
+    public function next(): void
+    {
+        $this->validateStep($this->step);
+        $this->goTo($this->step + 1);
+    }
+
+    public function back(): void
+    {
+        $this->goTo($this->step - 1);
+    }
+
+    public function setPriority(string $key): void
+    {
+        if (array_key_exists($key, Event::PRIORITIES)) {
+            $this->priority = $key;
+        }
     }
 
     public function toggleNewClient(): void
@@ -139,8 +217,8 @@ class EventCreate extends Component
             'type' => $type,
             'stage' => self::STATUS_PILLS[$this->statusPill] ?? 'draft',
             'city' => $this->city ?: ($company->city ?: 'TBD'),
-            'country' => $company->country ?: 'Jordan',
-            'currency' => $company->default_currency,
+            'country' => $this->country ?: ($company->country ?: 'Jordan'),
+            'currency' => $this->currency ?: $company->default_currency,
             'management_fee_pct' => $company->default_management_fee_pct,
             'timezone' => $this->timezone,
             'client_id' => $this->client_id,
@@ -153,6 +231,12 @@ class EventCreate extends Component
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at ?: null,
             'progress' => 0,
+            'priority' => $this->priority,
+            'venue_id' => $this->venue_id,
+            'description' => trim($this->description) ?: null,
+            'expected_participants' => $this->expected_participants !== '' ? (int) $this->expected_participants : null,
+            'budget_cents' => $this->budget !== '' ? (int) round((float) $this->budget * 100) : 0,
+            'project_manager_id' => $this->project_manager_id,
             'enabled_modules' => array_values(array_intersect(array_keys(Event::HUB_MODULES), $this->modules)),
         ]);
 
@@ -161,6 +245,81 @@ class EventCreate extends Component
         session()->flash('status', "Event “{$event->name}” created — {$event->dayCount()} agenda ".str('day')->plural($event->dayCount()).' ready in the Event Hub.');
 
         return $this->redirectRoute('events.hub', $event);
+    }
+
+    /**
+     * A room is checked when you leave it, not at the end. Finding out on the
+     * last screen that the first one was wrong is the thing a studio avoids.
+     */
+    private function validateStep(int $step): void
+    {
+        $rules = match ($step) {
+            1 => [
+                'name' => ['required', 'string', 'max:120'],
+                'client_id' => ['required_without:new_client', 'nullable', 'exists:clients,id'],
+                'new_client' => ['nullable', 'string', 'max:120'],
+                'template' => ['required'],
+                'statusPill' => ['required', 'in:'.implode(',', array_keys(self::STATUS_PILLS))],
+                'priority' => ['required', 'in:'.implode(',', array_keys(Event::PRIORITIES))],
+            ],
+            2 => [
+                'starts_at' => ['required', 'date'],
+                'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+                'timezone' => ['required', 'string', 'max:60'],
+                'city' => ['nullable', 'string', 'max:80'],
+                'venue_id' => ['nullable', 'exists:venues,id'],
+            ],
+            4 => [
+                'description' => ['nullable', 'string', 'max:600'],
+                'expected_participants' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+                'budget' => ['nullable', 'numeric', 'min:0'],
+                'project_manager_id' => ['nullable', 'exists:users,id'],
+                'cover' => ['nullable', 'image', 'max:8192'],
+                'logo' => ['nullable', 'image', 'max:4096'],
+            ],
+            default => [],
+        };
+
+        if ($rules) {
+            $this->validate($rules, [
+                'name.required' => 'Give the event a name — everything else is built around it.',
+                'client_id.required_without' => 'Choose a client, or add a new one.',
+                'template.required' => 'Pick the kind of event this is.',
+                'starts_at.required' => 'Pick a start date. The agenda, the transport and the run of show all hang off it.',
+                'ends_at.after_or_equal' => 'The end date cannot be before the start.',
+            ]);
+        }
+    }
+
+    /**
+     * How much of the event is defined — the figure the preview reports.
+     *
+     * Counted off the same answers the studio asks for, so it cannot claim
+     * progress you have not made.
+     *
+     * @return array{pct:int,done:int,total:int,missing:array<int,string>}
+     */
+    public function readiness(): array
+    {
+        $gates = [
+            'A name' => $this->name !== '',
+            'A client' => $this->client_id !== null || trim($this->new_client) !== '',
+            'A kind of event' => $this->template !== null,
+            'A start date' => $this->starts_at !== '',
+            'A city or venue' => $this->city !== '' || $this->venue_id !== null,
+            'At least one module' => $this->modules !== [],
+            'A sentence about it' => trim($this->description) !== '',
+            'An expected headcount' => $this->expected_participants !== '',
+        ];
+
+        $done = count(array_filter($gates));
+
+        return [
+            'pct' => (int) round($done / count($gates) * 100),
+            'done' => $done,
+            'total' => count($gates),
+            'missing' => array_keys(array_filter($gates, fn ($met) => ! $met)),
+        ];
     }
 
     private function validateAll(): void
@@ -188,15 +347,25 @@ class EventCreate extends Component
 
     public function render()
     {
-        $type = $this->resolvedType();
+        $company = CompanyProfile::current();
 
         return view('livewire.event-create', [
+            'steps' => self::STEPS,
             'clients' => Client::orderBy('name')->get(),
+            'venues' => \App\Models\Venue::orderBy('name')->get(),
+            'managers' => \App\Models\User::orderBy('name')->get(),
             'templates' => self::TEMPLATES,
             'hubModules' => Event::HUB_MODULES,
+            'priorities' => Event::PRIORITIES,
             'timezones' => ['UTC', 'Asia/Amman', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Bahrain', 'Europe/London', 'America/New_York'],
-            'previewType' => $type,
+            'currencies' => Event::CURRENCIES,
+            'defaultCurrency' => $company->default_currency,
+            'previewType' => $this->resolvedType(),
             'previewDays' => $this->dayCount(),
+            'readiness' => $this->readiness(),
+            // Roughly what the platform will scaffold once it launches — the
+            // studio's own estimate, not a stored number.
+            'setupMinutes' => max(1, (int) ceil(count($this->modules) * 0.35)),
         ]);
     }
 }

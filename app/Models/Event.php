@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
     'registration_token', 'registration_open', 'registration_capacity', 'registration_note', 'badge_template',
-    'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules',
+    'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules', 'priority',
 ])]
 class Event extends Model
 {
@@ -37,6 +37,14 @@ class Event extends Model
         'vip_reception', 'embassy_event', 'training_program', 'product_launch',
         'awards_ceremony', 'outdoor_event', 'public_event', 'private_dinner',
         'hybrid_event', 'online_event',
+    ];
+
+    /** How much an event matters: key => [label, hex]. */
+    public const PRIORITIES = [
+        'low' => ['Low', '#94A3B8'],
+        'normal' => ['Normal', '#3B82F6'],
+        'high' => ['High', '#D4AF37'],
+        'critical' => ['Critical', '#EF4444'],
     ];
 
     /**
