@@ -45,6 +45,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\FinanceOverview;
 use App\Livewire\PublicRegistration;
+use App\Livewire\ReportsOverview;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\SponsorPackagesSettings;
@@ -293,8 +294,11 @@ Route::middleware('auth')->group(function () {
     // Money across the book — the layer above each event's own budget.
     Route::get('/finance', FinanceOverview::class)->name('finance.index');
 
+    // Reports: the book read across, rather than one event at a time.
+    Route::get('/reports', ReportsOverview::class)->name('reports.index');
+
     // Modules still awaiting their build phase render the generic stub.
-    foreach (['assets', 'reports', 'ai-assistant'] as $key) {
+    foreach (['assets', 'ai-assistant'] as $key) {
         $module = config("modules.nav.{$key}");
 
         Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))

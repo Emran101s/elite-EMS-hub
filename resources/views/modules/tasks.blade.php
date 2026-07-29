@@ -1,39 +1,37 @@
 <x-layouts.app title="Tasks" subtitle="Everything on the to-do list across events and projects.">
-    {{-- ══ Task status strip ══ --}}
-    <div class="strip-dark mb-5 px-6 py-5">
-        <div class="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
+    {{-- ══ Task status strip ══
+         This was the platform's last dark slab. Every other page opens with
+         the same divided card of figures, and a page that opens differently
+         reads as a page from a different product. ══ --}}
+    @php
+        $totalTasks = max($counts->sum(), 1);
+        $donePct = (int) round((($counts['done'] ?? 0) + ($counts['approved'] ?? 0)) / $totalTasks * 100);
 
-        <div class="relative flex flex-wrap items-center gap-x-5 gap-y-5">
-            @php
-                // Labels and colours come from the model, so this page can never
-                // drift behind the board's statuses again.
-                $shown = $counts->filter(fn ($c) => $c > 0);
-                $totalTasks = max($counts->sum(), 1);
-            @endphp
-            @foreach ($shown as $status => $count)
-                @php [$label, $hex] = \App\Models\Task::STAGES[$status] ?? [str($status)->headline(), '#94A3B8']; @endphp
-                @if (! $loop->first)
-                    <span class="hidden h-11 w-px bg-white/10 sm:block" aria-hidden="true"></span>
-                @endif
-                <div class="min-w-[92px]">
-                    <p class="flex items-center gap-1.5 text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">
-                        <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span> {{ $label }}
-                    </p>
-                    <p class="pf mt-1 text-[26px] font-bold leading-none text-white">{{ $count }}</p>
-                    <p class="mt-1 text-3xs text-white/40">{{ round($count / $totalTasks * 100) }}%</p>
-                </div>
-            @endforeach
+        // The tones follow the model's own stage colours, so a new status can
+        // never arrive here wearing the wrong one.
+        $stageTone = [
+            'todo' => 'navy', 'doing' => 'blue', 'review' => 'gold',
+            'approved' => 'green', 'done' => 'green', 'cancelled' => 'red',
+        ];
+    @endphp
 
-            <div class="ml-auto min-w-[180px] flex-1">
-                <div class="mb-1.5 flex items-baseline justify-between">
-                    <span class="text-[0.48rem] font-bold uppercase tracking-[0.16em] text-gold-300/80">Completion</span>
-                    <span class="text-xs font-bold text-white">{{ round(($counts['done'] ?? 0) / $totalTasks * 100) }}%</span>
-                </div>
-                <div class="h-2 overflow-hidden rounded-full bg-white/15">
-                    <div class="h-full rounded-full bg-emerald-400" style="width: {{ round(($counts['done'] ?? 0) / $totalTasks * 100) }}%"></div>
-                </div>
-            </div>
+    <x-figure-strip class="mb-4" :figures="$counts->filter(fn ($c) => $c > 0)
+        ->map(fn ($count, $status) => [
+            'label' => \App\Models\Task::STAGES[$status][0] ?? str($status)->headline()->toString(),
+            'note' => round($count / $totalTasks * 100) . '% of the board',
+            'value' => $count,
+            'icon' => 'clipboard',
+            'tone' => $stageTone[$status] ?? 'blue',
+            'href' => route('tasks.index', ['status' => $status]),
+        ])->values()->all()" />
+
+    <div class="card mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <span class="eyebrow">Completion</span>
+        <div class="h-2 min-w-[180px] flex-1 overflow-hidden rounded-full bg-navy-50">
+            <div class="h-full rounded-full bg-emerald-500" style="width: {{ $donePct }}%"></div>
         </div>
+        <span class="pf text-[15px] font-black text-navy-950">{{ $donePct }}%</span>
+        <span class="text-[11.5px] text-muted">{{ ($counts['done'] ?? 0) + ($counts['approved'] ?? 0) }} of {{ $counts->sum() }} closed</span>
     </div>
 
     <div class="card divide-y divide-line">
