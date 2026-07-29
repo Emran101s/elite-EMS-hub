@@ -29,11 +29,16 @@ class ModulePagesTest extends TestCase
         }
     }
 
-    public function test_command_center_greets_the_user_by_first_name(): void
+    public function test_the_dashboard_greets_the_user_by_first_name(): void
     {
         $user = User::factory()->create(['name' => 'Emran Ahmed']);
 
-        $this->actingAs($user)->get('/')->assertOk()
-            ->assertSeeInOrder(['Welcome back', 'Emran']);
+        // The greeting reads the clock, so any of the three is correct.
+        $body = $this->actingAs($user)->get('/')->assertOk()->assertSee('Emran')->getContent();
+
+        $this->assertTrue(
+            (bool) preg_match('/Good (morning|afternoon|evening), Emran/', $body),
+            'the dashboard greets by first name, with a greeting that fits the hour',
+        );
     }
 }

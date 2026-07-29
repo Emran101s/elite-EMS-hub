@@ -32,7 +32,7 @@ class NavPanel
     public const AREAS = [
         'workspace' => [
             'label' => 'Command Center', 'icon' => 'home', 'route' => 'home',
-            'match' => ['home', 'operations-room', 'concept.*'],
+            'match' => ['home', 'operations-room', 'concept.*'],  // the room redirects here
         ],
         'events' => [
             'label' => 'Events', 'icon' => 'calendar', 'route' => 'events.index',
@@ -185,7 +185,6 @@ class NavPanel
             default => [
                 ['Workspace', [
                     ['Dashboard', 'home', 'home', null],
-                    ['Operations Room', 'operations-room', 'columns', null],
                     ['Events', 'events.index', 'calendar', self::liveEvents()],
                     ['Tasks', 'tasks.index', 'clipboard', self::openTasks()],
                 ]],

@@ -80,7 +80,7 @@
             </div>
 
             <div class="flex shrink-0 items-center px-4 py-3">
-                <a href="{{ route('operations-room') }}"
+                <a href="{{ route('home') }}"
                    class="flex h-10 items-center gap-2 rounded-xl bg-navy-950 px-4 text-[12.5px] font-bold text-white transition hover:bg-navy-800">
                     View Live Dashboard →
                 </a>

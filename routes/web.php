@@ -6,7 +6,6 @@ use App\Http\Controllers\AttendeeTemplateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BadgeSheetPdfController;
 use App\Http\Controllers\BudgetPdfController;
-use App\Http\Controllers\CommandCenterController;
 use App\Http\Controllers\ContractDocumentPdfController;
 use App\Http\Controllers\DailyMovementSchedulePdfController;
 use App\Http\Controllers\DriverTripSheetPdfController;
@@ -36,10 +35,10 @@ use App\Http\Controllers\VipTransferSheetPdfController;
 use App\Livewire\CheckInScan;
 use App\Livewire\ClientRecord;
 use App\Livewire\ClientsManager;
-use App\Livewire\CommandCenter;
 use App\Livewire\CompanySettings;
 use App\Livewire\CrmPipeline;
 use App\Livewire\DefaultsSettings;
+use App\Livewire\Dashboard;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
@@ -100,10 +99,13 @@ Route::middleware('auth')->group(function () {
 
     // The Command Center is the platform's front door: the KPI strip, the
     // Operations Hub, and the live rails down the right.
-    Route::get('/', CommandCenterController::class)->name('home');
+    Route::get('/', Dashboard::class)->name('home');
 
     // The Operations Room — the same portfolio, arranged as a worklist.
-    Route::get('/operations-room', CommandCenter::class)->name('operations-room');
+    // There is one dashboard now. The Operations Room was the second, and two
+    // screens with the same job means neither has one — every old link, and the
+    // hub's own button, lands on the dashboard instead of a 404.
+    Route::redirect('/operations-room', '/')->name('operations-room');
 
     // Design prototype. Real records, a proposed visual language; nothing in
     // the platform depends on it, so it can be kept or deleted whole.

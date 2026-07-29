@@ -2,155 +2,104 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\CommandCenter;
+use App\Livewire\Dashboard;
 use App\Models\Event;
-use App\Models\Task;
 use App\Models\User;
-use App\Services\CommandCenterService;
 use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * There is one dashboard. It answers "when" — today, this week, the book —
+ * which is the job no other screen on the platform has.
+ */
 class CommandCenterTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function dashboard()
+    private function actor(): User
     {
         $this->seed(DemoDataSeeder::class);
-        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        return $this->actingAs($user)->get('/operations-room');
+        return User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
     }
 
-    public function test_operations_room_renders_its_sections(): void
+    public function test_the_dashboard_renders_its_sections(): void
     {
-        $this->dashboard()->assertOk()
-            ->assertSee('Operations Room')
-            // The portfolio card now carries an explicit per-row Focus button
-            // rather than a "click to focus" hint on the heading.
-            ->assertSee('Portfolio')
-            ->assertSee('Focus')
-            ->assertSee('Overdue')
-            ->assertSee('Approvals')
-            ->assertSee('Money');
+        $user = $this->actor();
+
+        $this->actingAs($user)->get('/')->assertOk()
+            ->assertSee('Today')
+            ->assertSee('The week ahead')
+            ->assertSee('The book')
+            ->assertSee('Signals')
+            ->assertSee('In the book');
     }
 
-    public function test_focusing_an_event_narrows_the_stream_to_that_event(): void
+    public function test_the_operations_room_is_gone_and_its_url_lands_here(): void
     {
-        $this->seed(DemoDataSeeder::class);
-        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
-        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
-        $other = Event::where('name', 'Tech Expo 2026')->firstOrFail();
+        $user = $this->actor();
 
-        // Give each event one unmistakable overdue task.
-        $icft->tasks()->create(['title' => 'ICFT signal marker', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(3)]);
-        $other->tasks()->create(['title' => 'Expo signal marker', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(3)]);
-
-        $c = Livewire::actingAs($user)->test(CommandCenter::class)
-            ->assertSee('ICFT signal marker')
-            ->assertSee('Expo signal marker');
-
-        $c->call('focusOn', $icft->id)
-            ->assertSet('focusEvent', $icft->id)
-            ->assertSee('ICFT signal marker')
-            ->assertDontSee('Expo signal marker');
-
-        // Clicking the same event again clears the focus.
-        $c->call('focusOn', $icft->id)->assertSet('focusEvent', null)->assertSee('Expo signal marker');
+        // One dashboard: the old URL keeps working rather than 404ing.
+        $this->actingAs($user)->get('/operations-room')->assertRedirect('/');
     }
 
-    public function test_lens_filters_the_stream_by_kind(): void
+    public function test_the_spotlight_is_what_is_live_or_what_is_next(): void
     {
-        $this->seed(DemoDataSeeder::class);
-        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
-        $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $user = $this->actor();
 
-        $icft->tasks()->create(['title' => 'Overdue marker task', 'status' => 'todo', 'priority' => 'high', 'due_on' => now()->subDays(2)]);
-        $icft->tasks()->create(['title' => 'Awaiting signoff task', 'status' => 'review', 'priority' => 'high']);
+        $view = Livewire::actingAs($user)->test(Dashboard::class);
+        $spotlight = $view->viewData('spotlight');
+        $today = Carbon::today();
 
-        Livewire::actingAs($user)->test(CommandCenter::class)
-            ->call('setLens', 'overdue')
-            ->assertSet('lens', 'overdue')
-            ->assertSee('Overdue marker task')
-            ->assertDontSee('Awaiting signoff task');
-    }
+        $this->assertNotNull($spotlight);
 
-    public function test_islands_show_computed_health_scores(): void
-    {
-        $response = $this->dashboard();
-        $pulse = app(EventHealthService::class);
-
-        foreach (['ICFT 2026', 'Tech Expo 2026', 'NDI Workshop'] as $name) {
-            $event = Event::where('name', $name)->firstOrFail();
-            $response->assertSee($name)
-                ->assertSee($pulse->breakdown($event)['score'].'%');
+        if ($view->viewData('spotlightLive')) {
+            $this->assertTrue($spotlight->starts_at->startOfDay()->lte($today));
+            $this->assertTrue(($spotlight->ends_at ?? $spotlight->starts_at)->endOfDay()->gte($today));
+        } else {
+            // Nothing running: it is the soonest event still to come.
+            $soonest = Event::whereNull('archived_at')->whereDate('starts_at', '>=', $today)
+                ->orderBy('starts_at')->first();
+            $this->assertTrue($spotlight->is($soonest));
         }
     }
 
-    public function test_alerts_surface_events_whose_computed_health_is_poor(): void
+    public function test_the_week_is_seven_days_starting_today(): void
     {
-        $this->seed(DemoDataSeeder::class);
+        $user = $this->actor();
 
-        // Health is derived, never stored: alerts must mirror the health engine.
-        $pulse = app(EventHealthService::class);
-        $expected = Event::whereNull('archived_at')->get()
-            ->filter(fn ($e) => in_array($pulse->breakdown($e)['status'], ['at_risk', 'behind'], true));
+        $week = Livewire::actingAs($user)->test(Dashboard::class)->viewData('week');
 
-        $service = app(CommandCenterService::class);
+        $this->assertCount(7, $week);
+        $this->assertTrue($week->first()['date']->isToday());
+        $this->assertTrue($week->first()['today']);
+        $this->assertTrue($week->last()['date']->isSameDay(Carbon::today()->addDays(6)));
 
-        // Assert against the uncapped health alerts: `alerts()` is a shortlist
-        // that also carries conflicts, money and tasks, and trims to six — a
-        // health alert can legitimately be crowded out of the display.
-        $health = $service->healthAlerts()->pluck('title')->implode(' | ');
-
-        $this->assertNotEmpty($expected, 'demo data should contain at least one unhealthy event');
-        foreach ($expected as $event) {
-            $this->assertStringContainsString($event->name, $health, "{$event->name} has poor health but raised no alert");
-        }
-
-        // The display list stays bounded no matter how much is wrong.
-        $this->assertLessThanOrEqual(6, $service->alerts()->count());
-    }
-
-    public function test_service_numbers_are_sane(): void
-    {
-        $this->seed(DemoDataSeeder::class);
-        $pulse = app(CommandCenterService::class);
-
-        $this->assertCount(6, $pulse->islands());
-        $this->assertGreaterThan(0, $pulse->alerts()->count());
-
-        foreach ($pulse->utilization() as $resource) {
-            if ($resource['pct'] !== null) {
-                $this->assertGreaterThanOrEqual(0, $resource['pct']);
-                $this->assertLessThanOrEqual(100, $resource['pct']);
-            }
-        }
-
-        $budget = $pulse->budgetByHealth();
-        $this->assertSame(211000000, $budget['total']);
-        $this->assertEqualsWithDelta(100, collect($budget['segments'])->sum('pct'), 0.5);
-
-        // Six orbit stages, each with label/hex/count — blocked rides inside In Progress.
-        $counts = $pulse->taskCounts();
-        $this->assertSame(array_keys(Task::STAGES), array_keys($counts));
-        foreach ($counts as $stage) {
-            $this->assertGreaterThanOrEqual(0, $stage['count']);
+        // The load is the sum of its parts, not a separate number.
+        foreach ($week as $day) {
+            $this->assertSame($day['sessions'] + $day['movements'] + $day['tasks'], $day['load']);
         }
     }
 
-    public function test_islands_have_positions_on_the_orbit(): void
+    public function test_the_figures_mirror_the_health_engine(): void
     {
-        $this->seed(DemoDataSeeder::class);
+        $user = $this->actor();
 
-        foreach (app(CommandCenterService::class)->islands() as $event) {
-            $this->assertGreaterThanOrEqual(0, $event->pos_x);
-            $this->assertLessThanOrEqual(100, $event->pos_x);
-            $this->assertGreaterThanOrEqual(0, $event->pos_y);
-            $this->assertLessThanOrEqual(100, $event->pos_y);
-        }
+        $figures = collect(Livewire::actingAs($user)->test(Dashboard::class)->viewData('figures'));
+        $service = app(EventHealthService::class);
+
+        $expected = Event::whereNull('archived_at')->with(EventHealthService::RELATIONS)->get()
+            ->filter(fn (Event $e) => in_array($service->breakdown($e)['status'], ['at_risk', 'behind'], true))
+            ->count();
+
+        $this->assertSame($expected, $figures->firstWhere('label', 'At risk')['value']);
+        $this->assertSame(
+            Event::whereNull('archived_at')->count(),
+            $figures->firstWhere('label', 'In the book')['value'],
+        );
     }
 }
