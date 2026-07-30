@@ -15,6 +15,13 @@
         ? asset('storage/'.$company->logo_path)
         : null;
     $isLetter = $type === 'letter';
+
+    // The preamble: who is contracting, where, on what date, and what for.
+    // Generated rather than stored, so it can never drift from the parties and
+    // dates panels — edit a representative there and this sentence follows.
+    $recitals = $type === 'client' && isset($data['meta'], $data['first_party'])
+        ? \App\Support\ContractClauses::recitals($data)
+        : null;
 @endphp
 <div class="relative mx-auto max-w-[640px] overflow-hidden rounded-md bg-white {{ $forPdf ? '' : 'shadow-[0_30px_70px_-30px_rgba(9,24,49,0.5)]' }}">
 
@@ -93,6 +100,26 @@
             <div class="mb-5 rounded-xl border border-line bg-page/40 px-4 py-3">
                 <p class="text-3xs font-bold uppercase tracking-[0.14em] text-gold-700">With</p>
                 <p class="mt-1 text-xs font-bold">{{ $data['counterparty']['name_en'] }}</p>
+            </div>
+        @endif
+
+        {{-- ── the preamble ──
+             An agreement that opens on "1. Scope of Work" is missing the words
+             that make it an agreement: entered into where, on what date, by
+             whom, and — the recital — for what. This was computed and never
+             printed; the card above summarises the parties, this states them. --}}
+        @if ($recitals)
+            <div class="mb-5 border-b border-line pb-4">
+                @foreach ($recitals['en'] as $i => $para)
+                    @if ($bilingual)
+                        <div class="mt-2 grid grid-cols-2 gap-3 first:mt-0">
+                            <p class="text-3xs leading-relaxed text-navy-700">{{ $para }}</p>
+                            <p dir="rtl" class="text-3xs leading-relaxed text-navy-700 [font-family:Amiri,serif]">{{ $recitals['ar'][$i] ?? '' }}</p>
+                        </div>
+                    @else
+                        <p class="mt-2 text-3xs leading-relaxed text-navy-700 first:mt-0">{{ $para }}</p>
+                    @endif
+                @endforeach
             </div>
         @endif
 

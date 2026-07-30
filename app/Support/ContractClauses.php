@@ -37,6 +37,20 @@ class ContractClauses
         $spAr = collect($d['second_parties'] ?? [])->pluck('name_ar')->filter()->join(' و');
         $ev = $d['event'] ?? [];
 
+        // Latin runs inside an Arabic sentence — a place, a date, an event named
+        // in English — are reordered by the bidirectional algorithm and break
+        // across lines mid-phrase. Isolating each one keeps it whole and in the
+        // right place, which is what U+2068/U+2069 exist for.
+        // A place and a date are short and must never break: "22 July 2026"
+        // split across two lines of Arabic reads as two different things.
+        $place = self::isolate($d['meta']['place'] ?? '', nowrap: true);
+        $date = self::isolate($d['meta']['date'] ?? '', nowrap: true);
+        $evNameAr = self::isolate($ev['name'] ?? '');
+        $evDatesAr = self::isolate($ev['dates'] ?? '');
+        $evVenueAr = self::isolate($ev['venue'] ?? '');
+        $evLocationAr = self::isolate($ev['location'] ?? '');
+        $spAr = self::isolate($spAr);
+
         return [
             'en' => [
                 "This Event Management Services Agreement (the “Agreement”) is entered into in {$d['meta']['place']} on {$d['meta']['date']} by and between:",
@@ -46,11 +60,11 @@ class ContractClauses
                 "Whereas the Client wishes to organise “{$ev['name']}” ({$ev['dates']}, {$ev['venue']}, {$ev['location']}), and the Contractor agrees to plan, manage, supervise and deliver the said event on a full-service basis from project inception through final completion and post-event reporting; the Parties have agreed as follows:",
             ],
             'ar' => [
-                "أُبرمت اتفاقية خدمات إدارة الفعاليات هذه (\"الاتفاقية\") في {$d['meta']['place']} بتاريخ {$d['meta']['date']} بين كلٍّ من:",
+                "أُبرمت اتفاقية خدمات إدارة الفعاليات هذه (\"الاتفاقية\") في {$place} بتاريخ {$date} بين كلٍّ من:",
                 "الطرف الأول (المتعهّد): {$d['first_party']['name_ar']}، ويمثّلها {$d['first_party']['rep_ar']}، ويُشار إليها فيما بعد بـ \"المتعهّد\" أو \"إيليت بزنس هَب\"؛",
                 "الطرف الثاني (العميل): {$spAr}، ويُشار إليه فيما بعد بـ \"العميل\".",
                 'ويُشار إلى المتعهّد والعميل مجتمعَين بـ "الطرفين" وإلى كلٍّ منهما منفرداً بـ "الطرف".',
-                "وحيث إن العميل يرغب في تنظيم فعالية \"{$ev['name']}\" ({$ev['dates']}، {$ev['venue']}، {$ev['location']})، وحيث يوافق المتعهّد على تخطيط الفعالية المذكورة وإدارتها والإشراف عليها وتنفيذها بنظام الخدمة الشاملة، من بدء المشروع وحتى إتمامه النهائي ورفع التقرير الختامي؛ فقد اتفق الطرفان على ما يلي:",
+                "وحيث إن العميل يرغب في تنظيم فعالية \"{$evNameAr}\" ({$evDatesAr}، {$evVenueAr}، {$evLocationAr})، وحيث يوافق المتعهّد على تخطيط الفعالية المذكورة وإدارتها والإشراف عليها وتنفيذها بنظام الخدمة الشاملة، من بدء المشروع وحتى إتمامه النهائي ورفع التقرير الختامي؛ فقد اتفق الطرفان على ما يلي:",
             ],
         ];
     }
@@ -500,6 +514,24 @@ class ContractClauses
     private static function pct(float|int|string $v): string
     {
         return rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
+    }
+
+    /**
+     * Wrap a run in FIRST STRONG ISOLATE … POP DIRECTIONAL ISOLATE, so a Latin
+     * name or date embedded in Arabic keeps its own direction and stays in one
+     * piece. Invisible characters, no markup — they survive into the PDF, which
+     * a <span dir="ltr"> would not once the text is stored as a plain string.
+     */
+    private static function isolate(string $s, bool $nowrap = false): string
+    {
+        if ($s === '') {
+            return '';
+        }
+
+        // Isolation fixes the order; only a non-breaking space stops the run
+        // being split at a line end. Long runs — an event name, a venue — keep
+        // ordinary spaces so they can still wrap.
+        return "\u{2068}".($nowrap ? str_replace(' ', "\u{00A0}", $s) : $s)."\u{2069}";
     }
 
     /** Arabic-Indic digits, for numbers set inside Arabic legal text. */

@@ -287,6 +287,43 @@ class EventContractTest extends TestCase
     }
 
     /**
+     * An agreement that opens on "1. Scope of Services" is missing the words
+     * that make it an agreement. The recitals were computed and never printed —
+     * every contract the company sent went out without its preamble.
+     */
+    public function test_the_preamble_prints_on_the_document(): void
+    {
+        [$user, $event] = $this->make();
+        $html = $this->tab($user, $event)->html();
+
+        $this->assertStringContainsString('is entered into in', $html);
+        $this->assertStringContainsString('First Party (Contractor)', $html);
+        $this->assertStringContainsString('Second Party (Client)', $html);
+        $this->assertStringContainsString('the Parties have agreed as follows', $html);
+        $this->assertStringContainsString('الطرف الأول (المتعهّد)', $html);
+
+        // And it reaches the export, not only the preview.
+        $pdf = $this->actingAs($user)->get(route('events.contract.pdf', $event));
+        $pdf->assertOk();
+    }
+
+    /**
+     * Latin runs inside Arabic — a place, a date — are reordered by the
+     * bidirectional algorithm and break across lines mid-phrase. "22 July 2026"
+     * split over two lines of Arabic reads as two different things.
+     */
+    public function test_latin_runs_inside_the_arabic_preamble_are_isolated(): void
+    {
+        [, $event] = $this->make();
+        $ar = ContractClauses::recitals(EventContract::forEvent($event)->data)['ar'][0];
+
+        $this->assertStringContainsString("\u{2068}", $ar, 'the run is isolated');
+        $this->assertStringContainsString("\u{2069}", $ar);
+        $this->assertStringNotContainsString('Amman, Jordan', $ar, 'spaces became non-breaking');
+        $this->assertStringContainsString("Amman,\u{00A0}Jordan", $ar);
+    }
+
+    /**
      * A bilingual contract is only bilingual if the two columns line up. Every
      * clause needs an Arabic title, every English paragraph needs the Arabic
      * paragraph that sits beside it, and every bullet needs its Arabic label —
