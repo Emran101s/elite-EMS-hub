@@ -272,6 +272,7 @@ class EventContract extends Model
                 'vat_pct' => 16,
                 'permits_pct' => 10,
                 'cure_days' => 14,
+                'acceptance_days' => 5,
             ],
             'assumptions' => [
                 'attendees_min' => 500,

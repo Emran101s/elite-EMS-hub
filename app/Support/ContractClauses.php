@@ -90,6 +90,9 @@ class ContractClauses
         [$wordsEn, $wordsAr] = self::inWords($valueCents, $cur);
         $isFixed = ($f['value_mode'] ?? 'fixed') === 'fixed';
 
+        $accept = (int) ($t['acceptance_days'] ?? 5);
+        $acceptAr = self::arabicNumeral($accept);
+
         return array_values(array_filter([
 
             // ── 1 · SCOPE OF SERVICES ────────────────────────────────────────
@@ -212,6 +215,27 @@ class ContractClauses
                 'schedule' => $f['payment_schedule'] ?? [],
             ],
 
+            // ── 5b · ACCEPTANCE OF SERVICES ──────────────────────────────────
+            // The clause that closes a project. Without a deemed-acceptance
+            // deadline, a client who simply never replies leaves the work
+            // formally unfinished and the final payment formally not due.
+            [
+                'n' => '5b', 'type' => 'prose',
+                'en_title' => 'Acceptance of Services', 'ar_title' => 'قبول الخدمات',
+                'en' => [
+                    'Upon completion of the Event, Elite Business Hub shall submit to the Client a Certificate of Services Rendered listing the services delivered and the total amount due.',
+                    "The Client shall sign the Certificate within {$accept} ({$accept}) business days of receipt, or within the same period provide a written, reasoned refusal identifying the specific services disputed.",
+                    'If the Client neither signs the Certificate nor provides a written reasoned refusal within that period, the services described in it shall be deemed accepted in full on the day following its expiry, and the final payment shall fall due.',
+                    'Acceptance of the Certificate does not waive any claim in respect of defects that could not reasonably have been discovered at the time of acceptance.',
+                ],
+                'ar' => [
+                    'عند إتمام الفعالية، تقدّم إيليت بزنس هَب إلى العميل محضر إنجاز الخدمات مبيّناً فيه الخدمات المنفَّذة وإجمالي المبلغ المستحقّ.',
+                    "ويلتزم العميل بتوقيع المحضر خلال {$acceptAr} ({$accept}) أيام عمل من تاريخ استلامه، أو أن يقدّم خلال المدة ذاتها رفضاً خطّياً مسبَّباً يحدّد فيه الخدمات محلّ الاعتراض.",
+                    'وإذا لم يوقّع العميل المحضر ولم يقدّم رفضاً خطّياً مسبَّباً خلال تلك المدة، تُعَدّ الخدمات الواردة فيه مقبولةً بالكامل في اليوم التالي لانتهائها، وتُصبح الدفعة النهائية مستحقّة.',
+                    'ولا يُسقط قبول المحضر أي مطالبة تتعلّق بعيوب لم يكن من الممكن اكتشافها بصورة معقولة وقت القبول.',
+                ],
+            ],
+
             // ── 6 · CANCELLATION AND REFUNDS ─────────────────────────────────
             [
                 'n' => '6', 'type' => 'list',
@@ -298,6 +322,27 @@ class ContractClauses
                 ],
             ],
 
+            // ── 8b · CLIENT MATERIALS AND WARRANTIES ─────────────────────────
+            // The Client hands over logos, speaker photographs, film and copy.
+            // If it does not in fact hold those rights, the claim lands on
+            // whoever printed and published them — so it warrants that it does.
+            [
+                'n' => '8b', 'type' => 'prose',
+                'en_title' => 'Client Materials and Warranties', 'ar_title' => 'مواد العميل وإقراراته',
+                'en' => [
+                    'The Client warrants that all materials it provides to Elite Business Hub — including logos, trademarks, names, images, film, text and speaker materials — are either owned by the Client or licensed to it on terms permitting their use for the Event, and that their content complies with applicable law.',
+                    'The Client shall indemnify Elite Business Hub against any claim, demand or penalty arising from the use of those materials as instructed, including claims by rights holders and orders of governmental or regulatory authorities.',
+                    'Elite Business Hub may suspend, withdraw or remove any Client material where it receives a substantiated claim from a rights holder, an order from a competent authority, or where the Client is found to have provided inaccurate information about the material or its activities. It shall notify the Client without delay and, where practicable, before acting.',
+                    'The Client shall provide participant data, speaker materials, approvals and branding assets by the deadlines set in the approved project plan. Elite Business Hub is not responsible for any consequence of late or incomplete delivery of Client materials.',
+                ],
+                'ar' => [
+                    'يقرّ العميل ويضمن أن جميع المواد التي يزوّد بها إيليت بزنس هَب — بما في ذلك الشعارات والعلامات التجارية والأسماء والصور والأفلام والنصوص ومواد المتحدّثين — مملوكةٌ له أو مرخّصة له بشروط تسمح باستخدامها لأغراض الفعالية، وأن مضمونها متوافق مع القوانين المعمول بها.',
+                    'ويلتزم العميل بتعويض إيليت بزنس هَب عن أي مطالبة أو دعوى أو غرامة تنشأ عن استخدام تلك المواد وفقاً لتعليماته، بما في ذلك مطالبات أصحاب الحقوق وأوامر الجهات الحكومية أو الرقابية.',
+                    'ويجوز لإيليت بزنس هَب تعليق أي مادة من مواد العميل أو سحبها أو إزالتها إذا تلقّت مطالبةً مدعومة من صاحب حق، أو أمراً من جهة مختصّة، أو إذا تبيّن أن العميل قدّم معلومات غير صحيحة عن المادة أو عن نشاطه. وتُشعِر العميل بذلك دون تأخير، وقبل التصرّف متى أمكن.',
+                    'ويلتزم العميل بتزويد بيانات المشاركين ومواد المتحدّثين والموافقات وأصول الهوية البصرية ضمن المواعيد المحدّدة في خطة المشروع المعتمَدة. ولا تتحمّل إيليت بزنس هَب مسؤولية أي أثر يترتّب على تأخّر تسليم مواد العميل أو نقصها.',
+                ],
+            ],
+
             // ── 9 · CONFIDENTIALITY ──────────────────────────────────────────
             [
                 'n' => '9', 'type' => 'prose',
@@ -320,17 +365,33 @@ class ContractClauses
                 ],
             ],
 
+            // ── 10b · TERM ───────────────────────────────────────────────────
+            [
+                'n' => '10b', 'type' => 'prose',
+                'en_title' => 'Term of the Agreement', 'ar_title' => 'مدّة الاتفاقية',
+                'en' => [
+                    'This Agreement shall enter into force on the date of its signature by both Parties and shall remain effective until the Parties have fully performed their obligations under it, including delivery of the Event, acceptance of the services and settlement of all amounts due.',
+                    'Expiry or termination of this Agreement shall not release either Party from liability for any breach committed during its term, nor from the obligations of confidentiality, intellectual property and payment, which survive it.',
+                ],
+                'ar' => [
+                    'تدخل هذه الاتفاقية حيّز النفاذ من تاريخ توقيعها من الطرفين وتبقى سارية إلى حين تنفيذ الطرفين لكامل التزاماتهما بموجبها، بما في ذلك تنفيذ الفعالية وقبول الخدمات وتسوية جميع المبالغ المستحقّة.',
+                    'ولا يُعفي انقضاء هذه الاتفاقية أو إنهاؤها أيّاً من الطرفين من المسؤولية عن أي إخلال وقع خلال مدّتها، ولا من التزامات السرّية والملكية الفكرية والسداد، التي تظلّ سارية بعدها.',
+                ],
+            ],
+
             // ── 11 · GOVERNING LAW ───────────────────────────────────────────
             [
                 'n' => '11', 'type' => 'prose',
-                'en_title' => 'Governing Law and Jurisdiction', 'ar_title' => 'القانون الحاكم والاختصاص القضائي',
+                'en_title' => 'Governing Law and Dispute Resolution', 'ar_title' => 'القانون الحاكم وتسوية النزاعات',
                 'en' => [
-                    'This Agreement shall be governed by and construed in accordance with the laws of the Hashemite Kingdom of Jordan.',
-                    'The competent courts of Amman, Jordan, shall have exclusive jurisdiction over any dispute arising out of or in connection with this Agreement.',
+                    'This Agreement shall be governed by and construed in accordance with the laws of the Hashemite Kingdom of Jordan. Where any part of the Project is implemented outside Jordan, each Party shall additionally comply with the mandatory laws of the country of implementation.',
+                    'The Parties shall first attempt to resolve any dispute arising out of or in connection with this Agreement amicably, by negotiation between their authorised representatives, within thirty (30) days of written notice of the dispute.',
+                    'Failing amicable settlement within that period, the competent courts of Amman, Jordan, shall have exclusive jurisdiction over the dispute.',
                 ],
                 'ar' => [
-                    'تخضع هذه الاتفاقية لقوانين المملكة الأردنية الهاشمية وتُفسَّر وفقاً لها.',
-                    'وتختصّ محاكم عمّان المختصّة في المملكة الأردنية الهاشمية اختصاصاً حصرياً بالنظر في أي نزاع ينشأ عن هذه الاتفاقية أو يتّصل بها.',
+                    'تخضع هذه الاتفاقية لقوانين المملكة الأردنية الهاشمية وتُفسَّر وفقاً لها. وإذا نُفِّذ أي جزء من المشروع خارج الأردن، يلتزم كل طرف إضافةً إلى ذلك بالقواعد الآمرة في قوانين دولة التنفيذ.',
+                    'ويسعى الطرفان أولاً إلى تسوية أي نزاع ينشأ عن هذه الاتفاقية أو يتّصل بها ودّياً بالتفاوض بين ممثّليهما المفوَّضين، خلال ثلاثين (30) يوماً من الإشعار الخطّي بالنزاع.',
+                    'وإذا تعذّرت التسوية الودّية خلال تلك المدة، تختصّ محاكم عمّان المختصّة في المملكة الأردنية الهاشمية اختصاصاً حصرياً بالنظر في النزاع.',
                 ],
             ],
 
@@ -340,11 +401,13 @@ class ContractClauses
                 'en_title' => 'Amendments and Entire Agreement', 'ar_title' => 'التعديلات والاتفاق الكامل',
                 'en' => [
                     'No provision of this Agreement may be amended, modified or waived except by a written amendment duly signed by both Parties.',
-                    'This Agreement, together with the approved Scope of Work, project plan and budget, constitutes the entire agreement between the Parties and supersedes all prior discussions, proposals and understandings relating to the Project.',
+                    'This Agreement, together with its annexes, constitutes the entire agreement between the Parties and supersedes all prior discussions, proposals and understandings relating to the Project. The following form an integral part of it: the approved Scope of Work, the approved project plan and budget, and the Certificate of Services Rendered.',
+                    'This Agreement is executed in two (2) counterparts of equal legal force, one for each Party.',
                 ],
                 'ar' => [
                     'لا يجوز تعديل أي حكم من أحكام هذه الاتفاقية أو تغييره أو التنازل عنه إلا بموجب تعديل خطّي موقّع حسب الأصول من الطرفين.',
-                    'وتشكّل هذه الاتفاقية، مع نطاق العمل المعتمَد وخطة المشروع والموازنة، الاتفاقَ الكامل بين الطرفين، وتحلّ محلّ جميع المناقشات والعروض والتفاهمات السابقة المتعلقة بالمشروع.',
+                    'وتشكّل هذه الاتفاقية مع ملاحقها الاتفاقَ الكامل بين الطرفين، وتحلّ محلّ جميع المناقشات والعروض والتفاهمات السابقة المتعلقة بالمشروع. وتُعَدّ الوثائق التالية جزءاً لا يتجزّأ منها: نطاق العمل المعتمَد، وخطة المشروع والموازنة المعتمَدتان، ومحضر إنجاز الخدمات.',
+                    'حُرِّرت هذه الاتفاقية من نسختين (2) متساويتين في القوة القانونية، لكل طرف نسخة.',
                 ],
             ],
         ]));
@@ -418,10 +481,12 @@ class ContractClauses
                 'en_title' => 'Termination', 'ar_title' => 'إنهاء الاتفاقية',
                 'en' => [
                     "Either Party may terminate this Agreement if the other Party commits a material breach and fails to remedy such breach within {$cure} ({$cure}) days after receipt of a written notice requiring remedy.",
+                    'Either Party may also withdraw from this Agreement without cause by written notice, provided that the withdrawing Party compensates the other for all services actually rendered, all costs committed to third parties, and any loss directly caused by the withdrawal.',
                     'On termination for any reason, the Client shall pay for all services delivered up to the date of termination, together with all costs committed to third parties which cannot be recovered, and the cancellation charges set out in the Cancellation and Refunds article.',
                 ],
                 'ar' => [
                     "يجوز لأيٍّ من الطرفين إنهاء هذه الاتفاقية إذا ارتكب الطرف الآخر إخلالاً جوهرياً ولم يعالجه خلال {$cureAr} ({$cure}) يوماً من تاريخ استلامه إشعاراً خطّياً يطالبه بالمعالجة.",
+                    'كما يجوز لأيٍّ من الطرفين العدول عن هذه الاتفاقية دون سبب بموجب إشعار خطّي، شريطة أن يعوّض الطرفَ الآخر عن جميع الخدمات المنفَّذة فعلياً، وكافة التكاليف الملتزَم بها تجاه الغير، وأي ضرر ناجم مباشرةً عن العدول.',
                     'وعند الإنهاء لأي سبب، يلتزم العميل بسداد قيمة جميع الخدمات المنفَّذة حتى تاريخ الإنهاء، إضافةً إلى كافة التكاليف الملتزَم بها تجاه الغير وغير القابلة للاسترداد، ورسوم الإلغاء المنصوص عليها في مادة الإلغاء والاسترداد.',
                 ],
             ],

@@ -54,10 +54,13 @@ class EventContractTest extends TestCase
         foreach (['Scope of Services', 'Exclusions', 'Contract Value', 'Financial Responsibility',
             'Payment Terms', 'Cancellation and Refunds', 'Taxes and Government Fees',
             'Roles and Responsibilities', 'Confidentiality', 'Force Majeure',
-            'Governing Law and Jurisdiction', 'Amendments and Entire Agreement',
+            'Governing Law and Dispute Resolution', 'Amendments and Entire Agreement',
             'Insurance and Liability', 'Intellectual Property and Media Rights',
             'Health, Safety and Security', 'Termination', 'Assignment and Subcontracting',
-            'Notices', 'Governing Language'] as $expected) {
+            'Notices', 'Governing Language',
+            // Adopted from the India agreement — the four it had and we did not.
+            'Acceptance of Services', 'Client Materials and Warranties',
+            'Term of the Agreement'] as $expected) {
             $this->assertContains($expected, $titles);
         }
     }
@@ -287,6 +290,53 @@ class EventContractTest extends TestCase
     }
 
     /**
+     * Four clauses adopted from the India agreement, which was structured
+     * around things ours had no words for: a deadline after which unanswered
+     * work counts as accepted, a warranty on the materials the client hands
+     * over, a term, and an amicable-settlement step before court.
+     */
+    public function test_the_adopted_clauses_carry_their_operative_terms(): void
+    {
+        [, $event] = $this->make();
+        $clauses = collect(ContractClauses::clauses(EventContract::forEvent($event)->data));
+
+        // Acceptance: the period is a setting, and it appears in both columns.
+        $acc = $clauses->firstWhere('en_title', 'Acceptance of Services');
+        $this->assertStringContainsString('5 (5) business days', $acc['en'][1]);
+        $this->assertStringContainsString('٥ (5)', $acc['ar'][1]);
+        $this->assertStringContainsString('deemed accepted in full', $acc['en'][2]);
+
+        // Client materials: the warranty, the indemnity and the takedown right.
+        $mat = $clauses->firstWhere('en_title', 'Client Materials and Warranties');
+        $this->assertStringContainsString('warrants', $mat['en'][0]);
+        $this->assertStringContainsString('indemnify', $mat['en'][1]);
+        $this->assertStringContainsString('suspend, withdraw or remove', $mat['en'][2]);
+
+        // Term: survives, and says what survives.
+        $term = $clauses->firstWhere('en_title', 'Term of the Agreement');
+        $this->assertStringContainsString('until the Parties have fully performed', $term['en'][0]);
+        $this->assertStringContainsString('survive', $term['en'][1]);
+
+        // Negotiate before litigating.
+        $law = $clauses->firstWhere('en_title', 'Governing Law and Dispute Resolution');
+        $this->assertStringContainsString('amicably', $law['en'][1]);
+        $this->assertStringContainsString('Failing amicable settlement', $law['en'][2]);
+    }
+
+    /** The acceptance window is a setting, not a sentence somebody retypes. */
+    public function test_the_acceptance_window_follows_its_setting(): void
+    {
+        [, $event] = $this->make();
+        $data = EventContract::forEvent($event)->data;
+        $data['terms']['acceptance_days'] = 10;
+
+        $acc = collect(ContractClauses::clauses($data))->firstWhere('en_title', 'Acceptance of Services');
+
+        $this->assertStringContainsString('10 (10) business days', $acc['en'][1]);
+        $this->assertStringContainsString('١٠ (10)', $acc['ar'][1]);
+    }
+
+    /**
      * An agreement that opens on "1. Scope of Services" is missing the words
      * that make it an agreement. The recitals were computed and never printed —
      * every contract the company sent went out without its preamble.
@@ -409,7 +459,7 @@ class EventContractTest extends TestCase
         $html = $this->tab($user, $event)->html();
 
         foreach (['Scope of Services', 'Financial Responsibility', 'Payment Terms',
-            'Governing Law and Jurisdiction', 'Governing Language'] as $title) {
+            'Governing Law and Dispute Resolution', 'Governing Language'] as $title) {
             $this->assertStringContainsString($title, $html, "the preview is missing “{$title}”");
         }
 
