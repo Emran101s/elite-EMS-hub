@@ -255,13 +255,23 @@ class EventContract extends Model
                 'contract_value_cents' => $estimated,
                 'estimated_total_cents' => $estimated,   // legacy, kept for old contracts
                 'management_fee_pct' => (float) ($event->management_fee_pct ?? 15),
-                // Percent → milestone. Full amount settled by one week before.
+                // Percent → milestone, on the house terms: signature, then 60,
+                // 30 and 7 days out. Fully settled before anyone travels.
                 'payment_schedule' => [
-                    ['pct' => 30, 'when_en' => 'Upon signing of this Agreement', 'when_ar' => 'عند توقيع هذه الاتفاقية'],
-                    ['pct' => 30, 'when_en' => 'No later than sixty (60) days before the Event', 'when_ar' => 'قبل الفعالية بمدة لا تقل عن ستين (60) يوماً'],
-                    ['pct' => 20, 'when_en' => 'No later than thirty (30) days before the Event', 'when_ar' => 'قبل الفعالية بمدة لا تقل عن ثلاثين (30) يوماً'],
-                    ['pct' => 20, 'when_en' => 'The balance, so the full amount is settled no later than one (1) week before the Event', 'when_ar' => 'الرصيد المتبقّي بحيث يُسدَّد كامل المبلغ قبل بدء الفعالية بأسبوع واحد (1) على الأقل'],
+                    ['pct' => 15, 'when_en' => 'Upon execution of this Agreement', 'when_ar' => 'عند توقيع هذه الاتفاقية'],
+                    ['pct' => 30, 'when_en' => 'No later than sixty (60) days prior to the Event', 'when_ar' => 'قبل الفعالية بمدة لا تقل عن ستين (60) يوماً'],
+                    ['pct' => 30, 'when_en' => 'No later than thirty (30) days prior to the Event', 'when_ar' => 'قبل الفعالية بمدة لا تقل عن ثلاثين (30) يوماً'],
+                    ['pct' => 25, 'when_en' => 'No later than seven (7) days prior to the Event', 'when_ar' => 'قبل الفعالية بمدة لا تقل عن سبعة (7) أيام'],
                 ],
+            ],
+            // The rates and periods the articles quote. Editing one here rewrites
+            // the sentence that cites it — nobody edits legal text to change 16%.
+            'terms' => [
+                'hotel_tax_pct' => 8,
+                'hotel_service_pct' => 7,
+                'vat_pct' => 16,
+                'permits_pct' => 10,
+                'cure_days' => 14,
             ],
             'assumptions' => [
                 'attendees_min' => 500,

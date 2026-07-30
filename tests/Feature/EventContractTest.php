@@ -51,8 +51,13 @@ class EventContractTest extends TestCase
         }
 
         $titles = array_column($blocks, 'title_en');
-        foreach (['Scope of Work', 'Contract Value', 'Cancellation & Refund Policy',
-            'Insurance & Liability', 'Termination', 'Governing Language'] as $expected) {
+        foreach (['Scope of Services', 'Exclusions', 'Contract Value', 'Financial Responsibility',
+            'Payment Terms', 'Cancellation and Refunds', 'Taxes and Government Fees',
+            'Roles and Responsibilities', 'Confidentiality', 'Force Majeure',
+            'Governing Law and Jurisdiction', 'Amendments and Entire Agreement',
+            'Insurance and Liability', 'Intellectual Property and Media Rights',
+            'Health, Safety and Security', 'Termination', 'Assignment and Subcontracting',
+            'Notices', 'Governing Language'] as $expected) {
             $this->assertContains($expected, $titles);
         }
     }
@@ -83,7 +88,7 @@ class EventContractTest extends TestCase
         $this->assertSame($before, count($c->get('data')['blocks']));
 
         // Edits belong to this contract, not the standard set.
-        $this->assertSame('Scope of Work', ContractClauses::blocks([])[0]['title_en']);
+        $this->assertSame('Scope of Services', ContractClauses::blocks([])[0]['title_en']);
     }
 
     public function test_blank_percentages_do_not_break_the_tab_or_the_pdf(): void
@@ -125,7 +130,7 @@ class EventContractTest extends TestCase
         $c = $this->tab($user, $event);
         $blocks = collect($c->get('data')['blocks']);
 
-        $scope = $blocks->firstWhere('title_en', 'Scope of Work');
+        $scope = $blocks->firstWhere('title_en', 'Scope of Services');
         $excl = $blocks->firstWhere('title_en', 'Exclusions');
 
         $this->assertSame('bullets', $scope['type']);
@@ -167,11 +172,11 @@ class EventContractTest extends TestCase
             ->assertSet('dirty', true);
 
         // Still untouched on disk.
-        $this->assertSame('Scope of Work', $contract->fresh()->data['blocks'][0]['title_en']);
+        $this->assertSame('Scope of Services', $contract->fresh()->data['blocks'][0]['title_en']);
 
         // Discard throws the edit away and reloads what is stored.
         $c->call('discard')->assertSet('dirty', false);
-        $this->assertSame('Scope of Work', $c->get('data')['blocks'][0]['title_en']);
+        $this->assertSame('Scope of Services', $c->get('data')['blocks'][0]['title_en']);
 
         // Edit again and commit.
         $c->call('updateBlockField', $first, 'title_en', 'Committed edit')->call('save')
@@ -260,13 +265,73 @@ class EventContractTest extends TestCase
         $clauses = ContractClauses::clauses($c->data);
         $recitals = ContractClauses::recitals($c->data);
 
-        // scope of work present in both languages
-        $this->assertSame('Scope of Work', $clauses[0]['en_title']);
-        $this->assertSame('نطاق العمل', $clauses[0]['ar_title']);
+        // scope of services present in both languages
+        $this->assertSame('Scope of Services', $clauses[0]['en_title']);
+        $this->assertSame('نطاق الخدمات', $clauses[0]['ar_title']);
         $this->assertNotEmpty($recitals['ar']);
-        // cost-share rows carry the entity shares
+
+        // Cost sharing appears because this Client is two funding entities, and
+        // carries their shares.
         $cost = collect($clauses)->firstWhere('type', 'costshare');
         $this->assertSame(80, $cost['rows'][0]['share']);
+
+        // The value is spelled out beside the figure, as a contract must.
+        $value = collect($clauses)->firstWhere('en_title', 'Contract Value');
+        $this->assertStringContainsString('JOD 350,000.00', $value['en'][0]);
+        $this->assertStringContainsString('Three Hundred Fifty Thousand Jordanian Dinars Only', $value['en'][0]);
+        $this->assertStringContainsString('ديناراً أردنياً', $value['ar'][0]);
+
+        // Rates the articles quote come from data.terms, not from the prose.
+        $tax = collect($clauses)->firstWhere('en_title', 'Taxes and Government Fees');
+        $this->assertStringContainsString('16% sales tax (VAT)', $tax['en'][1]);
+    }
+
+    /**
+     * A bilingual contract is only bilingual if the two columns line up. Every
+     * clause needs an Arabic title, every English paragraph needs the Arabic
+     * paragraph that sits beside it, and every bullet needs its Arabic label —
+     * a missing one prints as a blank half-row on the signed page.
+     */
+    public function test_every_clause_is_paired_in_both_languages(): void
+    {
+        [, $event] = $this->make();
+        $blocks = ContractClauses::blocks(EventContract::forEvent($event)->data);
+
+        $this->assertGreaterThanOrEqual(19, count($blocks), 'the full article set is seeded');
+
+        foreach ($blocks as $b) {
+            $this->assertNotSame('', trim($b['title_ar']), "{$b['title_en']} has no Arabic title");
+            $this->assertSame(
+                count($b['en']), count($b['ar']),
+                "{$b['title_en']}: the English and Arabic paragraph counts differ",
+            );
+
+            foreach ($b['en'] as $i => $para) {
+                $this->assertNotSame('', trim($para));
+                $this->assertNotSame('', trim($b['ar'][$i]), "{$b['title_en']} ¶{$i} has no Arabic");
+            }
+
+            foreach ($b['items'] as $i => $item) {
+                $this->assertNotSame('', trim($item['l_en']));
+                $this->assertNotSame('', trim($item['l_ar']), "{$b['title_en']} bullet {$i} has no Arabic");
+            }
+        }
+    }
+
+    /**
+     * One Client entity means no cost split to state — the article disappears
+     * rather than printing a lone "100%" row that says nothing.
+     */
+    public function test_cost_sharing_only_appears_when_the_client_is_more_than_one_entity(): void
+    {
+        [, $event] = $this->make();
+        $c = EventContract::forEvent($event);
+
+        $data = $c->data;
+        $data['second_parties'] = [array_merge($data['second_parties'][0], ['share' => 100])];
+
+        $this->assertNull(collect(ContractClauses::clauses($data))->firstWhere('type', 'costshare'));
+        $this->assertNotNull(collect(ContractClauses::clauses($c->data))->firstWhere('type', 'costshare'));
     }
 
     public function test_editing_persists(): void
@@ -294,6 +359,30 @@ class EventContractTest extends TestCase
         $res = $this->actingAs($user)->get(route('events.contract.pdf', $event));
         $res->assertOk();
         $this->assertSame('application/pdf', $res->headers->get('content-type'));
+    }
+
+    /**
+     * The live preview is the document — what it shows is what prints. Assert
+     * the template actually reaches the page in both languages rather than
+     * merely that the page did not crash.
+     */
+    public function test_the_live_preview_carries_the_template_in_both_languages(): void
+    {
+        [$user, $event] = $this->make();
+        $html = $this->tab($user, $event)->html();
+
+        foreach (['Scope of Services', 'Financial Responsibility', 'Payment Terms',
+            'Governing Law and Jurisdiction', 'Governing Language'] as $title) {
+            $this->assertStringContainsString($title, $html, "the preview is missing “{$title}”");
+        }
+
+        foreach (['نطاق الخدمات', 'المسؤولية المالية', 'شروط الدفع', 'لغة الاتفاقية'] as $title) {
+            $this->assertStringContainsString($title, $html, "the preview is missing the Arabic “{$title}”");
+        }
+
+        // A deliverable from the scope list, and the value spelled out.
+        $this->assertStringContainsString('Preparation and submission of the final event report', $html);
+        $this->assertStringContainsString('Three Hundred Fifty Thousand Jordanian Dinars Only', $html);
     }
 
     // ── Phase 1: many typed contracts ──────────────────────────

@@ -32,9 +32,10 @@ class ContractPaymentTest extends TestCase
         [$event, $contract] = $this->ctx();
         $payments = $contract->payments;
 
-        // 30/30/20/20 → four rows that add up to the estimate, to the cent.
+        // 15/30/30/25 — the house terms — four rows adding up to the estimate,
+        // to the cent.
         $this->assertCount(4, $payments);
-        $this->assertSame([30.0, 30.0, 20.0, 20.0], $payments->pluck('pct')->all());
+        $this->assertSame([15.0, 30.0, 30.0, 25.0], $payments->pluck('pct')->all());
         $this->assertSame(
             $contract->data['financials']['estimated_total_cents'],
             $payments->sum('amount_cents')
