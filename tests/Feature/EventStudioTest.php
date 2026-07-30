@@ -106,6 +106,47 @@ class EventStudioTest extends TestCase
             ->assertSet('modules', fn (array $m) => in_array('budget', $m, true));
     }
 
+    /**
+     * The review room must end in the act it was leading up to, and a launch
+     * that fails must land you where the answer is missing — an error rendered
+     * beside a field in a room you are not standing in is an invisible one.
+     */
+    public function test_the_review_room_launches_and_a_failed_launch_shows_you_why(): void
+    {
+        $user = $this->actor();
+
+        // "Building…" belongs to the review room's own button — the launch bar
+        // at the foot of the page carries Launch Event on every step, so seeing
+        // that text proves nothing about where the room ends.
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->assertDontSee('Building…')
+            ->call('goTo', 5)
+            ->assertSeeHtml('wire:click="save"')
+            ->assertSee('Launch Event')
+            ->assertSee('Building…');
+
+        // Nothing at all: the first unanswered room is the first one.
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('step', 5)
+            ->call('save')
+            ->assertHasErrors(['name'])
+            ->assertSet('step', 1);
+
+        // Typing saves a draft, and mount() restores it — so a second studio in
+        // the same session would open on the first one's answers.
+        session()->forget('event-studio.draft');
+
+        // Named but undated: launching bounces back to When & Where, room 2.
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('name', 'Arab Investment Summit 2027')
+            ->set('new_client', 'Arab Investment Group')
+            ->call('chooseTemplate', 'summit')
+            ->set('step', 5)
+            ->call('save')
+            ->assertHasErrors(['starts_at'])
+            ->assertSet('step', 2);
+    }
+
     public function test_nothing_is_written_until_launch(): void
     {
         $user = $this->actor();

@@ -349,6 +349,17 @@
 
                 @if ($step < count($steps))
                     <button type="button" wire:click="next" class="flex h-10 items-center rounded-xl bg-navy-950 px-5 text-[12px] font-bold text-white transition hover:bg-navy-800">Continue →</button>
+                @else
+                    {{-- The last room has to end in the act it was leading up to.
+                         The launch bar below carries the same button, but a review
+                         screen whose only control is "Back" reads as a dead end. --}}
+                    <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                            class="flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-5 text-[12px] font-black text-navy-950 shadow-[0_12px_26px_-16px_rgba(212,175,55,0.95)] transition hover:brightness-105 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="save">🚀</span>
+                        <span wire:loading wire:target="save">…</span>
+                        <span wire:loading.remove wire:target="save">Launch Event</span>
+                        <span wire:loading wire:target="save">Building…</span>
+                    </button>
                 @endif
             </div>
         </div>

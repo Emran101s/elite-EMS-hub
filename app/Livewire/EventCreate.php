@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Event;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -413,10 +414,36 @@ class EventCreate extends Component
         ];
     }
 
+    /** Which room each field is answered in, so a failed launch can go there. */
+    private const ROOM_OF = [
+        'name' => 1, 'client_id' => 1, 'new_client' => 1, 'template' => 1,
+        'statusPill' => 1, 'priority' => 1,
+        'starts_at' => 2, 'ends_at' => 2, 'timezone' => 2, 'city' => 2,
+        'country' => 2, 'venue_id' => 2,
+        'modules' => 3,
+        'description' => 4, 'expected_participants' => 4, 'budget' => 4,
+        'currency' => 4, 'project_manager_id' => 4, 'cover' => 4, 'logo' => 4,
+    ];
+
     private function validateAll(): void
     {
         // Every problem surfaces at once — you shouldn't fix one field, resubmit,
         // and only then discover the next one is missing too.
+        try {
+            $this->validateAllRules();
+        } catch (ValidationException $e) {
+            // The message renders beside its field, and its field lives in a room
+            // you may not be standing in — pressing Launch on the review screen
+            // and watching nothing happen is the same as no button at all.
+            $rooms = array_map(fn ($k) => self::ROOM_OF[explode('.', $k)[0]] ?? 5, array_keys($e->errors()));
+            $this->step = $rooms ? min($rooms) : $this->step;
+
+            throw $e;
+        }
+    }
+
+    private function validateAllRules(): void
+    {
         $this->validate([
             'client_id' => ['required_without:new_client', 'nullable', 'exists:clients,id'],
             'new_client' => ['nullable', 'string', 'max:120'],
