@@ -10,6 +10,15 @@
 --}}
 @php
     $ref = fn (string $s, string $lang = 'en') => \App\Support\ContractAppendices::resolve($s, $refs ?? [], $lang);
+
+    // A cost-share clause with nothing to share is a heading over an empty
+    // table. Once the Client is a single entity the article has no subject, so
+    // it leaves the document rather than printing "Deep Root · 100%".
+    $sharesApply = \App\Support\ContractClauses::sharesApply($data);
+    $blocks = array_values(array_filter(
+        $blocks,
+        fn ($b) => ($b['type'] ?? '') !== 'costshare' || $sharesApply,
+    ));
 @endphp
 
 @forelse ($blocks as $bi => $b)
@@ -26,9 +35,9 @@
 
         @if (($b['type'] ?? 'prose') === 'costshare')
             <table class="mt-2 w-full text-3xs">
-                @foreach ($data['second_parties'] ?? [] as $sp)
+                @foreach (\App\Support\ContractClauses::parties($data) as $sp)
                     <tr class="border-b border-line last:border-0">
-                        <td class="py-1 font-semibold">{{ $sp['name_en'] ?: '—' }}</td>
+                        <td class="py-1 font-semibold">{{ $sp['name_en'] ?: ($sp['name_ar'] ?? '—') }}</td>
                         <td class="py-1 text-right font-bold">{{ (float) ($sp['share'] ?? 0) }}%</td>
                         <td class="py-1 text-right text-muted">{{ $fmt($est * (float) ($sp['share'] ?? 0) / 100) }}</td>
                     </tr>

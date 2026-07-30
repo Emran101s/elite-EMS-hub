@@ -446,34 +446,61 @@
 
                 @if ($type === 'client')
                     {{-- Parties module --}}
-                    <x-accordion-section id="parties" num="01" title="Parties" summary="The client entities and their shares">
+                    @php
+                        // A share divides a cost between funders. With one Client
+                        // there is nothing to divide, so the column, the total and
+                        // the "must equal 100%" rule all disappear rather than
+                        // demanding a number that means nothing.
+                        $split = \App\Support\ContractClauses::sharesApply($data);
+                    @endphp
+                    <x-accordion-section id="parties" num="01" title="Parties"
+                                         summary="{{ $split ? 'The client entities and their shares' : 'Who the client is' }}">
                         <div class="space-y-2.5">
                             @php $shareTotal = collect($data['second_parties'] ?? [])->sum(fn ($p) => (float) ($p['share'] ?? 0)); @endphp
                             @foreach ($data['second_parties'] ?? [] as $i => $sp)
                                 <div wire:key="sp-{{ $i }}" class="group/sp space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-eyebrow font-bold uppercase tracking-wide text-navy-400">Second party {{ $i + 1 }}</p>
+                                        <p class="text-eyebrow font-bold uppercase tracking-wide text-navy-400">{{ $split ? 'Second party '.($i + 1) : 'Second party' }}</p>
                                         @if (count($data['second_parties']) > 1)
                                             <button type="button" wire:click="removeSecondParty({{ $i }})"
                                                     class="text-eyebrow font-bold uppercase tracking-wide text-navy-300 opacity-0 transition hover:text-red-700 group-hover/sp:opacity-100">Remove</button>
                                         @endif
                                     </div>
-                                    <div class="grid grid-cols-[1fr_5rem] gap-1.5">
+                                    <div class="grid gap-1.5 {{ $split ? 'grid-cols-[1fr_5rem]' : 'grid-cols-1' }}">
                                         <input type="text" wire:model.live.debounce.500ms="data.second_parties.{{ $i }}.name_en" placeholder="Entity name (English)" class="{{ $in }}">
-                                        <div class="relative">
-                                            <input type="number" min="0" max="100" wire:model.live.debounce.300ms="data.second_parties.{{ $i }}.share" class="{{ $in }} pr-6 text-center !font-bold">
-                                            <span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-eyebrow font-semibold text-navy-400">%</span>
-                                        </div>
+                                        @if ($split)
+                                            <div class="relative">
+                                                <input type="number" min="0" max="100" wire:model.live.debounce.300ms="data.second_parties.{{ $i }}.share" class="{{ $in }} pr-6 text-center !font-bold">
+                                                <span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-eyebrow font-semibold text-navy-400">%</span>
+                                            </div>
+                                        @endif
                                     </div>
                                     <input type="text" dir="rtl" wire:model.live.debounce.500ms="data.second_parties.{{ $i }}.name_ar" placeholder="اسم الجهة بالعربية" class="{{ $inAr }}">
+
+                                    {{-- The recital names the Client from the English
+                                         field, and the English text is the controlling
+                                         one. Without it the row cannot be bound, so it
+                                         is told rather than silently dropped. --}}
+                                    @if (trim((string) ($sp['name_en'] ?? '')) === '')
+                                        <p class="text-eyebrow text-muted">
+                                            No English name — this row will not appear on the document.
+                                            @if (trim((string) ($sp['name_ar'] ?? '')) !== '')
+                                                Add one, or remove the row.
+                                            @endif
+                                        </p>
+                                    @endif
                                 </div>
                             @endforeach
                             <div class="flex items-center justify-between border-t border-line pt-2.5">
-                                @php $shareOk = abs($shareTotal - 100) < 0.001; @endphp
-                                <span class="text-micro font-bold {{ $shareOk ? 'text-emerald-600' : 'text-risk' }}">
-                                    {{ rtrim(rtrim(number_format($shareTotal, 2), '0'), '.') }}%
-                                    @unless ($shareOk)<span class="font-semibold"> — must equal 100%</span>@endunless
-                                </span>
+                                @if ($split)
+                                    @php $shareOk = abs($shareTotal - 100) < 0.001; @endphp
+                                    <span class="text-micro font-bold {{ $shareOk ? 'text-emerald-600' : 'text-risk' }}">
+                                        {{ rtrim(rtrim(number_format($shareTotal, 2), '0'), '.') }}%
+                                        @unless ($shareOk)<span class="font-semibold"> — must equal 100%</span>@endunless
+                                    </span>
+                                @else
+                                    <span class="text-micro text-muted">One client — no cost split, so no shares.</span>
+                                @endif
                                 <button type="button" wire:click="addSecondParty" class="btn-ghost btn-xs">＋ Add party</button>
                             </div>
                         </div>

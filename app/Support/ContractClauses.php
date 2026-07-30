@@ -30,11 +30,45 @@ use Illuminate\Support\Number;
  */
 class ContractClauses
 {
+    /**
+     * The Client, as the document should name it.
+     *
+     * A party is a row with an English name. Not because English matters more,
+     * but because the operative recital — "Second Party (Client): …" — is built
+     * from name_en, and Article 23 makes the English text the controlling one.
+     * A row with only an Arabic name cannot be named in the sentence that binds
+     * it, so it is an unfinished form row, not a second Client.
+     *
+     * That is also what somebody means when they clear the name to remove a
+     * party: it must stop appearing, not linger as "· 0%".
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function parties(array $d): array
+    {
+        return array_values(array_filter(
+            $d['second_parties'] ?? [],
+            fn ($p) => trim((string) ($p['name_en'] ?? '')) !== '',
+        ));
+    }
+
+    /**
+     * Whether a share means anything.
+     *
+     * A percentage exists to divide a cost between funders. One Client pays all
+     * of it, so "100%" tells the reader nothing and "0%" is simply wrong —
+     * neither belongs on the page. Shares appear only when there is a split.
+     */
+    public static function sharesApply(array $d): bool
+    {
+        return count(self::parties($d)) > 1;
+    }
+
     /** Recitals / parties block shown before the numbered clauses. */
     public static function recitals(array $d): array
     {
-        $sp = collect($d['second_parties'] ?? [])->pluck('name_en')->filter()->join(' and ');
-        $spAr = collect($d['second_parties'] ?? [])->pluck('name_ar')->filter()->join(' و');
+        $sp = collect(self::parties($d))->pluck('name_en')->filter()->join(' and ');
+        $spAr = collect(self::parties($d))->pluck('name_ar')->filter()->join(' و');
         $ev = $d['event'] ?? [];
 
         // Latin runs inside an Arabic sentence — a place, a date, an event named
@@ -78,7 +112,7 @@ class ContractClauses
     {
         $f = $d['financials'] ?? [];
         $t = $d['terms'] ?? [];
-        $sp = array_values(array_filter($d['second_parties'] ?? [], fn ($p) => trim((string) ($p['name_en'] ?? '')) !== ''));
+        $sp = self::parties($d);
         $cur = $f['currency'] ?? 'JOD';
 
         // The contract stands on its own agreed figure, not on a live budget estimate.

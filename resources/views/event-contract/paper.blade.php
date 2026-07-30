@@ -26,6 +26,11 @@
     // The annexes, and the slug → number map that turns {{appendix:scope}} in
     // the clause text into "Appendix 1". Both surfaces read the same list, so
     // the preview cannot number an appendix differently from the export.
+    // Who the Client actually is, and whether a percentage means anything.
+    // One definition, read by the parties strip and by the cost-share table.
+    $parties = \App\Support\ContractClauses::parties($data);
+    $sharesApply = \App\Support\ContractClauses::sharesApply($data);
+
     $appendices = $appendices ?? [];
     $refs = [];
     foreach ($appendices as $i => $a) {
@@ -97,10 +102,14 @@
                 <p class="text-3xs font-bold uppercase tracking-[0.14em] text-gold-700">Between</p>
                 <p class="mt-1 text-xs font-bold">{{ $data['first_party']['name_en'] ?? 'Elite Business Hub' }}</p>
                 <p class="text-3xs text-muted">First Party</p>
+                {{-- A share divides a cost between funders. One Client pays all
+                     of it, so a percentage beside a single name says nothing —
+                     and an unfilled row saying "0%" is simply wrong. Named
+                     parties only, and shares only when there is a split. --}}
                 <div class="mt-2 flex flex-wrap gap-1.5">
-                    @foreach ($data['second_parties'] ?? [] as $sp)
+                    @foreach ($parties as $sp)
                         <span class="rounded-full bg-navy-900 px-2.5 py-1 text-3xs font-bold text-white">
-                            {{ $sp['name_en'] ?: '—' }} · <span class="text-gold-300">{{ (float) ($sp['share'] ?? 0) }}%</span>
+                            {{ $sp['name_en'] ?: ($sp['name_ar'] ?? '—') }}@if ($sharesApply) · <span class="text-gold-300">{{ (float) ($sp['share'] ?? 0) }}%</span>@endif
                         </span>
                     @endforeach
                 </div>

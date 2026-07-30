@@ -290,6 +290,116 @@ class EventContractTest extends TestCase
         $this->assertStringContainsString('16% sales tax (VAT)', $tax['en'][1]);
     }
 
+    // ══════════════════ WHO THE CLIENT IS ══════════════════
+
+    /**
+     * The party chips from the paper's "Between" strip. Asserting on the whole
+     * page for "100%" catches the payment schedule, the tax rates and even an
+     * rgba() value — the chip is the only thing these tests are about.
+     *
+     * @return list<string>
+     */
+    private function partyChips(string $html): array
+    {
+        // The chip holds a bare name, or a name plus a nested span with the
+        // share — so the pattern allows one level of nesting rather than
+        // stopping at the first </span> and finding nothing.
+        preg_match_all(
+            '/rounded-full bg-navy-900[^>]*>((?:[^<]|<!--.*?-->|<span[^>]*>.*?<\/span>)*)<\/span>/s',
+            $html, $m,
+        );
+
+        return array_map(
+            fn ($x) => trim(preg_replace('/<!--.*?-->|<[^>]+>/s', '', $x)),
+            $m[1] ?? [],
+        );
+    }
+
+    /** The clause headings the PAPER prints — not the editor's input fields. */
+    private function paperClauses(string $html): array
+    {
+        preg_match_all('/text-gold-600">\d+\.<\/span> ([^<]+)</', $html, $m);
+
+        return array_map('trim', $m[1] ?? []);
+    }
+
+    /**
+     * A share divides a cost between funders. One Client pays all of it, so a
+     * percentage beside a single name says nothing — and a row somebody added
+     * and never filled must never reach the paper as "· 0%".
+     */
+    public function test_a_single_client_carries_no_share(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = $this->tab($user, $event)
+            ->set('data.second_parties.0.name_en', 'Deep Root')
+            ->set('data.second_parties.0.share', 100)
+            ->call('removeSecondParty', 1);
+
+        $data = $c->get('data');
+        $this->assertCount(1, ContractClauses::parties($data));
+        $this->assertFalse(ContractClauses::sharesApply($data));
+
+        $chips = $this->partyChips($c->html());
+        $this->assertCount(1, $chips);
+        $this->assertStringContainsString('Deep Root', $chips[0]);
+        $this->assertStringNotContainsString('%', $chips[0], 'no percentage beside a lone client');
+
+        // No rule demanding a number that means nothing, and the cost-share
+        // article has no subject, so it leaves the document.
+        $this->assertStringNotContainsString('must equal 100%', $c->html());
+        $this->assertNotContains('Cost Sharing Between the Client Entities', $this->paperClauses($c->html()));
+    }
+
+    /** An unnamed row is an empty form field, not a party. */
+    public function test_a_blank_row_is_not_a_party(): void
+    {
+        [$user, $event] = $this->make();
+
+        // Exactly the state the Hekma Project contract was found in.
+        $c = $this->tab($user, $event)
+            ->set('data.second_parties.0.name_en', 'Deep Root')
+            ->set('data.second_parties.0.share', 100)
+            ->set('data.second_parties.1.name_en', '')
+            ->set('data.second_parties.1.name_ar', '')
+            ->set('data.second_parties.1.share', 0);
+
+        $data = $c->get('data');
+        $this->assertCount(2, $data['second_parties'], 'the row is still in the form');
+        $this->assertCount(1, ContractClauses::parties($data), 'but it is not a party');
+        $this->assertFalse(ContractClauses::sharesApply($data));
+
+        $chips = $this->partyChips($c->html());
+        $this->assertCount(1, $chips, 'the blank row never reaches the paper');
+        $this->assertStringNotContainsString('%', $chips[0]);
+    }
+
+    /** Two funders — the split is real, so it is stated. */
+    public function test_two_clients_carry_their_shares(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = $this->tab($user, $event)
+            ->set('data.second_parties.0.name_en', 'World People Assembly')
+            ->set('data.second_parties.0.share', 80)
+            ->set('data.second_parties.1.name_en', 'Peace Group')
+            ->set('data.second_parties.1.share', 20);
+
+        $this->assertTrue(ContractClauses::sharesApply($c->get('data')));
+
+        $chips = $this->partyChips($c->html());
+        $this->assertCount(2, $chips);
+        $this->assertStringContainsString('80%', $chips[0]);
+        $this->assertStringContainsString('20%', $chips[1]);
+        $this->assertContains('Cost Sharing Between the Client Entities', $this->paperClauses($c->html()));
+
+        // And the article exists in a freshly seeded template.
+        $this->assertNotNull(
+            collect(ContractClauses::clauses($c->get('data')))->firstWhere('type', 'costshare'),
+        );
+    }
+
     // ══════════════════ THE ANNEXES ══════════════════
 
     public function test_a_client_contract_is_bound_with_one_appendix(): void
