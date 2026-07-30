@@ -224,6 +224,73 @@ class EventHubTest extends TestCase
             ->assertSee('Live status');
     }
 
+    /**
+     * The card must not go quiet while work is still open. It used to require a
+     * risk above the severe line, a pending approval, or a task with a due date
+     * — so an event carrying medium risks and undated tasks reported that
+     * nothing was waiting, and its header looked like a different design from
+     * the event next to it.
+     */
+    public function test_the_critical_card_sees_lesser_risks_and_undated_tasks(): void
+    {
+        $this->actor();
+        $service = app(\App\Services\EventCommandHeader::class);
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        // Clear the decks, then leave exactly one undated open task.
+        $event->risks()->delete();
+        $event->approvals()->delete();
+        $event->tasks()->delete();
+        $event->tasks()->create([
+            'title' => 'Sign off the floor plan',
+            'status' => 'todo',
+            'priority' => 'high',
+            'due_on' => null,
+        ]);
+
+        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $this->assertSame('Sign off the floor plan', $critical['title']);
+        $this->assertSame('No date set', $critical['due']);
+
+        // A medium open risk outranks the undated task.
+        // 3 × 3 = 9, below the severe line of 12 — the case that used to vanish.
+        $event->risks()->create([
+            'title' => 'Venue contract unsigned',
+            'category' => 'contractual',
+            'status' => 'open',
+            'probability' => 3,
+            'impact' => 3,
+        ]);
+
+        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $this->assertSame('Venue contract unsigned', $critical['title']);
+        $this->assertSame('risks', $critical['tab']);
+    }
+
+    /**
+     * One header for every event: whether or not anything is waiting, the card
+     * renders the same skeleton — headline, source, Due / Owner / Risk level,
+     * and a way in. The empty state used to be a different, shorter card, which
+     * is what made two events look like two designs.
+     */
+    public function test_the_header_keeps_its_shape_when_nothing_is_waiting(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        $event->risks()->delete();
+        $event->approvals()->delete();
+        $event->tasks()->delete();
+
+        $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
+            ->assertSee('Next critical action')
+            ->assertSee('Nothing is waiting on you')
+            ->assertSee('Due')
+            ->assertSee('Owner')
+            ->assertSee('Risk level')
+            ->assertSee('Clear');
+    }
+
     public function test_a_name_with_an_edition_splits_and_a_plain_name_does_not(): void
     {
         $this->actor();

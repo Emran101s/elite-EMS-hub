@@ -70,7 +70,13 @@
         @endif
     </div>
 
-    <div class="flex flex-wrap items-start gap-x-6 gap-y-5 px-4 py-6 lg:px-6 lg:py-8 xl:pe-[340px]">
+    {{-- The band is as tall as the identity column, and the identity column is
+         as tall as the event's name — so a one-word event got a squashed header
+         and a three-line one got a deep one, and opening two events in a row
+         looked like two different products. The floating action card sets the
+         floor: at xl, where it is pinned, the band is never shorter than the
+         card it holds. Longer names still grow it. --}}
+    <div class="flex flex-wrap items-start gap-x-6 gap-y-5 px-4 py-6 lg:px-6 lg:py-8 xl:min-h-[336px] xl:pe-[340px]">
 
         {{-- crest --}}
         <span class="relative grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-full bg-navy-950 ring-2 ring-gold-400/70 ring-offset-4 ring-offset-white lg:h-[104px] lg:w-[104px]">
@@ -140,50 +146,64 @@
                 <x-icon name="flag" class="ms-auto h-3.5 w-3.5 {{ $critical ? 'text-gold-600' : 'text-navy-200' }}" />
             </p>
 
-            @if ($critical)
-                <div class="mt-3 flex items-start gap-2.5">
-                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy-950 text-gold-400">
-                        <x-icon name="calendar" class="h-4 w-4" />
-                    </span>
-                    <div class="min-w-0">
-                        <p class="pf line-clamp-2 text-[14px] font-bold leading-snug text-navy-950">{{ $critical['title'] }}</p>
-                        <p class="mt-0.5 truncate text-[11.5px] text-muted">{{ $critical['where'] }}</p>
-                    </div>
+            {{-- One skeleton, whether or not there is anything to report: mark,
+                 headline, source, then Due / Owner / Risk level, then the way
+                 in. An empty state built out of different parts makes the
+                 header change shape from event to event, which reads as a bug
+                 in the design rather than as a quiet week. --}}
+            @php
+                $clear = ! $critical;
+                $level = $critical['level'] ?? 'Clear';
+            @endphp
+
+            <div class="mt-3 flex items-start gap-2.5">
+                <span @class([
+                    'grid h-9 w-9 shrink-0 place-items-center rounded-xl',
+                    'bg-navy-950 text-gold-400' => ! $clear,
+                    'bg-emerald-50 text-emerald-600' => $clear,
+                ])>
+                    <x-icon :name="$clear ? 'check' : 'calendar'" class="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                    <p class="pf line-clamp-2 text-[14px] font-bold leading-snug text-navy-950">
+                        {{ $critical['title'] ?? 'Nothing is waiting on you' }}
+                    </p>
+                    <p class="mt-0.5 truncate text-[11.5px] text-muted">
+                        {{ $critical['where'] ?? 'Risks, approvals and tasks all clear' }}
+                    </p>
                 </div>
+            </div>
 
-                <dl class="mt-3 space-y-1.5 border-t border-line pt-3 text-[11.5px]">
-                    @foreach ([['Due', $critical['due']], ['Owner', $critical['owner']]] as [$term, $value])
-                        <div class="flex items-baseline justify-between gap-3">
-                            <dt class="text-muted">{{ $term }}</dt>
-                            <dd class="truncate font-semibold text-navy-900">{{ $value }}</dd>
-                        </div>
-                    @endforeach
+            <dl class="mt-3 space-y-1.5 border-t border-line pt-3 text-[11.5px]">
+                @foreach ([['Due', $critical['due'] ?? '—'], ['Owner', $critical['owner'] ?? '—']] as [$term, $value])
                     <div class="flex items-baseline justify-between gap-3">
-                        <dt class="text-muted">Risk level</dt>
-                        <dd>
-                            <span @class([
-                                'rounded-full px-2 py-0.5 text-[10px] font-bold',
-                                'bg-risk/10 text-red-700' => $critical['level'] === 'Critical',
-                                'bg-warn/15 text-amber-700' => $critical['level'] === 'High',
-                                'bg-gold-50 text-gold-800' => $critical['level'] === 'Medium',
-                                'bg-navy-50 text-navy-500' => $critical['level'] === 'Low',
-                            ])>{{ $critical['level'] }}</span>
-                        </dd>
+                        <dt class="text-muted">{{ $term }}</dt>
+                        <dd class="truncate font-semibold text-navy-900">{{ $value }}</dd>
                     </div>
-                </dl>
+                @endforeach
+                <div class="flex items-baseline justify-between gap-3">
+                    <dt class="text-muted">Risk level</dt>
+                    <dd>
+                        <span @class([
+                            'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                            'bg-risk/10 text-red-700' => $level === 'Critical',
+                            'bg-warn/15 text-amber-700' => $level === 'High',
+                            'bg-gold-50 text-gold-800' => $level === 'Medium',
+                            'bg-navy-50 text-navy-500' => $level === 'Low',
+                            'bg-emerald-50 text-emerald-700' => $level === 'Clear',
+                        ])>{{ $level }}</span>
+                    </dd>
+                </div>
+            </dl>
 
-                <a href="{{ route('events.hub', [$event, 'tab' => $critical['tab']]) }}"
-                   class="mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-950 text-[12.5px] font-bold text-white transition hover:bg-navy-800">
-                    {{ $critical['cta'] }} →
-                </a>
-            @else
-                <p class="pf mt-3 text-[14px] font-bold text-navy-950">Nothing is waiting on you</p>
-                <p class="mt-1 text-[11.5px] text-muted">No open risk, no pending approval, no dated task still to do.</p>
-                <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}"
-                   class="mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-50 text-[12.5px] font-bold text-navy-700 transition hover:bg-navy-100">
-                    Open the task board →
-                </a>
-            @endif
+            <a href="{{ route('events.hub', [$event, 'tab' => $critical['tab'] ?? 'tasks']) }}"
+               @class([
+                   'mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl text-[12.5px] font-bold transition',
+                   'bg-navy-950 text-white hover:bg-navy-800' => ! $clear,
+                   'bg-navy-50 text-navy-700 hover:bg-navy-100' => $clear,
+               ])>
+                {{ $critical['cta'] ?? 'Open the task board' }} →
+            </a>
         </div>
     </div>
 

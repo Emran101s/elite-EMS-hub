@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\EventAgendaSession;
+use App\Models\Task;
 use Illuminate\Support\Carbon;
 
 /**
@@ -180,22 +181,56 @@ class EventCommandHeader
             ->first();
 
         if ($task) {
+            return $this->fromTask($task);
+        }
+
+        // Below the severe line, but still open and still somebody's problem.
+        // Without this an event carrying three medium risks reports that nothing
+        // is waiting, which is not a quieter answer — it is a wrong one.
+        $lesser = $event->risks->filter->isOpen()
+            ->sortByDesc(fn ($r) => $r->severity())
+            ->first();
+
+        if ($lesser) {
             return [
-                'title' => $task->title,
-                'where' => $task->area
-                    ? (\App\Models\Task::MODULES[$task->area][0] ?? str($task->area)->title()->toString())
-                    : 'Task board',
-                'due' => $this->when($task->due_on),
-                'owner' => $task->assignee?->name ?? 'Unassigned',
-                'level' => match ($task->priority) {
-                    'urgent' => 'Critical', 'high' => 'High', 'low' => 'Low', default => 'Medium',
-                },
-                'tab' => 'tasks',
-                'cta' => 'Open task',
+                'title' => $lesser->title,
+                'where' => str($lesser->category ?: 'Risk register')->replace('_', ' ')->title()->toString(),
+                'due' => $lesser->due_on ? $this->when($lesser->due_on) : 'Unscheduled',
+                'owner' => $lesser->owner?->name ?? 'Unassigned',
+                'level' => $lesser->severity() > 0 ? 'Medium' : 'Low',
+                'tab' => 'risks',
+                'cta' => 'Open risk',
             ];
         }
 
-        return null;
+        // An open task nobody dated is still open. Sorting by due_on and then
+        // requiring one means the busiest undated event in the portfolio reads
+        // as the calmest.
+        $undated = $event->tasks
+            ->filter(fn ($t) => $t->isOpen())
+            ->sortBy(fn ($t) => match ($t->priority) {
+                'urgent' => 0, 'high' => 1, 'low' => 3, default => 2,
+            })
+            ->first();
+
+        return $undated ? $this->fromTask($undated) : null;
+    }
+
+    private function fromTask(Task $task): array
+    {
+        return [
+            'title' => $task->title,
+            'where' => $task->area
+                ? (Task::MODULES[$task->area][0] ?? str($task->area)->title()->toString())
+                : 'Task board',
+            'due' => $task->due_on ? $this->when($task->due_on) : 'No date set',
+            'owner' => $task->assignee?->name ?? 'Unassigned',
+            'level' => match ($task->priority) {
+                'urgent' => 'Critical', 'high' => 'High', 'low' => 'Low', default => 'Medium',
+            },
+            'tab' => 'tasks',
+            'cta' => 'Open task',
+        ];
     }
 
     private function when(Carbon $date): string
