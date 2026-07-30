@@ -18,6 +18,26 @@
     // The new input language: quiet fills that light up on focus — no boxed grid.
     $in = 'w-full rounded-xl border border-transparent bg-page/70 px-3 py-2 text-sm font-medium text-navy-900 placeholder:text-navy-300 transition focus:border-gold-400 focus:bg-white focus:outline-none';
     $inAr = $in.' text-right';
+
+    // Which set the block editor is pointed at. The body unless an appendix is
+    // open — one editor, so there is only ever one of these to keep in step.
+    $axList = array_values($data['appendices'] ?? []);
+    $axIndex = null;
+    foreach ($axList as $i => $a) {
+        if (($a['slug'] ?? null) === $editingAppendix) { $axIndex = $i; break; }
+    }
+    $editingAx = $axIndex === null ? null : $axList[$axIndex];
+    $axNumber = $axIndex === null ? null : $axIndex + 1;
+    $editBlocks = $editingAx ? ($editingAx['blocks'] ?? []) : ($data['blocks'] ?? []);
+
+    // References pointing at an appendix that no longer exists. A wrong
+    // cross-reference in a signed contract is worse than a missing feature, so
+    // this is shown loudly and blocks the export.
+    $axNumbers = [];
+    foreach ($axList as $i => $a) { $axNumbers[$a['slug'] ?? ''] = (string) ($i + 1); }
+    $broken = \App\Support\ContractAppendices::brokenReferences(
+        [...($data['blocks'] ?? []), ...$axList], $axNumbers,
+    );
 @endphp
 
 <div>
@@ -525,18 +545,34 @@
                 @endif
 
                 {{-- Body module --}}
-                <x-accordion-section id="contract-body" num="{{ $type === 'client' ? '04' : '02' }}" title="Contract Body" summary="{{ count($data['blocks'] ?? []) }} clauses · every one editable">
+                <x-accordion-section id="contract-body" num="{{ $type === 'client' ? '04' : '02' }}"
+                                     title="{{ $editingAx ? 'Appendix '.$axNumber.' · '.($editingAx['title_en'] ?: 'Untitled') : 'Contract Body' }}"
+                                     summary="{{ count($editBlocks) }} {{ $editingAx ? 'sections' : 'clauses' }} · every one editable">
                     <div class="space-y-3">
+                        {{-- One editor, retargeted. The breadcrumb is the only way
+                             to tell which set you are typing into, so it is never
+                             hidden while an appendix is open. --}}
+                        @if ($editingAx)
+                            <div class="flex items-center gap-2 rounded-xl bg-gold-50/70 px-3 py-2 text-eyebrow">
+                                <button type="button" wire:click="editAppendix(null)" class="font-bold text-gold-800 hover:underline">Body</button>
+                                <span class="text-navy-300">/</span>
+                                <span class="font-bold text-navy-900">Appendix {{ $axNumber }} · {{ $editingAx['title_en'] ?: 'Untitled' }}</span>
+                                <button type="button" wire:click="editAppendix(null)" class="ms-auto btn-ghost btn-xs">← Back to the body</button>
+                            </div>
+                        @endif
+
                         @can('manage-contract')
                             <div class="flex items-center justify-end gap-2">
-                                <button type="button" wire:click="restoreStandardBlocks"
-                                        wire:confirm="Restore the standard clause set? Any edits to the body will be replaced."
-                                        class="btn-ghost btn-xs" title="Put the standard clauses back">↺ Restore standard</button>
+                                @unless ($editingAx)
+                                    <button type="button" wire:click="restoreStandardBlocks"
+                                            wire:confirm="Restore the standard clause set? Any edits to the body will be replaced."
+                                            class="btn-ghost btn-xs" title="Put the standard clauses back">↺ Restore standard</button>
+                                @endunless
                                 <button type="button" wire:click="addBlock" class="btn-gold btn-xs">＋ Add section</button>
                             </div>
                         @endcan
 
-                        @forelse ($data['blocks'] ?? [] as $bi => $b)
+                        @forelse ($editBlocks as $bi => $b)
                             <div wire:key="blk-{{ $b['id'] }}" class="rounded-2xl bg-page/50 p-3">
                                 <div class="flex items-start gap-2.5">
                                     <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-black text-gold-400">{{ $bi + 1 }}</span>
@@ -616,14 +652,101 @@
                             </div>
                         @empty
                             <p class="rounded-xl border border-dashed border-line px-4 py-8 text-center text-xs text-muted">
-                                No clauses yet — add a section or restore the standard set.
+                                {{ $editingAx ? 'This appendix is empty — add a section, or pull it from its module.' : 'No clauses yet — add a section or restore the standard set.' }}
                             </p>
                         @endforelse
                     </div>
                 </x-accordion-section>
 
+                {{-- ══ THE ANNEXES ══
+                     What the contract carries behind its signatures. The list
+                     lives here; editing one retargets the panel above rather
+                     than nesting a second editor inside this one. --}}
+                @if ($type === 'client')
+                    <x-accordion-section id="appendices" num="05" title="Appendices"
+                                         summary="{{ count($axList) }} {{ count($axList) === 1 ? 'appendix' : 'appendices' }}{{ count($axList) ? ' · '.collect($axList)->pluck('title_en')->implode(', ') : '' }}">
+                        <div class="space-y-3">
+                            @if ($broken)
+                                <p class="rounded-xl bg-risk/10 px-3 py-2 text-eyebrow font-bold text-red-700">
+                                    ⚠ The text refers to {{ implode(', ', $broken) }}, which no longer exists. Fix the reference or restore the appendix — the PDF will not export until you do.
+                                </p>
+                            @endif
+
+                            @forelse ($axList as $ai => $ax)
+                                <div wire:key="ax-{{ $ax['slug'] }}"
+                                     @class(['rounded-2xl p-3', 'bg-gold-50/70 ring-1 ring-gold-200' => $editingAppendix === $ax['slug'], 'bg-page/50' => $editingAppendix !== $ax['slug']])>
+                                    <div class="flex items-start gap-2.5">
+                                        <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-black text-gold-400">{{ $ai + 1 }}</span>
+                                        <div class="grid min-w-0 flex-1 gap-1.5">
+                                            <input type="text" value="{{ $ax['title_en'] ?? '' }}" placeholder="Appendix title (English)"
+                                                   wire:change="updateAppendixField('{{ $ax['slug'] }}', 'title_en', $event.target.value)"
+                                                   class="{{ $in }} !py-1.5 !text-sm !font-bold">
+                                            <input type="text" dir="rtl" value="{{ $ax['title_ar'] ?? '' }}" placeholder="عنوان الملحق"
+                                                   wire:change="updateAppendixField('{{ $ax['slug'] }}', 'title_ar', $event.target.value)"
+                                                   class="{{ $inAr }} !py-1.5 !text-xs">
+                                        </div>
+                                        @can('manage-contract')
+                                            <div class="flex shrink-0 flex-col gap-0.5">
+                                                <button type="button" wire:click="moveAppendix('{{ $ax['slug'] }}', -1)" @disabled($ai === 0) class="btn-ghost btn-xs disabled:opacity-25">↑</button>
+                                                <button type="button" wire:click="moveAppendix('{{ $ax['slug'] }}', 1)" @disabled($ai === count($axList) - 1) class="btn-ghost btn-xs disabled:opacity-25">↓</button>
+                                                <button type="button" wire:click="deleteAppendix('{{ $ax['slug'] }}')"
+                                                        wire:confirm="Remove this appendix? Any reference to it in the contract text will break until you fix it."
+                                                        class="btn-ghost btn-xs text-risk">✕</button>
+                                            </div>
+                                        @endcan
+                                    </div>
+
+                                    <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                                        <span class="rounded-md bg-white px-2 py-0.5 text-eyebrow font-bold text-navy-500 ring-1 ring-line">
+                                            {{ count($ax['blocks'] ?? []) }} {{ \Illuminate\Support\Str::plural('section', count($ax['blocks'] ?? [])) }}
+                                        </span>
+                                        @if ($ax['source'] ?? null)
+                                            <span class="rounded-md bg-navy-900 px-2 py-0.5 text-eyebrow font-bold text-gold-300">
+                                                {{ ['budget' => 'Budget', 'agenda' => 'Agenda', 'venue' => 'Venue', 'brief' => 'Brief', 'form' => 'Form', 'typed' => 'Typed'][$ax['source']] ?? $ax['source'] }}
+                                            </span>
+                                        @endif
+                                        @if ($ax['pulled_at'] ?? null)
+                                            <span class="text-eyebrow text-muted">pulled {{ \Illuminate\Support\Carbon::parse($ax['pulled_at'])->diffForHumans() }}</span>
+                                        @endif
+
+                                        <span class="ms-auto flex gap-1.5">
+                                            @if (($ax['source'] ?? null) && ! in_array($ax['source'], ['typed', 'form'], true))
+                                                @can('manage-contract')
+                                                    <button type="button" wire:click="pullAppendix('{{ $ax['slug'] }}')"
+                                                            wire:confirm="Replace this appendix with a fresh snapshot from the module? Anything typed here will be lost."
+                                                            class="btn-ghost btn-xs">⇣ {{ ($ax['pulled_at'] ?? null) ? 'Refresh' : 'Pull' }}</button>
+                                                @endcan
+                                            @endif
+                                            <button type="button" wire:click="editAppendix('{{ $ax['slug'] }}')" class="btn-ghost btn-xs">Open →</button>
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-1.5 font-mono text-eyebrow text-muted">
+                                        Refer to it in the text as <b>&#123;&#123;appendix:{{ $ax['slug'] }}&#125;&#125;</b> — never as “Appendix {{ $ai + 1 }}”.
+                                    </p>
+                                </div>
+                            @empty
+                                <p class="rounded-xl border border-dashed border-line px-4 py-8 text-center text-xs text-muted">
+                                    No appendices. The scope, the budget and the programme all belong here.
+                                </p>
+                            @endforelse
+
+                            @can('manage-contract')
+                                <div class="rounded-2xl border border-dashed border-line p-3">
+                                    <p class="eyebrow mb-2">Add an appendix</p>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach (\App\Support\ContractAppendices::LIBRARY as $key => [$label, $labelAr, $src])
+                                            <button type="button" wire:click="addAppendix('{{ $key }}')" class="btn-ghost btn-xs">＋ {{ $label }}</button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endcan
+                        </div>
+                    </x-accordion-section>
+                @endif
+
                 {{-- Signatories module --}}
-                <x-accordion-section id="signatories" num="{{ $type === 'client' ? '05' : '03' }}" title="Signatories" summary="{{ $signatories->whereNotNull('signed_at')->count() }} of {{ $signatories->count() }} signed">
+                <x-accordion-section id="signatories" num="{{ $type === 'client' ? '06' : '03' }}" title="Signatories" summary="{{ $signatories->whereNotNull('signed_at')->count() }} of {{ $signatories->count() }} signed">
                     <div class="space-y-2">
                         @forelse ($signatories as $s)
                             <div wire:key="sig-{{ $s->id }}"
@@ -688,6 +811,7 @@
                             'bilingual' => $bilingual, 'event' => $event, 'fmt' => $fmt, 'est' => $est,
                             'f' => $f, 'signatories' => $signatories, 'reference' => $reference,
                             'status' => $status, 'fullySigned' => $fullySigned, 'forPdf' => false,
+                            'appendices' => $data['appendices'] ?? [],
                         ])
                     </div>
                 </div>

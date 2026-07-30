@@ -4,6 +4,7 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\EventContract;
+use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
 use App\Support\ContractTemplates;
 use App\Support\Taxonomy;
@@ -152,6 +153,13 @@ class ContractTab extends Component
         // Client contracts seed the standard clause body once, then own it.
         if ($c->isClient() && empty($this->data['blocks'])) {
             $this->data['blocks'] = ContractClauses::blocks($this->data);
+            $this->persist();
+        }
+
+        // …and one appendix, the scope. A contract written before appendices
+        // existed gets it on first open; everything else is added on purpose.
+        if ($c->isClient() && ! isset($this->data['appendices'])) {
+            $this->data['appendices'] = ContractAppendices::seed();
             $this->persist();
         }
 
@@ -369,11 +377,40 @@ class ContractTab extends Component
         }
     }
 
-    /* ── The contract body: editable bilingual blocks ── */
+    /* ── The contract body: editable bilingual blocks ──
+       Every method here edits whichever set the editor is pointed at: the
+       body by default, or an appendix when one is open. An appendix's
+       blocks are the same shape, so retargeting is the whole feature —
+       there is no second editor to keep in step with this one. ── */
+
+    /** The blocks currently being edited, by value (for reading). */
+    private function currentBlocks(): array
+    {
+        if ($this->editingAppendix !== null && ($i = $this->appendixIndex($this->editingAppendix)) !== null) {
+            return $this->data['appendices'][$i]['blocks'] ?? [];
+        }
+
+        return $this->data['blocks'] ?? [];
+    }
+
+    /** The same list, by reference (for writing). */
+    private function &blocksRef(): array
+    {
+        if ($this->editingAppendix !== null && ($i = $this->appendixIndex($this->editingAppendix)) !== null) {
+            $this->data['appendices'][$i]['blocks'] ??= [];
+
+            return $this->data['appendices'][$i]['blocks'];
+        }
+
+        $this->data['blocks'] ??= [];
+
+        return $this->data['blocks'];
+    }
+
 
     private function blockIndex(string $id): ?int
     {
-        foreach ($this->data['blocks'] ?? [] as $i => $b) {
+        foreach ($this->currentBlocks() as $i => $b) {
             if (($b['id'] ?? '') === $id) {
                 return $i;
             }
@@ -386,7 +423,8 @@ class ContractTab extends Component
     public function addBlock(): void
     {
         Gate::authorize('manage-contract');
-        $this->data['blocks'][] = [
+        $blocks = &$this->blocksRef();
+        $blocks[] = [
             'id' => 'b'.Str::random(8),
             'type' => 'prose',
             'title_en' => 'New Section',
@@ -402,20 +440,22 @@ class ContractTab extends Component
     public function updateBlockField(string $id, string $field, string $value): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (! in_array($field, ['title_en', 'title_ar'], true) || ($i = $this->blockIndex($id)) === null) {
             return;
         }
-        $this->data['blocks'][$i][$field] = $value;
+        $blocks[$i][$field] = $value;
         $this->touch();
     }
 
     public function updateParagraph(string $id, string $lang, int $p, string $value): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (! in_array($lang, ['en', 'ar'], true) || ($i = $this->blockIndex($id)) === null) {
             return;
         }
-        $this->data['blocks'][$i][$lang][$p] = $value;
+        $blocks[$i][$lang][$p] = $value;
         $this->touch();
     }
 
@@ -423,23 +463,25 @@ class ContractTab extends Component
     public function addParagraph(string $id): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (($i = $this->blockIndex($id)) === null) {
             return;
         }
-        $this->data['blocks'][$i]['en'][] = '';
-        $this->data['blocks'][$i]['ar'][] = '';
+        $blocks[$i]['en'][] = '';
+        $blocks[$i]['ar'][] = '';
         $this->touch();
     }
 
     public function removeParagraph(string $id, int $p): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (($i = $this->blockIndex($id)) === null) {
             return;
         }
         foreach (['en', 'ar'] as $lang) {
-            unset($this->data['blocks'][$i][$lang][$p]);
-            $this->data['blocks'][$i][$lang] = array_values($this->data['blocks'][$i][$lang]);
+            unset($blocks[$i][$lang][$p]);
+            $blocks[$i][$lang] = array_values($blocks[$i][$lang]);
         }
         $this->touch();
     }
@@ -449,56 +491,61 @@ class ContractTab extends Component
     public function addItem(string $id): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (($i = $this->blockIndex($id)) === null) {
             return;
         }
-        $this->data['blocks'][$i]['items'][] = ['l_en' => '', 'l_ar' => '', 't_en' => '', 't_ar' => ''];
+        $blocks[$i]['items'][] = ['l_en' => '', 'l_ar' => '', 't_en' => '', 't_ar' => ''];
         $this->touch();
     }
 
     public function updateItem(string $id, int $row, string $field, string $value): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (! in_array($field, ['l_en', 'l_ar', 't_en', 't_ar'], true) || ($i = $this->blockIndex($id)) === null) {
             return;
         }
-        $this->data['blocks'][$i]['items'][$row][$field] = $value;
+        $blocks[$i]['items'][$row][$field] = $value;
         $this->touch();
     }
 
     public function removeItem(string $id, int $row): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (($i = $this->blockIndex($id)) === null) {
             return;
         }
-        unset($this->data['blocks'][$i]['items'][$row]);
-        $this->data['blocks'][$i]['items'] = array_values($this->data['blocks'][$i]['items']);
+        unset($blocks[$i]['items'][$row]);
+        $blocks[$i]['items'] = array_values($blocks[$i]['items']);
         $this->touch();
     }
 
     public function moveBlock(string $id, int $dir): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         $i = $this->blockIndex($id);
         $j = $i === null ? null : $i + $dir;
-        if ($i === null || $j === null || $j < 0 || $j >= count($this->data['blocks'])) {
+        if ($i === null || $j === null || $j < 0 || $j >= count($blocks)) {
             return;
         }
-        $blocks = $this->data['blocks'];
+        $blocks = $blocks;
         [$blocks[$i], $blocks[$j]] = [$blocks[$j], $blocks[$i]];
-        $this->data['blocks'] = array_values($blocks);
+        $blocks = array_values($blocks);
         $this->touch();
     }
 
     public function deleteBlock(string $id): void
     {
         Gate::authorize('manage-contract');
+        $blocks = &$this->blocksRef();
         if (($i = $this->blockIndex($id)) === null) {
             return;
         }
-        unset($this->data['blocks'][$i]);
-        $this->data['blocks'] = array_values($this->data['blocks']);
+        unset($blocks[$i]);
+        $blocks = array_values($blocks);
         $this->touch();
     }
 
@@ -508,6 +555,143 @@ class ContractTab extends Component
         Gate::authorize('manage-contract');
         $this->data['blocks'] = ContractClauses::blocks($this->data);
         $this->touch();
+    }
+
+    // ══════════════════ THE ANNEXES ══════════════════
+    //
+    // An appendix holds blocks of exactly the same shape as the body's, so
+    // every method above works on one — which is why the editor retargets
+    // instead of growing a second set of controls.
+
+    /** null = editing the body; a slug = editing that appendix. */
+    public ?string $editingAppendix = null;
+
+    /** The list, always an array even on a contract seeded before appendices. */
+    private function appendices(): array
+    {
+        return array_values($this->data['appendices'] ?? []);
+    }
+
+    private function appendixIndex(string $slug): ?int
+    {
+        foreach ($this->appendices() as $i => $a) {
+            if (($a['slug'] ?? '') === $slug) {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    public function editAppendix(?string $slug): void
+    {
+        $this->editingAppendix = $slug !== null && $this->appendixIndex($slug) !== null ? $slug : null;
+    }
+
+    public function addAppendix(string $key): void
+    {
+        Gate::authorize('manage-contract');
+
+        // Slugs are the identity a reference points at, so a second Budget
+        // appendix gets its own — never a duplicate that two references share.
+        $slug = $key;
+        $n = 1;
+        while ($this->appendixIndex($slug) !== null) {
+            $slug = $key.'-'.(++$n);
+        }
+
+        $this->data['appendices'] = [...$this->appendices(), ContractAppendices::make($key, $slug)];
+        $this->editingAppendix = $slug;
+        $this->touch();
+    }
+
+    public function updateAppendixField(string $slug, string $field, string $value): void
+    {
+        Gate::authorize('manage-contract');
+        if (! in_array($field, ['title_en', 'title_ar'], true) || ($i = $this->appendixIndex($slug)) === null) {
+            return;
+        }
+        $this->data['appendices'][$i][$field] = $value;
+        $this->touch();
+    }
+
+    public function moveAppendix(string $slug, int $dir): void
+    {
+        Gate::authorize('manage-contract');
+        $list = $this->appendices();
+        $i = $this->appendixIndex($slug);
+        $j = $i === null ? null : $i + $dir;
+
+        if ($i === null || $j === null || $j < 0 || $j >= count($list)) {
+            return;
+        }
+
+        [$list[$i], $list[$j]] = [$list[$j], $list[$i]];
+        $this->data['appendices'] = array_values($list);
+        $this->touch();   // every {{appendix:…}} in the document renumbers itself
+    }
+
+    public function deleteAppendix(string $slug): void
+    {
+        Gate::authorize('manage-contract');
+        if (($i = $this->appendixIndex($slug)) === null) {
+            return;
+        }
+
+        $list = $this->appendices();
+        unset($list[$i]);
+        $this->data['appendices'] = array_values($list);
+
+        if ($this->editingAppendix === $slug) {
+            $this->editingAppendix = null;
+        }
+
+        $this->touch();
+    }
+
+    /**
+     * Take a snapshot from the module that owns this appendix's content.
+     *
+     * A snapshot, not a feed: the contract must not change after it is sent
+     * because somebody edited a budget line. Refreshing is this button, and it
+     * is refused once the document is signed.
+     */
+    public function pullAppendix(string $slug): void
+    {
+        Gate::authorize('manage-contract');
+        $i = $this->appendixIndex($slug);
+
+        $contract = $this->contractId ? $this->event->contracts()->find($this->contractId) : null;
+
+        if ($i === null || ! $contract) {
+            return;
+        }
+
+        if ($contract->status === 'signed') {
+            $this->dispatch('contract-toast', message: 'This document is signed — its appendices are fixed.', tone: 'warn');
+
+            return;
+        }
+
+        $source = $this->data['appendices'][$i]['source'] ?? null;
+
+        if (! $source || in_array($source, ['typed', 'form'], true)) {
+            return;
+        }
+
+        [$blocks, $summary] = ContractAppendices::pull($source, $this->event, $contract);
+
+        if ($blocks === []) {
+            $this->dispatch('contract-toast', message: $summary, tone: 'warn');
+
+            return;
+        }
+
+        $this->data['appendices'][$i]['blocks'] = $blocks;
+        $this->data['appendices'][$i]['pulled_at'] = now()->toIso8601String();
+        $this->touch();
+
+        $this->dispatch('contract-toast', message: 'Pulled '.$summary.'.', tone: 'ok');
     }
 
     public function updated(string $name): void

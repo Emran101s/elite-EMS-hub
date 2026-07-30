@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
 use App\Support\ContractTemplates;
 use Illuminate\Database\Eloquent\Model;
@@ -297,6 +298,41 @@ class EventContract extends Model
         return is_array($blocks) && $blocks !== []
             ? $blocks
             : ContractClauses::blocks($this->data ?? []);
+    }
+
+    /**
+     * The annexes, in the order they are bound.
+     *
+     * Each is {slug, title_en, title_ar, source, pulled_at, blocks} — and its
+     * blocks are the same shape as the body's, so the paper renders an appendix
+     * with the code that already renders a clause.
+     *
+     * The slug is the identity: clause text refers to an appendix by slug, not
+     * by number, so reordering them renumbers every reference instead of
+     * quietly making one wrong.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function appendices(): array
+    {
+        $list = $this->data['appendices'] ?? null;
+
+        if (! is_array($list)) {
+            return $this->isClient() ? ContractAppendices::seed() : [];
+        }
+
+        return array_values($list);
+    }
+
+    /** slug => "1", for resolving {{appendix:slug}} references. */
+    public function appendixNumbers(): array
+    {
+        $n = [];
+        foreach ($this->appendices() as $i => $a) {
+            $n[$a['slug'] ?? ''] = (string) ($i + 1);
+        }
+
+        return $n;
     }
 
     /** The agreed figure the payment schedule is calculated against (cents). */

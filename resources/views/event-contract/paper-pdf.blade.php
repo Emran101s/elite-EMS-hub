@@ -41,6 +41,7 @@
         'fmt' => $fmt, 'est' => $est, 'f' => $f, 'signatories' => $signatories,
         'reference' => $contract->reference, 'status' => $contract->status,
         'fullySigned' => $fullySigned, 'forPdf' => true,
+        'appendices' => $contract->appendices(),
     ])
 </body>
 </html>

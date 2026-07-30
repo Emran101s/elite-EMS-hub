@@ -9,6 +9,7 @@ use App\Models\EventContract;
 use App\Models\EventSpeaker;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -287,6 +288,164 @@ class EventContractTest extends TestCase
         // Rates the articles quote come from data.terms, not from the prose.
         $tax = collect($clauses)->firstWhere('en_title', 'Taxes and Government Fees');
         $this->assertStringContainsString('16% sales tax (VAT)', $tax['en'][1]);
+    }
+
+    // ══════════════════ THE ANNEXES ══════════════════
+
+    public function test_a_client_contract_is_bound_with_one_appendix(): void
+    {
+        [$user, $event] = $this->make();
+        $ax = $this->tab($user, $event)->get('data')['appendices'];
+
+        $this->assertCount(1, $ax, 'one appendix by default — the scope');
+        $this->assertSame('scope', $ax[0]['slug']);
+        $this->assertSame('Detailed Scope of Work', $ax[0]['title_en']);
+        $this->assertSame('نطاق العمل التفصيلي', $ax[0]['title_ar']);
+    }
+
+    /**
+     * References are by slug, never by number, so reordering the appendices
+     * renumbers every sentence that mentions one — instead of leaving one of
+     * them quietly wrong in a document somebody signs.
+     */
+    public function test_reordering_appendices_renumbers_every_reference(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = $this->tab($user, $event)
+            ->call('addAppendix', 'budget')
+            ->call('editAppendix', null);
+
+        $slugs = collect($c->get('data')['appendices'])->pluck('slug')->all();
+        $this->assertSame(['scope', 'budget'], $slugs);
+
+        $numbers = ['scope' => '1', 'budget' => '2'];
+        $text = 'The scope is set out in {{appendix:scope}} and the budget in {{appendix:budget}}.';
+
+        $this->assertSame(
+            'The scope is set out in Appendix 1 and the budget in Appendix 2.',
+            ContractAppendices::resolve($text, $numbers),
+        );
+
+        // Drag the budget above the scope; the same sentence now reads the other way.
+        $c->call('moveAppendix', 'budget', -1);
+        $flipped = [];
+        foreach ($c->get('data')['appendices'] as $i => $a) {
+            $flipped[$a['slug']] = (string) ($i + 1);
+        }
+
+        $this->assertSame(
+            'The scope is set out in Appendix 2 and the budget in Appendix 1.',
+            ContractAppendices::resolve($text, $flipped),
+        );
+
+        // Arabic gets Arabic numerals, not a Latin digit inside an RTL line.
+        $this->assertStringContainsString('الملحق ٢', ContractAppendices::resolve($text, $flipped, 'ar'));
+    }
+
+    /** A reference to an appendix that no longer exists must not print silently. */
+    public function test_a_broken_reference_is_found_and_named(): void
+    {
+        $blocks = [['en' => ['See {{appendix:gone}} and {{appendix:scope}}.'], 'ar' => []]];
+
+        $this->assertSame(['gone'], ContractAppendices::brokenReferences($blocks, ['scope' => '1']));
+        $this->assertStringContainsString(
+            '⚠ MISSING APPENDIX',
+            ContractAppendices::resolve($blocks[0]['en'][0], ['scope' => '1']),
+        );
+    }
+
+    /**
+     * THE ONE THAT MATTERS: a budget appendix prints what the client is
+     * charged. Cost is the company's business. A leaked cost column in a signed
+     * appendix cannot be taken back, so the guard lives in the pull itself.
+     */
+    public function test_the_budget_appendix_prints_charge_and_never_cost(): void
+    {
+        [$user, $event] = $this->make();
+
+        // Cost 1,000 · charged 4,000. Both are round and unmistakable in output.
+        $event->budgetItems()->create([
+            'category' => 'Production', 'description' => 'Main stage build',
+            'quantity' => 1, 'estimated_cents' => 100000, 'sell_cents' => 400000, 'billable' => true,
+        ]);
+        // A line that costs but is not charged on must not appear at all.
+        $event->budgetItems()->create([
+            'category' => 'Production', 'description' => 'Internal crew time',
+            'quantity' => 1, 'estimated_cents' => 250000, 'sell_cents' => null, 'billable' => false,
+        ]);
+
+        $c = $this->tab($user, $event)->call('addAppendix', 'budget')->call('pullAppendix', 'budget');
+
+        $ax = collect($c->get('data')['appendices'])->firstWhere('slug', 'budget');
+        $printed = json_encode($ax['blocks'], JSON_UNESCAPED_UNICODE);
+
+        $this->assertStringContainsString('Main stage build', $printed);
+        $this->assertStringContainsString('4,000.00', $printed, 'the charge is printed');
+        $this->assertStringNotContainsString('1,000.00', $printed, 'the cost is not');
+        $this->assertStringNotContainsString('Internal crew time', $printed, 'a non-billable line is not the client’s business');
+        $this->assertStringNotContainsString('2,500.00', $printed);
+
+        $this->assertNotNull($ax['pulled_at'], 'a pull is dated, so a stale snapshot is visible');
+    }
+
+    /** A signed document's appendices are fixed — refreshing one is refused. */
+    public function test_a_signed_contract_refuses_to_refresh_an_appendix(): void
+    {
+        [$user, $event] = $this->make();
+        $event->budgetItems()->create([
+            'category' => 'Production', 'description' => 'Stage', 'quantity' => 1,
+            'estimated_cents' => 100000, 'sell_cents' => 400000, 'billable' => true,
+        ]);
+
+        $c = $this->tab($user, $event)->call('addAppendix', 'budget');
+        EventContract::forEvent($event)->update(['status' => 'signed']);
+
+        $c->call('pullAppendix', 'budget');
+
+        $ax = collect($c->get('data')['appendices'])->firstWhere('slug', 'budget');
+        $this->assertSame([], $ax['blocks'], 'nothing was pulled');
+        $this->assertNull($ax['pulled_at']);
+    }
+
+    /**
+     * One editor, retargeted. Adding a section while an appendix is open must
+     * land in the appendix, not in the agreement — the bug this design exists
+     * to prevent.
+     */
+    public function test_the_block_editor_retargets_at_the_open_appendix(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = $this->tab($user, $event);
+        $bodyBefore = count($c->get('data')['blocks']);
+
+        $c->call('editAppendix', 'scope')->call('addBlock');
+
+        $ax = collect($c->get('data')['appendices'])->firstWhere('slug', 'scope');
+        $this->assertCount(1, $ax['blocks'], 'the section landed in the appendix');
+        $this->assertCount($bodyBefore, $c->get('data')['blocks'], 'and not in the body');
+
+        // Back to the body, and it behaves as it always did.
+        $c->call('editAppendix', null)->call('addBlock');
+        $this->assertCount($bodyBefore + 1, $c->get('data')['blocks']);
+        $this->assertCount(1, collect($c->get('data')['appendices'])->firstWhere('slug', 'scope')['blocks']);
+    }
+
+    /** Appendices print after the signatures, numbered and titled, in both languages. */
+    public function test_appendices_print_on_the_document(): void
+    {
+        [$user, $event] = $this->make();
+        $html = $this->tab($user, $event)->call('addAppendix', 'acceptance')->html();
+
+        $this->assertStringContainsString('Appendix 1', $html);
+        $this->assertStringContainsString('Detailed Scope of Work', $html);
+        $this->assertStringContainsString('Appendix 2', $html);
+        $this->assertStringContainsString('Certificate of Services Rendered', $html);
+        $this->assertStringContainsString('محضر إنجاز الخدمات', $html);
+        $this->assertStringContainsString('Initialled for and on behalf of the Parties', $html);
+
+        $this->actingAs($user)->get(route('events.contract.pdf', $event))->assertOk();
     }
 
     /**

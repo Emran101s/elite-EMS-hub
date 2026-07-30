@@ -22,6 +22,15 @@
     $recitals = $type === 'client' && isset($data['meta'], $data['first_party'])
         ? \App\Support\ContractClauses::recitals($data)
         : null;
+
+    // The annexes, and the slug → number map that turns {{appendix:scope}} in
+    // the clause text into "Appendix 1". Both surfaces read the same list, so
+    // the preview cannot number an appendix differently from the export.
+    $appendices = $appendices ?? [];
+    $refs = [];
+    foreach ($appendices as $i => $a) {
+        $refs[$a['slug'] ?? ''] = (string) ($i + 1);
+    }
 @endphp
 <div class="relative mx-auto max-w-[640px] overflow-hidden rounded-md bg-white {{ $forPdf ? '' : 'shadow-[0_30px_70px_-30px_rgba(9,24,49,0.5)]' }}">
 
@@ -124,67 +133,10 @@
         @endif
 
         {{-- clauses, exactly as they'll print --}}
-        @forelse ($data['blocks'] ?? [] as $bi => $b)
-            <div class="mb-4 break-inside-avoid">
-                {{-- a letter reads as prose — no numbered clause headers --}}
-                @unless ($isLetter)
-                <div class="flex items-baseline justify-between gap-3 border-b border-navy-900 pb-1">
-                    <p class="text-xs font-black"><span class="text-gold-600">{{ $bi + 1 }}.</span> {{ $b['title_en'] ?: 'Untitled clause' }}</p>
-                    @if ($bilingual && ($b['title_ar'] ?? ''))
-                        <p dir="rtl" class="text-xs font-bold text-navy-600 [font-family:Amiri,serif]">{{ $b['title_ar'] }}</p>
-                    @endif
-                </div>
-                @endunless
-
-                @if (($b['type'] ?? 'prose') === 'costshare')
-                    <table class="mt-2 w-full text-3xs">
-                        @foreach ($data['second_parties'] ?? [] as $sp)
-                            <tr class="border-b border-line last:border-0">
-                                <td class="py-1 font-semibold">{{ $sp['name_en'] ?: '—' }}</td>
-                                <td class="py-1 text-right font-bold">{{ (float) ($sp['share'] ?? 0) }}%</td>
-                                <td class="py-1 text-right text-muted">{{ $fmt($est * (float) ($sp['share'] ?? 0) / 100) }}</td>
-                            </tr>
-                        @endforeach
-                    </table>
-                @elseif (($b['type'] ?? 'prose') === 'schedule')
-                    <table class="mt-2 w-full text-3xs">
-                        @foreach ($f['payment_schedule'] ?? [] as $s)
-                            <tr class="border-b border-line last:border-0">
-                                <td class="py-1 font-bold">{{ (float) ($s['pct'] ?? 0) }}%</td>
-                                <td class="py-1">{{ $s['when_en'] ?? '' }}</td>
-                                <td class="py-1 text-right text-muted">{{ $fmt($est * (float) ($s['pct'] ?? 0) / 100) }}</td>
-                            </tr>
-                        @endforeach
-                    </table>
-                @endif
-
-                @foreach ($b['en'] ?? [] as $p => $para)
-                    @if ($bilingual)
-                        <div class="mt-2 grid grid-cols-2 gap-3">
-                            <p class="text-3xs leading-relaxed text-navy-700">{{ $para }}</p>
-                            <p dir="rtl" class="text-3xs leading-relaxed text-navy-700 [font-family:Amiri,serif]">{{ $b['ar'][$p] ?? '' }}</p>
-                        </div>
-                    @else
-                        <p class="mt-2 {{ $isLetter ? 'text-xs leading-loose' : 'text-3xs leading-relaxed' }} text-navy-700">{{ $para }}</p>
-                    @endif
-                @endforeach
-
-                @if (in_array($b['type'] ?? '', ['bullets', 'list'], true))
-                    <ul class="mt-2 space-y-0.5">
-                        @foreach ($b['items'] ?? [] as $it)
-                            <li class="flex items-baseline justify-between gap-3 text-3xs">
-                                <span><span class="text-gold-600">◆</span> <b>{{ $it['l_en'] ?? '' }}</b>@if ($it['t_en'] ?? '') — {{ $it['t_en'] }}@endif</span>
-                                @if ($bilingual && (($it['l_ar'] ?? '') !== ''))<span dir="rtl" class="text-navy-600 [font-family:Amiri,serif]">{{ $it['l_ar'] }}</span>@endif
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        @empty
-            <p class="rounded-xl border border-dashed border-line px-4 py-10 text-center text-xs text-muted">
-                The body is empty — add sections on the left and watch them appear here.
-            </p>
-        @endforelse
+        @include('event-contract.blocks', [
+            'blocks' => $data['blocks'] ?? [],
+            'number' => fn ($i) => ($i + 1).'.',
+        ])
 
         {{-- signatures --}}
         @if ($signatories->isNotEmpty())
@@ -210,6 +162,50 @@
         <p class="mt-5 border-t border-line pt-2 text-center font-mono text-[8px] text-muted">
             {{ $reference }} · {{ $bilingual ? 'EN / AR' : 'EN' }} · {{ \Illuminate\Support\Str::headline($status) }}
         </p>
+
+        {{-- ══════════ THE ANNEXES ══════════
+             Each starts on its own page and ends in an initials line, which is
+             what stops an appendix being swapped for a different one after the
+             agreement has been signed. Sections are numbered within the
+             appendix (1.1, 1.2) so a reader can cite them. --}}
+        @foreach ($appendices as $ai => $ax)
+            @php $an = $ai + 1; @endphp
+            <section class="mt-8 border-t-2 border-navy-900 pt-5" style="break-before: page">
+                <div class="flex items-baseline justify-between gap-3">
+                    <div>
+                        <p class="text-3xs font-bold uppercase tracking-[0.22em] text-gold-700">Appendix {{ $an }}</p>
+                        <p class="pf mt-0.5 text-base font-black text-navy-900">{{ $ax['title_en'] ?: 'Untitled appendix' }}</p>
+                    </div>
+                    @if ($bilingual && ($ax['title_ar'] ?? ''))
+                        <div dir="rtl" class="text-right">
+                            <p class="text-3xs font-bold tracking-[0.1em] text-gold-700 [font-family:Amiri,serif]">الملحق {{ $an }}</p>
+                            <p class="mt-0.5 text-sm font-bold text-navy-900 [font-family:Amiri,serif]">{{ $ax['title_ar'] }}</p>
+                        </div>
+                    @endif
+                </div>
+
+                <p class="mt-1 font-mono text-[8px] text-muted">
+                    This appendix forms an integral part of {{ $reference }}.
+                </p>
+
+                <div class="mt-4">
+                    @include('event-contract.blocks', [
+                        'blocks' => $ax['blocks'] ?? [],
+                        'number' => fn ($i) => $an.'.'.($i + 1),
+                        'empty' => 'This appendix is empty — fill it in, or pull it from the module that owns it.',
+                    ])
+                </div>
+
+                <div class="mt-5 flex items-end justify-between gap-6 border-t border-line pt-3 break-inside-avoid">
+                    <p class="text-3xs text-muted">Initialled for and on behalf of the Parties</p>
+                    <div class="flex gap-6">
+                        @foreach (['Contractor', 'Client'] as $side)
+                            <span class="w-24 border-t border-dashed border-navy-300 pt-0.5 text-center text-[7px] uppercase tracking-wide text-muted">{{ $side }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endforeach
     </div>
 
     {{-- the seal presses on when everyone has signed --}}
