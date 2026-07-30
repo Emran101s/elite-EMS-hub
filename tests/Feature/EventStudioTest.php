@@ -78,6 +78,34 @@ class EventStudioTest extends TestCase
         $this->assertContains('A sentence about it', $after['missing']);
     }
 
+    /**
+     * The module tiles are grouped by category for reading, but the key is the
+     * identity — a grouping that renumbers them leaves every tile posting the
+     * same meaningless key and nothing switches on. Assert the wiring, not just
+     * the method: toggleModule() on its own passed while the page was dead.
+     */
+    public function test_every_module_tile_is_wired_to_its_own_key(): void
+    {
+        $user = $this->actor();
+
+        $studio = Livewire::actingAs($user)->test(EventCreate::class)
+            ->call('chooseTemplate', 'summit')
+            ->call('goTo', 3);
+
+        foreach (array_keys(Event::HUB_MODULES) as $key) {
+            $studio->assertSeeHtml("toggleModule('{$key}')");
+        }
+
+        // And the switch itself works from both directions.
+        $on = $studio->get('modules');
+        $this->assertContains('budget', $on);
+
+        $studio->call('toggleModule', 'budget')
+            ->assertSet('modules', fn (array $m) => ! in_array('budget', $m, true))
+            ->call('toggleModule', 'budget')
+            ->assertSet('modules', fn (array $m) => in_array('budget', $m, true));
+    }
+
     public function test_nothing_is_written_until_launch(): void
     {
         $user = $this->actor();

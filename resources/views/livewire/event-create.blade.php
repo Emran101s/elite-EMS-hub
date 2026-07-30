@@ -217,7 +217,9 @@
                         Event Hub; every one you drop stays out of the way until you want it.
                     </p>
 
-                    @foreach (collect($hubModules)->groupBy(fn ($m) => $m[1]) as $group => $mods)
+                    {{-- preserveKeys: the module key IS the identity here; without it every
+                         button posts toggleModule('0') and nothing ever switches on. --}}
+                    @foreach (collect($hubModules)->groupBy(fn ($m) => $m[1], true) as $group => $mods)
                         <div>
                             <p class="eyebrow mb-2">{{ $group }}</p>
                             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -378,9 +380,15 @@
                 </button>
             </div>
 
-            <article class="overflow-hidden rounded-[24px] border border-line bg-white shadow-[0_24px_60px_-38px_rgba(11,31,58,0.55)]">
+            {{-- Portrait, on the deck's proportion (width ÷ height = 0.66), because
+                 this is the same card the Events deck will show once the event
+                 exists — a preview that is a different shape is not a preview.
+                 The cover takes the slack: everything under it is fixed height,
+                 so the ratio holds whatever the column width is. --}}
+            <article class="mx-auto flex w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-line bg-white shadow-[0_24px_60px_-38px_rgba(11,31,58,0.55)]"
+                     style="aspect-ratio: 66 / 100">
                 {{-- the cover --}}
-                <div class="relative isolate h-[168px] overflow-hidden bg-navy-950">
+                <div class="relative isolate min-h-[150px] flex-1 overflow-hidden bg-navy-950">
                     @if ($cover)
                         <img src="{{ $cover->temporaryUrl() }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover">
                     @else
@@ -409,11 +417,11 @@
                     </span>
                 </div>
 
-                <div class="px-5 pb-4 pt-12">
+                <div class="shrink-0 px-5 pb-4 pt-12">
                     <span class="inline-block rounded-full px-2.5 py-1 text-[9.5px] font-black uppercase tracking-[0.14em]"
                           style="background: {{ $pStageHex }}1a; color: {{ $pStageHex }}">{{ $pStage }}</span>
 
-                    <h3 class="pf mt-2.5 text-[24px] font-black leading-tight {{ $name !== '' ? 'text-navy-950' : 'text-navy-200' }}">{{ $pName }}</h3>
+                    <h3 class="pf mt-2.5 line-clamp-2 text-[24px] font-black leading-tight {{ $name !== '' ? 'text-navy-950' : 'text-navy-200' }}">{{ $pName }}</h3>
 
                     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11.5px] text-navy-600">
                         <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 text-navy-300" />{{ $pDates }}</span>
@@ -423,7 +431,7 @@
                         @endif
                     </div>
 
-                    <p class="mt-3 text-[12px] leading-relaxed {{ trim($description) !== '' ? 'text-navy-700' : 'text-navy-300' }}">
+                    <p class="mt-3 line-clamp-3 text-[12px] leading-relaxed {{ trim($description) !== '' ? 'text-navy-700' : 'text-navy-300' }}">
                         {{ trim($description) ?: 'A sentence about the event will appear here as you write it.' }}
                     </p>
                 </div>
@@ -440,7 +448,7 @@
                         ];
                     @endphp
 
-                    <div class="grid grid-cols-4 divide-x divide-line border-y border-line">
+                    <div class="grid shrink-0 grid-cols-4 divide-x divide-line border-y border-line">
                         @foreach ($rings as $ring)
                             <div class="flex flex-col items-center gap-1.5 px-1.5 py-4">
                                 <span class="relative grid h-[62px] w-[62px] place-items-center">
@@ -461,7 +469,7 @@
                     {{-- The first thing the platform will put in the diary. Agenda
                          lock is conventionally a month before doors, so the date is
                          known before the event exists. --}}
-                    <div class="m-4 rounded-2xl bg-page/70 px-4 py-3">
+                    <div class="m-4 shrink-0 rounded-2xl bg-page/70 px-4 py-3">
                         <p class="eyebrow">Next milestone</p>
                         @if ($milestone)
                             <div class="mt-1 flex flex-wrap items-baseline gap-x-3">
@@ -474,7 +482,7 @@
                         @endif
                     </div>
                 @else
-                    <div class="border-t border-line px-5 py-4">
+                    <div class="shrink-0 border-t border-line px-5 py-4">
                         <p class="eyebrow">What an attendee sees</p>
                         <p class="mt-1.5 text-[11.5px] leading-relaxed text-muted">
                             The cover, the name, the dates, the place and the description — and none of
