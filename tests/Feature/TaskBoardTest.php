@@ -139,4 +139,33 @@ class TaskBoardTest extends TestCase
 
         $this->assertSame('todo', $task->fresh()->status);
     }
+
+    /**
+     * In List view a row's checklist expands in place. The list owns which row
+     * is open, so opening one closes the last — otherwise a long list turns
+     * into a wall of nested rows you have to scroll past to reach the next task.
+     */
+    public function test_the_list_expands_one_row_at_a_time(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        $a = $event->tasks()->create(['title' => 'Confirm the stage build', 'status' => 'todo', 'priority' => 'normal', 'area' => 'venue',
+            'checklist' => [['text' => 'Measure the room', 'done' => false]]]);
+        $b = $event->tasks()->create(['title' => 'Brief the AV crew', 'status' => 'todo', 'priority' => 'normal', 'area' => 'venue',
+            'checklist' => [['text' => 'Send the cue sheet', 'done' => false]]]);
+
+        $html = Livewire::actingAs($user)->test(TasksTab::class, ['event' => $event])
+            ->call('setView', 'list')->html();
+
+        $this->assertStringContainsString('x-data="{ at: null }"', $html, 'the list owns the open row');
+
+        // The row-actions dropdown keeps its own `open` and should — it closes
+        // on outside click. What must not come back is a row wrapper with one.
+        $this->assertStringNotContainsString('x-data="{ open: false }" class="border-b', $html);
+
+        foreach ([$a, $b] as $task) {
+            $this->assertStringContainsString("at = (at === {$task->id} ? null : {$task->id})", $html);
+            $this->assertStringContainsString("x-show=\"at === {$task->id}\" x-collapse.duration.300ms", $html);
+        }
+    }
 }

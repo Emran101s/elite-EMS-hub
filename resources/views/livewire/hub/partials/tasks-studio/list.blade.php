@@ -4,7 +4,9 @@
 @endphp
 <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
     <div class="overflow-x-auto">
-        <div class="min-w-[900px]">
+        {{-- The list owns which row is expanded — one `at`, so opening a row's
+             checklist closes the last one and the table stays a table. --}}
+        <div x-data="{ at: null }" class="min-w-[900px]">
             <div class="grid {{ $cols }} gap-2 border-b border-line bg-navy-50/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
                 <span>Task</span><span>Status</span><span>Owner</span><span>Start</span><span>Due</span><span>Progress</span>
             </div>
@@ -20,11 +22,13 @@
 
                 @foreach ($rows as $item)
                     @php $prog = $item->progress(); [$cd, $ct] = $item->checklistProgress(); $overdue = $item->isOverdue(); $checklist = $item->checklist ?? []; @endphp
-                    <div wire:key="tlir-{{ $item->id }}" x-data="{ open: false }" class="border-b border-line/50">
+                    <div wire:key="tlir-{{ $item->id }}" class="border-b border-line/50">
                         <div class="grid {{ $cols }} items-center gap-2 px-4 py-2 transition hover:bg-navy-50/30">
                             <div class="flex min-w-0 items-center gap-2">
                                 @if (count($checklist))
-                                    <button type="button" @click="open = !open" class="text-navy-300 transition hover:text-navy-700"><svg class="h-3 w-3 transition-transform" :class="open && 'rotate-90'" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg></button>
+                                    <button type="button" x-on:click="at = (at === {{ $item->id }} ? null : {{ $item->id }})"
+                                            x-bind:aria-expanded="at === {{ $item->id }} ? 'true' : 'false'"
+                                            class="text-navy-300 transition hover:text-navy-700"><svg class="h-3 w-3 transition-transform duration-300" x-bind:class="at === {{ $item->id }} && 'rotate-90'" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg></button>
                                 @else<span class="w-3"></span>@endif
                                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $item->priorityHex() }}" title="{{ $item->priorityLabel() }}"></span>
                                 <button type="button" wire:click="openTask({{ $item->id }})" class="truncate text-left text-xs font-semibold text-navy-800 {{ in_array($item->status, ['done', 'cancelled']) ? 'text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled task' }}</button>
@@ -39,7 +43,8 @@
                         </div>
 
                         @if (count($checklist))
-                            <div x-show="open" x-cloak class="space-y-1 border-t border-line/50 bg-page/40 px-4 py-2 pl-11">
+                            <div x-show="at === {{ $item->id }}" x-collapse.duration.300ms x-cloak
+                                 class="space-y-1 border-t border-line/50 bg-page/40 px-4 py-2 pl-11">
                                 @foreach ($checklist as $ci)
                                     <div class="flex items-center gap-2">
                                         <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow text-white {{ ($ci['done'] ?? false) ? 'border-emerald-500 bg-emerald-500' : 'border-navy-300' }}">{{ ($ci['done'] ?? false) ? '✓' : '' }}</span>

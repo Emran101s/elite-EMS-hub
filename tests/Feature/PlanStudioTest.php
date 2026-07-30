@@ -180,4 +180,39 @@ class PlanStudioTest extends TestCase
 
         $this->assertSame(0, $event->planItems()->count());
     }
+
+    /**
+     * In List view a row's sub-items expand in place, and the list owns which
+     * row is open — opening one closes the last, so a plan of forty items never
+     * becomes a wall of nested rows between you and the next track.
+     */
+    public function test_the_list_expands_one_row_at_a_time(): void
+    {
+        [$user, $event] = $this->make();
+
+        // mount() seeds the default tracks, and the list groups by track.
+        $c = Livewire::actingAs($user)->test(PlanStudio::class, ['event' => $event]);
+        $track = $event->planTracks()->firstOrFail();
+
+        $items = collect(['Programme', 'Logistics'])->map(fn ($t) => $event->planItems()->create(
+            ['title' => $t, 'status' => 'in_progress', 'priority' => 'medium', 'track_id' => $track->id],
+        ));
+
+        foreach ($items as $item) {
+            $c->set('newSubtask', 'Something to do')->call('addSubtask', $item->id);
+        }
+
+        $html = $c->call('setView', 'list')->html();
+
+        $this->assertStringContainsString('x-data="{ at: null }"', $html, 'the list owns the open row');
+
+        // The row-actions dropdown keeps its own `open` and should — it closes
+        // on outside click. What must not come back is a row wrapper with one.
+        $this->assertStringNotContainsString('x-data="{ open: false }" class="border-b', $html);
+
+        foreach ($items as $item) {
+            $this->assertStringContainsString("at = (at === {$item->id} ? null : {$item->id})", $html);
+            $this->assertStringContainsString("x-show=\"at === {$item->id}\" x-collapse.duration.300ms", $html);
+        }
+    }
 }

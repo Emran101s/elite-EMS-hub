@@ -4,7 +4,10 @@
 @endphp
 <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
     <div class="overflow-x-auto">
-        <div class="min-w-[820px]">
+        {{-- The list owns which row is expanded, the same way <x-accordion>
+             does: one `at`, so opening a row's sub-items closes the last one
+             and the table never grows into a wall of nested rows. --}}
+        <div x-data="{ at: null }" class="min-w-[820px]">
             <div class="grid {{ $cols }} gap-2 border-b border-line bg-navy-50/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
                 <span>Item</span><span>Status</span><span>Owners</span><span>Start</span><span>Due</span><span>Progress</span>
             </div>
@@ -22,11 +25,13 @@
 
                 @foreach ($rows as $item)
                     @php $prog = $item->progress(); [$sd, $st] = $item->subtaskProgress(); $overdue = $item->isOverdue(); @endphp
-                    <div wire:key="lir-{{ $item->id }}" x-data="{ open: false }" class="border-b border-line/50">
+                    <div wire:key="lir-{{ $item->id }}" class="border-b border-line/50">
                         <div class="grid {{ $cols }} items-center gap-2 px-4 py-2 transition hover:bg-navy-50/30">
                             <div class="flex min-w-0 items-center gap-2">
                                 @if ($item->subtasks->count())
-                                    <button type="button" @click="open = !open" class="text-navy-300 transition hover:text-navy-700"><svg class="h-3 w-3 transition-transform" :class="open && 'rotate-90'" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg></button>
+                                    <button type="button" x-on:click="at = (at === {{ $item->id }} ? null : {{ $item->id }})"
+                                            x-bind:aria-expanded="at === {{ $item->id }} ? 'true' : 'false'"
+                                            class="text-navy-300 transition hover:text-navy-700"><svg class="h-3 w-3 transition-transform duration-300" x-bind:class="at === {{ $item->id }} && 'rotate-90'" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg></button>
                                 @else<span class="w-3"></span>@endif
                                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $item->priorityHex() }}" title="{{ $item->priorityLabel() }}"></span>
                                 <button type="button" wire:click="openItem({{ $item->id }})" class="truncate text-left text-xs font-semibold text-navy-800 {{ in_array($item->status, ['done', 'cancelled']) ? 'text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled item' }}</button>
@@ -43,7 +48,8 @@
                             <div class="flex items-center gap-1.5"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-navy-50"><div class="h-full rounded-full" style="width: {{ max($prog, $prog > 0 ? 4 : 0) }}%; background: {{ $item->statusHex() }}"></div></div><span class="text-eyebrow font-black text-navy-400">{{ $prog }}%</span></div>
                         </div>
 
-                        <div x-show="open" x-cloak class="space-y-1 border-t border-line/50 bg-page/40 px-4 py-2 pl-11">
+                        <div x-show="at === {{ $item->id }}" x-collapse.duration.300ms x-cloak
+                             class="space-y-1 border-t border-line/50 bg-page/40 px-4 py-2 pl-11">
                             @foreach ($item->subtasks as $sub)
                                 <div class="flex items-center gap-2">
                                     <button type="button" wire:click="toggleSubtask({{ $sub->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow text-white transition {{ $sub->is_done ? 'border-emerald-500 bg-emerald-500' : 'border-navy-300 hover:border-emerald-400' }}">{{ $sub->is_done ? '✓' : '' }}</button>
