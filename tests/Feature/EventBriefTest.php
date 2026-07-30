@@ -149,4 +149,27 @@ class EventBriefTest extends TestCase
         $res->assertOk();
         $this->assertSame('application/pdf', $res->headers->get('content-type'));
     }
+
+    /**
+     * Twelve sections beside a live preview only works if one is open at a
+     * time — otherwise the left column grows past the screen and the preview
+     * you are meant to be watching scrolls away. The group owns the open panel,
+     * so opening one closes the last.
+     */
+    public function test_the_sections_are_one_accordion_closed_on_arrival(): void
+    {
+        [$user, $event] = $this->make();
+        EventBrief::forEvent($event);
+
+        $html = Livewire::actingAs($user)->test(BriefTab::class, ['event' => $event])->html();
+
+        $this->assertStringContainsString('at: null', $html, 'nothing is open on arrival');
+        $this->assertStringNotContainsString('{ open: false }', $html, 'no section keeps its own state');
+
+        foreach (['cover', 'overview', 'components', 'risks'] as $panel) {
+            $this->assertStringContainsString("at = (at === '{$panel}'", $html, "{$panel} toggles the group");
+        }
+
+        $this->assertStringContainsString('x-collapse.duration.300ms', $html);
+    }
 }

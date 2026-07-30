@@ -681,4 +681,24 @@ class EventContractTest extends TestCase
         $this->assertStringContainsString('Signed', $html, 'the signed block is marked');
         $this->assertStringContainsString('verify', $html, 'a verification fingerprint prints');
     }
+
+    /**
+     * The editor's modules are an accordion — one group owning one open panel —
+     * rather than six independent booleans that can all be true at once. Assert
+     * the wiring: every panel writes the same `at`, and none of them carries a
+     * private `open` any more.
+     */
+    public function test_the_editor_modules_are_one_accordion(): void
+    {
+        [$user, $event] = $this->make();
+        $html = $this->tab($user, $event)->html();
+
+        $this->assertStringContainsString('at: null', $html, 'the group owns the open panel');
+        $this->assertStringNotContainsString('{ open: false }', $html, 'no panel keeps its own state');
+
+        foreach (['parties', 'value-and-payments', 'budget-assumptions', 'contract-body', 'signatories'] as $panel) {
+            $this->assertStringContainsString("at = (at === '{$panel}'", $html, "{$panel} toggles the group");
+            $this->assertStringContainsString("x-collapse.duration.300ms", $html);
+        }
+    }
 }

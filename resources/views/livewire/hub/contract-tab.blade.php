@@ -343,20 +343,12 @@
         <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
 
             {{-- ══════════ LEFT · the controls, as collapsible modules ══════════ --}}
-            <div class="space-y-3">
+            <x-accordion>
 
                 @if ($type !== 'client')
                     {{-- Document module --}}
-                    <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                        <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-700">01</span>
-                            <span class="flex-1">
-                                <span class="block text-sm font-bold text-navy-900">Document</span>
-                                <span class="block text-eyebrow text-muted">Title, counterparty and language</span>
-                            </span>
-                            <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                        </button>
-                        <div x-show="open" class="space-y-3 border-t border-line px-5 py-4">
+                    <x-accordion-section id="document" num="01" title="Document" summary="Title, counterparty and language">
+                        <div class="space-y-3">
                             <input type="text" wire:model.live.debounce.500ms="title" placeholder="{{ $tLabel }}" class="{{ $in }} !text-base !font-bold">
                             @php $cp = $data['counterparty'] ?? []; @endphp
 
@@ -429,21 +421,13 @@
                                 @endcan
                             </div>
                         </div>
-                    </section>
+                    </x-accordion-section>
                 @endif
 
                 @if ($type === 'client')
                     {{-- Parties module --}}
-                    <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                        <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-700">01</span>
-                            <span class="flex-1">
-                                <span class="block text-sm font-bold text-navy-900">Parties</span>
-                                <span class="block text-eyebrow text-muted">The client entities and their shares</span>
-                            </span>
-                            <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                        </button>
-                        <div x-show="open" class="space-y-2.5 border-t border-line px-5 py-4">
+                    <x-accordion-section id="parties" num="01" title="Parties" summary="The client entities and their shares">
+                        <div class="space-y-2.5">
                             @php $shareTotal = collect($data['second_parties'] ?? [])->sum(fn ($p) => (float) ($p['share'] ?? 0)); @endphp
                             @foreach ($data['second_parties'] ?? [] as $i => $sp)
                                 <div wire:key="sp-{{ $i }}" class="group/sp space-y-1.5">
@@ -473,19 +457,11 @@
                                 <button type="button" wire:click="addSecondParty" class="btn-ghost btn-xs">＋ Add party</button>
                             </div>
                         </div>
-                    </section>
+                    </x-accordion-section>
 
                     {{-- Value & schedule module --}}
-                    <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                        <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-700">02</span>
-                            <span class="flex-1">
-                                <span class="block text-sm font-bold text-navy-900">Value &amp; Payments</span>
-                                <span class="block text-eyebrow text-muted">{{ $fmt($est) }} · {{ count($f['payment_schedule'] ?? []) }} installments</span>
-                            </span>
-                            <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                        </button>
-                        <div x-show="open" class="space-y-3 border-t border-line px-5 py-4">
+                    <x-accordion-section id="value-and-payments" num="02" title="Value &amp; Payments" summary="{{ $fmt($est) }} · {{ count($f['payment_schedule'] ?? []) }} installments">
+                        <div class="space-y-3">
                             <div class="rounded-xl bg-gold-50/60 p-3">
                                 <div class="flex items-center gap-2">
                                     <span class="text-eyebrow font-bold text-navy-400">{{ $cur }}</span>
@@ -534,39 +510,23 @@
                                 </span>
                             </div>
                         </div>
-                    </section>
+                    </x-accordion-section>
 
                     {{-- Assumptions module --}}
-                    <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                        <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                            <span class="pf text-lg font-bold text-gold-700">03</span>
-                            <span class="flex-1">
-                                <span class="block text-sm font-bold text-navy-900">Budget Assumptions</span>
-                                <span class="block text-eyebrow text-muted">What the estimate is based on</span>
-                            </span>
-                            <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                        </button>
-                        <div x-show="open" class="grid gap-2.5 border-t border-line px-5 py-4 sm:grid-cols-2">
+                    <x-accordion-section id="budget-assumptions" num="03" title="Budget Assumptions" summary="What the estimate is based on">
+                        <div class="grid gap-2.5 sm:grid-cols-2">
                             <div><label class="field-label !mb-1 !text-eyebrow">Attendees — from</label><input type="number" wire:model.live.debounce.500ms="data.assumptions.attendees_min" class="{{ $in }}"></div>
                             <div><label class="field-label !mb-1 !text-eyebrow">Attendees — to</label><input type="number" wire:model.live.debounce.500ms="data.assumptions.attendees_max" class="{{ $in }}"></div>
                             <div><label class="field-label !mb-1 !text-eyebrow">Rooms</label><input type="number" wire:model.live.debounce.500ms="data.assumptions.rooms" class="{{ $in }}"></div>
                             <div><label class="field-label !mb-1 !text-eyebrow">Nights per guest</label><input type="number" wire:model.live.debounce.500ms="data.assumptions.nights" class="{{ $in }}"></div>
                             <div class="sm:col-span-2"><label class="field-label !mb-1 !text-eyebrow">Catering (English)</label><input type="text" wire:model.live.debounce.500ms="data.assumptions.catering_en" class="{{ $in }}"></div>
                         </div>
-                    </section>
+                    </x-accordion-section>
                 @endif
 
                 {{-- Body module --}}
-                <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                    <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-700">{{ $type === 'client' ? '04' : '02' }}</span>
-                        <span class="flex-1">
-                            <span class="block text-sm font-bold text-navy-900">Contract Body</span>
-                            <span class="block text-eyebrow text-muted">{{ count($data['blocks'] ?? []) }} clauses · every one editable</span>
-                        </span>
-                        <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                    </button>
-                    <div x-show="open" class="space-y-3 border-t border-line px-5 py-4">
+                <x-accordion-section id="contract-body" num="{{ $type === 'client' ? '04' : '02' }}" title="Contract Body" summary="{{ count($data['blocks'] ?? []) }} clauses · every one editable">
+                    <div class="space-y-3">
                         @can('manage-contract')
                             <div class="flex items-center justify-end gap-2">
                                 <button type="button" wire:click="restoreStandardBlocks"
@@ -660,19 +620,11 @@
                             </p>
                         @endforelse
                     </div>
-                </section>
+                </x-accordion-section>
 
                 {{-- Signatories module --}}
-                <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                    <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-700">{{ $type === 'client' ? '05' : '03' }}</span>
-                        <span class="flex-1">
-                            <span class="block text-sm font-bold text-navy-900">Signatories</span>
-                            <span class="block text-eyebrow text-muted">{{ $signatories->whereNotNull('signed_at')->count() }} of {{ $signatories->count() }} signed</span>
-                        </span>
-                        <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                    </button>
-                    <div x-show="open" class="space-y-2 border-t border-line px-5 py-4">
+                <x-accordion-section id="signatories" num="{{ $type === 'client' ? '05' : '03' }}" title="Signatories" summary="{{ $signatories->whereNotNull('signed_at')->count() }} of {{ $signatories->count() }} signed">
+                    <div class="space-y-2">
                         @forelse ($signatories as $s)
                             <div wire:key="sig-{{ $s->id }}"
                                  @class(['group flex flex-wrap items-center gap-2 rounded-xl px-3 py-2.5', 'bg-emerald-50/60' => $s->isSigned(), 'bg-page/50' => ! $s->isSigned()])>
@@ -715,8 +667,8 @@
                             <input type="text" wire:model.live.debounce.500ms="reference" class="{{ $in }} font-mono !text-xs">
                         </div>
                     </div>
-                </section>
-            </div>
+                </x-accordion-section>
+            </x-accordion>
 
             {{-- ══════════ RIGHT · the living paper ══════════ --}}
             <div class="xl:sticky xl:top-12">

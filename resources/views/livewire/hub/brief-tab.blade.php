@@ -86,19 +86,12 @@
 
         {{-- ══════════ LEFT · the sections, as collapsible modules ══════════ --}}
         @php $in = 'w-full rounded-xl border border-transparent bg-page/70 px-3 py-2 text-sm font-medium text-navy-900 placeholder:text-navy-300 transition focus:border-gold-400 focus:bg-white focus:outline-none'; @endphp
-        <div class="space-y-3">
+        <x-accordion>
 
             {{-- Cover module --}}
-            <section x-data="{ open: false }" class="overflow-hidden rounded-2xl border border-line bg-white">
-                <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                    <span class="pf text-lg font-bold text-gold-700">00</span>
-                    <span class="flex-1">
-                        <span class="block text-sm font-bold text-navy-900">Cover</span>
-                        <span class="block text-eyebrow text-muted">Subtitle, parties and how to use this document</span>
-                    </span>
-                    <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                </button>
-                <div x-show="open" class="space-y-2.5 border-t border-line px-5 py-4">
+            <x-accordion-section id="cover" num="00" title="Cover"
+                                 summary="Subtitle, parties and how to use this document">
+                <div class="space-y-2.5">
                     <div><label class="field-label !mb-1 !text-eyebrow">Subtitle</label>
                         <input type="text" wire:model.live.debounce.500ms="data.meta.subtitle" class="{{ $in }}"></div>
                     <div class="grid gap-2.5 sm:grid-cols-2">
@@ -112,7 +105,7 @@
                     <div><label class="field-label !mb-1 !text-eyebrow">How to use this document</label>
                         <textarea rows="3" wire:model.live.debounce.500ms="data.meta.how_to" class="{{ $in }} !text-xs leading-relaxed"></textarea></div>
                 </div>
-            </section>
+            </x-accordion-section>
 
             @foreach ($sections as $key => [$num, $title, $type])
                 @php
@@ -122,24 +115,16 @@
                         default => count($data[$key] ?? []).' '.\Illuminate\Support\Str::plural('row', count($data[$key] ?? [])),
                     };
                 @endphp
-                <section x-data="{ open: false }" wire:key="mod-{{ $key }}" class="overflow-hidden rounded-2xl border border-line bg-white">
-                    <button type="button" @click="open = !open" class="flex w-full items-center gap-3 px-5 py-3.5 text-left">
-                        <span class="pf text-lg font-bold text-gold-700">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
-                        <span class="flex-1">
-                            <span class="block text-sm font-bold text-navy-900">{{ $title }}</span>
-                            <span class="block text-eyebrow text-muted">{{ $summary }}</span>
-                        </span>
-                        <span class="text-navy-300 transition" :class="open && 'rotate-180'">▾</span>
-                    </button>
-                    <div x-show="open" class="border-t border-line px-5 py-4">
-                        @include('livewire.hub.partials.brief-section', ['type' => $type, 'key' => $key])
-                        @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
-                            <button type="button" wire:click="addRow('{{ $key }}')" class="mt-3 btn-ghost btn-xs">＋ Add row</button>
-                        @endif
-                    </div>
-                </section>
+                <x-accordion-section :id="$key" wire:key="mod-{{ $key }}"
+                                     :num="str_pad($num, 2, '0', STR_PAD_LEFT)"
+                                     :title="$title" :summary="$summary">
+                    @include('livewire.hub.partials.brief-section', ['type' => $type, 'key' => $key])
+                    @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
+                        <button type="button" wire:click="addRow('{{ $key }}')" class="mt-3 btn-ghost btn-xs">＋ Add row</button>
+                    @endif
+                </x-accordion-section>
             @endforeach
-        </div>
+        </x-accordion>
 
         {{-- ══════════ RIGHT · the living dossier ══════════ --}}
         <div class="xl:sticky xl:top-12">
