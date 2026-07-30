@@ -111,24 +111,21 @@
                             <label class="field-label" for="s-stage">Event stage</label>
                             <select id="s-stage" wire:model.live="statusPill" class="input h-11">
                                 @foreach (\App\Livewire\EventCreate::STATUS_PILLS as $pill => $stage)
-                                    <option value="{{ $pill }}">{{ \App\Support\Workflow::label('event_stage', $stage) }}</option>
+                                    <option value="{{ $pill }}" @selected($pill === $statusPill)>{{ \App\Support\Workflow::label('event_stage', $stage) }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div>
-                            <label class="field-label">Priority</label>
-                            <div class="flex flex-wrap gap-1">
-                                @foreach ($priorities as $key => [$label, $hex])
-                                    <button type="button" wire:click="setPriority('{{ $key }}')"
-                                            @class([
-                                                'flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border text-[11.5px] font-bold transition',
-                                                'border-navy-950 bg-navy-950 text-white' => $priority === $key,
-                                                'border-line bg-white text-navy-500 hover:border-navy-200' => $priority !== $key,
-                                            ])>
-                                        <span class="h-2 w-2 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
-                                    </button>
-                                @endforeach
+                            <label class="field-label" for="s-priority">Priority</label>
+                            <div class="relative">
+                                <span class="pointer-events-none absolute left-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
+                                      style="background: {{ $pPriorityHex }}"></span>
+                                <select id="s-priority" wire:model.live="priority" class="input h-11 !ps-8">
+                                    @foreach ($priorities as $key => [$label, $hex])
+                                        <option value="{{ $key }}" @selected($key === $priority)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -136,7 +133,7 @@
                     <div>
                         <label class="field-label">Event type <span class="text-risk">*</span></label>
                         <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
-                            @foreach ($templates as $key => [$label, $type, $icon, $mods])
+                            @foreach ($templates as $key => [$label, $type, $icon, $mods, $blurb])
                                 @php $on = $template === $key; @endphp
                                 <button type="button" wire:click="chooseTemplate('{{ $key }}')"
                                         @class([
@@ -154,8 +151,8 @@
                                     ])>
                                         <x-icon :name="$icon" class="h-5 w-5" />
                                     </span>
-                                    <span class="block text-[12px] font-bold text-navy-950">{{ $label }}</span>
-                                    <span class="block text-[10px] leading-tight text-muted">{{ count($mods) }} modules preset</span>
+                                    <span class="block text-[12.5px] font-bold text-navy-950">{{ $label }}</span>
+                                    <span class="block max-w-[15ch] text-[10.5px] leading-tight text-muted">{{ $blurb }}</span>
                                 </button>
                             @endforeach
                         </div>
@@ -207,7 +204,7 @@
                     <div class="sm:w-1/2">
                         <label class="field-label" for="s-tz">Timezone</label>
                         <select id="s-tz" wire:model.live="timezone" class="input h-11">
-                            @foreach ($timezones as $tz)<option value="{{ $tz }}">{{ $tz }}</option>@endforeach
+                            @foreach ($timezones as $tz)<option value="{{ $tz }}" @selected($tz === $timezone)>{{ $tz }}</option>@endforeach
                         </select>
                     </div>
                 </div>
@@ -276,7 +273,7 @@
                             <label class="field-label" for="s-cur">Currency</label>
                             <select id="s-cur" wire:model.live="currency" class="input h-11">
                                 @foreach ($currencies as $code => [$symbol, $label])
-                                    <option value="{{ $code }}">{{ $code }} — {{ $label }}</option>
+                                    <option value="{{ $code }}" @selected($code === $currency)>{{ $code }} — {{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -359,7 +356,7 @@
              the event is on screen the whole time you are deciding about it.
              Every field above writes here on the keystroke. --}}
         <div class="space-y-4 xl:sticky xl:top-4">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <p class="eyebrow">Live preview</p>
                 <span class="flex items-center gap-1.5 text-[10.5px] text-muted">
                     <span class="relative flex h-1.5 w-1.5">
@@ -368,6 +365,17 @@
                     </span>
                     updates as you type
                 </span>
+
+                {{-- The same card, without the numbers only your team should
+                     see. Enabled once there is something worth showing. --}}
+                <button type="button" wire:click="$toggle('asAttendee')" @disabled($name === '')
+                        @class([
+                            'ms-auto flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[11.5px] font-bold transition disabled:opacity-40',
+                            'border-navy-950 bg-navy-950 text-white' => $asAttendee,
+                            'border-line bg-white text-navy-700 hover:border-gold-300' => ! $asAttendee,
+                        ])>
+                    Preview as attendee <span aria-hidden="true">↗</span>
+                </button>
             </div>
 
             <article class="overflow-hidden rounded-[24px] border border-line bg-white shadow-[0_24px_60px_-38px_rgba(11,31,58,0.55)]">
@@ -421,43 +429,61 @@
                 </div>
 
                 {{-- the four figures the event will open with --}}
-                <div class="grid grid-cols-4 divide-x divide-line border-y border-line">
-                    @php $r = 2 * M_PI * 26; @endphp
-                    <div class="flex flex-col items-center gap-1.5 px-2 py-3.5">
-                        <span class="relative grid h-[52px] w-[52px] place-items-center">
-                            <svg class="h-[52px] w-[52px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
-                                <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-navy-50)" stroke-width="6" />
-                                <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-gold-500)" stroke-width="6" stroke-linecap="round"
-                                        stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $r - ($r * $readiness['pct'] / 100) }}"
-                                        style="transition: stroke-dashoffset .45s cubic-bezier(.22,1,.36,1)" />
-                            </svg>
-                            <span class="absolute text-[12px] font-black text-navy-950">{{ $readiness['pct'] }}%</span>
-                        </span>
-                        <span class="text-[10px] text-muted">Defined</span>
+                @unless ($asAttendee)
+                    @php
+                        $r = 2 * M_PI * 26;
+                        $rings = [
+                            ['value' => $readiness['pct'].'%', 'pct' => $readiness['pct'], 'hex' => 'var(--color-gold-500)', 'label' => 'Progress'],
+                            ['value' => count($modules), 'pct' => count($modules) ? min(100, count($modules) / 18 * 100) : 0, 'hex' => '#3B82F6', 'label' => 'Modules'],
+                            ['value' => $budget !== '' ? $curSymbol.\Illuminate\Support\Number::abbreviate((float) $budget, 0) : '—', 'pct' => $budget !== '' ? 100 : 0, 'hex' => '#10B981', 'label' => 'Budget'],
+                            ['value' => $pPriorityLabel, 'pct' => 100, 'hex' => $pPriorityHex, 'label' => 'Priority'],
+                        ];
+                    @endphp
+
+                    <div class="grid grid-cols-4 divide-x divide-line border-y border-line">
+                        @foreach ($rings as $ring)
+                            <div class="flex flex-col items-center gap-1.5 px-1.5 py-4">
+                                <span class="relative grid h-[62px] w-[62px] place-items-center">
+                                    <svg class="h-[62px] w-[62px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
+                                        <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-navy-50)" stroke-width="5" />
+                                        <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $ring['hex'] }}" stroke-width="5" stroke-linecap="round"
+                                                stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $r - ($r * $ring['pct'] / 100) }}"
+                                                style="transition: stroke-dashoffset .45s cubic-bezier(.22,1,.36,1)" />
+                                    </svg>
+                                    <span class="pf absolute text-[14px] font-black leading-none"
+                                          style="color: {{ $ring['label'] === 'Priority' ? $ring['hex'] : 'var(--color-navy-950)' }}">{{ $ring['value'] }}</span>
+                                </span>
+                                <span class="text-[10px] text-muted">{{ $ring['label'] }}</span>
+                            </div>
+                        @endforeach
                     </div>
 
-                    @foreach ([
-                        [count($modules), 'Modules'],
-                        [$budget !== '' ? $curSymbol.\Illuminate\Support\Number::abbreviate((float) $budget, 0) : '—', 'Budget'],
-                        [$pPriorityLabel, 'Priority'],
-                    ] as $i => [$value, $label])
-                        <div class="flex flex-col items-center justify-center gap-1.5 px-2 py-3.5">
-                            <span class="pf text-[19px] font-black leading-none {{ $label === 'Priority' ? '' : 'text-navy-950' }}"
-                                  @if ($label === 'Priority') style="color: {{ $pPriorityHex }}" @endif>{{ $value }}</span>
-                            <span class="text-[10px] text-muted">{{ $label }}</span>
-                        </div>
-                    @endforeach
-                </div>
+                    {{-- The first thing the platform will put in the diary. Agenda
+                         lock is conventionally a month before doors, so the date is
+                         known before the event exists. --}}
+                    <div class="m-4 rounded-2xl bg-page/70 px-4 py-3">
+                        <p class="eyebrow">Next milestone</p>
+                        @if ($milestone)
+                            <div class="mt-1 flex flex-wrap items-baseline gap-x-3">
+                                <span class="pf text-[13.5px] font-bold text-navy-950">{{ $milestone['title'] }}</span>
+                                <span class="flex items-center gap-1.5 text-[11.5px] text-muted"><x-icon name="calendar" class="h-3.5 w-3.5 text-navy-300" />{{ $milestone['due'] }}</span>
+                                <span class="ms-auto text-[11.5px] font-bold {{ $milestone['late'] ? 'text-risk' : 'text-gold-700' }}">{{ $milestone['note'] }}</span>
+                            </div>
+                        @else
+                            <p class="mt-1 text-[12px] text-navy-300">Set a start date and the first milestone lands here.</p>
+                        @endif
+                    </div>
+                @else
+                    <div class="border-t border-line px-5 py-4">
+                        <p class="eyebrow">What an attendee sees</p>
+                        <p class="mt-1.5 text-[11.5px] leading-relaxed text-muted">
+                            The cover, the name, the dates, the place and the description — and none of
+                            the budget, the modules or the priority. This is the card that goes on the
+                            registration page.
+                        </p>
+                    </div>
+                @endunless
 
-                {{-- what the platform will build the moment it launches --}}
-                <div class="bg-page/50 px-5 py-3">
-                    <p class="eyebrow">On launch</p>
-                    <p class="mt-1 text-[11.5px] text-navy-700">
-                        {{ $previewDays ?: 'No' }} agenda {{ str('day')->plural($previewDays) }},
-                        {{ count($modules) }} {{ str('module')->plural(count($modules)) }},
-                        and an Event Hub built around {{ $template ? strtolower($templates[$template][0]) : 'this' }} work.
-                    </p>
-                </div>
             </article>
         </div>
     </div>
@@ -469,8 +495,8 @@
                 <x-icon name="clipboard" class="h-4 w-4" />
             </span>
             <span class="leading-tight">
-                <span class="block text-[11.5px] font-bold text-emerald-700">Nothing written yet</span>
-                <span class="block text-[10.5px] text-muted">The event is created when you launch</span>
+                <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-emerald-700">Draft saved</span>
+                <span class="block text-[10.5px] text-muted">{{ $savedAgo ?? 'Nothing typed yet' }}</span>
             </span>
         </div>
 
@@ -479,8 +505,8 @@
                 <x-icon name="grid" class="h-4 w-4" />
             </span>
             <span class="leading-tight">
-                <span class="block text-[11.5px] font-bold text-navy-900">{{ count($modules) }} {{ str('module')->plural(count($modules)) }} selected</span>
-                <span class="block text-[10.5px] text-muted">{{ $template ? $templates[$template][0].' preset' : 'Pick a type to preset them' }}</span>
+                <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-700">{{ count($modules) }} {{ str('module')->plural(count($modules)) }} selected</span>
+                <span class="block text-[10.5px] text-muted">{{ $template ? $templates[$template][0].' preset enabled' : 'Pick a type to preset them' }}</span>
             </span>
         </div>
 
@@ -489,8 +515,8 @@
                 <x-icon name="clock" class="h-4 w-4" />
             </span>
             <span class="leading-tight">
-                <span class="block text-[11.5px] font-bold text-navy-900">≈ {{ $setupMinutes }} {{ str('minute')->plural($setupMinutes) }}</span>
-                <span class="block text-[10.5px] text-muted">Estimated setup</span>
+                <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-700">Est. setup time</span>
+                <span class="block text-[10.5px] text-muted">{{ $setupMinutes }} – {{ $setupMinutes + 1 }} minutes</span>
             </span>
         </div>
 

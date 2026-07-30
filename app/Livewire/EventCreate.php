@@ -48,21 +48,30 @@ class EventCreate extends Component
 
     public int $step = 1;
 
-    /** Type templates: key => [label, event type, icon, default modules]. */
-    public const TEMPLATES = [
-        'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports']],
-        'summit' => ['Summit', 'summit', 'sparkles', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'sponsors']],
-        'exhibition' => ['Exhibition', 'exhibition', 'building', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'files', 'attendees']],
-        'workshop' => ['Workshop', 'workshop', 'clipboard', ['agenda', 'tasks', 'budget', 'venue', 'attendees']],
-        'seminar' => ['Seminar', 'training_program', 'identification', ['agenda', 'tasks', 'venue', 'attendees']],
-        'gala' => ['Gala / Dinner', 'gala_dinner', 'star', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees']],
-        'corporate' => ['Corporate', 'product_launch', 'folder', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees']],
-        'awards' => ['Awards', 'awards_ceremony', 'star', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees']],
-        'hybrid' => ['Hybrid', 'hybrid_event', 'globe', ['agenda', 'tasks', 'budget', 'venue', 'attendees', 'reports']],
-        'outdoor' => ['Outdoor', 'outdoor_event', 'sparkles', ['tasks', 'budget', 'suppliers', 'venue', 'attendees']],
-        'other' => ['Other', 'public_event', 'dots', ['tasks', 'budget', 'venue', 'attendees']],
-    ];
+    /** Where the working draft lives between visits. */
+    private const DRAFT = 'event-studio.draft';
 
+    /** When the draft was last written — the bar reports this. */
+    public ?string $savedAt = null;
+
+    /** The preview, stripped to what a delegate would be shown. */
+    public bool $asAttendee = false;
+
+    /** Type templates: key => [label, event type, icon, default modules]. */
+    /** Type tiles: key => [label, event type, icon, default modules, what it is]. */
+    public const TEMPLATES = [
+        'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports'], 'Large scale knowledge sharing'],
+        'summit' => ['Summit', 'summit', 'sparkles', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'sponsors'], 'Executive level summit'],
+        'exhibition' => ['Exhibition', 'exhibition', 'building', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'files', 'attendees'], 'Products & services showcase'],
+        'workshop' => ['Workshop', 'workshop', 'clipboard', ['agenda', 'tasks', 'budget', 'venue', 'attendees'], 'Interactive hands-on session'],
+        'seminar' => ['Seminar', 'training_program', 'identification', ['agenda', 'tasks', 'venue', 'attendees'], 'Educational seminar'],
+        'gala' => ['Gala Dinner', 'gala_dinner', 'star', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees'], 'Evening gala & dinner'],
+        'corporate' => ['Corporate', 'product_launch', 'folder', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees'], 'Corporate meeting/event'],
+        'awards' => ['Awards', 'awards_ceremony', 'star', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees'], 'Awards & recognition'],
+        'hybrid' => ['Hybrid', 'hybrid_event', 'globe', ['agenda', 'tasks', 'budget', 'venue', 'attendees', 'reports'], 'In-person & online'],
+        'outdoor' => ['Outdoor', 'outdoor_event', 'sparkles', ['tasks', 'budget', 'suppliers', 'venue', 'attendees'], 'Outdoor experience'],
+        'other' => ['Other', 'public_event', 'dots', ['tasks', 'budget', 'venue', 'attendees'], 'Custom event type'],
+    ];
     /** Status pills → lifecycle stage. */
     public const STATUS_PILLS = ['lead' => 'draft', 'proposal' => 'proposal', 'confirmed' => 'confirmed'];
 
@@ -124,6 +133,85 @@ class EventCreate extends Component
         // with a conference's seven already ticked while no type tile was lit —
         // the launch bar said "7 selected" and the workspace said nothing was
         // picked. An empty studio should look empty.
+
+        $this->restoreDraft();
+    }
+
+    /**
+     * The draft is saved on every change, so the bar telling you it was saved
+     * is telling the truth and closing the tab does not cost you the work.
+     */
+    public function updated(): void
+    {
+        $this->saveDraft();
+    }
+
+    private function saveDraft(): void
+    {
+        session()->put(self::DRAFT, [
+            'at' => now()->toIso8601String(),
+            'fields' => collect($this->all())
+                ->except(['savedAt', 'cover', 'logo', 'errorBag', 'errorBagMessages'])
+                ->all(),
+        ]);
+
+        $this->savedAt = now()->toIso8601String();
+    }
+
+    private function restoreDraft(): void
+    {
+        $draft = session(self::DRAFT);
+
+        if (! is_array($draft) || ! isset($draft['fields'])) {
+            return;
+        }
+
+        foreach ($draft['fields'] as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
+
+        $this->savedAt = $draft['at'] ?? null;
+    }
+
+    /** How long ago the draft was written, in words. */
+    public function savedAgo(): ?string
+    {
+        return $this->savedAt ? Carbon::parse($this->savedAt)->diffForHumans() : null;
+    }
+
+    /**
+     * The first thing the platform will put in the diary.
+     *
+     * Not invented: agenda lock is conventionally a month before doors, and
+     * that is the date the studio will schedule, so it is shown before launch
+     * rather than after.
+     */
+    public function firstMilestone(): ?array
+    {
+        if (! $this->starts_at) {
+            return null;
+        }
+
+        try {
+            $due = Carbon::parse($this->starts_at)->subDays(30)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $days = (int) Carbon::today()->diffInDays($due, false);
+
+        return [
+            'title' => 'Agenda finalisation',
+            'due' => $due->format('M j, Y'),
+            'note' => match (true) {
+                $days < 0 => abs($days).' '.str('day')->plural(abs($days)).' overdue',
+                $days === 0 => 'Due today',
+                default => $days.' '.str('day')->plural($days).' left',
+            },
+            'late' => $days < 0,
+        ];
     }
 
     /**
@@ -241,6 +329,9 @@ class EventCreate extends Component
         ]);
 
         $event->syncAgendaDays();
+
+        // The draft has become an event; there is nothing left to restore.
+        session()->forget(self::DRAFT);
 
         session()->flash('status', "Event “{$event->name}” created — {$event->dayCount()} agenda ".str('day')->plural($event->dayCount()).' ready in the Event Hub.');
 
@@ -363,6 +454,8 @@ class EventCreate extends Component
             'previewType' => $this->resolvedType(),
             'previewDays' => $this->dayCount(),
             'readiness' => $this->readiness(),
+            'milestone' => $this->firstMilestone(),
+            'savedAgo' => $this->savedAgo(),
             // Roughly what the platform will scaffold once it launches — the
             // studio's own estimate, not a stored number.
             'setupMinutes' => max(1, (int) ceil(count($this->modules) * 0.35)),
