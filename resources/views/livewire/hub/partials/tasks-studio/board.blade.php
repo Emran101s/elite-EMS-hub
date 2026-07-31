@@ -2,7 +2,11 @@
     .ts-ghost { opacity: .4; }
     .ts-drag { transform: rotate(1.5deg); box-shadow: 0 22px 48px -16px rgba(3,10,23,.55) !important; }
 </style>
-<div class="flex gap-4 overflow-x-auto pb-3">
+{{-- When the Control Center is over the board, the board gains exactly its
+     width in trailing space. Without it the last column sits under the panel
+     and cannot be reached at all — which is the very complaint the panel
+     caused in the first place. With it, you scroll and it comes out. --}}
+<div class="flex gap-4 overflow-x-auto pb-3" :class="cc && 'pe-[456px]'">
     @foreach (\App\Models\Task::STAGES as $sv => [$slabel, $shex, $sopen])
         @php $col = $byStatus[$sv] ?? collect(); @endphp
         @continue ($sv === 'cancelled' && $col->isEmpty())

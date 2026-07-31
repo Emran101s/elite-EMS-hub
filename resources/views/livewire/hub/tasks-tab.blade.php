@@ -10,16 +10,14 @@
         </template>
     </div>
 
-    {{-- ══════════ WORKSPACE + CONTROL CENTER ══════════
-         The board wants the width. Five columns need ~1560px and the Control
-         Center takes 440 of it, which is exactly why Done was clipped — so the
-         panel is a toggle, closed by default. It is a dashboard, not something
-         you read while dragging a card. --}}
-    <div x-data="{ cc: $persist(false).as('ebh-task-cc') }"
-         class="grid items-start gap-5"
-         :class="cc ? 'xl:grid-cols-[minmax(0,1fr)_440px]' : 'xl:grid-cols-1'">
+    {{-- ══════════ THE WORKSPACE ══════════
+         The board always has the whole width. The Control Center used to take
+         440px of it permanently, which is why five columns could not fit and
+         Done sat past the edge — so it is now a panel that slides over the
+         board when you ask for it, and takes nothing when you do not. --}}
+    <div x-data="{ cc: $persist(false).as('ebh-task-cc') }">
 
-        {{-- ── left: toolbar + active view ── --}}
+        {{-- ── toolbar + active view ── --}}
         <div class="min-w-0">
             {{-- slim toolbar --}}
             <div class="mb-3 flex flex-wrap items-center gap-2.5">
@@ -62,8 +60,24 @@
             </div>
         </div>
 
-        {{-- ── right: Task Control Center, when asked for ── --}}
-        <div x-show="cc" x-cloak x-collapse.duration.300ms class="xl:sticky xl:top-4">
+        {{-- ── the Control Center, over the board rather than beside it ──
+             No dimming backdrop: this is a panel you glance at, and the board
+             behind it should stay readable while you do. It closes on its own
+             button or on Escape — not on any click outside, which would fire
+             every time you reached for a card. --}}
+        <div x-show="cc" x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+             x-on:keydown.escape.window="cc = false"
+             class="fixed inset-y-0 right-0 z-30 w-[min(440px,92vw)] overflow-y-auto bg-page/95 p-4 shadow-[-24px_0_60px_-24px_rgba(11,31,58,0.45)] backdrop-blur">
+            <div class="mb-3 flex items-center justify-end">
+                <button type="button" @click="cc = false"
+                        class="flex h-8 items-center gap-1.5 rounded-lg bg-white px-2.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line transition hover:text-navy-900">
+                    Close ✕
+                </button>
+            </div>
             @include('livewire.hub.partials.tasks-studio.control-center')
         </div>
     </div>
