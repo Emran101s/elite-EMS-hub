@@ -127,6 +127,16 @@ class ContractTab extends Component
         // create one. Nothing opens — and nothing is auto-created — until chosen,
         // so a deleted contract stays deleted.
         $this->event = $event;
+
+        // …unless a link names one. ?document=12 opens that document straight
+        // away, so a contract can be linked to from an email, a task or the
+        // Deck of another event. A document belonging to a different event, or
+        // one that has been deleted, silently lands on the Deck.
+        if ($id = (int) request('document')) {
+            if ($event->contracts()->whereKey($id)->exists()) {
+                $this->loadContract($id);
+            }
+        }
     }
 
     /** Close the editor and return to the wall of documents. */

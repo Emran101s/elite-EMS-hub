@@ -41,6 +41,10 @@ class EventContract extends Model
         'speaker' => ['label' => 'Speaker Agreement', 'party' => EventSpeaker::class, 'language' => 'en', 'structured' => false],
         'sponsorship' => ['label' => 'Sponsorship Agreement', 'party' => EventSponsor::class, 'language' => 'en', 'structured' => false],
         'letter' => ['label' => 'Letter', 'party' => null, 'language' => 'en', 'structured' => false],
+        // The document that closes a project. Signed after the Event, not at
+        // the start, and its signature is what makes the final payment due —
+        // so it is a document of its own with its own status, not a clause.
+        'acceptance' => ['label' => 'Certificate of Services', 'party' => null, 'language' => 'bilingual', 'structured' => false],
     ];
 
     public const STATUSES = ['draft', 'sent', 'partially_signed', 'signed', 'void'];
@@ -160,7 +164,7 @@ class EventContract extends Model
     /** Three-letter reference tag per type. Client keeps its original CTR. */
     private const REF_TAGS = [
         'client' => 'CTR', 'vendor' => 'VEN', 'speaker' => 'SPK',
-        'sponsorship' => 'SPN', 'letter' => 'LTR',
+        'sponsorship' => 'SPN', 'letter' => 'LTR', 'acceptance' => 'ACT',
     ];
 
     /** "EBH-CTR-2026-007" — unique per event; a suffix keeps a second one distinct. */
@@ -210,6 +214,19 @@ class EventContract extends Model
                     'detail' => $party->topic ?? $party->category ?? null,
                 ],
             ];
+
+            // The Act closes the client contract, so it inherits that contract's
+            // parties and its acceptance window rather than asking for them
+            // again — a Certificate naming a different Client than the
+            // agreement it settles would be worthless.
+            if ($type === 'acceptance') {
+                $agreement = static::where('event_id', $event->id)->where('type', 'client')->first();
+                $base['meta']['title_en'] = 'Certificate of Services Rendered';
+                $base['meta']['title_ar'] = 'محضر إنجاز الخدمات';
+                $base['second_parties'] = $agreement->data['second_parties'] ?? [];
+                $base['terms'] = $agreement->data['terms'] ?? ['acceptance_days' => 5];
+                $base['financials'] = ['currency' => $event->currency ?? 'JOD'];
+            }
 
             // The type's standard clauses, seeded once — the contract owns them after.
             $base['blocks'] = ContractTemplates::blocks($type, $base);
@@ -366,8 +383,12 @@ class EventContract extends Model
         $organiser = CompanyProfile::first()?->name ?? 'Elite Business Hub';
         $rows = [['role' => 'organiser', 'name' => $organiser, 'order' => 0]];
 
-        if ($this->isClient()) {
-            foreach (array_values($this->data['second_parties'] ?? []) as $i => $sp) {
+        if ($this->isClient() || $this->type === 'acceptance') {
+            // The Act closes the client contract, so the same parties sign it —
+            // and it reads the Client from the same place, which means a party
+            // added to the contract appears here too.
+            $parties = ContractClauses::parties($this->data ?? []) ?: ($this->data['second_parties'] ?? []);
+            foreach (array_values($parties) as $i => $sp) {
                 $rows[] = ['role' => 'client', 'name' => $sp['name_en'] ?? 'Client', 'order' => $i + 1];
             }
         } elseif ($this->type !== 'letter') {

@@ -290,6 +290,93 @@ class EventContractTest extends TestCase
         $this->assertStringContainsString('16% sales tax (VAT)', $tax['en'][1]);
     }
 
+    /**
+     * A document can be linked to. Without this the tab always lands on the
+     * Deck, so there is no address for "the Hekma contract" to put in an email
+     * or a task.
+     */
+    public function test_a_document_can_be_opened_by_link(): void
+    {
+        [$user, $event] = $this->make();
+        $contract = EventContract::forEvent($event);
+
+        $this->actingAs($user)
+            ->get(route('events.hub', [$event, 'tab' => 'contract', 'document' => $contract->id]))
+            ->assertOk()
+            ->assertSee('Contract Body');
+
+        // A document from another event does not open here.
+        $other = Event::create(['name' => 'Other', 'type' => 'conference', 'city' => 'Amman',
+            'country' => 'Jordan', 'starts_at' => now(), 'status' => 'planning']);
+        $stranger = EventContract::forEvent($other);
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['document' => $stranger->id])
+            ->test(ContractTab::class, ['event' => $event])
+            ->assertSet('contractId', null);
+    }
+
+    // ══════════════════ THE ACT ══════════════════
+
+    /**
+     * The Certificate of Services is the only document signed at the END of a
+     * project — its signature is what makes the final payment due. That is why
+     * it is a document with its own status rather than a clause in one.
+     */
+    public function test_the_certificate_of_services_is_its_own_signable_document(): void
+    {
+        [$user, $event] = $this->make();
+
+        // The agreement it closes, with two funders and a ten-day window.
+        $agreement = EventContract::forEvent($event);
+        $data = $agreement->data;
+        $data['second_parties'] = [
+            ['name_en' => 'World People Assembly', 'name_ar' => '', 'share' => 80],
+            ['name_en' => 'Peace Group', 'name_ar' => '', 'share' => 20],
+        ];
+        $data['terms']['acceptance_days'] = 10;
+        $agreement->update(['data' => $data]);
+
+        $act = EventContract::createFor($event, 'acceptance');
+
+        $this->assertSame('Certificate of Services', $act->typeLabel());
+        $this->assertTrue($act->isBilingual());
+        $this->assertFalse($act->isClient(), 'it is not the agreement');
+        $this->assertStringContainsString('EBH-ACT-', $act->reference);
+        $this->assertSame('draft', $act->status, 'it has a life of its own');
+
+        // It inherits the agreement's parties and window — a Certificate naming
+        // a different Client than the agreement it settles would be worthless.
+        $this->assertSame(
+            ['World People Assembly', 'Peace Group'],
+            array_column($act->data['second_parties'], 'name_en'),
+        );
+
+        $titles = array_column($act->data['blocks'], 'title_en');
+        $this->assertSame(
+            ['Certificate of Services Rendered', 'Services Delivered', 'Confirmation', 'Settlement'],
+            $titles,
+        );
+
+        $confirmation = collect($act->data['blocks'])->firstWhere('title_en', 'Confirmation');
+        $this->assertStringContainsString('10 (10) business days', $confirmation['en'][1]);
+        $this->assertStringContainsString('deemed accepted in full', $confirmation['en'][1]);
+        $this->assertStringContainsString('١٠ (10)', $confirmation['ar'][1]);
+
+        // Both funders sign it, as they signed the agreement.
+        $act->ensureSignatories();
+        $this->assertSame(
+            ['Elite Business Hub', 'World People Assembly', 'Peace Group'],
+            $act->signatories()->orderBy('order')->pluck('name')->all(),
+        );
+
+        // And it opens in the same editor and exports through the same paper.
+        Livewire::actingAs($user)->test(ContractTab::class, ['event' => $event])
+            ->call('selectContract', $act->id)
+            ->assertSee('Certificate of Services Rendered')
+            ->assertSee('محضر إنجاز الخدمات');
+    }
+
     // ══════════════════ WHO THE CLIENT IS ══════════════════
 
     /**
@@ -1115,15 +1202,18 @@ class EventContractTest extends TestCase
         $res = $this->actingAs($user)->get(route('events.contract.pdf', $event));
         $res->assertOk()->assertHeader('content-type', 'application/pdf');
 
-        // Assert on the source HTML so the check doesn't depend on PDF internals.
-        $html = view('event-contract.contract', [
-            'event' => $event, 'contract' => $contract, 'data' => $contract->data,
-            'recitals' => ContractClauses::recitals($contract->data),
-            'clauses' => [], 'signatories' => $contract->signatories()->get(), 'css' => '',
+        // Assert on the source HTML so the check doesn't depend on PDF
+        // internals — but on the partial that actually ships. This used to
+        // render a view nothing includes, so it could have passed while the
+        // real document printed no signatures at all.
+        $html = view('event-contract.paper-pdf', [
+            'event' => $event, 'contract' => $contract,
+            'signatories' => $contract->signatories()->get(), 'css' => '',
         ])->render();
 
         $this->assertStringContainsString($first->name, $html);
-        $this->assertStringContainsString('Signed', $html, 'the signed block is marked');
+        $this->assertStringContainsString('Signatures', $html);
+        $this->assertStringContainsString($first->signed_at->format('j M Y'), $html, 'the signed block is dated');
         $this->assertStringContainsString('verify', $html, 'a verification fingerprint prints');
     }
 

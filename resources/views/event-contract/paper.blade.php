@@ -158,7 +158,14 @@
                             <p class="mt-0.5 truncate text-3xs font-bold">{{ $s->name ?: '—' }}</p>
                             @if ($s->isSigned())
                                 <p class="pf mt-1.5 truncate text-sm italic text-navy-800">{{ $s->signature_data }}</p>
-                                <p class="text-[8px] font-bold uppercase text-emerald-700">✓ {{ $s->signed_at->format('j M Y') }}</p>
+                                <p class="text-[8px] font-bold uppercase text-emerald-700">✓ {{ $s->signed_at->format('j M Y · H:i') }}</p>
+                                {{-- The fingerprint of the document as it stood when
+                                     this signature was taken. Without it a signed PDF
+                                     cannot be told from one edited afterwards, which
+                                     is the whole point of recording the hash. --}}
+                                @if ($s->signed_hash)
+                                    <p class="mt-0.5 font-mono text-[6.5px] text-muted">verify {{ substr($s->signed_hash, 0, 12) }}</p>
+                                @endif
                             @else
                                 <div class="mt-5 border-t border-dashed border-navy-300 pt-0.5 text-[7px] uppercase tracking-wide text-muted">Signature &amp; date</div>
                             @endif

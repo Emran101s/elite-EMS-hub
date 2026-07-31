@@ -6,6 +6,7 @@
         'speaker' => ['Speaker Agreement', 'bg-violet-100 text-violet-700', 'linear-gradient(var(--plasma),var(--plasma-lit))'],
         'sponsorship' => ['Sponsorship', 'bg-gold-100 text-gold-800', 'linear-gradient(var(--gold-2),var(--gold))'],
         'letter' => ['Letter', 'bg-navy-100 text-navy-600', 'linear-gradient(var(--chrome-2),var(--chrome))'],
+        'acceptance' => ['Certificate of Services', 'bg-emerald-100 text-emerald-700', 'linear-gradient(var(--vital),var(--vital-lit))'],
     ];
     $statusChip = [
         'draft' => ['Draft', 'bg-navy-50 text-navy-500'],

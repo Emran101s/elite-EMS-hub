@@ -23,6 +23,7 @@ class ContractTemplates
             'speaker' => self::speaker($d),
             'sponsorship' => self::sponsorship($d),
             'letter' => self::letter($d),
+            'acceptance' => self::acceptance($d),
             default => [],
         };
 
@@ -184,6 +185,74 @@ class ContractTemplates
             ['en_title' => 'Letter', 'ar_title' => 'رسالة',
                 'en' => ["Dear {$to},", "On behalf of Elite Business Hub, it is our pleasure to write to you regarding {$v['event']}, taking place {$v['dates']} in {$v['where']}.", 'We would be honoured by your favourable consideration, and remain at your disposal for any clarification.', 'With our highest regards,'],
                 'ar' => ["حضرة {$to} المحترم،", "يسعدنا في إيليت بزنس هَب أن نتوجّه إليكم بهذه الرسالة بخصوص {$v['event']}، المقرر إقامتها بتاريخ {$v['dates']} في {$v['where']}.", 'ونتشرف بكريم موافقتكم، ونبقى رهن إشارتكم لأي استفسار.', 'وتفضلوا بقبول فائق الاحترام،']],
+        ];
+    }
+
+    // ── the Act ─────────────────────────────────────────────────
+
+    /**
+     * The Certificate of Services Rendered.
+     *
+     * Issued after the Event under the Acceptance of Services article: the
+     * Client signs it, or says nothing for the acceptance period and it is
+     * deemed accepted — and either way the final payment falls due. It is the
+     * only document here that is signed at the end rather than the beginning,
+     * which is exactly why it needed to stop being a clause.
+     */
+    private static function acceptance(array $d): array
+    {
+        $v = self::vars($d);
+        $days = (int) ($d['terms']['acceptance_days'] ?? 5);
+        $daysAr = strtr((string) $days, ['0' => '٠', '1' => '١', '2' => '٢', '3' => '٣', '4' => '٤',
+            '5' => '٥', '6' => '٦', '7' => '٧', '8' => '٨', '9' => '٩']);
+
+        return [
+            [
+                'en_title' => 'Certificate of Services Rendered', 'ar_title' => 'محضر إنجاز الخدمات',
+                'en' => [
+                    "This Certificate is issued under the Event Management Services Agreement between the Parties and records the services delivered by Elite Business Hub for {$v['event']}, held {$v['dates']} in {$v['where']}.",
+                    'Period covered: from ____________________ to ____________________.',
+                ],
+                'ar' => [
+                    "صدر هذا المحضر بموجب اتفاقية خدمات إدارة الفعاليات المبرمة بين الطرفين، ويوثّق الخدمات التي نفّذتها إيليت بزنس هَب لفعالية {$v['event']}، المقامة بتاريخ {$v['dates']} في {$v['where']}.",
+                    'الفترة المشمولة: من ____________________ إلى ____________________.',
+                ],
+            ],
+            [
+                'type' => 'bullets',
+                'en_title' => 'Services Delivered', 'ar_title' => 'الخدمات المنفَّذة',
+                'en' => ['The following services were rendered in accordance with the Agreement, its Scope of Services and its appendices:'],
+                'ar' => ['نُفِّذت الخدمات التالية وفقاً للاتفاقية ونطاق الخدمات الوارد فيها وملاحقها:'],
+                // Left for the producer to complete from the delivered project,
+                // or pulled in wholesale from the contract's own scope.
+                'items' => [
+                    ['l_en' => '', 'l_ar' => '', 't_en' => '', 't_ar' => ''],
+                ],
+            ],
+            [
+                'en_title' => 'Confirmation', 'ar_title' => 'الإقرار',
+                'en' => [
+                    'The above services were rendered in full, within the agreed timeframe, and to the quality required by the Agreement. The Client confirms that it has no claim in respect of their scope, quality or timing.',
+                    "The Client shall sign this Certificate within {$days} ({$days}) business days of receipt, or within the same period provide a written, reasoned refusal identifying the specific services disputed. Failing either, the services described above are deemed accepted in full on the day following that period.",
+                ],
+                'ar' => [
+                    'نُفِّذت الخدمات المذكورة أعلاه بالكامل وضمن المدة المتفق عليها وبالجودة التي تتطلّبها الاتفاقية، ويقرّ العميل بعدم وجود أي مطالبة تتعلّق بنطاقها أو جودتها أو توقيتها.',
+                    "ويلتزم العميل بتوقيع هذا المحضر خلال {$daysAr} ({$days}) أيام عمل من تاريخ استلامه، أو أن يقدّم خلال المدة ذاتها رفضاً خطّياً مسبَّباً يحدّد فيه الخدمات محلّ الاعتراض. وفي حال عدم القيام بأيٍّ منهما، تُعَدّ الخدمات الموصوفة أعلاه مقبولةً بالكامل في اليوم التالي لانتهاء تلك المدة.",
+                ],
+            ],
+            [
+                'en_title' => 'Settlement', 'ar_title' => 'التسوية',
+                'en' => [
+                    'Total value of services rendered: ____________________.',
+                    'Amounts previously paid: ____________________.',
+                    'Balance now due: ____________________, payable in accordance with the Payment Terms of the Agreement.',
+                ],
+                'ar' => [
+                    'إجمالي قيمة الخدمات المنفَّذة: ____________________.',
+                    'المبالغ المدفوعة سابقاً: ____________________.',
+                    'الرصيد المستحقّ الآن: ____________________، ويُسدَّد وفقاً لشروط الدفع الواردة في الاتفاقية.',
+                ],
+            ],
         ];
     }
 }
