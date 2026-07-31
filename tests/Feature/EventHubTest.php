@@ -333,6 +333,34 @@ class EventHubTest extends TestCase
             ->assertSee('1 pending');
     }
 
+    /**
+     * The hero, the health strip, the tabs and the live bar together stand
+     * 650px tall — the whole of a laptop screen before a figure of the module
+     * you came for. They scroll away; this rail does not, so you never lose
+     * which event you are in or the way back to the tabs.
+     */
+    public function test_a_slim_rail_survives_the_scroll(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        $event->tasks()->delete();
+        $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
+
+        $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
+            ->assertOk()->getContent();
+
+        // Everything the rail is for: who, where, what waits, the way back.
+        $this->assertStringContainsString('↑ Modules', $html);
+        $this->assertStringContainsString('ICFT 2026', $html);
+
+        // The rail's counts come from the same place as the tabs', so the two
+        // can never disagree about what is waiting.
+        $rail = substr($html, strpos($html, '↑ Modules') - 2400, 2400);
+        $this->assertStringContainsString('1', $rail);
+        $this->assertStringContainsString('Tasks', $rail);
+    }
+
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */
     public function test_only_issued_documents_count_against_the_contract_tab(): void
     {

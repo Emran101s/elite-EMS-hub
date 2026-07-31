@@ -16,6 +16,47 @@
          four blocks and not the one white bar it replaces. ══ --}}
     <x-event-header :event="$event" :header="$header" />
 
+    {{-- ══ The tucked bar ══
+         The hero, the health strip, the tabs and the live bar together stand
+         650px tall — on a 900px laptop that is the whole screen before a single
+         figure of the module you came for. They all scroll away now, which is
+         right, but then nothing says which event you are in or how to reach
+         another module. This slim rail stays: who, what is waiting, and the way
+         back. 48px against the 650 it lets you scroll past. ══ --}}
+    <div class="sticky top-0 z-30 -mx-1 hidden items-center gap-3 border-b border-line bg-page/92 px-3 py-2 backdrop-blur lg:flex">
+        <span class="grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-full bg-navy-950 ring-1 ring-gold-400/60">
+            @if ($event->logoUrl())
+                <img src="{{ $event->logoUrl() }}" alt="" class="h-full w-full object-cover">
+            @else
+                <x-event-crest :event="$event" class="h-full w-full" />
+            @endif
+        </span>
+
+        <span class="min-w-0 truncate text-[12.5px] font-bold text-navy-900">{{ $event->name }}</span>
+        <span class="h-3.5 w-px shrink-0 bg-line" aria-hidden="true"></span>
+        <span class="shrink-0 text-eyebrow font-bold uppercase tracking-[0.14em] text-gold-700">{{ \App\Models\Event::moduleLabel($tab) }}</span>
+
+        {{-- The same counts as the tabs, in the same two tones, so the rail and
+             the row can never disagree about what is waiting. --}}
+        @if ($attentionBar = $header['attention'] ?? [])
+            <span class="ms-auto flex shrink-0 flex-wrap items-center gap-1.5">
+                @foreach ($attentionBar as $key => $n)
+                    <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
+                       @class([
+                           'rounded-full px-2 py-0.5 text-[10.5px] font-bold transition hover:brightness-95',
+                           'bg-risk/12 text-red-700' => $n['tone'] === 'alarm',
+                           'bg-gold-100 text-gold-800' => $n['tone'] === 'wait',
+                       ])>{{ $n['count'] }} {{ \App\Models\Event::moduleLabel($key) }}</a>
+                @endforeach
+            </span>
+        @endif
+
+        <button type="button" onclick="this.closest('main').scrollTo({top: 0, behavior: 'smooth'})"
+                class="{{ ($header['attention'] ?? []) ? '' : 'ms-auto' }} shrink-0 rounded-lg bg-white px-2.5 py-1 text-eyebrow font-bold text-navy-600 ring-1 ring-line transition hover:text-navy-900">
+            ↑ Modules
+        </button>
+    </div>
+
     {{-- ══ Module tabs ══
          The active module gets the navy tile and says what it is for; the rest
          are icon and name. Sub-labels on all twenty-one would be a wall of
