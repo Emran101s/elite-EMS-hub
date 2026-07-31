@@ -412,3 +412,102 @@
 @media (prefers-reduced-motion: reduce) {
     .orbit-spin-slow, .orbit-spin-reverse, .core-glow, .dash-flow { animation: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   ELITE ORBIT OS — the navigation shell.
+
+   The sidebar is the one dark surface in a light product: a slim command
+   rail and the expanded panel beside it. Everything here is scoped to
+   .orbit-* so it cannot leak into the workspace, which stays white.
+
+   The palette is fixed by the brief and deliberately narrow — four navies,
+   two golds, three accents. Gold is structural, not decorative: it marks
+   where you are and nothing else.
+   ══════════════════════════════════════════════════════════════════════ */
+@theme {
+    --color-orbit-navy: #07162f;
+    --color-orbit-navy-1: #081a3d;   /* gradient start  */
+    --color-orbit-navy-2: #0d2557;   /* gradient middle */
+    --color-orbit-navy-3: #050f24;   /* gradient end    */
+    --color-orbit-gold: #d8b84f;
+    --color-orbit-gold-lit: #f4d76a;
+    --color-orbit-cyan: #4dbbd5;
+    --color-orbit-violet: #7b5ce6;
+    --color-orbit-online: #3edc7a;
+    --color-orbit-label: #8fa0c8;    /* muted label blue */
+    --color-orbit-dim: #6e7f9e;      /* secondary blue-gray */
+}
+
+/* The two dark surfaces. The rail runs darker than the panel so the eye
+   reads two planes rather than one slab. */
+.orbit-rail {
+    background: linear-gradient(180deg, #081a3d 0%, #0d2557 46%, #050f24 100%);
+}
+.orbit-panel {
+    background:
+        radial-gradient(120% 60% at 50% 0%, rgba(13, 37, 87, 0.85) 0%, transparent 60%),
+        linear-gradient(180deg, #081a3d 0%, #0b1f47 40%, #050f24 100%);
+}
+
+/* Glass. One recipe, used by the profile card, the status pill, the active
+   row and the dock, so they read as one family. */
+.orbit-glass {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+        0 18px 40px -24px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+}
+.orbit-glass-hover:hover {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.26);
+}
+
+/* Where you are. A gold hairline and a glow that sits under the card, not
+   around it — a ring all the way round reads as an error state. */
+.orbit-selected {
+    background: rgba(216, 184, 79, 0.08);
+    border: 1px solid rgba(216, 184, 79, 0.5);
+    box-shadow:
+        0 10px 30px -12px rgba(216, 184, 79, 0.35),
+        inset 0 1px 0 0 rgba(244, 215, 106, 0.18);
+}
+
+/* The orbit: rings around the active rail icon, and the connector that
+   carries the eye from the rail into the selected row beside it. */
+.orbit-ring {
+    border: 1px solid rgba(216, 184, 79, 0.28);
+    animation: orbit-breathe 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.orbit-ring-2 { border-color: rgba(216, 184, 79, 0.14); animation-delay: -2.75s; }
+
+@keyframes orbit-breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.9; }
+    50%      { transform: scale(1.06); opacity: 0.45; }
+}
+
+.orbit-pulse { animation: orbit-pulse 2.8s ease-in-out infinite; }
+@keyframes orbit-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(62, 220, 122, 0.55); }
+    70%      { box-shadow: 0 0 0 5px rgba(62, 220, 122, 0); }
+}
+
+/* The decorative field: orbit arcs and gold dust, kept between 4% and 12%
+   so it is texture rather than pattern. */
+.orbit-field::before,
+.orbit-field::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgba(216, 184, 79, 0.07);
+    pointer-events: none;
+}
+.orbit-field::before { inset: -40% -60% auto -60%; aspect-ratio: 1; }
+.orbit-field::after  { inset: auto -80% -50% -40%; aspect-ratio: 1; border-color: rgba(77, 187, 213, 0.06); }
+
+/* Reduced motion turns the whole thing still. Breathing rings are the
+   first thing that becomes unbearable when motion is a problem. */
+@media (prefers-reduced-motion: reduce) {
+    .orbit-ring, .orbit-pulse { animation: none; }
+}
