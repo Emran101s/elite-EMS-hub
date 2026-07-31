@@ -26,8 +26,18 @@
         // appear here — see EventCommandHeader::attention().
         $attention = $header['attention'] ?? [];
     @endphp
-    <div class="sticky top-0 z-20 -mx-1 mt-3 bg-page/90 px-1 py-1.5 backdrop-blur">
-        <nav class="scrollbar-none flex items-stretch gap-1 overflow-x-auto" aria-label="Event modules">
+    {{-- Sticky earns its keep for a one-line scroller you keep returning to.
+         Wrapped, the whole row is already on screen, so pinning three rows to
+         the top would cost 124px of every screenful for nothing — it scrolls
+         away with the rest. --}}
+    <div class="sticky top-0 z-20 -mx-1 mt-3 bg-page/90 px-1 py-1.5 backdrop-blur lg:static lg:bg-transparent lg:backdrop-blur-none">
+        {{-- Twenty-one tabs need ~2380px and the work area is 1186 — so half of
+             them, and half of the counts above, sat behind a scrollbar that is
+             deliberately invisible. On a desktop they wrap instead: two rows,
+             everything on screen, nothing to discover by dragging. Narrow
+             screens keep the scroller, where wrapping would make five rows. --}}
+        <nav class="scrollbar-none flex items-stretch gap-1 overflow-x-auto lg:flex-wrap lg:overflow-x-visible"
+             aria-label="Event modules">
             @foreach ($modules as $key => [$label, $note, $icon])
                 @continue (! $event->moduleEnabled($key))
                 <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
