@@ -540,6 +540,34 @@ class EventContractTest extends TestCase
         $this->assertStringContainsString('الملحق ٢', ContractAppendices::resolve($text, $flipped, 'ar'));
     }
 
+    /**
+     * The agreement points at its own scope appendix out of the box. Building
+     * the reference mechanism and then never using it would leave every new
+     * contract with an Appendix 1 the document never mentions.
+     */
+    public function test_the_agreement_points_at_its_scope_appendix(): void
+    {
+        [$user, $event] = $this->make();
+        $c = $this->tab($user, $event);
+
+        $scope = collect($c->get('data')['blocks'])->firstWhere('title_en', 'Scope of Services');
+        $this->assertStringContainsString('{{appendix:scope}}', $scope['en'][1]);
+        $this->assertStringContainsString('{{appendix:scope}}', $scope['ar'][1]);
+
+        // On the paper it reads as a number, in each language.
+        $html = $c->html();
+        $this->assertStringContainsString('as further detailed in Appendix 1', $html);
+        $this->assertStringContainsString('الملحق ١', $html);
+        $this->assertStringNotContainsString('{{appendix:scope}}', $this->paperClauses($html)[0] ?? '');
+
+        // Removing what it points at is allowed, but never quiet.
+        $c->call('deleteAppendix', 'scope');
+        $this->assertSame(['scope'], ContractAppendices::brokenReferences(
+            $c->get('data')['blocks'], [],
+        ));
+        $this->assertStringContainsString('MISSING APPENDIX', $c->html());
+    }
+
     /** A reference to an appendix that no longer exists must not print silently. */
     public function test_a_broken_reference_is_found_and_named(): void
     {

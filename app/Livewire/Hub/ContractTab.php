@@ -657,6 +657,17 @@ class ContractTab extends Component
         }
 
         $this->touch();
+
+        // The document may point at what was just removed. Say so — the editor
+        // shows the broken reference and the export refuses, but finding out
+        // at export time is late.
+        if (in_array($slug, ContractAppendices::referencedSlugs([...($this->data['blocks'] ?? []), ...$list]), true)) {
+            $this->dispatch(
+                'contract-toast',
+                message: 'Removed — but the contract still refers to it. Fix the reference before exporting.',
+                tone: 'warn',
+            );
+        }
     }
 
     /**

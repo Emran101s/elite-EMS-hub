@@ -135,11 +135,13 @@ class ContractClauses
                 'en_title' => 'Scope of Services', 'ar_title' => 'نطاق الخدمات',
                 'en' => [
                     'Elite Business Hub shall serve as the exclusive event management company, the sole coordination authority, and the single point of contact for the Event. The Contractor shall be responsible for the planning, management, supervision, coordination and full execution of the Event from project inception through final completion and post-event reporting.',
-                    'The scope of services shall include, but not be limited to, the following:',
+                    // The reference is a token, not a number: reordering the
+                    // annexes renumbers this sentence. See ContractAppendices.
+                    'The scope of services shall include, but not be limited to, the following, as further detailed in {{appendix:scope}}:',
                 ],
                 'ar' => [
                     'تعمل إيليت بزنس هَب بصفتها الشركة الحصرية لإدارة الفعالية، والجهة الوحيدة المخوّلة بالتنسيق، ونقطة الاتصال الموحّدة للفعالية. ويكون المتعهّد مسؤولاً عن تخطيط الفعالية وإدارتها والإشراف عليها وتنسيقها وتنفيذها الكامل، من بدء المشروع وحتى إتمامه النهائي ورفع التقرير الختامي.',
-                    'ويشمل نطاق الخدمات، على سبيل المثال لا الحصر، ما يلي:',
+                    'ويشمل نطاق الخدمات، على سبيل المثال لا الحصر، ما يلي، وفقاً لما هو مفصّل في {{appendix:scope}}:',
                 ],
                 // The deliverables list — edit, reorder or delete freely per event.
                 'items' => [
