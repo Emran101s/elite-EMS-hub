@@ -143,7 +143,7 @@
         <div class="w-full shrink-0 rounded-2xl border border-line bg-white/95 p-4 shadow-[0_14px_36px_-24px_rgba(11,31,58,0.55)] backdrop-blur sm:w-[298px] xl:absolute xl:end-6 xl:top-8">
             <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.18em] text-navy-400">
                 Next critical action
-                <x-icon name="flag" class="ms-auto h-3.5 w-3.5 {{ $critical ? 'text-gold-600' : 'text-navy-200' }}" />
+                <x-icon name="flag" class="ms-auto h-3.5 w-3.5 text-gold-600" />
             </p>
 
             {{-- One skeleton, whether or not there is anything to report: mark,
@@ -157,11 +157,11 @@
             @endphp
 
             <div class="mt-3 flex items-start gap-2.5">
-                <span @class([
-                    'grid h-9 w-9 shrink-0 place-items-center rounded-xl',
-                    'bg-navy-950 text-gold-400' => ! $clear,
-                    'bg-emerald-50 text-emerald-600' => $clear,
-                ])>
+                {{-- Same mark on every event, in the same navy and gold. Only
+                     the glyph changes — a card that swaps its whole palette
+                     when the news is good reads as a different component, not
+                     as the same one saying something different. --}}
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy-950 text-gold-400">
                     <x-icon :name="$clear ? 'check' : 'calendar'" class="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
@@ -197,11 +197,7 @@
             </dl>
 
             <a href="{{ route('events.hub', [$event, 'tab' => $critical['tab'] ?? 'tasks']) }}"
-               @class([
-                   'mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl text-[12.5px] font-bold transition',
-                   'bg-navy-950 text-white hover:bg-navy-800' => ! $clear,
-                   'bg-navy-50 text-navy-700 hover:bg-navy-100' => $clear,
-               ])>
+               class="mt-3.5 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-950 text-[12.5px] font-bold text-white transition hover:bg-navy-800">
                 {{ $critical['cta'] ?? 'Open the task board' }} →
             </a>
         </div>
