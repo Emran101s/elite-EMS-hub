@@ -291,6 +291,65 @@ class EventHubTest extends TestCase
             ->assertSee('Clear');
     }
 
+    /**
+     * Twenty tabs of identical weight mean the only way to learn whether Risks
+     * has anything in it is to open Risks. Each count must mean exactly one
+     * thing — a number on a tab that turns out to mean something else is worse
+     * than a bare tab.
+     */
+    public function test_the_tabs_say_where_the_work_is(): void
+    {
+        $user = $this->actor();
+        $service = app(\App\Services\EventCommandHeader::class);
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        $event->tasks()->delete();
+        $event->risks()->delete();
+        $event->approvals()->delete();
+
+        // A quiet event puts nothing on any tab.
+        $this->assertSame([], $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS)));
+
+        // One overdue task, one open one that is not yet due: only the first counts.
+        $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
+        $event->tasks()->create(['title' => 'Soon', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->addWeek()]);
+        $event->approvals()->create(['title' => 'Agenda', 'type' => 'agenda', 'status' => 'pending']);
+
+        $a = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+
+        $this->assertSame(1, $a['tasks']['count']);
+        $this->assertSame('1 overdue', $a['tasks']['why']);
+        $this->assertSame('alarm', $a['tasks']['tone'], 'past its date is an alarm, not a workload');
+
+        $this->assertSame(1, $a['approvals']['count']);
+        $this->assertSame('wait', $a['approvals']['tone']);
+
+        $this->assertArrayNotHasKey('risks', $a, 'a module with nothing waiting stays bare');
+        $this->assertArrayNotHasKey('budget', $a, 'and a module with no defined signal is never invented');
+
+        // And it reaches the tab row.
+        $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
+            ->assertSee('1 overdue')
+            ->assertSee('1 pending');
+    }
+
+    /** A draft is waiting on nobody; a sent document is waiting on a pen. */
+    public function test_only_issued_documents_count_against_the_contract_tab(): void
+    {
+        $this->actor();
+        $service = app(\App\Services\EventCommandHeader::class);
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        $contract = \App\Models\EventContract::forEvent($event);
+        $contract->update(['status' => 'draft']);
+
+        $load = fn () => $event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS);
+        $this->assertArrayNotHasKey('contract', $service->attention($load()));
+
+        $contract->update(['status' => 'sent']);
+        $this->assertSame('1 awaiting signature', $service->attention($load())['contract']['why']);
+    }
+
     public function test_a_name_with_an_edition_splits_and_a_plain_name_does_not(): void
     {
         $this->actor();

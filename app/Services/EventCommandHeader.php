@@ -31,7 +31,7 @@ class EventCommandHeader
     public const RELATIONS = [
         'tasks.assignee', 'risks.owner', 'approvals.requester', 'budgetItems',
         'agendaDays', 'agendaSessions.day', 'speakers', 'sponsors', 'rooms', 'suppliers',
-        'venue', 'transport.manifest', 'attendees',
+        'venue', 'transport.manifest', 'attendees', 'contracts',
     ];
 
     public function __construct(private EventHealthService $health) {}
@@ -51,7 +51,52 @@ class EventCommandHeader
             'meters' => $this->meters($event, $health),
             'readiness' => $this->readiness($event),
             'live' => $this->live($event),
+            'attention' => $this->attention($event),
         ];
+    }
+
+    /**
+     * Where the work is, module by module.
+     *
+     * Twenty tabs of identical weight mean the only way to learn whether Risks
+     * has anything in it is to open Risks. Every count below is already
+     * computed somewhere in this class or on the record itself — this puts it
+     * on the tab so you can see it without going there.
+     *
+     * Only signals with one unambiguous meaning are here. A number on a tab
+     * that turns out to mean something other than "this needs you" is worse
+     * than a tab with nothing on it, so the rest stay bare.
+     *
+     * @return array<string,array{count:int,tone:string,why:string}>
+     */
+    public function attention(Event $event): array
+    {
+        $tasks = $event->tasks->filter->isOpen();
+
+        $signals = [
+            // Past its date and still open — the alarm, not the workload.
+            'tasks' => [
+                $tasks->filter(fn ($t) => $t->due_on?->isPast())->count(),
+                'alarm', 'overdue',
+            ],
+            'risks' => [$event->risks->filter->isOpen()->count(), 'alarm', 'open'],
+            'approvals' => [$event->approvals->where('status', 'pending')->count(), 'wait', 'pending'],
+            'speakers' => [$event->speakers->where('status', '!=', 'confirmed')->count(), 'wait', 'unconfirmed'],
+            // Issued and waiting on a pen — a draft is not waiting on anyone.
+            'contract' => [
+                $event->contracts->whereIn('status', ['sent', 'partially_signed'])->count(),
+                'wait', 'awaiting signature',
+            ],
+        ];
+
+        $out = [];
+        foreach ($signals as $key => [$count, $tone, $why]) {
+            if ($count > 0) {
+                $out[$key] = ['count' => $count, 'tone' => $tone, 'why' => $count.' '.$why];
+            }
+        }
+
+        return $out;
     }
 
     /**

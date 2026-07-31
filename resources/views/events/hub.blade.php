@@ -22,6 +22,9 @@
          text you scroll past — on the one you are in, it is the caption. ══ --}}
     @php
         $modules = \App\Models\Event::HUB_TABS;
+        // Where the work is. Only modules with something genuinely waiting
+        // appear here — see EventCommandHeader::attention().
+        $attention = $header['attention'] ?? [];
     @endphp
     <div class="sticky top-0 z-20 -mx-1 mt-3 bg-page/90 px-1 py-1.5 backdrop-blur">
         <nav class="scrollbar-none flex items-stretch gap-1 overflow-x-auto" aria-label="Event modules">
@@ -45,6 +48,18 @@
                             <span class="block text-[10px] font-semibold text-white/55">{{ $note }}</span>
                         @endif
                     </span>
+
+                    {{-- What is waiting behind this tab. Twenty tabs of equal
+                         weight mean the only way to learn whether Risks has
+                         anything in it is to open Risks. --}}
+                    @if ($n = $attention[$key] ?? null)
+                        <span title="{{ $n['why'] }}" @class([
+                            'ms-0.5 grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full px-1 text-[10px] font-black tabular-nums',
+                            'bg-white/20 text-white' => $tab === $key,
+                            'bg-risk/12 text-red-700' => $tab !== $key && $n['tone'] === 'alarm',
+                            'bg-gold-100 text-gold-800' => $tab !== $key && $n['tone'] === 'wait',
+                        ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
+                    @endif
                 </a>
             @endforeach
         </nav>
