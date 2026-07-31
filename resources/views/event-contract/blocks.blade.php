@@ -22,10 +22,17 @@
 @endphp
 
 @forelse ($blocks as $bi => $b)
-    <div class="mb-4 break-inside-avoid">
+    @php
+        // Keeping a clause whole is right for a short one and wrong for a long
+        // one: an eighteen-bullet scope that refuses to split cannot fit beside
+        // a preamble, so it jumps to the next page and leaves half of the first
+        // one blank. Long clauses flow; their heading stays with what follows.
+        $tall = count($b['items'] ?? []) > 6 || count($b['en'] ?? []) > 3;
+    @endphp
+    <div @class(['mb-4', 'break-inside-avoid' => ! $tall])>
         {{-- a letter reads as prose — no numbered clause headers --}}
         @unless ($isLetter)
-            <div class="flex items-baseline justify-between gap-3 border-b border-navy-900 pb-1">
+            <div class="flex items-baseline justify-between gap-3 border-b border-navy-900 pb-1" style="break-after: avoid">
                 <p class="text-xs font-black"><span class="text-gold-600">{{ $number($bi) }}</span> {{ $b['title_en'] ?: 'Untitled clause' }}</p>
                 @if ($bilingual && ($b['title_ar'] ?? ''))
                     <p dir="rtl" class="text-xs font-bold text-navy-600 [font-family:Amiri,serif]">{{ $b['title_ar'] }}</p>
