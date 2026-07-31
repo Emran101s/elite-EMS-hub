@@ -99,7 +99,7 @@ document.addEventListener('keydown', (e) => {
 // a landscape card — which is what happens the moment width is driven by the
 // column alone.
 const DECK_RATIO = 0.66;        // width ÷ height
-const DECK_H_MIN = 520;
+const DECK_H_MIN = 340;
 const DECK_H_MAX = 900;
 
 // The neighbours' distances were quoted against a 980px hero; they are applied
@@ -145,10 +145,37 @@ function mountDeck(stage) {
     let hovering = -1;
 
     const measure = () => {
-        // Height first, from the window, then width from the ratio — so the
-        // card is portrait by construction. Only if that width will not fit the
-        // column does width lead, and the height follows it back down.
-        let h = Math.min(DECK_H_MAX, Math.max(DECK_H_MIN, Math.round(window.innerHeight * 0.74)));
+        // Height first, then width from the ratio — so the card is portrait by
+        // construction. Only if that width will not fit the column does width
+        // lead, and the height follows it back down.
+        //
+        // The height used to be 74% of the WINDOW, which is a share the deck
+        // can never honour: by the time the stage begins, the page title, the
+        // figures strip and the view switch have already spent some 400px, so
+        // a card claiming three quarters of the window guaranteed a scrollbar
+        // on every screen. It asks the scroll container what is actually left
+        // instead — its own top edge, less whatever sits under it.
+        const scroller = stage.closest('main') || document.documentElement;
+        const top = stage.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+
+        // Everything between the deck's bottom edge and the bottom of the
+        // scroll container: its own following siblings, then every ancestor's
+        // siblings and bottom padding, all the way up. Walking the whole way
+        // matters — counting only the pager left the page 24px short, which is
+        // exactly the padding on the wrapper two levels above it.
+        let below = 0;
+        for (let el = stage; el && el !== scroller; el = el.parentElement) {
+            for (let s = el.nextElementSibling; s; s = s.nextElementSibling) {
+                below += s.getBoundingClientRect().height
+                    + parseFloat(getComputedStyle(s).marginTop || 0);
+            }
+            below += parseFloat(getComputedStyle(el.parentElement).paddingBottom || 0);
+        }
+
+        // 40 is the lift the tilted neighbours need above the hero.
+        const headroom = scroller.clientHeight - top - below - 40;
+
+        let h = Math.min(DECK_H_MAX, Math.max(DECK_H_MIN, Math.round(headroom)));
         let w = Math.round(h * DECK_RATIO);
 
         const room = Math.round(stage.clientWidth * 0.62);
@@ -159,6 +186,11 @@ function mountDeck(stage) {
 
         heroW = w;
         k = heroW / DECK_REF;
+
+        // Below this the title block's three columns — date, name, ring — no
+        // longer fit on one row, and the card starts clipping its own dock.
+        // See the [data-deck-size='sm'] rules for what it drops.
+        stage.dataset.deckSize = w < 380 ? 'sm' : 'lg';
 
         cards.forEach((card) => {
             card.style.width = `${heroW}px`;

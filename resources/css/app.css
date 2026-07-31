@@ -216,6 +216,22 @@
        once the numbers, the milestone and the dock have taken theirs. */
     .deck-card [data-deck-part='cover'] { flex: 1 1 auto; min-height: 150px; }
 
+    /* A narrow plate says less rather than clipping what it cannot fit.
+       The parts go in reverse priority — the AI insight first, then the
+       progress ring, which is the third column that wraps the whole title
+       block into three stacked rows the moment it has no room. The cover, the
+       title, the numbers and the dock survive at every size: a card that clips
+       its own dock is worse than one that says less. The JS sets the flag,
+       because the JS is what decides how wide the card is.
+
+       !important because these rules live in @layer components and the parts
+       they hide carry Tailwind display utilities — `grid` on the insight
+       panel — and a utility layer beats a component layer no matter how
+       specific the selector is. The ring has no such class, which is why it
+       vanished on the first try and the insight silently did not. */
+    .deck-stage[data-deck-size='sm'] [data-deck-part='insight'],
+    .deck-stage[data-deck-size='sm'] [data-deck-part='ring'] { display: none !important; }
+
     /* While a pointer is down the deck must track it exactly, so the easing is
        suspended and restored on release. */
     .deck-stage.is-dragging .deck-card { transition: none; }

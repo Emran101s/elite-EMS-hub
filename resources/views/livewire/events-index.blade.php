@@ -15,9 +15,11 @@
 
     {{-- ══════════ THE COMMAND BAR ══════════ --}}
     <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+        {{-- The subtitle used to say what the view switcher says again eight
+             rows below, and cost this bar a second line — which the deck under
+             it is sized out of. The heading alone now. --}}
         <div class="min-w-0">
-            <h1 class="pf text-[28px] font-black leading-none text-navy-950">Projects &amp; Events</h1>
-            <p class="mt-1.5 text-[12.5px] text-muted">{{ $views[$view][2] }} — see, compare and open every mission in the book.</p>
+            <h1 class="pf text-[24px] font-black leading-none text-navy-950">Projects &amp; Events</h1>
         </div>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
@@ -99,7 +101,9 @@
         </div>
     </div>
 
-    <x-figure-strip :figures="$figures" />
+    {{-- Dense: the deck below is sized from whatever height is left, so two
+         rows of figures come straight out of the card you came to look at. --}}
+    <x-figure-strip :figures="$figures" :dense="$view === 'deck'" />
 
     {{-- ══════════ THE VIEW SWITCHER ══════════ --}}
     <div class="flex flex-wrap items-center gap-3">
@@ -158,7 +162,7 @@
                 <div class="absolute -right-24 top-1/4 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.12),transparent_70%)]"></div>
             </div>
 
-            <div class="flex items-center justify-between px-1 pb-1 pt-4">
+            <div class="flex items-center justify-between px-1 pb-1 pt-2">
                 <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
                     <span class="h-px w-4 bg-navy-200"></span>Past missions
                 </p>
@@ -219,7 +223,13 @@
                                 </p>
                             </div>
 
-                            <x-mission.ring :percent="$m['progress']" :hex="$m['statusHex']" :size="84" label="Overall" class="mt-9" />
+                            {{-- Wrapped so the deck can drop it: on a narrow
+                                 plate the ring is the third column that will
+                                 not fit, and it wraps the whole title block
+                                 into three stacked rows. --}}
+                            <span data-deck-part="ring">
+                                <x-mission.ring :percent="$m['progress']" :hex="$m['statusHex']" :size="84" label="Overall" class="mt-9" />
+                            </span>
                         </div>
 
                         {{-- 3 · the numbers ── 4 · the faces travel with them --}}
@@ -249,10 +259,13 @@
                 @endforeach
             </div>
 
-            {{-- ── the controls ── --}}
-            <div class="mt-5 flex items-center justify-center gap-3">
+            {{-- ── the controls ──
+                 The hint sits on this row rather than under it: a second line
+                 of 11px grey cost 25px of the card's height, and the card is
+                 what people came for. --}}
+            <div class="mt-3 flex items-center justify-center gap-3">
                 <button type="button" data-deck-prev
-                        class="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-[19px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
                         aria-label="Previous mission">‹</button>
 
                 <div class="flex items-center gap-1.5" data-deck-dots>
@@ -264,13 +277,13 @@
                 </div>
 
                 <button type="button" data-deck-next
-                        class="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-[19px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
                         aria-label="Next mission">›</button>
-            </div>
 
-            <p class="mt-2 text-center text-[11px] text-muted">
-                Drag the deck, swipe, use ← →, or pick a card at the edge
-            </p>
+                <p class="ms-2 hidden text-[11px] text-muted lg:block">
+                    Drag, swipe, use ← →, or pick a card at the edge
+                </p>
+            </div>
         </div>
 
 
