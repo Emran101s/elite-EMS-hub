@@ -29,9 +29,13 @@ class EventHubTest extends TestCase
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
+        // The cover carries the name, where and when, the owner of the next
+        // critical action, and health. The client, the PM and the stage are
+        // deliberately on the Overview beneath it — see event-header.blade.php.
+        // This used to assert the client name too, and passed only because the
+        // sidebar's portfolio tree happened to print it; the cover never did.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
             ->assertSee('ICFT 2026 — Event Hub')
-            ->assertSee('ICFT Global Committee')
             ->assertSee('Layla Haddad')
             ->assertSee('Health');
     }

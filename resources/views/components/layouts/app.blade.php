@@ -27,7 +27,7 @@
     h-screen rather than min-h-screen so the panel scrolls its own list instead
     of making the page tall and pushing Settings off the bottom.
 --}}
-<div class="flex h-screen gap-3 overflow-hidden p-3 lg:gap-4 lg:p-4">
+<div class="flex h-screen overflow-hidden bg-orbit-navy-3">
 
     <x-app-rail />
     <x-app-panel />
@@ -40,7 +40,7 @@
         page to scroll through, which is exactly what the hub's tab strip was
         doing.
     --}}
-    <main class="scrollbar-none min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-navy-900/[0.045] px-4 pb-4 lg:px-6 lg:pb-6">
+    <main class="scrollbar-none m-3 min-w-0 flex-1 overflow-y-auto rounded-[22px] bg-canvas px-4 pb-4 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.85)] lg:m-4 lg:px-6 lg:pb-6">
 
         @php
             // The rail already says which area you are in, so a trail back to

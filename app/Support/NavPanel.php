@@ -56,6 +56,74 @@ class NavPanel
         ],
     ];
 
+    /**
+     * The panel, exactly as the Elite Orbit OS reference draws it.
+     *
+     * Fixed rather than derived from the area: the reference shows the whole
+     * platform at once, so the panel is the map and the rail is the pin on it.
+     *
+     * Rows whose page is not built yet are still drawn, at the owner's explicit
+     * instruction. They render identically and simply do not go anywhere — a
+     * navigation that grows a new row every release teaches people to re-read
+     * it, and one that shows the shape of the product teaches them the product.
+     * A row without a route says "Coming soon" and takes no keyboard focus,
+     * which is the difference between a promise and a broken link.
+     *
+     * @var array<int,array{0:string,1:array<int,array{0:string,1:string,2:string}>}>
+     */
+    public const PANEL = [
+        ['Events', [
+            ['Dashboard', 'home', 'home'],
+            ['All events', 'events.index', 'calendar'],
+            ['New event', 'events.create', 'sparkles'],
+        ]],
+        ['Planning', [
+            ['Planning board', 'planning.index', 'grid'],
+            ['Tasks', 'tasks.index', 'clipboard'],
+        ]],
+        ['Communication', [
+            ['Messages', 'messages.index', 'chat'],
+            ['Guests', 'guests.index', 'users'],
+        ]],
+        ['Business', [
+            ['Proposals', 'proposals.index', 'document'],
+            ['Contracts', 'contracts.index', 'document'],
+        ]],
+        ['Finance', [
+            ['Invoices', 'invoices.index', 'currency'],
+            ['Payments', 'payments.index', 'card'],
+        ]],
+    ];
+
+    /**
+     * Areas the fixed panel already covers.
+     *
+     * Everywhere else — the CRM, the library, Settings — still appends its own
+     * sections underneath, or Venues, Team and Reports would have no door left.
+     */
+    public const PANEL_COVERS = ['workspace', 'events', 'tasks'];
+
+    /**
+     * @return Collection<int,array{label:string,items:Collection}>
+     */
+    public static function panel(): Collection
+    {
+        return collect(self::PANEL)->map(fn (array $section) => [
+            'label' => $section[0],
+            'items' => collect($section[1])->map(function (array $item) {
+                $built = Route::has($item[1]);
+
+                return [
+                    'label' => $item[0],
+                    'href' => $built ? route($item[1]) : null,
+                    'icon' => $item[2],
+                    'count' => null,
+                    'active' => $built && request()->routeIs($item[1]),
+                ];
+            })->values(),
+        ]);
+    }
+
     /** Settings sits apart on the rail, as it does in most tools. */
     public const SETTINGS = [
         'label' => 'Settings', 'icon' => 'cog', 'route' => 'settings.index',

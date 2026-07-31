@@ -436,17 +436,20 @@
     --color-orbit-online: #3edc7a;
     --color-orbit-label: #8fa0c8;    /* muted label blue */
     --color-orbit-dim: #6e7f9e;      /* secondary blue-gray */
+    --color-canvas: #f8fafe;         /* the light card the work sits on */
 }
 
-/* The two dark surfaces. The rail runs darker than the panel so the eye
-   reads two planes rather than one slab. */
+/* The two dark surfaces. The rail runs darker than the panel so the eye reads
+   two planes rather than one slab — they are flush now, with no gap between
+   them, so the tonal step is the only thing separating them. */
 .orbit-rail {
-    background: linear-gradient(180deg, #081a3d 0%, #0d2557 46%, #050f24 100%);
+    background: linear-gradient(180deg, #040c1f 0%, #08183a 44%, #030913 100%);
 }
 .orbit-panel {
     background:
-        radial-gradient(120% 60% at 50% 0%, rgba(13, 37, 87, 0.85) 0%, transparent 60%),
-        linear-gradient(180deg, #081a3d 0%, #0b1f47 40%, #050f24 100%);
+        radial-gradient(130% 55% at 50% 0%, rgba(16, 42, 96, 0.9) 0%, transparent 62%),
+        linear-gradient(180deg, #07142f 0%, #0a1c40 42%, #040d1f 100%);
+    box-shadow: inset 1px 0 0 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Glass. One recipe, used by the profile card, the status pill, the active

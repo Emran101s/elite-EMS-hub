@@ -92,7 +92,10 @@ class PlatformChromeTest extends TestCase
             $page->assertSee('title="'.$area['label'].'"', false);
         }
 
-        $page->assertSee('title="Settings"', false);
+        // Settings is not an area, so it is not on the rail — it sits in the
+        // panel's command dock with the other two things you reach for without
+        // reading. Still one click from anywhere, which is the point.
+        $page->assertSee(route('settings.index'), false);
     }
 
     /**
@@ -110,11 +113,18 @@ class PlatformChromeTest extends TestCase
 
         $html = $this->actingAs($user)->get(route('home'))->assertOk()->getContent();
 
-        $rail = str($html)->after('aria-label="Areas"')->before('</nav>');
+        // The nav's OWN class list, not its subtree: the decorative layer
+        // inside it is absolutely positioned and clips itself on purpose, to
+        // keep its orbit arcs from bleeding across the page. That is fine.
+        // What must never clip is the box the labels hang off.
+        $railBox = (string) str($html)->before('aria-label="Areas"')->afterLast('<nav ');
+        $rail = (string) str($html)->after('aria-label="Areas"')->before('</nav>');
 
-        $this->assertStringContainsString('left-full', (string) $rail, 'the labels still hang off the rail');
-        $this->assertStringNotContainsString('overflow-hidden', (string) $rail,
+        $this->assertStringContainsString('left-full', $rail, 'the labels still hang off the rail');
+        $this->assertStringNotContainsString('overflow-hidden', $railBox,
             'the rail clips, so its hover labels are painted where nobody can see them');
+        $this->assertStringNotContainsString('overflow-x-auto', $railBox);
+        $this->assertStringNotContainsString('overflow-y-auto', $railBox);
     }
 
     public function test_the_event_hub_breadcrumb_names_event_and_module(): void
