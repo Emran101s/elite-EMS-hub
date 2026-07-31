@@ -141,6 +141,38 @@ class TaskBoardTest extends TestCase
     }
 
     /**
+     * A row reading "Untitled task · Unassigned · —" rendered exactly like a
+     * real one makes the board look broken and the design take the blame. It
+     * now says quietly that it is unfinished.
+     */
+    public function test_an_unfinished_task_reads_as_unfinished(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        $bare = $event->tasks()->create(['title' => '', 'status' => 'todo', 'priority' => 'normal']);
+        $this->assertSame(['a title', 'an owner', 'a due date'], $bare->incomplete());
+
+        $part = $event->tasks()->create(['title' => 'Book the stage', 'status' => 'todo',
+            'priority' => 'normal', 'assignee_id' => $user->id]);
+        $this->assertSame(['a due date'], $part->incomplete());
+
+        $whole = $event->tasks()->create(['title' => 'Sign the venue', 'status' => 'todo',
+            'priority' => 'normal', 'assignee_id' => $user->id, 'due_on' => now()->addWeek()]);
+        $this->assertSame([], $whole->incomplete());
+
+        // A finished task is not waiting for its details.
+        $done = $event->tasks()->create(['title' => '', 'status' => 'done', 'priority' => 'normal']);
+        $this->assertSame([], $done->incomplete(), 'a closed task is not nagged about');
+
+        $html = Livewire::actingAs($user)->test(TasksTab::class, ['event' => $event])->html();
+
+        $this->assertStringContainsString('Still needs a title, an owner and a due date', $html);
+        $this->assertStringContainsString('Still needs a due date', $html);
+        $this->assertStringNotContainsString('Still needs', explode('Sign the venue', $html)[1] ?? '',
+            'a complete task carries no dot');
+    }
+
+    /**
      * In List view a row's checklist expands in place. The list owns which row
      * is open, so opening one closes the last — otherwise a long list turns
      * into a wall of nested rows you have to scroll past to reach the next task.

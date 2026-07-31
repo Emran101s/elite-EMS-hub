@@ -22,7 +22,7 @@
 
         {{-- title --}}
         <button type="button" wire:click="openTask({{ $item->id }})" data-block-drag
-                class="pf mt-2 text-left text-sm font-bold leading-snug text-navy-900 {{ $closed ? '!text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled task' }}</button>
+                class="pf mt-2 block w-full text-left text-sm font-bold leading-snug text-navy-900"><x-record-title :record="$item" fallback="Untitled task" :muted="$closed" /></button>
 
         @if (trim((string) $item->description) !== '')
             <p class="mt-1 line-clamp-2 text-2xs leading-relaxed text-muted">{{ $item->description }}</p>

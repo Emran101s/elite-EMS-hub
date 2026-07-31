@@ -87,6 +87,29 @@ class Task extends Model
     }
 
     /** Live work — not done, not cancelled. */
+    /**
+     * What this record is still missing to be a real task.
+     *
+     * A row that says "Untitled task · Unassigned · —" is not a task, it is a
+     * placeholder somebody made and walked away from. Rendered like any other
+     * it makes the board look broken and the design take the blame, so the
+     * board can now say so quietly instead.
+     *
+     * @return list<string>
+     */
+    public function incomplete(): array
+    {
+        if (! $this->isOpen()) {
+            return [];   // a finished task is not waiting for its details
+        }
+
+        return array_values(array_filter([
+            trim((string) $this->title) === '' ? 'a title' : null,
+            $this->assignee_id === null ? 'an owner' : null,
+            $this->due_on === null ? 'a due date' : null,
+        ]));
+    }
+
     public function isOpen(): bool
     {
         return self::STAGES[$this->status][2] ?? true;

@@ -27,7 +27,7 @@
                         <div class="group flex items-stretch border-b border-line/50 transition hover:bg-navy-50/30">
                             <div class="flex w-[210px] shrink-0 items-center gap-2 px-3 py-1.5">
                                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $item->priorityHex() }}"></span>
-                                <button type="button" wire:click="openTask({{ $item->id }})" class="truncate text-left text-xs font-semibold text-navy-800 {{ in_array($item->status, ['done', 'cancelled']) ? 'text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled task' }}</button>
+                                <button type="button" wire:click="openTask({{ $item->id }})" class="min-w-0 text-left text-xs font-semibold text-navy-800"><x-record-title :record="$item" fallback="Untitled task" :muted="in_array($item->status, ['done', 'cancelled'])" /></button>
                                 @if ($item->isSigned())<span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-eyebrow font-black text-navy-900">✓</span>@endif
                                 <span class="ml-auto">@include('livewire.hub.partials.tasks-studio.actions', ['item' => $item])</span>
                             </div>

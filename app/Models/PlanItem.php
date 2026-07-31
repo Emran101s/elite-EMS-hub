@@ -89,6 +89,25 @@ class PlanItem extends Model
         return in_array($this->status, self::SIGNED, true) && $this->approved_at !== null;
     }
 
+    /**
+     * What this item is still missing to be a real plan item. Same reasoning as
+     * Task::incomplete() — see there.
+     *
+     * @return list<string>
+     */
+    public function incomplete(): array
+    {
+        if (in_array($this->status, ['done', 'cancelled'], true)) {
+            return [];
+        }
+
+        return array_values(array_filter([
+            trim((string) $this->title) === '' ? 'a title' : null,
+            $this->owners()->count() === 0 ? 'an owner' : null,
+            $this->due_on === null ? 'a due date' : null,
+        ]));
+    }
+
     public function isOverdue(): bool
     {
         return $this->isOpen() && $this->due_on && $this->due_on->isPast();

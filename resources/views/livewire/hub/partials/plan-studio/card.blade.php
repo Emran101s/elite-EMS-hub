@@ -10,7 +10,7 @@
     <div class="flex items-start gap-2">
         <span class="mt-1 h-2 w-2 shrink-0 rounded-full" style="background: {{ $item->priorityHex() }}" title="{{ $item->priorityLabel() }} priority"></span>
         <button type="button" wire:click="openItem({{ $item->id }})" data-block-drag
-                class="flex-1 text-left text-sm font-bold leading-snug text-navy-900 {{ $closed ? 'text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled item' }}</button>
+                class="min-w-0 flex-1 text-left text-sm font-bold leading-snug text-navy-900"><x-record-title :record="$item" fallback="Untitled item" :muted="$closed" /></button>
         @if ($item->isSigned())
             <span title="Approved by {{ $item->approver?->name ?? 'team' }} · {{ $item->approved_at?->format('d M Y') }}"
                   class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-eyebrow font-black text-navy-900 shadow ring-2 ring-white">✓</span>

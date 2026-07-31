@@ -31,7 +31,7 @@
                                             class="text-navy-300 transition hover:text-navy-700"><svg class="h-3 w-3 transition-transform duration-300" x-bind:class="at === {{ $item->id }} && 'rotate-90'" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg></button>
                                 @else<span class="w-3"></span>@endif
                                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $item->priorityHex() }}" title="{{ $item->priorityLabel() }}"></span>
-                                <button type="button" wire:click="openTask({{ $item->id }})" class="truncate text-left text-xs font-semibold text-navy-800 {{ in_array($item->status, ['done', 'cancelled']) ? 'text-navy-400 line-through' : '' }}">{{ $item->title ?: 'Untitled task' }}</button>
+                                <button type="button" wire:click="openTask({{ $item->id }})" class="min-w-0 text-left text-xs font-semibold text-navy-800"><x-record-title :record="$item" fallback="Untitled task" :muted="in_array($item->status, ['done', 'cancelled'])" /></button>
                                 @if ($item->isSigned())<span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-eyebrow font-black text-navy-900" title="{{ $item->stageLabel() }}">✓</span>@endif
                                 <span class="ml-auto">@include('livewire.hub.partials.tasks-studio.actions', ['item' => $item])</span>
                             </div>
