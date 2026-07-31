@@ -10,8 +10,14 @@
         </template>
     </div>
 
-    {{-- ══════════ WORKSPACE + CONTROL CENTER ══════════ --}}
-    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_440px]">
+    {{-- ══════════ WORKSPACE + CONTROL CENTER ══════════
+         The board wants the width. Five columns need ~1560px and the Control
+         Center takes 440 of it, which is exactly why Done was clipped — so the
+         panel is a toggle, closed by default. It is a dashboard, not something
+         you read while dragging a card. --}}
+    <div x-data="{ cc: $persist(false).as('ebh-task-cc') }"
+         class="grid items-start gap-5"
+         :class="cc ? 'xl:grid-cols-[minmax(0,1fr)_440px]' : 'xl:grid-cols-1'">
 
         {{-- ── left: toolbar + active view ── --}}
         <div class="min-w-0">
@@ -28,7 +34,14 @@
                     @endforeach
                 </div>
 
-                <button type="button" wire:click="addTask" class="ml-auto flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-4 text-xs font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition hover:brightness-105">＋ New task</button>
+                <button type="button" @click="cc = ! cc"
+                        :class="cc ? 'border-navy-900 bg-navy-900 text-white' : 'border-line bg-white text-navy-600 hover:border-gold-300'"
+                        class="ml-auto flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold shadow-sm transition">
+                    <x-icon name="chart" class="h-3.5 w-3.5" />
+                    <span x-text="cc ? 'Hide panel' : 'Control Center'"></span>
+                </button>
+
+                <button type="button" wire:click="addTask" class="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-4 text-xs font-bold text-navy-950 shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition hover:brightness-105">＋ New task</button>
             </div>
 
             {{-- module filter --}}
@@ -49,8 +62,8 @@
             </div>
         </div>
 
-        {{-- ── right: Task Control Center ── --}}
-        <div class="xl:sticky xl:top-4">
+        {{-- ── right: Task Control Center, when asked for ── --}}
+        <div x-show="cc" x-cloak x-collapse.duration.300ms class="xl:sticky xl:top-4">
             @include('livewire.hub.partials.tasks-studio.control-center')
         </div>
     </div>

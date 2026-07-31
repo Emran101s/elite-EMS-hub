@@ -6,7 +6,12 @@
     @foreach (\App\Models\Task::STAGES as $sv => [$slabel, $shex, $sopen])
         @php $col = $byStatus[$sv] ?? collect(); @endphp
         @continue ($sv === 'cancelled' && $col->isEmpty())
-        <div wire:key="tcol-{{ $sv }}" class="flex w-[300px] shrink-0 flex-col">
+        {{-- Columns share the width instead of claiming a fixed 300px each.
+             Five fixed columns need 1564px and the work area is 1538 — which is
+             why Done sat 26px off the edge and looked missing. Flexible, they
+             fill whatever there is, and only fall back to scrolling when the
+             space is genuinely too tight for a readable card. --}}
+        <div wire:key="tcol-{{ $sv }}" class="flex min-w-[264px] flex-1 flex-col">
             {{-- column header --}}
             <div class="kanban-head">
                 <span class="h-2.5 w-2.5 rounded-full" style="background: {{ $shex }}"></span>
