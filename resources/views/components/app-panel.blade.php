@@ -14,7 +14,11 @@
     them, because a nav that does not say how much is in there makes you open
     each one to find out.
 --}}
-<aside class="hidden w-[286px] shrink-0 flex-col overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)] lg:flex">
+{{-- The context panel costs 286px. At lg — which is a landscape iPad — the
+     rail, the panel and the gutters took 414 of 1024 and left 610 for the work
+     itself. It now waits for xl, so a tablet gets the rail and a real column;
+     the rail still reaches every area without it. --}}
+<aside class="hidden w-[286px] shrink-0 flex-col overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)] xl:flex">
 
     {{-- ── who you are ── --}}
     <details class="group/user relative shrink-0" data-menu>
