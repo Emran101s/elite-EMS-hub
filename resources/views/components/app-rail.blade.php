@@ -22,7 +22,7 @@
 {{-- No overflow-hidden here, ever: the hover labels are painted OUTSIDE this
      box (absolute, left-full), so clipping it silently swallows them. The
      decorative layer below clips itself instead. --}}
-<nav class="orbit-rail relative flex h-full w-[90px] shrink-0 flex-col items-center"
+<nav class="orbit-rail relative flex h-full w-[78px] shrink-0 flex-col items-center"
      aria-label="Areas">
 
     {{-- Gold dust and orbit arcs. Fixed positions rather than random, so the
@@ -61,13 +61,13 @@
 
                 @if ($active)
                     {{-- the orbit --}}
-                    <span aria-hidden="true" class="orbit-ring pointer-events-none absolute inset-[-8px] rounded-full"></span>
-                    <span aria-hidden="true" class="orbit-ring orbit-ring-2 pointer-events-none absolute inset-[-19px] rounded-full"></span>
+                    <span aria-hidden="true" class="orbit-ring pointer-events-none absolute inset-[-6px] rounded-full"></span>
+                    <span aria-hidden="true" class="orbit-ring orbit-ring-2 pointer-events-none absolute inset-[-14px] rounded-full"></span>
                     <span aria-hidden="true" class="pointer-events-none absolute inset-[-2px] rounded-full bg-[radial-gradient(circle,rgba(244,215,106,0.26),transparent_68%)]"></span>
 
                     {{-- the node on the rail's edge, where the panel begins --}}
-                    <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 hidden h-px w-[13px] -translate-y-1/2 bg-gradient-to-r from-orbit-gold-lit/70 to-transparent xl:block"></span>
-                    <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 hidden h-[7px] w-[7px] -translate-y-1/2 translate-x-[9px] rounded-full bg-orbit-gold-lit shadow-[0_0_12px_rgba(244,215,106,0.95)] xl:block"></span>
+                    <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 hidden h-px w-[9px] -translate-y-1/2 bg-gradient-to-r from-orbit-gold-lit/70 to-transparent xl:block"></span>
+                    <span aria-hidden="true" class="pointer-events-none absolute left-full top-1/2 hidden h-[7px] w-[7px] -translate-y-1/2 translate-x-[5px] rounded-full bg-orbit-gold-lit shadow-[0_0_12px_rgba(244,215,106,0.95)] xl:block"></span>
                 @endif
 
                 <x-icon :name="$area['icon']" @class([

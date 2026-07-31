@@ -32,7 +32,7 @@
     the connector from the rail, and the dock's underglow — so it still means
     "here" by the time you reach the bottom.
 --}}
-<aside class="orbit-panel relative hidden w-[328px] shrink-0 flex-col overflow-hidden xl:flex"
+<aside class="orbit-panel relative hidden w-[288px] shrink-0 flex-col overflow-hidden xl:flex"
        aria-label="Main navigation">
 
     {{-- the decorative field: arcs and dust, 4–12% so it reads as texture --}}
