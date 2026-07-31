@@ -222,10 +222,12 @@ class EventHubTest extends TestCase
             $header['readiness']['pct'],
         );
 
+        // The header is one card now, so these read shorter than the four
+        // blocks they replace — same four things, a third of the height.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next critical action')
-            ->assertSee('Readiness to Go Live')
-            ->assertSee('Live status');
+            ->assertSee('Next')
+            ->assertSee('Readiness')
+            ->assertSee('Health');
     }
 
     /**
@@ -287,7 +289,7 @@ class EventHubTest extends TestCase
         $event->tasks()->delete();
 
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next critical action')
+            ->assertSee('Next')
             ->assertSee('Nothing is waiting on you')
             ->assertSee('Due')
             ->assertSee('Owner')
@@ -338,12 +340,15 @@ class EventHubTest extends TestCase
     }
 
     /**
-     * The hero, the health strip, the tabs and the live bar together stand
-     * 650px tall — the whole of a laptop screen before a figure of the module
-     * you came for. They scroll away; this rail does not, so you never lose
-     * which event you are in or the way back to the tabs.
+     * The way to the next module survives the scroll.
+     *
+     * There used to be a separate 41px rail pinned above the tabs, because the
+     * tabs themselves cost 136px and pinning those would have eaten a seventh
+     * of every screenful. The nav is 70px now, so it is the thing that sticks
+     * and the rail is gone — one pinned element instead of two, and it is the
+     * one you actually use.
      */
-    public function test_a_slim_rail_survives_the_scroll(): void
+    public function test_the_module_nav_survives_the_scroll(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
@@ -354,15 +359,15 @@ class EventHubTest extends TestCase
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
             ->assertOk()->getContent();
 
-        // Everything the rail is for: who, where, what waits, the way back.
-        $this->assertStringContainsString('↑ Modules', $html);
-        $this->assertStringContainsString('ICFT 2026', $html);
+        $nav = (string) str($html)->after('aria-label="Event modules"')->before('</nav>');
+        $box = (string) str($html)->before('aria-label="Event modules"')->afterLast('<div ');
 
-        // The rail's counts come from the same place as the tabs', so the two
-        // can never disagree about what is waiting.
-        $rail = substr($html, strpos($html, '↑ Modules') - 2400, 2400);
-        $this->assertStringContainsString('1', $rail);
-        $this->assertStringContainsString('Tasks', $rail);
+        $this->assertStringContainsString('sticky top-0', $box, 'the nav must survive the scroll');
+        $this->assertStringContainsString('Tasks', $nav);
+
+        // Its counts come from the same place as the header's, so the two can
+        // never disagree about what is waiting.
+        $this->assertStringContainsString('1 overdue', $nav);
     }
 
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */
