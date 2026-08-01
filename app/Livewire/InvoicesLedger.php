@@ -64,8 +64,10 @@ class InvoicesLedger extends Component
         $payment = EventContractPayment::with(['event.client', 'contract'])->findOrFail($paymentId);
 
         // Raising twice off one installment is the mistake this page makes
-        // easiest to make, so it is the one it refuses.
-        if (InvoiceLine::where('payment_id', $payment->id)->exists()) {
+        // easiest to make, so it is the one it refuses. A VOIDED invoice is
+        // not asking for anything, so it does not block — that is the whole
+        // difference between voiding a document and deleting it.
+        if (self::billedPaymentIds()->contains($payment->id)) {
             return;
         }
 
@@ -174,7 +176,7 @@ class InvoicesLedger extends Component
 
         // Installments that have never been billed. This is what makes the page
         // useful on the day it ships rather than an empty table with a button.
-        $billed = InvoiceLine::whereNotNull('payment_id')->pluck('payment_id')->all();
+        $billed = self::billedPaymentIds()->all();
 
         $ready = EventContractPayment::query()
             ->with(['event.client', 'contract'])
@@ -210,6 +212,19 @@ class InvoicesLedger extends Component
                     'note' => 'Installments never billed'],
             ],
         ]);
+    }
+
+    /**
+     * Installments a live invoice is already asking for.
+     *
+     * One definition, used by both the guard and the ready list, or the page
+     * offers to raise something it will then refuse to raise.
+     */
+    private static function billedPaymentIds(): Collection
+    {
+        return InvoiceLine::whereNotNull('payment_id')
+            ->whereHas('invoice', fn ($q) => $q->where('status', '!=', 'void'))
+            ->pluck('payment_id');
     }
 
     private function money(int $cents): string

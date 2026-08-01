@@ -6,6 +6,7 @@ use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One contract installment, tracked against reality. Status is derived from
@@ -72,6 +73,39 @@ class EventContractPayment extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(EventContract::class, 'contract_id');
+    }
+
+    /** Invoice lines raised against this installment. */
+    public function invoiceLines(): HasMany
+    {
+        return $this->hasMany(InvoiceLine::class, 'payment_id');
+    }
+
+    /**
+     * The invoice that is asking for this installment, if one is.
+     *
+     * A voided invoice is not asking for anything, so it does not count — the
+     * installment becomes billable again, which is the whole point of voiding
+     * rather than deleting.
+     */
+    public function invoice(): ?Invoice
+    {
+        return $this->invoiceLines
+            ->map->invoice
+            ->filter()
+            ->first(fn (Invoice $i) => $i->status !== 'void');
+    }
+
+    /**
+     * Whether an invoice owns this installment's money.
+     *
+     * Where one does, receipts are recorded against the invoice and mirrored
+     * here — two places that take the same payment is how a ledger ends up
+     * counting it twice.
+     */
+    public function isInvoiced(): bool
+    {
+        return $this->invoice() !== null;
     }
 
     public function auditLabel(): string

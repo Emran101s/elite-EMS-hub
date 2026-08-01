@@ -53,7 +53,14 @@ class PaymentsLedger extends Component
     {
         Gate::authorize('manage-contract');
 
-        $p = EventContractPayment::findOrFail($paymentId);
+        $p = EventContractPayment::with('invoiceLines.invoice')->findOrFail($paymentId);
+
+        // Where an invoice is asking for this installment, the invoice is where
+        // the money is recorded and this row only mirrors it. Two places that
+        // take the same payment is how a ledger counts it twice.
+        if ($p->isInvoiced()) {
+            return;
+        }
 
         $cents = $amount === null || $amount === '' || ! is_numeric($amount)
             ? $p->outstandingCents()
@@ -72,14 +79,19 @@ class PaymentsLedger extends Component
     {
         Gate::authorize('manage-contract');
 
-        EventContractPayment::findOrFail($paymentId)
-            ->update(['paid_cents' => 0, 'paid_at' => null]);
+        $p = EventContractPayment::with('invoiceLines.invoice')->findOrFail($paymentId);
+
+        if ($p->isInvoiced()) {
+            return;
+        }
+
+        $p->update(['paid_cents' => 0, 'paid_at' => null]);
     }
 
     private function installments(): Collection
     {
         return EventContractPayment::query()
-            ->with(['event.client', 'contract'])
+            ->with(['event.client', 'contract', 'invoiceLines.invoice'])
             ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
             ->get()
             ->filter(function (EventContractPayment $p) {

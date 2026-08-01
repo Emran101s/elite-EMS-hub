@@ -121,7 +121,21 @@
                                          Contract tab does and what recording a
                                          payment usually means. --}}
                                     <span class="flex items-center justify-end gap-1.5">
-                                        @if (! $may)
+                                        @php $inv = $p->invoice(); @endphp
+
+                                        @if ($inv)
+                                            {{-- An invoice is asking for this one, so the
+                                                 invoice is where the money is recorded and
+                                                 this row only mirrors it. Offering a second
+                                                 Record button here is how a ledger comes to
+                                                 count one payment twice. --}}
+                                            <a href="{{ route('invoices.index', ['q' => $inv->number]) }}"
+                                               title="Recorded against {{ $inv->number }}"
+                                               class="flex items-center gap-1.5 rounded-lg bg-navy-50 px-2 py-1 font-mono text-[10px] font-bold text-navy-600 transition hover:bg-navy-100 hover:text-indigo-600">
+                                                <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $inv->stateHex() }}"></span>
+                                                {{ $inv->number }}
+                                            </a>
+                                        @elseif (! $may)
                                             <span class="text-[10.5px] italic text-navy-300">View only</span>
                                         @elseif ($state === 'paid')
                                             <button type="button" wire:click="clear({{ $p->id }})"

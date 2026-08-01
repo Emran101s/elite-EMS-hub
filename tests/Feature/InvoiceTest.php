@@ -285,4 +285,125 @@ class InvoiceTest extends TestCase
 
         $this->assertSame(route('invoices.index'), $panel['href']);
     }
+
+    /* ══ the link back to the schedule ══
+       Without this the two ledgers contradict each other about the same money:
+       an invoice collected in full while its installment still reads "overdue,
+       JD52,500 outstanding". ══ */
+
+    public function test_money_recorded_on_an_invoice_lands_on_its_installment(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+        $this->assertSame(0, $p->paid_cents);
+
+        $c = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $invoice = Invoice::latest('id')->firstOrFail();
+
+        $c->call('record', $invoice->id);
+
+        $p->refresh();
+        $this->assertSame($p->amount_cents, $p->paid_cents);
+        $this->assertSame('paid', $p->status(), 'the schedule agrees with the invoice');
+        $this->assertNotNull($p->paid_at);
+    }
+
+    public function test_a_part_payment_lands_proportionally(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $c = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $invoice = Invoice::with('lines')->latest('id')->firstOrFail();
+
+        $c->call('record', $invoice->id, $invoice->totalCents() / 100 / 2);   // half
+
+        $p->refresh();
+        $this->assertSame((int) round($invoice->totalCents() / 2), $p->paid_cents);
+        $this->assertSame('partial', $p->status());
+    }
+
+    /**
+     * Tax is collected on top of the lines and settles no installment, so a
+     * client paying an invoice in full settles its lines EXACTLY — with nothing
+     * left over to overpay the schedule with.
+     */
+    public function test_tax_does_not_overpay_the_installment(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $c = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $invoice = Invoice::latest('id')->firstOrFail();
+        $invoice->update(['tax_pct' => 16]);
+
+        $c->call('record', $invoice->id);   // the whole tax-inclusive total
+
+        $invoice = $invoice->fresh()->load('lines');
+        $p->refresh();
+
+        $this->assertGreaterThan($p->amount_cents, $invoice->paid_cents, 'more cash came in than the line is worth');
+        $this->assertSame($p->amount_cents, $p->paid_cents, 'but the installment is settled, not overpaid');
+        $this->assertSame(0, $p->outstandingCents());
+    }
+
+    /** Voiding hands the installment back: it is billable again, and unpaid. */
+    public function test_voiding_releases_the_installment(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $c = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $invoice = Invoice::latest('id')->firstOrFail();
+        $c->call('record', $invoice->id);
+        $this->assertSame('paid', $p->fresh()->status());
+
+        $c->call('void', $invoice->id);
+
+        $p->refresh()->load('invoiceLines.invoice');
+        $this->assertSame(0, $p->paid_cents, 'a void invoice collected nothing');
+        $this->assertFalse($p->isInvoiced(), 'and is no longer asking for it');
+        $this->assertContains($p->id, $c->viewData('ready')->pluck('id'), 'so it can be billed again');
+    }
+
+    /** Deleting a draft raised by mistake hands the installment back too. */
+    public function test_deleting_a_draft_releases_the_installment(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $c = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $invoice = Invoice::latest('id')->firstOrFail();
+
+        $c->call('destroyDraft', $invoice->id);
+
+        $p->refresh()->load('invoiceLines.invoice');
+        $this->assertFalse($p->isInvoiced());
+        $this->assertContains($p->id, $c->viewData('ready')->pluck('id'));
+    }
+
+    /**
+     * Two places that take the same payment is how a ledger counts it twice, so
+     * the Payments page stops recording once an invoice owns the installment.
+     */
+    public function test_the_payments_page_will_not_record_an_invoiced_installment(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+
+        Livewire::actingAs($user)->test(\App\Livewire\PaymentsLedger::class)
+            ->call('record', $p->id, 100);
+
+        $this->assertSame(0, $p->fresh()->paid_cents, 'the invoice is where that money goes');
+
+        // …and it starts recording again the moment nothing is asking for it.
+        Invoice::latest('id')->firstOrFail()->update(['status' => 'void']);
+
+        Livewire::actingAs($user)->test(\App\Livewire\PaymentsLedger::class)
+            ->call('record', $p->id, 100);
+
+        $this->assertSame(100_00, $p->fresh()->paid_cents);
+    }
 }

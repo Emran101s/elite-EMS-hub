@@ -44,6 +44,29 @@ class Invoice extends Model
         'currency', 'issued_on', 'due_on', 'tax_pct', 'paid_cents', 'paid_at',
         'bill_to', 'notes', 'terms'];
 
+    /**
+     * Money recorded here lands on the schedule it was raised from.
+     *
+     * Without this the two ledgers contradict each other about the same money:
+     * an invoice collected in full while its installment still reads "overdue,
+     * JD52,500 outstanding". A hook rather than a call at each site, because a
+     * fourth place that writes paid_cents one day would otherwise reintroduce
+     * the divergence silently.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (self $invoice) {
+            if ($invoice->wasChanged(['paid_cents', 'paid_at', 'status'])) {
+                $invoice->syncToSchedule();
+            }
+        });
+
+        // A deleted invoice never collected anything. Only a draft can be
+        // deleted, so in practice this releases an installment that was
+        // invoiced by mistake.
+        static::deleted(fn (self $invoice) => $invoice->releaseSchedule());
+    }
+
     protected function casts(): array
     {
         return [
@@ -139,6 +162,56 @@ class Invoice extends Model
     public function isOutstanding(): bool
     {
         return in_array($this->state(), ['sent', 'partial', 'overdue'], true);
+    }
+
+    /* ── the link back to the schedule ── */
+
+    /**
+     * Write what has been collected onto the installments this was raised from.
+     *
+     * The pool is capped at the SUBTOTAL before it is spread: tax is collected
+     * on top of the lines and settles no installment, so a client paying an
+     * invoice in full settles its lines exactly, with nothing left over to
+     * overpay the next one with.
+     *
+     * Allocation runs in line order and each line takes at most its own
+     * amount — the same rule an accounts department applies when a part
+     * payment arrives against a multi-line invoice.
+     */
+    public function syncToSchedule(): void
+    {
+        // Cast, do not trust: a column DEFAULT lives in the database, not in
+        // the model, so paid_cents is still null in memory on the save that
+        // follows a create() — and min(null, x) is null, which SQLite then
+        // refuses to write into a NOT NULL column.
+        $collected = (int) $this->paid_cents;
+
+        // A void invoice collected nothing that the schedule should believe in.
+        $pool = $this->status === 'void' ? 0 : min($collected, $this->subtotalCents());
+
+        foreach ($this->lines as $line) {
+            $take = min($pool, $line->amountCents());
+            $pool -= $take;
+
+            $payment = $line->payment;
+
+            if (! $payment) {
+                continue;
+            }
+
+            $payment->update([
+                'paid_cents' => min((int) $payment->amount_cents, $take),
+                'paid_at' => $take > 0 ? ($this->paid_at?->toDateString() ?? now()->toDateString()) : null,
+            ]);
+        }
+    }
+
+    /** Hand the installments back: this invoice is no longer asking for them. */
+    public function releaseSchedule(): void
+    {
+        foreach ($this->lines as $line) {
+            $line->payment?->update(['paid_cents' => 0, 'paid_at' => null]);
+        }
     }
 
     /* ── making one ── */
