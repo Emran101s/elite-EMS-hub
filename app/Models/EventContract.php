@@ -476,7 +476,11 @@ class EventContract extends Model
         $starts = $this->event?->starts_at;
         $offsets = count($schedule) === 4 ? [null, 60, 30, 7] : [];
 
-        foreach (array_values($schedule) as $i => $s) {
+        $rows = array_values($schedule);
+        $last = count($rows) - 1;
+        $run = 0;
+
+        foreach ($rows as $i => $s) {
             $due = null;
             if (array_key_exists($i, $offsets)) {
                 $due = $offsets[$i] === null
@@ -484,12 +488,23 @@ class EventContract extends Model
                     : $starts?->copy()->subDays($offsets[$i])->toDateString();
             }
 
+            // The last installment takes the remainder rather than its own
+            // rounded share. Rounding each share independently does not add up:
+            // 15/30/30/25 of JD 525,000.55 comes to a cent MORE than the
+            // contract, and of JD 1,000.01 to a cent less — so the client
+            // settles every installment and the agreement still does not
+            // reconcile. The final row absorbs it, as it does on paper.
+            $amount = $i === $last
+                ? (int) $total - $run
+                : (int) round($total * (float) ($s['pct'] ?? 0) / 100);
+            $run += $amount;
+
             $this->payments()->create([
                 'event_id' => $this->event_id,
                 'sort' => $i,
                 'label' => $s['when_en'] ?? ('Installment '.($i + 1)),
                 'pct' => (float) ($s['pct'] ?? 0),
-                'amount_cents' => (int) round($total * (float) ($s['pct'] ?? 0) / 100),
+                'amount_cents' => $amount,
                 'due_on' => $due,
             ]);
         }
@@ -502,17 +517,33 @@ class EventContract extends Model
     public function repriceUnpaidPayments(): void
     {
         $schedule = array_values($this->data['financials']['payment_schedule'] ?? []);
-        $total = $this->data['financials']['estimated_total_cents'] ?? 0;
+        $total = (int) ($this->data['financials']['estimated_total_cents'] ?? 0);
 
-        foreach ($this->payments()->get() as $payment) {
-            $row = $schedule[$payment->sort] ?? null;
-            if (! $row || $payment->paid_cents > 0) {
-                continue;
-            }
+        // Cash received is history, so a row with money on it keeps its figure
+        // and what is left to schedule is the total less those.
+        [$settled, $open] = $this->payments()->get()
+            ->partition(fn (EventContractPayment $p) => $p->paid_cents > 0);
+
+        $remaining = $total - (int) $settled->sum('amount_cents');
+
+        $open = $open->filter(fn (EventContractPayment $p) => isset($schedule[$p->sort]))->values();
+        $last = $open->count() - 1;
+        $run = 0;
+
+        foreach ($open as $i => $payment) {
+            $row = $schedule[$payment->sort];
+
+            // The final unpaid row takes the remainder, so the schedule adds up
+            // to the contract however the percentages round.
+            $amount = $i === $last
+                ? $remaining - $run
+                : (int) round($total * (float) ($row['pct'] ?? 0) / 100);
+            $run += $amount;
+
             $payment->update([
                 'label' => $row['when_en'] ?? $payment->label,
                 'pct' => (float) ($row['pct'] ?? $payment->pct),
-                'amount_cents' => (int) round($total * (float) ($row['pct'] ?? 0) / 100),
+                'amount_cents' => $amount,
             ]);
         }
     }

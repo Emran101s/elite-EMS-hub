@@ -27,6 +27,54 @@ class ContractPaymentTest extends TestCase
         return [$event, $contract, User::where('email', 'emran.itan@elitebhub.com')->firstOrFail()];
     }
 
+    /**
+     * The schedule has to add up to the contract, whatever the percentages do
+     * when they round.
+     *
+     * Each installment used to be rounded independently, so 15/30/30/25 of
+     * JD 525,000.55 came to a cent MORE than the agreement and of JD 1,000.01
+     * to a cent less: the client settles every installment and the contract
+     * still does not reconcile. The final row absorbs the difference, as it
+     * does on paper.
+     */
+    public function test_the_installments_always_sum_to_the_contract(): void
+    {
+        [$event, $contract] = $this->ctx();
+
+        foreach ([100_001, 52_500_055, 333_333, 999_999_999, 7] as $total) {
+            $contract->payments()->delete();
+
+            $data = $contract->data;
+            $data['financials']['estimated_total_cents'] = $total;
+            $contract->update(['data' => $data]);
+
+            $contract->refresh()->ensurePayments();
+
+            $this->assertSame($total, (int) $contract->payments()->sum('amount_cents'),
+                "a contract of {$total} does not reconcile");
+        }
+    }
+
+    /** Repricing keeps that true, and never rewrites money already received. */
+    public function test_repricing_leaves_settled_rows_alone_and_still_adds_up(): void
+    {
+        [$event, $contract] = $this->ctx();
+
+        $first = $contract->payments()->orderBy('sort')->first();
+        $first->update(['paid_cents' => $first->amount_cents]);
+        $settled = $first->amount_cents;
+
+        $data = $contract->data;
+        $data['financials']['estimated_total_cents'] = 88_888_881;
+        $contract->update(['data' => $data]);
+
+        $contract->refresh()->repriceUnpaidPayments();
+
+        $this->assertSame($settled, $contract->payments()->orderBy('sort')->first()->amount_cents,
+            'cash received is history');
+        $this->assertSame(88_888_881, (int) $contract->fresh()->payments()->sum('amount_cents'));
+    }
+
     public function test_the_schedule_becomes_trackable_installments(): void
     {
         [$event, $contract] = $this->ctx();
