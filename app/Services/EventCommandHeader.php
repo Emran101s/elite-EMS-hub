@@ -82,6 +82,14 @@ class EventCommandHeader
             'risks' => [$event->risks->filter->isOpen()->count(), 'alarm', 'open'],
             'approvals' => [$event->approvals->where('status', 'pending')->count(), 'wait', 'pending'],
             'speakers' => [$event->speakers->where('status', '!=', 'confirmed')->count(), 'wait', 'unconfirmed'],
+            // Commitments the modules hold that the budget cannot count: rooms
+            // held at a rate nobody has agreed, a movement with no cost. A
+            // count, not a state — "over budget" is prose and belongs in the
+            // alert feed, where it can say by how much.
+            'budget' => [
+                count(app(\App\Services\BudgetSync::class)->pending($event)),
+                'wait', 'not costed',
+            ],
             // Issued and waiting on a pen — a draft is not waiting on anyone.
             'contract' => [
                 $event->contracts->whereIn('status', ['sent', 'partially_signed'])->count(),

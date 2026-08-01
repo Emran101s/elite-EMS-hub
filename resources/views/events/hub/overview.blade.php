@@ -11,7 +11,10 @@
     $budgetTotal = max($event->budget_cents, 1);
     $committed = max($estimated - $actual, 0);
     $remaining = max($event->budget_cents - $estimated, 0);
-    $budgetUsedPct = $event->budget_cents > 0 ? (int) round($actual / $budgetTotal * 100) : null;
+    // One definition of "used", shared with the Budget tab — see
+    // Event::budgetUsedPct(). This tile used to divide what had been invoiced
+    // by the cap and read 0% while the Budget tab read 100%.
+    $budgetUsedPct = $event->budgetUsedPct();
 
     // Money must follow the event's currency — never a hard-coded "$".
     $sym = $event->currencySymbol();

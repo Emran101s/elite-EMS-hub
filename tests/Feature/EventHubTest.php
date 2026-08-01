@@ -313,6 +313,12 @@ class EventHubTest extends TestCase
         $event->risks()->delete();
         $event->approvals()->delete();
 
+        // Money is a signal too: a room held at a rate nobody has agreed is a
+        // commitment the budget cannot count. Quiet means quiet everywhere.
+        $event->roomBlocks()->delete();
+        $event->transport()->delete();
+        $event->rooms()->each(fn ($r) => $r->update(['cost_cents' => 1_000_00]));
+
         // A quiet event puts nothing on any tab.
         $this->assertSame([], $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS)));
 
@@ -331,7 +337,19 @@ class EventHubTest extends TestCase
         $this->assertSame('wait', $a['approvals']['tone']);
 
         $this->assertArrayNotHasKey('risks', $a, 'a module with nothing waiting stays bare');
-        $this->assertArrayNotHasKey('budget', $a, 'and a module with no defined signal is never invented');
+        $this->assertArrayNotHasKey('budget', $a, '…and money that is all accounted for is not a signal');
+
+        // Hold rooms without a rate and the Budget tab says so, because the
+        // rooms are real and the budget cannot count them.
+        $event->roomBlocks()->create([
+            'hotel' => 'Unpriced Inn', 'rooms_count' => 12, 'rate_cents' => 0,
+            'check_in' => now()->addMonth(), 'check_out' => now()->addMonth()->addDays(3), 'status' => 'held',
+        ]);
+
+        $b = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+
+        $this->assertSame(1, $b['budget']['count']);
+        $this->assertSame('1 not costed', $b['budget']['why']);
 
         // And it reaches the tab row.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()

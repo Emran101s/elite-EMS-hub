@@ -187,6 +187,30 @@ class BudgetFollowsModulesTest extends TestCase
 
     /* ── and it says so on the screen ── */
 
+    /** And the feed that exists to say what needs you finally mentions money. */
+    public function test_going_over_the_cap_reaches_the_alert_feed(): void
+    {
+        $event = $this->event();
+        $event->update(['budget_cents' => 20_000_00]);
+
+        $this->block($event);          // 25,500 against a 20,000 cap
+
+        $html = $this->actingAs(User::factory()->create(['role' => 'admin']))
+            ->get(route('events.hub', $event))->assertOk()->getContent();
+
+        $this->assertStringContainsString('over budget', $html);
+
+        $forecast = $event->fresh()->costForecast();
+
+        // Cost is what the rooms cost us; forecast is what the client is
+        // charged for them — the cap is their money, so it is measured against
+        // the charge. With the house 15% fee: 25,500 → 29,325.
+        $this->assertSame(25_500_00, $forecast['cost']);
+        $this->assertSame(29_325_00, $forecast['forecast']);
+        $this->assertSame(9_325_00, $forecast['over']);
+        $this->assertSame(147, $forecast['pct']);
+    }
+
     public function test_the_budget_says_what_came_from_where(): void
     {
         $event = $this->event();

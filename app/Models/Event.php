@@ -607,6 +607,61 @@ class Event extends Model
         }
     }
 
+    /**
+     * What this event is now forecast to cost, and what it was allowed to.
+     *
+     * The forecast is each line's own best number — its actual where one has
+     * been recorded, its estimate until then (EventBudgetItem::costCents()) —
+     * which is the figure the Budget tab has always shown. It lives here so
+     * the hub, the alert feed and the tab can all quote it without three
+     * copies of the same sum quietly diverging.
+     *
+     * The cap is what the client agreed to spend, so what is measured against
+     * it is what they will be CHARGED — cost plus whatever each line adds over
+     * it, which is the same figure the Budget tab's Forecast shows. Charging is
+     * per line (EventBudgetItem::sellCents) rather than a flat percentage on
+     * the subtotal, because a hand-quoted line, a per-line markup and a
+     * non-billable line all exist and a flat percentage silently ignores them.
+     *
+     * @return array{forecast:int,cost:int,cap:int,over:int,pct:?int}
+     */
+    public function costForecast(): array
+    {
+        $pct = (float) ($this->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT);
+
+        $cost = (int) $this->budgetItems->sum(fn (EventBudgetItem $i) => $i->costCents());
+        $forecast = (int) $this->budgetItems->sum(fn (EventBudgetItem $i) => $i->sellCents($pct));
+        $cap = (int) ($this->budget_cents ?? 0);
+
+        return [
+            'forecast' => $forecast,
+            'cost' => $cost,
+            'cap' => $cap,
+            'over' => $cap > 0 ? max(0, $forecast - $cap) : 0,
+            'pct' => $cap > 0 ? (int) round($forecast / $cap * 100) : null,
+        ];
+    }
+
+    /**
+     * How much of the budget is spoken for, as a percentage of the cap.
+     *
+     * One definition, because there were three. The Overview tab divided what
+     * had actually been invoiced by the cap and said 0% while the Budget tab
+     * divided the forecast by the cap and said 100%, on the same event, under
+     * the same words. Committed is the number that answers the question people
+     * are asking — a room booked is money gone whether or not the invoice has
+     * arrived — and it is deliberately not clamped: an event at 153% should
+     * say 153%, not sit quietly at 100.
+     *
+     * Null when there is no cap: a percentage of nothing is not 0%.
+     */
+    public function budgetUsedPct(): ?int
+    {
+        $cost = $this->costForecast();
+
+        return $cost['pct'];
+    }
+
     /** Documents raised against this event — see Invoice::unscheduledPaidCents(). */
     public function invoices(): HasMany
     {

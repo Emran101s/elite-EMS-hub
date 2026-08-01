@@ -5,7 +5,10 @@
     // convert cents in the event currency into the other currency, formatted
     $conv = fn ($cents) => Event::moneyIn((int) round(($cents ?? 0) * $fxRate), $fxOther);
     $cap = $event->budget_cents ?? 0;
-    $usedPct = $cap > 0 ? min(100, round($grandForecast / $cap * 100)) : 0;
+    // One definition, shared with the Overview tile and the alert feed — see
+    // Event::budgetUsedPct(). Not clamped: an event at 153% should say so
+    // rather than sit quietly at 100 while the ring looks full.
+    $usedPct = $event->budgetUsedPct() ?? 0;
     $paidPct = $cap > 0 ? min(100, round($paidTotal / $cap * 100)) : 0;
     $remaining = $cap - $grandForecast;
     $track = $view === 'track';
@@ -43,7 +46,7 @@
             ];
     @endphp
 
-    <x-module-head :ring="$price ? max(0, (int) ($sellSummary['marginPct'] ?? 0)) : $usedPct"
+    <x-module-head :ring="$price ? max(0, (int) ($sellSummary['marginPct'] ?? 0)) : min(100, $usedPct)"
                    :ring-label="$price ? (($sellSummary['marginPct'] ?? null) === null ? '—' : $sellSummary['marginPct'].'%') : $usedPct.'%'"
                    :eyebrow="$price ? 'Margin' : 'Budget used'"
                    :figures="$figures"
@@ -70,7 +73,7 @@
                 </div>
                 <div class="flex h-2 overflow-hidden rounded-full bg-white/15">
                     <div class="bg-emerald-400" style="width: {{ $paidPct }}%"></div>
-                    <div class="bg-gold-400" style="width: {{ max(0, $usedPct - $paidPct) }}%"></div>
+                    <div class="bg-gold-400" style="width: {{ max(0, min(100, $usedPct) - $paidPct) }}%"></div>
                 </div>
                 <p class="mt-1.5 flex items-center gap-3 text-eyebrow text-white/40">
                     <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Paid</span>

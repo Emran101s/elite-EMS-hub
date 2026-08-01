@@ -36,7 +36,7 @@ class EventHubController extends Controller
         $event->load([
             'client', 'venue', 'projectManager', 'project',
             'rooms', 'agendaDays.sessions.room', 'agendaSessions.day',
-            'tasks.assignee', 'budgetItems.supplier', 'suppliers',
+            'tasks.assignee', 'budgetItems.supplier', 'suppliers', 'roomBlocks',
             'attendees', 'transport.manifest',
             'sponsors', 'risks.owner', 'approvals.requester', 'approvals.decider',
             'teamMembers', 'speakers', 'brief', 'contract',
@@ -74,6 +74,33 @@ class EventHubController extends Controller
         foreach ($event->risks->filter->isOpen()->sortByDesc->severity()->take(3) as $risk) {
             $alerts->push(['tone' => $risk->severity() >= 15 ? 'risk' : 'info', 'title' => $risk->title,
                 'sub' => str($risk->category)->replace('_', ' ')->title().' risk · '.$risk->severity().'/25', 'when' => $risk->updated_at]);
+        }
+
+        // Money. An event forecast to blow its cap by half showed nothing here
+        // — the number lived on one tab, and the feed that exists to say what
+        // needs you never mentioned it.
+        $cost = $event->costForecast();
+
+        if ($cost['over'] > 0) {
+            $alerts->push([
+                'tone' => 'risk',
+                'title' => 'Forecast is '.$event->money($cost['over']).' over budget',
+                'sub' => $event->money($cost['forecast']).' against '.$event->money($cost['cap']).' · '.$cost['pct'].'%',
+                'when' => $event->updated_at,
+            ]);
+        }
+
+        // Commitments the budget cannot count. Rooms held at a rate nobody has
+        // agreed are real; a budget that omits them silently is not.
+        $pending = app(\App\Services\BudgetSync::class)->pending($event);
+
+        if ($pending !== []) {
+            $alerts->push([
+                'tone' => 'warn',
+                'title' => count($pending).' '.str('commitment')->plural(count($pending)).' not in the budget',
+                'sub' => collect($pending)->take(2)->map(fn (array $p) => $p['module'].' · '.$p['what'])->implode(' · '),
+                'when' => $event->updated_at,
+            ]);
         }
 
         foreach ($event->suppliers->filter(fn ($s) => $s->pivot->status === 'issue') as $supplier) {
