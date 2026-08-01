@@ -750,8 +750,11 @@ class BudgetTab extends Component
         $sponsorsReceived = $sponsors->sum('paid_cents');
         $sponsorTargetC = $this->event->sponsorship_target_cents ?? 0;
 
-        // Exhibition / Booths (extra): actual = Σ non-cancelled booth fees; received = Σ paid.
-        $exhibitorsIncome = $exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents');
+        // Exhibition / Booths (extra): actual = Σ live booth fees, plus whatever
+        // a cancelled stand paid and we kept — see Event::incomeSummary(), which
+        // has to reach the same answer. Received = Σ paid, everybody.
+        $exhibitorsIncome = $exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents')
+            + $exhibitors->where('status', 'cancelled')->sum('paid_cents');
         $exhibitorsReceived = $exhibitors->sum('paid_cents');
         $exhibitionTargetC = $this->event->exhibition_target_cents ?? 0;
 

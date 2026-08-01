@@ -621,7 +621,14 @@ class Event extends Model
         $other = (int) $items->where('source', '!=', 'client')->sum('amount_cents');
         $client = $manualClient + $contractCollected;
         $sponsors = (int) $this->sponsors->sum('amount_cents');
-        $exhibitors = (int) $this->exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents');
+        // A cancelled stand earns whatever was paid and kept, not its fee.
+        // Booked used to exclude cancelled exhibitors outright while collected
+        // counted everybody's deposits, so a stand that cancelled after paying
+        // made collected exceed booked — "you have received more than you sold"
+        // — and receivable, being max(0, booked − collected), read zero while
+        // money was genuinely owed.
+        $exhibitors = (int) $this->exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents')
+            + (int) $this->exhibitors->where('status', 'cancelled')->sum('paid_cents');
 
         $clientTarget = ($this->client_target_cents ?? 0) ?: $contractValue;
         $target = $clientTarget + (int) ($this->sponsorship_target_cents ?? 0)

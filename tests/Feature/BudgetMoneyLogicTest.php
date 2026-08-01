@@ -167,6 +167,29 @@ class BudgetMoneyLogicTest extends TestCase
 
     /* ══ 3 · a P&L subtracts cost from income, not the charge ══ */
 
+    /**
+     * Booked income excluded a cancelled stand outright while collected counted
+     * everybody's deposits, so a stand that cancelled after paying made
+     * collected exceed booked — and receivable, being max(0, booked − collected),
+     * read zero while money was owed.
+     */
+    public function test_a_cancelled_stand_earns_what_it_paid_not_its_fee(): void
+    {
+        $event = $this->event();
+
+        $event->exhibitors()->create(['company' => 'Live Co', 'status' => 'confirmed',
+            'fee_cents' => 200_000, 'paid_cents' => 50_000]);
+        $event->exhibitors()->create(['company' => 'Gone Co', 'status' => 'cancelled',
+            'fee_cents' => 300_000, 'paid_cents' => 30_000]);   // kept the deposit
+
+        $income = $event->fresh()->incomeSummary();
+
+        $this->assertSame(230_000, $income['exhibitors'],
+            'the live fee plus the deposit we kept, not the cancelled fee');
+        $this->assertLessThanOrEqual($income['total'], $income['collected'],
+            'you can never have collected more than you booked');
+    }
+
     public function test_profit_is_income_less_what_it_costs_to_deliver(): void
     {
         $event = $this->event(feePct: 15);
