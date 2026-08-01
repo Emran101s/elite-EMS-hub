@@ -14,6 +14,7 @@ use App\Http\Controllers\EventBriefPdfController;
 use App\Http\Controllers\EventContractPdfController;
 use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
+use App\Http\Controllers\InvoicePdfController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
 use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\MasterSchedulePdfController;
@@ -44,6 +45,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
+use App\Livewire\InvoicesLedger;
 use App\Livewire\PaymentsLedger;
 use App\Livewire\PublicRegistration;
 use App\Livewire\AiAssistant;
@@ -300,6 +302,12 @@ Route::middleware('auth')->group(function () {
     // layer above, because "what is waiting on a pen" is not a question about
     // one event.
     Route::get('/contracts', ContractsRegister::class)->name('contracts.index');
+
+    // Invoices: the document that has to leave the building before anybody can
+    // pay anything. The schedule says what was agreed; this is the asking.
+    Route::get('/invoices', InvoicesLedger::class)->name('invoices.index');
+    Route::get('/invoices/{invoice}.pdf', InvoicePdfController::class)
+        ->whereNumber('invoice')->name('invoices.pdf');
 
     // Every installment in the book, in the order the money is due. A schedule
     // lives inside its event, which is the right place to write one and the
