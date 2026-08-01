@@ -50,7 +50,7 @@ class BudgetSellPriceTest extends TestCase
             'category' => $this->cat($event),
             'description' => 'Stage build',
             'estimated_cents' => 100_000,
-            'actual_cents' => 0,
+            'actual_cents' => null,
             'paid_cents' => 0,
         ]);
     }

@@ -169,14 +169,39 @@ class EventBudgetItem extends Model
     // ══════════════════════════════════════════════════════════════════════
 
     /**
+     * Whether a real cost has been recorded, as opposed to being zero.
+     *
+     * These are different facts and the column used to be unable to tell them
+     * apart: NULL is "not costed yet", 0 is "costed, at nothing" — a venue a
+     * sponsor comped, a line a supplier waived. Every reader goes through here
+     * rather than testing the column, because `?:` gets it wrong and reads so
+     * naturally that it did for a year.
+     */
+    public function hasActual(): bool
+    {
+        return $this->actual_cents !== null;
+    }
+
+    /**
      * What this line costs: the actual once it is known, the estimate until then.
      *
-     * Same rule the Budget tab and the portfolio have always used, named once
-     * so the three of them cannot drift.
+     * Named once so the tab, the PDF and the portfolio cannot drift.
      */
     public function costCents(): int
     {
-        return (int) ($this->actual_cents ?: $this->estimated_cents);
+        return (int) ($this->actual_cents ?? $this->estimated_cents);
+    }
+
+    /**
+     * What the line was expected to cost, against what it did.
+     *
+     * Null until a cost is recorded: an uncosted line has not saved or overspent
+     * anything yet, and counting it as zero variance dilutes the average of the
+     * lines that have.
+     */
+    public function varianceCents(): ?int
+    {
+        return $this->hasActual() ? $this->estimated_cents - (int) $this->actual_cents : null;
     }
 
     /**
@@ -192,6 +217,22 @@ class EventBudgetItem extends Model
      */
     public function sellCents(?float $defaultFeePct = null): int
     {
+        return $this->sellCentsOn($this->costCents(), $defaultFeePct);
+    }
+
+    /**
+     * The same rule, priced against a cost you name.
+     *
+     * The Budget tab needs the charge on the ESTIMATE for its budget column and
+     * on the ACTUAL for its actual column; without this it fell back to a flat
+     * percentage of the subtotal, which ignores hand-typed prices, per-line
+     * markups and non-billable lines — and so disagreed with the Finance page
+     * about the same event by tens of thousands.
+     *
+     * A quoted price does not move with cost. That is what quoting one means.
+     */
+    public function sellCentsOn(int $cost, ?float $defaultFeePct = null): int
+    {
         if (! ($this->billable ?? true)) {
             return 0;
         }
@@ -202,7 +243,7 @@ class EventBudgetItem extends Model
 
         $pct = $this->markup_pct ?? $defaultFeePct ?? $this->event?->management_fee_pct ?? self::DEFAULT_FEE_PCT;
 
-        return (int) round($this->costCents() * (1 + $pct / 100));
+        return (int) round($cost * (1 + $pct / 100));
     }
 
     /** What the line earns. Negative means it is being sold below cost. */
@@ -225,19 +266,24 @@ class EventBudgetItem extends Model
         return $sell > 0 ? (int) round($this->marginCents($defaultFeePct) / $sell * 100) : null;
     }
 
-    /** Outstanding = actual (or estimated if no actual) minus paid. */
+    /** Outstanding = what it costs, less what has been paid against it. */
     public function outstandingCents(): int
     {
-        $due = $this->actual_cents ?: $this->estimated_cents;
-
-        return max(0, $due - $this->paid_cents);
+        return max(0, $this->costCents() - (int) $this->paid_cents);
     }
 
     /** Derive payment status from paid vs the amount due. */
     public function derivePaymentStatus(): string
     {
-        $due = $this->actual_cents ?: $this->estimated_cents;
+        $due = $this->costCents();
+
         if ($due > 0 && $this->paid_cents >= $due) {
+            return 'paid';
+        }
+
+        // A line costed at nothing owes nothing, so it is settled rather than
+        // pending forever — the supplier waived it, there is nothing to chase.
+        if ($this->hasActual() && $due === 0) {
             return 'paid';
         }
 

@@ -130,7 +130,8 @@ class BudgetSync
             'source_type' => $type,
             'source_id' => $id,
             'unit_cents' => null,
-            'actual_cents' => 0,
+                        // Not costed yet, which is null — 0 would mean it costs nothing.
+            'actual_cents' => null,
             'paid_cents' => 0,
             'payment_status' => 'pending',
         ]);

@@ -108,7 +108,7 @@ class EventHubActionsTest extends TestCase
     {
         [$event, $user] = $this->setup2();
         $event->budgetItems()->delete();
-        $event->budgetItems()->create(['category' => 'venue', 'description' => 'Hall', 'quantity' => 1, 'estimated_cents' => 1000000, 'actual_cents' => 0, 'paid_cents' => 0, 'payment_status' => 'pending']);
+        $event->budgetItems()->create(['category' => 'venue', 'description' => 'Hall', 'quantity' => 1, 'estimated_cents' => 1000000, 'actual_cents' => null, 'paid_cents' => 0, 'payment_status' => 'pending']);
 
         $c = Livewire::actingAs($user)->test(BudgetTab::class, ['event' => $event])
             ->set('feePct', '15');
@@ -638,7 +638,7 @@ class EventHubActionsTest extends TestCase
     public function test_budget_pdf_downloads(): void
     {
         [$event, $user] = $this->setup2();
-        $event->budgetItems()->create(['category' => 'venue', 'description' => 'Hall', 'quantity' => 1, 'estimated_cents' => 500000, 'actual_cents' => 0, 'paid_cents' => 0, 'payment_status' => 'pending']);
+        $event->budgetItems()->create(['category' => 'venue', 'description' => 'Hall', 'quantity' => 1, 'estimated_cents' => 500000, 'actual_cents' => null, 'paid_cents' => 0, 'payment_status' => 'pending']);
 
         $response = $this->actingAs($user)->get(route('events.budget.pdf', $event));
 

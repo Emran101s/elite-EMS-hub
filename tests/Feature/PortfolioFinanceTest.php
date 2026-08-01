@@ -31,7 +31,7 @@ class PortfolioFinanceTest extends TestCase
      * ambition and deliberately does not count — a P&L reports what you have,
      * not what you hoped for.
      */
-    private function eventWithCost(int $estimated, int $actual = 0, int $paid = 0, int $income = 0): Event
+    private function eventWithCost(int $estimated, ?int $actual = null, int $paid = 0, int $income = 0): Event
     {
         $event = Event::factory()->create(['stage' => 'planning']);
 
@@ -129,7 +129,7 @@ class PortfolioFinanceTest extends TestCase
         $event = $this->eventWithCost(estimated: 200_000);
         EventBudgetItem::create([
             'event_id' => $event->id, 'category' => 'catering',
-            'description' => 'Lunch', 'estimated_cents' => 90_000, 'actual_cents' => 0, 'paid_cents' => 0,
+            'description' => 'Lunch', 'estimated_cents' => 90_000, 'actual_cents' => null, 'paid_cents' => 0,
         ]);
 
         $categories = app(PortfolioFinance::class)->costByCategory();
@@ -252,7 +252,7 @@ class PortfolioFinanceTest extends TestCase
 
             // Cost and outstanding come from the same helpers the Budget tab uses.
             $this->assertSame(
-                (int) $event->budgetItems->sum(fn (EventBudgetItem $i) => $i->actual_cents ?: $i->estimated_cents),
+                (int) $event->budgetItems->sum(fn (EventBudgetItem $i) => $i->costCents()),
                 $row['cost']
             );
             $this->assertSame(

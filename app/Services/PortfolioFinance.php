@@ -179,8 +179,13 @@ class PortfolioFinance
     {
         return EventBudgetItem::with(['event.client', 'supplier'])
             ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
-            ->where(fn ($q) => $q->whereColumn('paid_cents', '<', 'actual_cents')
-                ->orWhere(fn ($w) => $w->where('actual_cents', 0)->whereColumn('paid_cents', '<', 'estimated_cents')))
+            // The same rule as outstandingCents(), in SQL: pay against the
+            // actual where one is recorded, against the estimate until then.
+            // NULL is "not costed", and a comparison with NULL is unknown
+            // rather than false, so each branch names which it wants.
+            ->where(fn ($q) => $q
+                ->where(fn ($w) => $w->whereNotNull('actual_cents')->whereColumn('paid_cents', '<', 'actual_cents'))
+                ->orWhere(fn ($w) => $w->whereNull('actual_cents')->whereColumn('paid_cents', '<', 'estimated_cents')))
             ->orderByRaw('due_on is null')
             ->orderBy('due_on')
             ->take($limit)

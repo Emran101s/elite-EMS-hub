@@ -14,15 +14,21 @@
             )
             ->filter(fn ($s) => $s['items']->isNotEmpty())->values();
         $est = $items->sum('estimated_cents');
-        $act = $items->sum('actual_cents');
+        $act = $items->sum(fn ($i) => (int) $i->actual_cents);
         $paid = $items->sum('paid_cents');
-        $forecast = $items->sum(fn ($i) => $i->actual_cents ?: $i->estimated_cents);
+        $forecast = $items->sum(fn ($i) => $i->costCents());
         $pct = (float) ($event->management_fee_pct ?? 15);
-        $feeEst = (int) round($est * $pct / 100);
-        $feeAct = (int) round($act * $pct / 100);
-        $grandEst = $est + $feeEst;
-        $grandAct = $act + $feeAct;
-        $grandForecast = $forecast + (int) round($forecast * $pct / 100);
+
+        // Charged line by line, not as a flat percentage of the subtotal — a
+        // hand-typed price, a per-line markup and a non-billable line all have
+        // to survive into the document the client is shown. See
+        // EventBudgetItem::sellCentsOn().
+        $costed = $items->filter->hasActual();
+        $grandEst = (int) $items->sum(fn ($i) => $i->sellCentsOn((int) $i->estimated_cents, $pct));
+        $grandAct = (int) $costed->sum(fn ($i) => $i->sellCentsOn((int) $i->actual_cents, $pct));
+        $grandForecast = (int) $items->sum(fn ($i) => $i->sellCents($pct));
+        $feeEst = $grandEst - $est;
+        $feeAct = $grandAct - $act;
         $cap = $event->budget_cents ?? 0;
         $pctLabel = rtrim(rtrim(number_format($pct, 2), '0'), '.');
     @endphp

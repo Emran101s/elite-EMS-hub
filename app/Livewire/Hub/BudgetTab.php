@@ -132,7 +132,7 @@ class BudgetTab extends Component
         // Start in Build while planning; switch to Track once real costs are
         // recorded. A mode asked for in the URL wins — it was chosen on purpose.
         if (! in_array(request('mode'), ['build', 'track', 'price'], true)) {
-            $this->view = $this->event->budgetItems()->where('actual_cents', '>', 0)->exists() ? 'track' : 'build';
+            $this->view = $this->event->budgetItems()->whereNotNull('actual_cents')->exists() ? 'track' : 'build';
         }
         if (request('action') === 'add') {
             $this->newLine();
@@ -290,7 +290,9 @@ class BudgetTab extends Component
         $this->vendor = $item->vendor ?? '';
         $this->quantity = max(1, $item->quantity ?? 1);
         $this->unit = $item->unit_cents ? (string) ($item->unit_cents / 100) : '';
-        $this->actual = $item->actual_cents ? (string) ($item->actual_cents / 100) : '';
+        // Null reads as blank; a recorded zero reads as "0", because those are
+        // different answers and the form has to be able to say both.
+        $this->actual = $item->actual_cents === null ? '' : (string) ($item->actual_cents / 100);
         $this->paid = $item->paid_cents ? (string) ($item->paid_cents / 100) : '';
         $this->sell = $item->sell_cents !== null ? (string) ($item->sell_cents / 100) : '';
         $this->markup = $item->markup_pct !== null ? (string) $item->markup_pct : '';
@@ -360,7 +362,11 @@ class BudgetTab extends Component
         $this->validate(['category' => ['required', Rule::in($names)]]);
 
         $unitCents = (int) round((float) ($this->unit ?: 0) * 100);
-        $actualCents = (int) round((float) ($this->actual ?: 0) * 100);
+        // Blank means not costed yet — null. A typed 0 means costed, at
+        // nothing: the supplier waived it, a sponsor comped it. Coercing blank
+        // to 0 made the second impossible to say and wiped the estimate off
+        // every line anybody opened and saved.
+        $actualCents = trim($this->actual) === '' ? null : (int) round((float) $this->actual * 100);
         $paidCents = (int) round((float) ($this->paid ?: 0) * 100);
 
         $existing = $this->editingId ? $this->event->budgetItems()->find($this->editingId) : null;
@@ -625,7 +631,7 @@ class BudgetTab extends Component
     public function markPaid(int $id): void
     {
         $item = $this->event->budgetItems()->findOrFail($id);
-        $due = $item->actual_cents ?: $item->estimated_cents;
+        $due = $item->costCents();
         $item->update(['paid_cents' => $due, 'payment_status' => 'paid']);
     }
 
@@ -647,7 +653,8 @@ class BudgetTab extends Component
                 'description' => $desc,
                 'quantity' => 1,
                 'estimated_cents' => 0,
-                'actual_cents' => 0,
+                                // Not costed yet, which is null — 0 would mean it costs nothing.
+                'actual_cents' => null,
                 'paid_cents' => 0,
                 'payment_status' => 'pending',
             ]);
@@ -684,19 +691,40 @@ class BudgetTab extends Component
 
         // Base subtotals (all real line items).
         $baseEst = $items->sum('estimated_cents');
-        $baseAct = $items->sum('actual_cents');
+        $baseAct = $items->sum(fn ($i) => (int) $i->actual_cents);
         $basePaid = $items->sum('paid_cents');
-        $baseForecast = $items->sum(fn ($i) => $i->actual_cents ?: $i->estimated_cents);
+        $baseForecast = $items->sum(fn ($i) => $i->costCents());
 
-        // Savings: budget − actual, only on lines where a real cost is recorded (+ = saved, − = over).
-        $costedLines = $items->where('actual_cents', '>', 0);
-        $savedTotal = $costedLines->sum('estimated_cents') - $costedLines->sum('actual_cents');
+        // Savings: budget − actual on lines that have been costed. "Costed at
+        // nothing" counts — a venue a sponsor comped is the largest saving an
+        // event ever makes, and it used to be invisible because 0 was read as
+        // "not costed yet".
+        $costedLines = $items->filter->hasActual();
+        $savedTotal = $costedLines->sum(fn ($i) => $i->varianceCents());
 
-        // Events-management fee is derived on top of the subtotal.
+        // What the client is charged, line by line.
+        //
+        // This used to be a flat percentage of the subtotal, which ignores a
+        // hand-typed price, a per-line markup and a line marked non-billable —
+        // so on any event where somebody had quoted a line, this tab and the
+        // Finance page gave different answers for the same event, by tens of
+        // thousands. Both read EventBudgetItem::sellCentsOn() now, so they
+        // cannot. With nothing priced by hand it reproduces subtotal + fee
+        // exactly, bar a cent or two of per-line rounding.
         $pct = (float) ($this->event->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT);
-        $feeEst = (int) round($baseEst * $pct / 100);
-        $feeAct = (int) round($baseAct * $pct / 100);
-        $feeForecast = (int) round($baseForecast * $pct / 100);
+
+        $chargeEst = (int) $items->sum(fn ($i) => $i->sellCentsOn((int) $i->estimated_cents, $pct));
+        // Actual-only, like $baseAct beside it: a line nobody has costed has
+        // not been charged for either, and padding the column with its quote
+        // would make the actual column a forecast wearing its name.
+        $chargeAct = (int) $costedLines->sum(fn ($i) => $i->sellCentsOn((int) $i->actual_cents, $pct));
+        $chargeForecast = (int) $items->sum(fn ($i) => $i->sellCents($pct));
+
+        // The fee row is what the charge adds over cost — the real number,
+        // whatever mixture of quotes, markups and the default produced it.
+        $feeEst = $chargeEst - $baseEst;
+        $feeAct = $chargeAct - $baseAct;
+        $feeForecast = $chargeForecast - $baseForecast;
 
         // ── Income side (P&L): three main streams, target vs actual ──
         $sponsors = $this->event->sponsors;
@@ -733,7 +761,13 @@ class BudgetTab extends Component
 
         $totalIncome = $clientActual + $sponsorsIncome + $exhibitorsIncome + $otherIncome;
         $totalTargetIncome = $clientTargetC + $sponsorTargetC + $exhibitionTargetC + $otherIncome;
-        $grandCost = $baseEst + $feeEst;
+        // What it costs to DELIVER — which is what a P&L subtracts from income.
+        //
+        // This was the charge, so an event billed correctly and paid in full
+        // reported a net profit of exactly zero: the management fee was being
+        // subtracted from the income it is part of. The fee is revenue you
+        // keep, not money you spend.
+        $costToDeliver = $baseForecast;
 
         // Live currency conversion (e.g. USD → JOD).
         $fx = app(CurrencyService::class);
@@ -756,11 +790,14 @@ class BudgetTab extends Component
             'feeEst' => $feeEst,
             'feeAct' => $feeAct,
             'feeForecast' => $feeForecast,
-            // grand (base + fee)
-            'grandEst' => $baseEst + $feeEst,
-            'grandAct' => $baseAct + $feeAct,
-            'grandForecast' => $baseForecast + $feeForecast,
-            'costPerHead' => ($heads = (int) ($this->event->expected_participants ?? 0)) > 0 ? (int) round(($baseEst + $feeEst) / $heads) : null,
+            // grand = what the client is charged
+            'grandEst' => $chargeEst,
+            'grandAct' => $chargeAct,
+            'grandForecast' => $chargeForecast,
+            // Cost per attendee, not charge per attendee — the row says Cost.
+            // It read the grand total before, which is what you bill, and the
+            // two are the same number only on an event nobody has priced.
+            'costPerHead' => ($heads = (int) ($this->event->expected_participants ?? 0)) > 0 ? (int) round($baseForecast / $heads) : null,
             'heads' => $heads,
             // currency
             'fxRate' => $rate,
@@ -785,8 +822,9 @@ class BudgetTab extends Component
             'otherIncome' => $otherIncome,
             'totalIncome' => $totalIncome,
             'totalTargetIncome' => $totalTargetIncome,
-            'netResult' => $totalIncome - $grandCost,
-            'projectedNet' => $totalTargetIncome - $grandCost,
+            'costToDeliver' => $costToDeliver,
+            'netResult' => $totalIncome - $costToDeliver,
+            'projectedNet' => $totalTargetIncome - $costToDeliver,
             'sponsorsCount' => $sponsors->count(),
             'exhibitorsCount' => $exhibitors->where('status', '!=', 'cancelled')->count(),
             'syncedCount' => $items->whereNotNull('source_type')->count(),

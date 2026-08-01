@@ -314,7 +314,7 @@
                                                 <span class="{{ $money }} text-xs font-bold {{ $catMargin < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $catCost || $catSell ? ($catMargin >= 0 ? '+' : '−').$fmt(abs($catMargin)) : '—' }}</span>
                                                 <span class="w-12 shrink-0 text-right text-xs font-bold {{ $catMarginPct === null ? 'text-navy-300' : ($catMarginPct < 0 ? 'text-risk' : 'text-navy-500') }}">{{ $catMarginPct === null ? '—' : $catMarginPct.'%' }}</span>
                                             @elseif ($track)
-                                                @php $secCosted = $secItems->where('actual_cents', '>', 0); $secSaved = $secCosted->sum('estimated_cents') - $secCosted->sum('actual_cents'); @endphp
+                                                @php $secCosted = $secItems->filter->hasActual(); $secSaved = $secCosted->sum(fn ($i) => $i->varianceCents()); @endphp
                                                 <span class="{{ $money }} text-xs font-bold {{ $catAct > $catEst && $catEst > 0 ? 'text-risk' : 'text-navy-700' }}">{{ $catAct ? $fmt($catAct) : '—' }}</span>
                                                 <span class="{{ $money }} text-xs font-bold text-emerald-700">{{ $catPaid ? $fmt($catPaid) : '—' }}</span>
                                                 <span class="{{ $money }} text-xs font-bold {{ $secCosted->isEmpty() ? 'text-navy-300' : ($secSaved < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ $secCosted->isEmpty() ? '—' : ($secSaved >= 0 ? '+' : '−').$fmt(abs($secSaved)) }}</span>
@@ -538,7 +538,8 @@
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Profit &amp; loss</p>
                     <div class="space-y-1.5 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Income (actual)</span><span class="font-bold text-emerald-700">{{ $fmt($totalIncome) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted">Cost (incl. fee)</span><span class="font-bold text-navy-900">{{ $fmt($grandEst) }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Cost to deliver</span><span class="font-bold text-navy-900">{{ $fmt($costToDeliver) }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Charged to client</span><span class="font-bold text-navy-900">{{ $fmt($grandForecast) }}</span></div>
                         <div class="flex items-center justify-between rounded-xl px-2 py-1.5 {{ $netResult < 0 ? 'bg-red-50' : 'bg-emerald-50' }}">
                             <span class="text-eyebrow font-bold uppercase tracking-wide {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult < 0 ? 'Net loss' : 'Net profit' }}</span>
                             <span class="text-sm font-bold {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult >= 0 ? '+' : '−' }}{{ $fmt(abs($netResult)) }}</span>
