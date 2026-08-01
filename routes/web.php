@@ -47,6 +47,7 @@ use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
 use App\Livewire\InvoicesLedger;
+use App\Livewire\PlanningBoard;
 use App\Livewire\PaymentsLedger;
 use App\Livewire\ProposalsDesk;
 use App\Livewire\PublicRegistration;
@@ -304,6 +305,11 @@ Route::middleware('auth')->group(function () {
     // layer above, because "what is waiting on a pen" is not a question about
     // one event.
     Route::get('/contracts', ContractsRegister::class)->name('contracts.index');
+
+    // The planning board: every deliverable across the book. Each event has its
+    // own Plan Studio; this answers the question no single event can — where
+    // the planning work is this week, and what is waiting on somebody.
+    Route::get('/planning', PlanningBoard::class)->name('planning.index');
 
     // Proposals: the priced offer that goes out before there is anything to
     // sign. Accepting one wins its deal, and winning is what opens the event.

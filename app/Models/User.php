@@ -63,6 +63,17 @@ class User extends Authenticatable
     /**
      * Events this user starred.
      */
+    /**
+     * Plan Studio deliverables this person owns.
+     *
+     * The pivot is plan_item_user; the Planning board filters on it, and the
+     * "who has nobody on it" figure is its absence.
+     */
+    public function planItems(): BelongsToMany
+    {
+        return $this->belongsToMany(PlanItem::class, 'plan_item_user');
+    }
+
     public function favoriteEvents(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'event_favorites');
