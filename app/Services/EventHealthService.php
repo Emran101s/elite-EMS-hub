@@ -174,18 +174,47 @@ class EventHealthService
             : (int) round($event->tasks->where('status', 'done')->count() / $total * 100);
     }
 
+    /**
+     * Budget health, against both things a budget can go wrong against.
+     *
+     * This used to compare actual with estimate only — are our costs coming in
+     * where we said. That is a real question, but it left an event forecast at
+     * 153% of what the client agreed scoring a clean 100, because nothing had
+     * been invoiced yet and so nothing had "overrun". A budget that is already
+     * committed past its cap is not healthy; it is the single most useful thing
+     * the score can tell you, and it was the one thing it could not.
+     *
+     * Both are measured and the worse one wins, so neither hides the other.
+     */
     private function budgetScore(Event $event): ?int
     {
-        $estimated = $event->budgetItems->sum('estimated_cents');
-        if ($estimated === 0) {
+        $estimated = (int) $event->budgetItems->sum('estimated_cents');
+        $cost = $event->costForecast();
+
+        // A cap with nothing planned against it yet is not a healthy budget or
+        // an unhealthy one — it is a budget nobody has written.
+        if ($estimated === 0 && $cost['forecast'] === 0) {
             return null;
         }
 
-        $actual = $event->budgetItems->sum('actual_cents');
+        $scores = [];
 
-        // On/under estimate = 100; every % of overrun burns a point (2x).
-        return $actual <= $estimated ? 100
-            : max(0, 100 - (int) round(($actual - $estimated) / $estimated * 200));
+        // Delivery: is what we are spending landing where we said it would?
+        if ($estimated > 0) {
+            $actual = (int) $event->budgetItems->sum('actual_cents');
+            $scores[] = $actual <= $estimated
+                ? 100
+                : max(0, 100 - (int) round(($actual - $estimated) / $estimated * 200));
+        }
+
+        // Commitment: is what we have promised still inside what was agreed?
+        if ($cost['cap'] > 0 && $cost['forecast'] > 0) {
+            $scores[] = $cost['forecast'] <= $cost['cap']
+                ? 100
+                : max(0, 100 - (int) round($cost['over'] / $cost['cap'] * 200));
+        }
+
+        return $scores === [] ? null : min($scores);
     }
 
     private function supplierScore(Event $event): ?int

@@ -211,6 +211,40 @@ class BudgetFollowsModulesTest extends TestCase
         $this->assertSame(147, $forecast['pct']);
     }
 
+    /**
+     * Health scored the budget on actual against estimate only, so an event
+     * committed to half again what the client agreed scored a clean 100 —
+     * nothing had been invoiced, so nothing had "overrun".
+     */
+    public function test_committing_past_the_cap_is_visible_in_the_health_score(): void
+    {
+        $event = $this->event();
+        $event->update(['budget_cents' => 20_000_00, 'stage' => 'planning']);
+
+        $health = app(\App\Services\EventHealthService::class);
+
+        $this->assertNull($health->breakdown($event->fresh())['components']['budget'],
+            'nothing committed and no spend — nothing to judge');
+
+        $this->block($event);   // 25,500 cost → 29,325 charged, against 20,000
+
+        $score = $health->breakdown($event->fresh())['components']['budget'];
+
+        $this->assertNotNull($score);
+        $this->assertLessThan(30, $score, 'a budget already 47% past its cap is not healthy');
+    }
+
+    public function test_a_budget_inside_its_cap_still_scores_clean(): void
+    {
+        $event = $this->event();
+        $event->update(['budget_cents' => 60_000_00, 'stage' => 'planning']);
+
+        $this->block($event);
+
+        $this->assertSame(100, app(\App\Services\EventHealthService::class)
+            ->breakdown($event->fresh())['components']['budget']);
+    }
+
     public function test_the_budget_says_what_came_from_where(): void
     {
         $event = $this->event();
