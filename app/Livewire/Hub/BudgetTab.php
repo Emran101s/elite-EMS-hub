@@ -834,6 +834,11 @@ class BudgetTab extends Component
             'sponsorsCount' => $sponsors->count(),
             'exhibitorsCount' => $exhibitors->where('status', '!=', 'cancelled')->count(),
             'syncedCount' => $items->whereNotNull('source_type')->count(),
+            // What the modules put here, and what they could not.
+            'linkedByModule' => $items->whereNotNull('source_type')
+                ->groupBy('source_type')
+                ->map(fn ($rows) => ['n' => $rows->count(), 'cents' => $rows->sum('estimated_cents')]),
+            'pendingFromModules' => app(BudgetSync::class)->pending($this->event),
         ]);
     }
 }

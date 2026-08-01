@@ -98,6 +98,25 @@ class EventRoomBlock extends Model
         return $this->rate_cents * $this->rooms_count * max(1, $this->nights());
     }
 
+    /**
+     * What this block is called on a budget line.
+     *
+     * The arithmetic is on the line — "25 rooms × 6 nights" — because a
+     * budget figure nobody can take apart is a figure nobody trusts.
+     */
+    public function budgetLine(): string
+    {
+        $what = collect([$this->room_type, $this->occupancy ? ucfirst($this->occupancy) : null])
+            ->filter()->implode(', ');
+
+        return trim(collect([
+            'Rooms · '.($this->hotel ?: 'Hotel'),
+            $what ?: null,
+        ])->filter()->implode(' — ')
+            .' ('.$this->rooms_count.' '.str('room')->plural($this->rooms_count)
+            .' × '.max(1, $this->nights()).' '.str('night')->plural(max(1, $this->nights())).')');
+    }
+
     public function roomNights(): int
     {
         return $this->rooms_count * $this->nights();

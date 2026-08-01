@@ -598,11 +598,48 @@
                     @endif
                 </div>
 
+                {{-- ══ what the modules put here, and what they could not ══ --}}
+                @if ($linkedByModule->isNotEmpty() || $pendingFromModules)
+                    <div class="border-t border-line p-4">
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">From the modules</p>
+
+                        @foreach ($linkedByModule as $src => $m)
+                            @php $meta = \App\Models\EventBudgetItem::SOURCES[$src] ?? ['A module', 'budget']; @endphp
+                            <a href="{{ route('events.hub', [$event, 'tab' => $meta[1]]) }}" wire:navigate
+                               class="mt-1.5 flex items-baseline gap-2 text-[11.5px] transition hover:text-indigo-600">
+                                <span class="font-bold text-navy-700">{{ $meta[0] }}</span>
+                                <span class="text-muted">{{ $m['n'] }} {{ str('line')->plural($m['n']) }}</span>
+                                <span class="pf ms-auto font-black tabular-nums text-navy-900">{{ number_format($m['cents'] / 100, 2) }}</span>
+                            </a>
+                        @endforeach
+
+                        {{-- The answer to "but I booked those rooms". Rooms held
+                             with no rate are real and cannot be costed, so the
+                             budget says so instead of quietly omitting them. --}}
+                        @if ($pendingFromModules)
+                            <div class="mt-2.5 rounded-xl bg-amber-50 p-2.5">
+                                <p class="text-[11px] font-bold text-amber-800">
+                                    {{ count($pendingFromModules) }} {{ str('commitment')->plural(count($pendingFromModules)) }} not in the budget
+                                </p>
+                                @foreach (collect($pendingFromModules)->take(4) as $p)
+                                    <a href="{{ route('events.hub', [$event, 'tab' => $p['tab']]) }}" wire:navigate
+                                       class="mt-1 block text-[11px] leading-snug text-amber-900/80 hover:underline">
+                                        <span class="font-semibold">{{ $p['module'] }}</span> · {{ $p['what'] }}
+                                    </a>
+                                @endforeach
+                                @if (count($pendingFromModules) > 4)
+                                    <p class="mt-1 text-[10.5px] text-amber-900/60">…and {{ count($pendingFromModules) - 4 }} more.</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 {{-- actions --}}
                 <div class="space-y-2 p-4">
                     @unless ($event->budgetLocked())
                         <button type="button" wire:click="newLine" class="btn-gold h-10 w-full text-xs">＋ Add Line</button>
-                        <button type="button" wire:click="syncModules" class="h-9 w-full rounded-xl border border-gold-300 bg-gold-50/60 text-xs font-bold text-gold-700 transition hover:bg-gold-100" title="Refresh linked costs from Accommodation, Transport, Speakers & Venue">↺ Sync modules @if ($syncedCount)· {{ $syncedCount }} linked @endif</button>
+                        <button type="button" wire:click="syncModules" class="h-9 w-full rounded-xl border border-gold-300 bg-gold-50/60 text-xs font-bold text-gold-700 transition hover:bg-gold-100" title="Re-read the modules. They also sync themselves whenever a booking changes.">↺ Sync modules @if ($syncedCount)· {{ $syncedCount }} linked @endif</button>
                         @if ($items->isEmpty())
                             <button type="button" wire:click="insertStarter" class="h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-gold-300">✨ Prefill common lines</button>
                         @endif

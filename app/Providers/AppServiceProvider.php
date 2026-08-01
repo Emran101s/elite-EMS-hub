@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\EventAccommodation;
+use App\Models\EventRoom;
+use App\Models\EventRoomBlock;
+use App\Models\EventSpeaker;
+use App\Models\EventTransport;
 use App\Models\User;
+use App\Observers\BudgetSourceObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +28,20 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->defineGates();
+        $this->watchBudgetSources();
+    }
+
+    /**
+     * Modules that hold money keep the budget current as they are worked on,
+     * rather than only when somebody opens the Budget tab. See
+     * App\Observers\BudgetSourceObserver.
+     */
+    private function watchBudgetSources(): void
+    {
+        foreach ([EventRoomBlock::class, EventAccommodation::class, EventTransport::class,
+            EventSpeaker::class, EventRoom::class] as $model) {
+            $model::observe(BudgetSourceObserver::class);
+        }
     }
 
     /**

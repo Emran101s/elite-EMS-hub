@@ -85,15 +85,24 @@ class EventBudgetItem extends Model
 
     public function linkedTab(): string
     {
-        return match ($this->source_type) {
-            'accommodation' => 'accommodation',
-            'transport' => 'transportation',
-            'speaker' => 'speakers',
-            'room' => 'venue',
-            'event_req' => 'venue',
-            default => 'budget',
-        };
+        return self::SOURCES[$this->source_type][1] ?? 'budget';
     }
+
+    /** What the module a linked line came from is called. */
+    public function linkedModule(): string
+    {
+        return self::SOURCES[$this->source_type][0] ?? 'A module';
+    }
+
+    /** source_type => [module name, the tab it lives on] */
+    public const SOURCES = [
+        'room_block' => ['Stay', 'accommodation'],
+        'accommodation' => ['Stay', 'accommodation'],
+        'transport' => ['Transport', 'transportation'],
+        'speaker' => ['Speakers', 'speakers'],
+        'room' => ['Venue', 'venue'],
+        'event_req' => ['Venue', 'venue'],
+    ];
 
     public const PAYMENT_STATUSES = ['pending', 'partial', 'paid'];
 

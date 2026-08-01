@@ -6,11 +6,19 @@ use App\Models\Event;
 use Illuminate\Support\Str;
 
 /**
- * Keeps the budget in step with the operational modules. Each module cost
- * record (accommodation, transport, speaker fee, venue hire) is mirrored as a
- * linked budget line whose amount tracks the source. Manual budget lines are
- * never touched; user progress (actual / paid / status) on a linked line is
- * preserved — only the source-owned fields are refreshed.
+ * Keeps the budget in step with the operational modules.
+ *
+ * Every module record that carries money — a block of rooms, a transfer, a
+ * speaker fee, a hall — is mirrored as a linked budget line whose amount
+ * tracks the source. Manual lines are never touched, and on a linked line the
+ * desk's own work (actual, paid, status) survives every re-sync: only the
+ * fields the module owns are refreshed.
+ *
+ * The Stay module is the one to read carefully. Money lives on the BLOCK —
+ * 25 rooms × 6 nights at 170 — and the rooming list underneath it is names,
+ * not money. Mirroring both would count the same rooms twice, so a rooming row
+ * that belongs to a block is skipped and only a standalone booking with a cost
+ * of its own becomes a line.
  */
 class BudgetSync
 {
@@ -21,7 +29,7 @@ class BudgetSync
             return 0;
         }
 
-        $event->load(['accommodations', 'transport', 'speakers', 'rooms']);
+        $event->load(['roomBlocks', 'accommodations', 'transport', 'speakers', 'rooms']);
         $event->ensureBudgetCategories();
 
         // Where each module's cost lands in the (user-editable) category list.
@@ -33,9 +41,30 @@ class BudgetSync
         $keep = [];
         $touched = 0;
 
-        foreach ($event->accommodations as $a) {
-            if ($a->cost_cents <= 0) {
+        // ── Stay: the blocks are the commitment ──
+        foreach ($event->roomBlocks as $b) {
+            // A cancelled block is not a cost, and a block nobody has priced
+            // yet is not one either — 0 would say the rooms are free.
+            if ($b->status === 'cancelled' || $b->totalCents() <= 0) {
                 continue;
+            }
+
+            $touched += $this->upsert($event, 'room_block', $b->id, [
+                'category' => $guests,
+                'description' => $b->budgetLine(),
+                'estimated_cents' => $b->totalCents(),
+                'vendor' => $b->hotel,
+                'supplier_id' => $b->supplier_id,
+                'quantity' => max(1, $b->roomNights()),
+                'unit_cents' => $b->rate_cents ?: null,
+            ]);
+            $keep[] = 'room_block:'.$b->id;
+        }
+
+        // …and a booking made outside any block, which carries its own cost.
+        foreach ($event->accommodations as $a) {
+            if ($a->block_id !== null || $a->cost_cents <= 0) {
+                continue;   // inside a block: already counted above
             }
             $touched += $this->upsert($event, 'accommodation', $a->id, [
                 'category' => $guests,
@@ -113,6 +142,46 @@ class BudgetSync
         }
 
         return $touched;
+    }
+
+    /**
+     * Module records that hold a commitment the budget cannot count yet.
+     *
+     * A block of rooms with no rate is the reason somebody stands in front of
+     * a budget saying "but I booked those" — the rooms are real, the number is
+     * not there, and until now nothing said so. Naming them is the difference
+     * between a budget that is wrong and one that is honest about what it does
+     * not know.
+     *
+     * @return list<array{module:string,tab:string,what:string}>
+     */
+    public function pending(Event $event): array
+    {
+        $out = [];
+
+        foreach ($event->roomBlocks as $b) {
+            if ($b->status !== 'cancelled' && $b->totalCents() <= 0) {
+                $out[] = ['module' => 'Stay', 'tab' => 'accommodation',
+                    'what' => $b->rooms_count.' '.Str::plural('room', $b->rooms_count)
+                        .' at '.($b->hotel ?: 'a hotel').' — no rate yet'];
+            }
+        }
+
+        foreach ($event->transport as $t) {
+            if ($t->cost_cents <= 0) {
+                $out[] = ['module' => 'Transport', 'tab' => 'transportation',
+                    'what' => ($t->route ?: 'A movement').' — not costed'];
+            }
+        }
+
+        foreach ($event->rooms as $r) {
+            if ($r->totalCents() <= 0) {
+                $out[] = ['module' => 'Venue', 'tab' => 'venue',
+                    'what' => ($r->name ?: 'A space').' — no hire cost'];
+            }
+        }
+
+        return $out;
     }
 
     /** Create or refresh a linked line, preserving actual/paid/status. */
