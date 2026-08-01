@@ -45,7 +45,7 @@ class EventHubTest extends TestCase
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        foreach (EventHubController::TABS as $tab) {
+        foreach (EventHubController::tabs() as $tab) {
             $this->actingAs($user)
                 ->get(route('events.hub', [$event, 'tab' => $tab]))
                 ->assertOk();

@@ -91,6 +91,9 @@ class Event extends Model
         'planning' => ['Planning', 'Strategy & timeline', 'list'],
         'tasks' => ['Tasks', 'Work & execution', 'clipboard'],
         'budget' => ['Budget', 'Cost & margin', 'currency'],
+        // What this event is invoiced for, at this event's prices — the list
+        // the invoice editor bills from. See App\Models\EventInvoiceItem.
+        'pricing' => ['Invoice items', 'Prices for this event', 'archive'],
         'risks' => ['Risks', 'What could go wrong', 'bell'],
         'approvals' => ['Approvals', 'Decisions pending', 'identification'],
         'agenda' => ['Agenda', 'Sessions & schedule', 'calendar'],
@@ -566,6 +569,16 @@ class Event extends Model
     public function planTracks(): HasMany
     {
         return $this->hasMany(PlanTrack::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
+     * What this event will be invoiced for, at this event's prices.
+     *
+     * Not a copy of the house list — see EventInvoiceItem.
+     */
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany(EventInvoiceItem::class)->orderBy('sort')->orderBy('name');
     }
 
     public function planItems(): HasMany

@@ -164,9 +164,13 @@
                                         <span class="min-w-0 flex-1">
                                             <span class="block truncate text-[12px] font-bold text-navy-900">{{ $picked->name }}</span>
                                             <span class="block truncate text-[10.5px] text-muted">
-                                                {{ $picked->currency }} {{ number_format($picked->unit_price_cents / 100, 2) }}
+                                                {{ $picked->currency }}
+                                                {{ number_format(($picked instanceof \App\Models\EventInvoiceItem ? $picked->sell_cents : $picked->unit_price_cents) / 100, 2) }}
                                                 {{ mb_strtolower($picked->unitLabel()) }}
                                                 @if ($picked->code) · {{ $picked->code }} @endif
+                                                @if ($picked instanceof \App\Models\EventInvoiceItem && $picked->marginPct() !== null)
+                                                    · <span class="{{ $picked->isUnderwater() ? 'font-bold text-red-600' : 'text-emerald-700' }}">{{ $picked->marginPct() }}% margin</span>
+                                                @endif
                                             </span>
                                         </span>
                                         <button type="button" wire:click="unpick"
@@ -199,7 +203,7 @@
                                 <details class="rounded-xl border border-line bg-white" data-menu>
                                     <summary class="flex cursor-pointer list-none items-center gap-2 px-2.5 py-2 text-[11.5px] font-bold text-navy-600 [&::-webkit-details-marker]:hidden">
                                         <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" />
-                                        Pick from the price list
+                                        {{ $priceListIsEvent ? "Pick from this event's items" : 'Pick from the house price list' }}
                                         <span class="ms-auto text-navy-300">▾</span>
                                     </summary>
                                     <div class="border-t border-line p-2">
@@ -215,12 +219,17 @@
                                                         <span class="block truncate text-[10px] text-muted">{{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}</span>
                                                     </span>
                                                     <span class="pf shrink-0 text-[11.5px] font-black tabular-nums text-navy-700">
-                                                        {{ number_format($it->unit_price_cents / 100, 2) }}
+                                                        {{ number_format(($it instanceof \App\Models\EventInvoiceItem ? $it->sell_cents : $it->unit_price_cents) / 100, 2) }}
                                                     </span>
                                                 </button>
                                             @empty
                                                 <p class="px-2 py-3 text-center text-[11px] italic text-navy-300">
-                                                    Nothing matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Add it to the price list</a>.
+                                                    Nothing matches.
+                                                    @if ($priceListIsEvent)
+                                                        <a href="{{ route('events.hub', [$inv->event, 'tab' => 'pricing']) }}" class="font-semibold text-indigo-600 hover:underline">Price it for this event</a>.
+                                                    @else
+                                                        <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Add it to the house list</a>.
+                                                    @endif
                                                 </p>
                                             @endforelse
                                         </div>

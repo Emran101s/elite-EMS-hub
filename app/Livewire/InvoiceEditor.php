@@ -7,6 +7,7 @@ use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Models\EventInvoiceItem;
 use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -166,14 +167,44 @@ class InvoiceEditor extends Component
     {
         Gate::authorize('manage-contract');
 
-        $item = ServiceItem::findOrFail($itemId);
+        $item = $this->priceListItem($itemId);
+
+        if (! $item) {
+            return;
+        }
 
         $this->editingLine = 0;
         $this->pickedId = $item->id;
         $this->factors = array_fill(0, count($item->factors()), '1');
-        $this->unit = (string) ($item->unit_price_cents / 100);
+        $this->unit = (string) ($this->priceOf($item) / 100);
         $this->description = $item->name;
         $this->syncPicked();
+    }
+
+    /**
+     * The list this invoice prices from.
+     *
+     * An invoice attached to an event bills from THAT event's items, because
+     * that is where the negotiated price lives — a room agreed at 78 for this
+     * summit is not the house 95. An invoice with no event has only the house
+     * list to go on, which is the right answer for a one-off.
+     */
+    private function fromEventList(): bool
+    {
+        return (bool) $this->invoice->event_id;
+    }
+
+    private function priceListItem(int $id): EventInvoiceItem|ServiceItem|null
+    {
+        return $this->fromEventList()
+            ? EventInvoiceItem::where('event_id', $this->invoice->event_id)->find($id)
+            : ServiceItem::find($id);
+    }
+
+    /** What the client is charged for one of it. */
+    private function priceOf(EventInvoiceItem|ServiceItem $item): int
+    {
+        return $item instanceof EventInvoiceItem ? $item->sell_cents : $item->unit_price_cents;
     }
 
     /** Typing in a factor box re-prices the line as you go. */
@@ -198,7 +229,7 @@ class InvoiceEditor extends Component
      */
     private function syncPicked(): void
     {
-        $item = $this->pickedId ? ServiceItem::find($this->pickedId) : null;
+        $item = $this->pickedId ? $this->priceListItem($this->pickedId) : null;
 
         if (! $item) {
             return;
@@ -366,20 +397,30 @@ class InvoiceEditor extends Component
 
         // Only what is in use, and only when a line is open — a price list is
         // a tool for writing a line, not furniture on the page.
+        $search = function ($q) {
+            if ($this->catalogueQuery === '') {
+                return;
+            }
+            $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
+            $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
+                ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
+                ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
+        };
+
         $catalogue = $this->editingLine === null
             ? collect()
-            : ServiceItem::active()
-                ->when($this->catalogueQuery !== '', function ($q) {
-                    $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
-                    $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
-                        ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
-                        ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
-                })
-                ->orderBy('category')->orderBy('name')->limit(60)->get();
+            : ($this->fromEventList()
+                ? EventInvoiceItem::where('event_id', $this->invoice->event_id)->active()
+                    ->tap($search)->orderBy('category')->orderBy('name')->limit(60)->get()
+                : ServiceItem::active()
+                    ->tap($search)->orderBy('category')->orderBy('name')->limit(60)->get());
 
         return view('livewire.invoice-editor', [
             'catalogue' => $catalogue,
-            'picked' => $this->pickedId ? ServiceItem::find($this->pickedId) : null,
+            'picked' => $this->pickedId ? $this->priceListItem($this->pickedId) : null,
+            // Which list is on offer, so the screen can say so rather than
+            // leaving somebody to wonder why the price is not the house one.
+            'priceListIsEvent' => $this->fromEventList(),
             'events' => Event::whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'client_id']),
             'clients' => Client::orderBy('name')->get(['id', 'name']),
             'company' => [

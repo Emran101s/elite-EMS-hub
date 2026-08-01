@@ -9,15 +9,24 @@ use Illuminate\View\View;
 
 class EventHubController extends Controller
 {
-    public const TABS = [
-        'overview', 'brief', 'contract', 'planning', 'agenda', 'speakers', 'tasks', 'budget', 'suppliers', 'venue',
-        'transportation', 'accommodation', 'exhibition', 'sponsors',
-        'attendees', 'files', 'risks', 'approvals', 'reports', 'ai', 'settings',
-    ];
+    /**
+     * The tabs a hub URL may ask for.
+     *
+     * Read off Event::HUB_TABS rather than listed again here: a second list is
+     * a list that goes stale, and when it does the tab simply stops opening —
+     * the nav still offers it, the URL still looks right, and the page quietly
+     * falls back to Overview.
+     *
+     * @return list<string>
+     */
+    public static function tabs(): array
+    {
+        return array_keys(Event::HUB_TABS);
+    }
 
     public function show(Event $event, EventHealthService $healthService, EventCommandHeader $headerService): View
     {
-        $tab = in_array(request('tab'), self::TABS, true) ? request('tab') : 'overview';
+        $tab = in_array(request('tab'), self::tabs(), true) ? request('tab') : 'overview';
 
         // A disabled module's tab falls back to Overview.
         if (! $event->moduleEnabled($tab)) {
