@@ -209,16 +209,16 @@ class EventContractTest extends TestCase
         $parties = count($c->get('data')['second_parties']);
         $rows = count($c->get('data')['financials']['payment_schedule']);
 
-        // A third funding entity, and a schedule of three instead of four.
+        // Another funding entity, and a schedule of three instead of four.
         $c->call('addSecondParty')
-            ->set('data.second_parties.'.$parties.'.name_en', 'Third Entity')
+            ->set('data.second_parties.'.$parties.'.name_en', 'Another Entity')
             ->call('removeInstallment', 3)
             ->call('balanceInstallments')
             ->call('save');
 
         $stored = $contract->fresh()->data;
         $this->assertCount($parties + 1, $stored['second_parties']);
-        $this->assertSame('Third Entity', $stored['second_parties'][$parties]['name_en']);
+        $this->assertSame('Another Entity', $stored['second_parties'][$parties]['name_en']);
         $this->assertCount($rows - 1, $stored['financials']['payment_schedule']);
 
         // Balancing leaves the schedule at exactly 100%.
@@ -253,9 +253,14 @@ class EventContractTest extends TestCase
         $c = EventContract::forEvent($event);
 
         $this->assertStringStartsWith('EBH-CTR-', $c->reference);
-        $this->assertCount(2, $c->data['second_parties']);
-        $this->assertSame(80, $c->data['second_parties'][0]['share']);
-        $this->assertSame(20, $c->data['second_parties'][1]['share']);
+
+        // Two parties is what a contract is: us, and this event's client.
+        // A second funding entity is added on purpose, never assumed.
+        $this->assertCount(1, $c->data['second_parties']);
+        $this->assertSame($event->client?->name ?? 'The Client', $c->data['second_parties'][0]['name_en']);
+        $this->assertSame(100, $c->data['second_parties'][0]['share']);
+        $this->assertFalse(ContractClauses::sharesApply($c->data),
+            'one funder pays all of it — a share would say nothing');
         $this->assertSame(35000000, $c->data['financials']['estimated_total_cents']);
         // payment schedule totals 100%
         $this->assertSame(100, collect($c->data['financials']['payment_schedule'])->sum('pct'));
@@ -274,10 +279,8 @@ class EventContractTest extends TestCase
         $this->assertSame('نطاق الخدمات', $clauses[0]['ar_title']);
         $this->assertNotEmpty($recitals['ar']);
 
-        // Cost sharing appears because this Client is two funding entities, and
-        // carries their shares.
-        $cost = collect($clauses)->firstWhere('type', 'costshare');
-        $this->assertSame(80, $cost['rows'][0]['share']);
+        // One funder, so there is nothing to divide and no article about it.
+        $this->assertNull(collect($clauses)->firstWhere('type', 'costshare'));
 
         // The value is spelled out beside the figure, as a contract must.
         $value = collect($clauses)->firstWhere('en_title', 'Contract Value');
@@ -470,6 +473,7 @@ class EventContractTest extends TestCase
         $c = $this->tab($user, $event)
             ->set('data.second_parties.0.name_en', 'World People Assembly')
             ->set('data.second_parties.0.share', 80)
+            ->call('addSecondParty')
             ->set('data.second_parties.1.name_en', 'Peace Group')
             ->set('data.second_parties.1.share', 20);
 
@@ -485,6 +489,88 @@ class EventContractTest extends TestCase
         $this->assertNotNull(
             collect(ContractClauses::clauses($c->get('data')))->firstWhere('type', 'costshare'),
         );
+    }
+
+    /**
+     * A contract is between two parties, and the signature page says so.
+     *
+     * It used to open with a second funding entity nobody had named — a share
+     * nobody had agreed, and a third signature block on the last page of every
+     * agreement.
+     */
+    public function test_a_contract_is_signed_by_two_parties_by_default(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = EventContract::forEvent($event);
+        $this->tab($user, $event);          // first open seeds the signature page
+
+        $lines = $c->fresh()->signatories;
+
+        $this->assertCount(2, $lines);
+        $this->assertSame(['organiser', 'client'], $lines->pluck('role')->all());
+    }
+
+    /** …and a third only when a third party is actually on the contract. */
+    public function test_a_second_funder_brings_its_own_signature_line(): void
+    {
+        [$user, $event] = $this->make();
+        $c = EventContract::forEvent($event);
+
+        $this->tab($user, $event)
+            ->call('addSecondParty')
+            ->set('data.second_parties.1.name_en', 'Peace Group')
+            ->call('save');
+
+        $lines = $c->fresh()->signatories;
+
+        $this->assertCount(3, $lines);
+        $this->assertSame('Peace Group', $lines->last()->name);
+
+        // The article that divides the cost comes with it, in its own place.
+        $this->assertContains(
+            'Cost Sharing Between the Client Entities',
+            collect($c->fresh()->data['blocks'])->pluck('title_en')->all(),
+        );
+    }
+
+    /** Drop the funder and its line goes too — nothing to sign for. */
+    public function test_removing_a_party_removes_its_unsigned_signature_line(): void
+    {
+        [$user, $event] = $this->make();
+        $c = EventContract::forEvent($event);
+
+        $tab = $this->tab($user, $event)
+            ->call('addSecondParty')
+            ->set('data.second_parties.1.name_en', 'Peace Group')
+            ->call('save');
+
+        $this->assertCount(3, $c->fresh()->signatories);
+
+        $tab->call('removeSecondParty', 1)->call('save');
+
+        $this->assertCount(2, $c->fresh()->signatories);
+    }
+
+    /** But a signature already given is a record, and survives. */
+    public function test_a_line_that_has_signed_is_never_removed(): void
+    {
+        [$user, $event] = $this->make();
+        $c = EventContract::forEvent($event);
+
+        $tab = $this->tab($user, $event)
+            ->call('addSecondParty')
+            ->set('data.second_parties.1.name_en', 'Peace Group')
+            ->call('save');
+
+        $c->fresh()->signatories->last()->update(['name' => 'Peace Group', 'signed_at' => now()]);
+
+        $tab->call('removeSecondParty', 1)->call('save');
+
+        $lines = $c->fresh()->signatories;
+
+        $this->assertCount(3, $lines, 'a signature is a record of something that happened');
+        $this->assertNotNull($lines->last()->signed_at);
     }
 
     // ══════════════════ THE ANNEXES ══════════════════
@@ -798,11 +884,17 @@ class EventContractTest extends TestCase
         [, $event] = $this->make();
         $c = EventContract::forEvent($event);
 
-        $data = $c->data;
-        $data['second_parties'] = [array_merge($data['second_parties'][0], ['share' => 100])];
+        // As seeded: one funder, nothing to divide.
+        $this->assertNull(collect(ContractClauses::clauses($c->data))->firstWhere('type', 'costshare'));
 
-        $this->assertNull(collect(ContractClauses::clauses($data))->firstWhere('type', 'costshare'));
-        $this->assertNotNull(collect(ContractClauses::clauses($c->data))->firstWhere('type', 'costshare'));
+        $split = $c->data;
+        $split['second_parties'][0]['share'] = 80;
+        $split['second_parties'][] = ['name_en' => 'Peace Group', 'name_ar' => '', 'share' => 20];
+
+        $article = collect(ContractClauses::clauses($split))->firstWhere('type', 'costshare');
+
+        $this->assertNotNull($article, 'a second funder brings the article with it');
+        $this->assertSame(80, $article['rows'][0]['share']);
     }
 
     public function test_editing_persists(): void

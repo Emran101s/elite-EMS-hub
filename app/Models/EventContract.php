@@ -260,10 +260,22 @@ class EventContract extends Model
                 'rep_en' => ($event->projectManager?->name ?? 'Emran Aletan').' — General Manager & CEO',
                 'rep_ar' => 'المدير العام والرئيس التنفيذي',
             ],
-            // The Second Party — the client, split across the two funding entities.
+            // The Second Party — this event's client, and only that.
+            //
+            // Two parties is what a contract is. A second funding entity is a
+            // real thing that happens, but it is something you add on purpose:
+            // seeding one meant every agreement opened with a party nobody had
+            // named, a share nobody had agreed and a third signature block on
+            // the last page. Add a Second Party in the editor and the split —
+            // and its signature line — appear with it.
             'second_parties' => [
-                ['name_en' => $event->client?->name ?? 'World People Assembly', 'name_ar' => 'الجمعية العالمية للشعوب', 'share' => 80],
-                ['name_en' => 'Peace Group', 'name_ar' => 'مجموعة السلام', 'share' => 20],
+                [
+                    'name_en' => $event->client?->name ?? 'The Client',
+                    // No client record carries its Arabic name, and inventing
+                    // one puts a different organisation's name on the page.
+                    'name_ar' => '',
+                    'share' => 100,
+                ],
             ],
             'financials' => [
                 'currency' => $event->currency ?? 'JOD',
@@ -404,6 +416,46 @@ class EventContract extends Model
 
         foreach ($rows as $r) {
             $this->signatories()->create($r);
+        }
+    }
+
+    /**
+     * Keep the client's signature lines in step with the Second Parties.
+     *
+     * The signature page is the parties, restated. A block for somebody who is
+     * not named on page one — or a party named there with nowhere to sign — is
+     * how a contract goes out wrong, and the two lists drifted apart the moment
+     * a funder was added or dropped after the contract was first opened.
+     *
+     * Only unsigned lines are touched. A signature is a record of something
+     * that happened, and nothing here may quietly erase one. Names are left
+     * alone too: a line may carry the representative rather than the entity.
+     */
+    public function syncClientSignatories(): void
+    {
+        if (! ($this->isClient() || $this->type === 'acceptance')) {
+            return;
+        }
+
+        if (! $this->signatories()->exists()) {
+            return;   // nothing seeded yet; ensureSignatories does the first pass
+        }
+
+        $parties = collect(ContractClauses::parties($this->data ?? []))->pluck('name_en')->filter()->values();
+        $lines = $this->signatories()->where('role', 'client')->get();
+
+        foreach ($parties->slice($lines->count()) as $i => $name) {
+            $this->signatories()->create([
+                'role' => 'client',
+                'name' => $name,
+                'order' => (int) $this->signatories()->max('order') + 1,
+            ]);
+        }
+
+        foreach ($lines->slice($parties->count()) as $surplus) {
+            if (! $surplus->isSigned()) {
+                $surplus->delete();
+            }
         }
     }
 

@@ -68,7 +68,15 @@ class ContractClauses
     public static function recitals(array $d): array
     {
         $sp = collect(self::parties($d))->pluck('name_en')->filter()->join(' and ');
-        $spAr = collect(self::parties($d))->pluck('name_ar')->filter()->join(' و');
+
+        // No client record carries an Arabic name, so most contracts have only
+        // the English one. Falling back to it leaves the Arabic recital naming
+        // the party — dropping it left the sentence with a blank where the
+        // Client should be, which is worse than a Latin name in an Arabic line.
+        $spAr = collect(self::parties($d))
+            ->map(fn (array $p) => trim((string) ($p['name_ar'] ?? '')) ?: trim((string) ($p['name_en'] ?? '')))
+            ->filter()->join(' و');
+
         $ev = $d['event'] ?? [];
 
         // Latin runs inside an Arabic sentence — a place, a date, an event named

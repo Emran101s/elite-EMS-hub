@@ -74,7 +74,51 @@ class ContractTab extends Component
     {
         Gate::authorize('manage-contract');
         $this->data['second_parties'][] = ['name_en' => '', 'name_ar' => '', 'share' => 0];
+        $this->ensureCostShareArticle();
         $this->touch();
+    }
+
+    /**
+     * A second funder brings its article with it.
+     *
+     * The body is seeded once and owned by the contract afterwards, so an
+     * article that only applies to more than one funding entity would never
+     * appear on an agreement that began with one — the split would be agreed
+     * in the editor and missing from the document anybody signs.
+     *
+     * The article is added as soon as the row is; the paper still hides it
+     * until the second entity has a name, because a table of one says nothing.
+     */
+    private function ensureCostShareArticle(): void
+    {
+        $isCostShare = fn (array $b) => ($b['type'] ?? '') === 'costshare';
+
+        $blocks = $this->data['blocks'] ?? [];
+
+        if ($blocks === [] || collect($blocks)->contains($isCostShare)) {
+            return;
+        }
+
+        // The standard body for two funders, purely to lift the article and
+        // learn where it sits. Its rows are not used: the table on the paper
+        // is drawn from the parties themselves, live.
+        $probe = $this->data;
+        $probe['second_parties'] = [['name_en' => 'A', 'share' => 0], ['name_en' => 'B', 'share' => 0]];
+
+        $standard = ContractClauses::blocks($probe);
+        $at = collect($standard)->search($isCostShare);
+
+        if ($at === false) {
+            return;   // this type has no such article
+        }
+
+        // Back where the standard body has it, after the clause it follows.
+        $follows = $standard[$at - 1]['title_en'] ?? null;
+        $pos = collect($blocks)->search(fn (array $b) => ($b['title_en'] ?? '') === $follows);
+
+        array_splice($blocks, $pos === false ? count($blocks) : $pos + 1, 0, [$standard[$at]]);
+
+        $this->data['blocks'] = $blocks;
     }
 
     public function removeSecondParty(int $i): void
@@ -800,6 +844,10 @@ class ContractTab extends Component
         $c->language = $this->language;
         $c->signed_at = $this->status === 'signed' ? ($c->signed_at ?? now()) : null;
         $c->save();
+
+        // The signature page follows the parties: adding a funder adds its
+        // line, dropping one takes it away — unless it has already signed.
+        $c->syncClientSignatories();
     }
 
     /* ── Payment tracking: the schedule, against reality ── */
