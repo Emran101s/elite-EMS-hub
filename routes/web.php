@@ -42,6 +42,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
+use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
 use App\Livewire\PublicRegistration;
 use App\Livewire\AiAssistant;
@@ -293,6 +294,11 @@ Route::middleware('auth')->group(function () {
     // The pipeline: the half of the business that happens before an event.
     Route::get('/crm', CrmPipeline::class)->name('crm.index');
     Route::get('/crm/clients/{client}', ClientRecord::class)->name('crm.client');
+
+    // Every agreement in the book. Each event keeps its own Deck; this is the
+    // layer above, because "what is waiting on a pen" is not a question about
+    // one event.
+    Route::get('/contracts', ContractsRegister::class)->name('contracts.index');
 
     // Money across the book — the layer above each event's own budget.
     Route::get('/finance', FinanceOverview::class)->name('finance.index');
