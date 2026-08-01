@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CompanyProfile;
 use App\Models\Concerns\Auditable;
 use App\Services\DealPipeline;
 use Illuminate\Database\Eloquent\Model;
@@ -184,7 +185,7 @@ class Proposal extends Model
             'number' => static::nextNumber(),
             'title' => $deal->title,
             'status' => 'draft',
-            'currency' => $deal->currency ?: 'JOD',
+            'currency' => $deal->currency ?: CompanyProfile::currency(),
             'issued_on' => now()->toDateString(),
             'valid_until' => now()->addDays(30)->toDateString(),
         ]);

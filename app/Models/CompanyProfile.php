@@ -12,6 +12,45 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class CompanyProfile extends Model
 {
+    /**
+     * The house currency and the house fee, named once.
+     *
+     * Every document used to fall back to a hardcoded 'JOD', so a company
+     * working in dollars had to correct the currency on every invoice it ever
+     * raised, and the one place it is configured was the one place nothing
+     * read. Memoised because this is a single-row table read several times a
+     * request, and re-queried after a save so Settings takes effect at once.
+     */
+    private static ?self $house = null;
+
+    public static function house(): ?self
+    {
+        return self::$house ??= static::query()->first();
+    }
+
+    public static function forgetHouse(): void
+    {
+        self::$house = null;
+    }
+
+    /** Settings → Company → default currency. */
+    public static function currency(): string
+    {
+        return self::house()?->default_currency ?: 'JOD';
+    }
+
+    /** Settings → Company → default management fee. */
+    public static function feePct(): float
+    {
+        return (float) (self::house()?->default_management_fee_pct ?? 15.0);
+    }
+
+    protected static function booted(): void
+    {
+        // A saved profile is a new house; the next read must not be the old one.
+        static::saved(fn () => self::forgetHouse());
+    }
+
     public const DEFAULT_TICKET_TYPES = ['Delegate', 'VIP', 'Speaker', 'Exhibitor', 'Press', 'Student'];
 
     protected function casts(): array

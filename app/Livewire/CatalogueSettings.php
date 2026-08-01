@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\CompanyProfile;
 use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -42,7 +43,7 @@ class CatalogueSettings extends Component
     public string $detail = '';
     public string $unit = 'item';
     public string $price = '';
-    public string $currency = 'JOD';
+    public string $currency = '';
     public string $tax = '';
     public bool $active = true;
 
@@ -57,7 +58,7 @@ class CatalogueSettings extends Component
         $this->reset(['code', 'name', 'itemCategory', 'detail', 'price', 'tax']);
         $this->editingId = 0;
         $this->unit = 'item';
-        $this->currency = 'JOD';
+        $this->currency = CompanyProfile::currency();
         $this->active = true;
     }
 
@@ -178,7 +179,7 @@ class CatalogueSettings extends Component
                 'category' => trim((string) $category) ?: null,
                 'unit' => $units[mb_strtolower(trim((string) $unitLabel))] ?? 'item',
                 'unit_price_cents' => (int) round((float) str_replace(',', '', (string) $price) * 100),
-                'currency' => mb_strtoupper(trim((string) $currency) ?: 'JOD'),
+                'currency' => mb_strtoupper(trim((string) $currency) ?: CompanyProfile::currency()),
                 'tax_pct' => is_numeric($tax) ? (float) $tax : null,
                 'detail' => trim((string) $detail) ?: null,
                 'active' => true,

@@ -115,6 +115,21 @@
                                    class="input h-9 w-full text-xs">
                         </label>
                     </div>
+
+                    <label class="block">
+                        <span class="mb-1 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
+                            Management fee %
+                            @if ($inv->contract)
+                                <span class="rounded bg-navy-50 px-1 py-0.5 text-[9px] normal-case tracking-normal text-navy-500"
+                                      title="A contract installment already includes the fee — charging it again bills it twice.">
+                                    already in the schedule
+                                </span>
+                            @endif
+                        </span>
+                        <input type="number" step="0.5" min="0" max="100" wire:model.blur="fee_pct" wire:change="saveDetails" @disabled(! $may)
+                               class="input h-9 w-full text-xs">
+                        @error('fee_pct') <p class="mt-1 text-[11px] font-semibold text-risk">{{ $message }}</p> @enderror
+                    </label>
                 </div>
 
                 @error('currency') <p class="mt-2 text-[11px] font-semibold text-risk">{{ $message }}</p> @enderror
@@ -298,6 +313,10 @@
                 <div class="space-y-1 border-t border-line bg-page/50 px-4 py-3 text-xs">
                     <div class="flex justify-between"><span class="text-muted">Subtotal</span>
                         <span class="font-bold text-navy-900">{{ $money($inv->subtotalCents()) }}</span></div>
+                    @if ($inv->fee_pct)
+                        <div class="flex justify-between"><span class="text-muted">Management fee ({{ rtrim(rtrim(number_format($inv->fee_pct, 2), '0'), '.') }}%)</span>
+                            <span class="font-bold text-gold-700">{{ $money($inv->feeCents()) }}</span></div>
+                    @endif
                     @if ($inv->tax_pct)
                         <div class="flex justify-between"><span class="text-muted">Tax ({{ rtrim(rtrim(number_format($inv->tax_pct, 2), '0'), '.') }}%)</span>
                             <span class="font-bold text-navy-900">{{ $money($inv->taxCents()) }}</span></div>

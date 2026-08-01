@@ -41,6 +41,17 @@ class InvoiceEditorTest extends TestCase
             ->where('amount_cents', '>', 0)->orderBy('id')->firstOrFail();
     }
 
+    /** The company profile is not part of the demo seed, so tests make one. */
+    private function house(array $attrs): \App\Models\CompanyProfile
+    {
+        $house = \App\Models\CompanyProfile::firstOrNew([]);
+        $house->fill($attrs + ['name' => $house->name ?: 'Elite Business Hub'])->save();
+
+        \App\Models\CompanyProfile::forgetHouse();
+
+        return $house;
+    }
+
     private function editor(Invoice $invoice, ?User $user = null)
     {
         return Livewire::actingAs($user ?? User::factory()->create(['role' => 'admin']))
@@ -255,6 +266,96 @@ class InvoiceEditorTest extends TestCase
 
         $this->editor($invoice, $viewer)
             ->call('newLine')->assertForbidden();
+    }
+
+    /* ══ the house settings, and the fee ══ */
+
+    public function test_a_new_invoice_takes_the_currency_and_fee_from_settings(): void
+    {
+        $user = $this->actor();
+
+        $this->house(['default_currency' => 'USD', 'default_management_fee_pct' => 12.5]);
+
+        Livewire::actingAs($user)->test(InvoicesLedger::class)->call('create');
+
+        $invoice = Invoice::latest('id')->firstOrFail();
+        $this->assertSame('USD', $invoice->currency, 'the house currency, not a constant');
+        $this->assertSame(12.5, $invoice->fee_pct);
+    }
+
+    /**
+     * The fee sits between the work and the tax, and is taxed with it: it is
+     * part of what is being charged.
+     */
+    public function test_the_fee_is_charged_on_the_work_and_taxed_with_it(): void
+    {
+        $this->actor();
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft',
+            'fee_pct' => 15, 'tax_pct' => 16]);
+        $invoice->lines()->create(['description' => 'Rooms', 'qty' => 36, 'unit_cents' => 95_00]);
+        $invoice = $invoice->fresh()->load('lines');
+
+        $this->assertSame(3_420_00, $invoice->subtotalCents());
+        $this->assertSame(513_00, $invoice->feeCents(), '15% of the work');
+        $this->assertSame(3_933_00, $invoice->netCents());
+        $this->assertSame((int) round(3_933_00 * 0.16), $invoice->taxCents(), 'tax on the net, fee included');
+        $this->assertSame(3_933_00 + (int) round(3_933_00 * 0.16), $invoice->totalCents());
+    }
+
+    /** With no fee the arithmetic is exactly what it always was. */
+    public function test_no_fee_leaves_the_totals_untouched(): void
+    {
+        $this->actor();
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft', 'tax_pct' => 16]);
+        $invoice->lines()->create(['description' => 'Rooms', 'qty' => 1, 'unit_cents' => 1_000_00]);
+        $invoice = $invoice->fresh()->load('lines');
+
+        $this->assertSame(0, $invoice->feeCents());
+        $this->assertSame($invoice->subtotalCents(), $invoice->netCents());
+        $this->assertSame(160_00, $invoice->taxCents());
+    }
+
+    /**
+     * A contract installment is a share of the contract VALUE, and that value
+     * already includes the management fee. Charging it again bills the client
+     * twice for the same thing.
+     */
+    public function test_an_invoice_raised_from_a_schedule_carries_no_fee(): void
+    {
+        $this->actor();
+
+        $this->house(['default_management_fee_pct' => 15]);
+
+        $invoice = Invoice::fromPayment($this->payment());
+
+        $this->assertSame(0.0, (float) $invoice->fee_pct,
+            'the schedule already includes the fee');
+        $this->assertSame($invoice->subtotalCents(), $invoice->netCents());
+    }
+
+    /** A negotiated rate lives on the event, so attaching one adopts it. */
+    public function test_attaching_an_event_adopts_that_events_fee(): void
+    {
+        $this->actor();
+        $event = Event::whereNull('archived_at')->firstOrFail();
+        $event->update(['management_fee_pct' => 22.5]);
+
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft', 'fee_pct' => 15]);
+
+        $this->editor($invoice)->set('event_id', $event->id);
+
+        $this->assertSame(22.5, (float) $invoice->fresh()->fee_pct);
+    }
+
+    /** The fee reaches the paper as its own row, not smeared across the lines. */
+    public function test_the_fee_appears_on_the_document(): void
+    {
+        $user = $this->actor();
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft', 'fee_pct' => 15]);
+        $invoice->lines()->create(['description' => 'Rooms', 'qty' => 1, 'unit_cents' => 1_000_00]);
+
+        $this->actingAs($user)->get(route('invoices.edit', $invoice))->assertOk()
+            ->assertSee('Management fee (15%)');
     }
 
     /** The PDF route must not be swallowed by the editor's {invoice}. */

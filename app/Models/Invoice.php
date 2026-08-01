@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CompanyProfile;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,7 +42,7 @@ class Invoice extends Model
     ];
 
     protected $fillable = ['event_id', 'contract_id', 'client_id', 'number', 'status',
-        'currency', 'issued_on', 'due_on', 'tax_pct', 'paid_cents', 'paid_at',
+        'currency', 'issued_on', 'due_on', 'tax_pct', 'fee_pct', 'paid_cents', 'paid_at',
         'bill_to', 'notes', 'terms'];
 
     /**
@@ -74,6 +75,7 @@ class Invoice extends Model
             'due_on' => 'date',
             'paid_at' => 'date',
             'tax_pct' => 'float',
+            'fee_pct' => 'float',
             'paid_cents' => 'integer',
         ];
     }
@@ -105,14 +107,38 @@ class Invoice extends Model
         return $this->lines->sum(fn (InvoiceLine $l) => $l->amountCents());
     }
 
+    /**
+     * The management fee, as a share of the work — the same shape as the tax.
+     *
+     * Its own row on the document rather than smeared across the lines,
+     * because that is what a client expects to see and what an argument about
+     * the bill is actually about.
+     */
+    public function feeCents(): int
+    {
+        return (int) round($this->subtotalCents() * (float) $this->fee_pct / 100);
+    }
+
+    /** What is being charged before tax: the work plus the fee on it. */
+    public function netCents(): int
+    {
+        return $this->subtotalCents() + $this->feeCents();
+    }
+
+    /**
+     * Tax sits on the net, fee included.
+     *
+     * The fee is part of what is being charged, so it is part of what is
+     * taxed. With no fee this is exactly what it always was.
+     */
     public function taxCents(): int
     {
-        return (int) round($this->subtotalCents() * $this->tax_pct / 100);
+        return (int) round($this->netCents() * $this->tax_pct / 100);
     }
 
     public function totalCents(): int
     {
-        return $this->subtotalCents() + $this->taxCents();
+        return $this->netCents() + $this->taxCents();
     }
 
     public function outstandingCents(): int
@@ -251,12 +277,20 @@ class Invoice extends Model
             'client_id' => $event?->client_id,
             'number' => static::nextNumber(),
             'status' => 'draft',
-            'currency' => $event?->currency ?? 'JOD',
+            // The event's own currency where it has one, the house currency
+            // otherwise — never a constant nobody can change.
+            'currency' => $event?->currency ?: CompanyProfile::currency(),
             'issued_on' => now()->toDateString(),
             // The installment's own date is the promise that was made; an
             // invoice raised late is still due when the contract says.
             'due_on' => $payment->due_on?->toDateString() ?? now()->addDays(30)->toDateString(),
             'bill_to' => $event?->client?->name,
+            // No fee on this one, deliberately. A contract installment is a
+            // share of the contract VALUE, and that value already includes the
+            // management fee — adding it again here bills the client twice for
+            // the same thing. A fee belongs on an invoice built from raw
+            // services, which is what a blank invoice is.
+            'fee_pct' => 0,
             // No auto-note naming the agreement: the document already prints
             // "Against agreement X" under Billed to, and the same sentence
             // twice on one page reads as a mistake rather than as emphasis.

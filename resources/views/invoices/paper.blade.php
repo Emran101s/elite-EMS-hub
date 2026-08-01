@@ -15,6 +15,7 @@
 @php
     $fmt = fn ($cents) => number_format($cents / 100, 2);
     $sub = $invoice->subtotalCents();
+    $fee = $invoice->feeCents();
     $tax = $invoice->taxCents();
     $total = $invoice->totalCents();
     $out = $invoice->outstandingCents();
@@ -158,6 +159,15 @@
                 <td class="k">Subtotal</td>
                 <td>{{ $cur }} {{ $fmt($sub) }}</td>
             </tr>
+            @if ($invoice->fee_pct)
+                {{-- Its own row: a fee smeared across the lines is a fee the
+                     client cannot see, and this is what the argument about the
+                     bill is usually about. --}}
+                <tr>
+                    <td class="k">Management fee ({{ rtrim(rtrim(number_format($invoice->fee_pct, 2), '0'), '.') }}%)</td>
+                    <td>{{ $cur }} {{ $fmt($fee) }}</td>
+                </tr>
+            @endif
             @if ($invoice->tax_pct)
                 <tr>
                     <td class="k">Tax ({{ rtrim(rtrim(number_format($invoice->tax_pct, 2), '0'), '.') }}%)</td>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\CompanyProfile;
 use App\Models\EventContractPayment;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
@@ -91,7 +92,11 @@ class InvoicesLedger extends Component
         $invoice = Invoice::create([
             'number' => Invoice::nextNumber(),
             'status' => 'draft',
-            'currency' => 'JOD',
+            'currency' => CompanyProfile::currency(),
+            // The house fee, so it is on the document before anybody has to
+            // remember it. Attaching an event in the editor re-reads it from
+            // that event, which is where a negotiated rate lives.
+            'fee_pct' => CompanyProfile::feePct(),
             'issued_on' => now()->toDateString(),
             'due_on' => now()->addDays(30)->toDateString(),
         ]);

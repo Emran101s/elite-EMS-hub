@@ -40,8 +40,9 @@ class InvoiceEditor extends Component
     public ?int $client_id = null;
     public string $issued_on = '';
     public string $due_on = '';
-    public string $currency = 'JOD';
+    public string $currency = '';
     public string $tax_pct = '0';
+    public string $fee_pct = '0';
     public string $notes = '';
     public string $terms = '';
 
@@ -74,8 +75,9 @@ class InvoiceEditor extends Component
             'client_id' => $invoice->client_id,
             'issued_on' => $invoice->issued_on?->toDateString() ?? '',
             'due_on' => $invoice->due_on?->toDateString() ?? '',
-            'currency' => $invoice->currency ?: 'JOD',
+            'currency' => $invoice->currency ?: CompanyProfile::currency(),
             'tax_pct' => rtrim(rtrim(number_format((float) $invoice->tax_pct, 2), '0'), '.'),
+            'fee_pct' => rtrim(rtrim(number_format((float) $invoice->fee_pct, 2), '0'), '.'),
             'notes' => $invoice->notes ?? '',
             'terms' => $invoice->terms ?? '',
         ]);
@@ -94,6 +96,7 @@ class InvoiceEditor extends Component
             'due_on' => 'nullable|date',
             'currency' => 'required|string|size:3',
             'tax_pct' => 'nullable|numeric|min:0|max:100',
+            'fee_pct' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|string|max:2000',
             'terms' => 'nullable|string|max:2000',
         ]);
@@ -110,11 +113,31 @@ class InvoiceEditor extends Component
             'due_on' => $this->due_on ?: null,
             'currency' => mb_strtoupper($this->currency),
             'tax_pct' => (float) ($this->tax_pct ?: 0),
+            'fee_pct' => (float) ($this->fee_pct ?: 0),
             'notes' => trim($this->notes) ?: null,
             'terms' => trim($this->terms) ?: null,
         ]);
 
         $this->invoice = $this->invoice->fresh()->load(['lines', 'event.client', 'client', 'contract']);
+    }
+
+    /**
+     * Attaching an event adopts that event's management fee.
+     *
+     * The rate is negotiated per engagement and lives on the event, so an
+     * invoice for that event should charge what was agreed rather than the
+     * house default it happened to be created with. Only ever offered — the
+     * fee already typed here is never overwritten in silence.
+     */
+    public function updatedEventId($value): void
+    {
+        $event = $value ? Event::find($value) : null;
+
+        if ($event && $event->management_fee_pct !== null) {
+            $this->fee_pct = rtrim(rtrim(number_format((float) $event->management_fee_pct, 2), '0'), '.');
+        }
+
+        $this->saveDetails();
     }
 
     /* ── lines ── */
