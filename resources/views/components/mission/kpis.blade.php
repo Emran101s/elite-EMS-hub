@@ -63,7 +63,12 @@
         </svg>
     </div>
 
-    <div class="px-3.5 py-3">
+    {{-- Marked so the events deck can drop it on a narrow plate. Five columns
+         in 307px is 61px each, which is not a figure, it is a rumour of one —
+         and this is the only cell the card already says twice above, in the
+         date tile and again in the meta line. Everywhere else the set of five
+         is unchanged. --}}
+    <div class="px-3.5 py-3" data-deck-part="kpi-extra">
         <p class="text-eyebrow font-bold uppercase tracking-[0.14em] {{ $label }}">Timeline</p>
         <p class="pf mt-1.5 {{ $num }} font-black leading-none {{ $ink }}">{{ $m['shortDates'] }}</p>
         <p class="mt-1 truncate text-[10px] {{ $mute }}">{{ $m['timeline'] }}</p>

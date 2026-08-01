@@ -230,7 +230,19 @@
        specific the selector is. The ring has no such class, which is why it
        vanished on the first try and the insight silently did not. */
     .deck-stage[data-deck-size='sm'] [data-deck-part='insight'],
+    .deck-stage[data-deck-size='sm'] [data-deck-part='dock-extra'],
+    .deck-stage[data-deck-size='sm'] [data-deck-part='kpi-extra'],
     .deck-stage[data-deck-size='sm'] [data-deck-part='ring'] { display: none !important; }
+
+    /* Losing the fifth figure leaves a five-column grid with a hole in it, so
+       the grid is retold as four — and the cells get their room back. */
+    .deck-stage[data-deck-size='sm'] [data-deck-part='kpis'] > * {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    .deck-stage[data-deck-size='sm'] [data-deck-part='kpis'] > * > * {
+        padding-left: 0.625rem;
+        padding-right: 0.625rem;
+    }
 
     /* While a pointer is down the deck must track it exactly, so the easing is
        suspended and restored on release. */

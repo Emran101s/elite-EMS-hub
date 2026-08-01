@@ -99,7 +99,10 @@ document.addEventListener('keydown', (e) => {
 // a landscape card — which is what happens the moment width is driven by the
 // column alone.
 const DECK_RATIO = 0.66;        // width ÷ height
-const DECK_H_MIN = 340;
+// The floor is a width in disguise: below roughly 300px across, even the
+// reduced card cannot lay out its four dock actions (4 × 68 + padding = 296).
+// 455 × 0.66 = 300.
+const DECK_H_MIN = 455;
 const DECK_H_MAX = 900;
 
 // The neighbours' distances were quoted against a 980px hero; they are applied
@@ -187,10 +190,13 @@ function mountDeck(stage) {
         heroW = w;
         k = heroW / DECK_REF;
 
-        // Below this the title block's three columns — date, name, ring — no
-        // longer fit on one row, and the card starts clipping its own dock.
+        // 500, because that is what the FULL card needs: seven dock actions at
+        // 68px plus padding is 500 exactly, and the five-figure grid and the
+        // title's third column want the same. Measured at 380 first, which let
+        // a 431px card keep all seven and quietly clip three of them — the
+        // threshold has to be the widest part's requirement, not the narrowest.
         // See the [data-deck-size='sm'] rules for what it drops.
-        stage.dataset.deckSize = w < 380 ? 'sm' : 'lg';
+        stage.dataset.deckSize = w < 500 ? 'sm' : 'lg';
 
         cards.forEach((card) => {
             card.style.width = `${heroW}px`;
