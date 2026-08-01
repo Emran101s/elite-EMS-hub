@@ -256,7 +256,10 @@ class BudgetTab extends Component
         $items = $this->event->budgetItems()->get();
         $baseEst = $items->sum('estimated_cents');
         $pct = (float) ($this->event->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT);
-        $fee = (int) round($baseEst * $pct / 100);
+
+        // Priced line by line, like every other total — a version approved at a
+        // flat percentage would not match the budget it is a snapshot of.
+        $fee = (int) $items->sum(fn ($i) => $i->sellCentsOn((int) $i->estimated_cents, $pct)) - $baseEst;
 
         $snapshot = $items->map(fn ($i) => [
             'category' => $i->category, 'description' => $i->description,

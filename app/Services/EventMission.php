@@ -88,7 +88,8 @@ class EventMission
         $tasks = $event->tasks->where('status', '!=', 'cancelled');
         $tasksDone = $tasks->whereIn('status', ['done', 'approved'])->count();
 
-        $budget = (int) ($event->budget_cents ?: $event->budgetItems->sum('estimate_cents'));
+        // See EventCommandHeader::meters() — the column is estimated_cents.
+        $budget = (int) ($event->budget_cents ?: $event->budgetItems->sum('estimated_cents'));
         $spent = (int) $event->budgetItems->sum('actual_cents');
 
         $openRisks = $event->risks->filter->isOpen();

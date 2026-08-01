@@ -165,6 +165,31 @@ class BudgetMoneyLogicTest extends TestCase
             'the absorbed line shows as what it is: money the fee does not cover');
     }
 
+    /**
+     * With no cap set, the budget is what the lines add up to.
+     *
+     * The fallback summed 'estimate_cents' and the column is 'estimated_cents'
+     * — summing a key that does not exist gives 0 in silence, so an event
+     * without a cap reported "No budget set" however much was on its budget.
+     */
+    public function test_an_event_with_no_cap_falls_back_to_the_sum_of_its_lines(): void
+    {
+        $event = $this->event();
+        $event->update(['budget_cents' => 0]);   // no cap agreed
+        $this->line($event, ['estimated_cents' => 300_000, 'actual_cents' => 120_000]);
+        $this->line($event, ['estimated_cents' => 200_000]);
+
+        $event = $event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS);
+        $service = app(\App\Services\EventCommandHeader::class);
+        $header = $service->for($event);
+
+        $budget = collect($header['meters'])->firstWhere('key', 'budget');
+
+        $this->assertNotSame('No budget set', $budget['detail'],
+            'the lines are the budget when no cap was agreed');
+        $this->assertStringContainsString('5K', $budget['detail'], 'the 5,000 of lines is the budget');
+    }
+
     /* ══ 3 · a P&L subtracts cost from income, not the charge ══ */
 
     /**

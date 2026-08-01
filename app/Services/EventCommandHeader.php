@@ -302,7 +302,11 @@ class EventCommandHeader
         $components = $health['components'];
 
         $spent = $event->budgetItems->sum('actual_cents');
-        $budget = $event->budget_cents ?: $event->budgetItems->sum('estimate_cents');
+        // budgetItems->sum('estimate_cents') — the column is estimated_cents, and
+        // summing a key that does not exist gives 0 in silence, so every event
+        // without a budget cap reported a budget of nothing and a spend of
+        // 100%. Seven events in the book were on that path.
+        $budget = (int) ($event->budget_cents ?: $event->budgetItems->sum('estimated_cents'));
 
         $tasksDone = $event->tasks->whereIn('status', ['done', 'approved'])->count();
         $tasksTotal = $event->tasks->where('status', '!=', 'cancelled')->count();
