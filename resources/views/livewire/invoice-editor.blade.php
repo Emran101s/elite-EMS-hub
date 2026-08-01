@@ -137,6 +137,82 @@
                 @if ($editingLine !== null)
                     <div class="border-b border-line bg-gold-50/40 p-3">
                         <div class="space-y-2">
+
+                            {{-- ── from the price list ──
+                                 An item brings its own price and its own way of
+                                 being counted: accommodation asks for rooms and
+                                 nights, transport for vehicles and days. See
+                                 ServiceItem::UNITS. ── --}}
+                            @if ($picked)
+                                <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block truncate text-[12px] font-bold text-navy-900">{{ $picked->name }}</span>
+                                            <span class="block truncate text-[10.5px] text-muted">
+                                                {{ $picked->currency }} {{ number_format($picked->unit_price_cents / 100, 2) }}
+                                                {{ mb_strtolower($picked->unitLabel()) }}
+                                                @if ($picked->code) · {{ $picked->code }} @endif
+                                            </span>
+                                        </span>
+                                        <button type="button" wire:click="unpick"
+                                                class="shrink-0 rounded-lg px-2 py-1 text-[10.5px] font-bold text-navy-400 transition hover:bg-white hover:text-navy-700">
+                                            Type it instead
+                                        </button>
+                                    </div>
+
+                                    @if ($picked->factors())
+                                        <div class="mt-2 flex flex-wrap items-end gap-2">
+                                            @foreach ($picked->factors() as $i => $label)
+                                                <label class="w-[92px]">
+                                                    <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">{{ $label }}</span>
+                                                    <input type="number" step="1" min="0" wire:model.live="factors.{{ $i }}"
+                                                           class="input h-9 w-full text-end text-xs">
+                                                </label>
+                                                @if (! $loop->last)
+                                                    <span class="pb-2 text-[13px] font-bold text-navy-300">×</span>
+                                                @endif
+                                            @endforeach
+                                            <span class="pb-2 text-[11.5px] text-muted">
+                                                = {{ $qty }} {{ \Illuminate\Support\Str::plural($picked->unitNoun(), (float) $qty) }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <p class="mt-1.5 text-[10.5px] text-muted">A fixed fee — priced once for the engagement.</p>
+                                    @endif
+                                </div>
+                            @elseif ($catalogue->isNotEmpty() || $catalogueQuery !== '')
+                                <details class="rounded-xl border border-line bg-white" data-menu>
+                                    <summary class="flex cursor-pointer list-none items-center gap-2 px-2.5 py-2 text-[11.5px] font-bold text-navy-600 [&::-webkit-details-marker]:hidden">
+                                        <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" />
+                                        Pick from the price list
+                                        <span class="ms-auto text-navy-300">▾</span>
+                                    </summary>
+                                    <div class="border-t border-line p-2">
+                                        <input type="search" wire:model.live.debounce.250ms="catalogueQuery"
+                                               placeholder="Room, transfer, lunch…"
+                                               class="input mb-1.5 h-8 w-full text-[11px]">
+                                        <div class="scrollbar-none max-h-48 overflow-y-auto">
+                                            @forelse ($catalogue as $it)
+                                                <button type="button" wire:click="pick({{ $it->id }})" wire:key="cat-{{ $it->id }}"
+                                                        class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-start transition hover:bg-page">
+                                                    <span class="min-w-0 flex-1">
+                                                        <span class="block truncate text-[11.5px] font-semibold text-navy-900">{{ $it->name }}</span>
+                                                        <span class="block truncate text-[10px] text-muted">{{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}</span>
+                                                    </span>
+                                                    <span class="pf shrink-0 text-[11.5px] font-black tabular-nums text-navy-700">
+                                                        {{ number_format($it->unit_price_cents / 100, 2) }}
+                                                    </span>
+                                                </button>
+                                            @empty
+                                                <p class="px-2 py-3 text-center text-[11px] italic text-navy-300">
+                                                    Nothing matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Add it to the price list</a>.
+                                                </p>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </details>
+                            @endif
+
                             <input type="text" wire:model="description" placeholder="What the client is being charged for"
                                    class="input h-9 w-full text-xs">
                             @error('description') <p class="text-[11px] font-semibold text-risk">{{ $message }}</p> @enderror
@@ -144,7 +220,11 @@
                             <div class="flex gap-2">
                                 <label class="w-[84px]">
                                     <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">Qty</span>
-                                    <input type="number" step="0.01" min="0" wire:model="qty" class="input h-9 w-full text-end text-xs">
+                                    {{-- Read-only while an item is picked: the quantity is the
+                                         factors multiplied, and two places to change it is one
+                                         too many. --}}
+                                    <input type="number" step="0.01" min="0" wire:model="qty" @readonly((bool) $picked)
+                                           class="input h-9 w-full text-end text-xs {{ $picked ? 'bg-navy-50 text-navy-500' : '' }}">
                                 </label>
                                 <label class="flex-1">
                                     <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">Unit price</span>

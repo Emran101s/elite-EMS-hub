@@ -7,6 +7,7 @@ use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -53,6 +54,16 @@ class InvoiceEditor extends Component
 
     /** Money typed into the record box. */
     public string $amount = '';
+
+    /* ── the price list ── */
+
+    /** The catalogue item being priced, or null when typing a line by hand. */
+    public ?int $pickedId = null;
+
+    /** One number per factor the unit asks for — rooms, nights, and so on. */
+    public array $factors = [];
+
+    public string $catalogueQuery = '';
 
     public function mount(Invoice $invoice): void
     {
@@ -116,6 +127,64 @@ class InvoiceEditor extends Component
         $this->description = '';
         $this->qty = '1';
         $this->unit = '';
+        $this->pickedId = null;
+        $this->factors = [];
+    }
+
+    /**
+     * Price a line from the catalogue.
+     *
+     * The item brings its own price and its own way of being counted: an
+     * accommodation line asks for rooms and nights, a transport line for
+     * vehicles and days. The boxes come from ServiceItem::UNITS rather than
+     * being guessed at here.
+     */
+    public function pick(int $itemId): void
+    {
+        Gate::authorize('manage-contract');
+
+        $item = ServiceItem::findOrFail($itemId);
+
+        $this->editingLine = 0;
+        $this->pickedId = $item->id;
+        $this->factors = array_fill(0, count($item->factors()), '1');
+        $this->unit = (string) ($item->unit_price_cents / 100);
+        $this->description = $item->name;
+        $this->syncPicked();
+    }
+
+    /** Typing in a factor box re-prices the line as you go. */
+    public function updatedFactors(): void
+    {
+        $this->syncPicked();
+    }
+
+    /** Back to typing a line by hand. */
+    public function unpick(): void
+    {
+        $this->pickedId = null;
+        $this->factors = [];
+    }
+
+    /**
+     * Rewrite the quantity and the description from the factor boxes.
+     *
+     * The description says how the quantity was arrived at — "Double room —
+     * 12 rooms × 3 nights" survives being read six months later; the same line
+     * with a quantity of 36 and no explanation does not.
+     */
+    private function syncPicked(): void
+    {
+        $item = $this->pickedId ? ServiceItem::find($this->pickedId) : null;
+
+        if (! $item) {
+            return;
+        }
+
+        $qty = $item->quantityFrom($this->factors);
+
+        $this->qty = rtrim(rtrim(number_format($qty, 2, '.', ''), '0'), '.') ?: '0';
+        $this->description = $item->describe($this->factors);
     }
 
     public function editLine(int $id): void
@@ -136,7 +205,7 @@ class InvoiceEditor extends Component
 
     public function cancelLine(): void
     {
-        $this->reset(['editingLine', 'description', 'qty', 'unit']);
+        $this->reset(['editingLine', 'description', 'qty', 'unit', 'pickedId', 'factors']);
     }
 
     public function saveLine(): void
@@ -272,7 +341,22 @@ class InvoiceEditor extends Component
     {
         $company = CompanyProfile::first();
 
+        // Only what is in use, and only when a line is open — a price list is
+        // a tool for writing a line, not furniture on the page.
+        $catalogue = $this->editingLine === null
+            ? collect()
+            : ServiceItem::active()
+                ->when($this->catalogueQuery !== '', function ($q) {
+                    $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
+                    $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
+                        ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
+                        ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
+                })
+                ->orderBy('category')->orderBy('name')->limit(60)->get();
+
         return view('livewire.invoice-editor', [
+            'catalogue' => $catalogue,
+            'picked' => $this->pickedId ? ServiceItem::find($this->pickedId) : null,
             'events' => Event::whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'client_id']),
             'clients' => Client::orderBy('name')->get(['id', 'name']),
             'company' => [

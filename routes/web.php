@@ -16,6 +16,7 @@ use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
 use App\Http\Controllers\InvoicePdfController;
 use App\Http\Controllers\ProposalPdfController;
+use App\Http\Controllers\ServiceItemTemplateController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
 use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\MasterSchedulePdfController;
@@ -46,6 +47,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
+use App\Livewire\CatalogueSettings;
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
 use App\Livewire\PlanningBoard;
@@ -296,6 +298,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/statuses', WorkflowSettings::class)->name('workflows.index');
     Route::get('/settings/defaults', DefaultsSettings::class)->name('defaults.index');
     Route::get('/settings/transport', TransportSettings::class)->name('transport-settings.index');
+
+    // The price list: what the company sells, what one of each costs, and how
+    // it is counted. The invoice editor prices lines from it.
+    Route::get('/settings/price-list', CatalogueSettings::class)->name('catalogue.index');
+    Route::get('/settings/price-list/template.xlsx', ServiceItemTemplateController::class)
+        ->name('catalogue.template');
     Route::get('/settings/sponsor-packages', SponsorPackagesSettings::class)->name('sponsor-packages.index');
 
     // The pipeline: the half of the business that happens before an event.
