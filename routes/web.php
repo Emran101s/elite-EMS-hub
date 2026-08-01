@@ -44,6 +44,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
+use App\Livewire\PaymentsLedger;
 use App\Livewire\PublicRegistration;
 use App\Livewire\AiAssistant;
 use App\Livewire\ReportsOverview;
@@ -299,6 +300,11 @@ Route::middleware('auth')->group(function () {
     // layer above, because "what is waiting on a pen" is not a question about
     // one event.
     Route::get('/contracts', ContractsRegister::class)->name('contracts.index');
+
+    // Every installment in the book, in the order the money is due. A schedule
+    // lives inside its event, which is the right place to write one and the
+    // wrong place to collect from.
+    Route::get('/payments', PaymentsLedger::class)->name('payments.index');
 
     // Money across the book — the layer above each event's own budget.
     Route::get('/finance', FinanceOverview::class)->name('finance.index');
