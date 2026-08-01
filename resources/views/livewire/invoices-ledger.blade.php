@@ -17,6 +17,15 @@
 
         <p class="text-[11.5px] text-muted">{{ $rows->count() }} {{ str('invoice')->plural($rows->count()) }} in view</p>
 
+        @if ($may)
+            {{-- Raising from a schedule covers the contracted work; a one-off,
+                 a rebilled expense or a retainer had nowhere to start. --}}
+            <button type="button" wire:click="create"
+                    class="flex h-10 items-center gap-1.5 rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
+                ＋ New invoice
+            </button>
+        @endif
+
         <div class="ms-auto flex flex-wrap items-center gap-1">
             <button type="button" wire:click="setState('all')"
                     @class(['rounded-full px-2.5 py-1 text-[11px] font-bold transition',
@@ -116,9 +125,15 @@
                         <div wire:key="inv-{{ $inv->id }}"
                              class="grid {{ $cols }} items-center gap-3 border-b border-line/50 px-4 py-2 transition last:border-0 hover:bg-navy-50/30 {{ $s === 'void' ? 'opacity-55' : '' }}">
 
-                            <a href="{{ route('invoices.pdf', $inv) }}"
-                               class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-indigo-600"
-                               title="Download the PDF">{{ $inv->number }}</a>
+                            <span class="flex min-w-0 items-center gap-1.5">
+                                <a href="{{ route('invoices.edit', $inv) }}" wire:navigate
+                                   class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-indigo-600"
+                                   title="Open the invoice">{{ $inv->number }}</a>
+                                <a href="{{ route('invoices.pdf', $inv) }}" title="Download the PDF"
+                                   class="shrink-0 text-navy-300 transition hover:text-indigo-600">
+                                    <x-icon name="document" class="h-3.5 w-3.5" />
+                                </a>
+                            </span>
 
                             <span class="min-w-0">
                                 <span class="block truncate text-[12.5px] font-bold text-navy-900">
@@ -161,6 +176,10 @@
                                 @elseif ($s === 'void')
                                     <span class="text-[10.5px] italic text-navy-300">Voided</span>
                                 @elseif ($s === 'draft')
+                                    <a href="{{ route('invoices.edit', $inv) }}" wire:navigate
+                                       class="rounded-lg px-2 py-1 text-[10.5px] font-bold text-navy-500 transition hover:bg-navy-50 hover:text-navy-900">
+                                        Edit
+                                    </a>
                                     <button type="button" wire:click="markSent({{ $inv->id }})"
                                             class="rounded-lg bg-navy-950 px-2.5 py-1 text-[10.5px] font-bold text-white transition hover:bg-navy-800">
                                         Mark sent

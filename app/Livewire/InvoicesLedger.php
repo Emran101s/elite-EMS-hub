@@ -57,7 +57,7 @@ class InvoicesLedger extends Component
     /* ── raising ── */
 
     /** Raise a draft invoice against a contract installment. */
-    public function raise(int $paymentId): void
+    public function raise(int $paymentId)
     {
         Gate::authorize('manage-contract');
 
@@ -71,7 +71,32 @@ class InvoicesLedger extends Component
             return;
         }
 
-        Invoice::fromPayment($payment);
+        $invoice = Invoice::fromPayment($payment);
+
+        // Straight into the editor: a raised invoice almost always needs a
+        // second line, a date or a word before it goes anywhere.
+        return $this->redirectRoute('invoices.edit', $invoice, navigate: true);
+    }
+
+    /**
+     * A blank invoice, for the work no schedule describes.
+     *
+     * Raising from an installment covers the contracted work; everything else
+     * — a one-off, a rebilled expense, a retainer — had nowhere to start.
+     */
+    public function create()
+    {
+        Gate::authorize('manage-contract');
+
+        $invoice = Invoice::create([
+            'number' => Invoice::nextNumber(),
+            'status' => 'draft',
+            'currency' => 'JOD',
+            'issued_on' => now()->toDateString(),
+            'due_on' => now()->addDays(30)->toDateString(),
+        ]);
+
+        return $this->redirectRoute('invoices.edit', $invoice, navigate: true);
     }
 
     /* ── the life of a document ── */

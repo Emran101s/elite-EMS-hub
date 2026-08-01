@@ -46,6 +46,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
+use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
 use App\Livewire\PlanningBoard;
 use App\Livewire\PaymentsLedger;
@@ -322,6 +323,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices', InvoicesLedger::class)->name('invoices.index');
     Route::get('/invoices/{invoice}.pdf', InvoicePdfController::class)
         ->whereNumber('invoice')->name('invoices.pdf');
+
+    // One invoice, and the paper it becomes. The PDF route is declared first
+    // so "/invoices/7.pdf" is never swallowed by the editor's {invoice}.
+    Route::get('/invoices/{invoice}', InvoiceEditor::class)
+        ->whereNumber('invoice')->name('invoices.edit');
 
     // Every installment in the book, in the order the money is due. A schedule
     // lives inside its event, which is the right place to write one and the

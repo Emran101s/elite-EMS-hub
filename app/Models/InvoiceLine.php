@@ -16,6 +16,25 @@ class InvoiceLine extends Model
 {
     protected $fillable = ['invoice_id', 'payment_id', 'description', 'qty', 'unit_cents', 'sort'];
 
+    /**
+     * A line changing changes the invoice, and the invoice owes its
+     * installments an answer.
+     *
+     * Without this, editing a line after money had been recorded left the
+     * schedule holding an allocation of a total that no longer exists — the
+     * two ledgers drift apart again, quietly, at exactly the moment somebody
+     * is correcting a mistake.
+     */
+    protected static function booted(): void
+    {
+        $resync = function (self $line) {
+            $line->invoice?->fresh()->load('lines')->syncToSchedule();
+        };
+
+        static::saved($resync);
+        static::deleted($resync);
+    }
+
     protected function casts(): array
     {
         return [

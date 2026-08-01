@@ -159,12 +159,18 @@ class InvoiceTest extends TestCase
         $c = Livewire::actingAs($user)->test(InvoicesLedger::class);
         $this->assertContains($p->id, $c->viewData('ready')->pluck('id'));
 
-        $c->call('raise', $p->id);
+        // Raising redirects into the editor, so the assertion about the ready
+        // list belongs to a fresh page rather than to the component that left.
+        $c->call('raise', $p->id)->assertRedirect();
 
         $invoice = Invoice::with('lines')->latest('id')->firstOrFail();
         $this->assertSame($p->id, $invoice->lines->first()->payment_id);
-        $this->assertNotContains($p->id, $c->viewData('ready')->pluck('id'),
-            'an installment that has been billed is no longer waiting to be');
+
+        $this->assertNotContains(
+            $p->id,
+            Livewire::actingAs($user)->test(InvoicesLedger::class)->viewData('ready')->pluck('id'),
+            'an installment that has been billed is no longer waiting to be',
+        );
     }
 
     /** Raising twice off one installment is the easy mistake, so it is refused. */
