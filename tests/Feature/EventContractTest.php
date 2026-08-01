@@ -575,6 +575,30 @@ class EventContractTest extends TestCase
 
     // ══════════════════ THE ANNEXES ══════════════════
 
+    /**
+     * The body cites the scope appendix, so the contract must have one.
+     *
+     * A list written as [] read as "already seeded", so the appendix never
+     * arrived and the exported PDF printed ⚠ MISSING APPENDIX to the client,
+     * in the middle of the Scope of Services clause.
+     */
+    public function test_a_contract_left_with_no_appendices_gets_the_scope_back(): void
+    {
+        [$user, $event] = $this->make();
+
+        $c = EventContract::forEvent($event);
+        $c->update(['data' => ['appendices' => []] + $c->data]);
+
+        $ax = $this->tab($user, $event)->get('data')['appendices'];
+
+        $this->assertCount(1, $ax);
+        $this->assertSame('scope', $ax[0]['slug']);
+
+        // …and nothing on the document shouts about a missing one.
+        $html = $this->actingAs($user)->get(route('events.contract.pdf', $event))->assertOk();
+        $this->assertStringNotContainsString('MISSING APPENDIX', $html->getContent());
+    }
+
     public function test_a_client_contract_is_bound_with_one_appendix(): void
     {
         [$user, $event] = $this->make();

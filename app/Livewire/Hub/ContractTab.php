@@ -212,7 +212,12 @@ class ContractTab extends Component
 
         // …and one appendix, the scope. A contract written before appendices
         // existed gets it on first open; everything else is added on purpose.
-        if ($c->isClient() && ! isset($this->data['appendices'])) {
+        //
+        // Empty counts as missing. A contract whose list had been written as []
+        // never seeded, while its standard body still cited the scope appendix
+        // — so the exported PDF printed "⚠ MISSING APPENDIX" to the client, in
+        // the middle of the Scope of Services clause.
+        if ($c->isClient() && empty($this->data['appendices'])) {
             $this->data['appendices'] = ContractAppendices::seed();
             $this->persist();
         }
