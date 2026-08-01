@@ -192,10 +192,12 @@ class ProposalTest extends TestCase
         $deal = $this->deal();
         $c = $this->desk();
 
-        $c->call('draftFor', $deal->id);
+        // Drafting redirects into the editor, so the assertion about the
+        // waiting list belongs to a fresh page rather than the one that left.
+        $c->call('draftFor', $deal->id)->assertRedirect();
 
         $this->assertSame(1, Proposal::count());
-        $this->assertNotContains($deal->id, $c->viewData('ready')->pluck('id'));
+        $this->assertNotContains($deal->id, $this->desk()->viewData('ready')->pluck('id'));
     }
 
     /**

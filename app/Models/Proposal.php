@@ -45,7 +45,7 @@ class Proposal extends Model
     ];
 
     protected $fillable = ['deal_id', 'client_id', 'contact_id', 'event_id', 'owner_id',
-        'number', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'tax_pct',
+        'number', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'tax_pct', 'fee_pct',
         'summary', 'terms', 'decided_on', 'decline_reason'];
 
     protected function casts(): array
@@ -55,6 +55,7 @@ class Proposal extends Model
             'valid_until' => 'date',
             'decided_on' => 'date',
             'tax_pct' => 'float',
+            'fee_pct' => 'float',
         ];
     }
 
@@ -108,14 +109,33 @@ class Proposal extends Model
         return $this->lines->filter->optional->sum(fn (ProposalLine $l) => $l->amountCents());
     }
 
+    /**
+     * The management fee, on the counted work — its own row, like the tax.
+     *
+     * Optional extras are outside it for the same reason they are outside the
+     * total: they are not being agreed to yet, and a fee on something the
+     * client has not said yes to is a number they will ask about.
+     */
+    public function feeCents(): int
+    {
+        return (int) round($this->subtotalCents() * (float) $this->fee_pct / 100);
+    }
+
+    /** The work plus the fee on it, before tax. */
+    public function netCents(): int
+    {
+        return $this->subtotalCents() + $this->feeCents();
+    }
+
+    /** Tax on the net, fee included — the fee is part of what is charged. */
     public function taxCents(): int
     {
-        return (int) round($this->subtotalCents() * $this->tax_pct / 100);
+        return (int) round($this->netCents() * $this->tax_pct / 100);
     }
 
     public function totalCents(): int
     {
-        return $this->subtotalCents() + $this->taxCents();
+        return $this->netCents() + $this->taxCents();
     }
 
     /* ── state ── */
@@ -186,6 +206,13 @@ class Proposal extends Model
             'title' => $deal->title,
             'status' => 'draft',
             'currency' => $deal->currency ?: CompanyProfile::currency(),
+            // No fee yet, deliberately. The first line below is the DEAL'S
+            // VALUE, which is already a whole-job figure — a fee on top of it
+            // inflates the quote by 15% the same way charging one on a contract
+            // installment bills it twice. The editor offers the house rate in
+            // one click once the offer is priced from real lines, so it is a
+            // decision rather than either a silent default or an oversight.
+            'fee_pct' => 0,
             'issued_on' => now()->toDateString(),
             'valid_until' => now()->addDays(30)->toDateString(),
         ]);

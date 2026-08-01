@@ -53,7 +53,7 @@ class ProposalsDesk extends Component
 
     /* ── the life of an offer ── */
 
-    public function draftFor(int $dealId): void
+    public function draftFor(int $dealId)
     {
         Gate::authorize('manage-contract');
 
@@ -65,7 +65,11 @@ class ProposalsDesk extends Component
             return;
         }
 
-        Proposal::forDeal($deal);
+        $proposal = Proposal::forDeal($deal);
+
+        // Straight into the editor: an offer with one carried-over line is the
+        // start of the work, not the end of it.
+        return $this->redirectRoute('proposals.edit', $proposal, navigate: true);
     }
 
     public function send(int $id): void

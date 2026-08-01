@@ -14,6 +14,7 @@ use App\Http\Controllers\EventBriefPdfController;
 use App\Http\Controllers\EventContractPdfController;
 use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
+use App\Http\Controllers\EventPricingTemplateController;
 use App\Http\Controllers\InvoicePdfController;
 use App\Http\Controllers\ProposalPdfController;
 use App\Http\Controllers\ServiceItemTemplateController;
@@ -52,6 +53,7 @@ use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
 use App\Livewire\PlanningBoard;
 use App\Livewire\PaymentsLedger;
+use App\Livewire\ProposalEditor;
 use App\Livewire\ProposalsDesk;
 use App\Livewire\PublicRegistration;
 use App\Livewire\AiAssistant;
@@ -219,6 +221,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/brief.pdf', EventBriefPdfController::class)
         ->whereNumber('event')->name('events.brief.pdf');
 
+    Route::get('/events/{event}/invoice-items/template.xlsx', EventPricingTemplateController::class)
+        ->whereNumber('event')->name('events.pricing.template');
+
     Route::get('/events/{event}/contract.pdf', EventContractPdfController::class)
         ->whereNumber('event')->name('events.contract.pdf');
 
@@ -325,6 +330,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/proposals', ProposalsDesk::class)->name('proposals.index');
     Route::get('/proposals/{proposal}.pdf', ProposalPdfController::class)
         ->whereNumber('proposal')->name('proposals.pdf');
+
+    Route::get('/proposals/{proposal}', ProposalEditor::class)
+        ->whereNumber('proposal')->name('proposals.edit');
 
     // Invoices: the document that has to leave the building before anybody can
     // pay anything. The schedule says what was agreed; this is the asking.
