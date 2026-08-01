@@ -190,6 +190,30 @@ class Invoice extends Model
         return in_array($this->state(), ['sent', 'partial', 'overdue'], true);
     }
 
+    /**
+     * Money this invoice has collected that the contract schedule does not know
+     * about.
+     *
+     * An invoice raised from an installment pushes what it collects onto that
+     * installment, so counting it again as income would book the same payment
+     * twice. An invoice raised for anything else — a one-off, a rebilled
+     * expense, work agreed after the contract — has nowhere else to be counted,
+     * and was simply invisible: the Budget showed income of nothing while a
+     * paid invoice sat in the ledger.
+     *
+     * A void invoice collected nothing anybody should believe in.
+     */
+    public function unscheduledPaidCents(): int
+    {
+        if ($this->status === 'void') {
+            return 0;
+        }
+
+        $onSchedule = $this->lines->pluck('payment')->filter()->unique('id')->sum('paid_cents');
+
+        return max(0, (int) $this->paid_cents - (int) $onSchedule);
+    }
+
     /* ── the link back to the schedule ── */
 
     /**

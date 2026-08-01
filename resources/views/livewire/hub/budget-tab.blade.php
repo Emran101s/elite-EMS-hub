@@ -123,9 +123,22 @@
                 <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-xs">
                     <div class="min-w-0 flex-1">
                         <p class="font-bold text-navy-900">Client / Main Fund</p>
-                        @if ($contractRef && $contractCollected > 0)
+                        {{-- Where the money was recorded, each part linked to the
+                             place that recorded it. One figure with three possible
+                             homes is a figure people query; this answers it. --}}
+                        @if ($clientMoney['collected'] > 0)
                             <p class="text-eyebrow text-muted">
-                                <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="font-bold text-gold-600 hover:text-gold-700">{{ $fmt($contractCollected) }} collected via contract {{ $contractRef }}</a>
+                                @if ($contractCollected > 0)
+                                    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="font-bold text-gold-600 hover:text-gold-700">{{ $fmt($contractCollected) }} via contract{{ $contractRef ? ' '.$contractRef : '' }}</a>
+                                @endif
+                                @if ($clientMoney['invoices'] > 0)
+                                    @if ($contractCollected > 0) · @endif
+                                    <a href="{{ route('invoices.index') }}" class="font-bold text-gold-600 hover:text-gold-700">{{ $fmt($clientMoney['invoices']) }} via invoices</a>
+                                @endif
+                                @if ($clientMoney['manual'] > 0)
+                                    @if ($contractCollected > 0 || $clientMoney['invoices'] > 0) · @endif
+                                    {{ $fmt($clientMoney['manual']) }} logged here
+                                @endif
                                 · <button type="button" wire:click="newIncome('client')" class="font-semibold text-navy-400 hover:text-navy-700">＋ extra</button>
                             </p>
                         @else

@@ -734,19 +734,13 @@ class BudgetTab extends Component
         $exhibitors = $this->event->exhibitors;
         $incomeItems = $this->event->incomeItems;
 
-        // Client / Main Fund IS the client contract — the single source of truth for
-        // the client deal. Target = the contract value; actual = payments collected
-        // against it (plus any manually logged client income, for edge cases). This
-        // stops the Budget showing income 0 while the Contract records money in.
-        $contract = $this->event->contract;
-        $contractCollected = $contract ? (int) $contract->payments->sum('paid_cents') : 0;
-        $contractValue = $contract
-            ? (int) ($contract->data['financials']['contract_value_cents']
-                ?? $contract->data['financials']['estimated_total_cents'] ?? 0)
-            : 0;
-        $clientItems = $incomeItems->where('source', 'client');
-        $clientActual = $clientItems->sum('amount_cents') + $contractCollected;
-        $clientTargetC = ($this->event->client_target_cents ?? 0) ?: $contractValue;
+        // Client / Main Fund is the client deal, counted once wherever it was
+        // recorded — the contract's schedule, an invoice raised outside it, or a
+        // figure typed here. Event::clientIncome() owns that arithmetic so this
+        // screen and the portfolio cannot disagree about what came in.
+        $clientMoney = $this->event->clientIncome();
+        $clientActual = $clientMoney['collected'];
+        $clientTargetC = $clientMoney['target'];
 
         // Sponsorships (extra): actual = Σ sponsor deals; received = Σ paid.
         $sponsorsIncome = $sponsors->sum('amount_cents');
@@ -817,8 +811,10 @@ class BudgetTab extends Component
             'otherIncomeItems' => $otherIncomeItems,
             'clientActual' => $clientActual,
             'clientTargetC' => $clientTargetC,
-            'contractRef' => $contract?->reference,
-            'contractCollected' => $contractCollected,
+            // Where that money was recorded, so a figure can be traced.
+            'clientMoney' => $clientMoney,
+            'contractRef' => $this->event->contract?->reference,
+            'contractCollected' => $clientMoney['contract'],
             'sponsorsIncome' => $sponsorsIncome,
             'sponsorsReceived' => $sponsorsReceived,
             'sponsorTargetC' => $sponsorTargetC,

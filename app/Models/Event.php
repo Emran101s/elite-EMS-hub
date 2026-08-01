@@ -607,6 +607,12 @@ class Event extends Model
         }
     }
 
+    /** Documents raised against this event — see Invoice::unscheduledPaidCents(). */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->latest('issued_on');
+    }
+
     public function incomeItems(): HasMany
     {
         return $this->hasMany(EventIncomeItem::class);
@@ -620,19 +626,51 @@ class Event extends Model
      *
      * @return array{client:int,sponsors:int,exhibitors:int,other:int,total:int,collected:int,target:int}
      */
-    public function incomeSummary(): array
+    /**
+     * What the client has paid, from wherever it was recorded, and what they
+     * were meant to pay.
+     *
+     * Three places record client money and each was somebody's job on a
+     * different day: the contract's payment schedule, an invoice raised outside
+     * it, and a figure typed straight into the budget. Counting one of them and
+     * calling it income is how a budget reports nothing while the ledger holds
+     * a paid invoice — so they are added up in one place, here, and the two
+     * screens that show client income both read it rather than each doing its
+     * own arithmetic and drifting.
+     *
+     * @return array{collected:int,target:int,contract:int,invoices:int,manual:int}
+     */
+    public function clientIncome(): array
     {
         $contract = $this->contract;
-        $contractCollected = $contract ? (int) $contract->payments->sum('paid_cents') : 0;
-        $contractValue = $contract
+
+        $fromContract = $contract ? (int) $contract->payments->sum('paid_cents') : 0;
+        $value = $contract
             ? (int) ($contract->data['financials']['contract_value_cents']
                 ?? $contract->data['financials']['estimated_total_cents'] ?? 0)
             : 0;
 
+        $manual = (int) $this->incomeItems->where('source', 'client')->sum('amount_cents');
+        $fromInvoices = (int) $this->invoices->sum(fn (Invoice $i) => $i->unscheduledPaidCents());
+
+        return [
+            'collected' => $fromContract + $fromInvoices + $manual,
+            'target' => ($this->client_target_cents ?? 0) ?: $value,
+            'contract' => $fromContract,
+            'invoices' => $fromInvoices,
+            'manual' => $manual,
+        ];
+    }
+
+    public function incomeSummary(): array
+    {
+        $money = $this->clientIncome();
+        $contractCollected = $money['contract'] + $money['invoices'];
+
         $items = $this->incomeItems;
-        $manualClient = (int) $items->where('source', 'client')->sum('amount_cents');
+        $manualClient = $money['manual'];
         $other = (int) $items->where('source', '!=', 'client')->sum('amount_cents');
-        $client = $manualClient + $contractCollected;
+        $client = $money['collected'];
         $sponsors = (int) $this->sponsors->sum('amount_cents');
         // A cancelled stand earns whatever was paid and kept, not its fee.
         // Booked used to exclude cancelled exhibitors outright while collected
@@ -643,8 +681,7 @@ class Event extends Model
         $exhibitors = (int) $this->exhibitors->where('status', '!=', 'cancelled')->sum('fee_cents')
             + (int) $this->exhibitors->where('status', 'cancelled')->sum('paid_cents');
 
-        $clientTarget = ($this->client_target_cents ?? 0) ?: $contractValue;
-        $target = $clientTarget + (int) ($this->sponsorship_target_cents ?? 0)
+        $target = $money['target'] + (int) ($this->sponsorship_target_cents ?? 0)
             + (int) ($this->exhibition_target_cents ?? 0) + $other;
 
         return [
