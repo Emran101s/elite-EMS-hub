@@ -4,7 +4,48 @@
     $may = auth()->user()?->can('write') ?? false;
 @endphp
 
+@php
+    // The section the tabs are on, in the words the screen uses.
+    $openSection = $section === 'all' ? null : ($section === 'none' ? 'Unsectioned' : ($sections[$section] ?? $section));
+@endphp
+
 <div class="space-y-4">
+
+    {{-- ══ sections: where a service comes from ══ --}}
+    <div class="flex flex-wrap items-center gap-1.5 border-b border-line pb-2.5">
+        <button type="button" wire:click="pickSection('all')"
+                @class(['flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-[12px] font-bold transition',
+                    'bg-navy-950 text-white shadow-sm' => $section === 'all',
+                    'text-navy-500 hover:bg-navy-50 hover:text-navy-900' => $section !== 'all'])>
+            Everything
+            <span @class(['text-[10.5px] font-black tabular-nums', 'text-gold-400' => $section === 'all', 'text-navy-300' => $section !== 'all'])>{{ $counts->sum() }}</span>
+        </button>
+
+        @foreach ($sections as $key => $label)
+            <button type="button" wire:click="pickSection(@js($key))"
+                    @class(['flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-[12px] font-bold transition',
+                        'bg-navy-950 text-white shadow-sm' => $section === $key,
+                        'text-navy-500 hover:bg-navy-50 hover:text-navy-900' => $section !== $key])>
+                {{ $label }}
+                <span @class(['text-[10.5px] font-black tabular-nums', 'text-gold-400' => $section === $key, 'text-navy-300' => $section !== $key])>{{ $counts[$key] ?? 0 }}</span>
+            </button>
+        @endforeach
+
+        {{-- Only when something is actually unfiled — an empty tab that is
+             always there just reads as a section nobody named. --}}
+        @if (($counts['none'] ?? 0) > 0)
+            <button type="button" wire:click="pickSection('none')"
+                    @class(['flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-[12px] font-bold transition',
+                        'bg-navy-950 text-white shadow-sm' => $section === 'none',
+                        'text-navy-400 hover:bg-navy-50 hover:text-navy-900' => $section !== 'none'])>
+                Unsectioned
+                <span @class(['text-[10.5px] font-black tabular-nums', 'text-gold-400' => $section === 'none', 'text-navy-300' => $section !== 'none'])>{{ $counts['none'] }}</span>
+            </button>
+        @endif
+
+        <a href="{{ route('taxonomies.index', ['list' => 'service_section']) }}" wire:navigate
+           class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-indigo-600">Edit sections</a>
+    </div>
 
     {{-- ══ the bar ══ --}}
     <div class="flex flex-wrap items-center gap-2">
@@ -40,7 +81,7 @@
         <p class="text-[11.5px] text-muted">{{ $items->count() }} of {{ $total }}</p>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
-            <a href="{{ route('catalogue.template') }}"
+            <a href="{{ route('catalogue.template', $section === 'all' || $section === 'none' ? [] : ['section' => $section]) }}"
                class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
                 <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" /> Template
             </a>
@@ -61,9 +102,14 @@
                 <x-icon name="archive" class="h-4 w-4" />
             </span>
             <span class="min-w-0">
-                <span class="block text-[12.5px] font-bold text-navy-900">Import a filled price list</span>
+                <span class="block text-[12.5px] font-bold text-navy-900">
+                    {{ $openSection && $section !== 'none' ? 'Import into '.mb_strtolower($openSection) : 'Import a filled price list' }}
+                </span>
                 <span class="block text-[11px] text-muted">
                     A row with a code you already use updates that item rather than adding a second one.
+                    @if ($openSection && $section !== 'none')
+                        Every row lands in <span class="font-semibold text-navy-700">{{ $openSection }}</span> unless the sheet names another section.
+                    @endif
                 </span>
             </span>
 
@@ -106,6 +152,17 @@
                     <datalist id="cat-list">
                         @foreach ($categories as $c)<option value="{{ $c }}">@endforeach
                     </datalist>
+                </label>
+
+                <label class="block">
+                    <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">Section</span>
+                    <select wire:model="itemSection" class="input h-9 w-full text-xs">
+                        <option value="">Unsectioned</option>
+                        @foreach ($sections as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('itemSection') <p class="mt-1 text-[11px] font-semibold text-risk">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
@@ -180,7 +237,8 @@
 
     {{-- ══ the list ══ --}}
     @if ($items->isEmpty())
-        <x-empty icon="archive" title="Nothing priced yet"
+        <x-empty icon="archive"
+                 title="{{ $openSection ? 'Nothing in '.mb_strtolower($openSection).' yet' : 'Nothing priced yet' }}"
                  hint="Add an item, or download the template, fill it in and import it." />
     @else
         <div class="space-y-3">
@@ -189,6 +247,15 @@
                     <div class="flex items-center gap-2 border-b border-line bg-navy-50/50 px-4 py-2">
                         <span class="text-[12px] font-black uppercase tracking-[0.14em] text-navy-700">{{ $group }}</span>
                         <span class="text-[11px] font-semibold text-navy-300">{{ $rows->count() }}</span>
+                        {{-- Browsing everything, the section is the thing you cannot
+                             work out from the category. Inside one, it is noise. --}}
+                        @if ($section === 'all')
+                            @foreach ($rows->pluck('section')->unique() as $s)
+                                <span class="rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-bold text-navy-500">
+                                    {{ $s ? ($sections[$s] ?? $s) : 'Unsectioned' }}
+                                </span>
+                            @endforeach
+                        @endif
                     </div>
 
                     <div class="overflow-x-auto">

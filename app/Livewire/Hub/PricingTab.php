@@ -5,6 +5,7 @@ namespace App\Livewire\Hub;
 use App\Models\Event;
 use App\Models\EventInvoiceItem;
 use App\Models\ServiceItem;
+use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -37,6 +38,7 @@ class PricingTab extends Component
     public string $code = '';
     public string $name = '';
     public string $itemCategory = '';
+    public string $itemSection = '';
     public string $detail = '';
     public string $unit = 'item';
     public string $cost = '';
@@ -62,7 +64,7 @@ class PricingTab extends Component
     {
         Gate::authorize('manage-budget');
 
-        $this->reset(['code', 'name', 'itemCategory', 'detail', 'cost', 'sell', 'tax']);
+        $this->reset(['code', 'name', 'itemCategory', 'itemSection', 'detail', 'cost', 'sell', 'tax']);
         $this->editingId = 0;
         $this->unit = 'item';
         $this->active = true;
@@ -78,6 +80,7 @@ class PricingTab extends Component
         $this->code = $item->code ?? '';
         $this->name = $item->name;
         $this->itemCategory = $item->category ?? '';
+        $this->itemSection = $item->section ?? '';
         $this->detail = $item->detail ?? '';
         $this->unit = $item->unit;
         $this->cost = (string) ($item->cost_cents / 100);
@@ -88,7 +91,7 @@ class PricingTab extends Component
 
     public function cancel(): void
     {
-        $this->reset(['editingId', 'code', 'name', 'itemCategory', 'detail', 'cost', 'sell', 'tax']);
+        $this->reset(['editingId', 'code', 'name', 'itemCategory', 'itemSection', 'detail', 'cost', 'sell', 'tax']);
     }
 
     public function save(): void
@@ -99,6 +102,7 @@ class PricingTab extends Component
             'name' => 'required|string|max:180',
             'code' => 'nullable|string|max:40',
             'itemCategory' => 'nullable|string|max:80',
+            'itemSection' => 'nullable|string|in:'.implode(',', Taxonomy::values('service_section')),
             'unit' => 'required|in:'.implode(',', array_keys(EventInvoiceItem::UNITS)),
             'cost' => 'nullable|numeric|min:0',
             'sell' => 'nullable|numeric|min:0',
@@ -124,6 +128,7 @@ class PricingTab extends Component
             'code' => $code,
             'name' => trim($this->name),
             'category' => trim($this->itemCategory) ?: null,
+            'section' => $this->itemSection ?: null,
             'detail' => trim($this->detail) ?: null,
             'unit' => $this->unit,
             'cost_cents' => (int) round((float) ($this->cost ?: 0) * 100),
@@ -191,18 +196,41 @@ class PricingTab extends Component
         $rows = IOFactory::load($this->importFile->getRealPath())
             ->getActiveSheet()->toArray(null, true, true, false);
 
-        array_shift($rows);   // the template's own header
+        // Columns are found by their heading rather than counted, so a sheet
+        // that gains a column later does not silently shift every value on it
+        // one place to the left.
+        $header = array_map(fn ($h) => mb_strtolower(trim((string) $h)), array_shift($rows) ?: []);
+
+        $at = function (array $row, string $name, array $also = []) use ($header) {
+            foreach ([$name, ...$also] as $label) {
+                $i = array_search($label, $header, true);
+
+                if ($i !== false) {
+                    return $row[$i] ?? null;
+                }
+            }
+
+            return null;
+        };
 
         $units = collect(EventInvoiceItem::UNITS)
             ->mapWithKeys(fn (array $m, string $k) => [mb_strtolower($m[0]) => $k])->all();
 
+        $sections = collect(Taxonomy::options('service_section'))
+            ->mapWithKeys(fn (string $label, string $key) => [mb_strtolower($label) => $key])->all();
+
         $made = $fixed = $skipped = 0;
 
         foreach ($rows as $row) {
-            [$code, $name, $category, $unitLabel, $cost, $sell, $tax, $detail] =
-                array_pad(array_slice($row, 0, 8), 8, null);
-
-            $name = trim((string) $name);
+            $code = $at($row, 'code');
+            $name = trim((string) $at($row, 'item', ['name']));
+            $category = $at($row, 'category');
+            $sectionLabel = $at($row, 'section');
+            $unitLabel = $at($row, 'unit', ['sold by']);
+            $cost = $at($row, 'costs us', ['cost']);
+            $sell = $at($row, 'we charge', ['sell', 'price']);
+            $tax = $at($row, 'tax %', ['tax']);
+            $detail = $at($row, 'detail');
 
             if ($name === '') {
                 $skipped++;
@@ -215,6 +243,7 @@ class PricingTab extends Component
             $fields = [
                 'name' => $name,
                 'category' => trim((string) $category) ?: null,
+                'section' => $sections[mb_strtolower(trim((string) $sectionLabel))] ?? null,
                 'unit' => $units[mb_strtolower(trim((string) $unitLabel))] ?? 'item',
                 'cost_cents' => $money($cost),
                 'sell_cents' => $money($sell),
@@ -255,12 +284,7 @@ class PricingTab extends Component
     {
         $items = $this->event->invoiceItems()
             ->when(! $this->showInactive, fn ($q) => $q->where('active', true))
-            ->when($this->q !== '', function ($q) {
-                $t = '%'.mb_strtolower(trim($this->q)).'%';
-                $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
-                    ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
-                    ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
-            })
+            ->search($this->q)
             ->get();
 
         // What is already priced here, so the house list can say so rather than
@@ -271,15 +295,11 @@ class PricingTab extends Component
             'items' => $items,
             'groups' => $items->groupBy(fn (EventInvoiceItem $i) => $i->category ?: 'Uncategorised'),
             'catalogue' => $this->showCatalogue
-                ? ServiceItem::active()
-                    ->when($this->catalogueQuery !== '', function ($q) {
-                        $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
-                        $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
-                            ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
-                    })
-                    ->orderBy('category')->orderBy('name')->get()
+                ? ServiceItem::active()->search($this->catalogueQuery)
+                    ->orderBy('section')->orderBy('category')->orderBy('name')->get()
                 : collect(),
             'taken' => $taken,
+            'sections' => Taxonomy::options('service_section'),
             'underwater' => $items->filter->isUnderwater(),
             'totals' => [
                 'cost' => $items->sum('cost_cents'),

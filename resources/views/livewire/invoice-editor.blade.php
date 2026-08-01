@@ -207,8 +207,10 @@
                                         <span class="ms-auto text-navy-300">▾</span>
                                     </summary>
                                     <div class="border-t border-line p-2">
+                                        {{-- One box across every section: a line does not care
+                                             whether the hotel or a production house supplies it. --}}
                                         <input type="search" wire:model.live.debounce.250ms="catalogueQuery"
-                                               placeholder="Room, transfer, lunch…"
+                                               placeholder="Room, transfer, lunch, or a section…"
                                                class="input mb-1.5 h-8 w-full text-[11px]">
                                         <div class="scrollbar-none max-h-48 overflow-y-auto">
                                             @forelse ($catalogue as $it)
@@ -216,7 +218,12 @@
                                                         class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-start transition hover:bg-page">
                                                     <span class="min-w-0 flex-1">
                                                         <span class="block truncate text-[11.5px] font-semibold text-navy-900">{{ $it->name }}</span>
-                                                        <span class="block truncate text-[10px] text-muted">{{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}</span>
+                                                        <span class="block truncate text-[10px] text-muted">
+                                                            @if ($it->section)
+                                                                <span class="font-semibold text-navy-500">{{ $it->sectionLabel() }}</span> ·
+                                                            @endif
+                                                            {{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}
+                                                        </span>
                                                     </span>
                                                     <span class="pf shrink-0 text-[11.5px] font-black tabular-nums text-navy-700">
                                                         {{ number_format(($it instanceof \App\Models\EventInvoiceItem ? $it->sell_cents : $it->unit_price_cents) / 100, 2) }}

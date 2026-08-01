@@ -23,7 +23,7 @@ class ServiceItem extends Model
 
     public const AUDIT_FIELDS = ['name', 'unit_price_cents', 'unit', 'active'];
 
-    protected $fillable = ['code', 'name', 'category', 'detail', 'unit',
+    protected $fillable = ['code', 'name', 'category', 'section', 'detail', 'unit',
         'unit_price_cents', 'currency', 'tax_pct', 'active', 'sort'];
 
     protected function casts(): array

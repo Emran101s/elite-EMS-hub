@@ -25,7 +25,7 @@ class EventInvoiceItem extends Model
 
     public const AUDIT_FIELDS = ['name', 'cost_cents', 'sell_cents', 'unit', 'active'];
 
-    protected $fillable = ['event_id', 'service_item_id', 'code', 'name', 'category',
+    protected $fillable = ['event_id', 'service_item_id', 'code', 'name', 'category', 'section',
         'detail', 'unit', 'cost_cents', 'sell_cents', 'currency', 'tax_pct', 'active', 'sort'];
 
     protected function casts(): array
@@ -97,6 +97,7 @@ class EventInvoiceItem extends Model
                 'service_item_id' => $item->id,
                 'name' => $item->name,
                 'category' => $item->category,
+                'section' => $item->section,
                 'detail' => $item->detail,
                 'unit' => $item->unit,
                 'sell_cents' => $item->unit_price_cents,

@@ -87,8 +87,23 @@
                         a stale copy of a price nobody agreed is worse than no copy.
                     </span>
                 </span>
-                <input type="search" wire:model.live.debounce.250ms="catalogueQuery" placeholder="Search the list…"
-                       class="input ms-auto h-8 w-48 text-[11px]">
+                <input type="search" wire:model.live.debounce.250ms="catalogueQuery" placeholder="Item, code, or a section…"
+                       class="input ms-auto h-8 w-52 text-[11px]">
+            </div>
+
+            {{-- The sections, as one-click searches. The house list is long
+                 enough that "what does the hotel provide" is a real question. --}}
+            <div class="flex flex-wrap items-center gap-1.5 border-b border-line bg-white px-4 py-2">
+                <button type="button" wire:click="$set('catalogueQuery', '')"
+                        @class(['rounded-full px-2.5 py-1 text-[10.5px] font-bold transition',
+                            'bg-navy-950 text-white' => $catalogueQuery === '',
+                            'bg-navy-50 text-navy-500 hover:text-navy-900' => $catalogueQuery !== ''])>All</button>
+                @foreach ($sections as $label)
+                    <button type="button" wire:click="$set('catalogueQuery', @js($label))"
+                            @class(['rounded-full px-2.5 py-1 text-[10.5px] font-bold transition',
+                                'bg-navy-950 text-white' => $catalogueQuery === $label,
+                                'bg-navy-50 text-navy-500 hover:text-navy-900' => $catalogueQuery !== $label])>{{ $label }}</button>
+                @endforeach
             </div>
 
             <div class="scrollbar-none max-h-64 overflow-y-auto">
@@ -98,7 +113,10 @@
                          class="flex items-center gap-3 border-b border-line/50 px-4 py-2 last:border-0 {{ $already ? 'opacity-45' : '' }}">
                         <span class="min-w-0 flex-1">
                             <span class="block truncate text-[12px] font-semibold text-navy-900">{{ $it->name }}</span>
-                            <span class="block truncate text-[10.5px] text-muted">{{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}</span>
+                            <span class="block truncate text-[10.5px] text-muted">
+                                @if ($it->section)<span class="font-semibold text-navy-500">{{ $it->sectionLabel() }}</span> · @endif
+                                {{ $it->category ?: 'Uncategorised' }} · {{ mb_strtolower($it->unitLabel()) }}
+                            </span>
                         </span>
                         <span class="pf shrink-0 text-[12px] font-black tabular-nums text-navy-700">
                             {{ number_format($it->unit_price_cents / 100, 2) }}
@@ -166,6 +184,17 @@
                 <label class="block">
                     <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">Category</span>
                     <input type="text" wire:model="itemCategory" placeholder="Accommodation" class="input h-9 w-full text-xs">
+                </label>
+
+                <label class="block">
+                    <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-navy-400">Section</span>
+                    <select wire:model="itemSection" class="input h-9 w-full text-xs">
+                        <option value="">Unsectioned</option>
+                        @foreach ($sections as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('itemSection') <p class="mt-1 text-[11px] font-semibold text-risk">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
@@ -265,6 +294,12 @@
                     <div class="flex items-center gap-2 border-b border-line bg-navy-50/50 px-4 py-2">
                         <span class="text-[12px] font-black uppercase tracking-[0.14em] text-navy-700">{{ $group }}</span>
                         <span class="text-[11px] font-semibold text-navy-300">{{ $rows->count() }}</span>
+                        {{-- Who supplies it, which the category does not say. --}}
+                        @foreach ($rows->pluck('section')->filter()->unique() as $sec)
+                            <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-navy-500 ring-1 ring-line">
+                                {{ $sections[$sec] ?? $sec }}
+                            </span>
+                        @endforeach
                     </div>
 
                     <div class="overflow-x-auto">

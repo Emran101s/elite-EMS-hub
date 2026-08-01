@@ -2,6 +2,9 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\Taxonomy;
+use Illuminate\Database\Eloquent\Builder;
+
 /**
  * How a thing is sold, and therefore how it is counted.
  *
@@ -31,9 +34,74 @@ trait PricedByUnit
         'session' => ['Per session', 'session', ['Sessions']],
     ];
 
+    /**
+     * The sections a price list is divided into, and the seed for the editable
+     * list in Settings — see Taxonomy::LISTS['service_section'].
+     *
+     * The question a section answers is where a service comes from, which is
+     * not what a category answers. "Lighting" is a category; whether the hotel
+     * hangs it or a production house trucks it in decides who is called, how
+     * long the lead time is and what the margin looks like.
+     */
+    public const SECTIONS = [
+        'hotel' => 'Hotel services',
+        'production' => 'Outside production',
+        'equipment' => 'Equipment & rental',
+        'transport' => 'Transport',
+        'people' => 'Crew & staffing',
+        'fees' => 'Fees & management',
+    ];
+
     public function unitLabel(): string
     {
         return self::UNITS[$this->unit][0] ?? 'Each';
+    }
+
+    /** What this section is called today — renaming one is a Settings job. */
+    public function sectionLabel(): string
+    {
+        return $this->section
+            ? Taxonomy::label('service_section', $this->section)
+            : 'Unsectioned';
+    }
+
+    /**
+     * The one search a document's price picker runs.
+     *
+     * Section is stored as a key and read as a label, so somebody typing the
+     * words they can see on the tab ("hotel services") has to find the rows
+     * filed under `hotel`. Resolving the label here is what makes "retrieve
+     * from everywhere" mean everywhere rather than everywhere-but-by-name.
+     */
+    public function scopeSearch(Builder $q, string $term): Builder
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return $q;
+        }
+
+        $like = '%'.mb_strtolower($term).'%';
+
+        $sections = collect(Taxonomy::options('service_section'))
+            ->filter(fn (string $label) => str_contains(mb_strtolower($label), mb_strtolower($term)))
+            ->keys()->all();
+
+        return $q->where(fn (Builder $w) => $w
+            ->whereRaw('lower(name) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(code, "")) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(category, "")) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(detail, "")) like ?', [$like])
+            ->when($sections !== [], fn (Builder $x) => $x->orWhereIn('section', $sections)));
+    }
+
+    public function scopeInSection(Builder $q, ?string $section): Builder
+    {
+        // 'none' is a section people actually browse: the rows nobody has
+        // filed yet, which are invisible if the only filters are real sections.
+        return $section === 'none'
+            ? $q->whereNull('section')
+            : $q->where('section', $section);
     }
 
     /** What one of this is, for the line's description: "room-night". */

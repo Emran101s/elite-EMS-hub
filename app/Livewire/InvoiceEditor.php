@@ -397,23 +397,14 @@ class InvoiceEditor extends Component
 
         // Only what is in use, and only when a line is open — a price list is
         // a tool for writing a line, not furniture on the page.
-        $search = function ($q) {
-            if ($this->catalogueQuery === '') {
-                return;
-            }
-            $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
-            $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
-                ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
-                ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
-        };
-
         $catalogue = $this->editingLine === null
             ? collect()
             : ($this->fromEventList()
                 ? EventInvoiceItem::where('event_id', $this->invoice->event_id)->active()
-                    ->tap($search)->orderBy('category')->orderBy('name')->limit(60)->get()
-                : ServiceItem::active()
-                    ->tap($search)->orderBy('category')->orderBy('name')->limit(60)->get());
+                    ->search($this->catalogueQuery)
+                    ->orderBy('section')->orderBy('category')->orderBy('name')->limit(60)->get()
+                : ServiceItem::active()->search($this->catalogueQuery)
+                    ->orderBy('section')->orderBy('category')->orderBy('name')->limit(60)->get());
 
         return view('livewire.invoice-editor', [
             'catalogue' => $catalogue,

@@ -346,14 +346,8 @@ class ProposalEditor extends Component
         // line, not furniture on the page.
         $catalogue = $this->editingLine === null
             ? collect()
-            : ServiceItem::active()
-                ->when($this->catalogueQuery !== '', function ($q) {
-                    $t = '%'.mb_strtolower(trim($this->catalogueQuery)).'%';
-                    $q->where(fn ($w) => $w->whereRaw('lower(name) like ?', [$t])
-                        ->orWhereRaw('lower(coalesce(code, "")) like ?', [$t])
-                        ->orWhereRaw('lower(coalesce(category, "")) like ?', [$t]));
-                })
-                ->orderBy('category')->orderBy('name')->limit(60)->get();
+            : ServiceItem::active()->search($this->catalogueQuery)
+                ->orderBy('section')->orderBy('category')->orderBy('name')->limit(60)->get();
 
         return view('livewire.proposal-editor', [
             'catalogue' => $catalogue,

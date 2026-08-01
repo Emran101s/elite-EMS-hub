@@ -14,6 +14,7 @@ use App\Models\EventIncomeItem;
 use App\Models\EventRisk;
 use App\Models\EventRoom;
 use App\Models\EventTransportPassenger;
+use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\TaxonomyTerm;
@@ -143,6 +144,11 @@ class Taxonomy
             'note' => 'Where money coming in is booked against on every event.',
             'color' => true, 'stores' => 'key', 'on' => ['event_income_items', 'source'],
         ],
+        'service_section' => [
+            'label' => 'Price list sections', 'group' => 'Money & suppliers',
+            'note' => 'Where a service comes from — what the hotel provides, what is brought in from outside, what is rented. Each section has its own tab and its own import.',
+            'color' => false, 'stores' => 'key', 'on' => ['service_items', 'section'],
+        ],
         'supplier_category' => [
             'label' => 'Supplier categories', 'group' => 'Money & suppliers',
             'note' => 'How the supplier directory is organised.',
@@ -205,6 +211,7 @@ class Taxonomy
             'passenger_category' => EventTransportPassenger::CATEGORIES,
 
             'income_source' => EventIncomeItem::SOURCES,
+            'service_section' => ServiceItem::SECTIONS,
             'supplier_category' => collect(Supplier::CATEGORIES)
                 ->mapWithKeys(fn (string $c) => [$c => str($c)->replace('_', ' & ')->title()->toString()])->all(),
             'deal_source' => self::fromWords(Deal::SOURCES),
