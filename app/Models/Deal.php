@@ -58,6 +58,12 @@ class Deal extends Model
         ];
     }
 
+    /** Offers made against this deal — see App\\Models\\Proposal. */
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class)->latest('id');
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

@@ -15,6 +15,7 @@ use App\Http\Controllers\EventContractPdfController;
 use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
 use App\Http\Controllers\InvoicePdfController;
+use App\Http\Controllers\ProposalPdfController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
 use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\MasterSchedulePdfController;
@@ -47,6 +48,7 @@ use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
 use App\Livewire\InvoicesLedger;
 use App\Livewire\PaymentsLedger;
+use App\Livewire\ProposalsDesk;
 use App\Livewire\PublicRegistration;
 use App\Livewire\AiAssistant;
 use App\Livewire\ReportsOverview;
@@ -302,6 +304,12 @@ Route::middleware('auth')->group(function () {
     // layer above, because "what is waiting on a pen" is not a question about
     // one event.
     Route::get('/contracts', ContractsRegister::class)->name('contracts.index');
+
+    // Proposals: the priced offer that goes out before there is anything to
+    // sign. Accepting one wins its deal, and winning is what opens the event.
+    Route::get('/proposals', ProposalsDesk::class)->name('proposals.index');
+    Route::get('/proposals/{proposal}.pdf', ProposalPdfController::class)
+        ->whereNumber('proposal')->name('proposals.pdf');
 
     // Invoices: the document that has to leave the building before anybody can
     // pay anything. The schedule says what was agreed; this is the asking.
