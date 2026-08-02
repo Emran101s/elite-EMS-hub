@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'name', 'logo_path', 'default_currency', 'default_timezone',
     'default_budget_categories', 'default_management_fee_pct', 'default_ticket_types', 'default_sponsor_packages',
-    'country', 'city', 'email', 'phone', 'website', 'address',
+    'country', 'city', 'email', 'phone', 'website', 'address', 'bank_accounts',
 ])]
 class CompanyProfile extends Model
 {
@@ -45,6 +45,39 @@ class CompanyProfile extends Model
         return (float) (self::house()?->default_management_fee_pct ?? 15.0);
     }
 
+    /** The fields one bank account holds, in the order a document prints them. */
+    public const BANK_FIELDS = [
+        'label' => 'Heading',
+        'account_name' => 'Account Name',
+        'bank_name' => 'Bank Name',
+        'account_no' => 'Account No.',
+        'iban' => 'IBAN',
+        'swift' => 'Swift Code',
+        'currency' => 'Currency',
+    ];
+
+    /**
+     * Where clients send money — printed at the foot of every invoice.
+     *
+     * Kept here rather than typed onto each document: a bank changes once and
+     * every invoice raised afterwards should be right, including the ones
+     * nobody thought to check.
+     *
+     * Rows with no account number and no IBAN are dropped rather than printed
+     * as an empty box, which is what a half-filled row would otherwise become
+     * on a document that has already left the building.
+     *
+     * @return list<array<string,string>>
+     */
+    public static function bankAccounts(): array
+    {
+        return collect(self::house()?->bank_accounts ?? [])
+            ->map(fn ($row) => collect(self::BANK_FIELDS)
+                ->mapWithKeys(fn (string $_, string $key) => [$key => trim((string) ($row[$key] ?? ''))])->all())
+            ->filter(fn (array $row) => $row['account_no'] !== '' || $row['iban'] !== '')
+            ->values()->all();
+    }
+
     protected static function booted(): void
     {
         // A saved profile is a new house; the next read must not be the old one.
@@ -56,6 +89,7 @@ class CompanyProfile extends Model
     protected function casts(): array
     {
         return [
+            'bank_accounts' => 'array',
             'default_budget_categories' => 'array',
             'default_ticket_types' => 'array',
             'default_sponsor_packages' => 'array',

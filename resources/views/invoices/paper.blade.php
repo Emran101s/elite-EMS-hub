@@ -74,6 +74,20 @@
     .inv .note b { display: block; font-size: 7.5px; letter-spacing: 1.4px; text-transform: uppercase;
                    color: #94A3B8; margin-bottom: 4px; }
 
+    .inv .pay { margin: 22px 34px 0; }
+    .inv .pay > b { display: block; font-size: 7.5px; letter-spacing: 1.4px; text-transform: uppercase;
+                    color: {{ $theme['primary'] }}; margin-bottom: 6px; }
+    .inv .pay table { width: 100%; border-collapse: separate; border-spacing: 10px 0; table-layout: fixed; }
+    {{-- text-align is stated, not inherited: the block sits after the totals
+         table, whose cells are right-aligned, and inheriting that turned every
+         line of the bank details flush right. --}}
+    .inv .pay td { vertical-align: top; background: #F8FAFC; padding: 11px 13px; text-align: left; }
+    .inv .pay .h { font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase;
+                   color: {{ $theme['primary'] }}; font-weight: bold; margin-bottom: 5px; }
+    .inv .pay p { margin: 0 0 2px; font-size: 8.5px; color: #64748B; line-height: 1.45; }
+    .inv .pay p b { color: #0F172A; }
+    .inv .pay .mono b { font-family: {{ $screen ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "'DejaVu Sans Mono', monospace" }}; letter-spacing: 0.2px; }
+
     .inv .foot { {{ $screen ? 'margin: 26px 34px 0;' : 'position: fixed; bottom: 22px; left: 34px; right: 34px;' }}
                  border-top: 1px solid #E2E8F0; padding-top: 7px; font-size: 8px; color: #94A3B8; }
     .inv .foot .r { float: right; }
@@ -201,6 +215,36 @@
             @if ($invoice->terms && $invoice->notes)
                 <div style="margin-top:6px">{{ $invoice->notes }}</div>
             @endif
+        </div>
+    @endif
+
+    {{-- ══ Payment details ══
+
+         Where to send the money, from Settings → Company. An invoice that
+         does not say how to pay it is an invoice somebody has to reply to
+         before they can pay it — and these details belong in one place, so a
+         changed bank corrects every invoice raised afterwards rather than the
+         ones somebody remembered to edit. --}}
+    @php $accounts = \App\Models\CompanyProfile::bankAccounts(); @endphp
+
+    @if ($accounts)
+        <div class="pay">
+            <b>Payment details</b>
+            <table>
+                <tr>
+                    @foreach ($accounts as $a)
+                        <td width="{{ (int) floor(100 / max(1, count($accounts))) }}%">
+                            @if ($a['label'])<div class="h">{{ $a['label'] }}</div>@endif
+                            @if ($a['account_name'])<p>Account Name: <b>{{ $a['account_name'] }}</b></p>@endif
+                            @if ($a['bank_name'])<p>Bank Name: <b>{{ $a['bank_name'] }}</b></p>@endif
+                            @if ($a['account_no'])<p class="mono">Account No.: <b>{{ $a['account_no'] }}</b></p>@endif
+                            @if ($a['iban'])<p class="mono">IBAN: <b>{{ $a['iban'] }}</b></p>@endif
+                            @if ($a['swift'])<p class="mono">Swift Code: <b>{{ $a['swift'] }}</b></p>@endif
+                            @if ($a['currency'])<p>Currency: <b>{{ $a['currency'] }}</b></p>@endif
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
         </div>
     @endif
 

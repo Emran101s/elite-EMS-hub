@@ -33,6 +33,15 @@ class CompanySettings extends Component
 
     public $logo = null;
 
+    /**
+     * Where clients send money. A list because there are two accounts today,
+     * one per currency, and a third is a business decision rather than a
+     * schema change.
+     *
+     * @var list<array<string,string>>
+     */
+    public array $bank_accounts = [];
+
     public function mount(): void
     {
         $p = CompanyProfile::current();
@@ -45,6 +54,18 @@ class CompanySettings extends Component
         $this->phone = $p->phone ?? '';
         $this->website = $p->website ?? '';
         $this->address = $p->address ?? '';
+        $this->bank_accounts = $p->bank_accounts ?: [];
+    }
+
+    public function addBankAccount(): void
+    {
+        $this->bank_accounts[] = array_fill_keys(array_keys(CompanyProfile::BANK_FIELDS), '');
+    }
+
+    public function removeBankAccount(int $i): void
+    {
+        unset($this->bank_accounts[$i]);
+        $this->bank_accounts = array_values($this->bank_accounts);
     }
 
     public function save(): void
@@ -60,6 +81,13 @@ class CompanySettings extends Component
             'website' => ['nullable', 'string', 'max:190'],
             'address' => ['nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'max:4096'],
+            'bank_accounts.*.label' => ['nullable', 'string', 'max:60'],
+            'bank_accounts.*.account_name' => ['nullable', 'string', 'max:190'],
+            'bank_accounts.*.bank_name' => ['nullable', 'string', 'max:190'],
+            'bank_accounts.*.account_no' => ['nullable', 'string', 'max:60'],
+            'bank_accounts.*.iban' => ['nullable', 'string', 'max:60'],
+            'bank_accounts.*.swift' => ['nullable', 'string', 'max:20'],
+            'bank_accounts.*.currency' => ['nullable', 'string', 'max:60'],
         ]);
 
         $data = [
@@ -72,6 +100,12 @@ class CompanySettings extends Component
             'phone' => trim($this->phone) ?: null,
             'website' => trim($this->website) ?: null,
             'address' => trim($this->address) ?: null,
+            // A row with neither an account number nor an IBAN is an empty box
+            // somebody opened and never filled; it must not reach a document.
+            'bank_accounts' => collect($this->bank_accounts)
+                ->map(fn (array $row) => array_map(fn ($v) => trim((string) $v), $row))
+                ->filter(fn (array $row) => ($row['account_no'] ?? '') !== '' || ($row['iban'] ?? '') !== '')
+                ->values()->all(),
         ];
 
         if ($this->logo) {
@@ -86,6 +120,7 @@ class CompanySettings extends Component
     public function render()
     {
         return view('livewire.company-settings', [
+            'bankFields' => CompanyProfile::BANK_FIELDS,
             'profile' => CompanyProfile::current(),
             'currencies' => CompanyProfile::CURRENCIES,
             'timezones' => CompanyProfile::TIMEZONES,
