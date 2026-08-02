@@ -98,6 +98,11 @@
     .badge-role { font-size: 3.2mm; font-weight: 600; color: color-mix(in srgb, var(--ink) 70%, #fff); }
     .badge-org  { font-size: 3.4mm; font-weight: 700; color: var(--accent); }
 
+    /* Extra lines the event chose — quieter than the organisation, because
+       they are what somebody reads second, after they know who this is. */
+    .badge-line { margin: 0.8mm 0 0; font-size: 3mm; font-weight: 600;
+                  line-height: 1.25; color: #475569; }
+
     .badge-foot {
         display: flex;
         align-items: flex-end;

@@ -53,6 +53,12 @@
             @if ($template['show_organisation'] && $attendee->organization)
                 <p class="badge-org">{{ $attendee->organization }}</p>
             @endif
+
+            {{-- Whatever else this event asked and wants on the badge — a
+                 track, a table number, a delegation. See Badge::lines(). --}}
+            @foreach (\App\Support\Badge::lines($event, $attendee) as $line)
+                <p class="badge-line">{{ $line['value'] }}</p>
+            @endforeach
         </div>
 
         <div class="badge-foot">

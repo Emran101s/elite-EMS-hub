@@ -39,12 +39,59 @@ class Badge
         'show_qr' => true,
         'show_reference' => true,
         'footer' => '',
+
+        // Extra lines, named by registration-field key. A badge that can print
+        // the workshop track is a badge somebody can be pointed to a room by;
+        // before this it could print a job title and nothing else the event
+        // actually asked.
+        'lines' => [],
     ];
 
     /** The event's template, with every missing key filled in. */
     public static function template(Event $event): array
     {
         return array_merge(self::DEFAULTS, (array) ($event->badge_template ?? []));
+    }
+
+    /**
+     * The extra lines this badge prints, resolved for one attendee.
+     *
+     * Named by field key so a renamed question keeps printing — the key is
+     * what answers are filed under. A line with nothing in it is dropped
+     * rather than printed as an empty row, because a badge is 90mm wide and a
+     * blank line costs a real one.
+     *
+     * @return list<array{label:string,value:string}>
+     */
+    public static function lines(Event $event, EventAttendee $attendee): array
+    {
+        $keys = (array) (self::template($event)['lines'] ?? []);
+
+        if ($keys === []) {
+            return [];
+        }
+
+        $fields = $event->registrationFields()->whereIn('key', $keys)->get()->keyBy('key');
+        $out = [];
+
+        foreach ($keys as $key) {
+            $field = $fields->get($key);
+
+            $value = $field?->maps_to
+                ? trim((string) $attendee->{$field->maps_to})
+                : $attendee->answer($key);
+
+            // Sessions are seats, not an answer — read them from the booking.
+            if ($field?->isSessions()) {
+                $value = $attendee->sessions->pluck('title')->join(' · ');
+            }
+
+            if ($value !== '') {
+                $out[] = ['label' => $field?->label ?? $key, 'value' => $value];
+            }
+        }
+
+        return $out;
     }
 
     /** [width, height] in millimetres. */

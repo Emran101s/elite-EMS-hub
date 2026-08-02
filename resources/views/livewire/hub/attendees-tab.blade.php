@@ -124,6 +124,13 @@
         </select>
         <div class="ml-auto flex items-center gap-2">
             <button type="button" wire:click="toggleCheckinMode" class="flex h-10 items-center gap-1.5 rounded-xl border border-gold-300 bg-gold-50 px-3 text-xs font-bold text-gold-800 transition hover:bg-gold-100" title="Full-screen arrival flow for show day">✓ Check-in mode</button>
+            {{-- Show day: a screen for somebody standing at the door. --}}
+            <a href="{{ route('events.arrivals', $event) }}"
+               class="inline-flex h-9 items-center gap-2 rounded-xl bg-navy-900 px-3.5 text-xs font-bold text-white transition hover:bg-navy-800"
+               title="Find and admit people who arrive without a badge">
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span> Arrivals desk
+            </a>
+
             <button type="button" wire:click="$toggle('showRegistration')"
                     @class(['flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition',
                             'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' => $event->registration_open,
@@ -199,6 +206,25 @@
                             </label>
                         @endforeach
                     </div>
+
+                    {{-- Anything else the form asked. A badge that can print
+                         the workshop track is a badge somebody can be pointed
+                         to a room by. --}}
+                    @php $printable = $this->badgeFieldChoices(); @endphp
+                    @if ($printable->isNotEmpty())
+                        <div>
+                            <span class="field-label !mb-1 !text-eyebrow">Also print</span>
+                            <div class="grid gap-1.5">
+                                @foreach ($printable as $field)
+                                    <label class="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold text-navy-700">
+                                        <input type="checkbox" value="{{ $field->key }}" wire:model.live="badge.lines"
+                                               class="h-3.5 w-3.5 rounded border-navy-300 text-navy-900 focus:ring-gold-400">
+                                        {{ $field->label }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     <label class="block">
                         <span class="field-label !mb-1 !text-eyebrow">Footer line</span>

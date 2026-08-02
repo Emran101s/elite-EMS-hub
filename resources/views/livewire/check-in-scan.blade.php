@@ -56,5 +56,41 @@
                 This badge is not on the list for this event. Check they are at the right door, or register them at the desk.
             </p>
         @endif
+
+        {{-- ══ the room they are standing at ══
+
+             The QR is printed once and cannot carry a room, so the room is
+             chosen here: whoever is on the door scans the badge and taps the
+             session in front of them. --}}
+        @php $today = $this->sessionsToday(); @endphp
+
+        @if ($attendee && $state !== 'unknown' && $state !== 'cancelled' && $today->isNotEmpty())
+            <div class="mt-5 border-t border-line pt-4 text-left">
+                <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Booked today</p>
+
+                @foreach ($today as $session)
+                    @php $in = $session->pivot->checked_in_at; @endphp
+                    <div wire:key="sess-{{ $session->id }}"
+                         class="mt-2 flex items-center gap-3 rounded-2xl border border-line bg-white px-3 py-2.5">
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-[13px] font-bold text-navy-900">{{ $session->title }}</span>
+                            <span class="block text-[11.5px] text-muted">
+                                @if ($session->starts_at) {{ substr($session->starts_at, 0, 5) }} @endif
+                                @if ($session->room) · {{ $session->room->name }} @endif
+                            </span>
+                        </span>
+
+                        @if ($in)
+                            <span class="shrink-0 text-[11.5px] font-bold text-emerald-700">In at {{ \Illuminate\Support\Carbon::parse($in)->format('H:i') }}</span>
+                        @else
+                            <button type="button" wire:click="admitToSession({{ $session->id }})"
+                                    class="shrink-0 rounded-xl bg-navy-950 px-3 py-2 text-[12px] font-bold text-white transition hover:bg-navy-800">
+                                Admit here
+                            </button>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 </div>

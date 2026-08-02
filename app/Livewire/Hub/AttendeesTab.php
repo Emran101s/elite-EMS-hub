@@ -196,6 +196,19 @@ class AttendeesTab extends Component
         $this->reset(['walkinName', 'walkinOrg']);
     }
 
+    /**
+     * The questions a badge can print, beyond the ones it always could.
+     *
+     * Name is the badge; organisation, job title and ticket have their own
+     * switches above. What is left is whatever this event thought to ask —
+     * which is exactly what a fixed badge design could never show.
+     */
+    public function badgeFieldChoices(): \Illuminate\Support\Collection
+    {
+        return $this->event->registrationForm()
+            ->reject(fn ($f) => in_array($f->maps_to, ['name', 'email', 'organization', 'job_title', 'ticket_type'], true));
+    }
+
     public function import(): void
     {
         $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:8192']]);
@@ -451,6 +464,10 @@ class AttendeesTab extends Component
             'badge.size' => ['required', Rule::in(array_keys(Badge::SIZES))],
             'badge.accent' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'badge.footer' => ['nullable', 'string', 'max:80'],
+            // Only questions this event actually asks: a key from anywhere
+            // else would print a blank line on every badge.
+            'badge.lines' => ['nullable', 'array'],
+            'badge.lines.*' => [Rule::in($this->event->registrationFields()->pluck('key'))],
         ], ['badge.accent.regex' => 'A colour must be a hex value like #D4AF37.']);
 
         // Only the keys the template declares, so nothing from a browser can

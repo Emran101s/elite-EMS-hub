@@ -64,6 +64,59 @@ class CheckInScan extends Component
         $this->state = 'done';
     }
 
+    /**
+     * The sessions this badge can be admitted to right now.
+     *
+     * The QR is printed once and cannot carry a room, so the room is decided
+     * here: whoever is on the door scans the badge and taps the session in
+     * front of them. Today's bookings only — a badge scanned at a Tuesday
+     * workshop should not offer Thursday's.
+     */
+    public function sessionsToday(): \Illuminate\Support\Collection
+    {
+        if (! $this->attendee) {
+            return collect();
+        }
+
+        return $this->attendee->sessions()
+            ->with('day')
+            ->get()
+            ->filter(fn ($s) => $s->day?->date?->isToday() ?? true)
+            ->sortBy('starts_at')
+            ->values();
+    }
+
+    /**
+     * Mark them present in one session.
+     *
+     * Separate from admitting them to the event: somebody can be in the
+     * building without being in this room, and a room's count is only worth
+     * having if it means the people who were in it.
+     */
+    public function admitToSession(int $sessionId): void
+    {
+        if (! $this->attendee || $this->attendee->status === 'cancelled') {
+            return;
+        }
+
+        $booking = $this->attendee->sessions()->whereKey($sessionId)->first();
+
+        if (! $booking || $booking->pivot->checked_in_at) {
+            return;
+        }
+
+        $this->attendee->sessions()->updateExistingPivot($sessionId, ['checked_in_at' => now()]);
+
+        // Being in a room is being in the building; a door reached by a side
+        // entrance should not leave somebody marked absent all day.
+        if ($this->attendee->checked_in_at === null) {
+            $this->attendee->update(['status' => 'checked_in', 'checked_in_at' => now()]);
+            $this->state = 'done';
+        }
+
+        $this->attendee->load('sessions');
+    }
+
     public function render()
     {
         return view('livewire.check-in-scan')->title('Check-in · '.$this->event->name);

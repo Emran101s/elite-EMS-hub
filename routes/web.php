@@ -48,6 +48,7 @@ use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
+use App\Livewire\ArrivalsDesk;
 use App\Livewire\CatalogueSettings;
 use App\Livewire\RegistrationTemplates;
 use App\Livewire\InvoiceEditor;
@@ -176,6 +177,11 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('event')->name('events.attendees.template');
 
     // Badges, laid out to fill A4 with cut lines. ?ids= prints a selection.
+    // The desk on the day: for everybody who arrives without a badge to scan,
+    // which is most of the first hour.
+    Route::get('/events/{event}/arrivals', ArrivalsDesk::class)
+        ->whereNumber('event')->name('events.arrivals');
+
     Route::get('/events/{event}/badges.pdf', BadgeSheetPdfController::class)
         ->whereNumber('event')->name('events.badges.pdf');
 
