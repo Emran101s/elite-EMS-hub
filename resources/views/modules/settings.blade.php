@@ -31,6 +31,7 @@
                     ['Equipment Catalog', 'Reusable equipment and prices for venues and events.', 'requirements.index', 'archive', 'items'],
                     ['Sponsorship Packages', 'Default tiers, prices, slots and benefits.', 'sponsor-packages.index', 'star', 'tiers'],
                     ['Transport Catalogue', 'Vehicles, capacities, drivers and the services you offer.', 'transport-settings.index', 'truck', 'vehicles & drivers'],
+                    ['Registration Templates', 'Question sets an event starts its registration form from.', 'registration-templates.index', 'clipboard', 'templates'],
                 ],
             ],
         ];

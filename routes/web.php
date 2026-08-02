@@ -49,6 +49,7 @@ use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
 use App\Livewire\CatalogueSettings;
+use App\Livewire\RegistrationTemplates;
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
 use App\Livewire\PlanningBoard;
@@ -78,6 +79,7 @@ use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\TaxonomyTerm;
 use App\Models\TransportDriver;
+use App\Models\RegistrationTemplate;
 use App\Models\TransportVehicle;
 use App\Models\User;
 use App\Models\Venue;
@@ -295,6 +297,7 @@ Route::middleware('auth')->group(function () {
             'requirements.index' => Requirement::count(),
             'sponsor-packages.index' => count(CompanyProfile::current()->sponsorPackages()),
             'transport-settings.index' => TransportVehicle::count() + TransportDriver::count(),
+            'registration-templates.index' => RegistrationTemplate::count(),
         ],
     ]))->name('settings.index');
     Route::get('/settings/clients', ClientsManager::class)->name('clients.index');
@@ -306,6 +309,11 @@ Route::middleware('auth')->group(function () {
 
     // The price list: what the company sells, what one of each costs, and how
     // it is counted. The invoice editor prices lines from it.
+    // Registration forms you keep. An event starts from a copy and owns it
+    // after — see RegistrationTemplate::applyTo().
+    Route::get('/settings/registration-templates', RegistrationTemplates::class)
+        ->name('registration-templates.index');
+
     Route::get('/settings/price-list', CatalogueSettings::class)->name('catalogue.index');
     Route::get('/settings/price-list/template.xlsx', ServiceItemTemplateController::class)
         ->name('catalogue.template');

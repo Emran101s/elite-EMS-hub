@@ -16,12 +16,60 @@
         </span>
 
         @if ($may)
-            <button type="button" wire:click="newField"
-                    class="ms-auto flex h-9 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white transition hover:bg-navy-800">
-                ＋ Add a question
-            </button>
+            <span class="ms-auto flex items-center gap-2">
+                {{-- Start from a form you keep. Adds by default rather than
+                     replaces: an event that has taken registrations has answers
+                     filed against its questions. --}}
+                @if ($templates->isNotEmpty())
+                    <details class="relative" data-menu>
+                        <summary class="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
+                            ⇪ From a template
+                        </summary>
+
+                        <div class="absolute end-0 z-30 mt-1.5 w-80 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
+                            @foreach ($templates as $t)
+                                <button type="button"
+                                        wire:click="$set('templateId', {{ $t->id }})"
+                                        @class(['flex w-full flex-col rounded-xl px-2.5 py-2 text-start transition',
+                                            'bg-navy-950 text-white' => $templateId === $t->id,
+                                            'hover:bg-page' => $templateId !== $t->id])>
+                                    <span class="text-[12px] font-bold">{{ $t->name }}</span>
+                                    <span @class(['text-[10.5px]', 'text-white/60' => $templateId === $t->id, 'text-muted' => $templateId !== $t->id])>
+                                        {{ $t->questions()->count() }} {{ str('question')->plural($t->questions()->count()) }}@if ($t->note) · {{ $t->note }} @endif
+                                    </span>
+                                </button>
+                            @endforeach
+
+                            @if ($templateId)
+                                <div class="mt-1.5 border-t border-line pt-2">
+                                    <label class="flex cursor-pointer items-start gap-2 px-2.5 pb-2 text-[11px] text-navy-600">
+                                        <input type="checkbox" wire:model="replaceForm" class="mt-0.5 h-3.5 w-3.5 rounded border-navy-300">
+                                        <span>Replace this event's questions — name and email are kept whatever happens.</span>
+                                    </label>
+                                    <button type="button" wire:click="applyTemplate"
+                                            class="w-full rounded-xl bg-navy-950 px-3 py-2 text-[11.5px] font-bold text-white transition hover:bg-navy-800">
+                                        {{ $replaceForm ? 'Replace the form' : 'Add its questions' }}
+                                    </button>
+                                </div>
+                            @endif
+
+                            <a href="{{ route('registration-templates.index') }}" wire:navigate
+                               class="mt-1 block px-2.5 py-1.5 text-[10.5px] font-semibold text-navy-400 transition hover:text-indigo-600">Manage templates →</a>
+                        </div>
+                    </details>
+                @endif
+
+                <button type="button" wire:click="newField"
+                        class="flex h-9 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white transition hover:bg-navy-800">
+                    ＋ Add a question
+                </button>
+            </span>
         @endif
     </div>
+
+    @if ($templateFlash)
+        <p class="rounded-2xl bg-emerald-50 px-4 py-2.5 text-[12px] font-semibold text-emerald-800">{{ $templateFlash }}</p>
+    @endif
 
     {{-- ══ the editor ══ --}}
     @if ($editingId !== null)

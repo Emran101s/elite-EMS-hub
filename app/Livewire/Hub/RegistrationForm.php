@@ -4,6 +4,7 @@ namespace App\Livewire\Hub;
 
 use App\Models\Event;
 use App\Models\RegistrationField;
+use App\Models\RegistrationTemplate;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -43,6 +44,47 @@ class RegistrationForm extends Component
     {
         $this->event = $event;
         $this->event->registrationForm();   // seeded on first open
+    }
+
+    /* ── starting from a template ── */
+
+    public ?int $templateId = null;
+
+    public bool $replaceForm = false;
+
+    /**
+     * What applying a template did, said on the component itself.
+     *
+     * A flash would be read on the next request; this re-renders in place, so
+     * the message has to live where the render can see it.
+     */
+    public string $templateFlash = '';
+
+    /**
+     * Write a kept form onto this event.
+     *
+     * Adding by default rather than replacing: an event that has already taken
+     * registrations has answers filed against its questions, and a template
+     * that silently cleared them would take the answers' meaning with it.
+     * Replacing is available and says what it does.
+     */
+    public function applyTemplate(): void
+    {
+        Gate::authorize('write');
+
+        $template = RegistrationTemplate::find($this->templateId);
+
+        if (! $template) {
+            return;
+        }
+
+        $added = $template->applyTo($this->event, $this->replaceForm);
+
+        $this->templateFlash = $added === 0
+            ? 'Nothing to add — this event already asks everything on “'.$template->name.'”.'
+            : $added.' '.str('question')->plural($added).' added from “'.$template->name.'”.';
+
+        $this->reset(['templateId', 'replaceForm']);
     }
 
     public function newField(): void
@@ -171,6 +213,7 @@ class RegistrationForm extends Component
     public function render()
     {
         return view('livewire.hub.registration-form', [
+            'templates' => RegistrationTemplate::orderBy('position')->orderBy('name')->get(),
             'fields' => $this->event->registrationFields()->get(),
             'types' => RegistrationField::TYPES,
             'columns' => RegistrationField::CORE_COLUMNS,
