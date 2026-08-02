@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Hub;
 
+use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\EventAccommodation;
 use App\Models\EventRoomBlock;
@@ -26,7 +27,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
  */
 class AccommodationTab extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, RoutesCostsToBudget;
 
     public Event $event;
 
@@ -500,6 +501,11 @@ class AccommodationTab extends Component
         $this->importMsg = $imported === 0
             ? 'No rows with a name were found in that file.'
             : $imported.' '.Str::plural('guest', $imported).' imported into '.$block->hotel.'.';
+    }
+
+    public function budgetModule(): string
+    {
+        return 'stay';
     }
 
     public function render()

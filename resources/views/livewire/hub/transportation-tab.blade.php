@@ -783,6 +783,11 @@
                             <div class="flex justify-between"><span class="text-muted">Over capacity</span><span class="font-bold text-red-700">{{ $overbooked }}</span></div>
                         @endif
                         <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">Transport cost</span><span class="font-bold text-navy-900">{{ $event->money($costTotal) }}</span></div>
+
+                        {{-- Which section of the budget this module's spend
+                             lands under. Asked here because this is where
+                             somebody is looking when the question comes up. --}}
+                        <x-budget-routing :routing="$this->budgetRouting()" />
                     </div>
                 </div>
                 @if ($fleet->isNotEmpty())

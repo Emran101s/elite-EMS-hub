@@ -356,6 +356,11 @@
                         <div class="flex justify-between"><span class="text-muted">Rooms named</span><span class="font-bold text-navy-900">{{ $roomsNamed }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Room-nights</span><span class="font-bold text-navy-900">{{ $roomNightsTotal }}</span></div>
                         <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">Estimated cost</span><span class="font-bold text-navy-900">{{ $event->money($costTotal) }}</span></div>
+
+                        {{-- Which section of the budget this module's spend
+                             lands under. Asked here because this is where
+                             somebody is looking when the question comes up. --}}
+                        <x-budget-routing :routing="$this->budgetRouting()" />
                     </div>
                     <p class="mt-2 text-eyebrow leading-relaxed text-muted">Rates are internal — the rooming list PDF never shows them.</p>
                 </div>

@@ -32,11 +32,17 @@ class BudgetSync
         $event->load(['roomBlocks', 'accommodations', 'transport', 'speakers', 'rooms']);
         $event->ensureBudgetCategories();
 
-        // Where each module's cost lands in the (user-editable) category list.
-        $guests = 'Attendee & Guest Services';
-        $venues = 'Venues';
-        $event->budgetCategory($guests);
-        $event->budgetCategory($venues);
+        // Where each module's cost lands — the event's own choice, made in the
+        // module itself, falling back to what this always did. See
+        // Event::moduleBudgetCategory().
+        $stay = $event->moduleBudgetCategory('stay');
+        $transport = $event->moduleBudgetCategory('transport');
+        $speakers = $event->moduleBudgetCategory('speakers');
+        $venues = $event->moduleBudgetCategory('venue');
+
+        foreach ([$stay, $transport, $speakers, $venues] as $name) {
+            $event->budgetCategory($name);
+        }
 
         $keep = [];
         $touched = 0;
@@ -50,7 +56,7 @@ class BudgetSync
             }
 
             $touched += $this->upsert($event, 'room_block', $b->id, [
-                'category' => $guests,
+                'category' => $stay,
                 'description' => $b->budgetLine(),
                 'estimated_cents' => $b->totalCents(),
                 'vendor' => $b->hotel,
@@ -67,7 +73,7 @@ class BudgetSync
                 continue;   // inside a block: already counted above
             }
             $touched += $this->upsert($event, 'accommodation', $a->id, [
-                'category' => $guests,
+                'category' => $stay,
                 'description' => trim('Accommodation · '.$a->hotel.($a->guest ? ' — '.$a->guest : '')),
                 'estimated_cents' => $a->cost_cents,
                 'vendor' => $a->hotel,
@@ -81,7 +87,7 @@ class BudgetSync
                 continue;
             }
             $touched += $this->upsert($event, 'transport', $t->id, [
-                'category' => $guests,
+                'category' => $transport,
                 'description' => 'Transport · '.$t->route,
                 'estimated_cents' => $t->cost_cents,
                 'vendor' => $t->provider,
@@ -95,7 +101,7 @@ class BudgetSync
                 continue;
             }
             $touched += $this->upsert($event, 'speaker', $s->id, [
-                'category' => $guests,
+                'category' => $speakers,
                 'description' => 'Speaker fee · '.$s->name,
                 'estimated_cents' => $s->fee_cents,
                 'quantity' => 1,
@@ -122,7 +128,7 @@ class BudgetSync
         // Event-wide requirements → one aggregate line under "Event Requirements".
         $eventReqTotal = $event->eventRequirementsTotalCents();
         if ($eventReqTotal > 0) {
-            $reqCat = 'Event Requirements';
+            $reqCat = $event->moduleBudgetCategory('requirements');
             $event->budgetCategory($reqCat);
             $n = count($event->event_requirements ?? []);
             $touched += $this->upsert($event, 'event_req', 0, [

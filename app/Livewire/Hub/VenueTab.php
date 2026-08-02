@@ -3,6 +3,7 @@
 namespace App\Livewire\Hub;
 
 use App\Livewire\Concerns\BulkSelectable;
+use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\Requirement;
 use Illuminate\Support\Str;
@@ -10,7 +11,7 @@ use Livewire\Component;
 
 class VenueTab extends Component
 {
-    use BulkSelectable;
+    use BulkSelectable, RoutesCostsToBudget;
 
     public Event $event;
 
@@ -130,6 +131,11 @@ class VenueTab extends Component
     private function redirectTab()
     {
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'venue']);
+    }
+
+    public function budgetModule(): string
+    {
+        return 'venue';
     }
 
     public function render()

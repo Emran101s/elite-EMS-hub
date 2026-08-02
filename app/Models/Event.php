@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
-    'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'budget_locked_at', 'progress', 'expected_participants',
+    'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'module_budget_categories', 'budget_locked_at', 'progress', 'expected_participants',
     'registration_token', 'registration_open', 'registration_capacity', 'registration_note', 'badge_template',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules', 'priority',
 ])]
@@ -247,6 +247,7 @@ class Event extends Model
             'event_requirements' => 'array',
             'management_fee_pct' => 'float',
             'planner_config' => 'array',
+            'module_budget_categories' => 'array',
             'budget_locked_at' => 'datetime',
             'progress' => 'integer',
             'expected_participants' => 'integer',
@@ -718,6 +719,69 @@ class Event extends Model
         }
 
         return ['destroys' => $destroys, 'keeps' => $keeps, 'money' => $money];
+    }
+
+    /**
+     * Which budget category each module's costs land in.
+     *
+     * The mapping used to live in code, so every guest-facing module went to
+     * one category and every hall to another — and an event that budgets
+     * transport apart from accommodation could not say so. The defaults below
+     * are what the code always did; each is now a choice the module itself can
+     * change, per event.
+     *
+     * @var array<string,string>
+     */
+    public const MODULE_BUDGET_DEFAULTS = [
+        'stay' => 'Attendee & Guest Services',
+        'transport' => 'Attendee & Guest Services',
+        'speakers' => 'Attendee & Guest Services',
+        'venue' => 'Venues',
+        'requirements' => 'Event Requirements',
+    ];
+
+    /** What a module is called where the choice is offered. */
+    public const MODULE_BUDGET_LABELS = [
+        'stay' => 'Accommodation',
+        'transport' => 'Transport',
+        'speakers' => 'Speaker fees',
+        'venue' => 'Venue hire',
+        'requirements' => 'Event requirements',
+    ];
+
+    /** The category this module's costs land in — its own, or the default. */
+    public function moduleBudgetCategory(string $module): string
+    {
+        $chosen = trim((string) (($this->module_budget_categories ?? [])[$module] ?? ''));
+
+        if ($chosen !== '' && $this->budgetCategories()->where('name', $chosen)->exists()) {
+            return $chosen;
+        }
+
+        return self::MODULE_BUDGET_DEFAULTS[$module] ?? 'Other';
+    }
+
+    /**
+     * Point a module's costs at a category.
+     *
+     * The category has to be one this event actually has: a line filed under a
+     * name no category carries is a line that shows up in no section.
+     */
+    public function routeModuleCosts(string $module, string $category): bool
+    {
+        if (! array_key_exists($module, self::MODULE_BUDGET_DEFAULTS)) {
+            return false;
+        }
+
+        if (! $this->budgetCategories()->where('name', $category)->exists()) {
+            return false;
+        }
+
+        $this->update([
+            'module_budget_categories' => [...($this->module_budget_categories ?? []), $module => $category],
+        ]);
+
+        return true;
     }
 
     /** Documents raised against this event — see Invoice::unscheduledPaidCents(). */

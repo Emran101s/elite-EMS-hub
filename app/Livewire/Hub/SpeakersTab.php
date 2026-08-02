@@ -3,6 +3,7 @@
 namespace App\Livewire\Hub;
 
 use App\Livewire\Concerns\BulkSelectable;
+use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\EventSpeaker;
 use Livewire\Attributes\Validate;
@@ -10,7 +11,7 @@ use Livewire\Component;
 
 class SpeakersTab extends Component
 {
-    use BulkSelectable;
+    use BulkSelectable, RoutesCostsToBudget;
 
     public Event $event;
 
@@ -112,6 +113,11 @@ class SpeakersTab extends Component
     public function delete(int $id): void
     {
         $this->event->speakers()->whereKey($id)->delete();
+    }
+
+    public function budgetModule(): string
+    {
+        return 'speakers';
     }
 
     public function render()

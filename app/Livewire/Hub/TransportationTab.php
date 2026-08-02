@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Hub;
 
+use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\EventTransport;
 use App\Models\Supplier;
@@ -29,7 +30,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
  */
 class TransportationTab extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, RoutesCostsToBudget;
 
     public Event $event;
 
@@ -1068,6 +1069,11 @@ class TransportationTab extends Component
                 'pax' => $group->sum(fn (EventTransport $m) => $m->paxCount()),
             ])
             ->sortByDesc('vehicles');
+    }
+
+    public function budgetModule(): string
+    {
+        return 'transport';
     }
 
     public function render()
