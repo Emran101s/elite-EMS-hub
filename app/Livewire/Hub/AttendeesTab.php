@@ -284,8 +284,25 @@ class AttendeesTab extends Component
             $data = ['name' => mb_substr($name, 0, 160)];
             $answers = [];
 
+            $seats = [];
+
             foreach ($columns as $key => ['field' => $field, 'index' => $i]) {
                 $value = $cell($row, $i);
+
+                // Sessions arrive as titles, because that is what a person
+                // typing a spreadsheet has. Anything that does not match a
+                // session on this agenda is skipped rather than invented.
+                if ($field->isSessions()) {
+                    if ($value !== null) {
+                        $wanted = collect(explode(',', $value))->map(fn ($t) => mb_strtolower(trim($t)))->filter();
+
+                        $seats = $field->sessionChoices()
+                            ->filter(fn ($sess) => $wanted->contains(mb_strtolower($sess->title)))
+                            ->pluck('id')->all();
+                    }
+
+                    continue;
+                }
 
                 if ($field->maps_to) {
                     if ($value !== null && $field->maps_to !== 'name') {
@@ -323,12 +340,24 @@ class AttendeesTab extends Component
 
             if ($existing) {
                 $existing->update($data + ['vip' => $vip || $existing->vip]);
+
+                // Only when the sheet had the column: an import that does not
+                // mention sessions must not empty the ones already booked.
+                if ($seats !== []) {
+                    $existing->sessions()->syncWithoutDetaching($seats);
+                }
+
                 $updated++;
 
                 continue;
             }
 
-            $this->event->attendees()->create($data + ['vip' => $vip, 'status' => 'registered']);
+            $attendee = $this->event->attendees()->create($data + ['vip' => $vip, 'status' => 'registered']);
+
+            if ($seats !== []) {
+                $attendee->sessions()->sync($seats);
+            }
+
             $imported++;
         }
 

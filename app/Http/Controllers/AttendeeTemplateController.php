@@ -54,6 +54,12 @@ class AttendeeTemplateController extends Controller
                 default => 20,
             };
 
+            // Sessions are named rather than listed: a dropdown holds one
+            // value, and somebody attends several.
+            if ($field->isSessions()) {
+                $widths[count($widths) - 1] = 40;
+            }
+
             // A choice question offers its choices rather than trusting a typist.
             if ($field->takesOptions() && $field->options) {
                 $name = 'list_'.$field->key;
@@ -99,6 +105,8 @@ class AttendeeTemplateController extends Controller
         return match ($field->type) {
             'select' => [$field->options[0] ?? '', $field->options[1] ?? ($field->options[0] ?? '')],
             'multiselect' => [implode(', ', array_slice($field->options ?? [], 0, 2)), $field->options[0] ?? ''],
+            'sessions' => [$field->sessionChoices()->take(2)->pluck('title')->join(', '),
+                $field->sessionChoices()->first()?->title ?? ''],
             'number' => ['1', '2'],
             'date' => [now()->addMonth()->format('Y-m-d'), ''],
             'checkbox' => ['Yes', 'No'],

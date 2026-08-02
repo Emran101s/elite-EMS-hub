@@ -360,8 +360,17 @@
                                                                 <span class="grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full bg-white/25 text-[7px] font-bold">{{ mb_substr($lead->name, 0, 1) }}</span>
                                                                 <span class="truncate">{{ str($lead->name)->limit(14) }}</span>
                                                             @endif
+                                                            {{-- Seats booked at registration, against the seats
+                                                                 there are. A capacity nobody is measured against is
+                                                                 a number somebody typed once. --}}
+                                                            @php $booked = $sess->bookedCount(); @endphp
                                                             @if ($sess->capacity)
-                                                                <span class="ms-auto shrink-0 whitespace-nowrap">{{ number_format($sess->capacity) }}@if ($fill !== null) · {{ $fill }}%@endif</span>
+                                                                <span class="ms-auto shrink-0 whitespace-nowrap"
+                                                                      title="{{ $booked }} booked of {{ number_format($sess->capacity) }}">
+                                                                    @if ($booked > 0)<span class="font-bold">{{ number_format($booked) }}</span>/@endif{{ number_format($sess->capacity) }}@if ($fill !== null && $booked === 0) · {{ $fill }}%@endif
+                                                                </span>
+                                                            @elseif ($booked > 0)
+                                                                <span class="ms-auto shrink-0 whitespace-nowrap font-bold" title="{{ $booked }} booked at registration">{{ number_format($booked) }}</span>
                                                             @endif
                                                         </span>
 

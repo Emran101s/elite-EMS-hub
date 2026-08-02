@@ -86,6 +86,45 @@
                             </select>
                             @break
 
+                        @case('sessions')
+                            {{-- The agenda, read live. A full session shows as
+                                 full rather than accepting a booking that will
+                                 be refused a moment later. --}}
+                            @php $byDay = $field->sessionChoices()->groupBy(fn ($x) => $x->day?->label ?: ($x->day?->date?->format('l j F') ?: 'Programme')); @endphp
+
+                            @forelse ($byDay as $day => $sessions)
+                                <span class="mt-2 block">
+                                    <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">{{ $day }}</span>
+
+                                    @foreach ($sessions as $session)
+                                        @php $full = $session->isFull(); $left = $session->seatsLeft(); @endphp
+                                        <label @class([
+                                                   'mt-1 flex items-start gap-2 rounded-xl border px-3 py-2 text-[12.5px]',
+                                                   'cursor-pointer border-line bg-white text-navy-700 hover:border-gold-300' => ! $full,
+                                                   'cursor-not-allowed border-line bg-page/60 text-navy-300' => $full,
+                                               ])>
+                                            <input type="checkbox" value="{{ $session->id }}"
+                                                   wire:model="form.{{ $field->key }}"
+                                                   @disabled($full)
+                                                   class="mt-0.5 h-3.5 w-3.5 rounded border-navy-300">
+                                            <span class="min-w-0 flex-1">
+                                                <span class="block font-semibold">{{ $session->title }}</span>
+                                                <span class="block text-[11px] {{ $full ? 'text-navy-300' : 'text-muted' }}">
+                                                    {{-- starts_at is a clock string on this model, not a date;
+                                                         the agenda prints it the same way. --}}
+                                                    @if ($session->starts_at) {{ substr($session->starts_at, 0, 5) }} @endif
+                                                    @if ($session->room) · {{ $session->room->name }} @endif
+                                                    @if ($full) · Full @elseif ($left !== null) · {{ $left }} {{ str('seat')->plural($left) }} left @endif
+                                                </span>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </span>
+                            @empty
+                                <span class="mt-1 block text-[12px] italic text-navy-300">The programme is not published yet.</span>
+                            @endforelse
+                            @break
+
                         @case('multiselect')
                             <span class="mt-1 grid gap-1.5 sm:grid-cols-2">
                                 @foreach ($field->options ?? [] as $option)

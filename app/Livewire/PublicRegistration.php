@@ -45,7 +45,7 @@ class PublicRegistration extends Component
 
         foreach ($this->fields() as $field) {
             $this->form[$field->key] = match ($field->type) {
-                'multiselect' => [],
+                'multiselect', 'sessions' => [],
                 'checkbox' => false,
                 // A one-choice list with nothing chosen is a question the
                 // visitor has to answer before they have read it.
@@ -59,6 +59,15 @@ class PublicRegistration extends Component
     public function fields()
     {
         return $this->event->registrationForm();
+    }
+
+    /** The registration already on file for this address, if there is one. */
+    private function existing(): ?\App\Models\EventAttendee
+    {
+        $email = trim((string) ($this->form['email'] ?? ''));
+
+        return $email === '' ? null : $this->event->attendees()
+            ->whereRaw('lower(email) = ?', [mb_strtolower($email)])->first();
     }
 
     /** The ticket types the company offers — editable in Defaults & Templates. */
@@ -96,6 +105,37 @@ class PublicRegistration extends Component
             $fields->mapWithKeys(fn ($f) => ['form.'.$f->key => mb_strtolower($f->label)])->all(),
         );
 
+        // Sessions are seats, and seats run out. Checked against the agenda
+        // itself rather than against what the page was showing an hour ago.
+        $seats = [];
+
+        foreach ($fields->where('type', 'sessions') as $field) {
+            $picked = collect($this->form[$field->key] ?? [])->filter()->map('intval');
+
+            $offered = $field->sessionChoices()->keyBy('id');
+
+            foreach ($picked as $id) {
+                $session = $offered->get($id);
+
+                if (! $session) {
+                    continue;   // not on this event's agenda
+                }
+
+                // Somebody already in the room keeps their seat: re-registering
+                // must not read as a new booking against a full session.
+                $alreadyIn = $this->existing()?->sessions()->whereKey($id)->exists() ?? false;
+
+                if ($session->isFull() && ! $alreadyIn) {
+                    $this->addError('form.'.$field->key,
+                        '“'.$session->title.'” is full. Please choose another.');
+
+                    return;
+                }
+
+                $seats[] = $id;
+            }
+        }
+
         // A question either fills a column the platform reads by name, or its
         // answer is filed under its key. Nothing else needs deciding here.
         $columns = [];
@@ -103,6 +143,12 @@ class PublicRegistration extends Component
 
         foreach ($fields as $field) {
             $value = $this->form[$field->key] ?? null;
+
+            // Seats live in the pivot, not in the answers: a string cannot be
+            // counted against a room or handed to whoever is on the door.
+            if ($field->isSessions()) {
+                continue;
+            }
 
             if ($field->maps_to) {
                 $columns[$field->maps_to] = is_array($value) ? implode(', ', $value) : $value;
@@ -113,15 +159,19 @@ class PublicRegistration extends Component
 
         // Registering twice with the same address updates the earlier one
         // rather than making a second badge for the same person.
-        $existing = $this->event->attendees()
-            ->whereRaw('lower(email) = ?', [mb_strtolower((string) ($columns['email'] ?? ''))])
-            ->first();
+        $existing = $this->existing();
 
         $data = $columns + ['answers' => $answers];
 
         $attendee = $existing
             ? tap($existing)->update($data + ['status' => $existing->status === 'cancelled' ? 'registered' : $existing->status])
             : $this->event->attendees()->create($data + ['status' => 'registered']);
+
+        // sync, not attach: a second visit to the form is the person changing
+        // their mind, and what they leave with is what they picked this time.
+        if ($fields->where('type', 'sessions')->isNotEmpty()) {
+            $attendee->sessions()->sync($seats);
+        }
 
         RateLimiter::hit($key, 900);
 

@@ -32,6 +32,41 @@ class EventAgendaSession extends Model
         return Workflow::color('session_status', $this->status);
     }
 
+    /**
+     * Who has booked a seat in this session.
+     */
+    public function attendees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(EventAttendee::class, 'attendee_session')
+            ->withPivot('checked_in_at')
+            ->withTimestamps();
+    }
+
+    /** Seats taken. */
+    public function bookedCount(): int
+    {
+        return $this->relationLoaded('attendees')
+            ? $this->attendees->count()
+            : $this->attendees()->count();
+    }
+
+    /** Seats left, or null where the session has no limit. */
+    public function seatsLeft(): ?int
+    {
+        return $this->capacity ? max(0, $this->capacity - $this->bookedCount()) : null;
+    }
+
+    /**
+     * No room left.
+     *
+     * A session with no capacity set is never full — an unset limit is "we have
+     * not counted the chairs", not "nobody may come".
+     */
+    public function isFull(): bool
+    {
+        return $this->capacity > 0 && $this->bookedCount() >= $this->capacity;
+    }
+
     /** A settled session is agreed and safe to put in front of a delegate. */
     public function isSettled(): bool
     {

@@ -34,6 +34,20 @@ class EventAttendee extends Model
     }
 
     /**
+     * The sessions this person is booked into.
+     *
+     * A pivot rather than an answer: an answer is a string on a person, and a
+     * string cannot be counted against a room's capacity or handed to whoever
+     * is standing at the door.
+     */
+    public function sessions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(EventAgendaSession::class, 'attendee_session')
+            ->withPivot('checked_in_at')
+            ->withTimestamps();
+    }
+
+    /**
      * What this person answered to a question that has no column of its own.
      *
      * A multi-select comes back as a list; everything else as a string. Both

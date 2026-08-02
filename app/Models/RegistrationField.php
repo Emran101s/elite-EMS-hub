@@ -42,6 +42,10 @@ class RegistrationField extends Model
         'select' => ['Choose one', true, 'A list, one answer.'],
         'multiselect' => ['Choose several', true, 'A list, any number of answers.'],
         'checkbox' => ['Yes / no', false, 'A single tick — consent, a preference.'],
+
+        // The choices are this event's agenda, read live. A session added
+        // tomorrow is on the form tomorrow, without anybody re-editing it.
+        'sessions' => ['Sessions', false, 'Pick from this event\'s agenda — seats are counted and a full session closes.'],
     ];
 
     /**
@@ -77,6 +81,31 @@ class RegistrationField extends Model
         return self::TYPES[$this->type][1] ?? false;
     }
 
+    /** A question answered with seats rather than words. */
+    public function isSessions(): bool
+    {
+        return $this->type === 'sessions';
+    }
+
+    /**
+     * The sessions this question offers.
+     *
+     * Read from the agenda every time rather than copied into `options`: a
+     * session added, renamed or moved after the form was built would otherwise
+     * be offered under a name that no longer exists, or not offered at all.
+     */
+    public function sessionChoices(): \Illuminate\Support\Collection
+    {
+        if (! $this->isSessions()) {
+            return collect();
+        }
+
+        return EventAgendaSession::where('event_id', $this->event_id)
+            ->with(['day', 'attendees'])
+            ->orderBy('agenda_day_id')->orderBy('sort')->orderBy('starts_at')
+            ->get();
+    }
+
     public function typeLabel(): string
     {
         return self::TYPES[$this->type][0] ?? 'Short text';
@@ -108,7 +137,7 @@ class RegistrationField extends Model
             'number' => 'numeric',
             'date' => 'date',
             'checkbox' => 'boolean',
-            'multiselect' => 'array',
+            'multiselect', 'sessions' => 'array',
             default => 'string',
         };
 
