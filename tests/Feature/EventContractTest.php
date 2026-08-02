@@ -573,6 +573,48 @@ class EventContractTest extends TestCase
         $this->assertNotNull($lines->last()->signed_at);
     }
 
+    /**
+     * Every status a document can hold must render, everywhere it is shown.
+     *
+     * The Overview tab kept its own copy of the status list and that copy was
+     * missing two of the five, so the first partly-signed contract on an event
+     * took the whole tab down with "Undefined array key". A copy of a list is a
+     * list that goes stale; the fix is that there is no copy, and this walks
+     * every status to prove it.
+     */
+    public function test_no_document_status_can_take_a_page_down(): void
+    {
+        [$user, $event] = $this->make();
+        $contract = EventContract::forEvent($event);
+
+        foreach (EventContract::STATUSES as $status) {
+            $contract->update(['status' => $status]);
+
+            $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
+                ->assertOk()
+                ->assertSee(\App\Support\Workflow::label('contract_status', $status));
+
+            $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'contract']))->assertOk();
+            $this->actingAs($user)->get(route('contracts.index'))->assertOk();
+        }
+    }
+
+    /** Renaming a status in Settings renames it on every screen that shows it. */
+    public function test_renaming_a_status_reaches_the_screens(): void
+    {
+        [$user, $event] = $this->make();
+        EventContract::forEvent($event)->update(['status' => 'partially_signed']);
+
+        \App\Support\Workflow::seed();
+        \App\Models\TaxonomyTerm::where('taxonomy', \App\Support\Workflow::taxonomy('contract_status'))
+            ->where('key', 'partially_signed')
+            ->firstOrFail()->update(['label' => 'Half signed']);
+        \App\Support\Workflow::forget();
+
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
+            ->assertOk()->assertSee('Half signed');
+    }
+
     // ══════════════════ THE ANNEXES ══════════════════
 
     /**

@@ -1,13 +1,21 @@
 @php
     use App\Models\EventContract;
 
-    $statusMeta = [
-        'draft' => ['Draft', 'bg-navy-50 text-navy-500'],
-        'sent' => ['Sent', 'bg-gold-100 text-gold-800'],
-        'partially_signed' => ['Part-signed', 'bg-gold-100 text-gold-800'],
-        'signed' => ['Signed', 'bg-emerald-50 text-emerald-700'],
-        'void' => ['Void', 'bg-navy-50 text-navy-400 line-through'],
+    // The words come from Workflow::rows('contract_status') — the list Settings
+    // renames — so a status renamed there is renamed here too. Only the
+    // treatment is local: this screen's chips are its own.
+    $statusClass = [
+        'draft' => 'bg-navy-50 text-navy-500',
+        'sent' => 'bg-gold-100 text-gold-800',
+        'partially_signed' => 'bg-gold-100 text-gold-800',
+        'signed' => 'bg-emerald-50 text-emerald-700',
+        'void' => 'bg-navy-50 text-navy-400 line-through',
     ];
+    $statusMeta = collect(\App\Models\EventContract::STATUSES)
+        ->mapWithKeys(fn (string $k) => [$k => [
+            \App\Support\Workflow::label('contract_status', $k),
+            $statusClass[$k] ?? 'bg-navy-50 text-navy-500',
+        ]])->all();
 @endphp
 
 <div class="space-y-4">

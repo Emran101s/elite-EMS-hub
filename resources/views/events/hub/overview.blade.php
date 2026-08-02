@@ -172,15 +172,31 @@
 
 {{-- ══ Row 1b: Delivery status — brief, contract, plan and speakers at a glance ══ --}}
 @php
-    $docTone = [
-        'signed' => ['Signed', 'bg-track/10 text-emerald-700 ring-track/30'],
-        'sent' => ['Sent', 'bg-warn/10 text-amber-700 ring-warn/30'],
-        'draft' => ['Draft', 'bg-navy-50 text-navy-500 ring-line'],
-        'none' => ['Not started', 'bg-navy-50 text-navy-400 ring-line'],
-    ];
-    [$contractLabel, $contractClass] = $docTone[$contract?->status ?? 'none'];
-    [$briefLabel, $briefClass] = $docTone[$brief ? 'draft' : 'none'];
-    if ($brief) { $briefLabel = 'Ready'; $briefClass = $docTone['signed'][1]; }
+    use App\Support\Workflow;
+
+    // The document's status, named and coloured by the one list that owns it
+    // — Workflow::rows('contract_status'), which is what Settings renames and
+    // recolours. This used to be a copy of that list living here, and it was
+    // missing two of the five statuses: a partly-signed contract took the whole
+    // Overview tab down with "Undefined array key".
+    //
+    // The colour is a hex from the list, so a status added later arrives with
+    // its own colour instead of needing a class written for it here.
+    $docChip = function (?string $status): array {
+        if (! $status) {
+            return ['Not started', 'color: #94A3B8; background: #94A3B815; box-shadow: inset 0 0 0 1px #94A3B833'];
+        }
+
+        $hex = Workflow::color('contract_status', $status);
+
+        return [
+            Workflow::label('contract_status', $status),
+            'color: '.$hex.'; background: '.$hex.'15; box-shadow: inset 0 0 0 1px '.$hex.'33',
+        ];
+    };
+
+    [$contractLabel, $contractStyle] = $docChip($contract?->status);
+    [$briefLabel, $briefStyle] = $brief ? ['Ready', $docChip('signed')[1]] : $docChip(null);
 @endphp
 <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 
@@ -201,7 +217,7 @@
         <div class="flex items-center justify-between">
             <h3 class="pf text-sm font-bold text-navy-900">Event Brief</h3>
         </div>
-        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold ring-1 {{ $briefClass }}">{{ $briefLabel }}</span>
+        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
         <p class="mt-2 text-[0.62rem] text-muted">The front-door document that drives the plan.</p>
     </a>
 
@@ -211,7 +227,7 @@
             <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
             @if ($contract)<span class="text-3xs font-bold text-muted">{{ $contract->reference }}</span>@endif
         </div>
-        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold ring-1 {{ $contractClass }}">{{ $contractLabel }}</span>
+        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
         <p class="mt-2 text-[0.62rem] text-muted">
             @if ($contract)
                 {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }} estimated

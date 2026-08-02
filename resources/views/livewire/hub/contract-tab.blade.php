@@ -9,11 +9,11 @@
         'acceptance' => ['Certificate of Services', 'bg-emerald-100 text-emerald-700', 'linear-gradient(var(--vital),var(--vital-lit))'],
     ];
     $statusChip = [
-        'draft' => ['Draft', 'bg-navy-50 text-navy-500'],
-        'sent' => ['Sent', 'bg-amber-100 text-amber-700'],
-        'partially_signed' => ['Partly signed', 'bg-amber-100 text-amber-700'],
-        'signed' => ['Signed', 'bg-emerald-100 text-emerald-700'],
-        'void' => ['Void', 'bg-navy-50 text-navy-300'],
+        'draft' => [\App\Support\Workflow::label('contract_status', 'draft'), 'bg-navy-50 text-navy-500'],
+        'sent' => [\App\Support\Workflow::label('contract_status', 'sent'), 'bg-amber-100 text-amber-700'],
+        'partially_signed' => [\App\Support\Workflow::label('contract_status', 'partially_signed'), 'bg-amber-100 text-amber-700'],
+        'signed' => [\App\Support\Workflow::label('contract_status', 'signed'), 'bg-emerald-100 text-emerald-700'],
+        'void' => [\App\Support\Workflow::label('contract_status', 'void'), 'bg-navy-50 text-navy-300'],
     ];
 
     // The new input language: quiet fills that light up on focus — no boxed grid.
@@ -132,13 +132,15 @@
                                     : (($c->data['counterparty']['name_en'] ?? '') ?: null));
                             $cardTitle = ! $autoTitle ? $c->title : ($c->isClient() ? 'Management Services Agreement' : $partyName);
                             $cardSub = $partyName && $partyName !== $cardTitle ? $partyName : null;
+                            $plaqueTone = [
+                                'draft' => 'text-white/40', 'sent' => 'text-amber-300',
+                                'partially_signed' => 'text-gold-300', 'signed' => 'text-emerald-300',
+                                'void' => 'text-white/30',
+                            ];
                             $plaqueStatus = [
-                                'draft' => ['Draft', 'text-white/40'],
-                                'sent' => ['Sent', 'text-amber-300'],
-                                'partially_signed' => ['Partly signed', 'text-gold-300'],
-                                'signed' => ['Signed', 'text-emerald-300'],
-                                'void' => ['Void', 'text-white/30'],
-                            ][$c->status] ?? ['Draft', 'text-white/40'];
+                                \App\Support\Workflow::label('contract_status', $c->status),
+                                $plaqueTone[$c->status] ?? 'text-white/40',
+                            ];
                         @endphp
                         <div class="group relative w-[248px]" wire:key="doc-{{ $c->id }}">
                             <div role="button" tabindex="0"
