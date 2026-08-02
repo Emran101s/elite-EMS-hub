@@ -139,6 +139,45 @@ class InvoicePaymentDetailsTest extends TestCase
         $this->assertStringNotContainsString('Payment details', $paper);
     }
 
+    /** An IBAN is printed in fours, whatever way it was typed in. */
+    public function test_the_iban_is_grouped_for_reading(): void
+    {
+        $unspaced = $this->usd();
+        $unspaced['iban'] = 'JO06UBSI1270000390265225115101';
+        $this->house([$unspaced]);
+
+        $paper = view('invoices.paper', [
+            'invoice' => $this->invoice(), 'company' => ['name' => 'EBH'],
+            'theme' => ['primary' => '#0B1F3A', 'accent' => '#D4AF37'], 'screen' => true,
+        ])->render();
+
+        $this->assertStringContainsString('JO06 UBSI 1270 0003 9026 5225 1151 01', $paper);
+
+        // …and what was typed is what is stored: normalising input is how a
+        // digit gets lost.
+        $this->assertSame('JO06UBSI1270000390265225115101', CompanyProfile::bankAccounts()[0]['iban']);
+    }
+
+    /** The same block, the same source, on an offer. */
+    public function test_a_proposal_carries_the_same_details(): void
+    {
+        $this->house();
+
+        $proposal = \App\Models\Proposal::create([
+            'number' => \App\Models\Proposal::nextNumber(), 'title' => 'An offer',
+            'status' => 'draft', 'currency' => 'JOD',
+        ]);
+        $proposal->lines()->create(['description' => 'Delivery', 'qty' => 1, 'unit_cents' => 5_000_00]);
+
+        $paper = view('proposals.paper', [
+            'proposal' => $proposal->fresh()->load('lines'), 'company' => ['name' => 'EBH'],
+            'theme' => ['primary' => '#0B1F3A', 'accent' => '#D4AF37'], 'screen' => true,
+        ])->render();
+
+        $this->assertStringContainsString('Payment details', $paper);
+        $this->assertStringContainsString('JO06 UBSI 1270 0003 9026 5225 1151 01', $paper);
+    }
+
     public function test_settings_keeps_what_was_entered(): void
     {
         Livewire::actingAs(User::factory()->create(['role' => 'admin']))

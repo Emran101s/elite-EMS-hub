@@ -238,7 +238,7 @@
                             @if ($a['account_name'])<p>Account Name: <b>{{ $a['account_name'] }}</b></p>@endif
                             @if ($a['bank_name'])<p>Bank Name: <b>{{ $a['bank_name'] }}</b></p>@endif
                             @if ($a['account_no'])<p class="mono">Account No.: <b>{{ $a['account_no'] }}</b></p>@endif
-                            @if ($a['iban'])<p class="mono">IBAN: <b>{{ $a['iban'] }}</b></p>@endif
+                            @if ($a['iban'])<p class="mono">IBAN: <b>{{ \App\Models\CompanyProfile::formatIban($a['iban']) }}</b></p>@endif
                             @if ($a['swift'])<p class="mono">Swift Code: <b>{{ $a['swift'] }}</b></p>@endif
                             @if ($a['currency'])<p>Currency: <b>{{ $a['currency'] }}</b></p>@endif
                         </td>

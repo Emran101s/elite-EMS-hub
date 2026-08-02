@@ -23,7 +23,9 @@
         'data' => $brief->data,
         'version' => $brief->version,
         'status' => $brief->status,
-        'sections' => \App\Models\EventBrief::SECTIONS,
+        {{-- What the brief actually uses, so the export matches the editor:
+             a section taken off on screen must not reappear in the PDF. --}}
+        'sections' => $brief->sections(),
         'infoFields' => \App\Models\EventBrief::INFO_FIELDS,
         'twocolHeads' => \App\Models\EventBrief::TWOCOL_HEADS,
         'forPdf' => true,

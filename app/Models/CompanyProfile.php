@@ -57,6 +57,22 @@ class CompanyProfile extends Model
     ];
 
     /**
+     * An IBAN as it is printed: in groups of four.
+     *
+     * Stored as typed — pasted from a bank letter it may arrive spaced or
+     * unspaced, and normalising what somebody typed is how a digit gets lost.
+     * Grouping is a display decision, made here so both documents make it the
+     * same way, and thirty unbroken characters are a number nobody can check
+     * against their own records.
+     */
+    public static function formatIban(string $iban): string
+    {
+        $bare = preg_replace('/\s+/', '', $iban) ?? $iban;
+
+        return trim(chunk_split($bare, 4, ' '));
+    }
+
+    /**
      * Where clients send money — printed at the foot of every invoice.
      *
      * Kept here rather than typed onto each document: a bank changes once and

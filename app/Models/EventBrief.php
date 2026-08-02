@@ -9,10 +9,11 @@ use Illuminate\Support\Str;
 
 class EventBrief extends Model
 {
-    protected $fillable = ['event_id', 'template', 'status', 'version', 'data', 'approved_at'];
+    protected $fillable = ['event_id', 'template', 'status', 'version', 'data', 'hidden_sections', 'approved_at'];
 
     protected $casts = [
         'data' => 'array',
+        'hidden_sections' => 'array',
         'approved_at' => 'datetime',
     ];
 
@@ -55,6 +56,36 @@ class EventBrief extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * The sections this brief actually uses.
+     *
+     * The twelve are the same on every event because a brief is a standard
+     * document. Not every event has sponsors or an exhibition floor, though,
+     * and a heading with nothing under it reads to a client as something
+     * nobody bothered to fill in — so a section can be taken off this brief.
+     * Its content is kept, not deleted, and putting it back returns it.
+     *
+     * @return array<string,array{0:string,1:string,2:string}>
+     */
+    public function sections(): array
+    {
+        $hidden = $this->hidden_sections ?? [];
+
+        return collect(self::SECTIONS)
+            ->reject(fn (array $meta, string $key) => in_array($key, $hidden, true))
+            ->all();
+    }
+
+    /** The ones taken off, for the "put it back" list. */
+    public function hiddenSections(): array
+    {
+        $hidden = $this->hidden_sections ?? [];
+
+        return collect(self::SECTIONS)
+            ->filter(fn (array $meta, string $key) => in_array($key, $hidden, true))
+            ->all();
     }
 
     public static function forEvent(Event $event): self

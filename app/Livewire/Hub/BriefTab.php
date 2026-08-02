@@ -3,6 +3,7 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
+use Illuminate\Support\Facades\Gate;
 use App\Models\EventBrief;
 use App\Services\BriefGenerator;
 use App\Support\BriefTemplates;
@@ -37,6 +38,41 @@ class BriefTab extends Component
         $this->version = $brief->version;
         $this->status = $brief->status;
         $this->template = $brief->template;
+        $this->hidden = $brief->hidden_sections ?? [];
+    }
+
+    /**
+     * Sections taken off THIS brief.
+     *
+     * The twelve are the same on every event because a brief is a standard
+     * document. Not every event has sponsors or an exhibition floor, though,
+     * and a heading with nothing under it reads to a client as something
+     * nobody bothered to fill in.
+     *
+     * @var list<string>
+     */
+    public array $hidden = [];
+
+    /** Take a section off this brief. What was written in it is kept. */
+    public function removeSection(string $key): void
+    {
+        Gate::authorize('write');
+
+        if (! isset(EventBrief::SECTIONS[$key]) || in_array($key, $this->hidden, true)) {
+            return;
+        }
+
+        $this->hidden[] = $key;
+        $this->persist();
+    }
+
+    /** Put it back, with whatever was in it. */
+    public function restoreSection(string $key): void
+    {
+        Gate::authorize('write');
+
+        $this->hidden = array_values(array_diff($this->hidden, [$key]));
+        $this->persist();
     }
 
     /** Section key that was just saved via its Save button (drives the "Saved ✓" flash). */
@@ -133,6 +169,7 @@ class BriefTab extends Component
             return;
         }
         $brief->data = $this->data;
+        $brief->hidden_sections = array_values($this->hidden);
         $brief->version = $this->version;
         $brief->status = $this->status;
         $brief->template = $this->template;
@@ -143,8 +180,14 @@ class BriefTab extends Component
 
     public function render()
     {
+        // The paper and the editor read the same list, so what is on screen is
+        // exactly what exports — including what has been taken off.
+        $live = collect(EventBrief::SECTIONS)->reject(fn ($m, $k) => in_array($k, $this->hidden, true))->all();
+
         return view('livewire.hub.brief-tab', [
-            'sections' => EventBrief::SECTIONS,
+            'sections' => $live,
+            'hiddenSections' => collect(EventBrief::SECTIONS)
+                ->filter(fn ($m, $k) => in_array($k, $this->hidden, true))->all(),
             'infoFields' => EventBrief::INFO_FIELDS,
             'twocolHeads' => EventBrief::TWOCOL_HEADS,
             'templates' => BriefTemplates::TEMPLATES,

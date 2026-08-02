@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\CompanyProfile;
 use App\Models\Deal;
 use App\Models\Proposal;
 use Illuminate\Support\Collection;
@@ -52,6 +53,35 @@ class ProposalsDesk extends Component
     }
 
     /* ── the life of an offer ── */
+
+    /**
+     * A blank offer, for work that has no deal behind it yet.
+     *
+     * Every proposal had to start from a deal at the proposal stage, so an
+     * offer for somebody who had just phoned — or a second option alongside a
+     * live one — could not be written at all. The pipeline is where most offers
+     * come from; it is not where all of them do.
+     */
+    public function create()
+    {
+        Gate::authorize('manage-contract');
+
+        $proposal = Proposal::create([
+            'number' => Proposal::nextNumber(),
+            'title' => 'New proposal',
+            'status' => 'draft',
+            'currency' => CompanyProfile::currency(),
+            // The house fee, so it is on the offer before anybody has to
+            // remember it — unlike an offer built from a deal's value, which
+            // is already a whole-job figure. See Proposal::forDeal().
+            'fee_pct' => CompanyProfile::feePct(),
+            'issued_on' => now()->toDateString(),
+            'valid_until' => now()->addDays(30)->toDateString(),
+            'owner_id' => auth()->id(),
+        ]);
+
+        return $this->redirectRoute('proposals.edit', $proposal, navigate: true);
+    }
 
     public function draftFor(int $dealId)
     {

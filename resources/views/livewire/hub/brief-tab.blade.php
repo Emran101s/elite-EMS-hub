@@ -122,9 +122,47 @@
                     @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
                         <button type="button" wire:click="addRow('{{ $key }}')" class="mt-3 btn-ghost btn-xs">＋ Add row</button>
                     @endif
+
+                    {{-- Typing saves on its own; this is the button that says so.
+                         Autosave that leaves no mark is autosave nobody trusts. --}}
+                    <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+                        <button type="button" wire:click="saveSection('{{ $key }}')"
+                                class="rounded-xl bg-navy-950 px-3.5 py-2 text-[11.5px] font-bold text-white transition hover:bg-navy-800">
+                            Save this section
+                        </button>
+
+                        @if ($savedSection === $key)
+                            <span class="text-[11.5px] font-bold text-emerald-700">Saved ✓</span>
+                        @else
+                            <span class="text-[11px] text-muted">Changes save as you type.</span>
+                        @endif
+
+                        <button type="button" wire:click="removeSection('{{ $key }}')"
+                                wire:confirm="Take “{{ $title }}” off this brief?&#10;&#10;What you have written in it is kept, and you can put the section back."
+                                class="ms-auto text-[11.5px] font-semibold text-navy-400 transition hover:text-red-600">
+                            Remove this section
+                        </button>
+                    </div>
                 </x-accordion-section>
             @endforeach
         </x-accordion>
+
+        {{-- Taken off this brief. Nothing is lost: the content is still there,
+             and putting the section back returns it. --}}
+        @if ($hiddenSections)
+            <div class="mt-3 rounded-2xl border border-dashed border-line bg-page/40 p-4">
+                <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Not on this brief</p>
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                    @foreach ($hiddenSections as $key => [$num, $title, $type])
+                        <button type="button" wire:click="restoreSection('{{ $key }}')" wire:key="off-{{ $key }}"
+                                class="rounded-xl border border-line bg-white px-3 py-1.5 text-[11.5px] font-semibold text-navy-600 transition hover:border-gold-300 hover:text-navy-900">
+                            ＋ {{ $title }}
+                        </button>
+                    @endforeach
+                </div>
+                <p class="mt-2 text-[11px] text-muted">What was written in these is kept — putting one back returns it.</p>
+            </div>
+        @endif
 
         {{-- ══════════ RIGHT · the living dossier ══════════ --}}
         <div class="xl:sticky xl:top-12">

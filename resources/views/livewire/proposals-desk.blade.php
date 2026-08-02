@@ -17,6 +17,14 @@
 
         <p class="text-[11.5px] text-muted">{{ $rows->count() }} {{ str('offer')->plural($rows->count()) }} in view</p>
 
+        @if ($may)
+            {{-- Most offers come from the pipeline; not all of them do. --}}
+            <button type="button" wire:click="create"
+                    class="flex h-10 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
+                ＋ New proposal
+            </button>
+        @endif
+
         <div class="ms-auto flex flex-wrap items-center gap-1">
             <button type="button" wire:click="setState('all')"
                     @class(['rounded-full px-2.5 py-1 text-[11px] font-bold transition',
@@ -94,7 +102,7 @@
     {{-- ══ THE OFFERS ══ --}}
     @if ($rows->isEmpty())
         <x-empty icon="document" title="No offer yet"
-                 hint="Draft one from a deal above, or clear the filters if you were expecting to see something." />
+                 hint="Start one with New proposal, draft one from a deal above, or clear the filters if you were expecting to see something." />
     @else
         <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
             <div class="overflow-x-auto">

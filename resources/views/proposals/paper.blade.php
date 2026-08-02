@@ -83,6 +83,19 @@
     .pro .sign .cap { font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
                       color: #94A3B8; margin-top: 5px; }
 
+    {{-- Same block as the invoice, same source (Settings → Company). An offer
+         that is accepted is paid against these, so they belong on it. --}}
+    .pro .pay { margin: 22px 34px 0; }
+    .pro .pay > b { display: block; font-size: 7.5px; letter-spacing: 1.4px; text-transform: uppercase;
+                    color: {{ $theme['primary'] }}; margin-bottom: 6px; }
+    .pro .pay table { width: 100%; border-collapse: separate; border-spacing: 10px 0; table-layout: fixed; }
+    .pro .pay td { vertical-align: top; background: #F8FAFC; padding: 11px 13px; text-align: left; }
+    .pro .pay .h { font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase;
+                   color: {{ $theme['primary'] }}; font-weight: bold; margin-bottom: 5px; }
+    .pro .pay p { margin: 0 0 2px; font-size: 8.5px; color: #64748B; line-height: 1.45; }
+    .pro .pay p b { color: #0F172A; }
+    .pro .pay .mono b { font-family: {{ $screen ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "'DejaVu Sans Mono', monospace" }}; letter-spacing: 0.2px; }
+
     .pro .foot { {{ $screen ? 'margin: 26px 34px 0;' : 'position: fixed; bottom: 22px; left: 34px; right: 34px;' }}
                  border-top: 1px solid #E2E8F0; padding-top: 7px; font-size: 8px; color: #94A3B8; }
     .pro .foot .r { float: right; }
@@ -234,6 +247,29 @@
             <div class="cap">Date</div>
         </div>
     </div>
+
+    @php $accounts = \App\Models\CompanyProfile::bankAccounts(); @endphp
+
+    @if ($accounts)
+        <div class="pay">
+            <b>Payment details</b>
+            <table>
+                <tr>
+                    @foreach ($accounts as $a)
+                        <td width="{{ (int) floor(100 / max(1, count($accounts))) }}%">
+                            @if ($a['label'])<div class="h">{{ $a['label'] }}</div>@endif
+                            @if ($a['account_name'])<p>Account Name: <b>{{ $a['account_name'] }}</b></p>@endif
+                            @if ($a['bank_name'])<p>Bank Name: <b>{{ $a['bank_name'] }}</b></p>@endif
+                            @if ($a['account_no'])<p class="mono">Account No.: <b>{{ $a['account_no'] }}</b></p>@endif
+                            @if ($a['iban'])<p class="mono">IBAN: <b>{{ \App\Models\CompanyProfile::formatIban($a['iban']) }}</b></p>@endif
+                            @if ($a['swift'])<p class="mono">Swift Code: <b>{{ $a['swift'] }}</b></p>@endif
+                            @if ($a['currency'])<p>Currency: <b>{{ $a['currency'] }}</b></p>@endif
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
+        </div>
+    @endif
 
     <div class="foot">
         <span class="r">{{ $proposal->number }}</span>
