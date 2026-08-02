@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'event_id', 'name', 'email', 'phone', 'organization', 'job_title',
-    'ticket_type', 'status', 'amount_cents', 'vip', 'dietary', 'notes', 'checked_in_at',
+    'ticket_type', 'status', 'amount_cents', 'vip', 'dietary', 'notes', 'answers', 'checked_in_at',
 ])]
 class EventAttendee extends Model
 {
@@ -27,9 +27,31 @@ class EventAttendee extends Model
     {
         return [
             'amount_cents' => 'integer',
+            'answers' => 'array',
             'vip' => 'boolean',
             'checked_in_at' => 'datetime',
         ];
+    }
+
+    /**
+     * What this person answered to a question that has no column of its own.
+     *
+     * A multi-select comes back as a list; everything else as a string. Both
+     * are printed the same way, so a caller never has to know which it was.
+     */
+    public function answer(string $key): string
+    {
+        $value = ($this->answers ?? [])[$key] ?? null;
+
+        if (is_array($value)) {
+            return implode(', ', $value);
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        return trim((string) $value);
     }
 
     /**

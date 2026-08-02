@@ -37,9 +37,9 @@ class PublicRegistrationTest extends TestCase
     private function fillIn(Event $event, string $email = 'someone@example.org'): Testable
     {
         return Livewire::test(PublicRegistration::class, ['token' => $event->registrationToken()])
-            ->set('name', 'Layla Haddad')
-            ->set('email', $email)
-            ->set('organization', 'Jordan Investment Commission');
+            ->set('form.name', 'Layla Haddad')
+            ->set('form.email', $email)
+            ->set('form.organization', 'Jordan Investment Commission');
     }
 
     public function test_the_page_is_reached_by_token_and_needs_no_sign_in(): void
@@ -91,7 +91,7 @@ class PublicRegistrationTest extends TestCase
         $event = $this->openEvent();
 
         $this->fillIn($event, 'layla@example.org')->call('register');
-        $this->fillIn($event, 'layla@example.org')->set('job_title', 'Head of IR')->call('register');
+        $this->fillIn($event, 'layla@example.org')->set('form.job_title', 'Head of IR')->call('register');
 
         $this->assertSame(1, $event->attendees()->count());
         $this->assertSame('Head of IR', $event->attendees()->first()->job_title);
@@ -107,7 +107,7 @@ class PublicRegistrationTest extends TestCase
             ->assertDontSee('Register for this event');
 
         // The page may have been open since before it closed.
-        $this->fillIn($event)->call('register')->assertHasErrors('name');
+        $this->fillIn($event)->call('register')->assertHasErrors('form.name');
         $this->assertSame(0, $event->attendees()->count());
     }
 
@@ -122,7 +122,7 @@ class PublicRegistrationTest extends TestCase
             ->assertOk()
             ->assertSee('Fully booked');
 
-        $this->fillIn($event, 'second@example.org')->call('register')->assertHasErrors('name');
+        $this->fillIn($event, 'second@example.org')->call('register')->assertHasErrors('form.name');
         $this->assertSame(1, $event->attendees()->count());
     }
 
@@ -152,7 +152,7 @@ class PublicRegistrationTest extends TestCase
             $this->fillIn($event, "guest{$i}@example.org")->call('register')->assertHasNoErrors();
         }
 
-        $this->fillIn($event, 'guest6@example.org')->call('register')->assertHasErrors('name');
+        $this->fillIn($event, 'guest6@example.org')->call('register')->assertHasErrors('form.name');
         $this->assertSame(5, $event->attendees()->count());
     }
 
@@ -161,10 +161,10 @@ class PublicRegistrationTest extends TestCase
         $event = $this->openEvent();
 
         Livewire::test(PublicRegistration::class, ['token' => $event->registrationToken()])
-            ->set('name', '')
-            ->set('email', 'not-an-address')
+            ->set('form.name', '')
+            ->set('form.email', 'not-an-address')
             ->call('register')
-            ->assertHasErrors(['name', 'email']);
+            ->assertHasErrors(['form.name', 'form.email']);
 
         $this->assertSame(0, $event->attendees()->count());
     }
@@ -175,6 +175,6 @@ class PublicRegistrationTest extends TestCase
         $event->update(['archived_at' => now()]);
 
         $this->assertFalse($event->fresh()->registrationIsLive());
-        $this->fillIn($event)->call('register')->assertHasErrors('name');
+        $this->fillIn($event)->call('register')->assertHasErrors('form.name');
     }
 }

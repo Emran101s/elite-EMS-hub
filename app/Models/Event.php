@@ -873,6 +873,57 @@ class Event extends Model
         ];
     }
 
+    /**
+     * The questions this event's registration form asks, in order.
+     *
+     * Seeded from the seven the platform always asked, so an event that
+     * existed before forms were editable keeps the form it had.
+     */
+    public function registrationFields(): HasMany
+    {
+        return $this->hasMany(RegistrationField::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** The live form: the questions, seeded on first use. */
+    public function registrationForm(): \Illuminate\Support\Collection
+    {
+        if (! $this->registrationFields()->exists()) {
+            $this->seedRegistrationForm();
+        }
+
+        return $this->registrationFields()->where('active', true)->get();
+    }
+
+    /**
+     * The form every event used to have, as fields.
+     *
+     * Name and email first because they identify a person; the rest in the
+     * order the old form asked them, so nothing moves for anybody used to it.
+     */
+    public function seedRegistrationForm(): void
+    {
+        $defaults = [
+            ['name', 'Full name', 'text', true],
+            ['email', 'Email address', 'email', true],
+            ['phone', 'Phone', 'phone', false],
+            ['organization', 'Organisation', 'text', false],
+            ['job_title', 'Job title', 'text', false],
+            ['ticket_type', 'Ticket type', 'select', false],
+            ['dietary', 'Dietary requirements', 'text', false],
+        ];
+
+        foreach ($defaults as $i => [$column, $label, $type, $required]) {
+            $this->registrationFields()->firstOrCreate(['key' => $column], [
+                'label' => $label,
+                'type' => $type,
+                'required' => $required,
+                'maps_to' => $column,
+                'options' => $column === 'ticket_type' ? CompanyProfile::current()->ticketTypes() : null,
+                'position' => $i,
+            ]);
+        }
+    }
+
     public function attendees(): HasMany
     {
         return $this->hasMany(EventAttendee::class);

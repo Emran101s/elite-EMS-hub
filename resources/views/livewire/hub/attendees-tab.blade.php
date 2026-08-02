@@ -280,6 +280,13 @@
                 <button type="button" wire:click="saveRegistrationSettings" class="btn-navy btn-sm">Save</button>
             </div>
         </div>
+
+        {{-- The questions the form asks. Here rather than on a screen of its
+             own, because "what does the form ask" and "is the form open" are
+             the same thought. --}}
+        <div class="mb-4">
+            <livewire:hub.registration-form :event="$event" :key="'regform-'.$event->id" />
+        </div>
     @endif
 
     @if ($showImport)

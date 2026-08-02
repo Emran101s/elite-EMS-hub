@@ -54,48 +54,72 @@
                 <p class="whitespace-pre-line rounded-xl bg-page/70 px-4 py-3 text-[12.5px] leading-relaxed text-navy-600">{{ $event->registration_note }}</p>
             @endif
 
-            <label class="block">
-                <span class="field-label">Full name <span class="text-risk">*</span></span>
-                <input type="text" wire:model="name" class="input" autocomplete="name" required>
-                @error('name')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-            </label>
+            {{-- The form is whatever this event asks — see
+                 Event::registrationForm(). Autocomplete is still named for the
+                 core fields, because a browser filling in a phone number is
+                 worth more than a tidy loop. --}}
+            @foreach ($fields as $field)
+                @php
+                    $auto = ['name' => 'name', 'email' => 'email', 'phone' => 'tel',
+                             'organization' => 'organization', 'job_title' => 'organization-title'][$field->maps_to] ?? 'off';
+                    $err = 'form.'.$field->key;
+                @endphp
 
-            <label class="block">
-                <span class="field-label">Email <span class="text-risk">*</span></span>
-                <input type="email" wire:model="email" class="input" autocomplete="email" required>
-                @error('email')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-            </label>
+                <label class="block" wire:key="fld-{{ $field->id }}">
+                    <span class="field-label">
+                        {{ $field->label }}
+                        @if ($field->required)<span class="text-risk">*</span>@endif
+                    </span>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <label class="block">
-                    <span class="field-label">Phone</span>
-                    <input type="tel" wire:model="phone" class="input" autocomplete="tel">
+                    @switch ($field->type)
+                        @case('textarea')
+                            <textarea rows="3" wire:model="form.{{ $field->key }}" class="input"
+                                      placeholder="{{ $field->placeholder }}"></textarea>
+                            @break
+
+                        @case('select')
+                            <select wire:model="form.{{ $field->key }}" class="input">
+                                @unless ($field->required)<option value="">—</option>@endunless
+                                @foreach ($field->options ?? [] as $option)
+                                    <option value="{{ $option }}">{{ $option }}</option>
+                                @endforeach
+                            </select>
+                            @break
+
+                        @case('multiselect')
+                            <span class="mt-1 grid gap-1.5 sm:grid-cols-2">
+                                @foreach ($field->options ?? [] as $option)
+                                    <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-[12.5px] text-navy-700">
+                                        <input type="checkbox" value="{{ $option }}" wire:model="form.{{ $field->key }}"
+                                               class="h-3.5 w-3.5 rounded border-navy-300">
+                                        {{ $option }}
+                                    </label>
+                                @endforeach
+                            </span>
+                            @break
+
+                        @case('checkbox')
+                            <span class="mt-1 flex items-center gap-2">
+                                <input type="checkbox" wire:model="form.{{ $field->key }}"
+                                       class="h-4 w-4 rounded border-navy-300">
+                                <span class="text-[12.5px] text-navy-600">{{ $field->placeholder ?: 'Yes' }}</span>
+                            </span>
+                            @break
+
+                        @default
+                            <input type="{{ ['email' => 'email', 'phone' => 'tel', 'number' => 'number', 'date' => 'date'][$field->type] ?? 'text' }}"
+                                   wire:model="form.{{ $field->key }}" class="input"
+                                   autocomplete="{{ $auto }}"
+                                   placeholder="{{ $field->placeholder }}"
+                                   @if ($field->required) required @endif>
+                    @endswitch
+
+                    @if ($field->help)
+                        <span class="mt-1 block text-[11px] text-muted">{{ $field->help }}</span>
+                    @endif
+                    @error($err)<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                 </label>
-                @if ($types)
-                    <label class="block">
-                        <span class="field-label">Ticket</span>
-                        <select wire:model="ticket_type" class="input">
-                            @foreach ($types as $type)<option value="{{ $type }}">{{ $type }}</option>@endforeach
-                        </select>
-                    </label>
-                @endif
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <label class="block">
-                    <span class="field-label">Organisation</span>
-                    <input type="text" wire:model="organization" class="input" autocomplete="organization">
-                </label>
-                <label class="block">
-                    <span class="field-label">Job title</span>
-                    <input type="text" wire:model="job_title" class="input" autocomplete="organization-title">
-                </label>
-            </div>
-
-            <label class="block">
-                <span class="field-label">Dietary requirements</span>
-                <input type="text" wire:model="dietary" class="input" placeholder="Optional — allergies, preferences">
-            </label>
+            @endforeach
 
             <button type="submit" class="btn-gold w-full !py-3" wire:loading.attr="disabled">
                 <span wire:loading.remove wire:target="register">Register for this event</span>
