@@ -245,6 +245,28 @@ class BudgetFollowsModulesTest extends TestCase
             ->breakdown($event->fresh())['components']['budget']);
     }
 
+    /** Typing the name of a hotel you already have is the same as picking it. */
+    public function test_a_typed_hotel_name_adopts_the_venue_it_matches(): void
+    {
+        $event = $this->event();
+        $venue = \App\Models\Venue::create(['name' => 'Mövenpick Dead Sea', 'type' => 'Hotel', 'city' => 'Sweimeh']);
+
+        Livewire::actingAs(User::factory()->create(['role' => 'admin']))
+            ->test(\App\Livewire\Hub\AccommodationTab::class, ['event' => $event])
+            ->call('newBlock')
+            ->set('hotel', 'mövenpick dead sea')       // as typed, in any case
+            ->set('rooms_count', 10)
+            ->set('rate', '170')
+            ->set('check_in', now()->addMonth()->toDateString())
+            ->set('check_out', now()->addMonth()->addDays(2)->toDateString())
+            ->call('save');
+
+        $block = $event->fresh()->roomBlocks()->firstOrFail();
+
+        $this->assertSame($venue->id, $block->venue_id);
+        $this->assertSame('Mövenpick Dead Sea', $block->hotel, 'and it is named the way the directory names it');
+    }
+
     public function test_the_budget_says_what_came_from_where(): void
     {
         $event = $this->event();

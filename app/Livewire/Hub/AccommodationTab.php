@@ -148,6 +148,14 @@ class AccommodationTab extends Component
             return;
         }
 
+        // Typing the name of a hotel you already have is the same as picking
+        // it. People type rather than pick, and the block that results looks
+        // identical while being linked to nothing — so what this hotel costs
+        // across the book quietly stops counting it.
+        if (! $venue && trim($this->hotel) !== '') {
+            $venue = Venue::whereRaw('lower(name) = ?', [mb_strtolower(trim($this->hotel))])->first();
+        }
+
         $data = [
             'hotel' => $venue?->name ?: $this->hotel,
             'venue_id' => $venue?->id,
