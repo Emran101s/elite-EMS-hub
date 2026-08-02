@@ -199,6 +199,44 @@ class EventTransport extends Model
      *
      * @return array{vehicle:bool,driver:bool,passengers:bool,score:int,missing:array<int,string>}
      */
+    /**
+     * What this movement still needs, in words, as one answer.
+     *
+     * Readiness was said three times in three languages on every row — a
+     * status pill, a line of amber text about the driver, and three dots that
+     * needed a tooltip to decode. Somebody scanning forty movements for the
+     * one that is not ready cannot read dots. One phrase, one colour.
+     *
+     * @return array{label:string,ready:bool,detail:string}
+     */
+    public function readinessChip(): array
+    {
+        $missing = $this->readiness()['missing'];
+
+        if ($missing === []) {
+            return ['label' => 'Ready', 'ready' => true, 'detail' => 'Vehicle, driver and passengers all set.'];
+        }
+
+        // Named in the order the desk fixes them: a car with no driver is a
+        // phone call, a car with nobody in it is a plan that has not been made.
+        $words = [
+            'driver' => 'a driver',
+            'vehicle' => 'a vehicle',
+            'passengers' => 'passengers',
+        ];
+
+        $needs = collect(['driver', 'vehicle', 'passengers'])
+            ->filter(fn (string $k) => in_array($k, $missing, true))
+            ->map(fn (string $k) => $words[$k])
+            ->values();
+
+        return [
+            'label' => 'Needs '.$needs->join(' and '),
+            'ready' => false,
+            'detail' => $this->readiness()['score'].' of 3 ready.',
+        ];
+    }
+
     public function readiness(): array
     {
         $has = [

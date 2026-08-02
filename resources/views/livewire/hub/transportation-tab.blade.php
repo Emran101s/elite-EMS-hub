@@ -71,20 +71,22 @@
                                 </a>
                             </div>
                         </div>
-                        <button type="button" wire:click="deleteAllMovements"
-                                wire:confirm="Delete all {{ $total }} {{ \Illuminate\Support\Str::plural('vehicle', $total) }}? The guests are kept — they go back to the pool so you can plan again."
-                                class="btn-ghost btn-sm !text-rose-600 hover:!bg-rose-50"
-                                title="Clear the vehicle plan and start over; guests return to the pool">✕ Clear vehicles</button>
                     @endif
                     @if ($total)
-                        <a href="{{ route('events.transport.dispatch', $event) }}"
-                           class="btn-ghost btn-sm" title="Lanes against a time axis — plan and catch clashes">▦ Dispatch</a>
-                        <a href="{{ route('events.transport.live', $event) }}"
-                           class="inline-flex items-center gap-2 rounded-xl bg-navy-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-navy-800"
-                           title="Event-day operations — designed for a phone">
-                            <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-                            Live
-                        </a>
+                        {{-- Two other ways to look at the same movements. They are
+                             places, not verbs, so they read as one control rather
+                             than as two more buttons among the actions. --}}
+                        <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
+                            <span class="rounded-lg bg-navy-950 px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
+                            <a href="{{ route('events.transport.dispatch', $event) }}"
+                               class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
+                               title="Lanes against a time axis — plan and catch clashes">Dispatch</a>
+                            <a href="{{ route('events.transport.live', $event) }}"
+                               class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
+                               title="Event-day operations — designed for a phone">
+                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>Live
+                            </a>
+                        </span>
                     @endif
                     @if ($attendeePull > 0)
                         <button type="button" wire:click="pullAttendees"
@@ -94,6 +96,23 @@
                     @endif
                     <button type="button" wire:click="$toggle('showPlanImport')" class="btn-ghost btn-sm">⇪ Import movements</button>
                     <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add Movement</button>
+
+                    {{-- Clearing the whole vehicle plan used to sit between Export
+                         and Dispatch at the same weight as everything else. It is
+                         the one thing here you cannot undo. --}}
+                    @if ($total)
+                        <details class="relative" data-menu>
+                            <summary class="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-xl text-[15px] leading-none text-navy-300 transition hover:bg-navy-50 hover:text-navy-700 [&::-webkit-details-marker]:hidden">⋮</summary>
+                            <div class="absolute end-0 z-30 mt-1 w-64 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl">
+                                <button type="button" wire:click="deleteAllMovements"
+                                        wire:confirm="Delete all {{ $total }} {{ \Illuminate\Support\Str::plural('movement', $total) }}?&#10;&#10;The guests are kept — they go back to the pool so you can plan again. The movements themselves cannot be recovered."
+                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">
+                                    Clear the vehicle plan
+                                    <span class="block text-[10.5px] font-normal text-muted">Deletes {{ $total }} {{ \Illuminate\Support\Str::plural('movement', $total) }}; guests return to the pool.</span>
+                                </button>
+                            </div>
+                        </details>
+                    @endif
                 </x-slot:actions>
             </x-page-head>
 
@@ -413,13 +432,20 @@
 
                             <span class="shrink-0 text-navy-300 transition group-hover/mv:text-navy-600 {{ $open ? 'rotate-90' : '' }}">▸</span>
 
-                            {{-- the number you say out loud: "put them on car 3" --}}
-                            <span @class([
-                                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black',
-                                      'bg-gold-500 text-navy-950' => $priority,
-                                      'bg-navy-900 text-white' => ! $priority,
-                                  ])
-                                  title="Car {{ $m->refLabel() }} — assign by this number">{{ $m->ref_no }}</span>
+            {{-- The number you say out loud: "put them on car 3".
+                 A movement with no number rendered as a filled black circle with
+                 nothing in it — the loudest thing in the row, saying nothing. --}}
+            @if ($m->ref_no)
+                <span @class([
+                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black',
+                          'bg-gold-500 text-navy-950' => $priority,
+                          'bg-navy-900 text-white' => ! $priority,
+                      ])
+                      title="Car {{ $m->refLabel() }} — assign by this number">{{ $m->ref_no }}</span>
+            @else
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-line text-xs font-black text-navy-300"
+                      title="No car number yet — Edit to give it one">–</span>
+            @endif
 
                             {{-- time --}}
                             <div class="w-14 shrink-0 text-center">
@@ -433,10 +459,21 @@
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     @php $legClass = ['arrival' => 'bg-emerald-100 text-emerald-700', 'departure' => 'bg-sky-100 text-sky-700'][$m->leg] ?? 'bg-navy-100 text-navy-600'; @endphp
-                                    <span class="shrink-0 rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $legClass }}"
-                                          title="{{ \App\Models\EventTransport::LEG_HINTS[$m->leg] ?? '' }}">{{ $m->legLabel() }}</span>
+                                    {{-- Arrival and departure earn a colour; "other" is
+                                         the absence of one, and it was taking the first
+                                         slot on every row to say so. --}}
+                                    @if (in_array($m->leg, ['arrival', 'departure'], true))
+                                        <span class="shrink-0 rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $legClass }}"
+                                              title="{{ \App\Models\EventTransport::LEG_HINTS[$m->leg] ?? '' }}">{{ $m->legLabel() }}</span>
+                                    @endif
                                     <p class="truncate text-sm font-semibold text-navy-900">{{ $m->serviceType?->name ?? $m->route }}</p>
-                                    <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
+
+                                    {{-- Planned is the absence of news. On every row it
+                                         taught the eye to skip the one place a status
+                                         actually says something. --}}
+                                    @if ($m->status !== 'planned')
+                                        <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
+                                    @endif
                                     @if ($priority)
                                         <span class="rounded-full bg-gold-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-gold-800"
                                               title="{{ $m->priorityReason() }}">★ Priority</span>
@@ -450,16 +487,29 @@
                                               title="{{ $m->driver->name }} is on duty {{ \App\Models\TransportDriver::readableMinutes($m->driver->dutyMinutes($m->depart_at->toDateString())) }} that day">Driver overloaded</span>
                                     @endif
                                 </div>
-                                <p class="mt-0.5 truncate text-eyebrow text-muted">
-                                    @if ($m->pickup_from || $m->drop_to)
-                                        {{ $m->pickup_from ?: '—' }} → {{ $m->drop_to ?: '—' }}
-                                    @endif
-                                    @if ($m->depart_at) · pick-up {{ $m->depart_at->format('D j M · H:i') }}@endif
-                                    @if ($m->flight_no) · flight <span class="font-semibold text-navy-700">{{ $m->flight_no }}</span>@endif
-                                    @if ($m->arrive_at) · lands {{ $m->arrive_at->format('H:i') }}@endif
-                                    @if ($m->supplierName()) · {{ $m->supplierName() }}@endif
-                                    @if ($m->vehicle) · <span class="font-semibold text-navy-700">{{ $m->vehicle->label() }}</span>@endif
-                                </p>
+                                {{-- The route is what the movement IS, so it is not
+                                     the third thing on the row behind an ellipsis.
+                                     The pick-up date and time are already in the
+                                     column to the left and the day heading above;
+                                     printing them a third time cost the route its
+                                     room. --}}
+                                @if ($m->pickup_from || $m->drop_to)
+                                    <p class="mt-0.5 truncate text-xs font-semibold text-navy-700">
+                                        {{ $m->pickup_from ?: '—' }} <span class="text-navy-300">→</span> {{ $m->drop_to ?: '—' }}
+                                    </p>
+                                @endif
+
+                                @php
+                                    $facts = collect([
+                                        $m->flight_no ? 'flight '.$m->flight_no : null,
+                                        $m->arrive_at ? 'lands '.$m->arrive_at->format('H:i') : null,
+                                        $m->supplierName(),
+                                        $m->vehicle?->label(),
+                                    ])->filter();
+                                @endphp
+                                @if ($facts->isNotEmpty())
+                                    <p class="mt-0.5 truncate text-eyebrow text-muted">{{ $facts->join(' · ') }}</p>
+                                @endif
 
                                 {{-- The driver, and the two ways you'd actually reach them. --}}
                                 <p class="mt-1 flex flex-wrap items-center gap-2 text-eyebrow">
@@ -474,23 +524,19 @@
                                                class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700 hover:bg-emerald-100"
                                                title="Send this run's details to {{ $m->driver->name }}">WhatsApp</a>
                                         @endif
-                                    @else
-                                        <span class="font-semibold text-amber-600">No driver assigned</span>
                                     @endif
                                 </p>
                             </div>
 
-                            {{-- readiness: vehicle · driver · passengers --}}
-                            <div class="hidden shrink-0 items-center gap-1 lg:flex"
-                                 title="{{ $ready['score'] }} of 3 ready{{ $ready['missing'] ? ' — needs '.implode(' and ', $ready['missing']) : '' }}">
-                                @foreach (['vehicle', 'driver', 'passengers'] as $part)
-                                    <span @class([
-                                        'h-2 w-2 rounded-full',
-                                        'bg-emerald-500' => $ready[$part],
-                                        'bg-navy-200' => ! $ready[$part],
-                                    ])></span>
-                                @endforeach
-                            </div>
+            {{-- Readiness, once, in words. Three dots needed a tooltip to
+                 decode and nobody scanning forty rows reads dots. --}}
+            @php $chip = $m->readinessChip(); @endphp
+            <span @class([
+                      'hidden shrink-0 rounded-full px-2.5 py-1 text-eyebrow font-bold lg:block',
+                      'bg-emerald-50 text-emerald-700' => $chip['ready'],
+                      'bg-amber-50 text-amber-700' => ! $chip['ready'],
+                  ])
+                  title="{{ $chip['detail'] }}">{{ $chip['label'] }}</span>
 
                             {{-- vehicle & load --}}
                             <div class="hidden w-44 shrink-0 sm:block">
@@ -514,15 +560,28 @@
                                 {{ $m->cost_cents ? $event->money($m->cost_cents) : '—' }}
                             </p>
 
-                            <div class="flex shrink-0 items-center gap-1.5" wire:click.stop>
-                                <button type="button" wire:click="duplicate({{ $m->id }})" title="Repeat this run tomorrow"
-                                        class="rounded-lg bg-navy-50 px-2 py-1.5 text-eyebrow font-bold text-navy-700 hover:bg-navy-100">⧉</button>
-                                <button type="button" wire:click="edit({{ $m->id }})"
-                                        class="rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-700 hover:bg-navy-100">✎ Edit</button>
-                                <button type="button" wire:click="delete({{ $m->id }})"
-                                        wire:confirm="Delete this movement and its {{ $m->manifest->count() }} named {{ \Illuminate\Support\Str::plural('passenger', $m->manifest->count()) }}?"
-                                        class="rounded-lg bg-risk/10 px-2.5 py-1.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">Delete</button>
-                            </div>
+            {{-- Edit is the everyday one and stays a button. Repeating a run
+                 and deleting it are not everyday, and a permanent delete does
+                 not belong beside Edit at the same size and shape. --}}
+            <div class="flex shrink-0 items-center gap-1.5" wire:click.stop>
+                <button type="button" wire:click="edit({{ $m->id }})"
+                        class="rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-700 hover:bg-navy-100">✎ Edit</button>
+
+                <details class="relative" data-menu>
+                    <summary class="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-lg text-[15px] leading-none text-navy-300 transition hover:bg-navy-50 hover:text-navy-700 [&::-webkit-details-marker]:hidden">⋮</summary>
+                    <div class="absolute end-0 z-30 mt-1 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl">
+                        <button type="button" wire:click="duplicate({{ $m->id }})"
+                                class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">
+                            Repeat this run tomorrow
+                        </button>
+                        <button type="button" wire:click="delete({{ $m->id }})"
+                                wire:confirm="Delete {{ $m->refLabel() !== '—' ? 'car '.$m->refLabel().', ' : '' }}{{ $m->pickup_from ?: 'this movement' }}{{ $m->drop_to ? ' → '.$m->drop_to : '' }}?&#10;&#10;{{ $m->manifest->count() }} named {{ \Illuminate\Support\Str::plural('passenger', $m->manifest->count()) }} {{ $m->manifest->count() === 1 ? 'goes' : 'go' }} with it. This cannot be undone."
+                                class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">
+                            Delete this movement
+                        </button>
+                    </div>
+                </details>
+            </div>
                         </div>
 
                         {{-- ══ manifest: who is actually in the vehicle ══ --}}
