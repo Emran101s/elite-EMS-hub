@@ -292,7 +292,14 @@
     @if ($showImport)
         <form wire:submit="import" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
             <div class="flex-1">
-                <label class="field-label !mb-1 !text-eyebrow" for="att-import">Excel (.xlsx) or CSV — columns: <span class="font-semibold text-navy-700">name</span>, email, organization, job title, phone, ticket, amount, VIP, dietary, notes · re-importing updates by email</label>
+                {{-- The columns are this event's own questions now, so naming
+                     a fixed set here would be a lie the moment somebody adds
+                     one. The template is the answer. --}}
+                <label class="field-label !mb-1 !text-eyebrow" for="att-import">
+                    Excel (.xlsx) or CSV — the columns are
+                    <a href="{{ route('events.attendees.template', $event) }}" class="font-semibold text-gold-600 hover:underline">this event's questions</a>,
+                    plus amount and VIP · re-importing updates by email
+                </label>
                 <input id="att-import" type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv" class="input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
                 @error('importFile') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
             </div>

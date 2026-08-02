@@ -207,35 +207,72 @@ class AttendeesTab extends Component
             return;
         }
 
-        $header = array_map(fn ($h) => strtolower(trim((string) $h)), array_shift($rows));
-        $find = function (array $needles, ?int $fallback) use ($header) {
+        $header = array_map(fn ($h) => mb_strtolower(trim((string) $h)), array_shift($rows));
+
+        /**
+         * A column is found by what the heading says.
+         *
+         * The sheet's columns are this event's own questions now, so the old
+         * fixed positions cannot describe it. Matching on the heading also
+         * means a sheet somebody rearranged still imports, and a column the
+         * form does not ask is simply not there.
+         */
+        $at = function (array $needles) use ($header) {
             foreach ($header as $i => $h) {
                 foreach ($needles as $n) {
-                    if ($h !== '' && str_contains($h, $n)) {
+                    if ($h !== '' && str_contains($h, mb_strtolower($n))) {
                         return $i;
                     }
                 }
             }
 
-            return $fallback;
+            return null;
         };
-        $cName = $find(['name'], 0);
-        $cEmail = $find(['email', 'e-mail'], 1);
-        $cOrg = $find(['organi', 'company', 'org'], null);
-        $cPhone = $find(['phone', 'mobile', 'tel'], null);
-        $cTicket = $find(['ticket', 'type', 'category'], null);
-        $cAmount = $find(['amount', 'fee', 'price', 'paid'], null);
-        $cTitle = $find(['job', 'title', 'position', 'role'], null);
-        $cDiet = $find(['diet', 'allerg', 'meal'], null);
-        $cVip = $find(['vip'], null);
-        $cNotes = $find(['note', 'comment', 'remark'], null);
 
         $cell = fn (array $row, ?int $i) => $i !== null ? (trim((string) ($row[$i] ?? '')) ?: null) : null;
 
+        // Each question knows its own column: by its label first, and by the
+        // words the old fixed sheet used, so a template downloaded last month
+        // still imports.
+        // Kept exactly as loose as they were: a sheet somebody else prepared
+        // says "Attendee Type" or "Company", and refusing it would be a
+        // regression dressed up as tidiness.
+        $legacy = [
+            'name' => ['name'],
+            'email' => ['email', 'e-mail'],
+            'organization' => ['organi', 'company', 'org'],
+            'phone' => ['phone', 'mobile', 'tel'],
+            'job_title' => ['job', 'title', 'position', 'role'],
+            'ticket_type' => ['ticket', 'type', 'category'],
+            'dietary' => ['diet', 'allerg', 'meal'],
+            'notes' => ['note', 'comment', 'remark'],
+        ];
+
+        $fields = $this->event->registrationForm();
+        $columns = [];
+
+        foreach ($fields as $field) {
+            $columns[$field->key] = [
+                'field' => $field,
+                'index' => $at([$field->label, ...($legacy[$field->maps_to ?? ''] ?? [])]),
+            ];
+        }
+
+        // Columns the desk records that the form does not ask. None of these is
+        // a question you put to a registrant, which is why the default form has
+        // no question for them — and why looking only at the form's questions
+        // would quietly drop them from every sheet.
+        $cAmount = $at(['amount', 'fee', 'price', 'paid']);
+        $cVip = $at(['vip']);
+        $cNotes = isset($columns['notes']) ? null : $at(['note', 'comment', 'remark']);
+        $cName = $columns['name']['index'] ?? $at(['name']) ?? 0;
+
         $imported = 0;
         $updated = 0;
+
         foreach ($rows as $row) {
             $name = trim((string) ($row[$cName] ?? ''));
+
             if ($name === '') {
                 continue;
             }
@@ -244,17 +281,39 @@ class AttendeesTab extends Component
             $vip = $cVip !== null
                 && in_array(mb_strtolower((string) ($row[$cVip] ?? '')), ['1', 'y', 'yes', 'true', 'vip'], true);
 
-            $data = array_filter([
-                'name' => mb_substr($name, 0, 160),
-                'email' => $cell($row, $cEmail),
-                'phone' => $cell($row, $cPhone),
-                'organization' => $cell($row, $cOrg),
-                'job_title' => $cell($row, $cTitle),
-                'dietary' => $cell($row, $cDiet),
-                'notes' => $cell($row, $cNotes),
-                'ticket_type' => $cell($row, $cTicket) ?: 'Delegate',
-                'amount_cents' => (int) round($amount * 100),
-            ], fn ($v) => $v !== null);
+            $data = ['name' => mb_substr($name, 0, 160)];
+            $answers = [];
+
+            foreach ($columns as $key => ['field' => $field, 'index' => $i]) {
+                $value = $cell($row, $i);
+
+                if ($field->maps_to) {
+                    if ($value !== null && $field->maps_to !== 'name') {
+                        $data[$field->maps_to] = $value;
+                    }
+
+                    continue;
+                }
+
+                // A several-choice answer arrives as one cell; it is stored the
+                // way the form stores it so both look the same afterwards.
+                if ($value !== null) {
+                    $answers[$key] = $field->type === 'multiselect'
+                        ? array_values(array_filter(array_map('trim', explode(',', $value))))
+                        : $value;
+                }
+            }
+
+            $data['ticket_type'] = $data['ticket_type'] ?? 'Delegate';
+            $data['amount_cents'] = (int) round($amount * 100);
+
+            if ($cNotes !== null && ($note = $cell($row, $cNotes)) !== null) {
+                $data['notes'] = $note;
+            }
+
+            if ($answers !== []) {
+                $data['answers'] = $answers;
+            }
 
             // Re-importing a corrected sheet should fix the rows, not double them.
             // Email is the reliable key; without one, fall back to the name.

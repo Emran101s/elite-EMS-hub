@@ -74,9 +74,15 @@ class ImportTemplatesTest extends TestCase
         @unlink($path);
 
         $this->assertSame('Attendees', $ss->getActiveSheet()->getTitle());
+
+        // The columns ARE this event's questions, so the headings are the
+        // questions' own labels — see AttendeeTemplateController.
         $header = $ss->getActiveSheet()->toArray()[0];
-        $this->assertSame('Name', $header[0]);
-        $this->assertContains('Ticket Type', $header);
+
+        $this->assertSame('Full name', $header[0]);
+        $this->assertContains('Ticket type', $header);
+        $this->assertContains('Amount Paid', $header, 'what the desk records but never asks');
+        $this->assertContains('VIP', $header);
         $this->assertCount(1, array_filter($ss->getActiveSheet()->toArray(), fn ($r) => trim((string) ($r[0] ?? '')) !== ''));
     }
 
