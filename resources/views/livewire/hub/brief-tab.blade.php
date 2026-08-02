@@ -84,8 +84,13 @@
 
     <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
 
-        {{-- ══════════ LEFT · the sections, as collapsible modules ══════════ --}}
+        {{-- ══════════ LEFT · the sections, as collapsible modules ══════════
+
+             One grid child, not two. The column is defined by the grid, so a
+             second element out here takes the preview's column and pushes it
+             to the next row — which is exactly what a stray block did. --}}
         @php $in = 'w-full rounded-xl border border-transparent bg-page/70 px-3 py-2 text-sm font-medium text-navy-900 placeholder:text-navy-300 transition focus:border-gold-400 focus:bg-white focus:outline-none'; @endphp
+        <div class="min-w-0">
         <x-accordion>
 
             {{-- Cover module --}}
@@ -147,22 +152,38 @@
             @endforeach
         </x-accordion>
 
-        {{-- Taken off this brief. Nothing is lost: the content is still there,
-             and putting the section back returns it. --}}
+        {{-- One button, and the removed sections behind it.
+
+             A standing panel listing what is NOT on the document takes as much
+             room as a section that is, on a page whose whole job is the twelve
+             that are. It only appears once something has been taken off, and it
+             closes again the moment it is used. --}}
         @if ($hiddenSections)
-            <div class="mt-3 rounded-2xl border border-dashed border-line bg-page/40 p-4">
-                <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Not on this brief</p>
-                <div class="mt-2 flex flex-wrap gap-1.5">
+            <details class="relative mt-2.5" data-menu>
+                <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-dashed border-line bg-white px-3.5 py-2 text-[11.5px] font-semibold text-navy-500 transition hover:border-gold-300 hover:text-navy-900 [&::-webkit-details-marker]:hidden">
+                    ＋ Add a section
+                    <span class="rounded-full bg-navy-50 px-1.5 text-[10px] font-black tabular-nums text-navy-500">{{ count($hiddenSections) }}</span>
+                </summary>
+
+                <div class="absolute z-30 mt-1.5 w-72 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
+                    <p class="px-2.5 pb-1 pt-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">Not on this brief</p>
+
                     @foreach ($hiddenSections as $key => [$num, $title, $type])
                         <button type="button" wire:click="restoreSection('{{ $key }}')" wire:key="off-{{ $key }}"
-                                class="rounded-xl border border-line bg-white px-3 py-1.5 text-[11.5px] font-semibold text-navy-600 transition hover:border-gold-300 hover:text-navy-900">
-                            ＋ {{ $title }}
+                                class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-[12px] font-semibold text-navy-700 transition hover:bg-page">
+                            <span class="pf w-6 shrink-0 text-[13px] font-bold text-gold-700">{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}</span>
+                            <span class="min-w-0 flex-1 truncate">{{ $title }}</span>
+                            <span class="shrink-0 text-navy-300">＋</span>
                         </button>
                     @endforeach
+
+                    <p class="px-2.5 pb-1 pt-1.5 text-[10.5px] leading-snug text-muted">
+                        What you wrote in these is still there — putting one back returns it.
+                    </p>
                 </div>
-                <p class="mt-2 text-[11px] text-muted">What was written in these is kept — putting one back returns it.</p>
-            </div>
+            </details>
         @endif
+        </div>
 
         {{-- ══════════ RIGHT · the living dossier ══════════ --}}
         <div class="xl:sticky xl:top-12">
