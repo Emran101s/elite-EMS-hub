@@ -753,7 +753,12 @@
 
                     <div>
                         <label class="field-label !mb-1 !text-eyebrow">Vendor / supplier</label>
-                        <input type="text" wire:model="vendor" class="input h-10 text-sm" placeholder="e.g. Prime AV">
+                        {{-- A name from the directory links the line to that
+                             supplier; anything else is still allowed. --}}
+                        <input type="text" wire:model="vendor" list="budget-vendors" class="input h-10 text-sm" placeholder="e.g. Prime AV">
+                        <datalist id="budget-vendors">
+                            @foreach ($vendorNames as $name)<option value="{{ $name }}">@endforeach
+                        </datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>

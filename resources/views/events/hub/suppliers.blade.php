@@ -9,6 +9,21 @@
         'logistics' => ['Logistics', 'bg-amber-100 text-amber-700'],
         'decor' => ['Décor', 'bg-rose-100 text-rose-700'],
     ];
+
+    // What each supplier is carrying on this event, read off the budget.
+    //
+    // The card said how ready a supplier was and nothing about how much they
+    // are for — a readiness bar at 70% next to no number at all, while the
+    // budget knew the figure the whole time.
+    $spend = $event->budgetItems->whereNotNull('supplier_id')
+        ->groupBy('supplier_id')
+        ->map(fn ($lines) => [
+            'committed' => (int) $lines->sum(fn ($i) => $i->costCents()),
+            'paid' => (int) $lines->sum('paid_cents'),
+            'lines' => $lines->count(),
+        ]);
+
+    $committedTotal = (int) $spend->sum('committed');
 @endphp
 
 <div class="mb-5 card flex flex-wrap items-center justify-between gap-4 px-6 py-4">
@@ -19,6 +34,13 @@
         <div>
             <h3 class="pf text-base font-bold text-navy-900">Supplier Readiness</h3>
             <p class="text-[0.65rem] text-muted">{{ $event->suppliers->count() }} {{ str('supplier')->plural($event->suppliers->count()) }} on this event · requested → quoted → approved → contracted → in production → delivered → completed</p>
+            @if ($committedTotal > 0)
+                <p class="mt-1 text-[0.65rem] font-semibold text-navy-600">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate class="hover:text-indigo-600">
+                        {{ $event->money($committedTotal) }} committed across {{ $spend->count() }} of them
+                    </a>
+                </p>
+            @endif
         </div>
     </div>
     <a href="{{ route('suppliers.index') }}" class="rounded-xl border border-line bg-white px-3.5 py-2 text-xs font-semibold text-navy-700 transition hover:border-gold-300">Manage in Suppliers module →</a>
@@ -57,6 +79,23 @@
                     </div>
                     <span class="shrink-0 text-eyebrow font-black text-navy-500">{{ $pct }}%</span>
                 </div>
+                {{-- What they are for, in money. A supplier with nothing costed
+                     against them says so rather than showing a confident 0. --}}
+                @php $money = $spend[$supplier->id] ?? null; @endphp
+                <div class="mt-3 flex items-baseline gap-2 border-t border-line/70 pt-2.5">
+                    @if ($money)
+                        <span class="text-eyebrow font-bold uppercase tracking-wide text-navy-400">Committed</span>
+                        <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate
+                           class="pf text-[13px] font-black tabular-nums text-navy-900 hover:text-indigo-600">{{ $event->money($money['committed']) }}</a>
+                        <span class="text-micro text-muted">{{ $money['lines'] }} {{ str('line')->plural($money['lines']) }}</span>
+                        @if ($money['paid'] > 0)
+                            <span class="ms-auto text-micro font-semibold text-emerald-700">{{ $event->money($money['paid']) }} paid</span>
+                        @endif
+                    @else
+                        <span class="text-micro italic text-navy-300">Nothing costed against them yet</span>
+                    @endif
+                </div>
+
                 @if ($supplier->pivot->notes)
                     <p class="mt-2 rounded-lg bg-page/60 px-2.5 py-1.5 text-micro text-navy-700">{{ $supplier->pivot->notes }}</p>
                 @endif

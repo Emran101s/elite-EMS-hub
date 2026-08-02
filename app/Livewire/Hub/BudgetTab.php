@@ -386,6 +386,12 @@ class BudgetTab extends Component
             'category' => $this->category,
             'description' => $this->description ?: null,
             'vendor' => $this->vendor ?: null,
+            // Typing a supplier's name links the line to that supplier, so the
+            // Suppliers tab can say what each one is carrying. The text stays
+            // free: a one-off vendor who is not in the directory is a real
+            // thing, and forcing a record for them would stop the line being
+            // written at all.
+            'supplier_id' => $this->supplierIdFor($this->vendor),
             'quantity' => max(1, $this->quantity),
             'unit_cents' => $unitCents ?: null,
             'estimated_cents' => $estimatedCents,
@@ -504,6 +510,25 @@ class BudgetTab extends Component
         }
         app(BudgetSync::class)->sync($this->event->fresh());
         session()->flash('status', 'Budget synced with the modules.');
+    }
+
+    /**
+     * The supplier a typed vendor name means, if it means one.
+     *
+     * Matched on the name because that is what people type and what the field
+     * has always held — the same approach the transport module used to adopt
+     * its providers. No match is not an error; it is a vendor nobody has put
+     * in the directory yet.
+     */
+    private function supplierIdFor(?string $vendor): ?int
+    {
+        $vendor = trim((string) $vendor);
+
+        if ($vendor === '') {
+            return null;
+        }
+
+        return \App\Models\Supplier::whereRaw('lower(name) = ?', [mb_strtolower($vendor)])->value('id');
     }
 
     /** Copy a line within its section, ready to tweak. */
@@ -830,6 +855,11 @@ class BudgetTab extends Component
             'sponsorsCount' => $sponsors->count(),
             'exhibitorsCount' => $exhibitors->where('status', '!=', 'cancelled')->count(),
             'syncedCount' => $items->whereNotNull('source_type')->count(),
+            // Names for the vendor field's datalist: this event's suppliers
+            // first, since a line is nearly always one of them.
+            'vendorNames' => $this->event->suppliers->pluck('name')
+                ->merge(\App\Models\Supplier::orderBy('name')->pluck('name'))
+                ->unique()->values(),
             // What the modules put here, and what they could not.
             'linkedByModule' => $items->whereNotNull('source_type')
                 ->groupBy('source_type')
