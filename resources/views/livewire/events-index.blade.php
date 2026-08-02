@@ -296,10 +296,41 @@
          ══════════════════════════════════════════════════════════════ --}}
     @elseif ($view === 'list')
         <div class="space-y-4">
+            @if ($selectedIds)
+                <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-red-200 bg-red-50/60 px-4 py-2.5">
+                    <p class="text-[12.5px] font-bold text-red-900">
+                        {{ count($selectedIds) }} {{ str('event')->plural(count($selectedIds)) }} selected
+                    </p>
+                    <button type="button" wire:click="selectAllMatching"
+                            class="text-[11.5px] font-semibold text-red-700 underline-offset-2 hover:underline">Select everything matching these filters</button>
+                    <button type="button" wire:click="clearSelection"
+                            class="text-[11.5px] font-semibold text-navy-500 hover:text-navy-800">Clear</button>
+
+                    <button type="button" wire:click="deleteSelected"
+                            wire:confirm="Delete {{ count($selectedIds) }} {{ str('event')->plural(count($selectedIds)) }} permanently?&#10;&#10;Their tasks, budgets, documents, contracts and bookings go with them. Invoices and proposals are kept, unattached.&#10;&#10;This cannot be undone."
+                            class="ms-auto rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-700">
+                        Delete permanently
+                    </button>
+                </div>
+            @endif
+
             <div class="card overflow-hidden">
                 <div class="scrollbar-none overflow-x-auto">
-                    <div class="min-w-[1080px]">
-                        <div class="grid grid-cols-[minmax(230px,2.2fr)_100px_130px_150px_78px_130px_92px_112px_128px_36px] items-center gap-3 border-b border-line bg-page/40 px-4 py-2.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                    <div class="min-w-[1120px]">
+                        @php
+                            $cols = 'grid-cols-[28px_minmax(220px,2.2fr)_100px_130px_150px_78px_130px_92px_112px_128px_36px]';
+                            $pageIds = $rows->pluck('id')->all();
+                            $pageAllOn = $pageIds !== [] && ! array_diff($pageIds, $selectedIds);
+                        @endphp
+
+                        <div class="grid {{ $cols }} items-center gap-3 border-b border-line bg-page/40 px-4 py-2.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                            <span>
+                                @can('manage-events')
+                                    <input type="checkbox" @checked($pageAllOn)
+                                           wire:click="toggleSelectPage({{ \Illuminate\Support\Js::from($pageIds) }})"
+                                           class="h-3.5 w-3.5 cursor-pointer rounded border-navy-300">
+                                @endcan
+                            </span>
                             <span>Event</span><span>Status</span><span>Dates</span><span>Location</span>
                             <span class="text-center">Progress</span><span>Budget</span>
                             <span class="text-center">Attendees</span><span>Health</span><span>Next milestone</span><span></span>
@@ -308,12 +339,21 @@
                         <div class="divide-y divide-line">
                             @foreach ($rows as $m)
                                 @php $on = $active && $m['id'] === $active['id']; @endphp
+                                @php $ticked = in_array($m['id'], $selectedIds, true); @endphp
                                 <div wire:key="row-{{ $m['id'] }}" wire:click="activate({{ $m['id'] }})"
                                      @class([
-                                         'grid cursor-pointer grid-cols-[minmax(230px,2.2fr)_100px_130px_150px_78px_130px_92px_112px_128px_36px] items-center gap-3 px-4 py-3 transition',
-                                         'bg-indigo-50/60 shadow-[inset_3px_0_0_0_theme(colors.indigo.500)]' => $on,
-                                         'hover:bg-page/60' => ! $on,
+                                         'grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
+                                         'bg-indigo-50/60 shadow-[inset_3px_0_0_0_theme(colors.indigo.500)]' => $on && ! $ticked,
+                                         'bg-red-50/50' => $ticked,
+                                         'hover:bg-page/60' => ! $on && ! $ticked,
                                      ])>
+
+                                    <span wire:click.stop>
+                                        @can('manage-events')
+                                            <input type="checkbox" @checked($ticked) wire:click="toggleSelect({{ $m['id'] }})"
+                                                   class="h-3.5 w-3.5 cursor-pointer rounded border-navy-300">
+                                        @endcan
+                                    </span>
 
                                     <div class="flex min-w-0 items-center gap-3">
                                         <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50 ring-1 ring-line">
@@ -371,6 +411,14 @@
                                             <button type="button" wire:click="duplicate({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">Duplicate</button>
                                             <button type="button" wire:click="archive({{ $m['id'] }})" wire:confirm="Archive “{{ $m['name'] }}”? It leaves every board and list."
                                                     class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-600 transition hover:bg-red-50">Archive</button>
+                                            @can('manage-events')
+                                                {{-- Permanent, so it says so and it says what it takes.
+                                                     The event's own Settings has the full inventory and
+                                                     asks for the name; this is the quick one. --}}
+                                                <button type="button" wire:click="deleteEvent({{ $m['id'] }})"
+                                                        wire:confirm="Delete “{{ $m['name'] }}” permanently?&#10;&#10;Its tasks, budget, documents, contracts and bookings go with it. Invoices and proposals are kept, unattached.&#10;&#10;This cannot be undone."
+                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">Delete permanently</button>
+                                            @endcan
                                         </div>
                                     </details>
                                 </div>

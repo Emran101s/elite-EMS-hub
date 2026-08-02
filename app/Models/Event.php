@@ -662,6 +662,64 @@ class Event extends Model
         return $cost['pct'];
     }
 
+    /**
+     * What deleting this event would destroy, and what would survive it.
+     *
+     * Twenty-odd tables cascade off an event. "Permanently delete?" with no
+     * inventory asks somebody to agree to something nobody can see, which is
+     * how the wrong event gets deleted — so the confirmation counts the records
+     * first, in the words the modules use.
+     *
+     * Three things deliberately outlive it: invoices, proposals and the deal.
+     * They are the money and the sale, and they are kept (unattached) rather
+     * than destroyed with the project they were raised for.
+     *
+     * @return array{destroys:array<string,int>,keeps:array<string,int>,money:list<string>}
+     */
+    public function deletionInventory(): array
+    {
+        $destroys = collect([
+            'task' => $this->tasks()->count(),
+            'budget line' => $this->budgetItems()->count(),
+            'document' => $this->documents()->count(),
+            'attendee' => $this->attendees()->count(),
+            'contract' => $this->contracts()->count(),
+            'room block' => $this->roomBlocks()->count(),
+            'movement' => $this->transport()->count(),
+            'session' => $this->agendaSessions()->count(),
+            'speaker' => $this->speakers()->count(),
+            'sponsor' => $this->sponsors()->count(),
+            'risk' => $this->risks()->count(),
+        ])->filter()->all();
+
+        $keeps = collect([
+            'invoice' => $this->invoices()->count(),
+            'proposal' => Proposal::where('event_id', $this->id)->count(),
+            'deal' => Deal::where('event_id', $this->id)->count(),
+        ])->filter()->all();
+
+        // Records that mean money has moved. Deleting the event does not undo
+        // any of it, and somebody about to delete should be told so plainly.
+        $money = [];
+
+        $signed = $this->contracts()->where('status', 'signed')->count();
+        if ($signed > 0) {
+            $money[] = $signed.' signed '.str('contract')->plural($signed);
+        }
+
+        $paid = $this->invoices()->where('paid_cents', '>', 0)->count();
+        if ($paid > 0) {
+            $money[] = $paid.' paid '.str('invoice')->plural($paid);
+        }
+
+        $received = (int) EventContractPayment::where('event_id', $this->id)->sum('paid_cents');
+        if ($received > 0) {
+            $money[] = $this->money($received).' received against the schedule';
+        }
+
+        return ['destroys' => $destroys, 'keeps' => $keeps, 'money' => $money];
+    }
+
     /** Documents raised against this event — see Invoice::unscheduledPaidCents(). */
     public function invoices(): HasMany
     {

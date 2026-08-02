@@ -279,9 +279,59 @@ class SettingsTab extends Component
         return $this->redirectRoute('events.index');
     }
 
+    /* ── Deleting the event, on purpose ── */
+
+    /** Typed to arm the delete. Empty means the button stays disabled. */
+    public string $confirmName = '';
+
+    public bool $showDelete = false;
+
+    public function askToDelete(): void
+    {
+        Gate::authorize('manage-events');
+
+        $this->showDelete = true;
+        $this->confirmName = '';
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDelete = false;
+        $this->confirmName = '';
+    }
+
+    /**
+     * Delete the event and everything that hangs off it.
+     *
+     * The name has to be typed. A click-through confirmation is the right
+     * weight for archiving, which is reversible; this takes twenty tables with
+     * it and cannot be undone, and the one thing that reliably stops the wrong
+     * event going is having to read its name and write it out.
+     */
+    public function destroyEvent()
+    {
+        Gate::authorize('manage-events');
+
+        if (mb_strtolower(trim($this->confirmName)) !== mb_strtolower(trim($this->event->name))) {
+            $this->addError('confirmName', 'Type the event name exactly to confirm.');
+
+            return null;
+        }
+
+        $name = $this->event->name;
+        $this->event->delete();
+
+        session()->flash('status', "“{$name}” was permanently deleted.");
+
+        return $this->redirectRoute('events.index', navigate: true);
+    }
+
     public function render()
     {
         return view('livewire.hub.settings-tab', [
+            // Only counted when the panel is open: eleven counts on every
+            // render of a settings page nobody is deleting from is waste.
+            'inventory' => $this->showDelete ? $this->event->deletionInventory() : null,
             'clients' => Client::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
             'team' => $this->event->teamMembers()->orderBy('name')->get(),
