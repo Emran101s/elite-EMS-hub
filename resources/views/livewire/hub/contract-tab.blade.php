@@ -540,6 +540,10 @@
                                 @if ($budgetFlash)
                                     <p class="mt-1.5 text-[11px] font-semibold text-navy-600">{{ $budgetFlash }}</p>
                                 @endif
+
+                                <p class="mt-1.5 font-mono text-eyebrow text-muted">
+                                    Quoted live in the body wherever a clause reads <b>&#123;&#123;value&#125;&#125;</b> — change it here and every one of them follows, no regeneration needed.
+                                </p>
                             </div>
 
                             @php $totalPct = collect($f['payment_schedule'] ?? [])->sum(fn ($s) => (float) ($s['pct'] ?? 0)); @endphp

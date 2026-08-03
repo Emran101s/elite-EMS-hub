@@ -9,7 +9,11 @@
              and optionally $empty (the message when there is nothing).
 --}}
 @php
-    $ref = fn (string $s, string $lang = 'en') => \App\Support\ContractAppendices::resolve($s, $refs ?? [], $lang);
+    // Resolves {{value}} to the current Value & Payments figure, then
+    // {{appendix:slug}} to its number — in that order, since a token that
+    // named an appendix could never also name the value.
+    $ref = fn (string $s, string $lang = 'en') => \App\Support\ContractAppendices::resolve(
+        \App\Support\ContractClauses::resolveValue($s, $data, $lang), $refs ?? [], $lang);
 
     // A cost-share clause with nothing to share is a heading over an empty
     // table. Once the Client is a single entity the article has no subject, so

@@ -121,18 +121,6 @@ class ContractClauses
         $f = $d['financials'] ?? [];
         $t = $d['terms'] ?? [];
         $sp = self::parties($d);
-        // Put here by whoever generated these clauses, from the event. The
-        // body becomes editable text once written, so the figure is frozen on
-        // purpose — but it must be frozen in the right currency.
-        $cur = $d['currency'] ?? ($d['financials']['currency'] ?? \App\Models\CompanyProfile::currency());
-
-        // The contract stands on its own agreed figure, not on a live budget estimate.
-        $valueCents = (int) ($f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0);
-        $money = $cur.' '.number_format($valueCents / 100, 2);
-        // "JOD 350,000.00" reads as a foreign body inside an Arabic sentence;
-        // the Arabic side names the currency in Arabic and keeps the figure.
-        $moneyAr = number_format($valueCents / 100, 2).' '.self::arabicCurrency($cur);
-        [$wordsEn, $wordsAr] = self::inWords($valueCents, $cur);
         $isFixed = ($f['value_mode'] ?? 'fixed') === 'fixed';
 
         $accept = (int) ($t['acceptance_days'] ?? 5);
@@ -200,23 +188,29 @@ class ContractClauses
                 'ar_title' => $isFixed ? 'قيمة العقد' : 'القيمة التقديرية للمشروع',
                 'en' => $isFixed
                     ? [
-                        "The Parties agree that the total value of the Project is {$money} ({$wordsEn}).",
+                        // {{value}} is live: it is resolved from the current
+                        // Value & Payments figure every time the document is
+                        // rendered, not frozen at the moment this clause was
+                        // generated — a contract created before anything was
+                        // priced no longer says "0.00" forever. See
+                        // ContractClauses::resolveValue and blocks.blade.php.
+                        'The Parties agree that the total value of the Project is {{value}}.',
                         'This amount is a fixed lump-sum contract value covering the Scope of Services set out in Article 1, and shall not vary save by a written amendment duly signed by both Parties.',
                         'Any addition to, or reduction of, the Scope of Services shall be agreed in writing and priced as a written variation before the relevant costs are committed.',
                     ]
                     : [
-                        "The Parties agree that the current estimated value of the Project is {$money} ({$wordsEn}).",
+                        'The Parties agree that the current estimated value of the Project is {{value}}.',
                         'The above amount constitutes an estimated project budget and shall not be construed as a fixed lump-sum contract value. The final project cost may increase or decrease based on actual project requirements, final approved designs, Client instructions, supplier quotations, venue costs, accommodation requirements, logistical arrangements, governmental approvals and operational needs.',
                         'The Parties may amend the estimated budget through written approval without the need to execute a new Agreement.',
                     ],
                 'ar' => $isFixed
                     ? [
-                        "يتفق الطرفان على أن القيمة الإجمالية للمشروع هي {$moneyAr} ({$wordsAr}).",
+                        "يتفق الطرفان على أن القيمة الإجمالية للمشروع هي {{value}}.",
                         'وهذا المبلغ قيمة عقد إجمالية ثابتة تغطّي نطاق الخدمات المبيّن في المادة (1)، ولا يجوز تغييره إلا بموجب تعديل خطّي موقّع حسب الأصول من الطرفين.',
                         'ويُتَّفق خطياً على أي إضافة إلى نطاق الخدمات أو انتقاص منه، ويُسعَّر ذلك بموجب تعديل خطّي قبل الالتزام بالتكاليف ذات الصلة.',
                     ]
                     : [
-                        "يتفق الطرفان على أن القيمة التقديرية الحالية للمشروع هي {$moneyAr} ({$wordsAr}).",
+                        "يتفق الطرفان على أن القيمة التقديرية الحالية للمشروع هي {{value}}.",
                         'ويشكّل المبلغ أعلاه موازنةً تقديريةً للمشروع، ولا يجوز تفسيره على أنه قيمة عقد إجمالية ثابتة. وقد ترتفع التكلفة النهائية للمشروع أو تنخفض استناداً إلى متطلبات المشروع الفعلية، والتصاميم النهائية المعتمَدة، وتعليمات العميل، وعروض أسعار المورّدين، وتكاليف القاعات، ومتطلبات الإقامة، والترتيبات اللوجستية، والموافقات الحكومية، والاحتياجات التشغيلية.',
                         'ويجوز للطرفين تعديل الموازنة التقديرية بموجب موافقة خطّية دون الحاجة إلى إبرام اتفاقية جديدة.',
                     ],
@@ -600,6 +594,43 @@ class ContractClauses
         }
 
         return $out;
+    }
+
+    /**
+     * Resolve {{value}} in a piece of clause text to the document's current
+     * headline figure — the number shown in Value & Payments right now.
+     *
+     * Every other figure a clause quotes (a fee, a percentage) is written once
+     * and becomes ordinary editable prose afterwards, on purpose — a signed
+     * agreement should not read differently tomorrow because somebody edited
+     * an unrelated screen. The project value is the one exception: it is
+     * quoted nowhere else in the body, it is exactly what Value & Payments
+     * already tracks, and freezing it at the moment this clause happened to be
+     * generated is how a real contract ends up saying "0.00" forever because
+     * nothing had been priced yet when it was created.
+     */
+    public static function resolveValue(string $text, array $d, string $lang = 'en'): string
+    {
+        if (! str_contains($text, '{{value}}')) {
+            return $text;
+        }
+
+        return str_replace('{{value}}', self::liveValue($d, $lang), $text);
+    }
+
+    /** "JOD 350,000.00 (Three Hundred Fifty Thousand Jordanian Dinars Only)", live. */
+    public static function liveValue(array $d, string $lang = 'en'): string
+    {
+        $f = $d['financials'] ?? [];
+        $cur = $d['currency'] ?? ($f['currency'] ?? \App\Models\CompanyProfile::currency());
+        $cents = (int) ($f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0);
+        [$wordsEn, $wordsAr] = self::inWords($cents, $cur);
+
+        if ($lang === 'ar') {
+            return number_format($cents / 100, 2).' '.self::arabicCurrency($cur).' ('.$wordsAr.')';
+        }
+
+        return $cur.' '.number_format($cents / 100, 2).' ('.$wordsEn.')';
     }
 
     /**

@@ -260,7 +260,12 @@ class EventContract extends Model
             return $base;
         }
 
-        $estimated = (int) ($event->budget_cents ?? 0);
+        // The same figure the "From budget" button pulls in later — the
+        // priced budget lines, not $event->budget_cents (a manually-typed cap
+        // that is usually unset, which is why a fresh contract used to open
+        // saying the project is worth nothing).
+        $forecast = $event->costForecast();
+        $estimated = $forecast['forecast'] ?: $forecast['cap'];
         $dates = $event->starts_at && $event->ends_at
             ? $event->starts_at->format('j').'–'.$event->ends_at->format('j M Y')
             : ($event->starts_at?->format('j M Y') ?? 'To be confirmed');

@@ -319,11 +319,19 @@ class EventContractTest extends TestCase
         // One funder, so there is nothing to divide and no article about it.
         $this->assertNull(collect($clauses)->firstWhere('type', 'costshare'));
 
-        // The value is spelled out beside the figure, as a contract must.
+        // The value is a live token, not a figure frozen at generation — a
+        // contract created before anything was priced must not say "0.00"
+        // forever. See ContractClauses::resolveValue.
         $value = collect($clauses)->firstWhere('en_title', 'Contract Value');
-        $this->assertStringContainsString('JOD 350,000.00', $value['en'][0]);
-        $this->assertStringContainsString('Three Hundred Fifty Thousand Jordanian Dinars Only', $value['en'][0]);
-        $this->assertStringContainsString('ديناراً أردنياً', $value['ar'][0]);
+        $this->assertStringContainsString('{{value}}', $value['en'][0]);
+        $this->assertStringContainsString('{{value}}', $value['ar'][0]);
+
+        // Resolved, it reads exactly as a contract must — the figure spelled
+        // out in words beside it.
+        $resolvedEn = ContractClauses::resolveValue($value['en'][0], $c->data, 'en');
+        $this->assertStringContainsString('JOD 350,000.00', $resolvedEn);
+        $this->assertStringContainsString('Three Hundred Fifty Thousand Jordanian Dinars Only', $resolvedEn);
+        $this->assertStringContainsString('ديناراً أردنياً', ContractClauses::resolveValue($value['ar'][0], $c->data, 'ar'));
 
         // Rates the articles quote come from data.terms, not from the prose.
         $tax = collect($clauses)->firstWhere('en_title', 'Taxes and Government Fees');
