@@ -2,7 +2,7 @@
     $may = auth()->user()?->can('manage-contract') ?? false;
     $p = $proposal;
     $state = $p->state();
-    $cur = $p->currency ?: 'JOD';
+    $cur = $p->currencyCode();
     $money = fn ($c) => $cur.' '.number_format($c / 100, 2);
 @endphp
 

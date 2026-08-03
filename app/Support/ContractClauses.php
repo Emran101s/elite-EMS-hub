@@ -121,7 +121,10 @@ class ContractClauses
         $f = $d['financials'] ?? [];
         $t = $d['terms'] ?? [];
         $sp = self::parties($d);
-        $cur = $f['currency'] ?? 'JOD';
+        // Put here by whoever generated these clauses, from the event. The
+        // body becomes editable text once written, so the figure is frozen on
+        // purpose — but it must be frozen in the right currency.
+        $cur = $d['currency'] ?? ($d['financials']['currency'] ?? \App\Models\CompanyProfile::currency());
 
         // The contract stands on its own agreed figure, not on a live budget estimate.
         $valueCents = (int) ($f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0);

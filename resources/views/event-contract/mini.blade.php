@@ -8,7 +8,7 @@
     $miniData = $c->data ?? [];
     $miniData['blocks'] = $c->blocks();
     $miniF = $miniData['financials'] ?? [];
-    $miniCur = $miniF['currency'] ?? ($miniData['currency'] ?? 'JOD');
+    $miniCur = $c->currencyCode();
     $miniSigs = $c->signatories;
 @endphp
 <div class="pointer-events-none select-none overflow-hidden bg-white"

@@ -409,6 +409,8 @@ class ContractTab extends Component
             return;   // the client body refills via restoreStandardBlocks
         }
 
+        $this->data['currency'] = $this->event->currency ?: \App\Models\CompanyProfile::currency();
+        $this->data['financials']['currency'] = $this->data['currency'];
         $this->data['blocks'] = ContractTemplates::blocks($this->type, $this->data);
         $this->touch();
     }

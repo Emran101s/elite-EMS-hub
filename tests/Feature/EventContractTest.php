@@ -37,6 +37,43 @@ class EventContractTest extends TestCase
             ->call('selectContract', $contract->id);
     }
 
+    /**
+     * Money on a contract is the event's money.
+     *
+     * The currency used to be copied into the document's JSON when it was
+     * created, and each reader had its own `?? 'JOD'` fallback — so a document
+     * raised before the event's currency was set stayed on the fallback for
+     * ever, and the same screen showed the value in JOD beside a figure pulled
+     * from the budget in dollars.
+     */
+    public function test_a_contract_is_always_written_in_the_events_currency(): void
+    {
+        $event = Event::factory()->create(['currency' => 'JOD']);
+        $contract = EventContract::forEvent($event);
+
+        $this->assertSame('JOD', $contract->currencyCode());
+        $this->assertSame('JD 1,250', $contract->money(125000));
+
+        // The event changes its mind; the document follows it.
+        $event->update(['currency' => 'USD']);
+
+        $this->assertSame('USD', $contract->fresh()->currencyCode());
+        $this->assertSame('$1,250', $contract->fresh()->money(125000));
+    }
+
+    /** A stale copy left in the JSON must not win over the event. */
+    public function test_a_frozen_currency_in_the_document_does_not_override_the_event(): void
+    {
+        $event = Event::factory()->create(['currency' => 'USD']);
+        $contract = EventContract::forEvent($event);
+
+        $data = $contract->data;
+        $data['financials']['currency'] = 'JOD';
+        $contract->update(['data' => $data]);
+
+        $this->assertSame('USD', $contract->fresh()->currencyCode());
+    }
+
     public function test_body_seeds_as_editable_bilingual_blocks(): void
     {
         [$user, $event] = $this->make();

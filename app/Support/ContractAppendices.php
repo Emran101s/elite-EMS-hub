@@ -95,7 +95,7 @@ class ContractAppendices
      */
     private static function fromBudget(Event $event, EventContract $contract): array
     {
-        $cur = $contract->data['financials']['currency'] ?? $event->currency ?? 'JOD';
+        $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
         $fee = (float) ($event->management_fee_pct ?? 15);
         $money = fn (int $c) => $cur.' '.number_format($c / 100, 2);
 

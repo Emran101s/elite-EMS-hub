@@ -57,6 +57,28 @@ class EventContract extends Model
         'signed_at' => 'datetime',
     ];
 
+    /**
+     * The currency this document is written in — always the event's.
+     *
+     * It used to be copied into the document's own JSON when the document was
+     * created, and every reader then had its own `?? 'JOD'` fallback. So a
+     * contract raised before the event's currency was set stayed on the
+     * fallback for ever, and the same screen could show the value in JOD and
+     * the figure pulled from the budget in dollars.
+     *
+     * Money on a contract is the event's money. One place says so.
+     */
+    public function currencyCode(): string
+    {
+        return $this->event?->currency ?: CompanyProfile::currency();
+    }
+
+    /** Format a cents amount the way the rest of the platform formats money. */
+    public function money(?int $cents): string
+    {
+        return Event::moneyIn($cents, $this->currencyCode());
+    }
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
@@ -195,7 +217,7 @@ class EventContract extends Model
                     'place' => $location ?: 'Amman, Jordan',
                     'date' => now()->format('j F Y'),
                 ],
-                'currency' => $event->currency ?? 'JOD',
+                'currency' => $event->currency ?: CompanyProfile::currency(),
                 'event' => [
                     'name' => $event->name,
                     'dates' => $dates,
@@ -225,10 +247,14 @@ class EventContract extends Model
                 $base['meta']['title_ar'] = 'محضر إنجاز الخدمات';
                 $base['second_parties'] = $agreement->data['second_parties'] ?? [];
                 $base['terms'] = $agreement->data['terms'] ?? ['acceptance_days' => 5];
-                $base['financials'] = ['currency' => $event->currency ?? 'JOD'];
+                $base['financials'] = ['currency' => $event->currency ?: CompanyProfile::currency()];
             }
 
             // The type's standard clauses, seeded once — the contract owns them after.
+            // Generated text quotes a figure, so it has to be generated in
+            // the event's currency rather than whatever the seed left behind.
+            $base['currency'] = $event->currency ?: CompanyProfile::currency();
+            $base['financials']['currency'] = $base['currency'];
             $base['blocks'] = ContractTemplates::blocks($type, $base);
 
             return $base;
@@ -278,7 +304,7 @@ class EventContract extends Model
                 ],
             ],
             'financials' => [
-                'currency' => $event->currency ?? 'JOD',
+                'currency' => $event->currency ?: CompanyProfile::currency(),
                 // The contract stands on its own figure. The budget can seed it
                 // once (Pull from budget) but never drives it afterwards.
                 'value_mode' => 'fixed',                 // fixed | estimate

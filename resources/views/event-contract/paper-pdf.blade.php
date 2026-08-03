@@ -9,7 +9,7 @@
     $data = $contract->data ?? [];
     $data['blocks'] = $contract->blocks();   // client falls back to the standard set
     $f = $data['financials'] ?? [];
-    $cur = $f['currency'] ?? ($data['currency'] ?? 'JOD');
+    $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
     $est = $f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0;
     $fmt = fn ($c) => $cur.' '.number_format(($c ?? 0) / 100);
     $bilingual = $contract->isClient() || $contract->isBilingual();

@@ -293,10 +293,11 @@
 
     @php
         $f = $data['financials'] ?? [];
-        $cur = $f['currency'] ?? ($data['currency'] ?? 'JOD');
+        // The event's currency, not a copy frozen into the document.
+        $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
         $est = $f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0;
         $isFixed = ($f['value_mode'] ?? 'fixed') === 'fixed';
-        $fmt = fn ($c) => $cur.' '.number_format(($c ?? 0) / 100);
+        $fmt = fn ($c) => $event->money((int) round($c ?? 0));
         [$tLabel] = $typeMeta[$type] ?? ['Document'];
         [$sLabel, $sChip] = $statusChip[$status] ?? ['Draft', 'bg-navy-50 text-navy-500'];
         $bilingual = $type === 'client' || $language === 'bilingual';
@@ -510,7 +511,7 @@
                     </x-accordion-section>
 
                     {{-- Value & schedule module --}}
-                    <x-accordion-section id="value-and-payments" num="02" title="Value &amp; Payments" summary="{{ $fmt($est) }} · {{ count($f['payment_schedule'] ?? []) }} installments">
+                    <x-accordion-section id="value-and-payments" num="02" title="Value & Payments" summary="{{ $fmt($est) }} · {{ count($f['payment_schedule'] ?? []) }} installments">
                         <div class="space-y-3">
                             <div class="rounded-xl bg-gold-50/60 p-3">
                                 <div class="flex items-center gap-2">

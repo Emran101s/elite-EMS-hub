@@ -79,6 +79,33 @@ class Proposal extends Model
         return $this->belongsTo(Contact::class);
     }
 
+    /**
+     * The currency this document is written in.
+     *
+     * Its own, because a document may deliberately be raised in a client's
+     * currency; then the event's, when it has one and never chose for itself;
+     * then the house currency. What it is not is a hardcoded 'JOD' — which is
+     * what the screens fell back to, so a dollar event could show a dinar
+     * total to anyone whose document predated the currency being set.
+     */
+    /**
+     * Named `currencyCode`, not `currency`.
+     *
+     * A method sharing a column's name is only ever consulted when the
+     * attribute is missing — and then Eloquent reaches it through the relation
+     * resolver and demands a relationship instance. It fails exactly on the
+     * partially-loaded models that made the method necessary.
+     */
+    public function currencyCode(): string
+    {
+        // The raw attribute, not $this->currency: models run in strict mode, so
+        // reading an attribute that was never loaded throws rather than
+        // returning null — and a method sharing the column's name is exactly
+        // where that bites.
+        return ($this->attributes['currency'] ?? null)
+            ?: ($this->event?->currency ?: CompanyProfile::currency());
+    }
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);

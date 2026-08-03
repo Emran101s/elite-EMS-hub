@@ -3,7 +3,7 @@
     $inv = $invoice;
     $state = $inv->state();
     $out = $inv->outstandingCents();
-    $cur = $inv->currency ?: 'JOD';
+    $cur = $inv->currencyCode();
     $money = fn ($c) => $cur.' '.number_format($c / 100, 2);
 @endphp
 

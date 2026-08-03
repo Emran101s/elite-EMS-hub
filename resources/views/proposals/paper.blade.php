@@ -19,7 +19,7 @@
     $total = $proposal->totalCents();
     $optional = $proposal->lines->filter->optional;
     $included = $proposal->lines->reject->optional;
-    $cur = $proposal->currency ?: 'JOD';
+    $cur = $proposal->currencyCode();
 @endphp
 
 <style>

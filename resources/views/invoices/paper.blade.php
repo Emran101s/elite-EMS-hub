@@ -19,7 +19,7 @@
     $tax = $invoice->taxCents();
     $total = $invoice->totalCents();
     $out = $invoice->outstandingCents();
-    $cur = $invoice->currency ?: 'JOD';
+    $cur = $invoice->currencyCode();
     $state = $invoice->state();
     $billTo = $invoice->bill_to ?: ($invoice->client?->name ?: $invoice->event?->client?->name);
 @endphp

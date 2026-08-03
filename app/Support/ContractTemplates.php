@@ -58,7 +58,7 @@ class ContractTemplates
             'dates' => $d['event']['dates'] ?? 'the agreed dates',
             'where' => $d['event']['location'] ?? 'Amman, Jordan',
             'who' => ($d['counterparty']['name_en'] ?? '') !== '' ? $d['counterparty']['name_en'] : 'the Counterparty',
-            'fee' => $fee ? Event::moneyIn((int) $fee, $d['currency'] ?? 'JOD') : null,
+            'fee' => $fee ? Event::moneyIn((int) $fee, $d['currency'] ?? 'USD') : null,
             'package' => $d['counterparty']['package'] ?? null,
             'detail' => $d['counterparty']['detail'] ?? null,
         ];
