@@ -615,6 +615,63 @@ class EventContractTest extends TestCase
             ->assertOk()->assertSee('Half signed');
     }
 
+    /**
+     * "From budget" read the cap and nothing else.
+     *
+     * On an event whose cap has never been typed — and whose budget is lines
+     * mirrored from the modules — it copied a zero over a real figure and
+     * looked like a button that did nothing.
+     */
+    public function test_pulling_from_the_budget_takes_what_the_client_is_charged(): void
+    {
+        [$user, $event] = $this->make();
+
+        $event->update(['budget_cents' => 0]);
+        $event->budgetItems()->create([
+            'category' => 'Venues', 'description' => 'Meeting room',
+            'estimated_cents' => 10_000_00, 'quantity' => 1,
+        ]);
+
+        $forecast = $event->fresh()->costForecast()['forecast'];
+        $this->assertGreaterThan(0, $forecast);
+
+        $c = $this->tab($user, $event->fresh())->call('syncBudget');
+
+        $this->assertSame($forecast, $c->get('data')['financials']['contract_value_cents']);
+        $c->assertSet('budgetFlash', fn (string $m) => str_contains($m, 'taken from the budget'));
+    }
+
+    /** With nothing priced, it says so instead of writing a zero. */
+    public function test_pulling_from_an_empty_budget_explains_itself(): void
+    {
+        [$user, $event] = $this->make();
+
+        $event->budgetItems()->delete();
+        $event->update(['budget_cents' => 0]);
+
+        $c = $this->tab($user, $event->fresh());
+        $before = $c->get('data')['financials']['contract_value_cents'];
+
+        $c->call('syncBudget');
+
+        $this->assertSame($before, $c->get('data')['financials']['contract_value_cents'],
+            'a real figure is not overwritten with nothing');
+        $c->assertSet('budgetFlash', fn (string $m) => str_contains($m, 'nothing priced yet'));
+    }
+
+    /** An event budgeted as one agreed number still works. */
+    public function test_a_cap_with_no_lines_is_still_pulled(): void
+    {
+        [$user, $event] = $this->make();
+
+        $event->budgetItems()->delete();
+        $event->update(['budget_cents' => 250_000_00]);
+
+        $c = $this->tab($user, $event->fresh())->call('syncBudget');
+
+        $this->assertSame(250_000_00, $c->get('data')['financials']['contract_value_cents']);
+    }
+
     // ══════════════════ THE ANNEXES ══════════════════
 
     /**

@@ -526,9 +526,19 @@
                                                     @class(['rounded-md px-2 py-1 text-eyebrow font-bold transition', 'bg-navy-900 text-white' => ($f['value_mode'] ?? 'fixed') === $mode, 'text-navy-500 hover:text-navy-900' => ($f['value_mode'] ?? 'fixed') !== $mode])>{{ $ml }}</button>
                                         @endforeach
                                     </div>
-                                    <button type="button" wire:click="syncBudget" wire:confirm="Copy the event budget into the contract value? This overwrites the figure once — it does not link them."
-                                            class="text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700">↻ From budget</button>
+                                    {{-- The figure is on the button, so a pull is never a
+                                         mystery: you can see what is coming before it comes. --}}
+                                    @php $fromBudget = $event->costForecast(); @endphp
+                                    <button type="button" wire:click="syncBudget"
+                                            wire:confirm="Copy {{ $fromBudget['forecast'] ? $event->money($fromBudget['forecast']) : 'the budget' }} into the contract value? This overwrites the figure once — it does not link them."
+                                            class="text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700">
+                                        ↻ From budget @if ($fromBudget['forecast'])· {{ $event->money($fromBudget['forecast']) }}@endif
+                                    </button>
                                 </div>
+
+                                @if ($budgetFlash)
+                                    <p class="mt-1.5 text-[11px] font-semibold text-navy-600">{{ $budgetFlash }}</p>
+                                @endif
                             </div>
 
                             @php $totalPct = collect($f['payment_schedule'] ?? [])->sum(fn ($s) => (float) ($s['pct'] ?? 0)); @endphp

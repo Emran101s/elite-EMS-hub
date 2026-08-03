@@ -786,13 +786,48 @@ class ContractTab extends Component
      * One-shot convenience: copy the current budget into the contract value.
      * The contract keeps its own figure afterwards — this is never a live link.
      */
+    /**
+     * Take the contract's figure from the budget.
+     *
+     * This read `budget_cents` — the cap somebody types into "Total budget" —
+     * and nothing else. On an event where the cap has not been typed, and the
+     * budget is entirely lines mirrored from the modules, it copied a zero over
+     * a real figure and looked like a button that did nothing.
+     *
+     * What a contract is worth is what the client will be CHARGED, which is
+     * exactly what the Budget tab's Forecast shows. The cap is the fallback,
+     * for an event whose budget is a single agreed number and no lines.
+     */
     public function syncBudget(): void
     {
-        $cents = (int) ($this->event->budget_cents ?? 0);
+        Gate::authorize('manage-contract');
+
+        $cost = $this->event->costForecast();
+        $cents = $cost['forecast'] ?: $cost['cap'];
+
+        if ($cents <= 0) {
+            $this->budgetFlash = 'The budget has nothing priced yet, so there is no figure to take. '
+                .'Price the lines in Budget — or type the value here.';
+
+            return;
+        }
+
         $this->data['financials']['contract_value_cents'] = $cents;
         $this->data['financials']['estimated_total_cents'] = $cents;
+
+        $this->budgetFlash = $this->event->money($cents).' taken from the budget'
+            .($cost['forecast'] ? ' — what the client is charged, fee included.' : ' — the agreed total.');
+
         $this->touch();
     }
+
+    /**
+     * What the last pull did.
+     *
+     * On the component rather than a flash: this re-renders in place, and a
+     * pull that quietly changes nothing is the fault being fixed here.
+     */
+    public string $budgetFlash = '';
 
     /** Contract value typed in currency units → stored as cents. */
     public function setContractValue($value): void
