@@ -34,6 +34,7 @@ class BudgetSourceObserver
         \App\Models\EventTransport::class => ['cost_cents', 'route', 'provider'],
         \App\Models\EventSpeaker::class => ['fee_cents', 'name'],
         \App\Models\EventRoom::class => ['cost_cents', 'name', 'requirements', 'days', 'setup_days'],
+        \App\Models\EventCateringItem::class => ['cost_cents', 'per_person', 'headcount', 'title', 'status', 'supplier_id'],
     ];
 
     /** Guards against a sync setting off another one. */

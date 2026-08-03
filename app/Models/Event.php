@@ -63,6 +63,7 @@ class Event extends Model
         'venue' => ['Venue', 'Logistics', 'building'],
         'transportation' => ['Transport', 'Logistics', 'truck'],
         'accommodation' => ['Accommodation', 'Logistics', 'home'],
+        'catering' => ['Food & Beverage', 'Logistics', 'cup'],
         'exhibition' => ['Exhibition', 'Exhibition', 'grid'],
         'sponsors' => ['Sponsors', 'Exhibition', 'star'],
         'attendees' => ['Attendees', 'Sell', 'users'],
@@ -102,6 +103,7 @@ class Event extends Model
         'suppliers' => ['Suppliers', 'Vendors & orders', 'truck'],
         'transportation' => ['Transport', 'Movements & drivers', 'truck'],
         'accommodation' => ['Stay', 'Hotels & rooming', 'home'],
+        'catering' => ['Food & Beverage', 'Menus, breaks & meals', 'cup'],
         'exhibition' => ['Exhibition', 'Floor & stands', 'grid'],
         'sponsors' => ['Sponsors', 'Partnerships', 'star'],
         'attendees' => ['Attendees', 'Registrations & badges', 'users'],
@@ -122,7 +124,7 @@ class Event extends Model
         'brief' => '#3B6FD4', 'contract' => '#2E5AA8', 'planning' => '#4C7FE0',
         'tasks' => '#5B8DEF', 'budget' => '#1F4B99', 'risks' => '#E2574C', 'approvals' => '#7C6BD9',
         'agenda' => '#0E9488', 'speakers' => '#14B8A6',
-        'suppliers' => '#C2761E', 'venue' => '#B45309', 'transportation' => '#D97706', 'accommodation' => '#A16207',
+        'suppliers' => '#C2761E', 'venue' => '#B45309', 'transportation' => '#D97706', 'accommodation' => '#A16207', 'catering' => '#92400E',
         'exhibition' => '#A855F7', 'sponsors' => '#C026D3',
         'attendees' => '#16A34A',
         'files' => '#B08D2F', 'reports' => '#64748B',
@@ -689,6 +691,7 @@ class Event extends Model
             'movement' => $this->transport()->count(),
             'session' => $this->agendaSessions()->count(),
             'speaker' => $this->speakers()->count(),
+            'catering occasion' => $this->cateringItems()->count(),
             'sponsor' => $this->sponsors()->count(),
             'risk' => $this->risks()->count(),
         ])->filter()->all();
@@ -738,6 +741,7 @@ class Event extends Model
         'speakers' => 'Attendee & Guest Services',
         'venue' => 'Venues',
         'requirements' => 'Event Requirements',
+        'catering' => 'Food & Beverage',
     ];
 
     /** What a module is called where the choice is offered. */
@@ -747,6 +751,7 @@ class Event extends Model
         'speakers' => 'Speaker fees',
         'venue' => 'Venue hire',
         'requirements' => 'Event requirements',
+        'catering' => 'Food & beverage',
     ];
 
     /** The category this module's costs land in — its own, or the default. */
@@ -1035,6 +1040,13 @@ class Event extends Model
     public function speakers(): HasMany
     {
         return $this->hasMany(EventSpeaker::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** Every food & beverage occasion, soonest first — a coffee break on day
+     *  one belongs above the gala dinner on day four. */
+    public function cateringItems(): HasMany
+    {
+        return $this->hasMany(EventCateringItem::class)->orderBy('occasion_date')->orderBy('sort_order');
     }
 
     /** Total of the event-wide requirements (cents). */

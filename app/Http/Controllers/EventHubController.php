@@ -35,7 +35,7 @@ class EventHubController extends Controller
 
         $event->load([
             'client', 'venue', 'projectManager', 'project',
-            'rooms', 'agendaDays.sessions.room', 'agendaSessions.day',
+            'rooms', 'cateringItems.room', 'agendaDays.sessions.room', 'agendaSessions.day',
             'tasks.assignee', 'budgetItems.supplier', 'suppliers', 'roomBlocks',
             'attendees', 'transport.manifest',
             'sponsors', 'risks.owner', 'approvals.requester', 'approvals.decider',

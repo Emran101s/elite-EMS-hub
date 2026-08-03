@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\EventAccommodation;
+use App\Models\EventCateringItem;
 use App\Models\EventRoom;
 use App\Models\EventRoomBlock;
 use App\Models\EventSpeaker;
@@ -39,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
     private function watchBudgetSources(): void
     {
         foreach ([EventRoomBlock::class, EventAccommodation::class, EventTransport::class,
-            EventSpeaker::class, EventRoom::class] as $model) {
+            EventSpeaker::class, EventRoom::class, EventCateringItem::class] as $model) {
             $model::observe(BudgetSourceObserver::class);
         }
     }
