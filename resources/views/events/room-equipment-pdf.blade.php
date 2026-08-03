@@ -15,12 +15,7 @@
         $navy = $theme['primary'] ?? '#0B1F3A';
         $gold = $theme['accent'] ?? '#D4AF37';
 
-        $statusMeta = [
-            'needed' => ['Needed', '#475569', '#EEF2F7'],
-            'requested' => ['Requested', '#92400E', '#FEF3C7'],
-            'confirmed' => ['Confirmed', '#1E40AF', '#DBEAFE'],
-            'onsite' => ['On-site', '#166534', '#DCFCE7'],
-        ];
+        $statusMeta = \App\Models\EventRoom::equipmentStatusMeta();
 
         $days = $room->chargedDays();
         $units = $lines->sum('qty');
@@ -113,7 +108,7 @@
         <div class="eb">Elite Business Hub · Load-in Sheet</div>
         <h1>{{ $room->name }}</h1>
         <div class="sub">{{ $event->name }} · {{ str($room->type)->replace('_', ' ')->title() }}
-            @if ($event->starts_on) · {{ $event->starts_on->format('d M Y') }}@endif
+            @if ($event->starts_on) · {{ $event->starts_on->format('j M Y') }}@endif
             · room held {{ $days }} {{ str('day')->plural($days) }}</div>
     </div>
     <div class="fig">
@@ -123,7 +118,7 @@
 </div>
 
 <div class="tally">
-    @foreach ($statusMeta as $key => [$label, $fg, $bg])
+    @foreach ($statusMeta as $key => ['label' => $label, 'fg' => $fg, 'bg' => $bg])
         <div style="background:{{ $bg }};">
             <b style="color:{{ $fg }};">{{ $counts[$key] ?? 0 }}</b>
             <span style="color:{{ $fg }}; opacity:0.7;">{{ $label }}</span>
@@ -139,7 +134,7 @@
     </div>
 @else
     @foreach ($byStatus as $status => $group)
-        @php [$label, $fg, $bg] = $statusMeta[$status]; @endphp
+        @php ['label' => $label, 'fg' => $fg, 'bg' => $bg] = $statusMeta[$status]; @endphp
         <div class="grp">
             <h2 style="background:{{ $bg }}; color:{{ $fg }};">
                 {{ $label }}
@@ -193,7 +188,7 @@
 
 <div class="foot">
     <span>{{ $event->name }} · {{ $room->name }} · load-in sheet</span>
-    <span style="margin-left:auto;">Issued {{ now()->format('d M Y') }} · prices on the floor plan schedule</span>
+    <span style="margin-left:auto;">Issued {{ now()->format('j M Y') }} · prices on the floor plan schedule</span>
 </div>
 
 </body>

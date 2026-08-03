@@ -42,7 +42,7 @@
             </p>
             <ul class="mt-3 space-y-1.5 text-xs text-white/80">
                 <li class="flex items-center gap-2"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->city }}, {{ $event->country }}</li>
-                <li class="flex items-center gap-2"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('j, Y') ?? $event->starts_at?->format('Y') }}</li>
+                <li class="flex items-center gap-2"><x-icon name="calendar" class="h-3.5 w-3.5 shrink-0 text-white/50" /> {{ $event->starts_at?->format('j M') }} – {{ $event->ends_at?->format('j, Y') ?? $event->starts_at?->format('Y') }}</li>
                 @if ($event->venue)<li class="flex items-center gap-2"><x-icon name="home" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Venue: {{ $event->venue->name }}</li>@endif
                 @if ($event->expected_participants)<li class="flex items-center gap-2"><x-icon name="users" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Participants: {{ number_format($event->expected_participants) }}</li>@endif
                 @if ($event->projectManager)<li class="flex items-center gap-2"><x-icon name="identification" class="h-3.5 w-3.5 shrink-0 text-white/50" /> Project Manager: {{ $event->projectManager->name }}</li>@endif

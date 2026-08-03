@@ -1,6 +1,5 @@
 @php
-    $money = fn (int $cents, string $cur = 'JOD') => ($cur === 'USD' ? '$' : 'JD').' '
-        .(abs($cents) >= 100000 ? rtrim(rtrim(number_format($cents / 100000, 1), '0'), '.').'K' : number_format($cents / 100));
+    $money = fn (int $cents, string $cur = 'JOD') => \App\Support\Money::abbreviated($cents, $cur);
 @endphp
 
 <div>
@@ -79,7 +78,7 @@
                                                 <x-user-avatar :user="$deal->owner" size="h-5 w-5" />
                                             @endif
                                             <span class="truncate">{{ $deal->contact?->name ?? 'No contact' }}</span>
-                                            <span class="ml-auto shrink-0 tabular-nums">{{ $deal->expected_close_on?->format('d M') ?? '—' }}</span>
+                                            <span class="ml-auto shrink-0 tabular-nums">{{ $deal->expected_close_on?->format('j M') ?? '—' }}</span>
                                         </span>
                                     </button>
 
@@ -164,8 +163,8 @@
                             ['Client', $selected->client?->name ?? '—', $selected->client ? route('crm.client', $selected->client) : null],
                             ['Contact', $selected->contact?->name ?? 'None set'],
                             ['Owner', $selected->owner?->name ?? 'Unassigned'],
-                            ['Decision by', $selected->expected_close_on?->format('d M Y') ?? '—'],
-                            ['Event date', $selected->expected_event_on?->format('d M Y') ?? '—'],
+                            ['Decision by', $selected->expected_close_on?->format('j M Y') ?? '—'],
+                            ['Event date', $selected->expected_event_on?->format('j M Y') ?? '—'],
                             ['Source', $selected->source ?? '—'],
                         ] as $row)
                             @php [$k, $v] = $row; $href = $row[2] ?? null; @endphp
@@ -231,7 +230,7 @@
                                 @if ($a->follow_up_on && ! $a->follow_up_done)
                                     <button type="button" wire:click="completeFollowUp({{ $a->id }})"
                                             class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-gold-50 px-2 py-1 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200 transition hover:bg-gold-100">
-                                        ↻ Follow up {{ $a->follow_up_on->format('d M') }} · mark done
+                                        ↻ Follow up {{ $a->follow_up_on->format('j M') }} · mark done
                                     </button>
                                 @endif
                             </div>
@@ -260,7 +259,7 @@
                                     <span class="block truncate text-[11.5px] font-semibold text-navy-900">{{ $a->subject }}</span>
                                     <span class="block truncate text-[10px] text-muted">{{ $a->deal?->title ?? $a->client?->name }}</span>
                                 </span>
-                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-risk">{{ $a->follow_up_on->format('d M') }}</span>
+                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-risk">{{ $a->follow_up_on->format('j M') }}</span>
                             </button>
                         @endforeach
                     </div>

@@ -76,9 +76,9 @@
                             </div>
                             <p class="mt-0.5 truncate text-eyebrow text-muted">
                                 {{ $b->room_type ?: 'Standard' }}@if ($b->occupancy) · {{ \App\Models\EventAccommodation::OCCUPANCIES[$b->occupancy] ?? '' }}@endif
-                                @if ($b->check_in) · {{ $b->check_in->format('M j') }} – {{ $b->check_out?->format('M j') ?? '?' }} · {{ $b->nights() }} nights @endif
+                                @if ($b->check_in) · {{ $b->check_in->format('j M') }} – {{ $b->check_out?->format('j M') ?? '?' }} · {{ $b->nights() }} nights @endif
                                 @if ($b->confirmation_number) · #{{ $b->confirmation_number }} @endif
-                                @if ($b->cutoff_on) · <span class="font-semibold text-amber-700">cut-off {{ $b->cutoff_on->format('M j') }}</span> @endif
+                                @if ($b->cutoff_on) · <span class="font-semibold text-amber-700">cut-off {{ $b->cutoff_on->format('j M') }}</span> @endif
                             </p>
                         </div>
 

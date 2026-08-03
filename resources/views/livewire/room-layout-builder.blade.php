@@ -1,10 +1,5 @@
 @php
-    $statusMeta = [
-        'needed' => ['Needed', 'bg-navy-100 text-navy-600 border-navy-200'],
-        'requested' => ['Requested', 'bg-amber-100 text-amber-700 border-amber-200'],
-        'confirmed' => ['Confirmed', 'bg-emerald-100 text-emerald-700 border-emerald-200'],
-        'onsite' => ['On-site', 'bg-sky-100 text-sky-700 border-sky-200'],
-    ];
+    $equipmentStatusMeta = \App\Models\EventRoom::equipmentStatusMeta();
 @endphp
 <div>
     {{-- Header --}}
@@ -498,12 +493,9 @@
                             @php
                                 $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1));
                                 $rSt = $req['status'] ?? 'needed';
-                                [$stLabel, $stClass] = match ($rSt) {
-                                    'requested' => ['Requested', 'bg-amber-100 text-amber-800'],
-                                    'confirmed' => ['Confirmed', 'bg-sky-100 text-sky-800'],
-                                    'onsite' => ['On-site', 'bg-emerald-100 text-emerald-800'],
-                                    default => ['Needed', 'bg-navy-100 text-navy-600'],
-                                };
+                                $stMeta = $equipmentStatusMeta[$rSt] ?? $equipmentStatusMeta['needed'];
+                                $stLabel = $stMeta['label'];
+                                $stClass = $stMeta['class'];
                             @endphp
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-sm text-navy-800">{{ $req['name'] }}</span>

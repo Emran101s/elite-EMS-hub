@@ -12,7 +12,7 @@
     $curSymbol = \App\Models\Event::CURRENCIES[$cur][0] ?? '';
 
     $pDates = $starts_at
-        ? \Illuminate\Support\Carbon::parse($starts_at)->format('M j')
+        ? \Illuminate\Support\Carbon::parse($starts_at)->format('j M')
             . ($ends_at ? ' – ' . \Illuminate\Support\Carbon::parse($ends_at)->format('j, Y') : ', ' . \Illuminate\Support\Carbon::parse($starts_at)->format('Y'))
         : 'Dates not set';
 @endphp

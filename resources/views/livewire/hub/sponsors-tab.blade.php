@@ -1,10 +1,6 @@
 @php
     $fmt = fn ($cents) => $event->money($cents);
-    $stMeta = [
-        'pending' => ['Pending', 'bg-navy-100 text-navy-600'],
-        'partial' => ['Partial', 'bg-amber-100 text-amber-700'],
-        'paid' => ['Paid', 'bg-emerald-100 text-emerald-700'],
-    ];
+    $stMeta = \App\Models\EventSponsor::paymentStatusMeta();
     $pkgTone = [
         'platinum' => 'bg-navy-900 text-white', 'gold' => 'bg-gold-500 text-navy-900',
         'silver' => 'bg-navy-100 text-navy-700', 'bronze' => 'bg-amber-100 text-amber-800',

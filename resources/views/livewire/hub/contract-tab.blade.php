@@ -8,13 +8,9 @@
         'letter' => ['Letter', 'bg-navy-100 text-navy-600', 'linear-gradient(var(--chrome-2),var(--chrome))'],
         'acceptance' => ['Certificate of Services', 'bg-emerald-100 text-emerald-700', 'linear-gradient(var(--vital),var(--vital-lit))'],
     ];
-    $statusChip = [
-        'draft' => [\App\Support\Workflow::label('contract_status', 'draft'), 'bg-navy-50 text-navy-500'],
-        'sent' => [\App\Support\Workflow::label('contract_status', 'sent'), 'bg-amber-100 text-amber-700'],
-        'partially_signed' => [\App\Support\Workflow::label('contract_status', 'partially_signed'), 'bg-amber-100 text-amber-700'],
-        'signed' => [\App\Support\Workflow::label('contract_status', 'signed'), 'bg-emerald-100 text-emerald-700'],
-        'void' => [\App\Support\Workflow::label('contract_status', 'void'), 'bg-navy-50 text-navy-300'],
-    ];
+    // Same status meta the register uses — this editor and the register showed
+    // the same status in two different colours before they shared it.
+    $statusChip = \App\Models\EventContract::statusMeta();
 
     // The new input language: quiet fills that light up on focus — no boxed grid.
     $in = 'w-full rounded-xl border border-transparent bg-page/70 px-3 py-2 text-sm font-medium text-navy-900 placeholder:text-navy-300 transition focus:border-gold-400 focus:bg-white focus:outline-none';

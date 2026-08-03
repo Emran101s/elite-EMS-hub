@@ -287,18 +287,15 @@ class Event extends Model
     }
 
     /** Format a cents amount in this event's currency, e.g. "$1,250" or "JD 1,250". */
-    public function money(?int $cents, bool $withSpace = true): string
+    public function money(?int $cents): string
     {
         return self::moneyIn($cents, $this->currency ?? 'USD');
     }
 
-    /** Format a cents amount in any supported currency code. */
+    /** Format a cents amount in any supported currency code. See App\Support\Money. */
     public static function moneyIn(?int $cents, string $currency): string
     {
-        $symbol = self::CURRENCIES[$currency][0] ?? '$';
-        $sep = strlen($symbol) > 1 ? ' ' : '';
-
-        return $symbol.$sep.number_format(($cents ?? 0) / 100);
+        return \App\Support\Money::forScreen($cents, $currency);
     }
 
     /** Number of calendar days the event spans (inclusive). */

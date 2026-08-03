@@ -12,7 +12,7 @@
         <button type="button" wire:click="openItem({{ $item->id }})" data-block-drag
                 class="min-w-0 flex-1 text-left text-sm font-bold leading-snug text-navy-900"><x-record-title :record="$item" fallback="Untitled item" :muted="$closed" /></button>
         @if ($item->isSigned())
-            <span title="Approved by {{ $item->approver?->name ?? 'team' }} · {{ $item->approved_at?->format('d M Y') }}"
+            <span title="Approved by {{ $item->approver?->name ?? 'team' }} · {{ $item->approved_at?->format('j M Y') }}"
                   class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-eyebrow font-black text-navy-900 shadow ring-2 ring-white">✓</span>
         @endif
         @include('livewire.hub.partials.plan-studio.actions', ['item' => $item])
@@ -45,7 +45,7 @@
             <span class="flex items-center gap-1 text-eyebrow font-bold text-navy-400" title="{{ $sd }} of {{ $st }} subtasks done"><x-icon name="clipboard" class="h-3 w-3" />{{ $sd }}/{{ $st }}</span>
         @endif
         @if ($item->due_on)
-            <span class="ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-eyebrow font-bold {{ $overdue ? 'bg-red-50 text-red-600' : 'bg-navy-50 text-navy-500' }}"><x-icon name="calendar" class="h-3 w-3" />{{ $item->due_on->format('d M') }}</span>
+            <span class="ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-eyebrow font-bold {{ $overdue ? 'bg-red-50 text-red-600' : 'bg-navy-50 text-navy-500' }}"><x-icon name="calendar" class="h-3 w-3" />{{ $item->due_on->format('j M') }}</span>
         @endif
     </div>
 </div>

@@ -40,7 +40,7 @@
         <div class="eyebrow">&#9670; Elite Business Hub</div>
         <div class="title">{{ $event->name }}</div>
         <div class="meta">{{ $event->city }}@if ($event->city && $event->country), {{ $event->country }}@endif ·
-            {{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y') }}@if ($event->expected_participants) · {{ number_format($event->expected_participants) }} delegates @endif</div>
+            {{ $event->starts_at?->format('j M') }} – {{ $event->ends_at?->format('j M Y') ?? $event->starts_at?->format('Y') }}@if ($event->expected_participants) · {{ number_format($event->expected_participants) }} delegates @endif</div>
         <div class="ptitle">{{ $single ? $single->name.' — Partnership Opportunity' : 'Sponsorship & Partnership Prospectus' }}</div>
         <div class="intro">Partner with us to reach a curated audience of decision-makers and leaders. Choose the package that fits your goals.</div>
     </div>

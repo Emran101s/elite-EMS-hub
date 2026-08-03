@@ -51,7 +51,7 @@
                 <div class="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full opacity-20" style="background: {{ $theme['accent'] }}; filter: blur(60px);"></div>
                 <div class="flex items-center justify-between">
                     <span class="inline-flex items-center gap-2 text-2xs font-bold uppercase tracking-[0.2em]" style="color: {{ $theme['accent'] }};">◆ Elite Business Hub</span>
-                    <span class="text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-white/50">{{ $event->starts_at?->format('M j') }} – {{ $event->ends_at?->format('M j, Y') ?? $event->starts_at?->format('Y') }}</span>
+                    <span class="text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-white/50">{{ $event->starts_at?->format('j M') }} – {{ $event->ends_at?->format('j M Y') ?? $event->starts_at?->format('Y') }}</span>
                 </div>
                 <h1 class="mt-6 max-w-2xl text-3xl font-bold leading-tight text-balance">{{ $event->name }}</h1>
                 <p class="mt-2 text-sm text-white/70">{{ $event->city }}@if ($event->city && $event->country), {{ $event->country }}@endif @if ($event->expected_participants) · {{ number_format($event->expected_participants) }} delegates @endif</p>

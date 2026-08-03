@@ -188,7 +188,7 @@
             <span>{{ $company?->name ?? $event->name }} · Transportation plan · v1.0</span>
             <span>
                 @if ($company?->phone){{ $company->phone }} · @endif
-                Generated {{ now()->format('d M Y') }}
+                Generated {{ now()->format('j M Y') }}
             </span>
         </div>
     </div>

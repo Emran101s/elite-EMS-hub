@@ -1,5 +1,9 @@
 @php
     $packageTone = ['platinum' => 'bg-navy-900 text-white', 'gold' => 'bg-gold-500 text-navy-900', 'silver' => 'bg-navy-100 text-navy-700', 'bronze' => 'bg-amber-100 text-amber-800', 'strategic' => 'bg-navy-50 text-navy-700', 'supporting' => 'bg-page text-muted'];
+    // Same meta as the sponsors tab — this card and that tab showed a "pending"
+    // payment in two different colours (navy there, amber here via the generic
+    // status badge) before they shared it.
+    $stMeta = \App\Models\EventSponsor::paymentStatusMeta();
 @endphp
 
 <x-layouts.app title="Sponsors" subtitle="Every sponsorship across your events — packages, value and payment status.">
@@ -34,9 +38,10 @@
                                     <p class="text-[0.65rem] text-muted">${{ number_format($sponsor->amount_cents / 100) }}</p>
                                 </div>
                             </div>
+                            @php [$stLabel, $stClass] = $stMeta[$sponsor->payment_status] ?? $stMeta['pending']; @endphp
                             <div class="flex flex-col items-end gap-1">
                                 <span class="rounded-full px-2 py-0.5 text-[0.55rem] font-bold uppercase {{ $packageTone[$sponsor->package] ?? 'bg-page text-muted' }}">{{ $sponsor->package }}</span>
-                                <x-status-badge :status="$sponsor->payment_status" class="!text-[0.55rem]" />
+                                <span class="rounded-full px-2 py-0.5 text-[0.55rem] font-bold uppercase {{ $stClass }}">{{ $stLabel }}</span>
                             </div>
                         </div>
                     @endforeach

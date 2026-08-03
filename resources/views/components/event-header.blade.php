@@ -54,7 +54,7 @@
 
     $where = collect([$event->city, $event->country])->filter()->implode(', ');
     $when = $event->starts_at
-        ? $event->starts_at->format('M j').' – '.($event->ends_at?->format('M j, Y') ?? $event->starts_at->format('Y'))
+        ? $event->starts_at->format('j M').' – '.($event->ends_at?->format('j M Y') ?? $event->starts_at->format('Y'))
         : null;
 @endphp
 

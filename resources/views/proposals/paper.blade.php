@@ -138,17 +138,17 @@
     <div class="dates">
         <div class="cell">
             <div class="lbl">Issued</div>
-            <div class="n">{{ $proposal->issued_on?->format('j F Y') ?? '—' }}</div>
+            <div class="n"><x-date :value="$proposal->issued_on" style="document" /></div>
         </div>
         <div class="cell">
             <div class="lbl">Valid until</div>
             <div class="n {{ $proposal->state() === 'expired' ? 'lapsed' : '' }}">
-                {{ $proposal->valid_until?->format('j F Y') ?? 'No expiry' }}
+                <x-date :value="$proposal->valid_until" style="document" empty="No expiry" />
             </div>
         </div>
         <div class="cell">
             <div class="lbl">Total</div>
-            <div class="n">{{ $cur }} {{ $fmt($total) }}</div>
+            <div class="n">{{ \App\Support\Money::forDocument($total, $cur) }}</div>
         </div>
     </div>
 
@@ -209,23 +209,23 @@
         <table class="totals">
             <tr>
                 <td class="k">Subtotal</td>
-                <td>{{ $cur }} {{ $fmt($sub) }}</td>
+                <td>{{ \App\Support\Money::forDocument($sub, $cur) }}</td>
             </tr>
             @if ($proposal->fee_pct)
                 <tr>
                     <td class="k">Management fee ({{ rtrim(rtrim(number_format($proposal->fee_pct, 2), '0'), '.') }}%)</td>
-                    <td>{{ $cur }} {{ $fmt($fee) }}</td>
+                    <td>{{ \App\Support\Money::forDocument($fee, $cur) }}</td>
                 </tr>
             @endif
             @if ($proposal->tax_pct)
                 <tr>
                     <td class="k">Tax ({{ rtrim(rtrim(number_format($proposal->tax_pct, 2), '0'), '.') }}%)</td>
-                    <td>{{ $cur }} {{ $fmt($tax) }}</td>
+                    <td>{{ \App\Support\Money::forDocument($tax, $cur) }}</td>
                 </tr>
             @endif
             <tr class="grand">
                 <td class="k" style="color: inherit">Total</td>
-                <td>{{ $cur }} {{ $fmt($total) }}</td>
+                <td>{{ \App\Support\Money::forDocument($total, $cur) }}</td>
             </tr>
         </table>
     </div>

@@ -39,8 +39,8 @@
                 <h1 class="pf mt-1 text-3xl font-black leading-tight text-white" style="font-family:'Spectral',Georgia,serif">{{ $event->name }}</h1>
                 <p class="mt-1 text-xs text-white/55">
                     {{ $tracks->count() }} phases · {{ $total }} deliverables
-                    @if ($event->starts_at) · Event date {{ $event->starts_at->format('d M Y') }} @endif
-                    · Generated {{ now()->format('d M Y') }}
+                    @if ($event->starts_at) · Event date {{ $event->starts_at->format('j M Y') }} @endif
+                    · Generated {{ now()->format('j M Y') }}
                 </p>
             </div>
             <div class="flex shrink-0 gap-2">
@@ -94,7 +94,7 @@
                         <div class="mt-1 flex items-center gap-3 pl-[18px] text-[0.6rem] text-navy-400">
                             <span class="font-semibold" style="color: {{ $item->priorityHex() }}">{{ $item->priorityLabel() }}</span>
                             @if ($item->start_on || $item->due_on)
-                                <span>{{ $item->start_on?->format('d M') ?? '—' }} → <span class="{{ $item->isOverdue() ? 'font-bold text-red-600' : '' }}">{{ $item->due_on?->format('d M') ?? '—' }}</span></span>
+                                <span>{{ $item->start_on?->format('j M') ?? '—' }} → <span class="{{ $item->isOverdue() ? 'font-bold text-red-600' : '' }}">{{ $item->due_on?->format('j M') ?? '—' }}</span></span>
                             @endif
                             @if ($item->owners->isNotEmpty())<span>{{ $item->owners->pluck('name')->map(fn ($n) => \Illuminate\Support\Str::before($n, ' '))->join(', ') }}</span>@endif
                             @if ($st)<span class="ml-auto font-bold text-navy-500">{{ $sd }}/{{ $st }} subtasks · {{ $item->progress() }}%</span>@endif

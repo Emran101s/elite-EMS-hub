@@ -126,7 +126,7 @@
             <span>
                 Event control {{ $control['phone'] ?: '—' }}
                 @if ($control['name']) · {{ $control['name'] }}@endif
-                · Generated {{ now()->format('d M Y H:i') }}
+                · Generated {{ now()->format('j M Y · H:i') }}
             </span>
         </div>
     </div>

@@ -283,7 +283,7 @@ class CommandCenterService
             $alerts->push([
                 'severity' => 'risk',
                 'title' => ($p->event?->name ?? 'Event').' — installment overdue',
-                'detail' => $p->label.' · '.Event::moneyIn($p->outstandingCents(), $p->event?->currency ?? 'USD').' outstanding since '.$p->due_on->format('M j'),
+                'detail' => $p->label.' · '.Event::moneyIn($p->outstandingCents(), $p->event?->currency ?? 'USD').' outstanding since '.$p->due_on->format('j M'),
             ]);
         }
 

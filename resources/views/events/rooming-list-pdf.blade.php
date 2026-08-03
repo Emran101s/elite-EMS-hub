@@ -27,7 +27,7 @@
                 <p class="mt-1 text-xs text-white/55">
                     {{ $event->name }}
                     @if ($block->check_in)
-                        · {{ $block->check_in->format('d M Y') }} – {{ $block->check_out?->format('d M Y') ?? '—' }} <span class="text-white/40">(default dates)</span>
+                        · {{ $block->check_in->format('j M Y') }} – {{ $block->check_out?->format('j M Y') ?? '—' }} <span class="text-white/40">(default dates)</span>
                     @endif
                 </p>
             </div>
@@ -86,10 +86,10 @@
                             <td class="py-2 pr-3 text-xs font-semibold text-navy-900">{{ $r->occupancyLabel() ?: '—' }}</td>
                             <td class="py-2 pr-3 text-xs text-navy-700">{{ $r->room_type ?: ($block->room_type ?: 'Standard') }}</td>
                             <td class="py-2 pr-3 text-xs text-navy-700">
-                                {{ $r->check_in?->format('d M') ?? '—' }}{{ $r->arrival_time ? ' · '.$r->arrival_time : '' }}
+                                {{ $r->check_in?->format('j M') ?? '—' }}{{ $r->arrival_time ? ' · '.$r->arrival_time : '' }}
                             </td>
                             <td class="py-2 pr-3 text-xs text-navy-700">
-                                {{ $r->check_out?->format('d M') ?? '—' }}{{ $r->departure_time ? ' · '.$r->departure_time : '' }}
+                                {{ $r->check_out?->format('j M') ?? '—' }}{{ $r->departure_time ? ' · '.$r->departure_time : '' }}
                             </td>
                             <td class="py-2 pr-3 text-center text-xs font-semibold text-navy-900">{{ $r->nights() ?: '—' }}</td>
                             <td class="py-2 text-3xs leading-tight text-navy-600">
@@ -118,8 +118,8 @@
         @endif
 
         <p class="mt-8 border-t border-line pt-3 text-3xs text-muted">
-            {{ $event->name }} · Rooming list generated {{ now()->format('d M Y') }}
-            @if ($block->cutoff_on) · Release date {{ $block->cutoff_on->format('d M Y') }} @endif
+            {{ $event->name }} · Rooming list generated {{ now()->format('j M Y') }}
+            @if ($block->cutoff_on) · Release date {{ $block->cutoff_on->format('j M Y') }} @endif
         </p>
     </div>
 </body>

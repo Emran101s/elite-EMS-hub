@@ -9,9 +9,12 @@
     $data = $contract->data ?? [];
     $data['blocks'] = $contract->blocks();   // client falls back to the standard set
     $f = $data['financials'] ?? [];
-    $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
     $est = $f['contract_value_cents'] ?? $f['estimated_total_cents'] ?? 0;
-    $fmt = fn ($c) => $cur.' '.number_format(($c ?? 0) / 100);
+    // Matches the live editor's own $fmt exactly (contract-tab.blade.php) — the
+    // cost-share and payment-schedule tables this feeds are shared between the
+    // two surfaces, and a different formatter here would mean the preview and
+    // the export print the same figure two different ways.
+    $fmt = fn ($c) => $event->money((int) round($c ?? 0));
     $bilingual = $contract->isClient() || $contract->isBilingual();
     $fullySigned = $signatories->isNotEmpty() && $signatories->whereNull('signed_at')->isEmpty();
 @endphp

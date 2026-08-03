@@ -111,9 +111,9 @@ class EventMission
             'month' => $start?->format('M'),
             'year' => $start?->format('Y'),
             'dates' => $start
-                ? $start->format('M j').($end && ! $end->isSameDay($start) ? ' – '.$end->format('j, Y') : ', '.$start->format('Y'))
+                ? $start->format('j M').($end && ! $end->isSameDay($start) ? ' – '.$end->format('j, Y') : ', '.$start->format('Y'))
                 : 'Dates to be set',
-            'shortDates' => $start ? $start->format('M j').($end && ! $end->isSameDay($start) ? ' – '.$end->format('j') : '') : 'TBC',
+            'shortDates' => $start ? $start->format('j M').($end && ! $end->isSameDay($start) ? ' – '.$end->format('j') : '') : 'TBC',
             'duration' => $start && $end
                 ? ($d = (int) round($start->diffInDays($end)) + 1).' '.str('day')->plural($d)
                 : '—',
@@ -195,7 +195,7 @@ class EventMission
             'title' => $next->title,
             'due' => $overdue
                 ? (int) $next->due_on->diffInDays(Carbon::today()).'d overdue'
-                : 'Due '.$next->due_on->format('M j, Y'),
+                : 'Due '.$next->due_on->format('j M Y'),
             'overdue' => $overdue,
             'owner' => $next->assignee,
             'tab' => 'tasks',

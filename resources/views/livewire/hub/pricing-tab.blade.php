@@ -13,18 +13,18 @@
     <div class="card flex flex-wrap items-center gap-x-6 gap-y-3 p-4">
         <div>
             <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Priced to sell</p>
-            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-950">{{ $cur }} {{ $money($totals['sell']) }}</p>
+            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-950">{{ \App\Support\Money::forDocument($totals['sell'], $cur) }}</p>
         </div>
         <span class="h-9 w-px bg-line"></span>
         <div>
             <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Costs us</p>
-            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-800">{{ $cur }} {{ $money($totals['cost']) }}</p>
+            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-800">{{ \App\Support\Money::forDocument($totals['cost'], $cur) }}</p>
         </div>
         <span class="h-9 w-px bg-line"></span>
         <div>
             <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Margin</p>
             <p class="pf mt-0.5 text-[20px] font-black leading-none {{ $margin < 0 ? 'text-risk' : 'text-emerald-700' }}">
-                {{ $margin < 0 ? '−' : '' }}{{ $cur }} {{ $money(abs($margin)) }}
+                {{ $margin < 0 ? '−' : '' }}{{ \App\Support\Money::forDocument(abs($margin), $cur) }}
                 @if ($totals['sell'] > 0)
                     <span class="text-[12px] font-bold text-navy-400">{{ round($margin / $totals['sell'] * 100) }}%</span>
                 @endif

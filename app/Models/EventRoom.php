@@ -64,6 +64,23 @@ class EventRoom extends Model
      */
     public const EQUIPMENT_STATUSES = ['needed', 'requested', 'confirmed', 'onsite'];
 
+    /**
+     * Label + colour per equipment status, shared by the room's requirement
+     * list and the printed Room Equipment Sheet — one progression shown in
+     * two places (Tailwind classes on screen, hex for the PDF's inline CSS).
+     *
+     * @return array<string,array{label:string,class:string,fg:string,bg:string}>
+     */
+    public static function equipmentStatusMeta(): array
+    {
+        return [
+            'needed' => ['label' => 'Needed', 'class' => 'bg-navy-100 text-navy-600', 'fg' => '#475569', 'bg' => '#EEF2F7'],
+            'requested' => ['label' => 'Requested', 'class' => 'bg-amber-100 text-amber-800', 'fg' => '#92400E', 'bg' => '#FEF3C7'],
+            'confirmed' => ['label' => 'Confirmed', 'class' => 'bg-sky-100 text-sky-800', 'fg' => '#1E40AF', 'bg' => '#DBEAFE'],
+            'onsite' => ['label' => 'On-site', 'class' => 'bg-emerald-100 text-emerald-800', 'fg' => '#166534', 'bg' => '#DCFCE7'],
+        ];
+    }
+
     protected function casts(): array
     {
         return [

@@ -90,7 +90,7 @@
                             {{-- The agenda, read live. A full session shows as
                                  full rather than accepting a booking that will
                                  be refused a moment later. --}}
-                            @php $byDay = $field->sessionChoices()->groupBy(fn ($x) => $x->day?->label ?: ($x->day?->date?->format('l j F') ?: 'Programme')); @endphp
+                            @php $byDay = $field->sessionChoices()->groupBy(fn ($x) => $x->day?->label ?: ($x->day?->date?->format('l, j F') ?: 'Programme')); @endphp
 
                             @forelse ($byDay as $day => $sessions)
                                 <span class="mt-2 block">

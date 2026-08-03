@@ -32,7 +32,7 @@
                 <p class="mt-1 text-xs text-white/55">
                     {{ $movements->count() }} {{ \Illuminate\Support\Str::plural('movement', $movements->count()) }}
                     · {{ $movements->sum(fn ($m) => $m->paxCount()) }} passengers
-                    · In departure order · Generated {{ now()->format('d M Y') }}
+                    · In departure order · Generated {{ now()->format('j M Y') }}
                 </p>
             </div>
             <div class="shrink-0 text-right">
@@ -180,7 +180,7 @@
         @endforelse
 
         <p class="mt-6 border-t border-line pt-3 text-3xs text-muted">
-            {{ $event->name }} · Transport manifest · Generated {{ now()->format('d M Y H:i') }}
+            {{ $event->name }} · Transport manifest · Generated {{ now()->format('j M Y · H:i') }}
         </p>
     </div>
 </body>

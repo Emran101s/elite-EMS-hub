@@ -1,7 +1,13 @@
 @php
-    $money = fn (int $cents) => 'JD '.(abs($cents) >= 100000
-        ? rtrim(rtrim(number_format($cents / 100000, 1), '0'), '.').'K'
-        : number_format($cents / 100));
+    // Per-deal and per-event figures print in THAT record's own currency —
+    // a client with both a JOD and a USD deal used to see every figure
+    // labelled "JD" regardless, which is wrong whenever the two disagree.
+    // The two portfolio totals below (lifetime value, pipeline value) still
+    // sum every record's cents together with no currency conversion — a
+    // pre-existing gap this pass didn't introduce and formatting alone can't
+    // fix — so they're labelled in the house currency as the closest honest
+    // reading, not a claim that the sum is currency-correct.
+    $money = fn (int $cents, ?string $cur = null) => \App\Support\Money::abbreviated($cents, $cur ?? \App\Models\CompanyProfile::currency());
 @endphp
 
 <div>
@@ -120,11 +126,11 @@
                                 <span class="block truncate text-[10.5px] text-muted">
                                     {{ $deal->stageLabel() }}
                                     @if ($deal->stage === 'lost' && $deal->lost_reason) · {{ $deal->lost_reason }}
-                                    @elseif ($deal->isOpen() && $deal->expected_close_on) · decides {{ $deal->expected_close_on->format('d M') }}
+                                    @elseif ($deal->isOpen() && $deal->expected_close_on) · decides {{ $deal->expected_close_on->format('j M') }}
                                     @endif
                                 </span>
                             </div>
-                            <span class="shrink-0 text-[11.5px] font-bold tabular-nums text-navy-700">{{ $money($deal->value_cents) }}</span>
+                            <span class="shrink-0 text-[11.5px] font-bold tabular-nums text-navy-700">{{ $money($deal->value_cents, $deal->currency) }}</span>
                             @if ($deal->event)
                                 <a href="{{ route('events.hub', $deal->event) }}" class="btn-ghost btn-xs shrink-0">Event →</a>
                             @endif
@@ -149,7 +155,7 @@
                                         @if ($event->archived_at) · archived @endif
                                     </span>
                                 </span>
-                                <span class="shrink-0 text-[11.5px] font-bold tabular-nums text-navy-700">{{ $money((int) $event->budget_cents) }}</span>
+                                <span class="shrink-0 text-[11.5px] font-bold tabular-nums text-navy-700">{{ $money((int) $event->budget_cents, $event->currency) }}</span>
                             </a>
                         @endforeach
                     </div>
@@ -205,7 +211,7 @@
                             @if ($a->follow_up_on && ! $a->follow_up_done)
                                 <button type="button" wire:click="completeFollowUp({{ $a->id }})"
                                         class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-gold-50 px-2 py-1 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200 transition hover:bg-gold-100">
-                                    ↻ Follow up {{ $a->follow_up_on->format('d M') }} · mark done
+                                    ↻ Follow up {{ $a->follow_up_on->format('j M') }} · mark done
                                 </button>
                             @endif
                         </div>

@@ -49,6 +49,30 @@ class EventContract extends Model
 
     public const STATUSES = ['draft', 'sent', 'partially_signed', 'signed', 'void'];
 
+    /**
+     * Label + badge class per status, one definition shared by the register
+     * and the document editor — they showed the same status in two different
+     * colours (brand gold vs semantic amber) before this existed.
+     *
+     * @return array<string,array{0:string,1:string}>
+     */
+    public static function statusMeta(): array
+    {
+        $class = [
+            'draft' => 'bg-navy-50 text-navy-500',
+            'sent' => 'bg-amber-100 text-amber-700',
+            'partially_signed' => 'bg-amber-100 text-amber-700',
+            'signed' => 'bg-emerald-100 text-emerald-700',
+            'void' => 'bg-navy-50 text-navy-400',
+        ];
+
+        return collect(self::STATUSES)
+            ->mapWithKeys(fn (string $status) => [$status => [
+                \App\Support\Workflow::label('contract_status', $status),
+                $class[$status] ?? 'bg-navy-50 text-navy-500',
+            ]])->all();
+    }
+
     protected $fillable = ['event_id', 'type', 'party_type', 'party_id', 'title', 'language',
         'template_key', 'reference', 'status', 'version', 'data', 'signed_at'];
 

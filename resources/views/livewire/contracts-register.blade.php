@@ -1,21 +1,15 @@
 @php
     use App\Models\EventContract;
 
-    // The words come from Workflow::rows('contract_status') — the list Settings
-    // renames — so a status renamed there is renamed here too. Only the
-    // treatment is local: this screen's chips are its own.
-    $statusClass = [
-        'draft' => 'bg-navy-50 text-navy-500',
-        'sent' => 'bg-gold-100 text-gold-800',
-        'partially_signed' => 'bg-gold-100 text-gold-800',
-        'signed' => 'bg-emerald-50 text-emerald-700',
-        'void' => 'bg-navy-50 text-navy-400 line-through',
-    ];
-    $statusMeta = collect(\App\Models\EventContract::STATUSES)
-        ->mapWithKeys(fn (string $k) => [$k => [
-            \App\Support\Workflow::label('contract_status', $k),
-            $statusClass[$k] ?? 'bg-navy-50 text-navy-500',
-        ]])->all();
+    // Same status meta used by the single-document editor (contract-tab) — the
+    // register and the editor showed the same status in two different colours
+    // (brand gold vs semantic amber) before they shared this. A voided document
+    // gets struck through here, on top of the shared tone — a list-specific
+    // touch, not part of the colour itself.
+    $statusMeta = EventContract::statusMeta();
+    foreach ($statusMeta as $k => [$label, $class]) {
+        $statusMeta[$k] = [$label, $k === 'void' ? "{$class} line-through" : $class];
+    }
 @endphp
 
 <div class="space-y-4">

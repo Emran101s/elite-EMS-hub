@@ -3,7 +3,7 @@
     $p = $proposal;
     $state = $p->state();
     $cur = $p->currencyCode();
-    $money = fn ($c) => $cur.' '.number_format($c / 100, 2);
+    $money = fn ($c) => \App\Support\Money::forDocument($c, $cur);
 @endphp
 
 <div class="space-y-4">

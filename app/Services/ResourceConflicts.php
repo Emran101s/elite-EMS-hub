@@ -153,7 +153,7 @@ class ResourceConflicts
     private function pairLine(array $pair): string
     {
         return collect($pair)
-            ->map(fn ($e) => $e->name.' ('.$e->starts_at->format('M j').'–'.($e->ends_at ?? $e->starts_at)->format('M j').')')
+            ->map(fn ($e) => $e->name.' ('.$e->starts_at->format('j M').'–'.($e->ends_at ?? $e->starts_at)->format('j M').')')
             ->implode(' ↔ ');
     }
 

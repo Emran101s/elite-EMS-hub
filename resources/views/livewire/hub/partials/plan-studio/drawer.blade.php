@@ -34,7 +34,7 @@
                     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-sm font-black text-navy-900 shadow ring-2 ring-white">✓</span>
                     <div class="min-w-0">
                         <p class="text-eyebrow font-black uppercase tracking-wider text-gold-700">Signed off · Approved</p>
-                        <p class="truncate text-micro text-navy-600">{{ $selected->approver?->name ?? 'Team' }} · {{ $selected->approved_at?->format('d M Y') }}</p>
+                        <p class="truncate text-micro text-navy-600">{{ $selected->approver?->name ?? 'Team' }} · {{ $selected->approved_at?->format('j M Y') }}</p>
                     </div>
                 </div>
             @endif

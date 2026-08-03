@@ -162,7 +162,7 @@
 
         <div class="flex items-center justify-between border-t border-line px-12 py-3 text-3xs text-muted">
             <span>{{ $company?->name ?? $event->name }} · Transport order · {{ $supplier?->name ?? 'unassigned' }}</span>
-            <span>{{ $order['runs']->count() }} movements · {{ $order['days'] }} days · Generated {{ now()->format('d M Y') }}</span>
+            <span>{{ $order['runs']->count() }} movements · {{ $order['days'] }} days · Generated {{ now()->format('j M Y') }}</span>
         </div>
     </div>
 @empty

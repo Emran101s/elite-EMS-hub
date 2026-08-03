@@ -132,7 +132,7 @@
             </div>
         @endforeach
 
-        <div class="foot">Generated {{ now()->format('M j, Y · H:i') }} · Elite Business Hub — Operations Command Center</div>
+        <div class="foot">Generated {{ now()->format('j M Y · H:i') }} · Elite Business Hub — Operations Command Center</div>
     </div>
 </body>
 </html>

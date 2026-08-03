@@ -151,7 +151,7 @@
 
         <div class="border-t border-line px-12 py-3 text-3xs text-muted">
             {{ $event->name }} · {{ $scope }} transfer sheet · {{ $g->name }} ·
-            Generated {{ now()->format('d M Y H:i') }}
+            Generated {{ now()->format('j M Y · H:i') }}
         </div>
     </div>
 @empty

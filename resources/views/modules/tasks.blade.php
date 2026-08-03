@@ -53,7 +53,7 @@
                 @if ($task->priority === 'urgent' || $task->priority === 'high')
                     <span class="rounded-full bg-risk/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase text-red-700">{{ $task->priority }}</span>
                 @endif
-                <p class="hidden w-24 text-right text-xs text-muted sm:block">{{ $task->due_on?->format('M j') }}</p>
+                <p class="hidden w-24 text-right text-xs text-muted sm:block">{{ $task->due_on?->format('j M') }}</p>
                 <x-status-badge :status="$task->status" class="hidden sm:inline-flex" />
             </div>
         @empty

@@ -30,7 +30,7 @@
                         <span class="block truncate text-[10.5px] text-muted">{{ $event->radar_status }}</span>
                     </span>
                     <span class="shrink-0 text-[10.5px] tabular-nums text-navy-300">
-                        {{ $event->starts_at?->format('d M') ?? '—' }}
+                        {{ $event->starts_at?->format('j M') ?? '—' }}
                     </span>
                 </a>
             @empty

@@ -173,7 +173,7 @@
 
         <div class="border-t border-line px-10 py-3 text-3xs text-muted">
             {{ $event->name }} · Driver trip sheet · {{ $driver?->name }} ·
-            Generated {{ now()->format('d M Y H:i') }} ·
+            Generated {{ now()->format('j M Y · H:i') }} ·
             Times are local. Call event control if anything changes.
         </div>
     </div>

@@ -206,7 +206,7 @@ class EventCreate extends Component
 
         return [
             'title' => 'Agenda finalisation',
-            'due' => $due->format('M j, Y'),
+            'due' => $due->format('j M Y'),
             'note' => match (true) {
                 $days < 0 => abs($days).' '.str('day')->plural(abs($days)).' overdue',
                 $days === 0 => 'Due today',

@@ -1,11 +1,7 @@
 @php
     // The whole book is reported in the company's own currency; events run in
     // whatever the client pays in and are converted before they meet.
-    $sym = \App\Models\Event::CURRENCIES[$totals['currency']][0] ?? $totals['currency'];
-    $money = fn (int $cents, ?string $cur = null) => ($cur ?? $sym).' '.(abs($cents) >= 100000
-        ? rtrim(rtrim(number_format($cents / 100000, 1), '0'), '.').'K'
-        : number_format($cents / 100));
-    $full = fn (int $cents, ?string $cur = null) => ($cur ?? $sym).' '.number_format($cents / 100);
+    $money = fn (int $cents, ?string $cur = null) => \App\Support\Money::abbreviated($cents, $cur ?? $totals['currency']);
 @endphp
 
 <div>
@@ -204,7 +200,7 @@
                             </span>
                             <span class="shrink-0 text-right">
                                 <span class="block text-[11.5px] font-bold tabular-nums text-navy-900">{{ $money($p->outstandingCents()) }}</span>
-                                <span class="block text-[10px] tabular-nums {{ $overdue ? 'font-bold text-risk' : 'text-muted' }}">{{ $p->due_on?->format('d M') ?? '—' }}</span>
+                                <span class="block text-[10px] tabular-nums {{ $overdue ? 'font-bold text-risk' : 'text-muted' }}">{{ $p->due_on?->format('j M') ?? '—' }}</span>
                             </span>
                         </a>
                     @empty
@@ -229,7 +225,7 @@
                             </span>
                             <span class="shrink-0 text-right">
                                 <span class="block text-[11.5px] font-bold tabular-nums text-navy-900">{{ $money($item->outstandingCents()) }}</span>
-                                <span class="block text-[10px] tabular-nums {{ $late ? 'font-bold text-risk' : 'text-muted' }}">{{ $item->due_on?->format('d M') ?? 'no date' }}</span>
+                                <span class="block text-[10px] tabular-nums {{ $late ? 'font-bold text-risk' : 'text-muted' }}">{{ $item->due_on?->format('j M') ?? 'no date' }}</span>
                             </span>
                         </a>
                     @empty

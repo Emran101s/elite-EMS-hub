@@ -4,7 +4,7 @@
     $state = $inv->state();
     $out = $inv->outstandingCents();
     $cur = $inv->currencyCode();
-    $money = fn ($c) => $cur.' '.number_format($c / 100, 2);
+    $money = fn ($c) => \App\Support\Money::forDocument($c, $cur);
 @endphp
 
 <div class="space-y-4">

@@ -145,11 +145,11 @@
                                 </span>
                             </span>
 
-                            <span class="text-[11.5px] tabular-nums text-navy-500">{{ $inv->issued_on?->format('j M y') ?? '—' }}</span>
+                            <span class="text-[11.5px] tabular-nums text-navy-500">{{ $inv->issued_on?->format('j M Y') ?? '—' }}</span>
 
                             <span @class(['text-[11.5px] font-semibold tabular-nums',
                                 'text-red-600' => $s === 'overdue', 'text-navy-500' => $s !== 'overdue'])>
-                                {{ $inv->due_on?->format('j M y') ?? '—' }}
+                                {{ $inv->due_on?->format('j M Y') ?? '—' }}
                             </span>
 
                             <span class="pf text-end text-[13px] font-black tabular-nums text-navy-900">

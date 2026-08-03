@@ -354,8 +354,8 @@
                     @foreach ($dated as $c)
                         @php $at = min(96, max(8, $c['days'] / $span * 88 + 8)); @endphp
                         <button class="pin" data-pin="{{ $c['id'] }}" style="left:{{ $at }}%"
-                                title="{{ $c['name'] }} — {{ $c['starts']?->format('d M Y') }}">{{ str($c['name'])->substr(0, 2)->upper() }}</button>
-                        <span class="tick" style="left:{{ $at }}%">{{ $c['starts']?->format('d M') }}</span>
+                                title="{{ $c['name'] }} — {{ $c['starts']?->format('j M Y') }}">{{ str($c['name'])->substr(0, 2)->upper() }}</button>
+                        <span class="tick" style="left:{{ $at }}%">{{ $c['starts']?->format('j M') }}</span>
                     @endforeach
                 </div>
             </section>

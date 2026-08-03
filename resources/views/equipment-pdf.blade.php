@@ -25,7 +25,7 @@
     <div class="head">
         <div class="eyebrow">&#9670; Elite Business Hub · Equipment Catalog</div>
         <div class="title">Equipment Catalog</div>
-        <div class="meta">{{ $items->count() }} {{ \Illuminate\Support\Str::plural('item', $items->count()) }} · Generated {{ now()->format('j M Y, H:i') }}</div>
+        <div class="meta">{{ $items->count() }} {{ \Illuminate\Support\Str::plural('item', $items->count()) }} · Generated {{ now()->format('j M Y · H:i') }}</div>
     </div>
 
     <div class="wrap">

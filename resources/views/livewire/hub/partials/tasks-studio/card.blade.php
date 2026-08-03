@@ -44,13 +44,13 @@
             <div>
                 <p class="text-3xs font-bold uppercase tracking-[0.12em] text-navy-300">Due</p>
                 <p class="mt-0.5 flex items-center gap-1 text-2xs font-bold {{ $overdue ? 'text-red-600' : 'text-navy-700' }}">
-                    <x-icon name="calendar" class="h-3 w-3 opacity-70" />{{ $item->due_on?->format('d M Y') ?? '—' }}
+                    <x-icon name="calendar" class="h-3 w-3 opacity-70" />{{ $item->due_on?->format('j M Y') ?? '—' }}
                 </p>
             </div>
             <div>
                 <p class="text-3xs font-bold uppercase tracking-[0.12em] text-navy-300">Start</p>
                 <p class="mt-0.5 flex items-center gap-1 text-2xs font-bold text-navy-700">
-                    <x-icon name="calendar" class="h-3 w-3 opacity-70" />{{ $item->start_on?->format('d M Y') ?? '—' }}
+                    <x-icon name="calendar" class="h-3 w-3 opacity-70" />{{ $item->start_on?->format('j M Y') ?? '—' }}
                 </p>
             </div>
         </div>

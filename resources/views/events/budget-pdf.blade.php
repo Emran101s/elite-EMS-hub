@@ -66,7 +66,7 @@
         <div class="brand">ELITE BUSINESS HUB · EVENT BUDGET</div>
         <h1>{{ $event->name }}</h1>
         <div class="meta">
-            @if ($event->starts_at){{ $event->starts_at->format('M j') }}@if ($event->ends_at) – {{ $event->ends_at->format('M j, Y') }}@endif @endif
+            @if ($event->starts_at){{ $event->starts_at->format('j M') }}@if ($event->ends_at) – {{ $event->ends_at->format('j M Y') }}@endif @endif
             · {{ $items->count() }} lines
         </div>
     </div>
@@ -129,6 +129,6 @@
         </table>
     </div>
 
-    <p class="foot">Generated {{ now()->format('M j, Y · H:i') }} · Elite Business Hub — Operations Command Center</p>
+    <p class="foot">Generated {{ now()->format('j M Y · H:i') }} · Elite Business Hub — Operations Command Center</p>
 </body>
 </html>

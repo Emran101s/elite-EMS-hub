@@ -361,7 +361,7 @@
                                                 if ($item->quantity > 1 || $item->unit_cents) $bits[] = $item->quantity.' × '.$fmt($item->unit_cents);
                                                 if ($item->vendor) $bits[] = $item->vendor;
                                                 if ($item->invoice_number) $bits[] = $item->invoice_number;
-                                                if ($item->due_on) $bits[] = 'due '.$item->due_on->format('M j');
+                                                if ($item->due_on) $bits[] = 'due '.$item->due_on->format('j M');
                                             @endphp
                                             <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="group/edit min-w-0 flex-1 text-left" title="{{ $item->isLinked() ? 'Synced — edit in the '.\Illuminate\Support\Str::headline($item->linkedTab()).' tab' : 'Click to edit this line' }}">
                                                 <p class="flex items-center gap-1.5 truncate text-xs font-medium text-navy-900 group-hover/edit:text-gold-700">
@@ -581,7 +581,7 @@
                     </div>
 
                     @if ($bs === 'approved')
-                        <p class="text-eyebrow leading-snug text-muted">🔒 Locked {{ $event->budget_locked_at?->format('M j') }}@if ($approvedV?->decider) · by {{ $approvedV->decider->name }}@endif.</p>
+                        <p class="text-eyebrow leading-snug text-muted">🔒 Locked {{ $event->budget_locked_at?->format('j M') }}@if ($approvedV?->decider) · by {{ $approvedV->decider->name }}@endif.</p>
                         @if ($approvedTotal)
                             <div class="mt-2 flex justify-between text-xs"><span class="text-muted">Variance vs approved</span><span class="font-bold {{ $varianceVsApproved < 0 ? 'text-risk' : 'text-emerald-600' }}">{{ $varianceVsApproved >= 0 ? '+' : '−' }}{{ $fmt(abs($varianceVsApproved)) }}</span></div>
                         @endif
@@ -607,7 +607,7 @@
                             @foreach ($versions->take(4) as $v)
                                 <div class="flex items-center justify-between text-eyebrow">
                                     <span class="text-muted">v{{ $v->version }} · <span class="font-bold {{ $vm[$v->status] ?? '' }}">{{ ucfirst($v->status) }}</span></span>
-                                    <span class="text-navy-500">{{ $fmt($v->totals['grand'] ?? 0) }} · {{ $v->created_at->format('M j') }}</span>
+                                    <span class="text-navy-500">{{ $fmt($v->totals['grand'] ?? 0) }} · {{ $v->created_at->format('j M') }}</span>
                                 </div>
                             @endforeach
                         </div>

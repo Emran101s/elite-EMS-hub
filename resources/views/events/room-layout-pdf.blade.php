@@ -202,7 +202,7 @@
             <div class="eb">Elite Business Hub · Floor Plan</div>
             <h1>{{ $room->name }}</h1>
             <div class="sub">{{ $event->name }} · {{ str($room->type)->replace('_', ' ')->title() }}
-                @if ($event->starts_on) · {{ $event->starts_on->format('d M Y') }}@endif
+                @if ($event->starts_on) · {{ $event->starts_on->format('j M Y') }}@endif
                 · held {{ $days }} {{ str('day')->plural($days) }}</div>
         </div>
         <div class="chips">
@@ -313,7 +313,7 @@
         <div class="cell" style="flex:2.2;"><div class="k">Project</div><div class="v">{{ $event->name }}</div></div>
         <div class="cell" style="flex:1.9;"><div class="k">Drawing</div><div class="v">{{ $room->name }} — General Arrangement</div></div>
         <div class="cell" style="flex:1;"><div class="k">Capacity laid out</div><div class="v">{{ $seatTotal }}{{ $room->capacity ? ' / '.number_format($room->capacity) : '' }}</div></div>
-        <div class="cell" style="flex:0.85;"><div class="k">Issued</div><div class="v">{{ now()->format('d M Y') }}</div></div>
+        <div class="cell" style="flex:0.85;"><div class="k">Issued</div><div class="v">{{ now()->format('j M Y') }}</div></div>
         <div class="cell dark" style="flex:0.75;"><div class="k">Scale</div><div class="v">{{ $ratio ? '1 : '.$ratio : 'NTS' }}</div></div>
         <div class="cell dark" style="flex:0.6;"><div class="k">Sheet</div><div class="v">{{ $sheetRef }}</div></div>
     </div>
@@ -466,7 +466,7 @@
 
     <div class="foot2">
         <span>{{ $event->name }} · {{ $room->name }} · schedule to drawing {{ $sheetRef }}</span>
-        <span style="margin-left:auto;">Issued {{ now()->format('d M Y') }} · indicative layout, not for construction</span>
+        <span style="margin-left:auto;">Issued {{ now()->format('j M Y') }} · indicative layout, not for construction</span>
     </div>
 </div>
 

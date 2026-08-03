@@ -97,7 +97,7 @@ class ContractAppendices
     {
         $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
         $fee = (float) ($event->management_fee_pct ?? 15);
-        $money = fn (int $c) => $cur.' '.number_format($c / 100, 2);
+        $money = fn (int $c) => \App\Support\Money::forDocument($c, $cur);
 
         $items = $event->budgetItems()->with('event')->get()
             ->filter(fn (EventBudgetItem $i) => $i->sellCents($fee) > 0)

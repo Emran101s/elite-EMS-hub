@@ -118,7 +118,7 @@
             @if ($firstDay)
                 <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}"
                    class="rounded-xl border border-line px-2.5 py-1 text-[0.62rem] font-semibold text-navy-700 transition hover:border-gold-300">
-                    {{ $firstDay->date->format('M j, Y') }}
+                    {{ $firstDay->date->format('j M Y') }}
                 </a>
             @endif
         </div>

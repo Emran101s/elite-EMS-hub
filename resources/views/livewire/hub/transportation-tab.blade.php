@@ -312,7 +312,7 @@
                                             @else — @endif
                                         </td>
                                         <td class="px-3 py-2 text-xs text-navy-700 whitespace-nowrap">
-                                            {{ $g->arrival_on?->format('d M') ?? '—' }}{{ $g->arrival_time ? ' · '.substr($g->arrival_time, 0, 5) : '' }}
+                                            {{ $g->arrival_on?->format('j M') ?? '—' }}{{ $g->arrival_time ? ' · '.substr($g->arrival_time, 0, 5) : '' }}
                                         </td>
                                         <td class="px-3 py-2 text-xs font-semibold text-navy-900 whitespace-nowrap">{{ $g->pickup_time ? substr($g->pickup_time, 0, 5) : '—' }}</td>
                                         <td class="px-3 py-2 text-eyebrow text-muted">{{ \Illuminate\Support\Str::limit(($g->pickup_point ?: '—').' → '.($g->drop_point ?: '—'), 34) }}</td>

@@ -128,11 +128,11 @@
     <div class="dates">
         <div class="cell">
             <div class="lbl">Issued</div>
-            <div class="n">{{ $invoice->issued_on?->format('j F Y') ?? '—' }}</div>
+            <div class="n"><x-date :value="$invoice->issued_on" style="document" /></div>
         </div>
         <div class="cell">
             <div class="lbl">Due</div>
-            <div class="n {{ $state === 'overdue' ? 'overdue' : '' }}">{{ $invoice->due_on?->format('j F Y') ?? '—' }}</div>
+            <div class="n {{ $state === 'overdue' ? 'overdue' : '' }}"><x-date :value="$invoice->due_on" style="document" /></div>
         </div>
         <div class="cell">
             <div class="lbl">Currency</div>
@@ -140,7 +140,7 @@
         </div>
         <div class="cell">
             <div class="lbl">Amount due</div>
-            <div class="n {{ $out > 0 ? 'overdue' : '' }}">{{ $cur }} {{ $fmt($out) }}</div>
+            <div class="n {{ $out > 0 ? 'overdue' : '' }}">{{ \App\Support\Money::forDocument($out, $cur) }}</div>
         </div>
     </div>
 
@@ -171,7 +171,7 @@
         <table class="totals">
             <tr>
                 <td class="k">Subtotal</td>
-                <td>{{ $cur }} {{ $fmt($sub) }}</td>
+                <td>{{ \App\Support\Money::forDocument($sub, $cur) }}</td>
             </tr>
             @if ($invoice->fee_pct)
                 {{-- Its own row: a fee smeared across the lines is a fee the
@@ -179,18 +179,18 @@
                      bill is usually about. --}}
                 <tr>
                     <td class="k">Management fee ({{ rtrim(rtrim(number_format($invoice->fee_pct, 2), '0'), '.') }}%)</td>
-                    <td>{{ $cur }} {{ $fmt($fee) }}</td>
+                    <td>{{ \App\Support\Money::forDocument($fee, $cur) }}</td>
                 </tr>
             @endif
             @if ($invoice->tax_pct)
                 <tr>
                     <td class="k">Tax ({{ rtrim(rtrim(number_format($invoice->tax_pct, 2), '0'), '.') }}%)</td>
-                    <td>{{ $cur }} {{ $fmt($tax) }}</td>
+                    <td>{{ \App\Support\Money::forDocument($tax, $cur) }}</td>
                 </tr>
             @endif
             <tr class="grand">
                 <td class="k" style="color: inherit">Total</td>
-                <td>{{ $cur }} {{ $fmt($total) }}</td>
+                <td>{{ \App\Support\Money::forDocument($total, $cur) }}</td>
             </tr>
             @if ($invoice->paid_cents > 0)
                 {{-- A plain hyphen, not a typographic minus: DomPDF's core
@@ -198,11 +198,11 @@
                      which on an invoice reads as a number nobody is sure of. --}}
                 <tr class="rule">
                     <td class="k">Received</td>
-                    <td>- {{ $cur }} {{ $fmt($invoice->paid_cents) }}</td>
+                    <td>- {{ \App\Support\Money::forDocument($invoice->paid_cents, $cur) }}</td>
                 </tr>
                 <tr class="due">
                     <td class="k" style="color: inherit">Balance due</td>
-                    <td>{{ $cur }} {{ $fmt($out) }}</td>
+                    <td>{{ \App\Support\Money::forDocument($out, $cur) }}</td>
                 </tr>
             @endif
         </table>
