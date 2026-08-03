@@ -1,3 +1,16 @@
+{{--
+    A floor plan the way a venue expects to receive one.
+
+    Sheet 1 is the drawing, and it is not a re-drawing: the plan inside the
+    frame is the builder's own 960×560 coordinate space, its own element
+    component and its own metre scale, wrapped in a single transform that fits
+    it to paper. A table rotated 37° on screen is rotated 37° here, and nothing
+    has to be kept in step by hand.
+
+    Sheet 2 is the schedule — the hire, its days, and every piece of equipment
+    with its rate, quantity and run. A plan sent to a venue without its
+    equipment list is half a brief, and the half they ring back about.
+--}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,43 +21,48 @@
         $navy = $theme['primary'] ?? '#0B1F3A';
         $gold = $theme['accent'] ?? '#D4AF37';
 
-        // ── Drawing sheet geometry ──────────────────────────────────────────────
-        // A4 landscape @96dpi ≈ 1123×794. Masthead + footer are fixed bands; the
-        // plan and inspector share the body. The whole 960×560 builder space is
-        // mapped UNIFORMLY into an inset box so proportions (and circles) hold and
-        // there's a clean margin around the floor for dimension lines.
-        $CW = 772;                 // plan drawing width (px)
-        $CH = 556;                 // plan drawing height (px) — fills the sheet
-        $PAD = 32;                 // dimension-line margin inside the plan
+        $fmtM = fn ($n) => rtrim(rtrim(number_format((float) $n, 1), '0'), '.');
 
+        // ── the builder's geometry, verbatim ────────────────────────────────
         $roomW = is_numeric($room->width_m) && (float) $room->width_m > 0 ? (float) $room->width_m : null;
         $roomL = is_numeric($room->length_m) && (float) $room->length_m > 0 ? (float) $room->length_m : null;
-        $scale960 = $roomW && $roomL ? min(960 / $roomW, 560 / $roomL) : null;
+        $scale = $roomW && $roomL ? min(960 / $roomW, 560 / $roomL) : null;   // px per metre
+        $venW = $scale ? round($roomW * $scale, 2) : 960;
+        $venH = $scale ? round($roomL * $scale, 2) : 560;
+        $offX = $scale ? round((960 - $venW) / 2, 2) : 0;
+        $offY = $scale ? round((560 - $venH) / 2, 2) : 0;
 
-        $k = min(($CW - 2 * $PAD) / 960, ($CH - 2 * $PAD) / 560);   // uniform 960-space → paper
-        $mapOffX = $PAD + (($CW - 2 * $PAD) - 960 * $k) / 2;
-        $mapOffY = $PAD + (($CH - 2 * $PAD) - 560 * $k) / 2;
-        $pk = ($scale960 ?? 12) * $k;                                // px per metre on paper
+        // A metre grid at a density that survives print — 1 m lines turn to
+        // mush in a hall forty metres across.
+        $gridM = $scale && $scale < 14 ? ($scale < 8 ? 5 : 2) : 1;
+        $gridPx = $scale ? $scale * $gridM : 40;
 
-        $offX960 = $scale960 ? (960 - $roomW * $scale960) / 2 : 0;
-        $offY960 = $scale960 ? (560 - $roomL * $scale960) / 2 : 0;
-        $venX = $mapOffX + $offX960 * $k;
-        $venY = $mapOffY + $offY960 * $k;
-        $venW = $scale960 ? $roomW * $pk : $CW - 2 * $PAD;
-        $venH = $scale960 ? $roomL * $pk : $CH - 2 * $PAD;
-        $gridPx = $pk;
+        // ── fitting that space onto the sheet ──────────────────────────────
+        // A4 landscape at 96 dpi. The plan is scaled as one piece, so every
+        // proportion inside it survives; DIM is the margin the dimension lines
+        // and their captions live in.
+        $CANVAS_W = 1054; $CANVAS_H = 585; $DIM = 34;
+        $k = round(min(($CANVAS_W - 2 * $DIM) / 960, ($CANVAS_H - 2 * $DIM) / 560), 4);
+        $planW = 960 * $k; $planH = 560 * $k;
+        $planX = round(($CANVAS_W - $planW) / 2, 2);
+        $planY = round(($CANVAS_H - $planH) / 2, 2);
+        // The venue rectangle in paper coordinates, for the dimension lines.
+        $vx = round($planX + $offX * $k, 2);  $vy = round($planY + $offY * $k, 2);
+        $vw = round($venW * $k, 2);           $vh = round($venH * $k, 2);
 
-        $fmtM = fn ($n) => rtrim(rtrim(number_format((float) $n, 1), '0'), '.');
-        $presets = \App\Models\EventRoom::LAYOUT_PRESETS;
-
-        // ── Inspector figures ──
+        // ── figures ────────────────────────────────────────────────────────
         $area = $roomW && $roomL ? $roomW * $roomL : null;
         $seatTotal = $room->seatCount();
-        $tablesCount = collect($elements)->filter(fn ($e) => in_array($e['type'] ?? '', ['table', 'round', 'boardroom', 'banquet', 'seatblock'], true))->count();
         $pieces = count($elements);
-        $ratio = $scale960 ? max(1, (int) round(3779.5 / $pk / 5) * 5) : null;   // 96dpi → 1:N (rounded to 5)
+        // 96 dpi → 1 : N, rounded to something a scale rule actually carries.
+        $ratio = $scale ? max(1, (int) round(3779.5 / ($scale * $k) / 5) * 5) : null;
+        $days = $room->chargedDays();
 
-        $arrLabels = ['theater' => 'Theatre rows', 'classroom' => 'Classroom', 'banquet' => 'Banquet rounds', 'utables' => 'U-shape (tables)', 'ushape' => 'U-shape', 'perimeter' => 'Perimeter', 'grid' => 'Grid seating', 'circle' => 'Circle', 'boardroom' => 'Boardroom'];
+        $presets = \App\Models\EventRoom::LAYOUT_PRESETS;
+        $arrLabels = ['theater' => 'Theatre rows', 'classroom' => 'Classroom', 'banquet' => 'Banquet rounds',
+            'utables' => 'U-shape (tables)', 'ushape' => 'U-shape', 'perimeter' => 'Perimeter',
+            'grid' => 'Grid seating', 'circle' => 'Circle', 'boardroom' => 'Boardroom'];
+
         $breakdown = [];
         foreach ($elements as $e) {
             $lbl = ($e['type'] ?? '') === 'seatblock'
@@ -54,305 +72,417 @@
             $breakdown[$lbl]['count']++;
             $breakdown[$lbl]['seats'] += (int) ($e['seats'] ?? 0);
         }
+
+        $reqs = collect($room->requirements ?? []);
+        $reqTotal = $room->requirementsTotalCents();
         $equip = $room->equipmentLines();
+        $sheetRef = 'FP-'.str_pad((string) $room->id, 3, '0', STR_PAD_LEFT);
     @endphp
+
+    {{-- The builder's element component styles itself from the app's tokens,
+         so the app's own CSS has to come with it or every piece renders grey. --}}
+    <style>{!! $css !!}</style>
     <style>
-        @page { margin: 0; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #0F172A; }
+        @page { size: A4 landscape; margin: 0; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 1122px; background: #fff; color: #0F172A;
+               font-family: ui-sans-serif, system-ui, 'Helvetica Neue', Arial, sans-serif;
+               -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-        /* ── body grid ── */
-        .body { margin-top: 96px; height: 668px; padding: 16px 22px 0; }
-        .cols { display: table; width: 100%; table-layout: fixed; }
-        .cols > div { display: table-cell; vertical-align: top; }
-        .gut { width: 20px; }
-        .side { width: 264px; }
+        .sheet { position: relative; width: 1122px; height: 793px; overflow: hidden; page-break-after: always; }
+        .sheet:last-child { page-break-after: auto; }
 
-        /* ── plan card ── */
-        .plan { position: relative; border: 1.5px solid {{ $navy }}; border-radius: 7px; background: #fff; padding: 8px; }
-        .plan .tt { display: table; width: 100%; padding: 1px 4px 8px; }
-        .plan .tt .a, .plan .tt .b { display: table-cell; }
-        .plan .tt .b { text-align: right; }
-        .plan .tt .a { font-size: 10px; font-weight: bold; letter-spacing: 2px; color: {{ $navy }}; text-transform: uppercase; }
-        .plan .tt .b { font-size: 8.5px; font-weight: bold; letter-spacing: 1px; color: #64748B; }
-        .plan .tt .b b { color: {{ $gold }}; }
-        .canvas { position: relative; width: {{ $CW }}px; height: {{ $CH }}px; background: #FAFBFE; border: 1px solid #E7ECF3; border-radius: 4px; }
-        .floor { position: absolute; border: 1.5px solid {{ $navy }}; background: #fff; }
-        .gl-v { position: absolute; top: 0; width: 1px; background: #EAEFF6; }
-        .gl-h { position: absolute; left: 0; height: 1px; background: #EAEFF6; }
+        /* ── masthead ── */
+        .mh { height: 64px; background: {{ $navy }}; color: #fff; padding: 0 24px; display: flex; align-items: center; gap: 16px; }
+        .mh .eb { font-size: 7.5px; font-weight: 800; letter-spacing: 2.6px; text-transform: uppercase; color: {{ $gold }}; }
+        .mh h1 { margin: 2px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -0.2px; line-height: 1; }
+        .mh .sub { margin-top: 3px; font-size: 9px; color: rgba(255,255,255,0.62); letter-spacing: 0.3px; }
+        .mh .chips { margin-left: auto; display: flex; gap: 9px; }
+        .mh .chip { min-width: 74px; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.16);
+                    border-radius: 7px; background: rgba(255,255,255,0.05); text-align: center; }
+        .mh .chip b { display: block; color: #fff; font-size: 14px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
+        .mh .chip span { display: block; margin-top: 1px; font-size: 6.5px; font-weight: 700; letter-spacing: 1.3px;
+                         text-transform: uppercase; color: rgba(255,255,255,0.5); }
 
-        /* dimension lines (architectural tick style) */
-        .dim-l { position: absolute; height: 1px; background: {{ $navy }}; }
-        .dim-lt { position: absolute; width: 1px; background: {{ $navy }}; }
-        .dim-tick-h { position: absolute; width: 1px; height: 7px; background: {{ $navy }}; }
-        .dim-tick-v { position: absolute; height: 1px; width: 7px; background: {{ $navy }}; }
-        .dim-cap { position: absolute; font-size: 8px; font-weight: bold; color: {{ $navy }}; background: #FAFBFE; padding: 0 4px; }
-        .front { position: absolute; font-size: 6.5px; font-weight: bold; letter-spacing: 2px; color: #94A3B8; text-transform: uppercase; }
-        .gnote { position: absolute; font-size: 6.5px; font-weight: bold; color: #94A3B8; background: #F1F5F9; padding: 1px 4px; border-radius: 2px; }
-        .nodim { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 10px; color: #94A3B8; }
-        .name-pill { position: absolute; font-size: 6px; font-weight: bold; color: #334155; background: #fff; border: 1px solid #E2E8F0; border-radius: 3px; padding: 0 2px; white-space: nowrap; }
+        /* ── drawing frame ── */
+        .frame { position: relative; margin: 14px 24px 0; height: 625px; border: 1.5px solid {{ $navy }};
+                 border-radius: 6px; background: #fff; padding: 9px; }
+        .frame .cap { display: flex; align-items: baseline; padding: 0 3px 7px; }
+        .frame .cap .t { font-size: 9px; font-weight: 800; letter-spacing: 2.4px; text-transform: uppercase; color: {{ $navy }}; }
+        .frame .cap .r { margin-left: auto; font-size: 8px; font-weight: 700; letter-spacing: 1.2px; color: #7C8AA0; }
+        .frame .cap .r b { color: {{ $navy }}; }
+        .corner { position: absolute; width: 13px; height: 13px; border: 0 solid {{ $gold }}; }
 
-        /* blueprint corner ticks */
-        .cm { position: absolute; }
-        .cm .h { position: absolute; width: 11px; height: 2px; background: {{ $gold }}; }
-        .cm .v { position: absolute; width: 2px; height: 11px; background: {{ $gold }}; }
+        .canvas { position: relative; width: {{ $CANVAS_W }}px; height: {{ $CANVAS_H }}px;
+                  background: #FBFCFE; border: 1px solid #E7ECF3; border-radius: 3px; overflow: hidden; }
+        .floor { position: absolute; border: 1.6px solid {{ $navy }}; background: #fff; border-radius: 2px; }
 
-        /* below-plan strip: scale bar + orientation */
-        .strip { display: table; width: 100%; margin-top: 9px; }
-        .strip .sa, .strip .sb { display: table-cell; vertical-align: middle; }
-        .strip .sb { text-align: right; font-size: 7.5px; color: #94A3B8; letter-spacing: 1px; }
-        .sbar { border-collapse: collapse; }
-        .sbar td { height: 7px; border: 0.8px solid {{ $navy }}; padding: 0; }
-        .sbar .fill { background: {{ $navy }}; }
-        .sbar-lbls { font-size: 7px; color: #64748B; margin-top: 2px; }
+        /* the plan itself — builder coordinates, scaled as one piece */
+        .plan { position: absolute; width: 960px; height: 560px; transform-origin: 0 0; }
+        .piece { position: absolute; transform: translate(-50%, -50%); }
+        .nameTag { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 2px;
+                   white-space: nowrap; border-radius: 3px; background: rgba(255,255,255,0.94); border: 1px solid #E2E8F0;
+                   padding: 0 4px; font-size: 8px; font-weight: 700; color: #334155; }
+        .seatTag { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px;
+                   white-space: nowrap; border-radius: 99px; background: {{ $navy }}; color: #fff;
+                   padding: 1px 6px; font-size: 8px; font-weight: 700; }
+        .seatNum { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                   font-size: 9px; font-weight: 800; color: {{ $navy }}; }
 
-        /* ── sidebar ── */
-        .sec { border: 1px solid #E4E9F1; border-radius: 7px; margin-bottom: 10px; overflow: hidden; }
-        .sec .cap { display: table; width: 100%; background: {{ $navy }}; padding: 6px 11px; }
-        .sec .cap .ct, .sec .cap .cx { display: table-cell; vertical-align: middle; }
-        .sec .cap .ct { color: {{ $gold }}; font-size: 7.5px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
-        .sec .cap .cx { text-align: right; color: rgba(255,255,255,0.65); font-size: 7px; letter-spacing: 0.5px; }
+        /* dimension lines, architect's tick convention */
+        .dh { position: absolute; height: 1px; background: {{ $navy }}; }
+        .dv { position: absolute; width: 1px; background: {{ $navy }}; }
+        .tk { position: absolute; background: {{ $navy }}; }
+        .dcap { position: absolute; font-size: 8.5px; font-weight: 800; color: {{ $navy }};
+                background: #FBFCFE; padding: 0 5px; letter-spacing: 0.3px; white-space: nowrap; }
+        .note { position: absolute; font-size: 7px; font-weight: 700; letter-spacing: 1.1px;
+                text-transform: uppercase; color: #94A3B8; }
+        .nodim { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+                 font-size: 11px; color: #94A3B8; text-align: center; line-height: 1.6; }
 
-        /* dimension hero + stat tiles */
-        .dims { text-align: center; padding: 11px 8px 9px; border-bottom: 1px solid #EEF2F8; }
-        .dims .dn { font-size: 21px; font-weight: bold; color: {{ $navy }}; letter-spacing: 0.5px; }
-        .dims .dl { font-size: 7px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
-        .tiles { display: table; width: 100%; table-layout: fixed; }
-        .tiles .row { display: table-row; }
-        .tiles .t { display: table-cell; width: 50%; padding: 9px 6px; text-align: center; border-right: 1px solid #EEF2F8; border-bottom: 1px solid #EEF2F8; }
-        .tiles .t.re { border-right: none; }
-        .tiles .t.be { border-bottom: none; }
-        .tiles .tn { font-size: 17px; font-weight: bold; color: {{ $navy }}; }
-        .tiles .tn small { font-size: 8px; font-weight: normal; color: #94A3B8; }
-        .tiles .tl { font-size: 6.5px; letter-spacing: 1px; text-transform: uppercase; color: #94A3B8; margin-top: 3px; }
-        .util { padding: 9px 11px; border-top: 1px solid #EEF2F8; }
-        .util .ur { display: table; width: 100%; }
-        .util .ur .a, .util .ur .b { display: table-cell; font-size: 8px; }
-        .util .ur .a { color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
-        .util .ur .b { text-align: right; font-weight: bold; color: {{ $navy }}; }
-        .ubar { height: 7px; border-radius: 4px; background: #EDF1F7; margin-top: 5px; overflow: hidden; }
-        .ubar > div { height: 7px; background: {{ $gold }}; }
+        /* ── title block: the strip a drawing is identified by ── */
+        .tblock { position: absolute; left: 24px; right: 24px; bottom: 18px; height: 52px;
+                  display: flex; border: 1px solid {{ $navy }}; border-radius: 5px; overflow: hidden; }
+        .tblock .cell { padding: 7px 11px; border-right: 1px solid #DCE3ED; min-width: 0; }
+        .tblock .cell:last-child { border-right: 0; }
+        .tblock .k { font-size: 6.5px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: #94A3B8; }
+        .tblock .v { margin-top: 3px; font-size: 11px; font-weight: 800; color: {{ $navy }};
+                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tblock .dark { background: {{ $navy }}; }
+        .tblock .dark .k { color: rgba(255,255,255,0.55); }
+        .tblock .dark .v { color: {{ $gold }}; }
 
-        /* breakdown mini bar-chart */
-        .bdrow { padding: 6px 11px; border-bottom: 1px solid #F4F7FB; }
-        .bdrow.le { border-bottom: none; }
-        .bdtop { display: table; width: 100%; }
-        .bdtop .a, .bdtop .b { display: table-cell; vertical-align: bottom; }
-        .bdtop .a { font-size: 8.5px; font-weight: bold; color: #334155; }
-        .bdtop .b { text-align: right; font-size: 8px; font-weight: bold; color: {{ $navy }}; white-space: nowrap; }
-        .bdbar { height: 4px; border-radius: 3px; background: #EDF1F7; margin-top: 4px; overflow: hidden; }
-        .bdbar > div { height: 4px; background: {{ $navy }}; }
-
-        /* legend */
-        .lg { display: table; width: 100%; padding: 7px 11px; }
-        .lg .li { display: table-row; }
-        .lg .sym, .lg .txt { display: table-cell; vertical-align: middle; padding: 2.5px 0; }
-        .lg .sym { width: 24px; }
-        .lg .txt { font-size: 8.5px; color: #334155; }
-
-        /* title block */
-        .tb { width: 100%; border-collapse: collapse; }
-        .tb td { font-size: 7.5px; padding: 5px 9px; border: 1px solid #E4E9F1; }
-        .tb .k { color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; width: 40px; }
-        .tb .v { font-weight: bold; color: {{ $navy }}; }
+        /* ── sheet 2 ── */
+        .body2 { padding: 16px 24px 0; display: flex; gap: 16px; height: 700px; }
+        .sec { border: 1px solid #E4E9F1; border-radius: 7px; overflow: hidden; margin-bottom: 12px; }
+        .sec > h3 { margin: 0; background: {{ $navy }}; color: {{ $gold }}; padding: 7px 12px;
+                    font-size: 7.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+                    display: flex; align-items: center; }
+        .sec > h3 em { margin-left: auto; font-style: normal; font-size: 7px; font-weight: 600;
+                       letter-spacing: 0.6px; color: rgba(255,255,255,0.6); text-transform: none; }
+        table.sch { width: 100%; border-collapse: collapse; }
+        table.sch th { font-size: 6.5px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+                       color: #94A3B8; text-align: left; padding: 7px 12px; border-bottom: 1px solid #E9EDF4; background: #F8FAFC; }
+        table.sch td { font-size: 10px; padding: 7px 12px; border-bottom: 1px solid #F1F5F9; color: #334155; vertical-align: top; }
+        table.sch tr:last-child td { border-bottom: 0; }
+        table.sch .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        table.sch .item { font-weight: 700; color: {{ $navy }}; }
+        table.sch .idx { color: #B4BECD; font-variant-numeric: tabular-nums; width: 26px; }
+        table.sch .tot { font-weight: 800; color: {{ $navy }}; }
+        table.sch tr.sum td { background: #F8FAFC; border-top: 1.5px solid {{ $navy }}; border-bottom: 0;
+                              font-weight: 800; color: {{ $navy }}; font-size: 11px; }
+        .empty { padding: 22px 12px; text-align: center; font-size: 10px; color: #94A3B8; }
+        .pill { display: inline-block; border-radius: 99px; padding: 1px 7px; font-size: 7.5px; font-weight: 800;
+                letter-spacing: 0.4px; text-transform: uppercase; }
+        .rail { width: 296px; flex: none; }
+        .kv { display: flex; align-items: baseline; padding: 7px 12px; border-bottom: 1px solid #F1F5F9; font-size: 10px; }
+        .kv:last-child { border-bottom: 0; }
+        .kv .a { color: #64748B; }
+        .kv .b { margin-left: auto; padding-left: 8px; font-weight: 800; color: {{ $navy }}; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .kv.big { padding: 10px 12px; background: #F8FAFC; border-top: 1.5px solid {{ $navy }}; }
+        .kv.big .a { font-weight: 800; color: {{ $navy }}; text-transform: uppercase; font-size: 8px; letter-spacing: 1.2px; }
+        .kv.big .b { font-size: 15px; }
+        .prose { padding: 9px 12px; font-size: 9.5px; color: #475569; line-height: 1.55; }
+        .prose b { color: {{ $navy }}; }
+        .lgd { padding: 9px 12px; }
+        .lgd div { display: flex; align-items: center; gap: 9px; padding: 3px 0; font-size: 9.5px; color: #334155; }
+        .lgd s { flex: none; text-decoration: none; }
+        .bar { height: 5px; border-radius: 3px; background: #EDF1F7; overflow: hidden; margin-top: 4px; }
+        .bar > i { display: block; height: 5px; background: {{ $navy }}; }
+        .foot2 { position: absolute; left: 24px; right: 24px; bottom: 16px; display: flex;
+                 border-top: 1px solid #E4E9F1; padding-top: 8px; font-size: 8px; color: #94A3B8; letter-spacing: 0.4px; }
     </style>
 </head>
 <body>
-    {{-- ═══ masthead ═══ --}}
-    <x-pdf-header fixed :navy="$navy" :gold="$gold"
-        eyebrow="Elite Business Hub · Floor Plan"
-        :title="$room->name"
-        :subtitle="$event->name.' · '.str($room->type)->replace('_', ' ')->title()"
-        :chips="[
-            ['n' => $roomW && $roomL ? $fmtM($roomW).'×'.$fmtM($roomL) : '—', 'l' => 'Metres'],
-            ['n' => $area ? $fmtM($area) : '—', 'l' => 'm² Floor'],
-            ['n' => (string) $seatTotal, 'l' => 'Seats'],
-        ]" />
 
-    {{-- ═══ body ═══ --}}
-    <div class="body">
-        <div class="cols">
-            {{-- ── plan ── --}}
-            <div>
-                <div class="plan">
-                    {{-- blueprint corner ticks --}}
-                    <div class="cm" style="top:-1px; left:-1px;"><div class="h" style="top:0;left:0;"></div><div class="v" style="top:0;left:0;"></div></div>
-                    <div class="cm" style="top:-1px; right:-1px;"><div class="h" style="top:0;right:0;"></div><div class="v" style="top:0;right:0;"></div></div>
-                    <div class="cm" style="bottom:-1px; left:-1px;"><div class="h" style="bottom:0;left:0;"></div><div class="v" style="bottom:0;left:0;"></div></div>
-                    <div class="cm" style="bottom:-1px; right:-1px;"><div class="h" style="bottom:0;right:0;"></div><div class="v" style="bottom:0;right:0;"></div></div>
+{{-- ═══════════════════ SHEET 1 · the drawing ═══════════════════ --}}
+<div class="sheet">
+    <div class="mh">
+        <div style="min-width:0;">
+            <div class="eb">Elite Business Hub · Floor Plan</div>
+            <h1>{{ $room->name }}</h1>
+            <div class="sub">{{ $event->name }} · {{ str($room->type)->replace('_', ' ')->title() }}
+                @if ($event->starts_on) · {{ $event->starts_on->format('d M Y') }}@endif
+                · held {{ $days }} {{ str('day')->plural($days) }}</div>
+        </div>
+        <div class="chips">
+            <div class="chip"><b>{{ $roomW && $roomL ? $fmtM($roomW).'×'.$fmtM($roomL) : '—' }}</b><span>Metres</span></div>
+            <div class="chip"><b>{{ $area ? $fmtM($area) : '—' }}</b><span>m² Floor</span></div>
+            <div class="chip"><b>{{ $seatTotal }}</b><span>Seats</span></div>
+            <div class="chip"><b>{{ $pieces }}</b><span>Pieces</span></div>
+        </div>
+    </div>
 
-                    <div class="tt">
-                        <div class="a">Floor Plan</div>
-                        <div class="b">@if ($ratio)SCALE <b>1 : {{ $ratio }}</b> &nbsp;·&nbsp; @endif TRUE TO SCALE</div>
-                    </div>
+    <div class="frame">
+        <div class="corner" style="top:-1px;left:-1px;border-top-width:2px;border-left-width:2px;"></div>
+        <div class="corner" style="top:-1px;right:-1px;border-top-width:2px;border-right-width:2px;"></div>
+        <div class="corner" style="bottom:-1px;left:-1px;border-bottom-width:2px;border-left-width:2px;"></div>
+        <div class="corner" style="bottom:-1px;right:-1px;border-bottom-width:2px;border-right-width:2px;"></div>
 
-                    <div class="canvas">
-                        @if ($scale960)
-                            {{-- venue floor + 1 m grid --}}
-                            <div class="floor" style="left:{{ round($venX) }}px; top:{{ round($venY) }}px; width:{{ round($venW) }}px; height:{{ round($venH) }}px;">
-                                @for ($gx = $gridPx; $gx < $venW - 0.5; $gx += $gridPx)
-                                    <div class="gl-v" style="left:{{ round($gx) }}px; height:{{ round($venH) }}px;"></div>
-                                @endfor
-                                @for ($gy = $gridPx; $gy < $venH - 0.5; $gy += $gridPx)
-                                    <div class="gl-h" style="top:{{ round($gy) }}px; width:{{ round($venW) }}px;"></div>
-                                @endfor
+        <div class="cap">
+            <div class="t">General Arrangement</div>
+            <div class="r">
+                @if ($ratio)SCALE <b>1 : {{ $ratio }}</b> · @endif
+                {{ $scale ? 'DRAWN TO SCALE · METRES' : 'NOT TO SCALE — DIMENSIONS NOT SET' }}
+            </div>
+        </div>
+
+        <div class="canvas">
+            @if ($scale)
+                {{-- the floor, with its metre grid --}}
+                <div class="floor" style="left:{{ $vx }}px; top:{{ $vy }}px; width:{{ $vw }}px; height:{{ $vh }}px;
+                     background-image: linear-gradient(#E8EEF6 1px, transparent 1px),
+                                       linear-gradient(90deg, #E8EEF6 1px, transparent 1px);
+                     background-size: 100% {{ round($gridPx * $k, 2) }}px, {{ round($gridPx * $k, 2) }}px 100%;"></div>
+
+                {{-- width, above the floor --}}
+                @php $dy = $vy - 17; @endphp
+                <div class="dh" style="left:{{ $vx }}px; top:{{ $dy + 7 }}px; width:{{ $vw }}px;"></div>
+                <div class="tk" style="left:{{ $vx }}px; top:{{ $dy + 3 }}px; width:1px; height:9px;"></div>
+                <div class="tk" style="left:{{ $vx + $vw - 1 }}px; top:{{ $dy + 3 }}px; width:1px; height:9px;"></div>
+                <div class="dcap" style="left:{{ $vx + $vw / 2 }}px; top:{{ $dy }}px; transform: translateX(-50%);">{{ $fmtM($roomW) }} m</div>
+
+                {{-- length, to the left --}}
+                @php $dx = $vx - 17; @endphp
+                <div class="dv" style="left:{{ $dx + 7 }}px; top:{{ $vy }}px; height:{{ $vh }}px;"></div>
+                <div class="tk" style="left:{{ $dx + 3 }}px; top:{{ $vy }}px; width:9px; height:1px;"></div>
+                <div class="tk" style="left:{{ $dx + 3 }}px; top:{{ $vy + $vh - 1 }}px; width:9px; height:1px;"></div>
+                <div class="dcap" style="left:{{ $dx + 7 }}px; top:{{ $vy + $vh / 2 }}px;
+                     transform: translate(-50%, -50%) rotate(-90deg);">{{ $fmtM($roomL) }} m</div>
+
+                <div class="note" style="left:{{ $vx }}px; top:{{ $vy + 6 }}px; width:{{ $vw }}px; text-align:center;">▲ &nbsp;Front of room&nbsp; ▲</div>
+                <div class="note" style="right:8px; bottom:7px;">1 grid = {{ $gridM }} m</div>
+            @else
+                <div class="nodim">Room dimensions not set — the plan is shown unscaled.<br>
+                    Add a width and a length in the builder to draw it to scale.</div>
+            @endif
+
+            {{-- ── the plan, in the builder's own coordinates ── --}}
+            <div class="plan" style="left:{{ $planX }}px; top:{{ $planY }}px; transform: scale({{ $k }});">
+                @foreach ($elements as $el)
+                    <div class="piece" style="left:{{ $el['x'] ?? 480 }}px; top:{{ $el['y'] ?? 280 }}px;">
+                        @if (($el['type'] ?? '') === 'seatblock')
+                            @php $geo = \App\Models\EventRoom::seatChairs($el, $scale ?: 12); @endphp
+                            <div style="position:relative; width:{{ $geo['w'] }}px; height:{{ $geo['h'] }}px;
+                                        transform: rotate({{ $el['rot'] ?? 0 }}deg);">
+                                @foreach ($geo['desks'] as [$dxx, $dyy, $dw, $dh])
+                                    <span style="position:absolute; left:{{ $geo['w'] / 2 + $dxx - $dw / 2 }}px; top:{{ $geo['h'] / 2 + $dyy - $dh / 2 }}px;
+                                                 width:{{ $dw }}px; height:{{ $dh }}px; border-radius:2px; background:#E8EDF4; border:0.6px solid #C6D1E0;"></span>
+                                @endforeach
+                                @foreach ($geo['tables'] as [$tx, $ty, $td])
+                                    <span style="position:absolute; left:{{ $geo['w'] / 2 + $tx - $td / 2 }}px; top:{{ $geo['h'] / 2 + $ty - $td / 2 }}px;
+                                                 width:{{ $td }}px; height:{{ $td }}px; border-radius:50%; background:#EEF3FA; border:1px solid #8DA0BC;"></span>
+                                @endforeach
+                                @foreach ($geo['rects'] ?? [] as [$rx, $ry, $rw, $rh])
+                                    <span style="position:absolute; left:{{ $geo['w'] / 2 + $rx - $rw / 2 }}px; top:{{ $geo['h'] / 2 + $ry - $rh / 2 }}px;
+                                                 width:{{ $rw }}px; height:{{ $rh }}px; border-radius:2px; background:#E8EDF4; border:1px solid #C6D1E0;"></span>
+                                @endforeach
+                                @foreach ($geo['chairs'] as [$cx, $cy])
+                                    <span style="position:absolute; left:{{ $geo['w'] / 2 + $cx - $geo['chairPx'] / 2 }}px; top:{{ $geo['h'] / 2 + $cy - $geo['chairPx'] / 2 }}px;
+                                                 width:{{ $geo['chairPx'] }}px; height:{{ $geo['chairPx'] }}px; border-radius:1px; background:{{ $navy }};"></span>
+                                @endforeach
+                                @foreach ($geo['labels'] ?? [] as [$lx, $ly, $lt])
+                                    <span style="position:absolute; left:{{ $geo['w'] / 2 + $lx }}px; top:{{ $geo['h'] / 2 + $ly }}px;
+                                                 transform: translate(-100%, -50%); padding-right:2px; font-size:8px; font-weight:800; color:#64748B;">{{ $lt }}</span>
+                                @endforeach
                             </div>
-
-                            {{-- width dimension line (above floor) --}}
-                            @php $dy = round($venY) - 15; @endphp
-                            <div class="dim-l" style="left:{{ round($venX) }}px; top:{{ $dy + 7 }}px; width:{{ round($venW) }}px;"></div>
-                            <div class="dim-tick-h" style="left:{{ round($venX) }}px; top:{{ $dy + 4 }}px;"></div>
-                            <div class="dim-tick-h" style="left:{{ round($venX + $venW) }}px; top:{{ $dy + 4 }}px;"></div>
-                            <div class="dim-cap" style="left:{{ round($venX + $venW / 2 - 22) }}px; top:{{ $dy + 1 }}px;">{{ $fmtM($roomW) }} m</div>
-
-                            {{-- length dimension line (left of floor) --}}
-                            @php $dx = round($venX) - 15; @endphp
-                            <div class="dim-lt" style="left:{{ $dx + 7 }}px; top:{{ round($venY) }}px; height:{{ round($venH) }}px;"></div>
-                            <div class="dim-tick-v" style="left:{{ $dx + 4 }}px; top:{{ round($venY) }}px;"></div>
-                            <div class="dim-tick-v" style="left:{{ $dx + 4 }}px; top:{{ round($venY + $venH) }}px;"></div>
-                            <div class="dim-cap" style="left:{{ max(1, $dx - 18) }}px; top:{{ round($venY + $venH / 2 - 6) }}px; background:#FAFBFE;">{{ $fmtM($roomL) }} m</div>
-
-                            <div class="front" style="left:{{ round($venX) }}px; top:{{ round($venY) + 3 }}px; width:{{ round($venW) }}px; text-align:center;">▲ &nbsp;Front of room&nbsp; ▲</div>
-                            <div class="gnote" style="right:6px; bottom:6px;">1 grid = 1 m</div>
+                            @if (($el['seats'] ?? 0) > 0)
+                                <span class="seatTag">{{ $el['seats'] }} seats</span>
+                            @endif
                         @else
-                            <div class="nodim">Room dimensions not set — plan shown unscaled. Add width &amp; length to draw to scale.</div>
+                            <div style="transform: rotate({{ $el['rot'] ?? 0 }}deg);">
+                                <x-layout-element :type="$el['type']" :seats="$el['seats'] ?? 0"
+                                                  :w="$el['w'] ?? 96" :h="$el['h'] ?? 96" :scale="$scale" />
+                            </div>
+                            @if (($el['seats'] ?? 0) > 0 && ($el['type'] ?? '') !== 'chair')
+                                <span class="seatNum">{{ $el['seats'] }}</span>
+                            @endif
                         @endif
 
-                        {{-- placed furniture --}}
-                        @foreach ($elements as $el)
-                            @php
-                                $cx = $mapOffX + ($el['x'] ?? 480) * $k;
-                                $cy = $mapOffY + ($el['y'] ?? 280) * $k;
-                                $rot = $el['rot'] ?? 0;
-                            @endphp
-                            @if (($el['type'] ?? '') === 'seatblock')
-                                @php $geo = \App\Models\EventRoom::seatChairs($el, $pk); @endphp
-                                <div style="position:absolute; left:{{ round($cx - $geo['w'] / 2) }}px; top:{{ round($cy - $geo['h'] / 2) }}px; width:{{ $geo['w'] }}px; height:{{ $geo['h'] }}px; transform: rotate({{ $rot }}deg); transform-origin:center;">
-                                    @foreach ($geo['desks'] as [$dx2, $dy2, $dw, $dh])
-                                        <div style="position:absolute; left:{{ $geo['w'] / 2 + $dx2 - $dw / 2 }}px; top:{{ $geo['h'] / 2 + $dy2 - $dh / 2 }}px; width:{{ $dw }}px; height:{{ $dh }}px; background:#E8EDF4; border:0.5px solid #C6D1E0;"></div>
-                                    @endforeach
-                                    @foreach ($geo['tables'] as [$tx, $ty, $td])
-                                        <div style="position:absolute; left:{{ $geo['w'] / 2 + $tx - $td / 2 }}px; top:{{ $geo['h'] / 2 + $ty - $td / 2 }}px; width:{{ $td }}px; height:{{ $td }}px; border:1px solid #8DA0BC; border-radius:50%; background:#EEF3FA;"></div>
-                                    @endforeach
-                                    @foreach ($geo['rects'] ?? [] as [$rx, $ry, $rw, $rh])
-                                        <div style="position:absolute; left:{{ $geo['w'] / 2 + $rx - $rw / 2 }}px; top:{{ $geo['h'] / 2 + $ry - $rh / 2 }}px; width:{{ $rw }}px; height:{{ $rh }}px; background:#E8EDF4; border:1px solid #C6D1E0;"></div>
-                                    @endforeach
-                                    @php $cf = max(2.2, round($geo['chairPx'] * 0.42, 1)); @endphp
-                                    @foreach ($geo['chairs'] as [$cX, $cY, $cn])
-                                        <div style="position:absolute; left:{{ $geo['w'] / 2 + $cX - $geo['chairPx'] / 2 }}px; top:{{ $geo['h'] / 2 + $cY - $geo['chairPx'] / 2 }}px; width:{{ $geo['chairPx'] }}px; height:{{ $geo['chairPx'] }}px; background:{{ $navy }}; color:#fff; font-size:{{ $cf }}px; line-height:{{ $geo['chairPx'] }}px; text-align:center; overflow:hidden;">{{ $cn }}</div>
-                                    @endforeach
-                                    @foreach ($geo['labels'] ?? [] as [$lx, $ly, $lt])
-                                        <div style="position:absolute; left:{{ $geo['w'] / 2 + $lx - 12 }}px; top:{{ $geo['h'] / 2 + $ly - 4 }}px; width:11px; text-align:right; font-size:5px; font-weight:bold; color:#64748B;">{{ $lt }}</div>
-                                    @endforeach
-                                </div>
-                                @if (! empty($el['name']))
-                                    <div class="name-pill" style="left:{{ round($cx - $geo['w'] / 2) }}px; top:{{ round($cy - $geo['h'] / 2 - 9) }}px;">{{ $el['name'] }}</div>
-                                @endif
-                            @else
-                                @php $ew = ($el['w'] ?? 96) * $k; $eh = ($el['h'] ?? 96) * $k; @endphp
-                                <div style="position:absolute; left:{{ round($cx - $ew / 2) }}px; top:{{ round($cy - $eh / 2) }}px; transform: rotate({{ $rot }}deg); transform-origin:center;">
-                                    <x-layout-element :type="$el['type']" :seats="$el['seats'] ?? 0" :w="round($ew)" :h="round($eh)" :scale="$pk" />
-                                </div>
-                                @if (! empty($el['name']))
-                                    <div class="name-pill" style="left:{{ round($cx - $ew / 2) }}px; top:{{ round($cy - $eh / 2 - 9) }}px;">{{ $el['name'] }}</div>
-                                @endif
-                            @endif
-                        @endforeach
+                        @if (! empty($el['name']))
+                            <span class="nameTag">{{ $el['name'] }}</span>
+                        @endif
                     </div>
-
-                    {{-- scale bar + orientation --}}
-                    <div class="strip">
-                        <div class="sa">
-                            @if ($scale960)
-                                <table class="sbar"><tr>
-                                    @for ($i = 0; $i < 5; $i++)
-                                        <td class="{{ $i % 2 ? 'fill' : '' }}" style="width:{{ round($pk) }}px;"></td>
-                                    @endfor
-                                </tr></table>
-                                <div class="sbar-lbls">0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5 metres</div>
-                            @endif
-                        </div>
-                        <div class="sb">Drawing not for construction · indicative layout</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gut"></div>
-
-            {{-- ── inspector sidebar ── --}}
-            @php
-                $capUsed = $room->capacity && $seatTotal ? min(100, (int) round($seatTotal / $room->capacity * 100)) : null;
-                $maxSeats = max(1, collect($breakdown)->max('seats') ?? 1);
-            @endphp
-            <div class="side">
-                <div class="sec">
-                    <div class="cap"><div class="ct">Floor Inspector</div><div class="cx">Room summary</div></div>
-                    <div class="dims">
-                        <div class="dn">{{ $roomW && $roomL ? $fmtM($roomW).' × '.$fmtM($roomL).' m' : 'Not set' }}</div>
-                        <div class="dl">{{ $area ? 'Footprint · '.$fmtM($area).' m²' : 'Footprint' }}</div>
-                    </div>
-                    <div class="tiles">
-                        <div class="row">
-                            <div class="t"><div class="tn">{{ $seatTotal }}</div><div class="tl">Seats laid out</div></div>
-                            <div class="t re"><div class="tn">{{ $area && $seatTotal ? number_format($seatTotal / $area, 2) : '—' }}</div><div class="tl">Seats / m²</div></div>
-                        </div>
-                        <div class="row">
-                            <div class="t be"><div class="tn">{{ $tablesCount }}</div><div class="tl">Tables &amp; blocks</div></div>
-                            <div class="t re be"><div class="tn">{{ $pieces }}</div><div class="tl">Pieces on plan</div></div>
-                        </div>
-                    </div>
-                    @if ($capUsed !== null)
-                        <div class="util">
-                            <div class="ur"><div class="a">Capacity used</div><div class="b">{{ $seatTotal }} / {{ number_format($room->capacity) }} · {{ $capUsed }}%</div></div>
-                            <div class="ubar"><div style="width: {{ $capUsed }}%"></div></div>
-                        </div>
-                    @endif
-                </div>
-
-                @if (! empty($breakdown))
-                    <div class="sec">
-                        <div class="cap"><div class="ct">Layout Breakdown</div><div class="cx">{{ $seatTotal }} seats</div></div>
-                        @foreach ($breakdown as $lbl => $b)
-                            <div class="bdrow {{ $loop->last ? 'le' : '' }}">
-                                <div class="bdtop"><div class="a">{{ $b['count'] }}× {{ $lbl }}</div><div class="b">{{ $b['seats'] > 0 ? $b['seats'].' seats' : '—' }}</div></div>
-                                @if ($b['seats'] > 0)
-                                    <div class="bdbar"><div style="width: {{ max(4, (int) round($b['seats'] / $maxSeats * 100)) }}%"></div></div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-
-                <div class="sec">
-                    <div class="cap"><div class="ct">Legend</div><div class="cx">Drawn to scale</div></div>
-                    <div class="lg">
-                        <div class="li"><div class="sym"><div style="width:11px; height:11px; background:{{ $navy }};"></div></div><div class="txt">Chair — 0.6 × 0.6 m</div></div>
-                        <div class="li"><div class="sym"><div style="width:16px; height:9px; background:#EEF3FA; border:1px solid #8DA0BC;"></div></div><div class="txt">Table (e.g. 1.8 × 0.6 m)</div></div>
-                        <div class="li"><div class="sym"><div style="width:12px; height:12px; border-radius:50%; background:#EEF3FA; border:1px solid #8DA0BC;"></div></div><div class="txt">Round table</div></div>
-                        <div class="li"><div class="sym"><div style="width:16px; height:8px; background:{{ $navy }};"></div></div><div class="txt">Stage / podium</div></div>
-                        <div class="li"><div class="sym"><div style="width:12px; height:12px; background:#334155;"></div></div><div class="txt">Translation booth</div></div>
-                    </div>
-                </div>
-
-                @if ($equip->isNotEmpty())
-                    <div class="sec">
-                        <div class="cap"><div class="ct">Equipment</div><div class="cx">See AV sheet</div></div>
-                        <div class="util" style="border-top:none;">
-                            <div class="ur"><div class="a">{{ $equip->count() }} {{ Str::plural('line', $equip->count()) }} requested</div><div class="b">{{ $equip->sum('qty') }} units</div></div>
-                        </div>
-                    </div>
-                @endif
-
-                <table class="tb">
-                    <tr><td class="k">Scale</td><td class="v">{{ $ratio ? '1 : '.$ratio : '—' }}</td><td class="k">Units</td><td class="v">Metres</td></tr>
-                    <tr><td class="k">Date</td><td class="v">{{ now()->format('d M Y') }}</td><td class="k">Dwg</td><td class="v">FP-{{ $room->id }}</td></tr>
-                    <tr><td class="k">Room</td><td class="v" colspan="3">{{ Str::limit($room->name, 40) }}</td></tr>
-                </table>
+                @endforeach
             </div>
         </div>
     </div>
 
-    {{-- ═══ footer ═══ --}}
-    <x-pdf-footer fixed :navy="$navy" :gold="$gold" :sheet="'FP-'.$room->id" />
+    {{-- ── title block ── --}}
+    <div class="tblock">
+        <div class="cell" style="flex:2.2;"><div class="k">Project</div><div class="v">{{ $event->name }}</div></div>
+        <div class="cell" style="flex:1.9;"><div class="k">Drawing</div><div class="v">{{ $room->name }} — General Arrangement</div></div>
+        <div class="cell" style="flex:1;"><div class="k">Capacity laid out</div><div class="v">{{ $seatTotal }}{{ $room->capacity ? ' / '.number_format($room->capacity) : '' }}</div></div>
+        <div class="cell" style="flex:0.85;"><div class="k">Issued</div><div class="v">{{ now()->format('d M Y') }}</div></div>
+        <div class="cell dark" style="flex:0.75;"><div class="k">Scale</div><div class="v">{{ $ratio ? '1 : '.$ratio : 'NTS' }}</div></div>
+        <div class="cell dark" style="flex:0.6;"><div class="k">Sheet</div><div class="v">{{ $sheetRef }}</div></div>
+    </div>
+</div>
+
+{{-- ═══════════════════ SHEET 2 · the schedule ═══════════════════ --}}
+<div class="sheet">
+    <div class="mh">
+        <div style="min-width:0;">
+            <div class="eb">Elite Business Hub · Equipment &amp; Requirements</div>
+            <h1>{{ $room->name }}</h1>
+            <div class="sub">{{ $event->name }} · schedule accompanying drawing {{ $sheetRef }}</div>
+        </div>
+        <div class="chips">
+            <div class="chip"><b>{{ $days }}</b><span>Days held</span></div>
+            <div class="chip"><b>{{ $reqs->count() }}</b><span>Line items</span></div>
+            <div class="chip"><b>{{ $event->money($room->totalCents()) }}</b><span>Venue total</span></div>
+        </div>
+    </div>
+
+    <div class="body2">
+        {{-- ── the priced schedule ── --}}
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+            <div class="sec">
+                <h3>Equipment &amp; Requirements <em>rate is per unit, per day</em></h3>
+                @if ($reqs->isEmpty())
+                    <div class="empty">Nothing scheduled for this venue yet.</div>
+                @else
+                    <table class="sch">
+                        <thead><tr>
+                            <th class="idx">#</th><th>Item</th>
+                            <th class="n">Rate</th><th class="n">Qty</th><th class="n">Days</th><th class="n">Total</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach ($reqs as $i => $r)
+                                @php $q = max(1, (int) ($r['qty'] ?? 1)); $d = max(1, (int) ($r['days'] ?? 1)); @endphp
+                                <tr>
+                                    <td class="idx">{{ $i + 1 }}</td>
+                                    <td class="item">{{ $r['name'] ?? '—' }}
+                                        {{-- Said out loud, because a short run inside a long hire is the thing that gets missed. --}}
+                                        @if ($d < $days)
+                                            <span class="pill" style="background:#FEF3C7; color:#92400E;">{{ $d }} of {{ $days }} days</span>
+                                        @endif
+                                    </td>
+                                    <td class="n">{{ $event->money($r['cost_cents'] ?? 0) }}</td>
+                                    <td class="n">{{ $q }}</td>
+                                    <td class="n">{{ $d }}</td>
+                                    <td class="n tot">{{ $event->money(\App\Models\EventRoom::requirementCents($r)) }}</td>
+                                </tr>
+                            @endforeach
+                            <tr class="sum">
+                                <td colspan="5">Equipment &amp; requirements</td>
+                                <td class="n">{{ $event->money($reqTotal) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+
+            @if ($equip->isNotEmpty())
+                <div class="sec">
+                    <h3>Room Kit <em>{{ $equip->sum('qty') }} units · {{ $room->equipmentReadiness() }}% confirmed</em></h3>
+                    <table class="sch">
+                        <thead><tr><th>Item</th><th class="n">Units</th><th>Status</th><th>Notes</th></tr></thead>
+                        <tbody>
+                            @foreach ($equip as $name => $line)
+                                @php
+                                    [$bg, $fg] = match ($line['status']) {
+                                        'onsite' => ['#DCFCE7', '#166534'],
+                                        'confirmed' => ['#DBEAFE', '#1E40AF'],
+                                        default => ['#FEF3C7', '#92400E'],
+                                    };
+                                @endphp
+                                <tr>
+                                    <td class="item">{{ Str::title(str_replace('_', ' ', $name)) }}</td>
+                                    <td class="n">{{ $line['qty'] }}</td>
+                                    <td><span class="pill" style="background:{{ $bg }}; color:{{ $fg }};">{{ $line['status'] }}</span></td>
+                                    <td style="color:#64748B;">{{ $line['notes'] ?: '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            {{-- A plan comes back signed, or it comes back as an argument. --}}
+            <div class="sec" style="margin-top:auto;">
+                <h3>Confirmed by the venue</h3>
+                <div style="display:flex;">
+                    @foreach (['Venue representative', 'Name in print', 'Date'] as $field)
+                        <div style="flex:1; padding:11px 12px 9px; {{ $loop->last ? '' : 'border-right:1px solid #EEF2F8;' }}">
+                            <div style="height:26px; border-bottom:1px solid #C8D2E0;"></div>
+                            <div style="margin-top:5px; font-size:6.5px; font-weight:800; letter-spacing:1.4px;
+                                        text-transform:uppercase; color:#94A3B8;">{{ $field }}</div>
+                        </div>
+                    @endforeach
+                </div>
+                <div style="padding:0 12px 9px; font-size:8.5px; color:#94A3B8;">
+                    Signing confirms the room can be set as drawn, and that the equipment above is available for the days listed.
+                </div>
+            </div>
+        </div>
+
+        {{-- ── the rail ── --}}
+        <div class="rail">
+            <div class="sec">
+                <h3>Cost <em>{{ $event->currency }}</em></h3>
+                <div class="kv"><span class="a">Hire · {{ $event->money($room->cost_cents ?? 0) }} per day</span><span class="b">× {{ $days }}</span></div>
+                <div class="kv"><span class="a">Hire total</span><span class="b">{{ $event->money($room->hireCents()) }}</span></div>
+                <div class="kv"><span class="a">Equipment &amp; requirements</span><span class="b">{{ $event->money($reqTotal) }}</span></div>
+                <div class="kv big"><span class="a">Venue total</span><span class="b">{{ $event->money($room->totalCents()) }}</span></div>
+            </div>
+
+            <div class="sec">
+                <h3>How the days were counted</h3>
+                <div class="prose">
+                    @php
+                        $counted = $room->daysOnTheAgenda();
+                        $sentence = $room->daysAreCounted()
+                            ? 'Counted from the programme — this venue holds sessions on <b>'.$counted.'</b> '.str('day')->plural($counted).'.'
+                            : 'Set to <b>'.$room->days.'</b> '.str('day')->plural((int) $room->days).' by hand'
+                                .($counted !== (int) $room->days ? ', against '.$counted.' on the programme' : '').'.';
+                        if ($room->setup_days) {
+                            $sentence .= ' Plus <b>'.$room->setup_days.'</b> '
+                                .str('day')->plural($room->setup_days).' for setup and teardown.';
+                        }
+                    @endphp
+                    {!! $sentence !!}
+                </div>
+            </div>
+
+            @if (! empty($breakdown))
+                @php $maxSeats = max(1, collect($breakdown)->max('seats') ?: 1); @endphp
+                <div class="sec">
+                    <h3>Layout Breakdown <em>{{ $seatTotal }} seats</em></h3>
+                    <div style="padding:4px 12px 9px;">
+                        @foreach ($breakdown as $lbl => $b)
+                            <div style="padding:5px 0;">
+                                <div style="display:flex; font-size:9.5px;">
+                                    <span style="font-weight:700; color:#334155;">{{ $b['count'] }}× {{ $lbl }}</span>
+                                    <span style="margin-left:auto; font-weight:800; color:{{ $navy }};">{{ $b['seats'] > 0 ? $b['seats'].' seats' : '—' }}</span>
+                                </div>
+                                @if ($b['seats'] > 0)
+                                    <div class="bar"><i style="width:{{ max(4, (int) round($b['seats'] / $maxSeats * 100)) }}%"></i></div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="sec">
+                <h3>Legend <em>drawn to scale</em></h3>
+                <div class="lgd">
+                    <div><s style="width:11px;height:11px;background:{{ $navy }};border-radius:1px;"></s>Chair — 0.6 × 0.6 m</div>
+                    <div><s style="width:18px;height:9px;background:#EEF3FA;border:1px solid #8DA0BC;border-radius:2px;"></s>Table</div>
+                    <div><s style="width:13px;height:13px;background:#EEF3FA;border:1px solid #8DA0BC;border-radius:50%;"></s>Round table</div>
+                    <div><s style="width:18px;height:8px;background:{{ $navy }};border-radius:2px;"></s>Stage / podium</div>
+                    <div><s style="width:13px;height:13px;background:#334155;border-radius:2px;"></s>Translation booth</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="foot2">
+        <span>{{ $event->name }} · {{ $room->name }} · schedule to drawing {{ $sheetRef }}</span>
+        <span style="margin-left:auto;">Issued {{ now()->format('d M Y') }} · indicative layout, not for construction</span>
+    </div>
+</div>
+
 </body>
 </html>

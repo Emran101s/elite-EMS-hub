@@ -47,12 +47,45 @@
                         <input id="room-capacity" type="number" min="0" wire:model="room_capacity" class="input h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="field-label !mb-1 !text-eyebrow" for="room-cost">Hire cost ({{ $event->currency }})</label>
+                        <label class="field-label !mb-1 !text-eyebrow" for="room-cost">Hire, per day ({{ $event->currency }})</label>
                         <input id="room-cost" type="number" min="0" step="0.01" wire:model="room_cost" class="input h-10 text-sm" placeholder="0">
                         @error('room_cost') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                     </div>
                 </div>
-                <p class="mt-2 text-eyebrow text-muted">Hire cost auto-syncs into the Budget. Equipment &amp; requirements are managed inside the venue.</p>
+
+                {{-- How long it is held. Left blank, the agenda answers. --}}
+                @php
+                    $editing = $editingRoomId ? $event->rooms()->find($editingRoomId) : null;
+                    $counted = $editing?->daysOnTheAgenda() ?? 0;
+                @endphp
+                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow" for="room-days">Days held</label>
+                        <input id="room-days" type="number" min="1" max="365" wire:model="room_days" class="input h-10 text-sm"
+                               placeholder="{{ $counted > 0 ? $counted.' — from the agenda' : 'From the agenda' }}">
+                        @error('room_days') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label !mb-1 !text-eyebrow" for="room-setup">Setup &amp; teardown days</label>
+                        <input id="room-setup" type="number" min="0" max="60" wire:model="room_setup_days" class="input h-10 text-sm" placeholder="0">
+                        @error('room_setup_days') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="rounded-xl bg-navy-50 px-3 py-2">
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">Hire total</p>
+                        @php
+                            $rate = $room_cost !== '' ? (int) round((float) $room_cost * 100) : 0;
+                            $d = max(1, $room_days !== '' ? (int) $room_days : ($counted ?: 1)) + (int) ($room_setup_days ?: 0);
+                        @endphp
+                        <p class="pf text-[17px] font-black leading-tight text-navy-950">{{ $event->money($rate * $d) }}</p>
+                        <p class="text-eyebrow text-muted">{{ $event->money($rate) }} × {{ $d }} {{ str('day')->plural($d) }}</p>
+                    </div>
+                </div>
+
+                <p class="mt-2 text-eyebrow text-muted">
+                    Leave <b>days held</b> blank and it is counted from the agenda — a session moved re-prices the hire on its own.
+                    @if ($counted > 0) This venue is used on <b>{{ $counted }}</b> {{ str('day')->plural($counted) }} of the programme. @endif
+                    Hire syncs into the Budget; equipment &amp; requirements are priced inside the venue.
+                </p>
                 <div class="mt-3 flex justify-end gap-2">
                     <button type="button" wire:click="$set('showRoomForm', false)" class="h-9 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
                     <button type="submit" class="btn-navy h-9 px-5 text-xs">{{ $editingRoomId ? 'Update venue' : 'Add venue' }}</button>
@@ -88,6 +121,10 @@
                                     @if ($room->capacity)<span>{{ number_format($room->capacity) }} pax</span>@endif
                                     @if ($room->sessions_count)<span>{{ $room->sessions_count }} {{ str('session')->plural($room->sessions_count) }}</span>@endif
                                     @if ($eqCount)<span>🎛 {{ $eqCount }} {{ str('item')->plural($eqCount) }}</span>@endif
+                                    {{-- How long it is held, and whether that was counted or claimed. --}}
+                                    <span title="{{ $room->daysAreCounted() ? 'Counted from the agenda' : 'Set by hand' }}">
+                                        {{ $room->chargedDays() }} {{ str('day')->plural($room->chargedDays()) }}{{ $room->daysAreCounted() ? '' : ' (fixed)' }}
+                                    </span>
                                 </p>
                             </div>
                         </a>

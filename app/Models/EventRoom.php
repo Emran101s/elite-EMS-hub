@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
-#[Fillable(['event_id', 'name', 'type', 'capacity', 'cost_cents', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
+#[Fillable(['event_id', 'name', 'type', 'capacity', 'cost_cents', 'days', 'setup_days', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
 class EventRoom extends Model
 {
     public const TYPES = ['main_hall', 'breakout', 'exhibition', 'registration', 'vip', 'catering'];
@@ -80,21 +82,98 @@ class EventRoom extends Model
             'equipment' => 'array',
             'requirements' => 'array',
             'cost_cents' => 'integer',
+            'days' => 'integer',
+            'setup_days' => 'integer',
             'width_m' => 'float',
             'length_m' => 'float',
         ];
     }
 
+    /**
+     * Every requirement row carries an id, whatever wrote it.
+     *
+     * The id is what the remove button, and any future edit, matches on. A row
+     * that arrives without one — from an import, a script, a hand-edited JSON
+     * column — used to take the whole venue screen down on render. Stamping it
+     * here means there is one place that guarantees it rather than every reader
+     * guarding against it.
+     */
+    protected function requirements(): Attribute
+    {
+        return Attribute::set(fn ($value) => json_encode(
+            collect($value ?? [])->values()->map(fn ($row, $i) => array_merge(
+                is_array($row) ? $row : ['name' => (string) $row],
+                ['id' => (string) (($row['id'] ?? null) ?: Str::random(8))],
+            ))->all()
+        ));
+    }
+
+    /**
+     * How many days this room is used, counted off the programme.
+     *
+     * The agenda already knows: a session carries the room it is in and the day
+     * it is on. Asking somebody to type a number the platform can count is how
+     * the number ends up disagreeing with the schedule after it moves.
+     */
+    public function daysOnTheAgenda(): int
+    {
+        return $this->sessions()
+            ->distinct()->count('agenda_day_id');
+    }
+
+    /**
+     * The days this room is charged for.
+     *
+     * The agenda's count, unless somebody has said otherwise — a dark day held
+     * between two meetings is still paid for, and a room booked before the
+     * programme exists has no sessions to count.
+     */
+    public function chargedDays(): int
+    {
+        $days = $this->days ?? $this->daysOnTheAgenda();
+
+        return max(1, $days) + max(0, (int) $this->setup_days);
+    }
+
+    /** Whether the charged days are the platform's count or somebody's override. */
+    public function daysAreCounted(): bool
+    {
+        return $this->days === null;
+    }
+
+    /** Hire: the day rate for as many days as it is held. */
+    public function hireCents(): int
+    {
+        return (int) ($this->cost_cents ?? 0) * $this->chargedDays();
+    }
+
+    /**
+     * One requirement's cost: the rate, times how many, times how many days.
+     *
+     * Every row used to be a single figure, so twelve microphones for five days
+     * was one number somebody multiplied in their head — and nothing could be
+     * recalculated when the programme moved. Missing quantity or days count as
+     * one, so a row written before this still totals what it always did.
+     */
+    public static function requirementCents(array $row): int
+    {
+        $rate = (int) ($row['cost_cents'] ?? 0);
+        $qty = max(1, (int) ($row['qty'] ?? 1));
+        $days = max(1, (int) ($row['days'] ?? 1));
+
+        return $rate * $qty * $days;
+    }
+
     /** Sum of this venue's costed requirements (cents). */
     public function requirementsTotalCents(): int
     {
-        return collect($this->requirements ?? [])->sum(fn ($r) => (int) ($r['cost_cents'] ?? 0));
+        return collect($this->requirements ?? [])->sum(fn ($r) => self::requirementCents($r));
     }
 
-    /** Full venue cost = hire + all requirements (cents). */
+    /** Full venue cost = hire for its days + all requirements (cents). */
     public function totalCents(): int
     {
-        return (int) ($this->cost_cents ?? 0) + $this->requirementsTotalCents();
+        return $this->hireCents() + $this->requirementsTotalCents();
     }
 
     /** Total seats across all placed elements. */

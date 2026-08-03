@@ -476,20 +476,38 @@
                         @foreach ($catalog as $ci)<option value="{{ $ci->id }}">{{ $ci->name }}@if ($ci->unit_price_cents) · {{ number_format($ci->unit_price_cents / 100) }}@endif</option>@endforeach
                     </select>
                 @endif
-                <div class="mb-4 flex items-center gap-1.5">
+                <div class="mb-1.5 flex flex-wrap items-center gap-1.5">
                     <input type="text" wire:model="reqName" wire:keydown.enter="addRequirement" maxlength="120" placeholder="Equipment (or pick from catalog)" class="input h-10 min-w-0 flex-1 text-sm">
                     <span class="text-eyebrow font-semibold text-muted">{{ $event->currencySymbol() }}</span>
-                    <input type="number" min="0" step="0.01" wire:model="reqCost" wire:keydown.enter="addRequirement" placeholder="Price" class="input h-10 w-28 text-sm">
+                    <input type="number" min="0" step="0.01" wire:model="reqCost" wire:keydown.enter="addRequirement" placeholder="Rate" title="Price per unit, per day" class="input h-10 w-24 text-sm">
+                    <span class="text-eyebrow font-semibold text-muted">×</span>
+                    <input type="number" min="1" wire:model="reqQty" wire:keydown.enter="addRequirement" placeholder="Qty" title="How many" class="input h-10 w-16 text-sm">
+                    <span class="text-eyebrow font-semibold text-muted">×</span>
+                    <input type="number" min="1" wire:model="reqDays" wire:keydown.enter="addRequirement" placeholder="Days" title="For how many days" class="input h-10 w-16 text-sm">
                     <button type="button" wire:click="addRequirement" class="btn-gold h-10 shrink-0 px-4 text-xs">＋ Add</button>
                 </div>
+                <p class="mb-3 text-eyebrow text-muted">
+                    The rate is <b>per unit, per day</b> — 12 table microphones over 5 days is 12 × 5, not a total worked out on paper.
+                    Blank counts as one. This venue is held for <b>{{ $room->chargedDays() }}</b> {{ str('day')->plural($room->chargedDays()) }}.
+                </p>
                 @error('reqName') <p class="mb-2 text-eyebrow font-semibold text-risk">{{ $message }}</p> @enderror
 
                 <ul class="divide-y divide-line">
                     @forelse ($reqs as $req)
                         <li wire:key="dreq-{{ $req['id'] }}" class="group flex items-center justify-between gap-2 py-2.5">
-                            <span class="min-w-0 flex-1 truncate text-sm text-navy-800">{{ $req['name'] }}</span>
+                            @php $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1)); @endphp
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm text-navy-800">{{ $req['name'] }}</span>
+                                {{-- The working shown, so the total can be checked without opening it. --}}
+                                <span class="block text-eyebrow text-muted">
+                                    {{ $event->money($req['cost_cents'] ?? 0) }}
+                                    @if ($rQty > 1) × {{ $rQty }} @endif
+                                    @if ($rDays > 1) × {{ $rDays }} days @endif
+                                    @if ($rQty === 1 && $rDays === 1) · one unit, one day @endif
+                                </span>
+                            </span>
                             <span class="flex shrink-0 items-center gap-3">
-                                <span class="text-sm font-semibold text-navy-900">{{ $event->money($req['cost_cents'] ?? 0) }}</span>
+                                <span class="text-sm font-semibold text-navy-900">{{ $event->money(\App\Models\EventRoom::requirementCents($req)) }}</span>
                                 <button type="button" wire:click="removeRequirement('{{ $req['id'] }}')" class="rounded-lg bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                             </span>
                         </li>
@@ -506,7 +524,13 @@
                         <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Cost Summary</span>
                     </div>
                     <div class="space-y-2 p-4 text-sm">
-                        <div class="flex justify-between"><span class="text-muted">Hire cost</span><span class="font-bold text-navy-900">{{ $room->cost_cents ? $event->money($room->cost_cents) : '—' }}</span></div>
+                        @php
+                            // Spelled out, because "6 days" hides that one of
+                            // them is a build day nobody has a session on.
+                            $dParts = [($room->daysAreCounted() ? $room->daysOnTheAgenda() ?: 1 : $room->days).' '.($room->daysAreCounted() ? 'on the agenda' : 'set')];
+                            if ($room->setup_days) $dParts[] = $room->setup_days.' setup';
+                        @endphp
+                        <div class="flex justify-between gap-2"><span class="text-muted">Hire · {{ $event->money($room->cost_cents ?? 0) }} × {{ $room->chargedDays() }} {{ str('day')->plural($room->chargedDays()) }} <span class="text-eyebrow">({{ implode(' + ', $dParts) }})</span></span><span class="shrink-0 font-bold text-navy-900">{{ $room->cost_cents ? $event->money($room->hireCents()) : '—' }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Equipment</span><span class="font-bold text-navy-900">{{ $reqTotal ? $event->money($reqTotal) : '—' }}</span></div>
                         <div class="flex items-center justify-between border-t border-line pt-2"><span class="text-micro font-bold uppercase tracking-wide text-navy-900">Venue total</span><span class="text-base font-bold text-navy-900">{{ $event->money($venueTotal) }}</span></div>
                     </div>

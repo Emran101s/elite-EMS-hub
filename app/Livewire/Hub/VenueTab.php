@@ -35,6 +35,11 @@ class VenueTab extends Component
 
     public string $room_cost = '';
 
+    /** Blank means "count them off the agenda" — see EventRoom::chargedDays(). */
+    public string $room_days = '';
+
+    public string $room_setup_days = '';
+
     // Event-wide requirements (not tied to a venue). Per-venue requirements now
     // live inside each venue's detail (RoomLayoutBuilder → Requirements tab).
     public string $evReqName = '';
@@ -43,7 +48,7 @@ class VenueTab extends Component
 
     public function newRoom(): void
     {
-        $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost']);
+        $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost', 'room_days', 'room_setup_days']);
         $this->room_type = 'Breakout';
         $this->showRoomForm = true;
     }
@@ -57,6 +62,8 @@ class VenueTab extends Component
         $this->room_type = str($room->type)->replace('_', ' ')->title()->toString();
         $this->room_capacity = (string) ($room->capacity ?? '');
         $this->room_cost = $room->cost_cents ? (string) ($room->cost_cents / 100) : '';
+        $this->room_days = $room->days !== null ? (string) $room->days : '';
+        $this->room_setup_days = $room->setup_days ? (string) $room->setup_days : '';
         $this->showRoomForm = true;
     }
 
@@ -67,6 +74,8 @@ class VenueTab extends Component
             'room_type' => ['required', 'string', 'max:40'],   // built-in or a custom label
             'room_capacity' => ['nullable', 'integer', 'min:0'],
             'room_cost' => ['nullable', 'numeric', 'min:0'],
+            'room_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'room_setup_days' => ['nullable', 'integer', 'min:0', 'max:60'],
         ]);
 
         $data = [
@@ -74,6 +83,10 @@ class VenueTab extends Component
             'type' => str($this->room_type)->snake()->toString() ?: 'room',
             'capacity' => $this->room_capacity !== '' ? (int) $this->room_capacity : null,
             'cost_cents' => $this->room_cost !== '' ? (int) round((float) $this->room_cost * 100) : 0,
+            // Left blank on purpose: null means the agenda's count, which stays
+            // right when the programme moves. A number is somebody overruling it.
+            'days' => $this->room_days !== '' ? (int) $this->room_days : null,
+            'setup_days' => $this->room_setup_days !== '' ? (int) $this->room_setup_days : 0,
         ];
 
         if ($this->editingRoomId) {

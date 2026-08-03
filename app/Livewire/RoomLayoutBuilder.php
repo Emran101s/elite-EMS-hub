@@ -86,6 +86,11 @@ class RoomLayoutBuilder extends Component
 
     public string $reqCost = '';
 
+    /** How many, and for how many days — blank means one of each. */
+    public string $reqQty = '';
+
+    public string $reqDays = '';
+
     public function mount(Event $event, EventRoom $room): void
     {
         abort_unless($room->event_id === $event->id, 404);
@@ -633,16 +638,23 @@ class RoomLayoutBuilder extends Component
         $this->validate([
             'reqName' => ['required', 'string', 'max:120'],
             'reqCost' => ['nullable', 'numeric', 'min:0'],
+            'reqQty' => ['nullable', 'integer', 'min:1', 'max:9999'],
+            'reqDays' => ['nullable', 'integer', 'min:1', 'max:365'],
         ]);
         $reqs = $this->room->requirements ?? [];
         $reqs[] = [
             'id' => Str::random(8),
             'name' => trim($this->reqName),
+            // The price is per unit per day. Twelve microphones for five days is
+            // 12 × 5 here rather than a total somebody multiplied in their head —
+            // so when the programme shortens, the figure follows.
             'cost_cents' => $this->reqCost !== '' ? (int) round((float) $this->reqCost * 100) : 0,
+            'qty' => $this->reqQty !== '' ? (int) $this->reqQty : 1,
+            'days' => $this->reqDays !== '' ? (int) $this->reqDays : 1,
         ];
         $this->room->update(['requirements' => $reqs]);
         $this->room->refresh();
-        $this->reset(['reqName', 'reqCost']);
+        $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays']);
     }
 
     public function removeRequirement(string $id): void
@@ -659,6 +671,9 @@ class RoomLayoutBuilder extends Component
         if ($r = Requirement::find($catalogId)) {
             $this->reqName = $r->name;
             $this->reqCost = $r->unit_price_cents ? (string) ($r->unit_price_cents / 100) : '';
+            // Most equipment is hired for as long as the room is held; a shorter
+            // run (interpretation on three days of five) is then one edit.
+            $this->reqDays = (string) $this->room->chargedDays();
         }
     }
 

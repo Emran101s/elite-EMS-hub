@@ -33,7 +33,7 @@ class BudgetSourceObserver
         \App\Models\EventAccommodation::class => ['cost_cents', 'hotel', 'guest', 'rooms', 'block_id'],
         \App\Models\EventTransport::class => ['cost_cents', 'route', 'provider'],
         \App\Models\EventSpeaker::class => ['fee_cents', 'name'],
-        \App\Models\EventRoom::class => ['cost_cents', 'name', 'requirements'],
+        \App\Models\EventRoom::class => ['cost_cents', 'name', 'requirements', 'days', 'setup_days'],
     ];
 
     /** Guards against a sync setting off another one. */
