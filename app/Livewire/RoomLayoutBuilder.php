@@ -26,9 +26,6 @@ class RoomLayoutBuilder extends Component
 
     public string $length_m = '';
 
-    /** Equipment needs: item => quantity. */
-    public array $equipment = [];
-
     /** ── Seating generator ── */
     public bool $showSeatModal = false;
 
@@ -75,12 +72,6 @@ class RoomLayoutBuilder extends Component
     #[Url(except: 'floor')]
     public string $view = 'floor';
 
-    /** Live search filter for the equipment catalogue. */
-    public string $equipSearch = '';
-
-    /** New custom equipment item name. */
-    public string $customItem = '';
-
     /** Requirements editor (costed; total syncs to the budget). */
     public string $reqName = '';
 
@@ -97,27 +88,11 @@ class RoomLayoutBuilder extends Component
         $this->event = $event;
         $this->room = $room;
         $this->elements = $room->layout ?? [];
-        $this->equipment = $this->normaliseEquipment($room->equipment ?? []);
         $this->width_m = $room->width_m ? rtrim(rtrim(number_format((float) $room->width_m, 2, '.', ''), '0'), '.') : '';
         $this->length_m = $room->length_m ? rtrim(rtrim(number_format((float) $room->length_m, 2, '.', ''), '0'), '.') : '';
     }
 
     /** Coerce any stored shape (legacy int or rich array) into {qty,status,notes}. */
-    private function normaliseEquipment(array $raw): array
-    {
-        $out = [];
-        foreach ($raw as $item => $line) {
-            $qty = is_array($line) ? (int) ($line['qty'] ?? 0) : (int) $line;
-            if ($qty <= 0) {
-                continue;
-            }
-            $status = is_array($line) && in_array($line['status'] ?? '', EventRoom::EQUIPMENT_STATUSES, true) ? $line['status'] : 'needed';
-            $out[$item] = ['qty' => $qty, 'status' => $status, 'notes' => is_array($line) ? (string) ($line['notes'] ?? '') : ''];
-        }
-
-        return $out;
-    }
-
     public function addElement(string $type): void
     {
         if (! array_key_exists($type, EventRoom::LAYOUT_PRESETS)) {
@@ -540,98 +515,6 @@ class RoomLayoutBuilder extends Component
         $this->persist();
     }
 
-    /** Adjust an equipment item's quantity by $delta (removes the line at 0). */
-    public function bumpEquipment(string $item, int $delta): void
-    {
-        if (! isset($this->equipment[$item])) {
-            if ($delta <= 0) {
-                return;
-            }
-            $this->equipment[$item] = ['qty' => 0, 'status' => 'needed', 'notes' => ''];
-        }
-        $next = max(0, min(999, (int) $this->equipment[$item]['qty'] + $delta));
-        if ($next === 0) {
-            unset($this->equipment[$item]);
-        } else {
-            $this->equipment[$item]['qty'] = $next;
-        }
-        $this->persist();
-    }
-
-    /** Toggle an equipment line on (qty 1, needed) / off. */
-    public function toggleEquipment(string $item): void
-    {
-        if (isset($this->equipment[$item])) {
-            unset($this->equipment[$item]);
-        } else {
-            $this->equipment[$item] = ['qty' => 1, 'status' => 'needed', 'notes' => ''];
-        }
-        $this->persist();
-    }
-
-    /** Advance an item through needed → requested → confirmed → onsite → needed. */
-    public function cycleStatus(string $item): void
-    {
-        if (! isset($this->equipment[$item])) {
-            return;
-        }
-        $statuses = EventRoom::EQUIPMENT_STATUSES;
-        $i = array_search($this->equipment[$item]['status'] ?? 'needed', $statuses, true);
-        $this->equipment[$item]['status'] = $statuses[($i === false ? 0 : $i + 1) % count($statuses)];
-        $this->persist();
-    }
-
-    public function setNote(string $item, string $note): void
-    {
-        if (isset($this->equipment[$item])) {
-            $this->equipment[$item]['notes'] = trim($note);
-            $this->persist();
-        }
-    }
-
-    public function removeEquipment(string $item): void
-    {
-        unset($this->equipment[$item]);
-        $this->persist();
-    }
-
-    /** Merge a preset bundle into the current list (adds to existing quantities). */
-    public function applyPackage(string $name): void
-    {
-        $pkg = EventRoom::EQUIPMENT_PACKAGES[$name] ?? null;
-        if (! $pkg) {
-            return;
-        }
-        foreach ($pkg as $item => $qty) {
-            if (isset($this->equipment[$item])) {
-                $this->equipment[$item]['qty'] = min(999, $this->equipment[$item]['qty'] + $qty);
-            } else {
-                $this->equipment[$item] = ['qty' => $qty, 'status' => 'needed', 'notes' => ''];
-            }
-        }
-        $this->persist();
-    }
-
-    /** Add a free-text custom equipment line. */
-    public function addCustomItem(): void
-    {
-        $name = trim($this->customItem);
-        if ($name === '' || isset($this->equipment[$name])) {
-            $this->customItem = '';
-
-            return;
-        }
-        $this->equipment[$name] = ['qty' => 1, 'status' => 'needed', 'notes' => ''];
-        $this->customItem = '';
-        $this->persist();
-    }
-
-    public function clearEquipment(): void
-    {
-        $this->equipment = [];
-        $this->persist();
-    }
-
     // ── Requirements (per-venue; total syncs to the budget) ──
     public function addRequirement(): void
     {
@@ -655,6 +538,33 @@ class RoomLayoutBuilder extends Component
         $this->room->update(['requirements' => $reqs]);
         $this->room->refresh();
         $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays']);
+    }
+
+    /**
+     * Move a line along: needed → requested → confirmed → on-site.
+     *
+     * One tap rather than a dropdown, because this gets changed standing up
+     * with a phone while a truck is being unloaded.
+     */
+    public function advanceRequirement(string $id): void
+    {
+        $steps = EventRoom::EQUIPMENT_STATUSES;
+
+        $this->room->update([
+            'requirements' => collect($this->room->requirements ?? [])->map(function ($row) use ($id, $steps) {
+                if (($row['id'] ?? null) !== $id) {
+                    return $row;
+                }
+                $at = array_search($row['status'] ?? 'needed', $steps, true);
+                // Past the end, wrap back to the start — a line marked on-site
+                // by mistake has to be walkable back without a second control.
+                $row['status'] = $steps[($at === false ? 0 : $at + 1) % count($steps)];
+
+                return $row;
+            })->values()->all(),
+        ]);
+
+        $this->room->refresh();
     }
 
     public function removeRequirement(string $id): void
@@ -681,7 +591,6 @@ class RoomLayoutBuilder extends Component
     {
         $this->room->update([
             'layout' => $this->elements,
-            'equipment' => $this->equipment,
             'width_m' => is_numeric($this->width_m) && (float) $this->width_m > 0 ? (float) $this->width_m : null,
             'length_m' => is_numeric($this->length_m) && (float) $this->length_m > 0 ? (float) $this->length_m : null,
         ]);
@@ -693,21 +602,9 @@ class RoomLayoutBuilder extends Component
             ? collect($this->elements)->firstWhere('id', $this->selectedId)
             : null;
 
-        $catalogueItems = collect(EventRoom::EQUIPMENT)->flatten()->all();
-        $customItems = array_values(array_diff(array_keys($this->equipment), $catalogueItems));
-
-        $units = collect($this->equipment)->sum(fn ($l) => (int) ($l['qty'] ?? 0));
-        $ready = collect($this->equipment)->filter(fn ($l) => in_array($l['status'] ?? '', ['confirmed', 'onsite'], true))->sum(fn ($l) => (int) ($l['qty'] ?? 0));
-
         return view('livewire.room-layout-builder', [
             'presets' => EventRoom::LAYOUT_PRESETS,
-            'equipmentCatalogue' => EventRoom::EQUIPMENT,
-            'packages' => EventRoom::EQUIPMENT_PACKAGES,
-            'customItems' => $customItems,
             'seatTotal' => collect($this->elements)->sum(fn ($el) => (int) ($el['seats'] ?? 0)),
-            'equipmentTotal' => $units,
-            'equipmentLines' => count($this->equipment),
-            'equipmentReadiness' => $units > 0 ? (int) round($ready / $units * 100) : 0,
             'selected' => $selected,
             'catalog' => Requirement::orderBy('name')->get(),
         ])->layoutData([

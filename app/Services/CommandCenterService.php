@@ -152,7 +152,7 @@ class CommandCenterService
     {
         $lines = $this->activeEvents()
             ->flatMap(fn (Event $event) => $event->rooms->flatMap(
-                fn ($room) => collect($room->equipment ?? [])->values()
+                fn ($room) => $room->equipmentLines()
             ));
 
         if ($lines->isEmpty()) {

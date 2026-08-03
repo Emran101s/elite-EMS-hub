@@ -54,26 +54,15 @@ class EventRoom extends Model
     ];
 
     /** Equipment catalogue by category. */
-    public const EQUIPMENT = [
-        'Audio' => ['Sound system (PA)', 'Handheld microphones', 'Lapel / lavalier mics', 'Delegate microphones', 'Podium microphone', 'Audio mixer', 'Stage monitors'],
-        'Translation' => ['Interpreter booths', 'Translation receivers / headsets', 'IR transmitters'],
-        'Visual' => ['Projector', 'Projection screen', 'LED / video wall', 'Confidence monitors', 'Presentation laptop', 'Clicker / presenter remote'],
-        'Lighting' => ['Stage lighting', 'Ambient / uplighting', 'Spotlights', 'Follow spot'],
-        'Staging' => ['Stage / platform', 'Podium / lectern', 'Backdrop', 'Truss rigging'],
-        'Branding' => ['Banners', 'Roll-up stands', 'Directional signage', 'Branded backdrop'],
-        'Connectivity' => ['Wi-Fi access points', 'Extension cables', 'Power distribution', 'Cable management'],
-    ];
-
-    /** Preparation lifecycle for each equipment line. Order = progression. */
+    /**
+     * Preparation lifecycle for each equipment line. Order = progression.
+     *
+     * Carried on requirement rows. There was a second, hardcoded catalogue of
+     * standard AV items here with one-click bundles; the Requirements catalogue
+     * in Settings replaced it, and its editor was removed, so what was left
+     * wrote to a column nothing read.
+     */
     public const EQUIPMENT_STATUSES = ['needed', 'requested', 'confirmed', 'onsite'];
-
-    /** One-click bundles: package name => [item => qty]. */
-    public const EQUIPMENT_PACKAGES = [
-        'Conference' => ['Sound system (PA)' => 1, 'Handheld microphones' => 2, 'Lapel / lavalier mics' => 2, 'Projector' => 1, 'Projection screen' => 1, 'Presentation laptop' => 1, 'Clicker / presenter remote' => 1],
-        'Summit + Translation' => ['Sound system (PA)' => 1, 'Delegate microphones' => 12, 'Interpreter booths' => 2, 'Translation receivers / headsets' => 80, 'IR transmitters' => 4, 'LED / video wall' => 1, 'Confidence monitors' => 2],
-        'Gala / Awards' => ['Sound system (PA)' => 1, 'Stage lighting' => 1, 'Spotlights' => 2, 'Follow spot' => 1, 'Handheld microphones' => 2, 'LED / video wall' => 1, 'Branded backdrop' => 1, 'Truss rigging' => 1],
-        'Exhibition' => ['Wi-Fi access points' => 4, 'Power distribution' => 2, 'Directional signage' => 6, 'Roll-up stands' => 4, 'Banners' => 4, 'Ambient / uplighting' => 1],
-    ];
 
     protected function casts(): array
     {
@@ -101,10 +90,17 @@ class EventRoom extends Model
     protected function requirements(): Attribute
     {
         return Attribute::set(fn ($value) => json_encode(
-            collect($value ?? [])->values()->map(fn ($row, $i) => array_merge(
-                is_array($row) ? $row : ['name' => (string) $row],
-                ['id' => (string) (($row['id'] ?? null) ?: Str::random(8))],
-            ))->all()
+            collect($value ?? [])->values()->map(function ($row) {
+                $row = is_array($row) ? $row : ['name' => (string) $row];
+
+                return array_merge($row, [
+                    'id' => (string) (($row['id'] ?? null) ?: Str::random(8)),
+                    // Where a line has got to. The crew reads this off the prep
+                    // sheet, and it is what the portfolio's readiness counts.
+                    'status' => in_array($row['status'] ?? '', self::EQUIPMENT_STATUSES, true)
+                        ? $row['status'] : 'needed',
+                ]);
+            })->all()
         ));
     }
 
@@ -444,22 +440,31 @@ class EventRoom extends Model
     }
 
     /**
-     * Equipment lines: item => ['qty'=>int, 'status'=>string, 'notes'=>string].
-     * Normalises legacy int-only values ({item: qty}).
+     * This venue's equipment, as one list.
+     *
+     * There used to be two. An `equipment` column held a tick-list with
+     * statuses, and a `requirements` column held the priced lines; both were
+     * called "Equipment" on screen. When the requirements editor replaced the
+     * tick-list editor, `equipment` stopped being written to — so eleven of
+     * thirteen rooms had a full equipment list and an empty `equipment`
+     * column, and everything still reading it (the prep sheet, the portfolio's
+     * readiness figure) quietly showed nothing.
+     *
+     * Requirements are now the list. A row carries what it costs, how many,
+     * how many days, and where its preparation has got to.
      */
     public function equipmentLines(): Collection
     {
-        return collect($this->equipment ?? [])->map(function ($line) {
-            if (is_array($line)) {
-                return [
-                    'qty' => max(0, (int) ($line['qty'] ?? 0)),
-                    'status' => in_array($line['status'] ?? '', self::EQUIPMENT_STATUSES, true) ? $line['status'] : 'needed',
-                    'notes' => (string) ($line['notes'] ?? ''),
-                ];
-            }
-
-            return ['qty' => max(0, (int) $line), 'status' => 'needed', 'notes' => ''];
-        })->filter(fn ($l) => $l['qty'] > 0);
+        return collect($this->requirements ?? [])->map(fn ($row) => [
+            'id' => (string) ($row['id'] ?? ''),
+            'name' => (string) ($row['name'] ?? ''),
+            'qty' => max(1, (int) ($row['qty'] ?? 1)),
+            'days' => max(1, (int) ($row['days'] ?? 1)),
+            'cost_cents' => (int) ($row['cost_cents'] ?? 0),
+            'total_cents' => self::requirementCents($row),
+            'status' => in_array($row['status'] ?? '', self::EQUIPMENT_STATUSES, true) ? $row['status'] : 'needed',
+            'notes' => (string) ($row['notes'] ?? ''),
+        ])->filter(fn ($l) => $l['name'] !== '')->values();
     }
 
     /** Total equipment units requested. */

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Livewire\RoomLayoutBuilder;
 use App\Models\Event;
-use App\Models\EventRoom;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -142,69 +141,17 @@ class RoomLayoutTest extends TestCase
         $this->assertSame(12.5, $room->length_m);
     }
 
-    public function test_equipment_toggle_quantity_and_status(): void
-    {
-        [$event, $room, $user] = $this->ctx();
-
-        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
-            ->call('toggleEquipment', 'Handheld microphones');
-        $this->assertSame(1, $room->fresh()->equipment['Handheld microphones']['qty']);
-        $this->assertSame('needed', $room->fresh()->equipment['Handheld microphones']['status']);
-
-        $c->call('bumpEquipment', 'Handheld microphones', 3);
-        $this->assertSame(4, $room->fresh()->equipment['Handheld microphones']['qty']);
-        $this->assertSame(4, $room->fresh()->equipmentCount());
-
-        // status advances through the lifecycle and wraps
-        $c->call('cycleStatus', 'Handheld microphones');
-        $this->assertSame('requested', $room->fresh()->equipment['Handheld microphones']['status']);
-
-        $c->call('setNote', 'Handheld microphones', 'Shure SM58 ×4');
-        $this->assertSame('Shure SM58 ×4', $room->fresh()->equipment['Handheld microphones']['notes']);
-
-        // dropping to zero removes the line
-        $c->call('bumpEquipment', 'Handheld microphones', -4);
-        $this->assertArrayNotHasKey('Handheld microphones', $room->fresh()->equipment ?? []);
-    }
-
-    public function test_equipment_package_and_custom_item(): void
-    {
-        [$event, $room, $user] = $this->ctx();
-
-        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
-            ->call('applyPackage', 'Conference');
-        $expected = collect(EventRoom::EQUIPMENT_PACKAGES['Conference'])->sum();
-        $this->assertSame($expected, $room->fresh()->equipmentCount());
-
-        $c->set('customItem', 'Fog machine')->call('addCustomItem');
-        $this->assertSame(1, $room->fresh()->equipment['Fog machine']['qty']);
-
-        // readiness: confirm one line's worth
-        $c->call('cycleStatus', 'Fog machine')->call('cycleStatus', 'Fog machine'); // needed→requested→confirmed
-        $this->assertGreaterThan(0, $room->fresh()->equipmentReadiness());
-    }
-
     public function test_equipment_pdf_downloads(): void
     {
         [$event, $room, $user] = $this->ctx();
-        $room->update(['equipment' => ['Projector' => ['qty' => 2, 'status' => 'confirmed', 'notes' => '4K']]]);
+        $room->update(['requirements' => [
+            ['name' => 'Projector', 'cost_cents' => 9000, 'qty' => 2, 'days' => 2, 'status' => 'confirmed', 'notes' => '4K'],
+        ]]);
 
         $response = $this->actingAs($user)->get(route('events.room-equipment.pdf', [$event, $room]));
 
         $response->assertOk();
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
-    }
-
-    public function test_legacy_int_equipment_is_normalised(): void
-    {
-        [$event, $room, $user] = $this->ctx();
-        $room->update(['equipment' => ['Projector' => 3]]); // legacy shape
-
-        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
-            ->assertSet('equipment.Projector.qty', 3)
-            ->assertSet('equipment.Projector.status', 'needed');
-
-        $this->assertSame(3, $room->fresh()->equipmentCount());
     }
 
     public function test_staging_elements_have_no_seats(): void

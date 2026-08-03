@@ -495,7 +495,16 @@
                 <ul class="divide-y divide-line">
                     @forelse ($reqs as $req)
                         <li wire:key="dreq-{{ $req['id'] }}" class="group flex items-center justify-between gap-2 py-2.5">
-                            @php $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1)); @endphp
+                            @php
+                                $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1));
+                                $rSt = $req['status'] ?? 'needed';
+                                [$stLabel, $stClass] = match ($rSt) {
+                                    'requested' => ['Requested', 'bg-amber-100 text-amber-800'],
+                                    'confirmed' => ['Confirmed', 'bg-sky-100 text-sky-800'],
+                                    'onsite' => ['On-site', 'bg-emerald-100 text-emerald-800'],
+                                    default => ['Needed', 'bg-navy-100 text-navy-600'],
+                                };
+                            @endphp
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-sm text-navy-800">{{ $req['name'] }}</span>
                                 {{-- The working shown, so the total can be checked without opening it. --}}
@@ -505,8 +514,19 @@
                                     @if ($rDays > 1) × {{ $rDays }} days @endif
                                     @if ($rQty === 1 && $rDays === 1) · one unit, one day @endif
                                 </span>
+                                {{-- Hired for longer than the room is held: either the
+                                     room's days are wrong or this line's are. --}}
+                                @if ($rDays > $room->chargedDays())
+                                    <span class="mt-0.5 block text-eyebrow font-semibold text-amber-700">
+                                        ⚠ {{ $rDays }} days, but the venue is only held for {{ $room->chargedDays() }}.
+                                    </span>
+                                @endif
                             </span>
                             <span class="flex shrink-0 items-center gap-3">
+                                {{-- Tap to move it along; this is what the prep sheet prints. --}}
+                                <button type="button" wire:click="advanceRequirement('{{ $req['id'] }}')"
+                                        title="Needed → Requested → Confirmed → On-site"
+                                        class="rounded-full px-2 py-0.5 text-eyebrow font-bold transition hover:opacity-75 {{ $stClass }}">{{ $stLabel }}</button>
                                 <span class="text-sm font-semibold text-navy-900">{{ $event->money(\App\Models\EventRoom::requirementCents($req)) }}</span>
                                 <button type="button" wire:click="removeRequirement('{{ $req['id'] }}')" class="rounded-lg bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                             </span>

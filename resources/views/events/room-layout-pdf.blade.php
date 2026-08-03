@@ -330,6 +330,7 @@
         <div class="chips">
             <div class="chip"><b>{{ $days }}</b><span>Days held</span></div>
             <div class="chip"><b>{{ $reqs->count() }}</b><span>Line items</span></div>
+            <div class="chip"><b>{{ $room->equipmentReadiness() }}%</b><span>Confirmed</span></div>
             <div class="chip"><b>{{ $event->money($room->totalCents()) }}</b><span>Venue total</span></div>
         </div>
     </div>
@@ -344,7 +345,7 @@
                 @else
                     <table class="sch">
                         <thead><tr>
-                            <th class="idx">#</th><th>Item</th>
+                            <th class="idx">#</th><th>Item</th><th>Status</th>
                             <th class="n">Rate</th><th class="n">Qty</th><th class="n">Days</th><th class="n">Total</th>
                         </tr></thead>
                         <tbody>
@@ -356,8 +357,19 @@
                                         {{-- Said out loud, because a short run inside a long hire is the thing that gets missed. --}}
                                         @if ($d < $days)
                                             <span class="pill" style="background:#FEF3C7; color:#92400E;">{{ $d }} of {{ $days }} days</span>
+                                        @elseif ($d > $days)
+                                            <span class="pill" style="background:#FEE2E2; color:#991B1B;">{{ $d }} days · room held {{ $days }}</span>
                                         @endif
                                     </td>
+                                    @php
+                                        [$sBg, $sFg, $sLbl] = match ($r['status'] ?? 'needed') {
+                                            'requested' => ['#FEF3C7', '#92400E', 'Requested'],
+                                            'confirmed' => ['#DBEAFE', '#1E40AF', 'Confirmed'],
+                                            'onsite' => ['#DCFCE7', '#166534', 'On-site'],
+                                            default => ['#EEF2F7', '#475569', 'Needed'],
+                                        };
+                                    @endphp
+                                    <td><span class="pill" style="background:{{ $sBg }}; color:{{ $sFg }};">{{ $sLbl }}</span></td>
                                     <td class="n">{{ $event->money($r['cost_cents'] ?? 0) }}</td>
                                     <td class="n">{{ $q }}</td>
                                     <td class="n">{{ $d }}</td>
@@ -365,39 +377,13 @@
                                 </tr>
                             @endforeach
                             <tr class="sum">
-                                <td colspan="5">Equipment &amp; requirements</td>
+                                <td colspan="6">Equipment &amp; requirements</td>
                                 <td class="n">{{ $event->money($reqTotal) }}</td>
                             </tr>
                         </tbody>
                     </table>
                 @endif
             </div>
-
-            @if ($equip->isNotEmpty())
-                <div class="sec">
-                    <h3>Room Kit <em>{{ $equip->sum('qty') }} units · {{ $room->equipmentReadiness() }}% confirmed</em></h3>
-                    <table class="sch">
-                        <thead><tr><th>Item</th><th class="n">Units</th><th>Status</th><th>Notes</th></tr></thead>
-                        <tbody>
-                            @foreach ($equip as $name => $line)
-                                @php
-                                    [$bg, $fg] = match ($line['status']) {
-                                        'onsite' => ['#DCFCE7', '#166534'],
-                                        'confirmed' => ['#DBEAFE', '#1E40AF'],
-                                        default => ['#FEF3C7', '#92400E'],
-                                    };
-                                @endphp
-                                <tr>
-                                    <td class="item">{{ Str::title(str_replace('_', ' ', $name)) }}</td>
-                                    <td class="n">{{ $line['qty'] }}</td>
-                                    <td><span class="pill" style="background:{{ $bg }}; color:{{ $fg }};">{{ $line['status'] }}</span></td>
-                                    <td style="color:#64748B;">{{ $line['notes'] ?: '—' }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
 
             {{-- A plan comes back signed, or it comes back as an argument. --}}
             <div class="sec" style="margin-top:auto;">

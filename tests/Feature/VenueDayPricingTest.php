@@ -226,6 +226,61 @@ class VenueDayPricingTest extends TestCase
         $this->assertSame(300000, $line->estimated_cents);
     }
 
+    /**
+     * The prep sheet printed blank on eleven of thirteen rooms: it read the old
+     * `equipment` column while every room's equipment lived in `requirements`.
+     */
+    public function test_the_equipment_sheet_lists_what_the_venue_tab_holds(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $room->update(['equipment' => [], 'requirements' => [
+            ['name' => 'Table microphone', 'cost_cents' => 600, 'qty' => 12, 'days' => 5],
+            ['name' => 'Interpretation booth', 'cost_cents' => 42000, 'qty' => 1, 'days' => 3, 'status' => 'confirmed'],
+        ]]);
+        $room->refresh();
+
+        $lines = $room->equipmentLines();
+        $this->assertCount(2, $lines, 'the sheet reads the same list the tab edits');
+        $this->assertSame(13, $room->equipmentCount());
+        // 1 of 13 units confirmed.
+        $this->assertSame(8, $room->equipmentReadiness());
+
+        $res = $this->actingAs($user)->get(route('events.room-equipment.pdf', [$event, $room]));
+
+        $res->assertOk();
+        $this->assertSame('application/pdf', $res->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+    }
+
+    /** A row is stamped with a status on write, so no reader has to guard for it. */
+    public function test_a_requirement_is_given_a_status_and_an_id(): void
+    {
+        [, $room] = $this->ctx();
+
+        $room->update(['requirements' => [['name' => 'Staging', 'cost_cents' => 1000]]]);
+        $room->refresh();
+
+        $this->assertNotEmpty($room->requirements[0]['id']);
+        $this->assertSame('needed', $room->requirements[0]['status']);
+    }
+
+    public function test_a_line_walks_along_its_statuses_and_wraps(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $room->update(['requirements' => [['name' => 'Projector', 'cost_cents' => 5000]]]);
+        $room->refresh();
+        $id = $room->requirements[0]['id'];
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room]);
+
+        foreach (['requested', 'confirmed', 'onsite', 'needed'] as $expected) {
+            $c->call('advanceRequirement', $id);
+            $this->assertSame($expected, $room->fresh()->requirements[0]['status']);
+        }
+    }
+
     public function test_the_floor_plan_pdf_renders_the_plan_and_its_schedule(): void
     {
         [$event, $room, $user] = $this->ctx();

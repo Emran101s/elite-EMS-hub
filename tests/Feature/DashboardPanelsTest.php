@@ -26,11 +26,11 @@ class DashboardPanelsTest extends TestCase
         EventRoom::create([
             'event_id' => $event->id,
             'name' => 'Main Hall',
-            'equipment' => [
-                'Sound system (PA)' => ['qty' => 1, 'status' => 'onsite'],
-                'Projector' => ['qty' => 1, 'status' => 'confirmed'],
-                'Stage lighting' => ['qty' => 1, 'status' => 'requested'],
-                'Banners' => ['qty' => 4, 'status' => 'needed'],
+            'requirements' => [
+                ['name' => 'Sound system (PA)', 'qty' => 1, 'status' => 'onsite'],
+                ['name' => 'Projector', 'qty' => 1, 'status' => 'confirmed'],
+                ['name' => 'Stage lighting', 'qty' => 1, 'status' => 'requested'],
+                ['name' => 'Banners', 'qty' => 4, 'status' => 'needed'],
             ],
         ]);
 
