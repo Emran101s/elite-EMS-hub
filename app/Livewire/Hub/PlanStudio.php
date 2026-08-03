@@ -169,6 +169,7 @@ class PlanStudio extends Component
     /** Board drag: land an item in a column, in a given order. */
     public function moveToStatus(int $id, string $status, array $orderedIds = []): void
     {
+        Gate::authorize('write');
         $this->setStatus($id, $status);
         foreach (array_values($orderedIds) as $pos => $itemId) {
             $this->event->planItems()->whereKey((int) $itemId)->update(['position' => $pos]);
@@ -268,6 +269,7 @@ class PlanStudio extends Component
 
     public function saveTrackName(): void
     {
+        Gate::authorize('write');
         if ($this->editingTrackId) {
             $name = trim($this->trackEditName);
             if ($name !== '') {
@@ -288,6 +290,7 @@ class PlanStudio extends Component
 
     public function reorderTracks(array $ids): void
     {
+        Gate::authorize('write');
         foreach (array_values($ids) as $pos => $id) {
             $this->event->planTracks()->whereKey((int) $id)->update(['position' => $pos]);
         }

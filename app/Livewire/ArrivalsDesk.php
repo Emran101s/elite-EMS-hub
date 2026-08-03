@@ -7,6 +7,7 @@ use App\Models\EventAttendee;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The desk on the day.
@@ -65,6 +66,7 @@ class ArrivalsDesk extends Component
 
     public function admit(int $id): void
     {
+        Gate::authorize('write');
         $attendee = $this->event->attendees()->findOrFail($id);
 
         if ($attendee->status === 'cancelled' || $attendee->checked_in_at !== null) {
@@ -84,6 +86,7 @@ class ArrivalsDesk extends Component
      */
     public function undo(int $id): void
     {
+        Gate::authorize('write');
         $attendee = $this->event->attendees()->findOrFail($id);
 
         $attendee->update(['status' => 'registered', 'checked_in_at' => null]);

@@ -7,6 +7,7 @@ use App\Models\EventRisk;
 use App\Models\User;
 use App\Support\Taxonomy;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class RisksTab extends Component
 {
@@ -35,6 +36,7 @@ class RisksTab extends Component
 
     public function save()
     {
+        Gate::authorize('write');
         $this->validate([
             'title' => ['required', 'string', 'max:160'],
             'category' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('risk_category')))],
@@ -63,6 +65,7 @@ class RisksTab extends Component
 
     public function setStatus(int $riskId, string $status)
     {
+        Gate::authorize('write');
         abort_unless(in_array($status, EventRisk::STATUSES, true), 422);
 
         $this->event->risks()->whereKey($riskId)->firstOrFail()->update(['status' => $status]);

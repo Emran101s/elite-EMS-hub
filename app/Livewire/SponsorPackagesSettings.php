@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\CompanyProfile;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Sponsorship Packages'])]
 class SponsorPackagesSettings extends Component
@@ -44,6 +45,7 @@ class SponsorPackagesSettings extends Component
 
     public function resetPackages(): void
     {
+        Gate::authorize('write');
         CompanyProfile::current()->update(['default_sponsor_packages' => null]);
         $this->mount();
         session()->flash('status', 'Reset to the standard package list.');
@@ -51,6 +53,7 @@ class SponsorPackagesSettings extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $clean = collect($this->packages)
             ->filter(fn ($p) => trim((string) ($p['name'] ?? '')) !== '')
             ->map(fn ($p) => [

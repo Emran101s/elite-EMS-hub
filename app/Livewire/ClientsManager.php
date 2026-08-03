@@ -6,6 +6,7 @@ use App\Models\Client;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Clients'])]
 class ClientsManager extends Component
@@ -57,6 +58,7 @@ class ClientsManager extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'name' => ['required', 'string', 'max:160'],
             'organization' => ['nullable', 'string', 'max:160'],
@@ -93,6 +95,7 @@ class ClientsManager extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('manage-events');
         // events.client_id is nullOnDelete → events keep working, just unlinked.
         Client::whereKey($id)->delete();
     }

@@ -6,6 +6,7 @@ use App\Models\TaxonomyTerm;
 use App\Support\Workflow;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Workflow states: your wording, your colours, the platform's keys.
@@ -59,6 +60,7 @@ class WorkflowSettings extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'labels.*' => ['required', 'string', 'max:40'],
             'colors.*' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -89,6 +91,7 @@ class WorkflowSettings extends Component
     /** Put a set back to the wording and colours it shipped with. */
     public function restore(): void
     {
+        Gate::authorize('write');
         TaxonomyTerm::where('taxonomy', Workflow::taxonomy($this->set))->delete();
 
         Workflow::forget();
@@ -100,6 +103,7 @@ class WorkflowSettings extends Component
 
     public function reorder(array $keys): void
     {
+        Gate::authorize('write');
         foreach ($keys as $position => $key) {
             TaxonomyTerm::where('taxonomy', Workflow::taxonomy($this->set))
                 ->where('key', $key)->update(['position' => $position]);

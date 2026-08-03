@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventSponsor;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class SponsorsTab extends Component
 {
@@ -16,6 +17,7 @@ class SponsorsTab extends Component
 
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->sponsors()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }
@@ -73,6 +75,7 @@ class SponsorsTab extends Component
 
     public function updatedSponsorshipTarget(): void
     {
+        Gate::authorize('write');
         $this->event->update([
             'sponsorship_target_cents' => is_numeric($this->sponsorshipTarget) ? (int) round((float) $this->sponsorshipTarget * 100) : null,
         ]);
@@ -113,6 +116,7 @@ class SponsorsTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
 
         // Enforce the package's max slots — can't sell more than are available.
@@ -148,12 +152,14 @@ class SponsorsTab extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $this->event->sponsors()->whereKey($id)->delete();
     }
 
     // ── Package catalog ───────────────────────────────────────
     public function addPackage(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'newPackageName' => ['required', 'string', 'max:60'],
             'newPackagePrice' => ['nullable', 'numeric', 'min:0'],
@@ -194,6 +200,7 @@ class SponsorsTab extends Component
 
     public function savePackage(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'packageEditName' => ['required', 'string', 'max:60'],
             'packageEditPrice' => ['nullable', 'numeric', 'min:0'],
@@ -224,6 +231,7 @@ class SponsorsTab extends Component
 
     public function deletePackage(int $id): void
     {
+        Gate::authorize('write');
         // Existing sponsor deals keep their package name + amount; only the catalog entry goes.
         $this->event->sponsorPackages()->whereKey($id)->delete();
     }

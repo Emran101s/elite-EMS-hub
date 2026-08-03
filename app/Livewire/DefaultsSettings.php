@@ -6,6 +6,7 @@ use App\Models\CompanyProfile;
 use App\Models\EventBudgetItem;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Defaults & Templates'])]
 class DefaultsSettings extends Component
@@ -88,6 +89,7 @@ class DefaultsSettings extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate(['fee' => ['required', 'numeric', 'min:0', 'max:100']]);
 
         CompanyProfile::current()->update([

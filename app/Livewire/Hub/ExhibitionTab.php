@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class ExhibitionTab extends Component
 {
@@ -15,6 +16,7 @@ class ExhibitionTab extends Component
 
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->exhibitors()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }
@@ -65,6 +67,7 @@ class ExhibitionTab extends Component
 
     public function updatedExhibitionTarget(): void
     {
+        Gate::authorize('write');
         $this->event->update([
             'exhibition_target_cents' => is_numeric($this->exhibitionTarget) ? (int) round((float) $this->exhibitionTarget * 100) : null,
         ]);
@@ -98,6 +101,7 @@ class ExhibitionTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
 
         $data = [
@@ -124,6 +128,7 @@ class ExhibitionTab extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $this->event->exhibitors()->whereKey($id)->delete();
     }
 

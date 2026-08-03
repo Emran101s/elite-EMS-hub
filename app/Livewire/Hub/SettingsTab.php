@@ -119,6 +119,7 @@ class SettingsTab extends Component
 
     public function removeCover(): void
     {
+        Gate::authorize('write');
         if ($this->event->cover_path) {
             $this->event->update(['cover_path' => null]);
         }
@@ -127,6 +128,7 @@ class SettingsTab extends Component
 
     public function removeLogo(): void
     {
+        Gate::authorize('write');
         if ($this->event->logo_path) {
             $this->event->update(['logo_path' => null]);
         }
@@ -162,6 +164,7 @@ class SettingsTab extends Component
 
     public function save()
     {
+        Gate::authorize('write');
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -229,6 +232,7 @@ class SettingsTab extends Component
     /** Assign a workspace member to this event with a role. */
     public function addTeamMember(): void
     {
+        Gate::authorize('write');
         if (! $this->teamUserId || ! array_key_exists($this->teamRole, Taxonomy::options('team_role'))) {
             return;
         }
@@ -247,6 +251,7 @@ class SettingsTab extends Component
 
     public function removeTeamMember(int $userId, string $role): void
     {
+        Gate::authorize('write');
         DB::table('event_team_members')
             ->where('event_id', $this->event->id)->where('user_id', $userId)->where('role', $role)->delete();
         if ($role === 'project_manager' && $this->event->project_manager_id === $userId) {

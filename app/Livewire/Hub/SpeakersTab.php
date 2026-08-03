@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\EventSpeaker;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class SpeakersTab extends Component
 {
@@ -17,6 +18,7 @@ class SpeakersTab extends Component
 
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->speakers()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }
@@ -81,6 +83,7 @@ class SpeakersTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
 
         $data = [
@@ -106,12 +109,14 @@ class SpeakersTab extends Component
 
     public function setStatus(int $id, string $status): void
     {
+        Gate::authorize('write');
         abort_unless(in_array($status, EventSpeaker::STATUSES, true), 422);
         $this->event->speakers()->findOrFail($id)->update(['status' => $status]);
     }
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $this->event->speakers()->whereKey($id)->delete();
     }
 

@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\EventCateringItem;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class CateringTab extends Component
 {
@@ -86,6 +87,7 @@ class CateringTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
 
         $data = [
@@ -115,17 +117,20 @@ class CateringTab extends Component
 
     public function setStatus(int $id, string $status): void
     {
+        Gate::authorize('write');
         abort_unless(in_array($status, EventCateringItem::STATUSES, true), 422);
         $this->event->cateringItems()->findOrFail($id)->update(['status' => $status]);
     }
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $this->event->cateringItems()->whereKey($id)->delete();
     }
 
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->cateringItems()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }

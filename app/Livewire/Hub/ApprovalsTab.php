@@ -26,6 +26,7 @@ class ApprovalsTab extends Component
 
     public function save()
     {
+        Gate::authorize('write');
         $this->validate([
             'title' => ['required', 'string', 'max:160'],
             'type' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('approval_type')))],

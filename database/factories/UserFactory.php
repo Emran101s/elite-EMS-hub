@@ -30,6 +30,12 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Matches the users table's own default. Without this, a bare
+            // User::factory()->create() ends up with role = null in memory
+            // (Eloquent doesn't re-read DB-computed defaults after insert),
+            // which silently ranks below every gate — exactly the gap that
+            // made every pre-existing test pass before gates existed to fail.
+            'role' => 'coordinator',
         ];
     }
 

@@ -12,6 +12,7 @@ use App\Support\Taxonomy;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The pipeline — the half of the business that happens before an event exists.
@@ -107,6 +108,7 @@ class CrmPipeline extends Component
 
     public function saveDeal(): void
     {
+        Gate::authorize('write');
         $data = $this->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'contact_id' => ['nullable', 'exists:contacts,id'],
@@ -156,6 +158,7 @@ class CrmPipeline extends Component
 
     public function moveTo(int $id, string $stage): void
     {
+        Gate::authorize('manage-events');
         if (! array_key_exists($stage, Deal::STAGES)) {
             return;
         }
@@ -182,6 +185,7 @@ class CrmPipeline extends Component
 
     public function confirmLost(): void
     {
+        Gate::authorize('manage-events');
         $this->validate(['lostReason' => ['nullable', 'string', 'max:200']]);
 
         app(DealPipeline::class)->lose(Deal::findOrFail($this->losingId), $this->lostReason ?: null);
@@ -190,6 +194,7 @@ class CrmPipeline extends Component
 
     public function reopen(int $id): void
     {
+        Gate::authorize('manage-events');
         app(DealPipeline::class)->moveTo(Deal::findOrFail($id), 'negotiation');
     }
 
@@ -197,6 +202,7 @@ class CrmPipeline extends Component
 
     public function logActivity(): void
     {
+        Gate::authorize('write');
         $deal = Deal::findOrFail($this->selectedId);
 
         $data = $this->validate([
@@ -224,6 +230,7 @@ class CrmPipeline extends Component
 
     public function completeFollowUp(int $id): void
     {
+        Gate::authorize('write');
         DealActivity::whereKey($id)->update(['follow_up_done' => true]);
     }
 

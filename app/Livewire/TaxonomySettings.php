@@ -6,6 +6,7 @@ use App\Models\TaxonomyTerm;
 use App\Support\Taxonomy;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The lists the platform draws from, made editable.
@@ -84,6 +85,7 @@ class TaxonomySettings extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $data = $this->validate([
             'label' => ['required', 'string', 'max:80'],
             'color' => ['nullable', 'string', 'max:9'],
@@ -157,6 +159,7 @@ class TaxonomySettings extends Component
 
     public function toggleActive(int $id): void
     {
+        Gate::authorize('write');
         $term = TaxonomyTerm::findOrFail($id);
         $term->update(['is_active' => ! $term->is_active]);
         Taxonomy::forget();
@@ -164,6 +167,7 @@ class TaxonomySettings extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $term = TaxonomyTerm::findOrFail($id);
 
         // Two reasons a term cannot go: the platform's own code names it, or
@@ -180,6 +184,7 @@ class TaxonomySettings extends Component
 
     public function reorder(array $ids): void
     {
+        Gate::authorize('write');
         foreach ($ids as $position => $id) {
             TaxonomyTerm::whereKey($id)->where('taxonomy', $this->taxonomy)->update(['position' => $position]);
         }

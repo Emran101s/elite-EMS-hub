@@ -7,6 +7,7 @@ use App\Models\EventExhibitionHall;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Exhibition Floor Plan'])]
 class ExhibitionFloorPlan extends Component
@@ -81,6 +82,7 @@ class ExhibitionFloorPlan extends Component
 
     public function addHall(): void
     {
+        Gate::authorize('write');
         $n = $this->event->exhibitionHalls()->count();
         $hall = $this->event->exhibitionHalls()->create([
             'name' => trim($this->newHallName) ?: 'Hall '.chr(65 + $n),
@@ -94,6 +96,7 @@ class ExhibitionFloorPlan extends Component
 
     public function renameHall(int $id, string $name): void
     {
+        Gate::authorize('write');
         if ($name = trim($name)) {
             $this->event->exhibitionHalls()->whereKey($id)->update(['name' => Str::limit($name, 60, '')]);
         }
@@ -101,6 +104,7 @@ class ExhibitionFloorPlan extends Component
 
     public function deleteHall(int $id): void
     {
+        Gate::authorize('write');
         if ($this->event->exhibitionHalls()->count() <= 1) {
             session()->flash('status', 'An event needs at least one hall.');
 
@@ -127,6 +131,7 @@ class ExhibitionFloorPlan extends Component
 
     private function persistDims(): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         if (! $hall) {
             return;
@@ -155,6 +160,7 @@ class ExhibitionFloorPlan extends Component
     /** Draw a new booth on the floor — inventory first, buyer later. */
     public function addBooth(): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         if (! $hall) {
             return;
@@ -179,6 +185,7 @@ class ExhibitionFloorPlan extends Component
     /** Tray shortcut: create a booth already sold-to/reserved-for this exhibitor. */
     public function placeBooth(int $exhibitorId): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         $ex = $this->event->exhibitors()->whereKey($exhibitorId)->whereDoesntHave('booth')->first();
         if (! $hall || ! $ex) {
@@ -202,6 +209,7 @@ class ExhibitionFloorPlan extends Component
 
     public function moveBooth(int $id, float $x, float $y): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         if (! $hall) {
             return;
@@ -214,6 +222,7 @@ class ExhibitionFloorPlan extends Component
 
     public function resizeBooth(int $id, string $axis, float $delta): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         $booth = $this->event->booths()->whereKey($id)->first();
         if (! $hall || ! $booth) {
@@ -232,6 +241,7 @@ class ExhibitionFloorPlan extends Component
 
     public function setBoothNumber(int $id, string $number): void
     {
+        Gate::authorize('write');
         $number = trim($number);
         if ($number === '' || $this->event->booths()->where('number', $number)->whereKeyNot($id)->exists()) {
             return;   // numbers stay unique per event
@@ -243,6 +253,7 @@ class ExhibitionFloorPlan extends Component
 
     public function setBoothPrice(int $id, $price): void
     {
+        Gate::authorize('write');
         if (! is_numeric($price) || (float) $price < 0) {
             return;
         }
@@ -252,6 +263,7 @@ class ExhibitionFloorPlan extends Component
     /** The sale: link a buyer to the booth. */
     public function assignExhibitor(int $boothId, $exhibitorId): void
     {
+        Gate::authorize('write');
         $booth = $this->event->booths()->whereKey($boothId)->first();
         $ex = $this->event->exhibitors()->whereKey((int) $exhibitorId)->whereDoesntHave('booth')->first();
         if (! $booth || ! $ex || $booth->exhibitor_id) {
@@ -267,6 +279,7 @@ class ExhibitionFloorPlan extends Component
     /** Undo the sale — the booth returns to available inventory. */
     public function releaseExhibitor(int $boothId): void
     {
+        Gate::authorize('write');
         $booth = $this->event->booths()->whereKey($boothId)->first();
         if (! $booth || ! $booth->exhibitor_id) {
             return;
@@ -277,6 +290,7 @@ class ExhibitionFloorPlan extends Component
 
     public function deleteBooth(int $id): void
     {
+        Gate::authorize('write');
         $booth = $this->event->booths()->whereKey($id)->first();
         if (! $booth) {
             return;
@@ -291,6 +305,7 @@ class ExhibitionFloorPlan extends Component
     /** Grid-lay a booth for every exhibitor that doesn't have one yet. */
     public function autoArrange(): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         if (! $hall) {
             return;
@@ -335,6 +350,7 @@ class ExhibitionFloorPlan extends Component
 
     public function addFixture(string $type): void
     {
+        Gate::authorize('write');
         if (! array_key_exists($type, self::FIXTURE_PRESETS)) {
             return;
         }
@@ -350,6 +366,7 @@ class ExhibitionFloorPlan extends Component
 
     public function moveFixture(string $id, float $x, float $y): void
     {
+        Gate::authorize('write');
         $hall = $this->currentHall();
         $this->updateFixtures(fn ($fx) => $fx->map(function ($f) use ($id, $x, $y, $hall) {
             if ($f['id'] === $id) {
@@ -363,6 +380,7 @@ class ExhibitionFloorPlan extends Component
 
     public function resizeFixture(string $id, string $axis, float $delta): void
     {
+        Gate::authorize('write');
         $this->updateFixtures(fn ($fx) => $fx->map(function ($f) use ($id, $axis, $delta) {
             if ($f['id'] === $id) {
                 if ($axis === 'w' || $axis === 'both') {
@@ -379,6 +397,7 @@ class ExhibitionFloorPlan extends Component
 
     public function renameFixture(string $id, string $label): void
     {
+        Gate::authorize('write');
         $this->updateFixtures(fn ($fx) => $fx->map(function ($f) use ($id, $label) {
             if ($f['id'] === $id) {
                 $f['label'] = Str::limit(trim($label), 40, '');
@@ -390,6 +409,7 @@ class ExhibitionFloorPlan extends Component
 
     public function removeFixture(string $id): void
     {
+        Gate::authorize('write');
         $this->updateFixtures(fn ($fx) => $fx->reject(fn ($f) => $f['id'] === $id));
         if ($this->selectedKind === 'fixture' && $this->selectedId === $id) {
             $this->deselect();

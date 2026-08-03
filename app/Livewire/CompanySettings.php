@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Company Profile'])]
 class CompanySettings extends Component
@@ -70,6 +71,7 @@ class CompanySettings extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'name' => ['required', 'string', 'max:160'],
             'default_currency' => ['required', Rule::in(CompanyProfile::CURRENCIES)],

@@ -92,6 +92,7 @@ class TasksTab extends Component
     /** Board drag: land a task in a stage and re-order the column. */
     public function moveToStatus(int $taskId, string $status, array $orderedIds = []): void
     {
+        Gate::authorize('write');
         $this->moveTask($taskId, $status);
         foreach (array_values($orderedIds) as $pos => $id) {
             $this->event->tasks()->whereKey((int) $id)->update(['sort' => $pos]);

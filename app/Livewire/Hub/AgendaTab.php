@@ -336,6 +336,7 @@ class AgendaTab extends Component
 
     public function toggleFlag(int $sessionId): void
     {
+        Gate::authorize('write');
         $s = $this->event->agendaSessions()->whereKey($sessionId)->firstOrFail();
         $s->update(['flagged' => ! $s->flagged]);
     }
@@ -376,6 +377,7 @@ class AgendaTab extends Component
      */
     public function reorder(array $groups): void
     {
+        Gate::authorize('write');
         foreach ($groups as $group) {
             $dayId = (int) ($group['dayId'] ?? 0);
             if (! $this->event->agendaDays()->whereKey($dayId)->exists()) {

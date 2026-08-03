@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Venue'])]
 class RoomLayoutBuilder extends Component
@@ -518,6 +519,7 @@ class RoomLayoutBuilder extends Component
     // ── Requirements (per-venue; total syncs to the budget) ──
     public function addRequirement(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'reqName' => ['required', 'string', 'max:120'],
             'reqCost' => ['nullable', 'numeric', 'min:0'],
@@ -548,6 +550,7 @@ class RoomLayoutBuilder extends Component
      */
     public function advanceRequirement(string $id): void
     {
+        Gate::authorize('write');
         $steps = EventRoom::EQUIPMENT_STATUSES;
 
         $this->room->update([
@@ -569,6 +572,7 @@ class RoomLayoutBuilder extends Component
 
     public function removeRequirement(string $id): void
     {
+        Gate::authorize('write');
         $this->room->update([
             'requirements' => collect($this->room->requirements ?? [])->reject(fn ($r) => ($r['id'] ?? null) === $id)->values()->all(),
         ]);
@@ -589,6 +593,7 @@ class RoomLayoutBuilder extends Component
 
     private function persist(): void
     {
+        Gate::authorize('write');
         $this->room->update([
             'layout' => $this->elements,
             'width_m' => is_numeric($this->width_m) && (float) $this->width_m > 0 ? (float) $this->width_m : null,

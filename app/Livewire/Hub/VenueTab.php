@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Requirement;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 class VenueTab extends Component
 {
@@ -18,6 +19,7 @@ class VenueTab extends Component
     /** Delete the selected rooms. */
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->rooms()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }
@@ -69,6 +71,7 @@ class VenueTab extends Component
 
     public function saveRoom()
     {
+        Gate::authorize('write');
         $this->validate([
             'room_name' => ['required', 'string', 'max:120'],
             'room_type' => ['required', 'string', 'max:40'],   // built-in or a custom label
@@ -102,6 +105,7 @@ class VenueTab extends Component
 
     public function deleteRoom(int $roomId)
     {
+        Gate::authorize('write');
         // Sessions in this room fall back to "no room" (nullOnDelete on the FK).
         $this->event->rooms()->whereKey($roomId)->firstOrFail()->delete();
 
@@ -111,6 +115,7 @@ class VenueTab extends Component
     // ── Event-wide requirements (feed the budget's "Event Requirements") ──
     public function addEventRequirement(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'evReqName' => ['required', 'string', 'max:120'],
             'evReqCost' => ['nullable', 'numeric', 'min:0'],
@@ -127,6 +132,7 @@ class VenueTab extends Component
 
     public function removeEventRequirement(string $reqId): void
     {
+        Gate::authorize('write');
         $this->event->update([
             'event_requirements' => collect($this->event->event_requirements ?? [])->reject(fn ($r) => ($r['id'] ?? null) === $reqId)->values()->all(),
         ]);

@@ -8,6 +8,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Equipment Catalog'])]
 class RequirementsCatalog extends Component
@@ -52,6 +53,7 @@ class RequirementsCatalog extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate();
         $data = [
             'name' => trim($this->name),
@@ -69,12 +71,14 @@ class RequirementsCatalog extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         Requirement::whereKey($id)->delete();
     }
 
     /** Import equipment from an Excel (.xlsx/.xls) or CSV file. */
     public function import(): void
     {
+        Gate::authorize('write');
         $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:8192']]);
 
         $rows = $this->readRows($this->importFile);

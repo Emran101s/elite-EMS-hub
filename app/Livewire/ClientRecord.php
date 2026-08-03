@@ -9,6 +9,7 @@ use App\Models\DealActivity;
 use App\Support\Taxonomy;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Everything about one client, in one place.
@@ -77,6 +78,7 @@ class ClientRecord extends Component
 
     public function saveContact(): void
     {
+        Gate::authorize('write');
         $data = $this->validate([
             'c_name' => ['required', 'string', 'max:120'],
             'c_title' => ['nullable', 'string', 'max:120'],
@@ -107,12 +109,14 @@ class ClientRecord extends Component
 
     public function makePrimary(int $id): void
     {
+        Gate::authorize('write');
         $this->client->contacts()->update(['is_primary' => false]);
         $this->client->contacts()->whereKey($id)->update(['is_primary' => true]);
     }
 
     public function deleteContact(int $id): void
     {
+        Gate::authorize('write');
         $contact = $this->client->contacts()->findOrFail($id);
         $wasPrimary = $contact->is_primary;
         $contact->delete();
@@ -127,6 +131,7 @@ class ClientRecord extends Component
 
     public function logActivity(): void
     {
+        Gate::authorize('write');
         $data = $this->validate([
             'a_type' => ['required', Rule::in(array_keys(Taxonomy::options('activity_type')))],
             'a_subject' => ['required', 'string', 'max:160'],
@@ -152,6 +157,7 @@ class ClientRecord extends Component
 
     public function completeFollowUp(int $id): void
     {
+        Gate::authorize('write');
         DealActivity::whereKey($id)->where('client_id', $this->client->id)->update(['follow_up_done' => true]);
     }
 

@@ -153,6 +153,7 @@ class BudgetTab extends Component
 
     public function updatedBudgetCap(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             $this->budgetCap = $this->event->budget_cents ? (string) ($this->event->budget_cents / 100) : '';
 
@@ -165,6 +166,7 @@ class BudgetTab extends Component
 
     public function updatedFeePct(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             $this->feePct = (string) ($this->event->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT);
 
@@ -177,22 +179,26 @@ class BudgetTab extends Component
     // Income targets stay editable even when the cost baseline is locked.
     public function updatedClientTarget(): void
     {
+        Gate::authorize('write');
         $this->event->update(['client_target_cents' => is_numeric($this->clientTarget) ? (int) round((float) $this->clientTarget * 100) : null]);
     }
 
     public function updatedSponsorshipTarget(): void
     {
+        Gate::authorize('write');
         $this->event->update(['sponsorship_target_cents' => is_numeric($this->sponsorshipTarget) ? (int) round((float) $this->sponsorshipTarget * 100) : null]);
     }
 
     public function updatedExhibitionTarget(): void
     {
+        Gate::authorize('write');
         $this->event->update(['exhibition_target_cents' => is_numeric($this->exhibitionTarget) ? (int) round((float) $this->exhibitionTarget * 100) : null]);
     }
 
     // ── Approval & versioning ─────────────────────────────────
     public function submitForApproval(): void
     {
+        Gate::authorize('write');
         if ($this->event->budgetItems()->count() === 0) {
             session()->flash('status', 'Add budget lines before submitting for approval.');
 
@@ -237,6 +243,7 @@ class BudgetTab extends Component
 
     public function rejectBudget(): void
     {
+        Gate::authorize('manage-budget');
         $v = $this->event->budgetVersions()->where('status', 'pending')->orderByDesc('version')->first();
         if ($v) {
             $v->update(['status' => 'rejected', 'decided_by' => auth()->id(), 'decided_at' => now()]);
@@ -247,6 +254,7 @@ class BudgetTab extends Component
 
     public function reviseBudget(): void
     {
+        Gate::authorize('manage-budget');
         $this->event->update(['budget_status' => 'draft', 'budget_locked_at' => null]);
         session()->flash('status', 'Revision started — budget unlocked for editing. Re-submit when ready.');
     }
@@ -316,6 +324,7 @@ class BudgetTab extends Component
      */
     public function markupCategory(string $category, float $pct): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -333,6 +342,7 @@ class BudgetTab extends Component
     /** Send a category back to the event's fee — the "undo my pricing" path. */
     public function clearCategoryPricing(string $category): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -345,6 +355,7 @@ class BudgetTab extends Component
 
     public function toggleBillable(int $id): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -355,6 +366,7 @@ class BudgetTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -420,6 +432,7 @@ class BudgetTab extends Component
 
     public function deleteLine(int $id): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -435,6 +448,7 @@ class BudgetTab extends Component
     /** Delete the selected manual lines (synced lines are skipped). */
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -446,6 +460,7 @@ class BudgetTab extends Component
     /** Wipe every budget line (e.g. to remove a starter template and build fresh). */
     public function clearAllLines(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -475,6 +490,7 @@ class BudgetTab extends Component
 
     public function saveIncome(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'incomeSource' => 'required|in:'.implode(',', array_keys(Taxonomy::options('income_source'))),
             'incomeDesc' => 'nullable|string|max:160',
@@ -499,12 +515,14 @@ class BudgetTab extends Component
 
     public function deleteIncome(int $id): void
     {
+        Gate::authorize('write');
         $this->event->incomeItems()->whereKey($id)->delete();
     }
 
     /** Re-sync linked cost lines from Accommodation, Transport, Speakers & Venue. */
     public function syncModules(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -534,6 +552,7 @@ class BudgetTab extends Component
     /** Copy a line within its section, ready to tweak. */
     public function duplicateLine(int $id): void
     {
+        Gate::authorize('write');
         $item = $this->event->budgetItems()->findOrFail($id);
         $copy = $item->replicate();
         $copy->description = trim(($item->description ?? $item->categoryLabel()).' (copy)');
@@ -561,6 +580,7 @@ class BudgetTab extends Component
     /** Add a new custom budget category. */
     public function addCategory(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -584,6 +604,7 @@ class BudgetTab extends Component
     /** Persist a new category order (list of ids in the desired order). */
     public function reorderCategories(array $ids): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -607,6 +628,7 @@ class BudgetTab extends Component
     /** Rename a category — every line under it follows the new name. */
     public function saveCategoryName(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -624,6 +646,7 @@ class BudgetTab extends Component
     /** Remove a category; any lines under it move to another category (never lost). */
     public function deleteCategory(int $id): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }
@@ -652,12 +675,14 @@ class BudgetTab extends Component
 
     public function toggleFlag(int $id): void
     {
+        Gate::authorize('write');
         $item = $this->event->budgetItems()->findOrFail($id);
         $item->update(['flagged' => ! $item->flagged]);
     }
 
     public function markPaid(int $id): void
     {
+        Gate::authorize('write');
         $item = $this->event->budgetItems()->findOrFail($id);
         $due = $item->costCents();
         $item->update(['paid_cents' => $due, 'payment_status' => 'paid']);
@@ -666,6 +691,7 @@ class BudgetTab extends Component
     /** Insert the reusable professional skeleton (only lines not already present). */
     public function insertStarter(): void
     {
+        Gate::authorize('write');
         if (! $this->ensureUnlocked()) {
             return;
         }

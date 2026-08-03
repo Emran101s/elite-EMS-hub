@@ -108,6 +108,7 @@ class AttendeesTab extends Component
 
     public function save(): void
     {
+        Gate::authorize('write');
         $this->validate([
             'name' => ['required', 'string', 'max:160'],
             'email' => ['nullable', 'email', 'max:190'],
@@ -144,11 +145,13 @@ class AttendeesTab extends Component
 
     public function delete(int $id): void
     {
+        Gate::authorize('write');
         $this->event->attendees()->whereKey($id)->delete();
     }
 
     public function deleteSelected(): void
     {
+        Gate::authorize('write');
         $this->event->attendees()->whereIn('id', $this->selectedIds())->delete();
         $this->clearSelection();
     }
@@ -156,6 +159,7 @@ class AttendeesTab extends Component
     /** Quick on-site check-in toggle. */
     public function toggleCheckIn(int $id): void
     {
+        Gate::authorize('write');
         $a = $this->event->attendees()->findOrFail($id);
         $in = $a->status === 'checked_in';
         $a->update([
@@ -183,6 +187,7 @@ class AttendeesTab extends Component
     /** Someone at the door who never registered — capture and admit in one tap. */
     public function walkIn(): void
     {
+        Gate::authorize('write');
         $this->validate(['walkinName' => ['required', 'string', 'max:120']]);
 
         $this->event->attendees()->create([
@@ -211,6 +216,7 @@ class AttendeesTab extends Component
 
     public function import(): void
     {
+        Gate::authorize('write');
         $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:8192']]);
 
         $rows = $this->readRows($this->importFile);
