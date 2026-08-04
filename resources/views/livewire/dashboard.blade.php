@@ -92,6 +92,29 @@
                 </div>
             </div>
         </div>
+    @elseif ($events->isEmpty())
+        {{-- ══════════ FRESH WORKSPACE ══════════
+             With nothing booked yet there is no spotlight to show — the hero
+             used to just vanish, dropping straight into a wall of zeroes below.
+             Same band, same tokens, but it explains what this page becomes
+             once an event exists instead of looking like a page that broke. --}}
+        <div class="relative isolate -mx-4 -mt-1 overflow-hidden bg-navy-950 lg:-mx-6">
+            <div class="flex flex-wrap items-center gap-x-8 gap-y-5 px-4 py-7 lg:px-6">
+                <div class="min-w-[260px] flex-1">
+                    <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-300/90">
+                        <span class="h-px w-4 bg-gold-400"></span>Welcome to Elite Business Hub
+                    </p>
+                    <h1 class="pf mt-2 max-w-[34ch] text-[26px] font-black leading-[1.15] text-white lg:text-[30px]">
+                        Nothing on the book yet — this is where it'll surface once there is.
+                    </h1>
+                    <p class="mt-2 max-w-[52ch] text-[12.5px] text-white/60">
+                        Once you add an event, this page scans it every day and puts what needs
+                        you — overdue items, approvals waiting, money, risk — right here.
+                    </p>
+                </div>
+                <a href="{{ route('events.create') }}" class="btn-gold shrink-0">＋ Create your first event</a>
+            </div>
+        </div>
     @endif
 
     {{-- who is reading this, and what the day looks like --}}
@@ -190,17 +213,21 @@
                 </div>
 
                 <div class="space-y-2 px-4 py-3.5">
-                    @php $stageTotal = max(1, collect($stages)->sum('count')); @endphp
-                    @foreach ($stages as $stage)
-                        @continue (! $stage['count'])
-                        <a href="{{ route('events.index', ['stage' => $stage['key'] ?? null]) }}" class="flex items-center gap-2.5 rounded-lg px-1 py-0.5 transition hover:bg-page/60">
-                            <span class="w-28 shrink-0 truncate text-[11.5px] font-semibold text-navy-700">{{ $stage['label'] }}</span>
-                            <span class="h-2.5 flex-1 overflow-hidden rounded-full bg-navy-50">
-                                <span class="block h-full rounded-full" style="width: {{ round($stage['count'] / $stageTotal * 100) }}%; background: {{ $stage['hex'] ?? 'var(--color-navy-400)' }}"></span>
-                            </span>
-                            <span class="w-6 shrink-0 text-right text-[11.5px] font-bold tabular-nums text-navy-900">{{ $stage['count'] }}</span>
-                        </a>
-                    @endforeach
+                    @php $stageTotal = collect($stages)->sum('count'); @endphp
+                    @if ($stageTotal === 0)
+                        <p class="px-1 py-2 text-[11.5px] text-muted">No events in the book yet — stages will fill in as events move through them.</p>
+                    @else
+                        @foreach ($stages as $stage)
+                            @continue (! $stage['count'])
+                            <a href="{{ route('events.index', ['stage' => $stage['key'] ?? null]) }}" class="flex items-center gap-2.5 rounded-lg px-1 py-0.5 transition hover:bg-page/60">
+                                <span class="w-28 shrink-0 truncate text-[11.5px] font-semibold text-navy-700">{{ $stage['label'] }}</span>
+                                <span class="h-2.5 flex-1 overflow-hidden rounded-full bg-navy-50">
+                                    <span class="block h-full rounded-full" style="width: {{ round($stage['count'] / $stageTotal * 100) }}%; background: {{ $stage['hex'] ?? 'var(--color-navy-400)' }}"></span>
+                                </span>
+                                <span class="w-6 shrink-0 text-right text-[11.5px] font-bold tabular-nums text-navy-900">{{ $stage['count'] }}</span>
+                            </a>
+                        @endforeach
+                    @endif
                 </div>
 
                 <div class="grid grid-cols-2 divide-x divide-line border-t border-line sm:grid-cols-4">
@@ -227,17 +254,39 @@
                     <a href="{{ route('ai.index') }}" class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-navy-900">All {{ $signalCount }} →</a>
                 </div>
                 <div class="divide-y divide-line">
+                    {{-- Severity (critical/warning/info) already comes ranked worst-first
+                         off the advisor; the row only used to spend it on a 2px dot. The
+                         bar + ink pairing here reuses the platform's own danger/warning
+                         status tokens (app.css) so "what's on fire" reads before you've
+                         read a single word, and "why" — already computed, never shown —
+                         gives the fact that makes it urgent instead of just the label. --}}
                     @forelse ($signals as $s)
-                        @php $dot = match ($s['tone']) { 'red' => 'bg-risk', 'amber' => 'bg-warn', default => 'bg-navy-300' }; @endphp
-                        <a href="{{ $s['href'] }}" class="flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-page/60">
-                            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $dot }}"></span>
+                        @php
+                            $sev = match ($s['tone']) {
+                                'red' => ['bar' => 'bg-danger', 'dot' => 'bg-danger', 'ink' => 'text-danger-ink'],
+                                'amber' => ['bar' => 'bg-warning', 'dot' => 'bg-warning', 'ink' => 'text-warning-ink'],
+                                default => ['bar' => null, 'dot' => 'bg-navy-300', 'ink' => 'text-navy-900'],
+                            };
+                        @endphp
+                        <a href="{{ $s['href'] }}" class="relative flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-page/60">
+                            @if ($sev['bar'])
+                                <span class="absolute inset-y-0 left-0 w-[3px] {{ $sev['bar'] }}"></span>
+                            @endif
+                            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $sev['dot'] }}"></span>
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[12px] font-bold text-navy-900">{{ $s['title'] }}</span>
+                                <span class="block truncate text-[12px] font-bold {{ $sev['ink'] }}">{{ $s['title'] }}</span>
                                 <span class="block truncate text-[10.5px] text-muted">{{ $s['where'] }}</span>
+                                @if ($s['why'] ?? null)
+                                    <span class="mt-0.5 block truncate text-[10px] text-navy-400">{{ $s['why'] }}</span>
+                                @endif
                             </span>
                         </a>
                     @empty
-                        <p class="px-4 py-6 text-center text-[11.5px] text-muted">Nothing flagged anywhere.</p>
+                        <div class="px-4 py-7 text-center">
+                            <x-icon name="check" class="mx-auto h-6 w-6 text-success" />
+                            <p class="mt-2 text-[11.5px] font-semibold text-navy-700">Nothing flagged anywhere.</p>
+                            <p class="mt-0.5 text-[10.5px] text-muted">The advisor scans every open event — this is what a clean book looks like.</p>
+                        </div>
                     @endforelse
                 </div>
             </div>
@@ -248,7 +297,7 @@
                     <p class="text-[11px] text-muted">Every event, nearest first.</p>
                 </div>
                 <div class="divide-y divide-line">
-                    @foreach ($events->sortBy('starts_at')->take(6) as $e)
+                    @forelse ($events->sortBy('starts_at')->take(6) as $e)
                         <a href="{{ route('events.hub', $e) }}" class="flex items-center gap-2.5 px-3 py-2.5 transition hover:bg-page/60">
                             <span class="h-9 w-12 shrink-0 overflow-hidden rounded-lg bg-navy-50">
                                 @if ($e->coverUrl())
@@ -263,9 +312,13 @@
                             </span>
                             <x-health-ring :percent="$e->progress" :group="$e->healthGroup()" size="h-7 w-7" :label="false" class="shrink-0" />
                         </a>
-                    @endforeach
+                    @empty
+                        <p class="px-4 py-6 text-center text-[11.5px] text-muted">No events yet — once you add one, it'll show up here first.</p>
+                    @endforelse
                 </div>
-                <a href="{{ route('events.index') }}" class="block border-t border-line px-4 py-2.5 text-center text-[11.5px] font-semibold text-navy-500 transition hover:text-gold-700">All {{ $events->count() }} events →</a>
+                @if ($events->isNotEmpty())
+                    <a href="{{ route('events.index') }}" class="block border-t border-line px-4 py-2.5 text-center text-[11.5px] font-semibold text-navy-500 transition hover:text-gold-700">All {{ $events->count() }} events →</a>
+                @endif
             </div>
         </aside>
     </div>
