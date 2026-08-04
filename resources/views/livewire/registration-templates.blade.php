@@ -133,20 +133,32 @@
         </div>
     @endif
 
-    {{-- ══ the library ══ --}}
+    {{-- ══ the library ══
+         A copy-then-owns library reads best as a shelf of covers, not a plain
+         list — the icon badge and question-count chip are the same pairing
+         the stat tiles use everywhere else in the platform (Attendees, Risks,
+         Venue…), so choosing a template feels like the same app as running
+         the event it starts. --}}
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         @forelse ($templates as $t)
-            <div wire:key="tpl-{{ $t->id }}" class="card flex flex-col p-4">
-                <p class="text-[13px] font-bold text-navy-900">{{ $t->name }}</p>
-                @if ($t->note)
-                    <p class="mt-0.5 text-[11.5px] text-muted">{{ $t->note }}</p>
-                @endif
+            <div wire:key="tpl-{{ $t->id }}" class="card flex flex-col p-4 transition hover:shadow-[0_18px_40px_-24px_rgba(11,31,58,0.35)]">
+                <div class="flex items-start gap-3">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500">
+                        <x-icon name="clipboard" class="h-5 w-5" />
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-[13px] font-bold text-navy-900">{{ $t->name }}</p>
+                        @if ($t->note)
+                            <p class="mt-0.5 line-clamp-2 text-[11.5px] text-muted">{{ $t->note }}</p>
+                        @endif
+                    </div>
+                </div>
 
-                <p class="mt-2 text-[11px] font-semibold text-navy-500">
+                <span class="chip-gold mt-3 self-start">
                     {{ $t->questions()->count() }} {{ str('question')->plural($t->questions()->count()) }}
-                </p>
+                </span>
 
-                <p class="mt-1 line-clamp-3 text-[11px] leading-relaxed text-muted">
+                <p class="mt-2 line-clamp-3 text-[11px] leading-relaxed text-muted">
                     {{ $t->questions()->pluck('label')->join(' · ') }}
                 </p>
 
