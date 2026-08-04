@@ -97,8 +97,17 @@ class Badge
     /** [width, height] in millimetres. */
     public static function dimensions(Event $event): array
     {
-        $size = self::template($event)['size'];
+        return self::sizeDimensions(self::template($event)['size']);
+    }
 
+    /**
+     * [width, height] in millimetres, from a size key directly rather than
+     * re-reading the event's saved template — the one the live editor
+     * preview needs, since it already has an in-progress, unsaved size
+     * choice in its own $template array.
+     */
+    public static function sizeDimensions(string $size): array
+    {
         return array_slice(self::SIZES[$size] ?? self::SIZES['a6_landscape'], 1);
     }
 

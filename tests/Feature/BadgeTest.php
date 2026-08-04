@@ -71,6 +71,29 @@ class BadgeTest extends TestCase
         $this->assertSame([90, 54], Badge::dimensions($event->fresh()));
     }
 
+    /**
+     * Picking a different size used to leave the preview at whatever size the
+     * event last had saved — every other field (colour, logo, lines) updated
+     * live, but the dimensions specifically re-read the saved database value
+     * instead of the in-progress selection, so the preview never visibly
+     * changed until Save was clicked and the page reloaded.
+     */
+    public function test_picking_a_new_size_resizes_the_live_preview_before_saving(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        $screen = Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('showBadge', true);
+        $screen->assertSee('width: 148mm; height: 105mm', false); // a6_landscape default
+
+        $screen->set('badge.size', 'name_badge');
+        $screen->assertSee('width: 90mm; height: 54mm', false);
+        $screen->assertDontSee('width: 148mm; height: 105mm', false);
+
+        // Unsaved — the size change was only ever in the preview.
+        $this->assertNull($event->fresh()->badge_template);
+    }
+
     public function test_a_design_can_be_put_back_to_the_default(): void
     {
         [$event, , $user] = $this->ctx();
