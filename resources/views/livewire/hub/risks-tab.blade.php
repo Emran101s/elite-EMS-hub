@@ -1,4 +1,38 @@
 <div>
+    {{-- ══ Stat tiles ══
+         Every other module opens with a number before a table — this one
+         used to open straight into the register with nothing to scan first.
+         Same tile markup as the Attendees tab, so "open / critical / resolved"
+         reads the same way "registered / checked in / VIPs" does elsewhere. --}}
+    @php
+        $openRisks = $risks->filter->isOpen();
+        $criticalOpen = $openRisks->filter(fn ($r) => $r->severity() >= 15);
+        $resolved = $risks->whereIn('status', ['mitigated', 'closed']);
+    @endphp
+    <div class="mb-4 grid gap-3 sm:grid-cols-3">
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500"><x-icon name="flag" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none text-navy-900">{{ $openRisks->count() }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Open · {{ $risks->count() }} total</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger-ink"><x-icon name="flag" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none {{ $criticalOpen->count() ? 'text-danger-ink' : 'text-navy-900' }}">{{ $criticalOpen->count() }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Critical · severity ≥ 15</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><x-icon name="check" class="h-5 w-5" /></span>
+            <div class="min-w-0">
+                <p class="pf text-2xl font-black leading-none text-emerald-600">{{ $resolved->count() }}</p>
+                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Mitigated or closed</p>
+            </div>
+        </div>
+    </div>
+
     <div class="mb-4 flex items-center justify-between">
         <p class="text-xs text-muted">Open risks with severity ≥ 20 cap the Event Health Score at "At Risk".</p>
         <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-10 px-4 text-xs">＋ Register Risk</button>
