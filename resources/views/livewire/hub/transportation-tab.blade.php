@@ -13,93 +13,89 @@
         @endforeach
     </datalist>
     <div>
-        <div class="min-w-0 space-y-4">
+        <div class="min-w-0 space-y-3">
 
-            {{-- ══ page head ══ --}}
-            <x-page-head title="Movements"
-                         :subtitle="$total.' '.\Illuminate\Support\Str::plural('movement', $total).' · '.$paxTotal.' passengers · '.$seatsTotal.' seats booked'.($overbooked ? ' · '.$overbooked.' over capacity' : '')">
-                <x-slot:actions>
-                    @if ($total)
-                        {{-- Four documents, one reader each. All carry the filters on screen. --}}
-                        <div x-data="{ open: false }" @click.outside="open = false" class="relative">
-                            <button type="button" @click="open = !open" class="btn-ghost btn-sm">
-                                <span>↧ Export</span>
-                                @if ($filterLeg !== '' || $filterDay !== '')
-                                    <span class="ml-1 opacity-60">({{ $shown }})</span>
-                                @endif
-                            </button>
+            {{-- Lead strip — Transport used a standalone page title; hub modules lead with numbers. --}}
+            <x-stat-strip :stats="[
+                ['Movements', $total, 'truck', null, null, $shown < $total ? $shown.' shown' : null],
+                ['Passengers', $paxTotal, 'users', null, null, $unassignedCount ? $unassignedCount.' still to place' : 'All placed'],
+                ['Seats booked', $seatsTotal, 'identification', $seatsTotal > 0 ? min(100, (int) round($paxTotal / max(1, $seatsTotal) * 100)) : null, $overbooked ? 'bg-risk' : 'bg-gold-400', $overbooked ? $overbooked.' over capacity' : null, $overbooked ? 'text-red-700' : 'text-navy-900'],
+                ['Unassigned', $unassignedCount, 'flag', null, null, 'In the guest pool', $unassignedCount ? 'text-amber-700' : 'text-emerald-600'],
+            ]" />
 
-                            <div x-show="open" x-cloak x-transition.opacity.duration.150ms
-                                 class="absolute right-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-line bg-white shadow-overlay">
-                                <p class="border-b border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">
-                                    {{ $filterLeg || $filterDay ? $shown.' of '.$total.' movements' : 'All '.$total.' movements' }}
-                                </p>
+            {{-- Compact action bar — same weight as Attendees / Approvals toolbars --}}
+            <div class="flex flex-wrap items-center gap-2">
+                @if ($total)
+                    <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
+                        <span class="rounded-lg bg-navy-950 px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
+                        <a href="{{ route('events.transport.dispatch', $event) }}"
+                           class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
+                           title="Lanes against a time axis — plan and catch clashes">Dispatch</a>
+                        <a href="{{ route('events.transport.live', $event) }}"
+                           class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
+                           title="Event-day operations — designed for a phone">
+                            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>Live
+                        </a>
+                    </span>
 
-                                {{-- Written out rather than looped so a static scan can
-                                     see each route has a button. --}}
-                                <a href="{{ route('events.transport.daily-schedule.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
-                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">Daily Schedule</span>
-                                    <span class="block text-eyebrow text-muted">For the ops team — one day per page</span>
-                                </a>
-                                <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
-                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">Vehicle Manifest</span>
-                                    <span class="block text-eyebrow text-muted">Who rides in which vehicle</span>
-                                </a>
-                                <a href="{{ route('events.transport.trip-sheet.pdf', [$event, ...array_filter(['day' => $filterDay])]) }}" target="_blank"
-                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">Driver Trip Sheets</span>
-                                    <span class="block text-eyebrow text-muted">One page per driver, per day</span>
-                                </a>
-                                <a href="{{ route('events.transport.vip-sheet.pdf', $event) }}" target="_blank"
-                                   class="block px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">VIP Transfer Sheets</span>
-                                    <span class="block text-eyebrow text-muted">One page per VIP or speaker</span>
-                                </a>
+                    <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                        <button type="button" @click="open = !open" class="btn-ghost btn-sm">
+                            <span>↧ Export</span>
+                            @if ($filterLeg !== '' || $filterDay !== '')
+                                <span class="ml-1 opacity-60">({{ $shown }})</span>
+                            @endif
+                        </button>
 
-                                <p class="border-y border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Whole event</p>
-                                <a href="{{ route('events.transport.master-plan.pdf', $event) }}" target="_blank"
-                                   class="block border-b border-line px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">Master Plan</span>
-                                    <span class="block text-eyebrow text-muted">Client-facing, with a cover &amp; approval</span>
-                                </a>
-                                <a href="{{ route('events.transport.supplier-order.pdf', $event) }}" target="_blank"
-                                   class="block px-4 py-2.5 transition hover:bg-page/60">
-                                    <span class="block text-xs font-bold text-navy-900">Supplier Order</span>
-                                    <span class="block text-eyebrow text-muted">A request per vendor to quote against</span>
-                                </a>
-                            </div>
-                        </div>
-                    @endif
-                    @if ($total)
-                        {{-- Two other ways to look at the same movements. They are
-                             places, not verbs, so they read as one control rather
-                             than as two more buttons among the actions. --}}
-                        <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
-                            <span class="rounded-lg bg-navy-950 px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
-                            <a href="{{ route('events.transport.dispatch', $event) }}"
-                               class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
-                               title="Lanes against a time axis — plan and catch clashes">Dispatch</a>
-                            <a href="{{ route('events.transport.live', $event) }}"
-                               class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-navy-500 transition hover:text-navy-900"
-                               title="Event-day operations — designed for a phone">
-                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>Live
+                        <div x-show="open" x-cloak x-transition.opacity.duration.150ms
+                             class="absolute left-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-line bg-white shadow-overlay">
+                            <p class="border-b border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">
+                                {{ $filterLeg || $filterDay ? $shown.' of '.$total.' movements' : 'All '.$total.' movements' }}
+                            </p>
+                            <a href="{{ route('events.transport.daily-schedule.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">Daily Schedule</span>
+                                <span class="block text-eyebrow text-muted">Ops team — one day per page</span>
                             </a>
-                        </span>
-                    @endif
-                    @if ($attendeePull > 0)
-                        <button type="button" wire:click="pullAttendees"
-                                wire:confirm="Add {{ $attendeePull }} registered {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }} to the transport guest pool as arrivals? People already pulled are skipped."
-                                class="btn-ghost btn-sm"
-                                title="Bring registered attendees into the guest pool — no retyping">⇩ Pull {{ $attendeePull }} {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }}</button>
-                    @endif
-                    <button type="button" wire:click="$toggle('showPlanImport')" class="btn-ghost btn-sm">⇪ Import movements</button>
-                    <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add Movement</button>
+                            <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">Vehicle Manifest</span>
+                                <span class="block text-eyebrow text-muted">Who rides in which vehicle</span>
+                            </a>
+                            <a href="{{ route('events.transport.trip-sheet.pdf', [$event, ...array_filter(['day' => $filterDay])]) }}" target="_blank"
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">Driver Trip Sheets</span>
+                                <span class="block text-eyebrow text-muted">One page per driver, per day</span>
+                            </a>
+                            <a href="{{ route('events.transport.vip-sheet.pdf', $event) }}" target="_blank"
+                               class="block px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">VIP Transfer Sheets</span>
+                                <span class="block text-eyebrow text-muted">One page per VIP or speaker</span>
+                            </a>
+                            <p class="border-y border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Whole event</p>
+                            <a href="{{ route('events.transport.master-plan.pdf', $event) }}" target="_blank"
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">Master Plan</span>
+                                <span class="block text-eyebrow text-muted">Client-facing cover &amp; approval</span>
+                            </a>
+                            <a href="{{ route('events.transport.supplier-order.pdf', $event) }}" target="_blank"
+                               class="block px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-navy-900">Supplier Order</span>
+                                <span class="block text-eyebrow text-muted">Request per vendor to quote</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
 
-                    {{-- Clearing the whole vehicle plan used to sit between Export
-                         and Dispatch at the same weight as everything else. It is
-                         the one thing here you cannot undo. --}}
+                @if ($attendeePull > 0)
+                    <button type="button" wire:click="pullAttendees"
+                            wire:confirm="Add {{ $attendeePull }} registered {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }} to the transport guest pool as arrivals? People already pulled are skipped."
+                            class="btn-ghost btn-sm"
+                            title="Bring registered attendees into the guest pool — no retyping">⇩ Pull {{ $attendeePull }}</button>
+                @endif
+                <button type="button" wire:click="$toggle('showPlanImport')" class="btn-ghost btn-sm">⇪ Import</button>
+
+                <div class="ms-auto flex flex-wrap items-center gap-2">
+                    <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add Movement</button>
                     @if ($total)
                         <details class="relative" data-menu>
                             <summary class="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-xl text-[15px] leading-none text-navy-300 transition hover:bg-navy-50 hover:text-navy-700 [&::-webkit-details-marker]:hidden">⋮</summary>
@@ -113,8 +109,8 @@
                             </div>
                         </details>
                     @endif
-                </x-slot:actions>
-            </x-page-head>
+                </div>
+            </div>
 
             {{-- ══ import a whole transport plan: one sheet, every movement ══ --}}
             @if ($showPlanImport)
@@ -158,10 +154,10 @@
             @if ($guests->isNotEmpty() || $unassignedCount)
                 @php $guestIds = $guests->pluck('id')->all(); $allPicked = $guestIds && ! array_diff($guestIds, $pickedGuests); @endphp
                 <div class="card overflow-hidden">
-                    <div class="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
+                    <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-3.5 py-2">
                         <div>
-                            <p class="text-sm font-bold text-navy-900">Guests</p>
-                            <p class="text-eyebrow text-muted">{{ $unassignedCount }} still to place on a vehicle</p>
+                            <p class="text-[13px] font-bold text-navy-900">Guests</p>
+                            <p class="text-eyebrow text-muted">{{ $unassignedCount }} still to place</p>
                         </div>
 
                         {{-- the leg you're working --}}
@@ -355,39 +351,46 @@
                 </div>
             @endif
 
-            {{-- ══ leg tabs — arrivals, departures, everything else ══ --}}
-            @if ($total)
-                <div class="card flex flex-wrap items-center gap-1.5 px-4 py-3">
-                    <button type="button" wire:click="setLeg('')"
-                            class="rounded-full px-3.5 py-1.5 text-xs font-semibold transition {{ $filterLeg === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
-                        All <span class="opacity-60">{{ $total }}</span>
-                    </button>
-                    @foreach ($legTabs as $tab)
-                        <button type="button" wire:click="setLeg('{{ $tab['key'] }}')"
-                                @disabled($tab['runs'] === 0)
-                                class="rounded-full px-3.5 py-1.5 text-xs font-semibold transition {{ $filterLeg === $tab['key'] ? 'bg-navy-900 text-white' : ($tab['runs'] ? 'bg-navy-50 text-navy-600 hover:bg-navy-100' : 'bg-white text-navy-300') }}"
-                                title="{{ $tab['hint'] }}">
-                            {{ $tab['label'] }} <span class="opacity-60">{{ $tab['runs'] }}</span>
-                        </button>
-                    @endforeach
-                    <span class="ml-auto text-eyebrow text-muted">{{ $shown }} of {{ $total }} shown</span>
-                </div>
-            @endif
+            {{-- ══ filters — leg + day in one strip (was two full cards of chrome) ══ --}}
+            @if ($total || $days->isNotEmpty())
+                <div class="card flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2">
+                    @if ($total)
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button type="button" wire:click="setLeg('')"
+                                    class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
+                                All <span class="opacity-60">{{ $total }}</span>
+                            </button>
+                            @foreach ($legTabs as $tab)
+                                <button type="button" wire:click="setLeg('{{ $tab['key'] }}')"
+                                        @disabled($tab['runs'] === 0)
+                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === $tab['key'] ? 'bg-navy-900 text-white' : ($tab['runs'] ? 'bg-navy-50 text-navy-600 hover:bg-navy-100' : 'bg-white text-navy-300') }}"
+                                        title="{{ $tab['hint'] }}">
+                                    {{ $tab['label'] }} <span class="opacity-60">{{ $tab['runs'] }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
 
-            {{-- ══ day filter ══ --}}
-            @if ($days->isNotEmpty())
-                <div class="card flex flex-wrap items-center gap-2 px-4 py-3">
-                    <span class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Day</span>
-                    <button type="button" wire:click="setDay('')"
-                            class="rounded-full px-3 py-1 text-xs font-semibold transition {{ $filterDay === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
-                        All <span class="opacity-60">{{ $days->sum() }}</span>
-                    </button>
-                    @foreach ($days as $day => $count)
-                        <button type="button" wire:click="setDay('{{ $day }}')"
-                                class="rounded-full px-3 py-1 text-xs font-semibold transition {{ $filterDay === $day ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
-                            {{ \Carbon\Carbon::parse($day)->format('D j M') }} <span class="opacity-60">{{ $count }}</span>
-                        </button>
-                    @endforeach
+                    @if ($days->isNotEmpty())
+                        @if ($total)<span class="hidden h-5 w-px bg-line sm:block" aria-hidden="true"></span>@endif
+                        <div class="flex flex-wrap items-center gap-1">
+                            <span class="me-0.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Day</span>
+                            <button type="button" wire:click="setDay('')"
+                                    class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === '' ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
+                                All
+                            </button>
+                            @foreach ($days as $day => $count)
+                                <button type="button" wire:click="setDay('{{ $day }}')"
+                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === $day ? 'bg-navy-900 text-white' : 'bg-navy-50 text-navy-600 hover:bg-navy-100' }}">
+                                    {{ \Carbon\Carbon::parse($day)->format('D j M') }} <span class="opacity-60">{{ $count }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($total)
+                        <span class="ms-auto text-eyebrow text-muted">{{ $shown }} of {{ $total }}</span>
+                    @endif
                 </div>
             @endif
 
@@ -405,8 +408,8 @@
             {{-- ══ movements, grouped by day ══ --}}
             @foreach ($movements as $day => $group)
                 <div class="card overflow-hidden">
-                    <div class="flex items-center justify-between border-b border-line bg-page/40 px-5 py-2.5">
-                        <p class="text-xs font-bold text-navy-900">
+                    <div class="flex items-center justify-between border-b border-line bg-page/40 px-3.5 py-2">
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-700">
                             {{ $day === 'unscheduled' ? 'Not yet scheduled' : \Carbon\Carbon::parse($day)->format('l, j F') }}
                         </p>
                         <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">
@@ -427,7 +430,7 @@
                         @endphp
                         @php $open = $expandedId === $m->id; @endphp
                         <div wire:key="mv-{{ $m->id }}" class="border-b border-line last:border-0">
-                        <div class="group/mv flex cursor-pointer items-center gap-4 px-5 py-3 hover:bg-page/30"
+                        <div class="group/mv flex cursor-pointer items-center gap-3 px-3.5 py-2 hover:bg-page/30"
                              wire:click="toggleExpand({{ $m->id }})">
 
                             <span class="shrink-0 text-navy-300 transition group-hover/mv:text-navy-600 {{ $open ? 'rotate-90' : '' }}">▸</span>
@@ -511,21 +514,21 @@
                                     <p class="mt-0.5 truncate text-eyebrow text-muted">{{ $facts->join(' · ') }}</p>
                                 @endif
 
-                                {{-- The driver, and the two ways you'd actually reach them. --}}
-                                <p class="mt-1 flex flex-wrap items-center gap-2 text-eyebrow">
-                                    @if ($m->driver)
-                                        <span class="font-bold text-navy-800">{{ $m->driver->name }}</span>
+                                {{-- Driver contact stays one muted line so the route keeps the scan. --}}
+                                @if ($m->driver)
+                                    <p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-eyebrow text-muted">
+                                        <span class="font-semibold text-navy-700">{{ $m->driver->name }}</span>
                                         @if ($m->contactNumber())
                                             <a href="tel:{{ $m->contactNumber() }}" wire:click.stop
-                                               class="rounded bg-navy-50 px-1.5 py-0.5 font-semibold text-navy-700 hover:bg-navy-100">📞 {{ $m->contactNumber() }}</a>
+                                               class="font-semibold text-navy-600 hover:text-navy-900">{{ $m->contactNumber() }}</a>
                                         @endif
                                         @if ($wa = \App\Support\WhatsApp::toDriver($m))
                                             <a href="{{ $wa }}" target="_blank" rel="noopener" wire:click.stop
-                                               class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700 hover:bg-emerald-100"
-                                               title="Send this run's details to {{ $m->driver->name }}">WhatsApp</a>
+                                               class="font-bold text-emerald-600 hover:text-emerald-800"
+                                               title="Send this run's details to {{ $m->driver->name }}">WA</a>
                                         @endif
-                                    @endif
-                                </p>
+                                    </p>
+                                @endif
                             </div>
 
             {{-- Readiness, once, in words. Three dots needed a tooltip to

@@ -50,7 +50,7 @@
                    :ring-label="$price ? (($sellSummary['marginPct'] ?? null) === null ? '—' : $sellSummary['marginPct'].'%') : $usedPct.'%'"
                    :eyebrow="$price ? 'Margin' : 'Budget used'"
                    :figures="$figures"
-                   class="mb-5 px-6 py-5">
+                   class="mb-4">
         @if ($price)
             <x-slot:meter>
                 {{-- How much of this is a decision and how much is the default. --}}
@@ -87,28 +87,28 @@
         {{-- ══════════ MAIN · ledger ══════════ --}}
         <div class="min-w-0">
             @if ($event->budgetLocked())
-                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
-                    <span class="text-lg">🔒</span>
+                <div class="mb-3 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+                    <x-icon name="check" class="h-4 w-4 shrink-0 text-emerald-600" />
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs font-bold text-emerald-800">Approved budget — locked baseline</p>
-                        <p class="text-eyebrow text-emerald-700/80">This budget is the approved baseline and can't be edited. Actual costs still track; create a revision to change the plan.</p>
+                        <p class="text-xs font-bold text-emerald-800">Approved — locked baseline</p>
+                        <p class="text-eyebrow text-emerald-700/80">Actuals still track; revise to change the plan.</p>
                     </div>
-                    <button type="button" wire:click="reviseBudget" class="shrink-0 rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-eyebrow font-bold text-emerald-700 transition hover:bg-emerald-100">Create revision</button>
+                    <button type="button" wire:click="reviseBudget" class="shrink-0 rounded-lg border border-emerald-300 bg-white px-2.5 py-1 text-eyebrow font-bold text-emerald-700 transition hover:bg-emerald-100">Create revision</button>
                 </div>
             @elseif (($event->budget_status ?? 'draft') === 'pending')
-                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3">
-                    <span class="text-lg">⏳</span>
+                <div class="mb-3 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">
+                    <x-icon name="clock" class="h-4 w-4 shrink-0 text-amber-600" />
                     <div class="min-w-0 flex-1">
                         <p class="text-xs font-bold text-amber-800">Pending approval</p>
-                        <p class="text-eyebrow text-amber-700/80">Submitted for sign-off. Approve or reject from the Approval panel.</p>
+                        <p class="text-eyebrow text-amber-700/80">Approve or reject from the Approval panel.</p>
                     </div>
                 </div>
             @endif
             {{-- income (money in) — three streams, target vs actual --}}
             @php $tin = 'w-20 shrink-0 text-right'; @endphp
-            <div class="card mb-4 overflow-hidden">
-                <div class="flex items-center justify-between border-b border-line bg-emerald-50/50 px-3 py-2">
-                    <span class="flex items-center gap-1.5 text-xs font-bold text-navy-900"><span class="text-emerald-600">▲</span> Income (money in)</span>
+            <div class="card mb-3 overflow-hidden">
+                <div class="flex items-center justify-between border-b border-line bg-emerald-50/50 px-3 py-1.5">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-navy-900"><span class="text-emerald-600">▲</span> Income</span>
                     <div class="text-right leading-tight">
                         <span class="text-sm font-bold text-emerald-700">{{ $fmt($totalIncome) }}</span>
                         <span class="block text-eyebrow text-muted">actual · target {{ $fmt($totalTargetIncome) }}</span>
@@ -123,7 +123,7 @@
                 </div>
 
                 {{-- Client / Main Fund (primary) --}}
-                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-xs">
+                <div class="flex items-center gap-2 border-b border-line px-3 py-1.5 text-xs">
                     <div class="min-w-0 flex-1">
                         <p class="font-bold text-navy-900">Client / Main Fund</p>
                         {{-- Where the money was recorded, each part linked to the
@@ -161,7 +161,7 @@
                 <div class="bg-navy-900/[0.03] px-3 py-1 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Extra income</div>
 
                 {{-- Sponsorships --}}
-                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-xs">
+                <div class="flex items-center gap-2 border-b border-line px-3 py-1.5 text-xs">
                     <a href="{{ route('events.hub', [$event, 'tab' => 'sponsors']) }}" class="min-w-0 flex-1">
                         <p class="font-bold text-navy-900 hover:text-gold-700">Sponsorships →</p>
                         <p class="text-eyebrow text-muted">{{ $sponsorsCount }} sold · {{ $sponsorsReceived ? $fmt($sponsorsReceived).' received' : 'sell packages' }}</p>
@@ -176,7 +176,7 @@
                 </div>
 
                 {{-- Exhibition / Booths --}}
-                <div class="flex items-center gap-2 border-b border-line px-3 py-2 text-xs">
+                <div class="flex items-center gap-2 border-b border-line px-3 py-1.5 text-xs">
                     <a href="{{ route('events.hub', [$event, 'tab' => 'exhibition']) }}" class="min-w-0 flex-1">
                         <p class="font-bold text-navy-900 hover:text-gold-700">Exhibition / Booths →</p>
                         <p class="text-eyebrow text-muted">{{ $exhibitorsCount }} sold · {{ $exhibitorsReceived ? $fmt($exhibitorsReceived).' received' : 'sell booths' }}</p>
@@ -204,16 +204,16 @@
                 @endforeach
 
                 {{-- quick-add other income sources (client fund is its own stream above) --}}
-                <div class="flex flex-wrap items-center gap-1.5 border-t border-line bg-page/20 px-3 py-2">
-                    <span class="text-eyebrow font-semibold uppercase tracking-wide text-muted">Add income:</span>
+                <div class="flex flex-wrap items-center gap-1.5 border-t border-line bg-page/20 px-3 py-1.5">
+                    <span class="text-eyebrow font-semibold uppercase tracking-wide text-muted">Add:</span>
                     @foreach (\App\Support\Taxonomy::options('income_source') as $key => $label)
                         @continue ($key === 'client')
-                        <button type="button" wire:click="newIncome('{{ $key }}')" class="rounded-full border border-line bg-white px-2.5 py-0.5 text-eyebrow font-semibold text-navy-700 transition hover:border-gold-400 hover:text-gold-700">＋ {{ $label }}</button>
+                        <button type="button" wire:click="newIncome('{{ $key }}')" class="rounded-full border border-line bg-white px-2 py-0.5 text-eyebrow font-semibold text-navy-700 transition hover:border-gold-400 hover:text-gold-700">＋ {{ $label }}</button>
                     @endforeach
                 </div>
 
                 {{-- total --}}
-                <div class="flex items-center gap-2 border-t border-line bg-emerald-50/40 px-3 py-2 text-xs font-bold">
+                <div class="flex items-center gap-2 border-t border-line bg-emerald-50/40 px-3 py-1.5 text-xs font-bold">
                     <span class="flex-1 text-navy-900">Total income</span>
                     <span class="{{ $tin }} text-navy-500">{{ $fmt($totalTargetIncome) }}</span>
                     <span class="{{ $tin }} text-emerald-700">{{ $fmt($totalIncome) }}</span>
@@ -222,15 +222,15 @@
 
                 {{-- ══ builder toolbar ══ --}}
                 @unless ($event->budgetLocked())
-                    <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <div class="mb-2.5 flex flex-wrap items-center gap-1.5">
                         <div class="flex items-center gap-1.5">
-                            <input type="text" data-newcat wire:model="newCategoryName" wire:keydown.enter="addCategory" maxlength="60" class="input h-10 w-44 text-sm" placeholder="New category name…">
-                            <button type="button" wire:click="addCategory" class="btn-navy h-10 px-4 text-xs"><span class="text-gold-400">＋</span> Add Category</button>
+                            <input type="text" data-newcat wire:model="newCategoryName" wire:keydown.enter="addCategory" maxlength="60" class="input h-9 w-40 text-xs" placeholder="New category…">
+                            <button type="button" wire:click="addCategory" class="btn-navy h-9 px-3 text-xs"><span class="text-gold-400">＋</span> Category</button>
                         </div>
-                        <button type="button" wire:click="newLine" class="h-10 rounded-xl border border-line bg-white px-4 text-xs font-semibold text-navy-700 transition hover:border-gold-300">＋ Add Line Item</button>
-                        <div class="ml-auto flex items-center gap-2 text-eyebrow font-bold uppercase tracking-wide text-muted">
-                            <button type="button" wire:click="expandAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Expand all</button>
-                            <button type="button" wire:click="collapseAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Collapse all</button>
+                        <button type="button" wire:click="newLine" class="h-9 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 transition hover:border-gold-300">＋ Line</button>
+                        <div class="ml-auto flex items-center gap-1 text-eyebrow font-bold uppercase tracking-wide text-muted">
+                            <button type="button" wire:click="expandAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Expand</button>
+                            <button type="button" wire:click="collapseAll" class="rounded-lg px-2 py-1 hover:bg-navy-50 hover:text-navy-700">Collapse</button>
                         </div>
                     </div>
                     @error('newCategoryName') <p class="mb-2 text-micro font-semibold text-risk">{{ $message }}</p> @enderror
@@ -242,7 +242,7 @@
                     <div class="overflow-x-auto">
                         <div class="{{ $track || $price ? 'min-w-[680px]' : 'min-w-[380px]' }}">
                             {{-- column labels --}}
-                            <div class="flex items-center gap-2 border-b border-line bg-page/40 px-3 py-2.5 text-eyebrow font-bold uppercase tracking-wide text-muted">
+                            <div class="flex items-center gap-2 border-b border-line bg-page/40 px-3 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-muted">
                                 <span class="flex-1">Category / Line item</span>
                                 <span class="{{ $money }}">{{ match ($view) { 'track' => 'Budget', 'price' => 'Cost', default => 'Estimated cost' } }}</span>
                                 @if ($track)
@@ -276,7 +276,7 @@
                                 <div wire:key="catblock-{{ $section['key'] }}" @if ($section['id']) data-cat="{{ $section['id'] }}" @endif class="cat-block">
                                 {{-- ── category header ── --}}
                                 <div class="group/cat border-b border-line bg-white">
-                                    <div class="flex items-center gap-2 px-3 py-2">
+                                    <div class="flex items-center gap-2 px-3 py-1.5">
                                         @if ($isRenaming)
                                             <span class="shrink-0 text-eyebrow text-navy-300">▶</span>
                                             <input type="text" wire:model="categoryEditName" wire:keydown.enter="saveCategoryName" maxlength="60" class="input h-8 min-w-0 flex-1 text-sm font-bold">
@@ -487,35 +487,35 @@
                 </div>
 
                 {{-- mode --}}
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Mode</p>
-                    <div class="flex rounded-xl border border-line bg-page/40 p-1">
-                        <button type="button" wire:click="$set('view', 'build')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">🧱 Build</button>
-                        <button type="button" wire:click="$set('view', 'track')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">📊 Track</button>
-                        <button type="button" wire:click="$set('view', 'price')" class="flex-1 rounded-lg py-1.5 text-xs font-bold transition {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">💰 Price</button>
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Mode</p>
+                    <div class="flex rounded-xl border border-line bg-page/40 p-0.5">
+                        <button type="button" wire:click="$set('view', 'build')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">Build</button>
+                        <button type="button" wire:click="$set('view', 'track')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">Track</button>
+                        <button type="button" wire:click="$set('view', 'price')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-navy-600 hover:text-navy-900' }}">Price</button>
                     </div>
-                    <p class="mt-2 text-eyebrow leading-snug text-muted">{{ match ($view) {
-                        'build' => 'Plan budgeted amounts — quantity × unit from your own estimates.',
-                        'track' => 'Track budget vs actual & paid — see where you saved or overspent.',
-                        'price' => 'What each line costs you against what the client is charged for it.',
+                    <p class="mt-1.5 text-eyebrow leading-snug text-muted">{{ match ($view) {
+                        'build' => 'Plan quantity × unit estimates.',
+                        'track' => 'Budget vs actual & paid.',
+                        'price' => 'Cost to you vs charged to client.',
                     } }}</p>
                 </div>
 
                 {{-- total budget + fee + currency --}}
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Total budget</p>
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Total budget</p>
                     <div class="flex items-center gap-1.5">
                         <span class="text-lg font-bold text-navy-400">{{ $event->currencySymbol() }}</span>
                         <input type="number" min="0" step="1000" wire:model.live.debounce.500ms="budgetCap" class="input h-10 flex-1 text-base font-bold" placeholder="0">
                         <span class="text-eyebrow font-semibold text-muted">{{ $event->currency }}</span>
                     </div>
-                    <div class="mt-2.5 flex items-center justify-between rounded-xl bg-gold-50/50 px-3 py-2">
+                    <div class="mt-2 flex items-center justify-between rounded-lg bg-gold-50/50 px-2.5 py-1.5">
                         <span class="text-eyebrow font-semibold text-muted">Management fee</span>
                         <span class="inline-flex items-center rounded-md border border-gold-300 bg-white px-1.5 text-xs font-bold text-gold-700">
                             <input type="number" min="0" max="100" step="0.5" wire:model.live.debounce.500ms="feePct" class="w-8 bg-transparent text-center focus:outline-none">%
                         </span>
                     </div>
-                    <div class="mt-2 flex items-center justify-between rounded-xl bg-navy-50/60 px-3 py-2 text-eyebrow">
+                    <div class="mt-1.5 flex items-center justify-between rounded-lg bg-navy-50/60 px-2.5 py-1.5 text-eyebrow">
                         <div class="min-w-0">
                             <p class="truncate font-semibold text-navy-700">≈ {{ $conv($grandEst) }}</p>
                             <p class="truncate text-muted">1 {{ $event->currency }} = {{ rtrim(rtrim(number_format($fxRate, 4), '0'), '.') }} {{ $fxOther }} <span class="rounded-full px-1 text-eyebrow font-bold uppercase {{ $fxLive ? 'bg-emerald-100 text-emerald-700' : 'bg-navy-100 text-navy-500' }}">{{ $fxLive ? 'live' : 'pegged' }}</span></p>
@@ -525,24 +525,24 @@
                 </div>
 
                 {{-- summary readout --}}
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
                     <div class="mb-1 flex justify-between text-eyebrow font-semibold text-muted">
                         <span>{{ $fmt($grandForecast) }} of {{ $fmt($cap) }}</span>
                         <span class="{{ $usedPct >= 100 ? 'text-risk' : 'text-navy-700' }}">{{ $usedPct }}%</span>
                     </div>
-                    <div class="flex h-2 overflow-hidden rounded-full bg-navy-100">
+                    <div class="flex h-1.5 overflow-hidden rounded-full bg-navy-100">
                         <div class="bg-emerald-500" style="width: {{ $paidPct }}%"></div>
                         <div class="bg-gold-500" style="width: {{ max(0, $usedPct - $paidPct) }}%"></div>
                     </div>
-                    <div class="mt-3 space-y-1.5 text-xs">
+                    <div class="mt-2 space-y-1 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Grand budget</span><span class="font-bold text-navy-900">{{ $fmt($grandEst) }}</span></div>
                         @if ($track)
                             <div class="flex justify-between"><span class="text-muted">Actual</span><span class="font-bold {{ $grandAct > $grandEst && $grandEst > 0 ? 'text-risk' : 'text-navy-900' }}">{{ $grandAct ? $fmt($grandAct) : '—' }}</span></div>
                             <div class="flex justify-between"><span class="text-muted">Paid</span><span class="font-bold text-emerald-700">{{ $paidTotal ? $fmt($paidTotal) : '—' }}</span></div>
                             <div class="flex justify-between"><span class="text-muted">{{ $savedTotal < 0 ? 'Over budget' : 'Saved' }}</span><span class="font-bold {{ ! $hasActuals ? 'text-navy-300' : ($savedTotal < 0 ? 'text-risk' : 'text-emerald-600') }}">{{ ! $hasActuals ? '—' : ($savedTotal >= 0 ? '+' : '−').$fmt(abs($savedTotal)) }}</span></div>
                         @endif
-                        <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">{{ $remaining < 0 ? 'Over budget' : 'Remaining' }}</span><span class="font-bold {{ $remaining < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $fmt($remaining) }}</span></div>
+                        <div class="flex justify-between border-t border-line pt-1"><span class="text-muted">{{ $remaining < 0 ? 'Over budget' : 'Remaining' }}</span><span class="font-bold {{ $remaining < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $fmt($remaining) }}</span></div>
                         @if ($costPerHead !== null)
                             <div class="flex justify-between"><span class="text-muted">Cost / attendee <span class="text-navy-300">· {{ number_format($heads) }} pax</span></span><span class="font-bold text-navy-900">{{ $fmt($costPerHead) }}</span></div>
                         @endif
@@ -550,18 +550,18 @@
                 </div>
 
                 {{-- profit & loss --}}
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Profit &amp; loss</p>
-                    <div class="space-y-1.5 text-xs">
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Profit &amp; loss</p>
+                    <div class="space-y-1 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Income (actual)</span><span class="font-bold text-emerald-700">{{ $fmt($totalIncome) }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Cost to deliver</span><span class="font-bold text-navy-900">{{ $fmt($costToDeliver) }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Charged to client</span><span class="font-bold text-navy-900">{{ $fmt($grandForecast) }}</span></div>
-                        <div class="flex items-center justify-between rounded-xl px-2 py-1.5 {{ $netResult < 0 ? 'bg-red-50' : 'bg-emerald-50' }}">
+                        <div class="flex items-center justify-between rounded-lg px-2 py-1 {{ $netResult < 0 ? 'bg-red-50' : 'bg-emerald-50' }}">
                             <span class="text-eyebrow font-bold uppercase tracking-wide {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult < 0 ? 'Net loss' : 'Net profit' }}</span>
                             <span class="text-sm font-bold {{ $netResult < 0 ? 'text-risk' : 'text-emerald-700' }}">{{ $netResult >= 0 ? '+' : '−' }}{{ $fmt(abs($netResult)) }}</span>
                         </div>
                         @if ($totalTargetIncome !== $totalIncome)
-                            <div class="flex justify-between border-t border-line pt-1.5 text-micro"><span class="text-muted">Projected (at target)</span><span class="font-bold {{ $projectedNet < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $projectedNet >= 0 ? '+' : '−' }}{{ $fmt(abs($projectedNet)) }}</span></div>
+                            <div class="flex justify-between border-t border-line pt-1 text-micro"><span class="text-muted">Projected (at target)</span><span class="font-bold {{ $projectedNet < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $projectedNet >= 0 ? '+' : '−' }}{{ $fmt(abs($projectedNet)) }}</span></div>
                         @endif
                     </div>
                 </div>
@@ -573,8 +573,8 @@
                     [$bsLabel, $bsClass] = $bsMeta[$bs] ?? $bsMeta['draft'];
                     $approvedV = $versions->firstWhere('status', 'approved');
                 @endphp
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Approval</p>
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Approval</p>
                     <div class="mb-2 flex items-center gap-2">
                         <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $bsClass }}">{{ $bsLabel }}</span>
                         @if ($bs === 'approved' && $approvedV)<span class="text-eyebrow text-muted">baseline v{{ $approvedV->version }}</span>@endif
@@ -616,7 +616,7 @@
 
                 {{-- ══ what the modules put here, and what they could not ══ --}}
                 @if ($linkedByModule->isNotEmpty() || $pendingFromModules)
-                    <div class="border-t border-line p-4">
+                    <div class="border-t border-line p-3">
                         <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">From the modules</p>
 
                         @foreach ($linkedByModule as $src => $m)
@@ -779,7 +779,10 @@
                         <p class="text-xs text-muted">Budgeted total: <span class="font-bold text-navy-900">{{ $event->currencySymbol() }}{{ number_format((float) ($unit ?: 0) * max(1, (int) $quantity), 0) }}</span></p>
                         <div class="flex gap-2">
                             <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                            <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update line' : 'Add line' }}</button>
+                            <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-10 px-6 text-xs">
+                                <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update line' : 'Add line' }}</span>
+                                <span wire:loading wire:target="save">Saving…</span>
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -821,7 +824,10 @@
                     </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" wire:click="$set('showIncomeForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                        <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingIncomeId ? 'Update' : 'Add income' }}</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="saveIncome" class="btn-navy h-10 px-6 text-xs">
+                            <span wire:loading.remove wire:target="saveIncome">{{ $editingIncomeId ? 'Update' : 'Add income' }}</span>
+                            <span wire:loading wire:target="saveIncome">Saving…</span>
+                        </button>
                     </div>
                 </form>
         </x-modal>
