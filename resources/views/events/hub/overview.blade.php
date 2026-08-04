@@ -36,6 +36,11 @@
     $agendaDay = $upcoming->first($hasProgramme)
         ?? $upcoming->first()
         ?? $event->agendaDays->last();
+
+    // A card that opens onto a module borrows that module's own colour — the
+    // same one the hub nav dots and document folders already use — so the
+    // overview reads as a set of doors rather than a wall of grey headings.
+    $badge = fn (?string $key = null) => \App\Models\Event::moduleColor($key);
 @endphp
 
 {{-- ══ Row 1: Event Overview · Agenda Overview · Live Alerts ══ --}}
@@ -43,7 +48,12 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Event Overview</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge() }}; background: {{ $badge() }}15">
+                    <x-icon name="home" class="h-4 w-4" />
+                </span>
+                Event Overview
+            </h3>
             <span class="rounded-full bg-gold-50 px-2.5 py-1 text-[0.62rem] font-bold text-gold-700 ring-1 ring-gold-200">
                 ✦ {{ str($event->stage)->replace('_', ' ')->title() }} Phase
             </span>
@@ -114,7 +124,12 @@
     <div class="card p-5">
         @php $firstDay = $agendaDay; @endphp
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Agenda Overview</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('agenda') }}; background: {{ $badge('agenda') }}15">
+                    <x-icon name="calendar" class="h-4 w-4" />
+                </span>
+                Agenda Overview
+            </h3>
             @if ($firstDay)
                 <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}"
                    class="rounded-xl border border-line px-2.5 py-1 text-[0.62rem] font-semibold text-navy-700 transition hover:border-gold-300">
@@ -145,7 +160,12 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Live Alerts</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('risks') }}; background: {{ $badge('risks') }}15">
+                    <x-icon name="bell" class="h-4 w-4" />
+                </span>
+                Live Alerts
+            </h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'risks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="space-y-3.5">
@@ -202,8 +222,14 @@
 
     {{-- Speakers --}}
     <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card p-5">
+        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('speakers') }}" aria-hidden="true"></span>
         <div class="flex items-center justify-between">
-            <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
+            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('speakers') }}; background: {{ $badge('speakers') }}15">
+                    <x-icon name="sparkles" class="h-3.5 w-3.5" />
+                </span>
+                Speakers
+            </h3>
             <span class="text-3xs font-bold text-muted">roster</span>
         </div>
         <p class="mt-3 text-2xl font-bold text-navy-900">{{ $speakerCount }}</p>
@@ -214,8 +240,14 @@
 
     {{-- Brief --}}
     <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card p-5">
+        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('brief') }}" aria-hidden="true"></span>
         <div class="flex items-center justify-between">
-            <h3 class="pf text-sm font-bold text-navy-900">Event Brief</h3>
+            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('brief') }}; background: {{ $badge('brief') }}15">
+                    <x-icon name="clipboard" class="h-3.5 w-3.5" />
+                </span>
+                Event Brief
+            </h3>
         </div>
         <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
         <p class="mt-2 text-[0.62rem] text-muted">The front-door document that drives the plan.</p>
@@ -223,8 +255,14 @@
 
     {{-- Contract --}}
     <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card p-5">
+        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('contract') }}" aria-hidden="true"></span>
         <div class="flex items-center justify-between">
-            <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
+            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('contract') }}; background: {{ $badge('contract') }}15">
+                    <x-icon name="identification" class="h-3.5 w-3.5" />
+                </span>
+                Contract
+            </h3>
             @if ($contract)<span class="text-3xs font-bold text-muted">{{ $contract->reference }}</span>@endif
         </div>
         <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
@@ -242,7 +280,12 @@
 <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
     <div class="card p-5">
-        <h3 class="mb-4 pf text-base font-bold text-navy-900">Tasks Summary</h3>
+        <h3 class="mb-4 flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('tasks') }}; background: {{ $badge('tasks') }}15">
+                <x-icon name="clipboard" class="h-4 w-4" />
+            </span>
+            Tasks Summary
+        </h3>
         <div class="flex items-center gap-4">
             <x-donut :segments="[
                 ['pct' => $done / $taskTotal * 100, 'class' => 'stroke-track'],
@@ -268,7 +311,12 @@
     </div>
 
     <div class="card p-5">
-        <h3 class="mb-4 pf text-base font-bold text-navy-900">Budget Summary</h3>
+        <h3 class="mb-4 flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('budget') }}; background: {{ $badge('budget') }}15">
+                <x-icon name="currency" class="h-4 w-4" />
+            </span>
+            Budget Summary
+        </h3>
         <div class="flex items-center gap-4">
             <x-donut :segments="[
                 ['pct' => min($actual / $budgetTotal * 100, 100), 'class' => 'stroke-[#3B82F6]'],
@@ -313,7 +361,12 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Top Suppliers</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('suppliers') }}; background: {{ $badge('suppliers') }}15">
+                    <x-icon name="truck" class="h-4 w-4" />
+                </span>
+                Top Suppliers
+            </h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'suppliers']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="divide-y divide-line">
@@ -334,7 +387,12 @@
 
     <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Team Workload</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-500">
+                    <x-icon name="users" class="h-4 w-4" />
+                </span>
+                Team Workload
+            </h3>
             <a href="{{ route('team.index') }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View team</a>
         </div>
         <ul class="space-y-3.5">
@@ -364,7 +422,12 @@
 
     <div class="card p-5 xl:col-span-2">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Upcoming Deadlines</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('tasks') }}; background: {{ $badge('tasks') }}15">
+                    <x-icon name="calendar" class="h-4 w-4" />
+                </span>
+                Upcoming Deadlines
+            </h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
@@ -390,7 +453,12 @@
 
     <div class="card p-5">
         <div class="mb-3 flex items-center justify-between">
-            <h3 class="flex items-center gap-1.5 pf text-base font-bold text-navy-900"><span class="text-gold-500">✦</span> AI Recommendations</h3>
+            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold-50 text-gold-600">
+                    <x-icon name="sparkles" class="h-4 w-4" />
+                </span>
+                AI Recommendations
+            </h3>
             <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
         </div>
         <ul class="space-y-2.5 text-xs text-navy-800">

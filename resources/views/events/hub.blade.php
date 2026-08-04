@@ -22,10 +22,16 @@
          tall is furniture — it competes with the work for the eye and costs a
          seventh of a laptop screen on every page.
 
-         Underlines instead. Nothing is drawn but the words, so the row is quiet
-         until you look at it, and the active module is the only mark on it. It
-         is sticky at every size now that it costs 62px rather than 136, so the
-         way to the next module is always one glance away. ══ --}}
+         Words instead of tiles, still — that lesson holds. But twenty-one words
+         of equal grey weight told you *where* you were, never *what kind of
+         work* you were in. Every module already has a colour in
+         Event::MODULE_COLORS (used for document folders and chips elsewhere) —
+         Plan is blue, Programme teal, Logistics amber, Exhibition violet, Sell
+         green, Risks red. The nav now wears that: a small dot per module, and
+         the active one becomes a solid pill in its own colour. Quiet until you
+         look at it — one row is grey, one is not — and the colour underneath
+         you tells you which family of work you're standing in before you've
+         read a single word. Costs the same handful of rows as before. ══ --}}
     @php
         $modules = \App\Models\Event::HUB_TABS;
         // Where the work is. Only modules with something genuinely waiting
@@ -37,37 +43,49 @@
              desktop they wrap to two rows: everything on screen, nothing to
              discover by dragging. Narrow screens keep the scroller, where
              wrapping would make five rows. --}}
-        <nav class="scrollbar-none flex items-end gap-x-1 overflow-x-auto lg:flex-wrap lg:overflow-x-visible"
+        <nav class="scrollbar-none flex items-center gap-x-1 gap-y-1 overflow-x-auto py-1.5 lg:flex-wrap lg:overflow-x-visible"
              aria-label="Event modules">
-            @foreach ($modules as $key => [$label, $note, $icon])
-                @continue (! $event->moduleEnabled($key))
-                <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
-                   @if ($tab === $key) aria-current="page" @endif
-                   title="{{ $note }}"
-                   @class([
-                       'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-[7px] text-[12.5px] transition',
-                       'border-gold-500 font-bold text-navy-950' => $tab === $key,
-                       'border-transparent font-semibold text-navy-400 hover:text-navy-900' => $tab !== $key,
-                   ])>
-                    {{-- No icon. Twenty-one glyphs beside twenty-one words is
-                         noise twice over — the word already names the module —
-                         and the icons alone cost 441px, which is the third row
-                         this used to wrap to. --}}
-                    {{ $label }}
+                @foreach ($modules as $key => [$label, $note, $icon])
+                    @continue (! $event->moduleEnabled($key))
+                    @php
+                        $active = $tab === $key;
+                        $hex = \App\Models\Event::moduleColor($key);
+                    @endphp
+                    <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
+                       @if ($active) aria-current="page" @endif
+                       title="{{ $note }}"
+                       @class([
+                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[6px] text-[12.5px] font-bold transition',
+                           'text-white shadow-[0_6px_14px_-6px_rgba(11,31,58,0.55)]' => $active,
+                           'font-semibold text-navy-400 hover:bg-navy-50 hover:text-navy-900' => ! $active,
+                       ])
+                       style="{{ $active ? 'background:' . $hex . ';' : '' }}">
+                        {{-- No icon glyph — the word already names the module, and
+                             twenty-one icons cost 441px, a third row on its own.
+                             The dot carries the colour instead, for a tenth the width. --}}
+                        <span class="h-[5px] w-[5px] shrink-0 rounded-full transition"
+                              style="background: {{ $active ? 'rgba(255,255,255,.85)' : $hex }}; opacity: {{ $active ? 1 : 0.5 }}"
+                              aria-hidden="true"></span>
+                        {{ $label }}
 
-                    {{-- What is waiting behind this module. Twenty-one names of
-                         equal weight mean the only way to learn whether Risks
-                         has anything in it is to open Risks. --}}
-                    @if ($n = $attention[$key] ?? null)
-                        <span title="{{ $n['why'] }}" @class([
-                            'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
-                            'bg-risk/12 text-red-700' => $n['tone'] === 'alarm',
-                            'bg-gold-100 text-gold-800' => $n['tone'] !== 'alarm',
-                        ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
-                    @endif
-                </a>
-            @endforeach
+                        {{-- What is waiting behind this module. Twenty-one names of
+                             equal weight mean the only way to learn whether Risks
+                             has anything in it is to open Risks. --}}
+                        @if ($n = $attention[$key] ?? null)
+                            <span title="{{ $n['why'] }}" @class([
+                                'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
+                                'bg-white/25 text-white' => $active,
+                                'bg-risk/12 text-red-700' => ! $active && $n['tone'] === 'alarm',
+                                'bg-gold-100 text-gold-800' => ! $active && $n['tone'] !== 'alarm',
+                            ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
+                        @endif
+                    </a>
+                @endforeach
         </nav>
+        {{-- Edge fades hint the scroller holds more than what's on screen —
+             only matters below lg, where the nav scrolls instead of wraps. --}}
+        <span class="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-page to-transparent lg:hidden" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-page to-transparent lg:hidden" aria-hidden="true"></span>
     </div>
 
     <div class="mt-5">

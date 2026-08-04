@@ -56,9 +56,19 @@
     $when = $event->starts_at
         ? $event->starts_at->format('j M').' – '.($event->ends_at?->format('j M Y') ?? $event->starts_at->format('Y'))
         : null;
+
+    // Same ring the Agenda day-picker and Tasks control centre already draw —
+    // borrowing it here means the header speaks the hub's own visual language
+    // instead of inventing a third way to show a percentage.
+    $ring = 2 * M_PI * 15;
 @endphp
 
 <div class="relative isolate overflow-hidden rounded-[20px] border border-line bg-white shadow-[0_14px_40px_-30px_rgba(11,31,58,0.5)]">
+
+    {{-- The one gold thread that runs through every command surface in this
+         app — the Deck's ticket edge, the Manifest's masthead — so the hub
+         header reads as the same object, not a screen that forgot the motif. --}}
+    <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80" aria-hidden="true"></div>
 
     {{-- The cover, as a wash rather than a band. A photograph that costs no
          height still says which event this is the moment the page paints. --}}
@@ -72,12 +82,15 @@
 
     {{-- ══ who, and what is true right now ══ --}}
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-3 pt-3.5 lg:px-5">
-        <span class="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-navy-950 ring-1 ring-gold-400/50">
-            @if ($event->logoUrl())
-                <img src="{{ $event->logoUrl() }}" alt="" class="h-full w-full object-cover">
-            @else
-                <x-event-crest :event="$event" class="h-full w-full" />
-            @endif
+        <span class="relative grid h-11 w-11 shrink-0 place-items-center">
+            <span class="absolute -inset-1.5 -z-10 rounded-2xl bg-gold-400/35 blur-md core-glow" aria-hidden="true"></span>
+            <span class="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-navy-950 ring-1 ring-gold-400/50">
+                @if ($event->logoUrl())
+                    <img src="{{ $event->logoUrl() }}" alt="" class="h-full w-full object-cover">
+                @else
+                    <x-event-crest :event="$event" class="h-full w-full" />
+                @endif
+            </span>
         </span>
 
         <div class="min-w-0 flex-1">
@@ -114,23 +127,32 @@
     </div>
 
     {{-- ══ the figures ══
-         Health and readiness carry a hairline bar because a percentage with no
-         scale beside it is a number you have to remember the meaning of. The
-         scale figures are counts and need none. ══ --}}
+         Health and readiness carry a ring, not a bare number, for the same
+         reason the Agenda day-picker and Tasks control centre draw one: a
+         percentage with no scale beside it is a number you have to remember
+         the meaning of. The scale figures are counts and need none. ══ --}}
     <div class="scrollbar-none flex items-stretch gap-x-5 gap-y-2 overflow-x-auto border-t border-line px-4 py-2.5 lg:px-5">
         @foreach ([
             ['Health', $health['score'] === null ? '—' : $health['score'].'%', $healthWord, $health['score'] ?? 0, $healthText, $healthBar],
             ['Readiness', $readiness['pct'].'%', $readyWord, $readiness['pct'], $readyText, $readyBar],
         ] as [$label, $value, $word, $pct, $text, $bar])
-            <div class="min-w-[104px] shrink-0">
-                <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $label }}</p>
-                <p class="mt-0.5 flex items-baseline gap-1.5">
-                    <span class="pf text-[17px] font-black leading-none text-navy-950">{{ $value }}</span>
-                    <span class="text-[11px] font-bold {{ $text }}">{{ $word }}</span>
-                </p>
-                <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-navy-50">
-                    <span class="block h-full rounded-full {{ $bar }}" style="width: {{ max($pct, $pct > 0 ? 4 : 0) }}%"></span>
+            <div class="flex min-w-[132px] shrink-0 items-center gap-2.5">
+                <span class="relative grid h-9 w-9 shrink-0 place-items-center">
+                    <svg class="h-9 w-9 -rotate-90" viewBox="0 0 30 30" aria-hidden="true">
+                        <circle cx="15" cy="15" r="13" fill="none" stroke="var(--color-navy-50)" stroke-width="3.5" />
+                        <circle cx="15" cy="15" r="13" fill="none" stroke-width="3.5" stroke-linecap="round"
+                                class="{{ $text }} [stroke:currentColor]"
+                                stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * min($pct, 100) / 100) }}" />
+                    </svg>
+                    <span class="pf absolute text-[9.5px] font-black text-navy-950">{{ $pct > 0 || $health['score'] !== null ? $pct : '—' }}</span>
                 </span>
+                <p class="min-w-0 leading-tight">
+                    <span class="block text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $label }}</span>
+                    <span class="mt-0.5 flex items-baseline gap-1.5">
+                        <span class="pf text-[15px] font-black leading-none text-navy-950">{{ $value }}</span>
+                        <span class="text-[11px] font-bold {{ $text }}">{{ $word }}</span>
+                    </span>
+                </p>
             </div>
         @endforeach
 
@@ -154,8 +176,17 @@
     @php
         $clear = ! $critical;
         $level = $critical['level'] ?? 'Clear';
+        $accent = match ($level) {
+            'Critical' => 'bg-risk',
+            'High' => 'bg-warn',
+            'Medium' => 'bg-gold-400',
+            'Low' => 'bg-navy-300',
+            default => 'bg-emerald-400',
+        };
     @endphp
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line bg-page/60 px-4 py-2 lg:px-5">
+    <div class="relative flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line bg-page/60 px-4 py-2 ps-5 lg:px-5 lg:ps-6">
+        <span class="absolute inset-y-0 start-0 w-1 {{ $accent }}" aria-hidden="true"></span>
+
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-950 text-gold-400">
             <x-icon :name="$clear ? 'check' : 'flag'" class="h-3.5 w-3.5" />
         </span>
