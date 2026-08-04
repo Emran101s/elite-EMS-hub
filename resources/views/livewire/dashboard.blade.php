@@ -6,8 +6,6 @@
     // ── instrument cluster: each headline figure gets a dial, not a tile ──
     // "In the book" is the denominator everything else is read against, so its
     // dial is always full — it is the panel's own zero-point, not a metric.
-    $ringR = 30;
-    $ring = 2 * M_PI * $ringR;
     $dialHex = ['navy' => 'var(--color-gold-400)', 'green' => '#10b981', 'blue' => '#3b82f6', 'red' => '#ef4444', 'gold' => 'var(--color-gold-500)'];
     $totalEvents = $events->count();
     $figures = collect($figures)->map(function ($f) use ($totalEvents, $dialHex) {
@@ -26,134 +24,20 @@
 
 <div class="space-y-4">
 
-    {{-- ══════════ THE SPOTLIGHT ══════════
-         The one thing on the floor, or the next one in. It gets the photograph
-         and the whole width because on any given morning it is the answer to
-         "what am I actually doing today". --}}
-    @if ($spotlight)
-        @php
-            $h = $spotlightHeader;
-            $ready = $h['readiness'];
-            $days = $spotlight->starts_at ? (int) $now->diffInDays($spotlight->starts_at, false) : null;
-        @endphp
-
-        <div class="relative isolate -mx-4 -mt-1 overflow-hidden bg-navy-950 lg:-mx-6">
-            <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-                @if ($spotlight->coverUrl())
-                    <img src="{{ $spotlight->coverUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 38%">
-                @else
-                    <x-event-crest :event="$spotlight" class="h-full w-full opacity-70" />
-                @endif
-                <div class="absolute inset-0" style="background: linear-gradient(100deg,
-                    rgba(6,17,33,.96) 0%, rgba(6,17,33,.88) 42%, rgba(6,17,33,.55) 72%, rgba(6,17,33,.35) 100%)"></div>
-                {{-- faint instrument-panel rings, the same radial language as the
-                     mission radar on Events, at rest instead of in motion --}}
-                <svg class="absolute -right-16 -top-24 h-[420px] w-[420px] opacity-[0.14]" viewBox="0 0 100 100" aria-hidden="true">
-                    <circle cx="50" cy="50" r="46" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" />
-                    <circle cx="50" cy="50" r="34" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" stroke-dasharray="2 3" />
-                    <circle cx="50" cy="50" r="22" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" />
-                </svg>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-x-8 gap-y-5 px-4 py-6 lg:px-6 lg:py-7">
-
-                <div class="min-w-[260px] flex-1">
-                    <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-300/90">
-                        @if ($spotlightLive)
-                            <span class="relative flex h-2 w-2">
-                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70"></span>
-                                <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
-                            </span>
-                            On the floor now
-                        @else
-                            <span class="h-px w-4 bg-gold-400"></span>Next in
-                        @endif
-                    </p>
-
-                    <h1 class="pf mt-2 max-w-[20ch] text-[26px] font-black leading-[1.08] text-white lg:text-[34px]">
-                        <a href="{{ route('events.hub', $spotlight) }}" class="transition hover:text-gold-300">{{ $spotlight->name }}</a>
-                    </h1>
-
-                    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-white/70">
-                        @if ($spotlight->venue || $spotlight->city)
-                            <span class="flex items-center gap-1.5"><x-icon name="pin" class="h-3.5 w-3.5 text-white/40" />{{ $spotlight->venue?->name ?? $spotlight->city }}</span>
-                        @endif
-                        @if ($spotlight->starts_at)
-                            <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 text-white/40" />{{ $spotlight->starts_at->format('j M') }} – {{ $spotlight->ends_at?->format('j M Y') ?? $spotlight->starts_at->format('Y') }}</span>
-                        @endif
-                        @if ($spotlight->client)
-                            <span class="flex items-center gap-1.5"><x-icon name="identification" class="h-3.5 w-3.5 text-white/40" />{{ $spotlight->client->name }}</span>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- the two numbers that matter about it, read off dials rather
-                     than flat boxes — the same instrument face the panel below
-                     is built from, so the hero and the cluster read as one idea --}}
-                <div class="flex shrink-0 items-center gap-3">
-                    @php
-                        $runDay = $spotlightLive ? (int) $spotlight->starts_at->diffInDays($now) + 1 : null;
-                        $runTotal = $spotlightLive ? max($runDay, (int) $spotlight->starts_at->diffInDays($spotlight->ends_at ?? $spotlight->starts_at) + 1) : null;
-                        $readyTone = $ready['pct'] >= 70 ? '#34d399' : ($ready['pct'] >= 40 ? '#fbbf24' : '#f87171');
-                    @endphp
-                    <div class="relative h-[78px] w-[78px] shrink-0">
-                        <svg class="h-full w-full -rotate-90" viewBox="0 0 78 78" aria-hidden="true">
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5" />
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="var(--color-gold-400)" stroke-width="5" stroke-linecap="round"
-                                    stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * ($spotlightLive ? min($runDay / max($runTotal, 1) * 100, 100) : ($days === null ? 0 : 40)) / 100) }}" />
-                        </svg>
-                        <span class="absolute inset-0 grid place-items-center text-center leading-none">
-                            <span class="pf text-[19px] font-black text-gold-300">{{ $spotlightLive ? $runDay : ($days === null ? '—' : $days.'d') }}</span>
-                            <span class="mt-6 text-[8px] font-bold uppercase tracking-[0.12em] text-white/45">{{ $spotlightLive ? 'of '.$runTotal : 'to go' }}</span>
-                        </span>
-                    </div>
-
-                    <div class="relative h-[78px] w-[78px] shrink-0" title="{{ collect($ready['gates'])->map(fn ($g) => ($g['met'] ? '✓ ' : '✗ ').$g['label'])->implode(chr(10)) }}">
-                        <svg class="h-full w-full -rotate-90" viewBox="0 0 78 78" aria-hidden="true">
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5" />
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="{{ $readyTone }}" stroke-width="5" stroke-linecap="round"
-                                    stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * min($ready['pct'], 100) / 100) }}" />
-                        </svg>
-                        <span class="absolute inset-0 grid place-items-center text-center leading-none">
-                            <span class="pf text-[19px] font-black" style="color: {{ $readyTone }}">{{ $ready['pct'] }}%</span>
-                            <span class="mt-6 text-[8px] font-bold uppercase tracking-[0.12em] text-white/45">ready</span>
-                        </span>
-                    </div>
-                </div>
-
-                {{-- and the one thing it needs from a person --}}
-                <div class="w-full shrink-0 rounded-2xl bg-white/95 p-3.5 shadow-[0_14px_36px_-24px_rgba(0,0,0,.7)] backdrop-blur sm:w-[280px]">
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-navy-400">Next critical action</p>
-                    @if ($h['critical'])
-                        <p class="pf mt-1.5 line-clamp-2 text-[13.5px] font-bold leading-snug text-navy-950">{{ $h['critical']['title'] }}</p>
-                        <p class="mt-0.5 truncate text-[11px] text-muted">{{ $h['critical']['where'] }} · due {{ $h['critical']['due'] }}</p>
-                        <a href="{{ route('events.hub', [$spotlight, 'tab' => $h['critical']['tab']]) }}"
-                           class="mt-2.5 flex h-9 items-center justify-center rounded-xl bg-navy-950 text-[11.5px] font-bold text-white transition hover:bg-navy-800">{{ $h['critical']['cta'] }} →</a>
-                    @else
-                        <p class="pf mt-1.5 text-[13.5px] font-bold text-navy-950">Nothing is waiting on you</p>
-                        <a href="{{ route('events.hub', $spotlight) }}"
-                           class="mt-2.5 flex h-9 items-center justify-center rounded-xl bg-navy-50 text-[11.5px] font-bold text-navy-700 transition hover:bg-navy-100">Open command center →</a>
-                    @endif
-                </div>
-            </div>
-        </div>
-    @elseif ($events->isEmpty())
-        {{-- ══════════ FRESH WORKSPACE ══════════
-             With nothing booked yet there is no spotlight to show — the hero
-             used to just vanish, dropping straight into a wall of zeroes below.
-             Same band, same tokens, but it explains what this page becomes
-             once an event exists instead of looking like a page that broke. --}}
-        <div class="relative isolate -mx-4 -mt-1 overflow-hidden bg-navy-950 lg:-mx-6">
+    @if ($events->isEmpty())
+        {{-- Fresh workspace only — the old "next event" spotlight is gone.
+             Portfolio state lives in the instrument panel; nearest events live
+             in The floor; urgency lives in Signals. A permanent dark banner for
+             one upcoming event was repeating all three. --}}
+        <div class="relative isolate overflow-hidden rounded-[20px] bg-navy-950">
             <svg class="pointer-events-none absolute -right-16 -top-24 h-[420px] w-[420px] opacity-[0.14]" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="46" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" />
                 <circle cx="50" cy="50" r="34" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" stroke-dasharray="2 3" />
                 <circle cx="50" cy="50" r="22" fill="none" stroke="var(--color-gold-400)" stroke-width="0.4" />
             </svg>
-            <div class="flex flex-wrap items-center gap-x-8 gap-y-5 px-4 py-7 lg:px-6">
+            <div class="flex flex-wrap items-center gap-x-8 gap-y-5 px-5 py-7 lg:px-6">
                 <div class="min-w-[260px] flex-1">
-                    <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-300/90">
-                        <span class="h-px w-4 bg-gold-400"></span>Welcome to Elite Business Hub
-                    </p>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-300/90">Welcome to Elite Business Hub</p>
                     <h1 class="pf mt-2 max-w-[34ch] text-[26px] font-black leading-[1.15] text-white lg:text-[30px]">
                         Nothing on the book yet — this is where it'll surface once there is.
                     </h1>
@@ -167,11 +51,14 @@
         </div>
     @endif
 
-    {{-- who is reading this, and what the day looks like --}}
-    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 pt-1">
-        <h2 class="pf text-[22px] font-black text-navy-950">{{ $greeting }}, {{ str($user->name)->before(' ') }}</h2>
-        <p class="text-[12.5px] text-muted">{{ $now->format('l, j F Y') }} · {{ $headline }}</p>
-        <a href="{{ route('ai.index') }}" class="ms-auto text-[12px] font-semibold text-navy-500 transition hover:text-navy-900">Open the briefing →</a>
+    {{-- masthead: who is reading, and what the day looks like --}}
+    <div class="flex flex-wrap items-end gap-x-4 gap-y-2 pt-1">
+        <div class="min-w-0 flex-1">
+            <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-gold-700">{{ $now->format('l · j F Y') }}</p>
+            <h1 class="pf mt-1 text-[26px] font-black leading-none text-navy-950 lg:text-[30px]">{{ $greeting }}, {{ str($user->name)->before(' ') }}</h1>
+            <p class="mt-1.5 text-[13px] text-muted">{{ $headline }}</p>
+        </div>
+        <a href="{{ route('ai.index') }}" class="shrink-0 text-[12px] font-semibold text-navy-500 transition hover:text-navy-900">Open the briefing →</a>
     </div>
 
     {{-- ══════════ THE INSTRUMENT PANEL ══════════
@@ -188,17 +75,10 @@
                 @php $tag = ($f['href'] ?? null) ? 'a' : 'div'; @endphp
                 <{{ $tag }} @if ($f['href'] ?? null) href="{{ $f['href'] }}" @endif
                    class="group flex flex-col items-center gap-2.5 px-3 py-5 text-center transition {{ ($f['href'] ?? null) ? 'hover:bg-white/[0.035]' : '' }}">
-                    <div class="relative h-[72px] w-[72px] shrink-0">
-                        <svg class="h-full w-full -rotate-90 transition group-hover:scale-[1.04]" viewBox="0 0 78 78" aria-hidden="true">
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5" />
-                            <circle cx="39" cy="39" r="{{ $ringR }}" fill="none" stroke="{{ $f['hex'] }}" stroke-width="5" stroke-linecap="round"
-                                    stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * $f['pct'] / 100) }}" />
-                        </svg>
-                        <span class="absolute inset-0 grid place-items-center">
-                            <x-icon :name="$f['icon']" class="h-3.5 w-3.5" style="color: {{ $f['hex'] }}" />
-                        </span>
+                    <x-dial :pct="$f['pct']" :hex="$f['hex']" :size="72" class="transition group-hover:scale-[1.04]">
+                        <x-icon :name="$f['icon']" class="h-3.5 w-3.5" style="color: {{ $f['hex'] }}" />
                         <span class="pf absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-navy-950 px-1.5 text-[15px] font-black leading-tight text-white ring-1 ring-white/10">{{ $f['value'] }}</span>
-                    </div>
+                    </x-dial>
                     <p class="mt-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-white/70">{{ $f['label'] }}</p>
                     <p class="truncate text-[9.5px] text-white/35">{{ $f['note'] }}</p>
                 </{{ $tag }}>
@@ -213,8 +93,11 @@
                  Every module's share of one day, in one line. Nothing else on
                  the platform crosses the modules like this. --}}
             <div class="card overflow-hidden">
-                <div class="flex flex-wrap items-baseline gap-x-3 border-b border-line px-4 py-3">
-                    <h3 class="pf text-[15px] font-bold text-navy-950">Today</h3>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
+                    <h3 class="flex items-center gap-2 pf text-[15px] font-bold text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gold-100/70 text-gold-700"><x-icon name="clock" class="h-3.5 w-3.5" /></span>
+                        Today
+                    </h3>
                     <p class="text-[11.5px] text-muted">{{ $now->format('l, j F') }} — across every event.</p>
                     @if ($today['load'] === 0)
                         <span class="ms-auto chip">Clear</span>
@@ -246,8 +129,11 @@
                  Seven days, each carrying its own load, so nothing lands as a
                  surprise on the morning it happens. --}}
             <div class="card overflow-hidden">
-                <div class="flex flex-wrap items-baseline gap-x-3 border-b border-line px-4 py-3">
-                    <h3 class="pf text-[15px] font-bold text-navy-950">The week ahead</h3>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
+                    <h3 class="flex items-center gap-2 pf text-[15px] font-bold text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600"><x-icon name="calendar" class="h-3.5 w-3.5" /></span>
+                        The week ahead
+                    </h3>
                     <p class="text-[11.5px] text-muted">Sessions, movements and deadlines, day by day.</p>
                 </div>
 
@@ -309,8 +195,11 @@
 
             {{-- ══════════ THE BOOK ══════════ --}}
             <div class="card overflow-hidden">
-                <div class="flex flex-wrap items-baseline gap-x-3 border-b border-line px-4 py-3">
-                    <h3 class="pf text-[15px] font-bold text-navy-950">The book</h3>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
+                    <h3 class="flex items-center gap-2 pf text-[15px] font-bold text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500"><x-icon name="archive" class="h-3.5 w-3.5" /></span>
+                        The book
+                    </h3>
                     <p class="text-[11.5px] text-muted">Every event, by the stage it is in.</p>
                     <a href="{{ route('events.index') }}" class="ms-auto text-[11.5px] font-semibold text-navy-500 transition hover:text-navy-900">Open the journey →</a>
                 </div>
@@ -353,7 +242,10 @@
         <aside class="space-y-4">
             <div class="card overflow-hidden">
                 <div class="flex items-center gap-2 border-b border-line px-4 py-3">
-                    <h3 class="pf text-[14px] font-bold text-navy-950">Signals</h3>
+                    <h3 class="flex items-center gap-2 pf text-[14px] font-bold text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gold-100/70 text-gold-700"><x-icon name="chart" class="h-3.5 w-3.5" /></span>
+                        Signals
+                    </h3>
                     <a href="{{ route('ai.index') }}" class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-navy-900">All {{ $signalCount }} →</a>
                 </div>
                 <div class="divide-y divide-line">
@@ -396,8 +288,11 @@
 
             <div class="card overflow-hidden">
                 <div class="border-b border-line px-4 py-3">
-                    <h3 class="pf text-[14px] font-bold text-navy-950">The floor</h3>
-                    <p class="text-[11px] text-muted">Every event, nearest first.</p>
+                    <h3 class="flex items-center gap-2 pf text-[14px] font-bold text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500"><x-icon name="sparkles" class="h-3.5 w-3.5" /></span>
+                        The floor
+                    </h3>
+                    <p class="mt-0.5 text-[11px] text-muted">Every event, nearest first.</p>
                 </div>
                 <div class="divide-y divide-line">
                     @forelse ($events->sortBy('starts_at')->take(6) as $e)
