@@ -220,6 +220,31 @@ class Event extends Model
     /** Lifecycle stages — the event's single stored life story. Health is computed. */
     public const STAGES = ['draft', 'proposal', 'confirmed', 'planning', 'production', 'live', 'completed', 'closed', 'cancelled', 'on_hold'];
 
+    /**
+     * The life cycle's state machine: stage => the stages it may move to next.
+     * A first draft of the real business rule, kept as one editable array
+     * rather than scattered checks — correct it here if it doesn't match how
+     * events actually move in practice.
+     *
+     * The main line is draft -> proposal -> confirmed -> planning ->
+     * production -> live -> completed -> closed. cancelled and on_hold are
+     * off-path exceptions reachable from most active stages; closed is
+     * terminal. on_hold doesn't remember which active stage it paused —
+     * resuming can land on any of the three build stages.
+     */
+    public const TRANSITIONS = [
+        'draft' => ['proposal', 'cancelled'],
+        'proposal' => ['confirmed', 'draft', 'cancelled'],
+        'confirmed' => ['planning', 'on_hold', 'cancelled'],
+        'planning' => ['production', 'on_hold', 'cancelled'],
+        'production' => ['live', 'on_hold', 'cancelled'],
+        'live' => ['completed', 'cancelled'],
+        'completed' => ['closed'],
+        'closed' => [],
+        'cancelled' => ['draft'],
+        'on_hold' => ['confirmed', 'planning', 'production', 'cancelled'],
+    ];
+
     public const TEAM_ROLES = ['project_manager', 'operations_lead', 'registration_lead', 'supplier_coordinator', 'finance_owner', 'design_owner', 'production_owner', 'client_rm'];
 
     public const TEAM_ROLE_LABELS = [
@@ -278,6 +303,19 @@ class Event extends Model
     {
         return $query->whereNull('archived_at')
             ->whereNotIn('stage', ['completed', 'closed', 'cancelled']);
+    }
+
+    /** Saving the same stage a record already has is never a transition. */
+    public function canTransitionTo(string $stage): bool
+    {
+        return $stage === $this->stage
+            || in_array($stage, self::TRANSITIONS[$this->stage] ?? [], true);
+    }
+
+    /** Where this event could go next, for whoever's building the picker. */
+    public function nextStages(): array
+    {
+        return self::TRANSITIONS[$this->stage] ?? [];
     }
 
     /** Currency symbol for this event ($ or JD). */
@@ -966,6 +1004,16 @@ class Event extends Model
         // Every event has its link from the moment it exists.
         static::creating(function (self $event) {
             $event->registration_token ??= self::newRegistrationToken();
+        });
+
+        static::updated(function (self $event) {
+            // getOriginal() can be null for a factory-created event that never
+            // set 'stage' explicitly and relied on the DB column default —
+            // there's no honest "from" to report, so nothing to dispatch.
+            $from = $event->getOriginal('stage');
+            if ($event->wasChanged('stage') && $from !== null) {
+                \App\Events\EventStageChanged::dispatch($event, $from, $event->stage);
+            }
         });
     }
 

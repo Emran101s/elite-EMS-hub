@@ -9,6 +9,7 @@ use App\Models\Venue;
 use App\Support\Taxonomy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -177,7 +178,16 @@ class SettingsTab extends Component
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['required', 'in:'.implode(',', array_keys(Event::CURRENCIES))],
-            'stage' => ['required', 'in:'.implode(',', Event::STAGES)],
+            'stage' => [
+                'required', 'in:'.implode(',', Event::STAGES),
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if (! $this->event->canTransitionTo($value)) {
+                        $from = Str::headline($this->event->stage);
+                        $to = Str::headline($value);
+                        $fail("Can't move this event from {$from} to {$to} — that's not a stage it can go to from where it is.");
+                    }
+                },
+            ],
             // Any term still offered, plus whatever this event already is: an
             // event whose type was later retired must still be saveable.
             'type' => ['required', Rule::in(array_merge(array_keys(Taxonomy::options('event_type')), [$this->event->type]))],

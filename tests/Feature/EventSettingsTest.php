@@ -60,6 +60,31 @@ class EventSettingsTest extends TestCase
         $this->assertTrue($event->teamMembers()->whereKey($pm->id)->wherePivot('role', 'project_manager')->exists());
     }
 
+    public function test_a_legal_stage_move_saves(): void
+    {
+        [$event, $user] = $this->ctx();
+        $this->assertSame('planning', $event->stage); // ICFT 2026 starts here
+
+        Livewire::actingAs($user)->test(SettingsTab::class, ['event' => $event])
+            ->set('stage', 'production')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('production', $event->fresh()->stage);
+    }
+
+    public function test_an_illegal_stage_jump_is_rejected(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(SettingsTab::class, ['event' => $event])
+            ->set('stage', 'completed') // planning can't skip straight to completed
+            ->call('save')
+            ->assertHasErrors(['stage']);
+
+        $this->assertSame('planning', $event->fresh()->stage, 'a rejected transition must not persist');
+    }
+
     public function test_module_toggle_persists_and_gates_tabs(): void
     {
         [$event, $user] = $this->ctx();
