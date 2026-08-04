@@ -55,7 +55,7 @@ class ApprovalsTab extends Component
 
         // Nobody signs off their own request — not even a manager.
         if ($approval->requested_by === auth()->id()) {
-            session()->flash('status', 'You raised this request — a different manager has to decide it.');
+            session()->flash('error', 'You raised this request — a different manager has to decide it.');
 
             return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
         }

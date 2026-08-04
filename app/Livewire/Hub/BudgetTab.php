@@ -143,7 +143,7 @@ class BudgetTab extends Component
     private function ensureUnlocked(): bool
     {
         if ($this->event->budgetLocked()) {
-            session()->flash('status', 'Budget is locked. Create a revision to make changes.');
+            session()->flash('error', 'Budget is locked. Create a revision to make changes.');
 
             return false;
         }
@@ -200,7 +200,7 @@ class BudgetTab extends Component
     {
         Gate::authorize('write');
         if ($this->event->budgetItems()->count() === 0) {
-            session()->flash('status', 'Add budget lines before submitting for approval.');
+            session()->flash('error', 'Add budget lines before submitting for approval.');
 
             return;
         }
@@ -291,7 +291,7 @@ class BudgetTab extends Component
     {
         $item = $this->event->budgetItems()->findOrFail($id);
         if ($item->isLinked()) {
-            session()->flash('status', 'This line is synced from the '.str($item->linkedTab())->headline().' tab — edit it there.');
+            session()->flash('error', 'This line is synced from the '.str($item->linkedTab())->headline().' tab — edit it there.');
 
             return;
         }
@@ -438,7 +438,7 @@ class BudgetTab extends Component
         }
         $item = $this->event->budgetItems()->findOrFail($id);
         if ($item->isLinked()) {
-            session()->flash('status', 'This line is synced — remove the source record in the '.str($item->linkedTab())->headline().' tab.');
+            session()->flash('error', 'This line is synced — remove the source record in the '.str($item->linkedTab())->headline().' tab.');
 
             return;
         }

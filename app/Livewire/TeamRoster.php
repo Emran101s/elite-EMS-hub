@@ -92,7 +92,7 @@ class TeamRoster extends Component
     {
         Gate::authorize('manage-team');
         if ($id === auth()->id()) {
-            session()->flash('status', "You can't remove your own account.");
+            session()->flash('error', "You can't remove your own account.");
 
             return;
         }

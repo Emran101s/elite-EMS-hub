@@ -5,10 +5,6 @@
         <p class="text-xs text-muted">Your brand and the defaults every new event inherits.</p>
     </div>
 
-    @if (session('status'))
-        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
-    @endif
-
     <form wire:submit="save" class="grid gap-5">
         {{-- brand --}}
         <div class="card p-5">

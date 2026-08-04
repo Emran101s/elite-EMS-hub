@@ -106,7 +106,7 @@ class ExhibitionFloorPlan extends Component
     {
         Gate::authorize('write');
         if ($this->event->exhibitionHalls()->count() <= 1) {
-            session()->flash('status', 'An event needs at least one hall.');
+            session()->flash('error', 'An event needs at least one hall.');
 
             return;
         }

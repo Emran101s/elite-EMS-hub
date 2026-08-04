@@ -15,10 +15,6 @@
         </x-slot:actions>
     </x-page-head>
 
-    @if (session('status'))
-        <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
-    @endif
-
     {{-- Hotels are the half the accommodation and transport modules pick from,
          so they are one click away rather than mixed into the whole list. --}}
     <div class="mt-4 flex flex-wrap items-center gap-1.5">

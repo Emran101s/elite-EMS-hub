@@ -47,12 +47,6 @@
             </div>
         </div>
 
-        @if (session('status'))
-            <p class="border-b border-line bg-emerald-50/60 px-4 py-2 text-[11.5px] font-semibold text-emerald-800">
-                {{ session('status') }}
-            </p>
-        @endif
-
         <div class="flex items-center gap-3 border-b border-line px-4 py-1.5">
             <span class="w-4 shrink-0"></span>
             <span class="w-9 shrink-0 eyebrow">Colour</span>
