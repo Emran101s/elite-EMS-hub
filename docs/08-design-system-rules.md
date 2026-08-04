@@ -7,19 +7,25 @@ UI screens.** This applies in Cursor exactly as it applied here. The design syst
 describes what already exists so new work matches it — it is not an invitation to revisit
 it.
 
-## Correcting a stale doc: ORBIT was reverted
+## Correcting a stale doc: ORBIT was reverted — except one deliberate exception
 
 `CLAUDE.md` at the repo root, as it stood before this handover, described an in-progress
 "ORBIT" design system (`orbit-system.html`, `App\Support\Tone`, `resources/css/orbit-tokens.css`)
-as the **incoming** replacement for the navy/gold palette. That migration was **reverted**.
-`App\Support\Tone` no longer exists in the codebase, `resources/css/orbit-tokens.css` and
-`orbit-tokens.css`/`orbit.css` don't exist, and the app shell, sidebar and Command Center
-homepage are back on the navy/gold Command Center system. `CLAUDE.md` has been corrected as
-part of this handover (see the diff) so it no longer points Cursor at a system that isn't
-there. `orbit-system.html` and `setup-orbit.sh` are still present in the repo root as
-leftover artifacts of the reverted attempt — they are inert (nothing loads or generates from
-them anymore) and can be removed whenever convenient; they were left in place rather than
-deleted during this handover since deleting files wasn't asked for.
+as the **incoming** replacement for the navy/gold palette, platform-wide. That migration was
+**reverted**. `App\Support\Tone` no longer exists in the codebase, `resources/css/orbit-tokens.css`
+doesn't exist, and the Command Center homepage and workspace screens are on the navy/gold
+system. `orbit-system.html` and `setup-orbit.sh` are still present in the repo root as inert
+leftover artifacts — nothing loads or generates from them — and can be removed whenever
+convenient; left in place since deleting files wasn't asked for.
+
+**The sidebar is the one exception, and it's on purpose.** `app-rail.blade.php` and
+`app-panel.blade.php` deliberately kept a distinct dark/glass treatment through the ORBIT
+revert — "chrome stays constant" while the rest of the app went light. Its CSS originally
+lived under `.orbit-*` classes and `--color-orbit-*` tokens in `resources/css/app.css`, which
+confusingly collided with the name of the reverted platform-wide attempt even though the two
+are unrelated. Renamed to `.shell-*` / `--color-shell-*` — same values, name only, zero
+visual change — so the sidebar's own design language stops looking like leftover ORBIT debt
+it isn't.
 
 ## The live design system: Command Center (navy / gold / Playfair)
 
@@ -60,6 +66,6 @@ documents can legitimately use different visual languages where that serves the 
   briefs — don't assume left-to-right-only layout in anything document-adjacent.
 - Money needs precision: multi-currency, cents, tabular alignment, estimate vs actual vs
   committed. Columns must line up (`font-variant-numeric: tabular-nums` where digits stack).
-- Design for both extremes of density: 620 attendee rows and an empty `draft`-stage event
-  with nothing in it yet (see [02-platform-architecture.md](02-platform-architecture.md)
-  for exact volumes).
+- Design for both extremes of density: an empty `draft`-stage event with nothing in it yet,
+  and the dense end — see [02-platform-architecture.md](02-platform-architecture.md)'s "Real
+  data volumes" table for the current verified numbers.

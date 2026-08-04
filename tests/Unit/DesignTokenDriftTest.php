@@ -5,16 +5,16 @@ namespace Tests\Unit;
 use Tests\TestCase;
 
 /**
- * A soft report, not a gate. Counts colour values that bypass the navy/gold
- * token system in resources/css/app.css — arbitrary Tailwind bracket values
- * and named colours outside the established palette (navy, gold, and the
- * semantic status trio of emerald/amber/red plus the one deliberate sky
- * exception on room-equipment status).
+ * A real gate now, not just a report. Counts colour values that bypass the
+ * navy/gold token system in resources/css/app.css — arbitrary Tailwind
+ * bracket values and named colours outside the established palette (navy,
+ * gold, and the semantic status trio of emerald/amber/red plus the one
+ * deliberate sky exception on room-equipment status).
  *
- * This never fails the suite. There's real, pre-existing drift already in
- * the codebase (see the report this prints) — failing on it today would
- * block unrelated work. Once the count is driven down, flip the assertion
- * at the bottom to assertSame(0, ...) and it becomes a real gate.
+ * Shipped as a soft, always-passing report at 126 pre-existing violations —
+ * failing on it then would have blocked unrelated work. Driven to 0 since
+ * (see git log for this file), so it now actually fails if new drift
+ * appears rather than just printing a number nobody has to act on.
  *
  * PDF/paper templates are excluded on purpose: the design system explicitly
  * allows documents their own visual language, separate from the screens.
@@ -71,7 +71,6 @@ class DesignTokenDriftTest extends TestCase
             fwrite(STDERR, "\n");
         }
 
-        // Soft: always passes. Flip to assertSame(0, $total, ...) once driven down.
-        $this->assertTrue(true);
+        $this->assertSame(0, $total, "New off-token colour usage — see the report above.");
     }
 }

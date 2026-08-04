@@ -14,11 +14,17 @@ See `/docs` for the full product, architecture and design-system reference — s
 ## Design system: Command Center (navy / gold / Playfair)
 
 The navy `#0B1F3A` / gold `#D4AF37` palette on a light canvas, with Playfair Display for
-titles, is the **current, live** system. An earlier attempt to replace it with a system
-called "ORBIT" (`App\Support\Tone`, `orbit-tokens.css`) was built and then **reverted** —
-that class and those files no longer exist in the codebase. `orbit-system.html` and
-`setup-orbit.sh` at the repo root are inert leftovers from that attempt; nothing generates
+titles, is the **current, live** system. An earlier attempt to replace it platform-wide with
+a system called "ORBIT" (`App\Support\Tone`, `orbit-tokens.css`) was built and then
+**reverted** — that class and those files no longer exist in the codebase. `orbit-system.html`
+and `setup-orbit.sh` at the repo root are inert leftovers from that attempt; nothing generates
 from them anymore.
+
+One exception, and it's deliberate: the sidebar (`app-rail.blade.php` / `app-panel.blade.php`)
+kept its own distinct dark/glass treatment on purpose — "chrome stays constant" — through
+that revert. Its CSS lives in `resources/css/app.css` under the `.shell-*` classes and
+`--color-shell-*` tokens (renamed from `.orbit-*`/`--color-orbit-*`, which collided
+confusingly with the reverted platform-wide attempt above; same values, name only).
 
 Full detail — status-colour conventions, the money/date consolidation, the one deliberate
 exception (Plan Studio keeps its own visual identity) — is in `docs/08-design-system-rules.md`.
