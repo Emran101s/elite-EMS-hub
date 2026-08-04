@@ -46,11 +46,12 @@
 
             {{-- sponsors list --}}
             @if ($sponsors->isEmpty())
-                <div class="card px-6 py-16 text-center">
-                    <p class="text-sm font-semibold text-navy-900">No sponsors sold yet</p>
-                    <p class="mt-1 text-xs text-muted">Set your package prices in the catalog, then sell a package — the amount fills in automatically and rolls up into the budget's income.</p>
-                    <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Sell a sponsorship</button>
-                </div>
+                <x-empty icon="star" title="No sponsors sold yet"
+                         hint="Set your package prices in the catalog, then sell a package — the amount fills in automatically and rolls up into the budget's income.">
+                    <x-slot:actions>
+                        <button type="button" wire:click="newItem" class="btn-gold h-10 px-5 text-xs">＋ Sell a sponsorship</button>
+                    </x-slot:actions>
+                </x-empty>
             @else
                 <x-bulk-bar :count="$this->selectedCount()" noun="sponsor" />
                 <div class="card overflow-x-auto">

@@ -16,11 +16,12 @@
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0">
     @if ($items->isEmpty())
-        <div class="card px-6 py-16 text-center">
-            <p class="text-sm font-semibold text-navy-900">No food &amp; beverage yet</p>
-            <p class="mt-1 text-xs text-muted">Coffee breaks, lunches, a gala dinner at an outside restaurant — each occasion is its own line, with its own date, venue and rate.</p>
-            <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Add the first occasion</button>
-        </div>
+        <x-empty icon="cup" title="No food & beverage yet"
+                 hint="Coffee breaks, lunches, a gala dinner at an outside restaurant — each occasion is its own line, with its own date, venue and rate.">
+            <x-slot:actions>
+                <button type="button" wire:click="newItem" class="btn-gold h-10 px-5 text-xs">＋ Add the first occasion</button>
+            </x-slot:actions>
+        </x-empty>
     @else
         <x-bulk-bar :count="$this->selectedCount()" noun="occasion" />
         <div class="space-y-5">

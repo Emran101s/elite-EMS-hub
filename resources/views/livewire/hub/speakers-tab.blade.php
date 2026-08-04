@@ -10,11 +10,12 @@
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0">
     @if ($speakers->isEmpty())
-        <div class="card px-6 py-16 text-center">
-            <p class="text-sm font-semibold text-navy-900">No speakers yet</p>
-            <p class="mt-1 text-xs text-muted">Add keynotes, panellists and moderators — track invitations, confirmations and fees.</p>
-            <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Add the first speaker</button>
-        </div>
+        <x-empty icon="sparkles" title="No speakers yet"
+                 hint="Add keynotes, panellists and moderators — track invitations, confirmations and fees.">
+            <x-slot:actions>
+                <button type="button" wire:click="newItem" class="btn-gold h-10 px-5 text-xs">＋ Add the first speaker</button>
+            </x-slot:actions>
+        </x-empty>
     @else
         <x-bulk-bar :count="$this->selectedCount()" noun="speaker" />
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
