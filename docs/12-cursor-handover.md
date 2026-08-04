@@ -84,8 +84,14 @@ HARD RULES — DO NOT BREAK THESE
   effect.
 
 WORKING DISCIPLINE
-- Run `php artisan test` before starting and after every change. The baseline is 901/901
+- Run `php artisan test` before starting and after every change. The baseline is 911/911
   passing — don't leave it lower than you found it.
+- If you touch any CSS or resources/js/app.js, run `npm run build` before calling the work
+  done. public/build is gitignored and doesn't rebuild itself — the project owner views the
+  app at elitehub.test, which serves whatever public/build currently contains, not your
+  source edits directly and not Vite's own dev server. A change that's correct in source
+  and even correct under `npm run dev` can still be completely invisible to them until this
+  runs.
 - Investigate before consolidating or refactoring shared-looking code: some things that
   look duplicated across files are actually distinct domain concepts that only share an
   English word (see docs/10-current-codebase-assessment.md for real examples of both kinds
@@ -127,9 +133,20 @@ consistent" instruction.
 
 Test every screen you touch at both density extremes, not just whatever data happens to be
 loaded: an empty draft-stage event (most modules have nothing in them yet — that's normal,
-not a bug to hide) and the dense end (620 attendee rows, 41 agenda sessions, etc. — see
-docs/02-platform-architecture.md for the real numbers). A layout that only looks right at
-one end isn't done.
+not a bug to hide) and the dense end — see docs/02-platform-architecture.md's "Real data
+volumes" table for the current verified numbers (don't hardcode them here too; that table
+is the one place they live). A layout that only looks right at one end isn't done.
+
+AFTER EVERY CSS/JS CHANGE, REBUILD — THIS IS NOT OPTIONAL
+public/build (the compiled assets Herd actually serves at elitehub.test) is gitignored —
+it only exists locally, and it does not update itself. Blade template changes render live,
+no build needed. But any Tailwind class or resources/js/app.js change needs
+`npm run build` run afterward, or it will not appear at elitehub.test even though the
+source file is correctly changed and committed. If you're verifying through Vite's own dev
+server (`npm run dev`) instead of through elitehub.test directly, your changes can look
+correct to you while staying completely invisible to the project owner, who only ever
+looks at elitehub.test. Run `npm run build` after every session that touches CSS or JS,
+not just at the end of the day — the owner may check in mid-session.
 
 Contracts and the Event Brief run bilingual English/Arabic, right-to-left, in the same
 document. Any polish touching those views needs to be checked in both directions, not just
