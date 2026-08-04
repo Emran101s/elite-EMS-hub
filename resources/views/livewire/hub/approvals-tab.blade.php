@@ -39,7 +39,10 @@
             </div>
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
                 <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                <button type="submit" class="btn-navy h-10 px-5 text-xs">Submit Request</button>
+                <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-10 px-5 text-xs">
+                    <span wire:loading.remove wire:target="save">Submit Request</span>
+                    <span wire:loading wire:target="save">Submitting…</span>
+                </button>
             </div>
         </form>
     @endif

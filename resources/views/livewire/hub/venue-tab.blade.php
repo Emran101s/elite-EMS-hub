@@ -107,8 +107,20 @@
             </form>
         @endif
 
-        <div class="card overflow-hidden">
-            <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+        {{-- List scans many spaces; cards earn their keep when there are few
+             (≤3 default) or when someone chooses them. Preference sticks. --}}
+        @php $spacesDefault = $rooms->isNotEmpty() && $rooms->count() <= 3 ? 'cards' : 'list'; @endphp
+        <div x-data="{
+                 mode: (() => {
+                     const saved = localStorage.getItem('elitehub.venue.spacesMode');
+                     return saved === 'list' || saved === 'cards' ? saved : @js($spacesDefault);
+                 })(),
+                 setMode(m) {
+                     this.mode = m;
+                     localStorage.setItem('elitehub.venue.spacesMode', m);
+                 }
+             }">
+            <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                 <div class="min-w-0">
                     <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
                         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg" style="color: {{ $moduleHex }}; background: {{ $moduleHex }}15">
@@ -116,66 +128,146 @@
                         </span>
                         Spaces
                     </h3>
-                    <p class="ms-9 text-eyebrow text-muted">Click a venue for layout, equipment &amp; requirements</p>
+                    <p class="ms-9 text-eyebrow text-muted">Open a space for layout, equipment &amp; requirements</p>
                 </div>
-                <button type="button" wire:click="newRoom" class="btn-gold h-8 px-3 text-xs">＋ Add Venue</button>
+                <div class="flex items-center gap-2">
+                    @if ($rooms->isNotEmpty())
+                        <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
+                            <button type="button" @click="setMode('list')"
+                                    :class="mode === 'list' ? 'bg-navy-950 text-white' : 'text-navy-500 hover:text-navy-900'"
+                                    class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold transition">List</button>
+                            <button type="button" @click="setMode('cards')"
+                                    :class="mode === 'cards' ? 'bg-navy-950 text-white' : 'text-navy-500 hover:text-navy-900'"
+                                    class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold transition">Cards</button>
+                        </span>
+                    @endif
+                    <button type="button" wire:click="newRoom" class="btn-gold h-8 px-3 text-xs">＋ Add Venue</button>
+                </div>
             </div>
 
-            <ul class="divide-y divide-line">
-                @forelse ($rooms as $room)
-                    @php
-                        [$tIcon, $tBg, $tText] = $typeMeta[$room->type] ?? ['building', 'bg-navy-100', 'text-navy-600'];
-                        $total = $room->totalCents();
-                        $eqCount = count($room->requirements ?? []);
-                    @endphp
-                    <li class="group flex items-center gap-2.5 px-3.5 py-2 transition hover:bg-page/40 {{ $this->isSelected($room->id) ? 'bg-navy-50/60' : '' }}" wire:key="room-{{ $room->id }}">
-                        <button type="button" wire:click="toggleSelect({{ $room->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($room->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
-
-                        <a href="{{ route('events.room-layout', [$event, $room]) }}" class="flex min-w-0 flex-1 items-center gap-2.5">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $tBg }} {{ $tText }}"><x-icon :name="$tIcon" class="h-3.5 w-3.5" /></span>
-                            <div class="min-w-0">
-                                <p class="truncate text-[13px] font-bold text-navy-900 group-hover:text-gold-700">{{ $room->name }}</p>
-                                <p class="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-eyebrow text-muted">
-                                    <span class="rounded px-1.5 py-px text-eyebrow font-bold uppercase tracking-wide {{ $tBg }} {{ $tText }}">{{ $roomTypeLabels[$room->type] ?? str($room->type)->replace('_', ' ')->title() }}</span>
-                                    @if ($room->capacity)<span>{{ number_format($room->capacity) }} pax</span>@endif
-                                    @if ($room->sessions_count)<span>{{ $room->sessions_count }} {{ str('session')->plural($room->sessions_count) }}</span>@endif
-                                    @if ($eqCount)<span>{{ $eqCount }} eq</span>@endif
-                                    {{-- How long it is held, and whether that was counted or claimed. --}}
-                                    <span title="{{ $room->daysAreCounted() ? 'Counted from the agenda' : 'Set by hand' }}">
-                                        {{ $room->chargedDays() }}d{{ $room->daysAreCounted() ? '' : ' fixed' }}
+            @if ($rooms->isEmpty())
+                <div class="card">
+                    <x-empty icon="building" title="No venues yet" class="!border-0 !shadow-none"
+                             hint="Add the halls, rooms and areas inside your location — each becomes a schedulable space with its own layout, equipment and requirements.">
+                        <x-slot:actions>
+                            <button type="button" wire:click="newRoom" class="btn-gold btn-sm">＋ Add the first venue</button>
+                        </x-slot:actions>
+                    </x-empty>
+                </div>
+            @else
+                <div x-show="mode === 'list'" x-cloak class="card overflow-hidden">
+                    <ul class="divide-y divide-line">
+                        @foreach ($rooms as $room)
+                            @php
+                                [$tIcon, $tBg, $tText] = $typeMeta[$room->type] ?? ['building', 'bg-navy-100', 'text-navy-600'];
+                                $total = $room->totalCents();
+                                $eqCount = count($room->requirements ?? []);
+                            @endphp
+                            <li class="group flex items-center gap-2.5 px-3.5 py-2 transition hover:bg-page/40 {{ $this->isSelected($room->id) ? 'bg-navy-50/60' : '' }}" wire:key="room-list-{{ $room->id }}">
+                                <button type="button" wire:click="toggleSelect({{ $room->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($room->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                <a href="{{ route('events.room-layout', [$event, $room]) }}" class="flex min-w-0 flex-1 items-center gap-2.5">
+                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $tBg }} {{ $tText }}"><x-icon :name="$tIcon" class="h-3.5 w-3.5" /></span>
+                                    <div class="min-w-0">
+                                        <p class="truncate text-[13px] font-bold text-navy-900 group-hover:text-gold-700">{{ $room->name }}</p>
+                                        <p class="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-eyebrow text-muted">
+                                            <span class="rounded px-1.5 py-px text-eyebrow font-bold uppercase tracking-wide {{ $tBg }} {{ $tText }}">{{ $roomTypeLabels[$room->type] ?? str($room->type)->replace('_', ' ')->title() }}</span>
+                                            @if ($room->capacity)<span>{{ number_format($room->capacity) }} pax</span>@endif
+                                            @if ($room->sessions_count)<span>{{ $room->sessions_count }} {{ str('session')->plural($room->sessions_count) }}</span>@endif
+                                            @if ($eqCount)<span>{{ $eqCount }} eq</span>@endif
+                                            <span title="{{ $room->daysAreCounted() ? 'Counted from the agenda' : 'Set by hand' }}">
+                                                {{ $room->chargedDays() }}d{{ $room->daysAreCounted() ? '' : ' fixed' }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </a>
+                                <div class="flex shrink-0 items-center gap-1.5">
+                                    @if ($total > 0)<span class="hidden rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold tabular-nums text-navy-900 sm:inline">{{ $event->money($total) }}</span>@endif
+                                    <a href="{{ route('events.room-layout', [$event, $room]) }}" class="rounded-md border border-line bg-white px-2 py-0.5 text-eyebrow font-bold text-navy-700 transition hover:border-gold-300 group-hover:border-gold-300">Open →</a>
+                                    <span class="flex gap-0.5 opacity-0 transition group-hover:opacity-100">
+                                        <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank"
+                                           class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100"
+                                           title="Layout PDF — the floor drawing">↧ Layout</a>
+                                        <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank"
+                                           class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100"
+                                           title="AV & equipment prep sheet">↧ Equip</a>
+                                        <button type="button" wire:click="editRoom({{ $room->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
+                                        <button type="button" wire:click="deleteRoom({{ $room->id }})" wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less." class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
                                     </span>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div x-show="mode === 'cards'" x-cloak class="grid gap-3 sm:grid-cols-2">
+                    @foreach ($rooms as $room)
+                        @php
+                            [$tIcon, $tBg, $tText] = $typeMeta[$room->type] ?? ['building', 'bg-navy-100', 'text-navy-600'];
+                            $total = $room->totalCents();
+                            $eqCount = count($room->requirements ?? []);
+                            $typeLabel = $roomTypeLabels[$room->type] ?? str($room->type)->replace('_', ' ')->title();
+                        @endphp
+                        <div wire:key="room-card-{{ $room->id }}"
+                             class="group/space op-card {{ $this->isSelected($room->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
+                            <div class="flex flex-1 flex-col p-3.5">
+                                <div class="flex items-start gap-2.5">
+                                    <button type="button" wire:click="toggleSelect({{ $room->id }})"
+                                            class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($room->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}"
+                                            title="Select">✓</button>
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $tBg }} {{ $tText }}">
+                                        <x-icon :name="$tIcon" class="h-4 w-4" />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{{ route('events.room-layout', [$event, $room]) }}"
+                                           class="block truncate pf text-sm font-bold text-navy-900 transition group-hover/space:text-gold-700">{{ $room->name }}</a>
+                                        <span class="mt-1 inline-flex rounded px-1.5 py-px text-eyebrow font-bold uppercase tracking-wide {{ $tBg }} {{ $tText }}">{{ $typeLabel }}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-eyebrow">
+                                    <div>
+                                        <p class="font-bold uppercase tracking-[0.12em] text-navy-400">Capacity</p>
+                                        <p class="mt-0.5 font-semibold text-navy-900">{{ $room->capacity ? number_format($room->capacity).' pax' : '—' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold uppercase tracking-[0.12em] text-navy-400">Agenda</p>
+                                        <p class="mt-0.5 font-semibold text-navy-900">{{ $room->sessions_count ? $room->sessions_count.' '.str('session')->plural($room->sessions_count) : '—' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold uppercase tracking-[0.12em] text-navy-400">Held</p>
+                                        <p class="mt-0.5 font-semibold text-navy-900" title="{{ $room->daysAreCounted() ? 'Counted from the agenda' : 'Set by hand' }}">
+                                            {{ $room->chargedDays() }} {{ str('day')->plural($room->chargedDays()) }}{{ $room->daysAreCounted() ? '' : ' · fixed' }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold uppercase tracking-[0.12em] text-navy-400">Equipment</p>
+                                        <p class="mt-0.5 font-semibold text-navy-900">{{ $eqCount ? $eqCount.' '.str('item')->plural($eqCount) : '—' }}</p>
+                                    </div>
+                                </div>
+                                <p class="mt-3 pf text-[18px] font-black leading-none text-navy-950">
+                                    {{ $total > 0 ? $event->money($total) : '—' }}
                                 </p>
                             </div>
-                        </a>
-
-                        <div class="flex shrink-0 items-center gap-1.5">
-                            @if ($total > 0)<span class="hidden rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold tabular-nums text-navy-900 sm:inline">{{ $event->money($total) }}</span>@endif
-                            <a href="{{ route('events.room-layout', [$event, $room]) }}" class="rounded-md border border-line bg-white px-2 py-0.5 text-eyebrow font-bold text-navy-700 transition hover:border-gold-300 group-hover:border-gold-300">Open →</a>
-                            <span class="flex gap-0.5 opacity-0 transition group-hover:opacity-100">
-                                {{-- Both room exports live here: the layout drawing and the AV
-                                     prep sheet. The equipment sheet had no button anywhere. --}}
-                                <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank"
-                                   class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100"
-                                   title="Layout PDF — the floor drawing">↧ Layout</a>
-                                <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank"
-                                   class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100"
-                                   title="AV & equipment prep sheet">↧ Equip</a>
-                                <button type="button" wire:click="editRoom({{ $room->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
-                                <button type="button" wire:click="deleteRoom({{ $room->id }})" wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less." class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
-                            </span>
+                            <div class="op-card-foot">
+                                <a href="{{ route('events.room-layout', [$event, $room]) }}"
+                                   class="text-eyebrow font-bold text-navy-800 transition hover:text-gold-700">Open layout →</a>
+                                <div class="ms-auto flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover/space:opacity-100">
+                                    <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank"
+                                       class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300"
+                                       title="Layout PDF">↧ Layout</a>
+                                    <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank"
+                                       class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300"
+                                       title="AV & equipment prep sheet">↧ Equip</a>
+                                    <button type="button" wire:click="editRoom({{ $room->id }})"
+                                            class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300" title="Edit">✎</button>
+                                    <button type="button" wire:click="deleteRoom({{ $room->id }})"
+                                            wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less."
+                                            class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
+                                </div>
+                            </div>
                         </div>
-                    </li>
-                @empty
-                    <li>
-                        <x-empty icon="building" title="No venues yet" class="!border-0 !shadow-none"
-                                 hint="Add the halls, rooms and areas inside your location — each becomes a schedulable space with its own layout, equipment and requirements.">
-                            <x-slot:actions>
-                                <button type="button" wire:click="newRoom" class="btn-gold btn-sm">＋ Add the first venue</button>
-                            </x-slot:actions>
-                        </x-empty>
-                    </li>
-                @endforelse
-            </ul>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 

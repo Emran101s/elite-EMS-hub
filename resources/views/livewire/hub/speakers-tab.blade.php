@@ -129,7 +129,10 @@
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
                         <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                        <button type="submit" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update' : 'Add speaker' }}</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-10 px-6 text-xs">
+                            <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Add speaker' }}</span>
+                            <span wire:loading wire:target="save">Saving…</span>
+                        </button>
                     </div>
                 </form>
         </x-modal>

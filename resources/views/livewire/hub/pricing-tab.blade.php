@@ -261,9 +261,10 @@
             </div>
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-                <button type="button" wire:click="save"
+                <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                         class="rounded-xl bg-navy-950 px-3.5 py-2 text-[12px] font-bold text-white transition hover:bg-navy-800">
-                    {{ $editingId ? 'Save' : 'Add it' }}
+                    <span wire:loading.remove wire:target="save">{{ $editingId ? 'Save' : 'Add it' }}</span>
+                    <span wire:loading wire:target="save">Saving…</span>
                 </button>
                 <button type="button" wire:click="cancel"
                         class="rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:text-navy-700">Cancel</button>
