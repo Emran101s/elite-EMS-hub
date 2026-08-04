@@ -7,6 +7,7 @@ use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * A demand for money, issued on a date, with a number on it.
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Invoice extends Model
 {
-    use Auditable;
+    use Auditable, SoftDeletes;
 
     /** Issuing and money are decisions; a typo in the notes is not. */
     public const AUDIT_FIELDS = ['status', 'paid_cents', 'paid_at', 'issued_on', 'due_on'];

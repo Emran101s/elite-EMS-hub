@@ -10,7 +10,6 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * One canvas, not a three-step slog: answer a few questions on the left and
@@ -297,7 +296,7 @@ class EventCreate extends Component
         // duplicate/archive/delete on an existing one, nothing is destroyed or
         // hidden, so it sits at the same tier as everything else a coordinator
         // does day to day.
-        Gate::authorize('write');
+        $this->authorize('create', Event::class);
         $this->validateAll();
 
         if ($this->new_client !== '' && ! $this->client_id) {

@@ -12,7 +12,6 @@ use App\Services\EventMission;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -121,7 +120,7 @@ class EventsIndex extends Component
 
     public function duplicate(int $eventId)
     {
-        Gate::authorize('manage-events');
+        $this->authorize('duplicate', Event::class);
         $source = Event::whereNull('archived_at')->findOrFail($eventId);
 
         $copy = $source->replicate(['progress']);
@@ -138,7 +137,7 @@ class EventsIndex extends Component
 
     public function archive(int $eventId): void
     {
-        Gate::authorize('manage-events');
+        $this->authorize('archive', Event::class);
         Event::findOrFail($eventId)->update(['archived_at' => now()]);
 
         if ($this->activeId === $eventId) {
@@ -188,7 +187,7 @@ class EventsIndex extends Component
 
     public function deleteSelected(): void
     {
-        Gate::authorize('manage-events');
+        $this->authorize('delete', Event::class);
 
         $ids = array_map('intval', $this->selectedIds);
         if ($ids === []) {
@@ -211,7 +210,7 @@ class EventsIndex extends Component
 
     public function deleteEvent(int $eventId): void
     {
-        Gate::authorize('manage-events');
+        $this->authorize('delete', Event::class);
         $event = Event::findOrFail($eventId);
         $name = $event->name;
         $event->delete();

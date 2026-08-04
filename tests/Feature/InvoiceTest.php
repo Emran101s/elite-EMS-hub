@@ -240,7 +240,7 @@ class InvoiceTest extends TestCase
         // A genuine draft goes.
         $other = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft']);
         $c->call('destroyDraft', $other->id);
-        $this->assertDatabaseMissing('invoices', ['id' => $other->id]);
+        $this->assertSoftDeleted('invoices', ['id' => $other->id]);
     }
 
     public function test_only_writers_may_raise_or_record(): void

@@ -243,7 +243,7 @@ class InvoiceEditorTest extends TestCase
         $this->editor($invoice)->call('destroyDraft')
             ->assertRedirect(route('invoices.index'));
 
-        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+        $this->assertSoftDeleted('invoices', ['id' => $invoice->id]);
     }
 
     public function test_a_sent_invoice_is_not_deleted_by_the_editor(): void
