@@ -22,7 +22,7 @@
     ];
 @endphp
 
-<div {{ $attributes->merge(['class' => 'overflow-hidden rounded-[22px] border border-indigo-200/70 bg-white shadow-[0_20px_50px_-32px_rgba(49,46,129,0.45)] ring-1 ring-indigo-500/5']) }}>
+<div {{ $attributes->merge(['class' => 'overflow-hidden rounded-[22px] border border-gold-200/70 bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)] ring-1 ring-navy-950/5']) }}>
     <div class="grid gap-0 xl:grid-cols-[280px_minmax(0,1fr)_236px]">
 
         {{-- ── the picture ── --}}
@@ -38,8 +38,8 @@
                 <x-mission.badge :mission="$m" class="self-start !bg-white/95 !ring-white/40" />
 
                 <a href="{{ route('events.hub', $event) }}"
-                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-lg transition hover:bg-navy-800">
-                    Open Event <span aria-hidden="true">↗</span>
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-navy-900 to-navy-950 px-4 text-[12px] font-bold text-white shadow-lg ring-1 ring-gold-400/30 transition hover:shadow-[0_10px_24px_-8px_rgba(212,175,55,0.5)]">
+                    Open Event <span aria-hidden="true" class="text-gold-400">↗</span>
                 </a>
             </div>
         </div>
@@ -48,15 +48,15 @@
         <div class="min-w-0 border-y border-line xl:border-x xl:border-y-0">
             <div class="flex flex-wrap items-start gap-4 p-4 lg:p-5">
                 {{-- the date block --}}
-                <div class="grid w-[74px] shrink-0 place-items-center rounded-2xl border border-line bg-page/70 py-2.5 text-center">
-                    <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $m['month'] ?? '—' }}</span>
+                <div class="grid w-[74px] shrink-0 place-items-center rounded-2xl border border-gold-200/70 bg-page/70 py-2.5 text-center">
+                    <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-600">{{ $m['month'] ?? '—' }}</span>
                     <span class="pf text-[26px] font-black leading-none text-navy-950">{{ $m['day'] ?? '··' }}</span>
                     <span class="text-[10px] text-muted">{{ $m['year'] }}</span>
                 </div>
 
                 <div class="min-w-0 flex-1">
                     <h3 class="pf text-[20px] font-black leading-tight text-navy-950">
-                        <a href="{{ route('events.hub', $event) }}" class="transition hover:text-indigo-600">{{ $m['name'] }}</a>
+                        <a href="{{ route('events.hub', $event) }}" class="transition hover:text-gold-700">{{ $m['name'] }}</a>
                     </h3>
 
                     <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-navy-600">
@@ -83,10 +83,10 @@
                     <p class="mt-0.5 text-[11px] {{ $m['milestone']['overdue'] ? 'font-semibold text-red-600' : 'text-muted' }}">{{ $m['milestone']['due'] }}</p>
                 </div>
 
-                <div class="px-4 py-3">
-                    <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                <div class="bg-gold-50/40 px-4 py-3">
+                    <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-gold-700">
                         AI insight
-                        <x-icon name="sparkles" class="ms-auto h-3.5 w-3.5 text-indigo-500" />
+                        <x-icon name="sparkles" class="ms-auto h-3.5 w-3.5 text-gold-500" />
                     </p>
                     <p class="mt-1 text-[12px] leading-relaxed text-navy-700">{{ $m['insight'] }}</p>
                 </div>
@@ -110,8 +110,8 @@
                         @continue
                     @endunless
                     <a href="{{ route('events.hub', [$event, 'tab' => $tab]) }}"
-                       class="group/qa flex items-center gap-2.5 rounded-xl px-2 py-2 text-[12px] font-semibold text-navy-600 transition hover:bg-indigo-50 hover:text-navy-950">
-                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-page text-navy-400 transition group-hover/qa:bg-white group-hover/qa:text-indigo-600">
+                       class="group/qa flex items-center gap-2.5 rounded-xl px-2 py-2 text-[12px] font-semibold text-navy-600 transition hover:bg-gold-50 hover:text-navy-950">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-page text-navy-400 transition group-hover/qa:bg-navy-950 group-hover/qa:text-gold-400">
                             <x-icon :name="$icon" class="h-3.5 w-3.5" />
                         </span>
                         {{ $label }}

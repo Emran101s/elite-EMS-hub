@@ -13,33 +13,35 @@
 
 <div class="space-y-4">
 
-    {{-- ══════════ THE COMMAND BAR ══════════ --}}
+    {{-- ══════════ THE COMMAND MASTHEAD ══════════
+         The gold rule + eyebrow reads like a mission log header, not a page
+         title — the same idiom the Dashboard opens with, carried here. --}}
     <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-        {{-- The subtitle used to say what the view switcher says again eight
-             rows below, and cost this bar a second line — which the deck under
-             it is sized out of. The heading alone now. --}}
         <div class="min-w-0">
-            <h1 class="pf text-[24px] font-black leading-none text-navy-950">Projects &amp; Events</h1>
+            <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-600">
+                <span class="h-px w-4 bg-gold-400"></span>Portfolio Command
+            </p>
+            <h1 class="pf mt-1 text-[30px] font-black leading-none text-navy-950">Projects &amp; Events</h1>
         </div>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <div class="relative">
                 <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
                 <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search events, clients, venues…"
-                       class="input h-10 w-52 !rounded-2xl !py-0 !ps-9 text-xs xl:w-64">
+                       class="input h-10 w-52 !rounded-2xl !border-navy-100 !py-0 !ps-9 text-xs shadow-sm transition focus:!border-gold-400 xl:w-64">
             </div>
 
             <details class="relative" data-menu>
-                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-navy-100 bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 hover:shadow-md [&::-webkit-details-marker]:hidden">
                     <x-icon name="list" class="h-3.5 w-3.5 text-navy-400" /> Filters
-                    @if ($tab !== 'all' || $starred)<span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>@endif
+                    @if ($tab !== 'all' || $starred)<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
                 </summary>
-                <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
+                <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-navy-100 bg-white p-1.5 shadow-2xl shadow-navy-950/10">
                     @foreach ($typeTabs as $key => $label)
                         <button type="button" wire:click="setTab('{{ $key }}')"
                                 @class([
                                     'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] font-semibold transition',
-                                    'bg-navy-950 text-white' => $tab === $key,
+                                    'bg-navy-950 text-gold-300' => $tab === $key,
                                     'text-navy-600 hover:bg-page' => $tab !== $key,
                                 ])>{{ $label }}</button>
                     @endforeach
@@ -54,15 +56,15 @@
             </details>
 
             <details class="relative" data-menu>
-                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-navy-100 bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 hover:shadow-md [&::-webkit-details-marker]:hidden">
                     <x-icon name="columns" class="h-3.5 w-3.5 text-navy-400" /> Sort
                 </summary>
-                <div class="absolute end-0 z-30 mt-2 w-48 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
+                <div class="absolute end-0 z-30 mt-2 w-48 overflow-hidden rounded-2xl border border-navy-100 bg-white p-1.5 shadow-2xl shadow-navy-950/10">
                     @foreach (['date' => 'By date', 'health' => 'By health', 'budget' => 'By budget spent'] as $key => $label)
                         <button type="button" wire:click="$set('sort', '{{ $key }}')"
                                 @class([
                                     'flex w-full items-center rounded-xl px-3 py-2 text-start text-[12px] font-semibold transition',
-                                    'bg-navy-950 text-white' => $sort === $key,
+                                    'bg-navy-950 text-gold-300' => $sort === $key,
                                     'text-navy-600 hover:bg-page' => $sort !== $key,
                                 ])>{{ $label }}</button>
                     @endforeach
@@ -72,16 +74,16 @@
             {{-- Columns belongs to the List and nowhere else. --}}
             @if ($view === 'list')
                 <details class="relative" data-menu>
-                    <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+                    <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-navy-100 bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 hover:shadow-md [&::-webkit-details-marker]:hidden">
                         <x-icon name="grid" class="h-3.5 w-3.5 text-navy-400" /> Columns
                     </summary>
-                    <div class="absolute end-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
+                    <div class="absolute end-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-navy-100 bg-white p-1.5 shadow-2xl shadow-navy-950/10">
                         <p class="px-3 py-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">Rows per page</p>
                         @foreach ([10, 25, 50] as $n)
                             <button type="button" wire:click="setPerPage({{ $n }})"
                                     @class([
                                         'flex w-full items-center rounded-xl px-3 py-2 text-start text-[12px] font-semibold transition',
-                                        'bg-navy-950 text-white' => $perPage === $n,
+                                        'bg-navy-950 text-gold-300' => $perPage === $n,
                                         'text-navy-600 hover:bg-page' => $perPage !== $n,
                                     ])>{{ $n }} rows</button>
                         @endforeach
@@ -90,29 +92,207 @@
             @endif
 
             <a href="{{ route('settings.index') }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
+               class="flex h-10 items-center gap-1.5 rounded-2xl border border-navy-100 bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 hover:shadow-md">
                 <x-icon name="cog" class="h-3.5 w-3.5 text-navy-400" /> Customize
             </a>
 
             <a href="{{ route('events.create') }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
-                ＋ New Event
+               class="flex h-10 items-center gap-1.5 rounded-2xl bg-gradient-to-r from-navy-900 to-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_28px_-12px_rgba(11,31,58,0.85)] ring-1 ring-white/10 transition hover:shadow-[0_14px_32px_-10px_rgba(212,175,55,0.55)]">
+                <span class="text-gold-400">＋</span> New Event
             </a>
         </div>
     </div>
 
-    {{-- Dense: the deck below is sized from whatever height is left, so two
-         rows of figures come straight out of the card you came to look at. --}}
-    <x-figure-strip :figures="$figures" :dense="$view === 'deck'" />
+    {{-- ══════════ THE PORTFOLIO PULSE ══════════
+         The command bar's own instrument panel: the five figures that used
+         to sit in a light card now read as the mission-critical strip they
+         are — navy glass, gold ink, the same material as the Dashboard's
+         spotlight. Dense in Deck (two rows of figures come straight out of
+         the card's own height budget), full elsewhere. --}}
+    <div class="relative isolate overflow-hidden rounded-[22px] bg-navy-950 shadow-[0_24px_50px_-30px_rgba(6,20,38,0.75)]">
+        <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+            <div class="absolute inset-0 bg-[radial-gradient(120%_140%_at_0%_0%,rgba(212,175,55,0.16),transparent_55%)]"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(90%_120%_at_100%_100%,rgba(59,90,133,0.35),transparent_60%)]"></div>
+        </div>
+
+        <div @class(['grid grid-cols-2 divide-x divide-y divide-white/10 @container/pulse sm:grid-cols-3', 'lg:grid-cols-5 lg:divide-y-0' => true])>
+            @foreach ($figures as $f)
+                @php
+                    $tag = ($f['href'] ?? null) ? 'a' : 'div';
+                @endphp
+                <{{ $tag }} @if ($f['href'] ?? null) href="{{ $f['href'] }}" @endif
+                   class="group/pulse flex items-center gap-3 px-4 {{ $view === 'deck' ? 'py-3' : 'py-4' }} transition {{ ($f['href'] ?? null) ? 'hover:bg-white/[0.04]' : '' }}">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold-300 ring-1 ring-white/10 transition group-hover/pulse:bg-gold-400 group-hover/pulse:text-navy-950">
+                        <x-icon :name="$f['icon'] ?? 'chart'" class="h-4.5 w-4.5" />
+                    </span>
+                    <div class="min-w-0">
+                        <p class="pf text-[22px] font-black leading-none text-white">{{ $f['value'] }}</p>
+                        <p class="mt-1 truncate text-eyebrow font-bold uppercase tracking-[0.12em] text-white/45">{{ $f['label'] }}</p>
+                        @if ($view !== 'deck' && ($f['note'] ?? null))
+                            <p class="mt-0.5 truncate text-[10.5px] text-white/35">{{ $f['note'] }}</p>
+                        @endif
+                    </div>
+                    @if ($view !== 'deck')
+                        @if ($f['trend'] ?? null)
+                            <span @class([
+                                'ms-auto shrink-0 self-start text-[11px] font-bold',
+                                'text-emerald-400' => $f['trend']['up'],
+                                'text-white/35' => ! $f['trend']['up'],
+                            ])>{{ $f['trend']['label'] }}</span>
+                        @endif
+                    @endif
+                </{{ $tag }}>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ══════════ THE MISSION RADAR ══════════
+         Deck, List and Flight Path each answer "what is my book," one row or
+         card at a time. Nothing answers "what's closing in on me, all at
+         once" — that question is inherently spatial, so it gets a spatial
+         answer: a sweep display where bearing is arbitrary (evenly spread,
+         so nothing overlaps) but distance from the centre is not — it's how
+         soon each mission lands, computed from the same daysOut every card
+         already shows. Live missions sit at the core. Nothing here is a new
+         fact; it's the one fact (urgency) pulled out of nineteen rows and
+         given a shape the eye reads before the brain does. --}}
+    @php
+        $radarMaxDays = 120;
+        $radarPool = $deck
+            ->reject(fn ($m) => $m['past'] ?? false)
+            ->sortBy(fn ($m) => $m['daysOut'] ?? 999)
+            ->take(14)
+            ->values();
+        $radarN = max($radarPool->count(), 1);
+        $radarNodes = $radarPool->map(function ($m, $i) use ($radarN, $radarMaxDays) {
+            $angle = -90 + (360 / $radarN) * $i;
+            $rad = deg2rad($angle);
+            $live = $m['live'] ?? false;
+            $days = $m['daysOut'];
+            $urgency = $live ? 0 : ($days === null ? 1 : max(0, min(1, $days / $radarMaxDays)));
+            $r = $live ? 8 : 16 + $urgency * 32;
+
+            return [
+                'm' => $m,
+                'left' => round(50 + $r * cos($rad), 2),
+                'top' => round(50 + $r * sin($rad), 2),
+                'alert' => $live ? false : (($m['healthGroup'] ?? null) === 'risk' || ($m['risk'] ?? null) === 'Critical'),
+            ];
+        });
+        $riskRank = fn ($m) => match ($m['risk'] ?? 'Low') { 'Critical' => 4, 'High' => 3, 'Medium' => 2, default => 1 };
+        $nearest = $radarPool->first();
+        $riskiest = $radarPool->sortByDesc($riskRank)->first();
+        $onTrack = $radarPool->filter(fn ($m) => ($m['healthGroup'] ?? null) === 'track')->count();
+    @endphp
+    <div x-data="{ radarOpen: true }" class="relative isolate overflow-hidden rounded-[22px] bg-navy-950 shadow-[0_24px_50px_-30px_rgba(6,20,38,0.75)]">
+        <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+            <div class="absolute inset-0 bg-[radial-gradient(100%_140%_at_100%_0%,rgba(212,175,55,0.13),transparent_55%)]"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(80%_100%_at_0%_100%,rgba(59,90,133,0.3),transparent_60%)]"></div>
+        </div>
+
+        <button type="button" wire:key="radar-toggle" @click="radarOpen = ! radarOpen"
+                class="flex w-full items-center gap-2.5 px-4 py-3.5 text-start transition hover:bg-white/[0.03] lg:px-6">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-gold-300 ring-1 ring-white/10">
+                <x-icon name="globe" class="h-4 w-4" />
+            </span>
+            <span class="min-w-0">
+                <span class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.22em] text-gold-300/90">
+                    Mission Radar
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 orbit-pulse"></span>
+                </span>
+                <span class="mt-0.5 hidden text-[11px] text-white/40 sm:block">Bearing is arbitrary — distance from the centre is how soon each one lands.</span>
+            </span>
+            <span class="ms-auto grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/40 transition" :class="radarOpen ? '' : '-rotate-180'">
+                <x-icon name="chevron" class="h-3.5 w-3.5" />
+            </span>
+        </button>
+
+        <div x-show="radarOpen" x-transition.opacity.duration.200ms>
+            <div class="grid gap-6 px-4 pb-6 pt-1 lg:grid-cols-[260px_1fr] lg:gap-8 lg:px-6">
+
+                {{-- the sweep --}}
+                <div class="relative mx-auto aspect-square w-full max-w-[260px]">
+                    <div class="absolute inset-0 overflow-hidden rounded-full ring-1 ring-white/10" style="background: radial-gradient(circle, rgba(255,255,255,0.03), transparent 70%);">
+                        <div class="absolute inset-0 radar-spin" style="background: conic-gradient(from 0deg, rgba(212,175,55,0.28), rgba(212,175,55,0.05) 12%, transparent 26%, transparent 100%);"></div>
+                    </div>
+                    <div class="absolute inset-[6%] rounded-full border border-dashed border-white/[0.08]"></div>
+                    <div class="absolute inset-[27%] rounded-full border border-dashed border-white/[0.09]"></div>
+                    <div class="absolute inset-[48%] rounded-full border border-white/10"></div>
+
+                    <span class="absolute bottom-[1%] left-1/2 -translate-x-1/2 text-[8.5px] font-bold uppercase tracking-[0.14em] text-white/25">{{ $radarMaxDays }}+ days out</span>
+
+                    {{-- today, the core --}}
+                    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <span class="block h-2 w-2 rounded-full bg-gold-400 core-glow"></span>
+                        <span class="absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap text-[8.5px] font-bold uppercase tracking-[0.14em] text-gold-300/80">Today</span>
+                    </div>
+
+                    @forelse ($radarNodes as $node)
+                        <a href="{{ route('events.hub', $node['m']['event']) }}" wire:navigate
+                           title="{{ $node['m']['name'] }} · {{ $node['m']['timeline'] }}"
+                           class="group absolute z-10 -translate-x-1/2 -translate-y-1/2 p-1.5"
+                           style="left: {{ $node['left'] }}%; top: {{ $node['top'] }}%">
+                            <span class="relative flex h-2.5 w-2.5 rounded-full ring-2 ring-navy-950 transition duration-200 group-hover:scale-[1.8]"
+                                  style="background: {{ $node['m']['statusHex'] }}; box-shadow: 0 0 10px 1px {{ $node['m']['statusHex'] }}70;">
+                                @if ($node['alert'])
+                                    <span class="absolute inset-0 rounded-full radar-ping" style="--pulse-color: {{ $node['m']['riskHex'] }}80"></span>
+                                @endif
+                            </span>
+                            <span class="pointer-events-none absolute start-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-navy-950 px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl ring-1 ring-white/10 transition group-hover:opacity-100">
+                                {{ $node['m']['name'] }}
+                            </span>
+                        </a>
+                    @empty
+                        <p class="absolute left-1/2 top-[62%] w-[80%] -translate-x-1/2 text-center text-[10.5px] font-semibold text-white/35">Nothing ahead of today — the book is caught up.</p>
+                    @endforelse
+                </div>
+
+                {{-- what the sweep is telling you --}}
+                <div class="flex flex-col justify-center gap-2.5">
+                    @if ($nearest)
+                        <a href="{{ route('events.hub', $nearest['event']) }}" wire:navigate
+                           class="group flex items-center gap-3 rounded-2xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/[0.06] transition hover:bg-white/[0.07] hover:ring-white/10">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white/70"><x-icon name="clock" class="h-4 w-4" /></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-white/40">Closest on the sweep</span>
+                                <span class="mt-0.5 block truncate text-[13px] font-bold text-white">{{ $nearest['name'] }}</span>
+                            </span>
+                            <span class="shrink-0 text-[11px] font-bold text-gold-300">{{ $nearest['live'] ? 'Live now' : $nearest['timeline'] }}</span>
+                        </a>
+                    @endif
+
+                    @if ($riskiest && $riskRank($riskiest) > 1)
+                        <a href="{{ route('events.hub', $riskiest['event']) }}" wire:navigate
+                           class="group flex items-center gap-3 rounded-2xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/[0.06] transition hover:bg-white/[0.07] hover:ring-white/10">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10" style="color: {{ $riskiest['riskHex'] }}"><x-icon name="flag" class="h-4 w-4" /></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-white/40">Sharpest blip</span>
+                                <span class="mt-0.5 block truncate text-[13px] font-bold text-white">{{ $riskiest['name'] }}</span>
+                            </span>
+                            <span class="shrink-0 text-[11px] font-bold" style="color: {{ $riskiest['riskHex'] }}">{{ $riskiest['risk'] }} risk</span>
+                        </a>
+                    @endif
+
+                    <div class="flex items-center gap-3 rounded-2xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/[0.06]">
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-emerald-300"><x-icon name="check" class="h-4 w-4" /></span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-white/40">Clear of the centre</span>
+                            <span class="mt-0.5 block text-[13px] font-bold text-white">{{ $onTrack }} of {{ $radarPool->count() }} on track</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- ══════════ THE VIEW SWITCHER ══════════ --}}
     <div class="flex flex-wrap items-center gap-3">
-        <div class="inline-flex items-center gap-1 rounded-2xl border border-line bg-white/80 p-1 shadow-sm backdrop-blur">
+        <div class="inline-flex items-center gap-1 rounded-2xl border border-navy-100 bg-white p-1 shadow-sm">
             @foreach ($views as $key => [$label, $icon, $note])
                 <button type="button" wire:click="setView('{{ $key }}')" title="{{ $note }}"
                         @class([
-                            'flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-bold transition',
-                            'bg-navy-950 text-white shadow-[0_8px_20px_-12px_rgba(11,31,58,0.9)]' => $view === $key,
+                            'relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-bold transition',
+                            'bg-gradient-to-b from-navy-900 to-navy-950 text-white shadow-[0_10px_22px_-12px_rgba(11,31,58,0.9)] ring-1 ring-gold-400/30' => $view === $key,
                             'text-navy-500 hover:bg-page hover:text-navy-900' => $view !== $key,
                         ])>
                     <x-icon :name="$icon" class="h-3.5 w-3.5 {{ $view === $key ? 'text-gold-400' : '' }}" />{{ $label }}
@@ -120,13 +300,16 @@
             @endforeach
         </div>
 
-        <p class="text-[11.5px] text-muted">{{ $deck->count() }} {{ str('mission')->plural($deck->count()) }} in view</p>
+        <p class="flex items-center gap-1.5 text-[11.5px] font-semibold text-navy-500">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>
+            {{ $deck->count() }} {{ str('mission')->plural($deck->count()) }} in view
+        </p>
 
         {{-- One legend for all three views, because there is one vocabulary. --}}
         <div class="ms-auto flex flex-wrap items-center gap-x-3.5 gap-y-1">
             @foreach ($statuses as $key => [$label, $tone, $hex])
-                <span class="flex items-center gap-1.5 text-[10.5px] text-muted">
-                    <span class="h-2 w-2 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
+                <span class="flex items-center gap-1.5 text-[10.5px] font-semibold text-navy-500">
+                    <span class="h-2 w-2 rounded-full ring-2 ring-white" style="background: {{ $hex }}; box-shadow: 0 0 0 1px {{ $hex }}33"></span>{{ $label }}
                 </span>
             @endforeach
         </div>
@@ -155,18 +338,24 @@
          ══════════════════════════════════════════════════════════════ --}}
     @elseif ($view === 'deck')
         <div class="relative" data-deck-root>
-            {{-- the field the deck floats in --}}
+            {{-- the field the deck floats in — the same navy/gold glow the
+                 command masthead opens with, so the deck reads as the
+                 instrument at the centre of one control room, not a separate
+                 page underneath it. --}}
             <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[28px]" aria-hidden="true">
-                <div class="absolute inset-0 bg-gradient-to-b from-indigo-50/70 via-white to-page/50"></div>
-                <div class="absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.10),transparent_70%)]"></div>
-                <div class="absolute -right-24 top-1/4 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.12),transparent_70%)]"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-navy-50/70 via-white to-page/50"></div>
+                <div class="absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(11,31,58,0.08),transparent_70%)]"></div>
+                <div class="absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.14),transparent_70%)]"></div>
             </div>
 
             <div class="flex items-center justify-between px-1 pb-1 pt-2">
                 <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
                     <span class="h-px w-4 bg-navy-200"></span>Past missions
                 </p>
-                <p class="text-eyebrow font-bold uppercase tracking-[0.24em] text-indigo-500">Active mission</p>
+                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.24em] text-gold-600">
+                    <span class="relative flex h-1.5 w-1.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400 opacity-60"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold-500"></span></span>
+                    Active mission
+                </p>
                 <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-400">
                     Future missions<span class="h-px w-4 bg-navy-200"></span>
                 </p>
@@ -182,7 +371,7 @@
 
                 @foreach ($deck as $i => $m)
                     <article wire:key="deck-{{ $m['id'] }}" data-deck-card data-index="{{ $i }}" data-id="{{ $m['id'] }}" data-active="{{ $active && $m['id'] === $active['id'] ? 1 : 0 }}"
-                             class="deck-card overflow-hidden rounded-[26px] border border-white/60 bg-white ring-1 ring-indigo-500/5">
+                             class="deck-card overflow-hidden rounded-[26px] border border-white/60 bg-white ring-1 ring-navy-950/5">
 
                         {{-- 1 · the cover ── first thing to change on a step --}}
                         <div class="relative isolate overflow-hidden" data-deck-part="cover">
@@ -191,13 +380,16 @@
                             @else
                                 <x-event-crest :event="$m['event']" class="absolute inset-0 -z-10 h-full w-full" />
                             @endif
-                            <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/55 via-transparent to-navy-950/25"></div>
+                            <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/70 via-navy-950/5 to-navy-950/30"></div>
+                            {{-- A hairline of gold along the cover's own bottom edge — the
+                                 one recurring signature the deck carries, card to card. --}}
+                            <div class="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80"></div>
 
                             <div class="flex items-start justify-between p-4">
                                 <x-mission.badge :mission="$m" class="!bg-white/95 shadow-sm !ring-white/50" />
 
                                 <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" data-deck-keep
-                                        class="grid h-9 w-9 place-items-center rounded-full bg-navy-950/70 text-white backdrop-blur transition hover:bg-navy-950"
+                                        class="grid h-9 w-9 place-items-center rounded-full bg-navy-950/70 text-white ring-1 ring-white/10 backdrop-blur transition hover:bg-navy-950"
                                         title="{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }} this event">
                                     <x-icon name="star" class="h-4 w-4 {{ in_array($m['id'], $favoriteIds, true) ? 'fill-gold-400 text-gold-400' : '' }}" />
                                 </button>
@@ -206,15 +398,15 @@
 
                         {{-- 2 · the title block --}}
                         <div class="relative -mt-8 flex flex-wrap items-start gap-4 px-4 pb-3.5 lg:px-5" data-deck-part="title">
-                            <div class="grid w-[84px] shrink-0 place-items-center rounded-2xl border border-line bg-white py-3 text-center shadow-lg">
-                                <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $m['month'] ?? '—' }}</span>
+                            <div class="grid w-[84px] shrink-0 place-items-center rounded-2xl border border-gold-200/70 bg-white py-3 text-center shadow-[0_14px_28px_-14px_rgba(11,31,58,0.45)]">
+                                <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-600">{{ $m['month'] ?? '—' }}</span>
                                 <span class="pf text-[29px] font-black leading-none text-navy-950">{{ $m['day'] ?? '··' }}</span>
                                 <span class="text-[10.5px] text-muted">{{ $m['year'] }}</span>
                             </div>
 
                             <div class="min-w-0 flex-1 pt-9">
                                 <h2 class="pf line-clamp-2 text-[22px] font-black leading-tight text-navy-950">
-                                    <a href="{{ route('events.hub', $m['event']) }}" data-deck-keep class="transition hover:text-indigo-600">{{ $m['name'] }}</a>
+                                    <a href="{{ route('events.hub', $m['event']) }}" data-deck-keep class="transition hover:text-gold-700">{{ $m['name'] }}</a>
                                 </h2>
                                 <p class="mt-1.5 flex items-center gap-1.5 truncate text-[12px] text-navy-600"><x-icon name="pin" class="h-3.5 w-3.5 shrink-0 text-navy-300" />{{ $m['where'] }}</p>
                                 <p class="mt-1 flex flex-wrap items-center gap-x-2 text-[12px] text-navy-600">
@@ -244,9 +436,9 @@
                                 <p class="pf mt-1 truncate text-[13.5px] font-bold text-navy-950">{{ $m['milestone']['title'] }}</p>
                                 <p class="mt-0.5 text-[11px] {{ $m['milestone']['overdue'] ? 'font-semibold text-red-600' : 'text-muted' }}">{{ $m['milestone']['due'] }}</p>
                             </div>
-                            <div class="px-4 py-3">
-                                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
-                                    AI insight <x-icon name="sparkles" class="ms-auto h-3.5 w-3.5 text-indigo-500" />
+                            <div class="bg-gold-50/40 px-4 py-3">
+                                <p class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-gold-700">
+                                    AI insight <x-icon name="sparkles" class="ms-auto h-3.5 w-3.5 text-gold-500" />
                                 </p>
                                 <p class="mt-1 line-clamp-2 text-[12px] leading-relaxed text-navy-700">{{ $m['insight'] }}</p>
                             </div>
@@ -265,19 +457,19 @@
                  what people came for. --}}
             <div class="mt-3 flex items-center justify-center gap-3">
                 <button type="button" data-deck-prev
-                        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        class="grid h-10 w-10 place-items-center rounded-full border border-navy-100 bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-gold-300 hover:text-gold-700 hover:shadow-md disabled:opacity-25"
                         aria-label="Previous mission">‹</button>
 
                 <div class="flex items-center gap-1.5" data-deck-dots>
                     @foreach ($deck as $i => $m)
                         <button type="button" data-deck-dot data-index="{{ $i }}"
-                                class="h-1.5 w-1.5 rounded-full bg-navy-200 transition-all hover:bg-navy-400"
+                                class="h-1.5 w-1.5 rounded-full bg-navy-200 transition-all hover:bg-gold-400"
                                 title="{{ $m['name'] }}" aria-label="{{ $m['name'] }}"></button>
                     @endforeach
                 </div>
 
                 <button type="button" data-deck-next
-                        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-25"
+                        class="grid h-10 w-10 place-items-center rounded-full border border-navy-100 bg-white text-[18px] leading-none text-navy-600 shadow-sm transition hover:border-gold-300 hover:text-gold-700 hover:shadow-md disabled:opacity-25"
                         aria-label="Next mission">›</button>
 
                 <p class="ms-2 hidden text-[11px] text-muted lg:block">
@@ -314,7 +506,7 @@
                 </div>
             @endif
 
-            <div class="card overflow-hidden">
+            <div class="overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_16px_40px_-24px_rgba(11,31,58,0.25)]">
                 <div class="scrollbar-none overflow-x-auto">
                     <div class="min-w-[1120px]">
                         @php
@@ -323,15 +515,15 @@
                             $pageAllOn = $pageIds !== [] && ! array_diff($pageIds, $selectedIds);
                         @endphp
 
-                        <div class="grid {{ $cols }} items-center gap-3 border-b border-line bg-page/40 px-4 py-2.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                        <div class="grid {{ $cols }} items-center gap-3 border-b border-navy-900 bg-navy-950 px-4 py-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-white/45">
                             <span>
                                 @can('manage-events')
                                     <input type="checkbox" @checked($pageAllOn)
                                            wire:click="toggleSelectPage({{ \Illuminate\Support\Js::from($pageIds) }})"
-                                           class="h-3.5 w-3.5 cursor-pointer rounded border-navy-300">
+                                           class="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-white/10">
                                 @endcan
                             </span>
-                            <span>Event</span><span>Status</span><span>Dates</span><span>Location</span>
+                            <span class="text-gold-400/90">Event</span><span>Status</span><span>Dates</span><span>Location</span>
                             <span class="text-center">Progress</span><span>Budget</span>
                             <span class="text-center">Attendees</span><span>Health</span><span>Next milestone</span><span></span>
                         </div>
@@ -343,7 +535,7 @@
                                 <div wire:key="row-{{ $m['id'] }}" wire:click="activate({{ $m['id'] }})"
                                      @class([
                                          'grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
-                                         'bg-indigo-50/60 shadow-[inset_3px_0_0_0_theme(colors.indigo.500)]' => $on && ! $ticked,
+                                         'bg-gold-50/50 shadow-[inset_3px_0_0_0_theme(colors.gold.500)]' => $on && ! $ticked,
                                          'bg-red-50/50' => $ticked,
                                          'hover:bg-page/60' => ! $on && ! $ticked,
                                      ])>
@@ -356,7 +548,7 @@
                                     </span>
 
                                     <div class="flex min-w-0 items-center gap-3">
-                                        <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50 ring-1 ring-line">
+                                        <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50 ring-1 ring-navy-100">
                                             @if ($m['cover'])
                                                 <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover">
                                             @else
@@ -384,7 +576,7 @@
                                         <span class="block truncate text-[11.5px] font-bold text-navy-950">{{ $m['budgetLabel'] }}</span>
                                         <span class="block truncate text-[10px] text-muted">{{ $m['budgetOf'] }}</span>
                                         <span class="mt-1 block h-[3px] overflow-hidden rounded-full bg-navy-50">
-                                            <span class="block h-full rounded-full bg-blue-500" style="width: {{ $m['budgetPct'] ?? 0 }}%"></span>
+                                            <span class="block h-full rounded-full bg-gold-500" style="width: {{ $m['budgetPct'] ?? 0 }}%"></span>
                                         </span>
                                     </span>
 
@@ -449,20 +641,23 @@
          ══════════════════════════════════════════════════════════════ --}}
     @else
         <div class="space-y-4">
-            <div class="card overflow-hidden">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-3">
-                    <h2 class="pf text-[15px] font-bold text-navy-950">{{ $months['label'] ?? 'Flight Path' }}</h2>
-                    <p class="text-[11.5px] text-muted">Where every mission sits in the year.</p>
+            <div class="overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_16px_40px_-24px_rgba(11,31,58,0.25)]">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-navy-900 bg-navy-950 px-4 py-3.5">
+                    <div>
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-400">Flight Path</p>
+                        <h2 class="pf text-[16px] font-bold text-white">{{ $months['label'] ?? 'Strategic timeline' }}</h2>
+                    </div>
+                    <p class="hidden text-[11.5px] text-white/40 sm:block">Where every mission sits in the year.</p>
 
                     <div class="ms-auto flex items-center gap-2">
                         <button type="button" data-fp-today
-                                class="flex h-8 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[11.5px] font-semibold text-navy-700 transition hover:border-indigo-200">
-                            <x-icon name="calendar" class="h-3.5 w-3.5 text-navy-400" /> Today
+                                class="flex h-8 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-[11.5px] font-semibold text-white/80 transition hover:border-gold-400/40 hover:bg-white/10">
+                            <x-icon name="calendar" class="h-3.5 w-3.5 text-gold-400" /> Today
                         </button>
-                        <div class="flex h-8 items-center gap-0.5 rounded-xl border border-line bg-white px-1">
-                            <button type="button" data-fp-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg text-navy-500 transition hover:bg-page" aria-label="Zoom out">−</button>
-                            <span data-fp-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-navy-600">100%</span>
-                            <button type="button" data-fp-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg text-navy-500 transition hover:bg-page" aria-label="Zoom in">+</button>
+                        <div class="flex h-8 items-center gap-0.5 rounded-xl border border-white/10 bg-white/5 px-1">
+                            <button type="button" data-fp-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg text-white/70 transition hover:bg-white/10" aria-label="Zoom out">−</button>
+                            <span data-fp-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-white/80">100%</span>
+                            <button type="button" data-fp-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg text-white/70 transition hover:bg-white/10" aria-label="Zoom in">+</button>
                         </div>
                     </div>
                 </div>
@@ -493,8 +688,8 @@
                                         <span class="absolute inset-y-0 w-px bg-line/60" style="left: {{ $month['left'] }}%"></span>
                                     @endforeach
                                     @if ($months['todayLeft'] !== null)
-                                        <span data-fp-line class="absolute inset-y-0 w-px bg-navy-950/70" style="left: {{ $months['todayLeft'] }}%">
-                                            <span class="absolute -left-[3px] -top-1 h-[7px] w-[7px] rounded-full bg-navy-950"></span>
+                                        <span data-fp-line class="absolute inset-y-0 w-px bg-gold-500/70" style="left: {{ $months['todayLeft'] }}%">
+                                            <span class="absolute -left-[3px] -top-1 h-[7px] w-[7px] rounded-full bg-gold-500 shadow-[0_0_0_3px_rgba(212,175,55,0.25)]"></span>
                                         </span>
                                     @endif
                                 </div>
@@ -521,8 +716,8 @@
                                                 <button type="button" wire:click="activate({{ $m['id'] }})" wire:key="fp-{{ $m['id'] }}"
                                                         @class([
                                                             'absolute top-3 z-10 flex w-[236px] items-center gap-2.5 rounded-2xl border p-2 text-left transition',
-                                                            'border-indigo-400 bg-white shadow-[0_16px_36px_-20px_rgba(79,70,229,0.65)] ring-2 ring-indigo-500/20' => $on,
-                                                            'border-line bg-white/90 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg' => ! $on,
+                                                            'border-gold-400 bg-white shadow-[0_16px_36px_-20px_rgba(11,31,58,0.55)] ring-2 ring-gold-400/25' => $on,
+                                                            'border-line bg-white/90 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-lg' => ! $on,
                                                         ])
                                                         style="left: min({{ $left }}%, calc(100% - 236px))">
                                                     <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50">

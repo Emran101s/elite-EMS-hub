@@ -240,7 +240,7 @@ function mountDeck(stage) {
         dots.forEach((dot, i) => {
             const on = i === index;
             dot.classList.toggle('w-7', on);
-            dot.classList.toggle('bg-navy-950', on);
+            dot.classList.toggle('bg-gold-500', on);
             dot.classList.toggle('w-1.5', ! on);
             dot.classList.toggle('bg-navy-200', ! on);
             dot.setAttribute('aria-current', on ? 'true' : 'false');
