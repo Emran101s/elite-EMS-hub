@@ -56,15 +56,15 @@
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('events.pricing.template', $event) }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
+               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
                 <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" /> Template
             </a>
 
             @if ($may)
                 <button type="button" wire:click="toggleCatalogue"
                         @class(['flex h-10 items-center gap-1.5 rounded-2xl border px-3.5 text-[12px] font-semibold shadow-sm transition',
-                            'border-indigo-300 bg-indigo-50 text-indigo-700' => $showCatalogue,
-                            'border-line bg-white text-navy-700 hover:border-indigo-200' => ! $showCatalogue])>
+                            'border-gold-300 bg-gold-50 text-gold-800' => $showCatalogue,
+                            'border-line bg-white text-navy-700 hover:border-gold-300' => ! $showCatalogue])>
                     <x-icon name="list" class="h-3.5 w-3.5" /> From the house list
                 </button>
 
@@ -78,8 +78,8 @@
 
     {{-- ══ the house list, pulled one at a time ══ --}}
     @if ($showCatalogue)
-        <div class="card overflow-hidden border-indigo-200">
-            <div class="flex flex-wrap items-center gap-2 border-b border-line bg-indigo-50/50 px-4 py-2.5">
+        <div class="card overflow-hidden border-gold-200">
+            <div class="flex flex-wrap items-center gap-2 border-b border-line bg-gold-50/50 px-4 py-2.5">
                 <span class="min-w-0">
                     <span class="block text-[12.5px] font-bold text-navy-900">The house price list</span>
                     <span class="block text-[11px] text-muted">
@@ -125,14 +125,14 @@
                             <span class="shrink-0 text-[10.5px] italic text-navy-400">Already here</span>
                         @else
                             <button type="button" wire:click="pullFromHouse({{ $it->id }})"
-                                    class="shrink-0 rounded-lg bg-indigo-600 px-2.5 py-1 text-[10.5px] font-bold text-white transition hover:bg-indigo-700">
+                                    class="shrink-0 rounded-lg bg-gold-500 px-2.5 py-1 text-[10.5px] font-bold text-navy-950 transition hover:bg-gold-600">
                                 Add it
                             </button>
                         @endif
                     </div>
                 @empty
                     <p class="px-4 py-6 text-center text-[12px] italic text-navy-300">
-                        Nothing in the house list matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Manage it in Settings</a>.
+                        Nothing in the house list matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-gold-700 hover:underline">Manage it in Settings</a>.
                     </p>
                 @endforelse
             </div>

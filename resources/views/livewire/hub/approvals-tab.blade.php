@@ -1,4 +1,20 @@
 <div>
+    {{-- ══ Stat strip ══
+         This module opened straight into two lists with no number to scan
+         first — the one thing every other module now leads with. --}}
+    @php
+        $approvedCount = $decided->where('status', 'approved')->count();
+        $rejectedCount = $decided->where('status', 'rejected')->count();
+        $revisionCount = $decided->where('status', 'needs_revision')->count();
+        $moduleHex = \App\Models\Event::moduleColor('approvals');
+    @endphp
+    <x-stat-strip class="mb-4" :stats="[
+        ['Pending', $pending->count(), 'clock', null, null, null, 'text-info-ink'],
+        ['Approved', $approvedCount, 'check', null, null, null, 'text-emerald-600'],
+        ['Rejected', $rejectedCount, 'flag', null, null, null, $rejectedCount ? 'text-red-700' : 'text-navy-900'],
+        ['Needs revision', $revisionCount, 'clipboard', null, null, null, 'text-amber-700'],
+    ]" />
+
     <div class="mb-4 flex items-center justify-between">
         <p class="text-xs text-muted">Types: budget · supplier · design · venue · agenda · client · payment · report</p>
         <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-10 px-4 text-xs">＋ Request Approval</button>
@@ -30,13 +46,18 @@
 
     <div class="grid gap-5 lg:grid-cols-2">
         <div class="card p-6">
-            <h3 class="mb-4 pf text-base font-bold text-navy-900">Pending Approval ({{ $pending->count() }})</h3>
+            <h3 class="mb-4 flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $moduleHex }}; background: {{ $moduleHex }}15">
+                    <x-icon name="identification" class="h-4 w-4" />
+                </span>
+                Pending Approval ({{ $pending->count() }})
+            </h3>
             <ul class="space-y-3">
                 @forelse ($pending as $approval)
-                    <li class="rounded-xl border border-[var(--color-info)]/30 bg-[var(--color-info)]/5 px-4 py-3">
+                    <li class="rounded-xl border border-info/30 bg-info/5 px-4 py-3">
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
-                            <span class="rounded-full bg-[var(--color-info)]/10 px-2 py-0.5 text-eyebrow font-bold uppercase text-blue-700">{{ $approval->type }}</span>
+                            <span class="rounded-full bg-info/10 px-2 py-0.5 text-eyebrow font-bold uppercase text-info-ink">{{ $approval->type }}</span>
                         </div>
                         <p class="mt-1 text-xs text-muted">Requested by {{ $approval->requester?->name ?? '—' }} · {{ $approval->created_at->diffForHumans() }}</p>
                         @if ($approval->notes)<p class="mt-1 text-xs text-muted">{{ $approval->notes }}</p>@endif
@@ -58,13 +79,23 @@
                         @endcan
                     </li>
                 @empty
-                    <li class="text-xs text-muted">Nothing awaiting approval.</li>
+                    <li class="flex items-center gap-2.5 rounded-xl bg-page/60 px-4 py-6 text-center">
+                        <span class="mx-auto flex flex-col items-center gap-1.5 text-xs text-muted">
+                            <x-icon name="check" class="h-4 w-4 text-emerald-500" />
+                            Nothing awaiting approval — the queue is clear.
+                        </span>
+                    </li>
                 @endforelse
             </ul>
         </div>
 
         <div class="card p-6">
-            <h3 class="mb-4 pf text-base font-bold text-navy-900">History</h3>
+            <h3 class="mb-4 flex items-center gap-2.5 pf text-base font-bold text-navy-900">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-500">
+                    <x-icon name="archive" class="h-4 w-4" />
+                </span>
+                History
+            </h3>
             <ul class="space-y-3">
                 @forelse ($decided as $approval)
                     <li class="flex items-center justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0">
@@ -75,7 +106,7 @@
                         <x-status-badge :status="$approval->status" />
                     </li>
                 @empty
-                    <li class="text-xs text-muted">No decisions yet.</li>
+                    <li class="rounded-xl bg-page/60 px-4 py-6 text-center text-xs text-muted">No decisions yet.</li>
                 @endforelse
             </ul>
         </div>

@@ -1,37 +1,22 @@
 <div>
-    {{-- ══ Stat tiles ══
+    {{-- ══ Stat strip ══
          Every other module opens with a number before a table — this one
          used to open straight into the register with nothing to scan first.
-         Same tile markup as the Attendees tab, so "open / critical / resolved"
-         reads the same way "registered / checked in / VIPs" does elsewhere. --}}
+         Uses the same x-stat-strip as Attendees now, instead of hand-rolling
+         three bordered cards for it — one card, divided, says the same thing
+         in a third of the height, and a shared component means the day this
+         strip needs a fourth tile, both modules get it for free. --}}
     @php
         $openRisks = $risks->filter->isOpen();
         $criticalOpen = $openRisks->filter(fn ($r) => $r->severity() >= 15);
         $resolved = $risks->whereIn('status', ['mitigated', 'closed']);
+        $total = max($risks->count(), 1);
     @endphp
-    <div class="mb-4 grid gap-3 sm:grid-cols-3">
-        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500"><x-icon name="flag" class="h-5 w-5" /></span>
-            <div class="min-w-0">
-                <p class="pf text-2xl font-black leading-none text-navy-900">{{ $openRisks->count() }}</p>
-                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Open · {{ $risks->count() }} total</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger-ink"><x-icon name="flag" class="h-5 w-5" /></span>
-            <div class="min-w-0">
-                <p class="pf text-2xl font-black leading-none {{ $criticalOpen->count() ? 'text-danger-ink' : 'text-navy-900' }}">{{ $criticalOpen->count() }}</p>
-                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Critical · severity ≥ 15</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><x-icon name="check" class="h-5 w-5" /></span>
-            <div class="min-w-0">
-                <p class="pf text-2xl font-black leading-none text-emerald-600">{{ $resolved->count() }}</p>
-                <p class="mt-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Mitigated or closed</p>
-            </div>
-        </div>
-    </div>
+    <x-stat-strip class="mb-4" :stats="[
+        ['Open', $openRisks->count(), 'flag', round($openRisks->count() / $total * 100), 'bg-warn', $risks->count().' total'],
+        ['Critical', $criticalOpen->count(), 'flag', $openRisks->count() ? round($criticalOpen->count() / max($openRisks->count(), 1) * 100) : 0, 'bg-risk', 'severity ≥ 15', $criticalOpen->count() ? 'text-danger-ink' : 'text-navy-900'],
+        ['Resolved', $resolved->count(), 'check', round($resolved->count() / $total * 100), 'bg-track', 'mitigated or closed', 'text-emerald-600'],
+    ]" />
 
     <div class="mb-4 flex items-center justify-between">
         <p class="text-xs text-muted">Open risks with severity ≥ 20 cap the Event Health Score at "At Risk".</p>
