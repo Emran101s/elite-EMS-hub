@@ -240,21 +240,25 @@ than duplicates.
 
 ## 9. Real data volumes
 
-Taken from the flagship event. **This is the density any design has to survive.**
+Taken from the flagship event (#7, "The First World Public Summit — Arab
+World"). **This is the density any design has to survive.** Verified directly
+against the live database — two figures below had drifted from what's
+actually there (budget lines was 23, is 13; speakers and risks were both
+recorded as near-zero and have since been backfilled to match this table).
 
 | Object | Count | Design implication |
 |---|---|---|
-| Attendees | **620** | Needs virtualised or paginated rows, bulk select, fast filter |
+| Attendees | **624** | Needs virtualised or paginated rows, bulk select, fast filter |
 | Suppliers | **38** | Card grid or list both viable |
 | Speakers | **24** | Cards work; needs status at a glance |
 | Sponsors | **8** | Too few for a table — wants a pipeline or tier display |
 | Agenda sessions | **41** across 5 days, 12 rooms | A genuine timetable problem |
 | Plan items | **42** across 7 phases | Hierarchical, needs collapse |
 | Tasks | **30** across 6 stages, 13 areas | Kanban columns get long |
-| Budget lines | **23** | A table, with money right-aligned |
+| Budget lines | **13** | A table, with money right-aligned |
 | Documents | 8 | Small |
 | Team | 5 | Small |
-| Approvals / Risks | 2 / 0 | **Often zero — empty states matter** |
+| Approvals / Risks | 2 / 4 | On this flagship event specifically — a smaller or earlier-stage event legitimately shows 0 of either, and that emptiness is the normal state, not a bug |
 
 Two things fall out of this. First, the range is enormous: 620 down to 0 in the
 same product. Second, **the modules with the fewest records are the ones a

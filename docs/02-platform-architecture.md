@@ -87,16 +87,26 @@ a **documentation target**, not an instruction to rebuild navigation now.
 
 ## Real data volumes
 
-Taken from the flagship real-world event — this is the density any change has to survive:
+Taken from event #7, "The First World Public Summit — Arab World" — the flagship
+real-world event, and the density any change has to survive. Verified directly
+against the database, not carried forward from an earlier draft of this table —
+a previous version of this table cited 23 budget lines and 0 risks/speakers,
+neither of which matched the live data when checked.
 
 | Object | Count |
 |---|---|
-| Attendees | 620 |
+| Attendees | 624 |
 | Suppliers | 38 |
 | Speakers | 24 |
 | Agenda sessions | 41 across 5 days, 12 rooms |
 | Plan items | 42 |
 | Tasks | 30 |
-| Budget lines | 23 |
+| Budget lines | 13 |
 | Sponsors | 8 |
-| Approvals / Risks | frequently 0 — empty states are the normal state, not an edge case |
+| Approvals | 2 |
+| Risks | 4 |
+
+Approvals and risks being non-zero here is this specific flagship event, not a
+platform-wide guarantee — a smaller or earlier-stage event legitimately has 0 of
+either, and that's the normal state, not an edge case (see
+[04-event-life-cycle.md](04-event-life-cycle.md)).
