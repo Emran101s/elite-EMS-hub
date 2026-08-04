@@ -25,17 +25,29 @@
 <div {{ $attributes->merge(['class' => 'overflow-hidden rounded-[22px] border border-gold-200/70 bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)] ring-1 ring-navy-950/5']) }}>
     <div class="grid gap-0 xl:grid-cols-[280px_minmax(0,1fr)_236px]">
 
-        {{-- ── the picture ── --}}
-        <div class="relative isolate min-h-[190px] overflow-hidden xl:min-h-full">
-            @if ($m['cover'])
-                <img src="{{ $m['cover'] }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" style="object-position: 50% 40%">
-            @else
-                <x-event-crest :event="$event" class="absolute inset-0 -z-10 h-full w-full" />
-            @endif
-            <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/70 via-navy-950/10 to-navy-950/40"></div>
+        {{-- ── the identity, framed rather than a full-bleed backdrop ──
+             The same emblem treatment the deck's own cards use now: a
+             light field, not a navy-scrimmed photograph — this pane sat
+             dark on every single row you opened, in both List and Flight
+             Path, which made it the most-seen dark surface on the page. --}}
+        <div class="relative isolate flex min-h-[190px] flex-col overflow-hidden bg-gradient-to-br from-gold-50/80 via-white to-navy-50/60 xl:min-h-full">
+            <div class="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                <span class="absolute aspect-square h-[78%] rounded-full border border-dashed border-gold-300/55"></span>
+                <span class="absolute aspect-square h-[50%] rounded-full border border-dashed border-gold-300/45"></span>
+            </div>
 
-            <div class="flex h-full flex-col justify-between p-4">
-                <x-mission.badge :mission="$m" class="self-start !bg-white/95 !ring-white/40" />
+            <div class="relative z-10 flex h-full flex-col justify-between p-4">
+                <x-mission.badge :mission="$m" class="self-start !bg-white shadow-sm" />
+
+                <div class="flex flex-1 items-center justify-center py-2">
+                    <div class="grid h-[92px] w-[92px] shrink-0 place-items-center overflow-hidden rounded-[22px] ring-[5px] ring-white shadow-[0_18px_36px_-16px_rgba(11,31,58,0.35)]">
+                        @if ($m['cover'])
+                            <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 40%">
+                        @else
+                            <x-event-crest :event="$event" class="h-full w-full" />
+                        @endif
+                    </div>
+                </div>
 
                 <a href="{{ route('events.hub', $event) }}"
                    class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-navy-900 to-navy-950 px-4 text-[12px] font-bold text-white shadow-lg ring-1 ring-gold-400/30 transition hover:shadow-[0_10px_24px_-8px_rgba(212,175,55,0.5)]">

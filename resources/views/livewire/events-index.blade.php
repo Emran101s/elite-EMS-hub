@@ -104,40 +104,38 @@
     </div>
 
     {{-- ══════════ THE PORTFOLIO PULSE ══════════
-         The command bar's own instrument panel: the five figures that used
-         to sit in a light card now read as the mission-critical strip they
-         are — navy glass, gold ink, the same material as the Dashboard's
-         spotlight. Dense in Deck (two rows of figures come straight out of
-         the card's own height budget), full elsewhere. --}}
-    <div class="relative isolate overflow-hidden rounded-[22px] bg-navy-950 shadow-[0_24px_50px_-30px_rgba(6,20,38,0.75)]">
-        <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-            <div class="absolute inset-0 bg-[radial-gradient(120%_140%_at_0%_0%,rgba(212,175,55,0.16),transparent_55%)]"></div>
-            <div class="absolute inset-0 bg-[radial-gradient(90%_120%_at_100%_100%,rgba(59,90,133,0.35),transparent_60%)]"></div>
-        </div>
+         The five figures, on a light instrument strip rather than a second
+         dark band stacked straight on top of the Mission Radar below it —
+         two navy panels back to back read as a wall, not a control room.
+         Gold carries the accent instead: a hairline on top, and the icon
+         plate going dark only on hover — the same "where you are" idiom
+         the deck's own controls already use. --}}
+    <div class="relative isolate overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_16px_40px_-28px_rgba(11,31,58,0.2)]">
+        <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent"></div>
 
-        <div @class(['grid grid-cols-2 divide-x divide-y divide-white/10 @container/pulse sm:grid-cols-3', 'lg:grid-cols-5 lg:divide-y-0' => true])>
+        <div @class(['grid grid-cols-2 divide-x divide-y divide-navy-100 @container/pulse sm:grid-cols-3', 'lg:grid-cols-5 lg:divide-y-0' => true])>
             @foreach ($figures as $f)
                 @php
                     $tag = ($f['href'] ?? null) ? 'a' : 'div';
                 @endphp
                 <{{ $tag }} @if ($f['href'] ?? null) href="{{ $f['href'] }}" @endif
-                   class="group/pulse flex items-center gap-3 px-4 {{ $view === 'deck' ? 'py-3' : 'py-4' }} transition {{ ($f['href'] ?? null) ? 'hover:bg-white/[0.04]' : '' }}">
-                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold-300 ring-1 ring-white/10 transition group-hover/pulse:bg-gold-400 group-hover/pulse:text-navy-950">
+                   class="group/pulse flex items-center gap-3 px-4 {{ $view === 'deck' ? 'py-3' : 'py-4' }} transition {{ ($f['href'] ?? null) ? 'hover:bg-page/70' : '' }}">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-500 ring-1 ring-navy-100 transition group-hover/pulse:bg-navy-950 group-hover/pulse:text-gold-400">
                         <x-icon :name="$f['icon'] ?? 'chart'" class="h-4.5 w-4.5" />
                     </span>
                     <div class="min-w-0">
-                        <p class="pf text-[22px] font-black leading-none text-white">{{ $f['value'] }}</p>
-                        <p class="mt-1 truncate text-eyebrow font-bold uppercase tracking-[0.12em] text-white/45">{{ $f['label'] }}</p>
+                        <p class="pf text-[22px] font-black leading-none text-navy-950">{{ $f['value'] }}</p>
+                        <p class="mt-1 truncate text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-400">{{ $f['label'] }}</p>
                         @if ($view !== 'deck' && ($f['note'] ?? null))
-                            <p class="mt-0.5 truncate text-[10.5px] text-white/35">{{ $f['note'] }}</p>
+                            <p class="mt-0.5 truncate text-[10.5px] text-muted">{{ $f['note'] }}</p>
                         @endif
                     </div>
                     @if ($view !== 'deck')
                         @if ($f['trend'] ?? null)
                             <span @class([
                                 'ms-auto shrink-0 self-start text-[11px] font-bold',
-                                'text-emerald-400' => $f['trend']['up'],
-                                'text-white/35' => ! $f['trend']['up'],
+                                'text-emerald-600' => $f['trend']['up'],
+                                'text-navy-300' => ! $f['trend']['up'],
                             ])>{{ $f['trend']['label'] }}</span>
                         @endif
                     @endif
@@ -373,27 +371,58 @@
                     <article wire:key="deck-{{ $m['id'] }}" data-deck-card data-index="{{ $i }}" data-id="{{ $m['id'] }}" data-active="{{ $active && $m['id'] === $active['id'] ? 1 : 0 }}"
                              class="deck-card overflow-hidden rounded-[26px] border border-white/60 bg-white ring-1 ring-navy-950/5">
 
-                        {{-- 1 · the cover ── first thing to change on a step --}}
-                        <div class="relative isolate overflow-hidden" data-deck-part="cover">
-                            @if ($m['cover'])
-                                <img src="{{ $m['cover'] }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" style="object-position: 50% 38%">
-                            @else
-                                <x-event-crest :event="$m['event']" class="absolute inset-0 -z-10 h-full w-full" />
-                            @endif
-                            <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/70 via-navy-950/5 to-navy-950/30"></div>
-                            {{-- A hairline of gold along the cover's own bottom edge — the
-                                 one recurring signature the deck carries, card to card. --}}
-                            <div class="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80"></div>
+                        {{-- 1 · the cover, reimagined as a boarding pass ──
+                             A full-bleed photo behind navy scrim was the single
+                             biggest dark surface on the whole page — one per
+                             card, times five in view. This is the same flexible
+                             region (still absorbs whatever height the rest of
+                             the card does not use) but it is light by default:
+                             a soft field, not a photograph. The event's cover or
+                             generated crest becomes a framed emblem rather than
+                             a backdrop, echoing the badge on a real boarding
+                             pass — identity, not wallpaper. --}}
+                        <div class="relative isolate flex flex-col overflow-hidden bg-gradient-to-br from-gold-50/80 via-white to-navy-50/60" data-deck-part="cover">
+                            <div class="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                                <span class="absolute aspect-square h-[80%] rounded-full border border-dashed border-gold-300/60"></span>
+                                <span class="absolute aspect-square h-[54%] rounded-full border border-dashed border-gold-300/50"></span>
+                                <span class="absolute aspect-square h-[30%] rounded-full border border-navy-100"></span>
+                            </div>
 
-                            <div class="flex items-start justify-between p-4">
-                                <x-mission.badge :mission="$m" class="!bg-white/95 shadow-sm !ring-white/50" />
+                            <div class="relative z-10 flex items-start justify-between p-4">
+                                <x-mission.badge :mission="$m" class="!bg-white shadow-sm" />
 
                                 <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" data-deck-keep
-                                        class="grid h-9 w-9 place-items-center rounded-full bg-navy-950/70 text-white ring-1 ring-white/10 backdrop-blur transition hover:bg-navy-950"
+                                        class="grid h-9 w-9 place-items-center rounded-full bg-white text-navy-300 ring-1 ring-navy-100 shadow-sm transition hover:text-gold-600 hover:ring-gold-300"
                                         title="{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }} this event">
                                     <x-icon name="star" class="h-4 w-4 {{ in_array($m['id'], $favoriteIds, true) ? 'fill-gold-400 text-gold-400' : '' }}" />
                                 </button>
                             </div>
+
+                            <div class="relative z-10 flex flex-1 items-center justify-center py-2">
+                                <div class="grid h-[104px] w-[104px] shrink-0 place-items-center overflow-hidden rounded-[24px] ring-[5px] ring-white shadow-[0_20px_40px_-18px_rgba(11,31,58,0.35)]">
+                                    @if ($m['cover'])
+                                        <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 38%">
+                                    @else
+                                        <x-event-crest :event="$m['event']" class="h-full w-full" />
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- the barcode: a boarding-pass signature, deterministic per
+                                 event rather than decoration for its own sake. --}}
+                            @php
+                                $barcode = collect(str_split(substr(sha1($m['id'].'|'.$m['name']), 0, 60), 2))
+                                    ->map(fn ($h) => 22 + (hexdec($h) % 78));
+                            @endphp
+                            <div class="relative z-10 mb-3 flex h-4 items-end justify-center gap-[2px] px-6" aria-hidden="true">
+                                @foreach ($barcode as $h)
+                                    <span class="w-[2px] rounded-full bg-navy-200" style="height: {{ $h }}%"></span>
+                                @endforeach
+                            </div>
+
+                            {{-- A hairline of gold along the cover's own bottom edge — the
+                                 one recurring signature the deck carries, card to card. --}}
+                            <div class="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80"></div>
                         </div>
 
                         {{-- 2 · the title block --}}
@@ -515,15 +544,15 @@
                             $pageAllOn = $pageIds !== [] && ! array_diff($pageIds, $selectedIds);
                         @endphp
 
-                        <div class="grid {{ $cols }} items-center gap-3 border-b border-navy-900 bg-navy-950 px-4 py-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-white/45">
+                        <div class="grid {{ $cols }} items-center gap-3 border-b border-navy-100 bg-page/80 px-4 py-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
                             <span>
                                 @can('manage-events')
                                     <input type="checkbox" @checked($pageAllOn)
                                            wire:click="toggleSelectPage({{ \Illuminate\Support\Js::from($pageIds) }})"
-                                           class="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-white/10">
+                                           class="h-3.5 w-3.5 cursor-pointer rounded border-navy-200">
                                 @endcan
                             </span>
-                            <span class="text-gold-400/90">Event</span><span>Status</span><span>Dates</span><span>Location</span>
+                            <span class="text-gold-700">Event</span><span>Status</span><span>Dates</span><span>Location</span>
                             <span class="text-center">Progress</span><span>Budget</span>
                             <span class="text-center">Attendees</span><span>Health</span><span>Next milestone</span><span></span>
                         </div>
@@ -534,11 +563,17 @@
                                 @php $ticked = in_array($m['id'], $selectedIds, true); @endphp
                                 <div wire:key="row-{{ $m['id'] }}" wire:click="activate({{ $m['id'] }})"
                                      @class([
-                                         'grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
+                                         'relative grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
                                          'bg-gold-50/50 shadow-[inset_3px_0_0_0_theme(colors.gold.500)]' => $on && ! $ticked,
                                          'bg-red-50/50' => $ticked,
                                          'hover:bg-page/60' => ! $on && ! $ticked,
                                      ])>
+                                    {{-- a status-colour thread down the row's own left edge, so
+                                         the eye can scan "who's in trouble" down the column of
+                                         bars before it ever reaches the Health text. --}}
+                                    @unless ($on && ! $ticked)
+                                        <span class="absolute inset-y-2 left-0 w-[3px] rounded-full opacity-70" style="background: {{ $m['statusHex'] }}"></span>
+                                    @endunless
 
                                     <span wire:click.stop>
                                         @can('manage-events')
@@ -642,22 +677,22 @@
     @else
         <div class="space-y-4">
             <div class="overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_16px_40px_-24px_rgba(11,31,58,0.25)]">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-navy-900 bg-navy-950 px-4 py-3.5">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-navy-100 bg-page/80 px-4 py-3.5">
                     <div>
-                        <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-400">Flight Path</p>
-                        <h2 class="pf text-[16px] font-bold text-white">{{ $months['label'] ?? 'Strategic timeline' }}</h2>
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-700">Flight Path</p>
+                        <h2 class="pf text-[16px] font-bold text-navy-950">{{ $months['label'] ?? 'Strategic timeline' }}</h2>
                     </div>
-                    <p class="hidden text-[11.5px] text-white/40 sm:block">Where every mission sits in the year.</p>
+                    <p class="hidden text-[11.5px] text-muted sm:block">Where every mission sits in the year.</p>
 
                     <div class="ms-auto flex items-center gap-2">
                         <button type="button" data-fp-today
-                                class="flex h-8 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-[11.5px] font-semibold text-white/80 transition hover:border-gold-400/40 hover:bg-white/10">
-                            <x-icon name="calendar" class="h-3.5 w-3.5 text-gold-400" /> Today
+                                class="flex h-8 items-center gap-1.5 rounded-xl border border-navy-100 bg-white px-3 text-[11.5px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 hover:bg-gold-50">
+                            <x-icon name="calendar" class="h-3.5 w-3.5 text-gold-600" /> Today
                         </button>
-                        <div class="flex h-8 items-center gap-0.5 rounded-xl border border-white/10 bg-white/5 px-1">
-                            <button type="button" data-fp-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg text-white/70 transition hover:bg-white/10" aria-label="Zoom out">−</button>
-                            <span data-fp-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-white/80">100%</span>
-                            <button type="button" data-fp-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg text-white/70 transition hover:bg-white/10" aria-label="Zoom in">+</button>
+                        <div class="flex h-8 items-center gap-0.5 rounded-xl border border-navy-100 bg-white px-1 shadow-sm">
+                            <button type="button" data-fp-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg text-navy-500 transition hover:bg-page" aria-label="Zoom out">−</button>
+                            <span data-fp-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-navy-700">100%</span>
+                            <button type="button" data-fp-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg text-navy-500 transition hover:bg-page" aria-label="Zoom in">+</button>
                         </div>
                     </div>
                 </div>
