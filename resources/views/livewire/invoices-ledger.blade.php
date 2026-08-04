@@ -51,10 +51,10 @@
          button: every one of these is money the book has agreed to ask for and
          has not asked for yet. ══ --}}
     @if ($ready->isNotEmpty())
-        <div class="overflow-hidden rounded-2xl border border-violet-200 bg-violet-50/40 shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-navy-100 bg-navy-50/60 shadow-sm">
             <button type="button" wire:click="toggleReady"
-                    class="flex w-full items-center gap-3 px-4 py-2.5 text-start transition hover:bg-violet-50">
-                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-violet-500 text-white">
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-start transition hover:bg-navy-50">
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-800 text-white">
                     <x-icon name="sparkles" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0">
@@ -67,7 +67,7 @@
             </button>
 
             @if ($showReady)
-                <div class="border-t border-violet-200/70 bg-white">
+                <div class="border-t border-navy-100 bg-white">
                     @foreach ($ready as $p)
                         <div wire:key="ready-{{ $p->id }}"
                              class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line/50 px-4 py-2 last:border-0">
@@ -89,7 +89,7 @@
 
                             @if ($may)
                                 <button type="button" wire:click="raise({{ $p->id }})"
-                                        class="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-violet-700">
+                                        class="shrink-0 rounded-lg bg-navy-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-navy-800">
                                     Raise invoice
                                 </button>
                             @endif
@@ -127,10 +127,10 @@
 
                             <span class="flex min-w-0 items-center gap-1.5">
                                 <a href="{{ route('invoices.edit', $inv) }}" wire:navigate
-                                   class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-indigo-600"
+                                   class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-gold-700"
                                    title="Open the invoice">{{ $inv->number }}</a>
                                 <a href="{{ route('invoices.pdf', $inv) }}" title="Download the PDF"
-                                   class="shrink-0 text-navy-300 transition hover:text-indigo-600">
+                                   class="shrink-0 text-navy-300 transition hover:text-gold-700">
                                     <x-icon name="document" class="h-3.5 w-3.5" />
                                 </a>
                             </span>

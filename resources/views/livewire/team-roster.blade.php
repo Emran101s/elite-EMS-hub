@@ -3,7 +3,7 @@
         $roleTone = [
             'super_admin' => 'bg-gold-50 text-gold-700 ring-gold-200',
             'admin' => 'bg-navy-900 text-white ring-navy-900',
-            'manager' => 'bg-blue-50 text-blue-700 ring-blue-200',
+            'manager' => 'bg-info-soft text-info-ink ring-info/20',
             'coordinator' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
             'viewer' => 'bg-navy-50 text-navy-500 ring-line',
         ];

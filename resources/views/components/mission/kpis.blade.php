@@ -25,7 +25,7 @@
         <p class="pf mt-1.5 {{ $num }} font-black leading-none {{ $ink }}">{{ $m['budgetLabel'] }}</p>
         <p class="mt-1 truncate text-[10px] {{ $mute }}">{{ $m['budgetOf'] }}</p>
         <div class="mt-2 h-[3px] overflow-hidden rounded-full {{ $rail }}">
-            <div class="h-full rounded-full bg-blue-500" style="width: {{ $m['budgetPct'] ?? 0 }}%"></div>
+            <div class="h-full rounded-full bg-info" style="width: {{ $m['budgetPct'] ?? 0 }}%"></div>
         </div>
     </div>
 
@@ -34,7 +34,7 @@
         <p class="pf mt-1.5 {{ $num }} font-black leading-none {{ $ink }}">{{ $m['tasksTotal'] ? $m['tasksDone'].' / '.$m['tasksTotal'] : '—' }}</p>
         <p class="mt-1 truncate text-[10px] {{ $mute }}">{{ $m['tasksPct'] }}% completed</p>
         <div class="mt-2 h-[3px] overflow-hidden rounded-full {{ $rail }}">
-            <div class="h-full rounded-full bg-indigo-500" style="width: {{ $m['tasksPct'] }}%"></div>
+            <div class="h-full rounded-full bg-gold-500" style="width: {{ $m['tasksPct'] }}%"></div>
         </div>
     </div>
 

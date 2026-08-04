@@ -1,15 +1,18 @@
 @props(['mission', 'size' => 'sm'])
 
-{{-- The status pill. One vocabulary of five, one set of colours, every view. --}}
+{{-- The status pill. One vocabulary of five, one set of colours, every view.
+     Tone keys (slate/orange/…) come from EventMission::STATUSES; the classes
+     below map those keys onto the live navy/gold/semantic palette so the
+     badge stops counting as design-token drift. --}}
 
 @php
     $tone = [
-        'slate' => 'bg-slate-100 text-slate-600 ring-slate-200/70',
-        'orange' => 'bg-orange-100 text-orange-700 ring-orange-200/70',
-        'indigo' => 'bg-indigo-100 text-indigo-700 ring-indigo-200/70',
-        'blue' => 'bg-blue-100 text-blue-700 ring-blue-200/70',
+        'slate' => 'bg-navy-50 text-navy-600 ring-navy-100',
+        'orange' => 'bg-amber-100 text-amber-700 ring-amber-200/70',
+        'indigo' => 'bg-gold-100 text-gold-800 ring-gold-200/70',
+        'blue' => 'bg-info-soft text-info-ink ring-info/20',
         'green' => 'bg-emerald-100 text-emerald-700 ring-emerald-200/70',
-    ][$mission['statusTone']] ?? 'bg-slate-100 text-slate-600 ring-slate-200/70';
+    ][$mission['statusTone']] ?? 'bg-navy-50 text-navy-600 ring-navy-100';
 
     $scale = $size === 'xs' ? 'px-1.5 py-0.5 text-[8.5px]' : 'px-2.5 py-1 text-[9.5px]';
 @endphp

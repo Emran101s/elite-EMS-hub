@@ -18,10 +18,10 @@
 
         {{-- Event --}}
         <details class="relative" data-menu>
-            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
                 <x-icon name="calendar" class="h-3.5 w-3.5 text-navy-400" />
                 {{ $eventId ? \Illuminate\Support\Str::limit($events->firstWhere('id', $eventId)?->name ?? 'Event', 22) : 'All events' }}
-                @if ($eventId)<span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>@endif
+                @if ($eventId)<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
             </summary>
             <div class="absolute z-30 mt-2 max-h-72 w-64 overflow-y-auto rounded-2xl border border-line bg-white p-1.5 shadow-xl">
                 <button type="button" wire:click="setEvent(0)"
@@ -37,10 +37,10 @@
 
         {{-- Owner --}}
         <details class="relative" data-menu>
-            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
                 <x-icon name="users" class="h-3.5 w-3.5 text-navy-400" />
                 {{ $ownerId === -1 ? 'Unassigned' : ($ownerId ? \Illuminate\Support\Str::before($people->firstWhere('id', $ownerId)?->name ?? 'Owner', ' ') : 'Anyone') }}
-                @if ($ownerId)<span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>@endif
+                @if ($ownerId)<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
             </summary>
             <div class="absolute z-30 mt-2 max-h-72 w-56 overflow-y-auto rounded-2xl border border-line bg-white p-1.5 shadow-xl">
                 <button type="button" wire:click="setOwner(0)"
@@ -61,7 +61,7 @@
         <button type="button" wire:click="toggleAttention"
                 @class(['flex h-10 items-center gap-1.5 rounded-2xl border px-3.5 text-[12px] font-bold transition',
                     'border-red-300 bg-red-50 text-red-700' => $attentionOnly,
-                    'border-line bg-white text-navy-600 shadow-sm hover:border-indigo-200' => ! $attentionOnly])>
+                    'border-line bg-white text-navy-600 shadow-sm hover:border-gold-300' => ! $attentionOnly])>
             <x-icon name="bell" class="h-3.5 w-3.5" /> Needs attention
         </button>
 
@@ -103,7 +103,7 @@
                                      'border-line' => ! $late])>
 
                                 <a href="{{ route('events.hub', [$item->event, 'tab' => 'planning']) }}"
-                                   class="block text-[12.5px] font-bold leading-snug text-navy-900 transition hover:text-indigo-600">
+                                   class="block text-[12.5px] font-bold leading-snug text-navy-900 transition hover:text-gold-700">
                                     <x-record-title :record="$item" fallback="Untitled deliverable"
                                                     :muted="in_array($item->status, ['done', 'cancelled'])" />
                                 </a>

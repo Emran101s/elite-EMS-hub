@@ -29,7 +29,7 @@
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('invoices.pdf', $inv) }}"
-               class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
+               class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
                 <x-icon name="document" class="h-3.5 w-3.5 text-navy-400" /> PDF
             </a>
 
@@ -159,7 +159,7 @@
                                  nights, transport for vehicles and days. See
                                  ServiceItem::UNITS. ── --}}
                             @if ($picked)
-                                <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5">
+                                <div class="rounded-xl border border-gold-200 bg-gold-50/70 p-2.5">
                                     <div class="flex items-center gap-2">
                                         <span class="min-w-0 flex-1">
                                             <span class="block truncate text-[12px] font-bold text-navy-900">{{ $picked->name }}</span>
@@ -233,9 +233,9 @@
                                                 <p class="px-2 py-3 text-center text-[11px] italic text-navy-300">
                                                     Nothing matches.
                                                     @if ($priceListIsEvent)
-                                                        <a href="{{ route('events.hub', [$inv->event, 'tab' => 'pricing']) }}" class="font-semibold text-indigo-600 hover:underline">Price it for this event</a>.
+                                                        <a href="{{ route('events.hub', [$inv->event, 'tab' => 'pricing']) }}" class="font-semibold text-gold-700 hover:underline">Price it for this event</a>.
                                                     @else
-                                                        <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Add it to the house list</a>.
+                                                        <a href="{{ route('catalogue.index') }}" class="font-semibold text-gold-700 hover:underline">Add it to the house list</a>.
                                                     @endif
                                                 </p>
                                             @endforelse
@@ -310,7 +310,7 @@
                             <span class="block truncate text-[10.5px] text-muted">
                                 {{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }} × {{ number_format($line->unit_cents / 100, 2) }}
                                 @if ($line->payment_id)
-                                    · <span class="text-violet-600">from the schedule</span>
+                                    · <span class="text-navy-500">from the schedule</span>
                                 @endif
                             </span>
                         </button>

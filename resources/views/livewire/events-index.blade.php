@@ -196,7 +196,7 @@
             <span class="min-w-0">
                 <span class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.22em] text-gold-300/90">
                     Mission Radar
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 orbit-pulse"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shell-pulse"></span>
                 </span>
                 <span class="mt-0.5 hidden text-[11px] text-white/40 sm:block">Bearing is arbitrary — distance from the centre is how soon each one lands.</span>
             </span>

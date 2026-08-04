@@ -27,7 +27,7 @@
     h-screen rather than min-h-screen so the panel scrolls its own list instead
     of making the page tall and pushing Settings off the bottom.
 --}}
-<div class="flex h-screen overflow-hidden bg-orbit-navy-3">
+<div class="flex h-screen overflow-hidden bg-shell-navy-3">
 
     <x-app-rail />
     <x-app-panel />

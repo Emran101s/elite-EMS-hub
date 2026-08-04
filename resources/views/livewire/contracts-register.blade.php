@@ -27,10 +27,10 @@
             </div>
 
             <details class="relative" data-menu>
-                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
                     <x-icon name="list" class="h-3.5 w-3.5 text-navy-400" />
                     {{ $type === 'all' ? 'All types' : EventContract::TYPES[$type]['label'] }}
-                    @if ($type !== 'all')<span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>@endif
+                    @if ($type !== 'all')<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
                 </summary>
                 <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
                     <button type="button" wire:click="setType('all')"
@@ -173,7 +173,7 @@
                             @php $due = $nextDue($doc); @endphp
                             <a href="{{ route('events.hub', [$doc->event, 'tab' => 'contract', 'document' => $doc->id]) }}"
                                wire:key="lane-{{ $doc->id }}"
-                               class="block rounded-xl border border-line bg-page/40 p-2.5 transition hover:border-indigo-200 hover:bg-white">
+                               class="block rounded-xl border border-line bg-page/40 p-2.5 transition hover:border-gold-300 hover:bg-white">
                                 <p class="truncate text-[12.5px] font-bold text-navy-900">{{ $doc->displayTitle() }}</p>
                                 <p class="mt-0.5 truncate text-[11px] text-muted">{{ $doc->event?->name }}</p>
                                 <div class="mt-1.5 flex items-center gap-2">

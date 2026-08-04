@@ -193,7 +193,7 @@
                         @if (array_sum($legCounts) > 0)
                             <button type="button" wire:click="deleteAllGuests"
                                     wire:confirm="Delete all {{ array_sum($legCounts) }} guests — arrivals and departures, assigned and unassigned? The vehicles stay. This cannot be undone."
-                                    @class(['text-eyebrow font-bold uppercase tracking-wide text-rose-600 hover:text-rose-800', 'ml-auto' => $legCounts[$guestLeg] === 0])
+                                    @class(['text-eyebrow font-bold uppercase tracking-wide text-red-600 hover:text-red-800', 'ml-auto' => $legCounts[$guestLeg] === 0])
                                     title="Empty the guest list so you can import a corrected sheet">Delete all guests</button>
                         @endif
                     </div>
@@ -248,7 +248,7 @@
                             <button type="button" wire:click="unassignPicked" class="text-eyebrow font-bold uppercase tracking-wide text-navy-500 hover:text-navy-900">Send back to pool</button>
                             <button type="button" wire:click="deletePicked"
                                     wire:confirm="Delete {{ count($pickedGuests) }} {{ \Illuminate\Support\Str::plural('guest', count($pickedGuests)) }} from this event? This cannot be undone."
-                                    class="text-eyebrow font-bold uppercase tracking-wide text-rose-600 hover:text-rose-800">Delete</button>
+                                    class="text-eyebrow font-bold uppercase tracking-wide text-red-600 hover:text-red-800">Delete</button>
                             <button type="button" wire:click="clearPicked" class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-navy-700">Clear</button>
                         </div>
                     @endif

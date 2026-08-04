@@ -97,7 +97,7 @@
                                     </span>
 
                                     <a href="{{ $p->event ? route('events.hub', [$p->event, 'tab' => 'contract']) : '#' }}"
-                                       class="min-w-0 transition hover:text-indigo-600">
+                                       class="min-w-0 transition hover:text-gold-700">
                                         <span class="block truncate text-[12px] font-semibold text-navy-700">{{ $p->event?->name ?? '—' }}</span>
                                         <span class="block truncate text-[10.5px] text-muted">{{ $p->event?->client?->name ?? 'No client' }}</span>
                                     </a>
@@ -131,7 +131,7 @@
                                                  count one payment twice. --}}
                                             <a href="{{ route('invoices.index', ['q' => $inv->number]) }}"
                                                title="Recorded against {{ $inv->number }}"
-                                               class="flex items-center gap-1.5 rounded-lg bg-navy-50 px-2 py-1 font-mono text-[10px] font-bold text-navy-600 transition hover:bg-navy-100 hover:text-indigo-600">
+                                               class="flex items-center gap-1.5 rounded-lg bg-navy-50 px-2 py-1 font-mono text-[10px] font-bold text-navy-600 transition hover:bg-navy-100 hover:text-gold-700">
                                                 <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $inv->stateHex() }}"></span>
                                                 {{ $inv->number }}
                                             </a>

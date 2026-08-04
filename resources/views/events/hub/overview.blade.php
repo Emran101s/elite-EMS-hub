@@ -152,7 +152,7 @@
                     </li>
                 @endforeach
             </ul>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}" class="mt-4 block text-center text-xs font-semibold text-[#3B82F6] hover:underline">View Full Agenda →</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}" class="mt-4 block text-center text-xs font-semibold text-info hover:underline">View Full Agenda →</a>
         @else
             <p class="text-xs text-muted">No sessions yet — the agenda contributes 10% of the health score.</p>
         @endif
@@ -166,7 +166,7 @@
                 </span>
                 Live Alerts
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'risks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'risks']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
         </div>
         <ul class="space-y-3.5">
             @forelse ($alerts as $alert)
@@ -175,7 +175,7 @@
                             'mt-1 h-2 w-2 shrink-0 rounded-full',
                             'bg-risk' => $alert['tone'] === 'risk',
                             'bg-warn' => $alert['tone'] === 'warn',
-                            'bg-[#3B82F6]' => $alert['tone'] === 'info',
+                            'bg-info' => $alert['tone'] === 'info',
                         ])></span>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-xs font-semibold text-navy-900">{{ $alert['title'] }}</p>
@@ -307,7 +307,7 @@
                 @endforeach
             </ul>
         </div>
-        <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="mt-3 block text-center text-xs font-semibold text-[#3B82F6] hover:underline">View All Tasks →</a>
+        <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="mt-3 block text-center text-xs font-semibold text-info hover:underline">View All Tasks →</a>
     </div>
 
     <div class="card p-5">
@@ -319,7 +319,7 @@
         </h3>
         <div class="flex items-center gap-4">
             <x-donut :segments="[
-                ['pct' => min($actual / $budgetTotal * 100, 100), 'class' => 'stroke-[#3B82F6]'],
+                ['pct' => min($actual / $budgetTotal * 100, 100), 'class' => 'stroke-info'],
                 ['pct' => min($committed / $budgetTotal * 100, max(100 - $actual / $budgetTotal * 100, 0)), 'class' => 'stroke-warn'],
                 ['pct' => min($remaining / $budgetTotal * 100, max(100 - ($actual + $committed) / $budgetTotal * 100, 0)), 'class' => 'stroke-track'],
             ]" size="h-28 w-28" class="shrink-0">
@@ -328,7 +328,7 @@
             </x-donut>
             <ul class="space-y-2 text-[0.68rem]">
                 @foreach ([
-                    ['Spent', $actual, 'bg-[#3B82F6]'], ['Committed', $committed, 'bg-warn'], ['Remaining', $remaining, 'bg-track'],
+                    ['Spent', $actual, 'bg-info'], ['Committed', $committed, 'bg-warn'], ['Remaining', $remaining, 'bg-track'],
                 ] as [$label, $cents, $dot])
                     <li class="flex items-center gap-1.5">
                         <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
@@ -356,7 +356,7 @@
             </div>
         </div>
 
-        <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" class="mt-3 block text-center text-xs font-semibold text-[#3B82F6] hover:underline">View Budget Details →</a>
+        <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" class="mt-3 block text-center text-xs font-semibold text-info hover:underline">View Budget Details →</a>
     </div>
 
     <div class="card p-5">
@@ -367,7 +367,7 @@
                 </span>
                 Top Suppliers
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'suppliers']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'suppliers']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
         </div>
         <ul class="divide-y divide-line">
             @forelse ($event->suppliers->sortByDesc('rating')->take(4) as $supplier)
@@ -393,7 +393,7 @@
                 </span>
                 Team Workload
             </h3>
-            <a href="{{ route('team.index') }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View team</a>
+            <a href="{{ route('team.index') }}" class="text-[0.65rem] font-semibold text-info hover:underline">View team</a>
         </div>
         <ul class="space-y-3.5">
             @forelse ($workload as $row)
@@ -428,7 +428,7 @@
                 </span>
                 Upcoming Deadlines
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
         </div>
         <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
             @forelse ($event->tasks->where('status', '!=', 'done')->whereNotNull('due_on')->sortBy('due_on')->take(5) as $task)
@@ -459,7 +459,7 @@
                 </span>
                 AI Recommendations
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-[#3B82F6] hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
         </div>
         <ul class="space-y-2.5 text-xs text-navy-800">
             @foreach (array_slice($ai['attention'], 0, 3) as $point)

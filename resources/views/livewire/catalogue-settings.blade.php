@@ -44,7 +44,7 @@
         @endif
 
         <a href="{{ route('taxonomies.index', ['list' => 'service_section']) }}" wire:navigate
-           class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-indigo-600">Edit sections</a>
+           class="ms-auto text-[11px] font-semibold text-navy-400 transition hover:text-gold-700">Edit sections</a>
     </div>
 
     {{-- ══ the bar ══ --}}
@@ -56,10 +56,10 @@
         </div>
 
         <details class="relative" data-menu>
-            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200 [&::-webkit-details-marker]:hidden">
+            <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
                 <x-icon name="list" class="h-3.5 w-3.5 text-navy-400" />
                 {{ $category === 'all' ? 'All categories' : $category }}
-                @if ($category !== 'all')<span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>@endif
+                @if ($category !== 'all')<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
             </summary>
             <div class="absolute z-30 mt-2 max-h-72 w-56 overflow-y-auto rounded-2xl border border-line bg-white p-1.5 shadow-xl">
                 <button type="button" wire:click="$set('category', 'all')"
@@ -82,7 +82,7 @@
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('catalogue.template', $section === 'all' || $section === 'none' ? [] : ['section' => $section]) }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
+               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
                 <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" /> Template
             </a>
 

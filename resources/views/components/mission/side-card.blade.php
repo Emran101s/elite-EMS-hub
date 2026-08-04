@@ -9,7 +9,7 @@
 @php $m = $mission; @endphp
 
 <button type="button" wire:click="activate({{ $m['id'] }})" wire:key="side-{{ $m['id'] }}"
-        {{ $attributes->merge(['class' => 'group/side w-full overflow-hidden rounded-[20px] border border-line bg-white/85 text-left shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-indigo-200 hover:bg-white hover:shadow-[0_22px_44px_-26px_rgba(30,27,75,0.5)]']) }}>
+        {{ $attributes->merge(['class' => 'group/side w-full overflow-hidden rounded-[20px] border border-line bg-white/85 text-left shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-gold-300 hover:bg-white hover:shadow-[0_22px_44px_-26px_rgba(30,27,75,0.5)]']) }}>
 
     <div class="relative isolate h-[92px] overflow-hidden">
         @if ($m['cover'])
@@ -49,6 +49,6 @@
                 <span class="grid h-6 w-6 place-items-center rounded-full bg-navy-50 text-[8.5px] font-bold text-navy-500 ring-2 ring-white">+{{ $m['teamMore'] }}</span>
             @endif
         </div>
-        <span class="shrink-0 text-[10px] font-semibold text-navy-400 transition group-hover/side:text-indigo-600">Bring in →</span>
+        <span class="shrink-0 text-[10px] font-semibold text-navy-400 transition group-hover/side:text-gold-700">Bring in →</span>
     </div>
 </button>

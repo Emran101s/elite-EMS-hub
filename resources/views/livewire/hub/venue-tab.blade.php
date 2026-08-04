@@ -7,10 +7,10 @@
     $typeMeta = [
         'main_hall' => ['building', 'bg-navy-100', 'text-navy-700'],
         'breakout' => ['users', 'bg-sky-100', 'text-sky-600'],
-        'exhibition' => ['grid', 'bg-violet-100', 'text-violet-600'],
-        'registration' => ['identification', 'bg-indigo-100', 'text-indigo-600'],
+        'exhibition' => ['grid', 'bg-navy-50', 'text-navy-600'],
+        'registration' => ['identification', 'bg-gold-100', 'text-gold-700'],
         'vip' => ['star', 'bg-amber-100', 'text-amber-700'],
-        'catering' => ['home', 'bg-teal-100', 'text-teal-600'],
+        'catering' => ['home', 'bg-emerald-100', 'text-emerald-600'],
     ];
     $totalCost = $rooms->sum(fn ($r) => $r->totalCents());
     $totalCap = $rooms->sum('capacity');

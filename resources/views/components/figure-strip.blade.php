@@ -28,10 +28,10 @@
     $tones = [
         'navy' => ['bg-navy-950', 'text-gold-400'],
         'green' => ['bg-emerald-500', 'text-white'],
-        'blue' => ['bg-blue-500', 'text-white'],
+        'blue' => ['bg-info', 'text-white'],
         'red' => ['bg-red-500', 'text-white'],
         'gold' => ['bg-gold-500', 'text-navy-950'],
-        'violet' => ['bg-violet-500', 'text-white'],
+        'violet' => ['bg-navy-700', 'text-white'],
     ];
     // Container queries, not breakpoints: this strip sits in a column with a
     // rail beside it on some pages and not on others, and a breakpoint answers

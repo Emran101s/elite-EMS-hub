@@ -125,9 +125,9 @@
 
                             <span class="flex min-w-0 items-center gap-1.5">
                                 <a href="{{ route('proposals.edit', $p) }}" wire:navigate title="Open the offer"
-                                   class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-indigo-600">{{ $p->number }}</a>
+                                   class="truncate font-mono text-[11px] font-bold text-navy-700 transition hover:text-gold-700">{{ $p->number }}</a>
                                 <a href="{{ route('proposals.pdf', $p) }}" title="Download the PDF"
-                                   class="shrink-0 text-navy-300 transition hover:text-indigo-600">
+                                   class="shrink-0 text-navy-300 transition hover:text-gold-700">
                                     <x-icon name="document" class="h-3.5 w-3.5" />
                                 </a>
                             </span>

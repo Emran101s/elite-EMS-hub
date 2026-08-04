@@ -2,12 +2,12 @@
     $readiness = ['requested' => 10, 'quoted' => 30, 'approved' => 50, 'contracted' => 70, 'in_production' => 80, 'delivered' => 95, 'completed' => 100, 'issue' => 20];
     $avg = $event->suppliers->isEmpty() ? null : (int) round($event->suppliers->avg(fn ($s) => $readiness[$s->pivot->status] ?? 10));
     $catMeta = [
-        'catering' => ['Catering', 'bg-teal-100 text-teal-700'],
-        'av_lighting' => ['AV & Lighting', 'bg-violet-100 text-violet-700'],
+        'catering' => ['Catering', 'bg-emerald-100 text-emerald-700'],
+        'av_lighting' => ['AV & Lighting', 'bg-navy-50 text-navy-700'],
         'production' => ['Production', 'bg-sky-100 text-sky-700'],
         'support' => ['Support', 'bg-navy-100 text-navy-700'],
         'logistics' => ['Logistics', 'bg-amber-100 text-amber-700'],
-        'decor' => ['Décor', 'bg-rose-100 text-rose-700'],
+        'decor' => ['Décor', 'bg-amber-100 text-amber-700'],
     ];
 
     // What each supplier is carrying on this event, read off the budget.
@@ -36,7 +36,7 @@
             <p class="text-[0.65rem] text-muted">{{ $event->suppliers->count() }} {{ str('supplier')->plural($event->suppliers->count()) }} on this event · requested → quoted → approved → contracted → in production → delivered → completed</p>
             @if ($committedTotal > 0)
                 <p class="mt-1 text-[0.65rem] font-semibold text-navy-600">
-                    <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate class="hover:text-indigo-600">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate class="hover:text-gold-700">
                         {{ $event->money($committedTotal) }} committed across {{ $spend->count() }} of them
                     </a>
                 </p>
@@ -86,7 +86,7 @@
                     @if ($money)
                         <span class="text-eyebrow font-bold uppercase tracking-wide text-navy-400">Committed</span>
                         <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate
-                           class="pf text-[13px] font-black tabular-nums text-navy-900 hover:text-indigo-600">{{ $event->money($money['committed']) }}</a>
+                           class="pf text-[13px] font-black tabular-nums text-navy-900 hover:text-gold-700">{{ $event->money($money['committed']) }}</a>
                         <span class="text-micro text-muted">{{ $money['lines'] }} {{ str('line')->plural($money['lines']) }}</span>
                         @if ($money['paid'] > 0)
                             <span class="ms-auto text-micro font-semibold text-emerald-700">{{ $event->money($money['paid']) }} paid</span>

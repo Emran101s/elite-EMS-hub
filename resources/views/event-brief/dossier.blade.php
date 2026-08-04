@@ -23,7 +23,7 @@
 <div class="sheet">
 
     {{-- Dossier hero --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-[#071528] px-12 pb-10 pt-12 text-white">
+    <div class="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-navy-950 px-12 pb-10 pt-12 text-white">
         <div class="pointer-events-none absolute inset-0">
             <div class="absolute -right-16 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.22),transparent_65%)]"></div>
             <div class="absolute left-12 top-11 h-px w-16 bg-gold-400"></div>

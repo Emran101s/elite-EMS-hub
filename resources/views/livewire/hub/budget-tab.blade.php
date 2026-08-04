@@ -19,9 +19,9 @@
     $money = 'w-24 shrink-0 text-right';
     // Per-category colour + icon, cycled by position — a distinct chip like the builder concept.
     $catPalette = [
-        ['bg-sky-100', 'text-sky-600'], ['bg-blue-100', 'text-blue-600'], ['bg-rose-100', 'text-rose-600'],
-        ['bg-violet-100', 'text-violet-600'], ['bg-teal-100', 'text-teal-600'], ['bg-emerald-100', 'text-emerald-600'],
-        ['bg-amber-100', 'text-amber-600'], ['bg-indigo-100', 'text-indigo-600'], ['bg-fuchsia-100', 'text-fuchsia-600'],
+        ['bg-navy-50', 'text-navy-600'], ['bg-gold-100', 'text-gold-700'], ['bg-emerald-100', 'text-emerald-600'],
+        ['bg-amber-100', 'text-amber-600'], ['bg-red-100', 'text-red-600'], ['bg-info-soft', 'text-info-ink'],
+        ['bg-navy-100', 'text-navy-700'], ['bg-gold-50', 'text-gold-800'], ['bg-emerald-50', 'text-emerald-700'],
     ];
     $catIcons = ['users', 'building', 'clipboard', 'grid', 'star', 'truck', 'archive', 'currency', 'chart'];
 @endphp
@@ -622,7 +622,7 @@
                         @foreach ($linkedByModule as $src => $m)
                             @php $meta = \App\Models\EventBudgetItem::SOURCES[$src] ?? ['A module', 'budget']; @endphp
                             <a href="{{ route('events.hub', [$event, 'tab' => $meta[1]]) }}" wire:navigate
-                               class="mt-1.5 flex items-baseline gap-2 text-[11.5px] transition hover:text-indigo-600">
+                               class="mt-1.5 flex items-baseline gap-2 text-[11.5px] transition hover:text-gold-700">
                                 <span class="font-bold text-navy-700">{{ $meta[0] }}</span>
                                 <span class="text-muted">{{ $m['n'] }} {{ str('line')->plural($m['n']) }}</span>
                                 <span class="pf ms-auto font-black tabular-nums text-navy-900">{{ number_format($m['cents'] / 100, 2) }}</span>

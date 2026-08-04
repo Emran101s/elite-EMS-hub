@@ -21,14 +21,14 @@
      @class([
          'group relative flex h-[318px] w-full cursor-pointer flex-col overflow-hidden rounded-3xl border bg-white transition duration-300',
          'border-gold-400 shadow-[0_18px_40px_rgba(212,175,55,0.16)] ring-1 ring-gold-300' => $selected,
-         'border-line shadow-[0_12px_30px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:border-[rgba(212,175,55,0.45)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)]' => ! $selected,
+         'border-line shadow-[0_12px_30px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:border-gold-400/45 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)]' => ! $selected,
      ])>
 
     {{-- stage edge --}}
     <span class="absolute inset-x-0 top-0 z-20 h-1" style="background: {{ $stageHex }}" title="{{ str($event->stage)->replace('_', ' ')->title() }}"></span>
 
     {{-- visual: the crest sits on a branded navy band, so pale logos still read --}}
-    <div class="relative h-[124px] shrink-0 overflow-hidden bg-gradient-to-br from-navy-800 to-[#061225]">
+    <div class="relative h-[124px] shrink-0 overflow-hidden bg-gradient-to-br from-navy-800 to-navy-950">
         <div class="pointer-events-none absolute -right-7 -top-9 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.30),transparent_70%)]"></div>
 
         @if ($event->cover_path)

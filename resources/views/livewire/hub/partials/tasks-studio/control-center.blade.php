@@ -25,7 +25,7 @@
         ['Total Tasks', $stats['total'], 'text-navy-900'],
         ['Overdue', $stats['overdue'], $stats['overdue'] > 0 ? 'text-red-600' : 'text-navy-900'],
         ['Due Today', $dueToday, $dueToday > 0 ? 'text-amber-600' : 'text-navy-900'],
-        ['Need Approval', $stats['needApproval'], $stats['needApproval'] > 0 ? 'text-orange-600' : 'text-navy-900'],
+        ['Need Approval', $stats['needApproval'], $stats['needApproval'] > 0 ? 'text-amber-600' : 'text-navy-900'],
         ['Completed', $stats['pct'].'%', 'text-emerald-600'],
         ['Assigned to Me', $stats['mine'], 'text-navy-900'],
         ['Open', $openCount, 'text-navy-900'],
@@ -131,7 +131,7 @@
             <div class="rounded-2xl border border-line bg-page/40 p-3.5">
                 <p class="eyebrow mb-2">Summary</p>
                 <dl class="space-y-1 text-3xs">
-                    @foreach ([['Total', $stats['total'], 'text-navy-800'], ['Completed', $doneCount, 'text-emerald-600'], ['Open', $openCount, 'text-navy-800'], ['Overdue', $stats['overdue'], 'text-red-600'], ['Approval', $stats['needApproval'], 'text-orange-600']] as [$l, $v, $t])
+                    @foreach ([['Total', $stats['total'], 'text-navy-800'], ['Completed', $doneCount, 'text-emerald-600'], ['Open', $openCount, 'text-navy-800'], ['Overdue', $stats['overdue'], 'text-red-600'], ['Approval', $stats['needApproval'], 'text-amber-600']] as [$l, $v, $t])
                         <div class="flex items-center justify-between">
                             <dt class="text-navy-500">{{ $l }}</dt>
                             <dd class="font-black {{ $t }}">{{ $v }}</dd>
@@ -150,7 +150,7 @@
             </div>
             <div class="mt-2.5 space-y-1.5">
                 @foreach ($insights as [$tone, $text, $act])
-                    @php $dot = ['risk' => 'bg-red-500', 'warn' => 'bg-amber-500', 'info' => 'bg-blue-500', 'ok' => 'bg-emerald-500'][$tone]; @endphp
+                    @php $dot = ['risk' => 'bg-red-500', 'warn' => 'bg-amber-500', 'info' => 'bg-info', 'ok' => 'bg-emerald-500'][$tone]; @endphp
                     <div class="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-line">
                         <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $dot }}"></span>
                         <span class="flex-1 text-3xs font-semibold text-navy-700">{{ $text }}</span>

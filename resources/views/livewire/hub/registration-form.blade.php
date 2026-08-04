@@ -11,7 +11,7 @@
             <span class="block text-[13px] font-bold text-navy-900">The questions this event asks</span>
             <span class="block text-[11.5px] text-muted">
                 {{ $fields->count() }} {{ str('question')->plural($fields->count()) }} ·
-                what a registrant sees at <a href="{{ $event->registrationUrl() }}" target="_blank" class="font-semibold text-indigo-600 hover:underline">the public link</a>.
+                what a registrant sees at <a href="{{ $event->registrationUrl() }}" target="_blank" class="font-semibold text-gold-700 hover:underline">the public link</a>.
             </span>
         </span>
 
@@ -54,7 +54,7 @@
                             @endif
 
                             <a href="{{ route('registration-templates.index') }}" wire:navigate
-                               class="mt-1 block px-2.5 py-1.5 text-[10.5px] font-semibold text-navy-400 transition hover:text-indigo-600">Manage templates →</a>
+                               class="mt-1 block px-2.5 py-1.5 text-[10.5px] font-semibold text-navy-400 transition hover:text-gold-700">Manage templates →</a>
                         </div>
                     </details>
                 @endif
@@ -182,7 +182,7 @@
                         {{ $columns[$field->maps_to] ?? $field->maps_to }}
                     </span>
                 @else
-                    <span class="hidden shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600 sm:block"
+                    <span class="hidden shrink-0 rounded-full bg-gold-50 px-2 py-0.5 text-[10px] font-bold text-gold-700 sm:block"
                           title="Kept as an answer under “{{ $field->key }}”">Answer</span>
                 @endif
 

@@ -28,7 +28,7 @@
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('proposals.pdf', $p) }}"
-               class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-indigo-200">
+               class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
                 <x-icon name="document" class="h-3.5 w-3.5 text-navy-400" /> PDF
             </a>
 
@@ -176,7 +176,7 @@
                                  room quoted now and billed in six months comes
                                  from one price. --}}
                             @if ($picked)
-                                <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5">
+                                <div class="rounded-xl border border-gold-200 bg-gold-50/70 p-2.5">
                                     <div class="flex items-center gap-2">
                                         <span class="min-w-0 flex-1">
                                             <span class="block truncate text-[12px] font-bold text-navy-900">{{ $picked->name }}</span>
@@ -237,7 +237,7 @@
                                                 </button>
                                             @empty
                                                 <p class="px-2 py-3 text-center text-[11px] italic text-navy-300">
-                                                    Nothing matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-indigo-600 hover:underline">Add it to the price list</a>.
+                                                    Nothing matches. <a href="{{ route('catalogue.index') }}" class="font-semibold text-gold-700 hover:underline">Add it to the price list</a>.
                                                 </p>
                                             @endforelse
                                         </div>
