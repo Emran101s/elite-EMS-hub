@@ -536,6 +536,18 @@
             @endif
 
             <div class="overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_16px_40px_-24px_rgba(11,31,58,0.25)]">
+                {{-- ══ THE MANIFEST STRIP ══
+                     A ledger identity for the one view built for scanning, not
+                     browsing: a gold-tinted masthead and a doubled rule under
+                     the column heads — the two marks that read "this is a
+                     manifest" before a single row has been read. --}}
+                <div class="flex items-center gap-2 bg-gradient-to-r from-gold-50/70 via-white to-white px-4 py-2.5">
+                    <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.22em] text-gold-700">
+                        <span class="h-px w-4 bg-gold-400"></span>Mission Manifest
+                    </p>
+                    <p class="ms-auto text-[10.5px] text-muted">Sorted by {{ ['date' => 'date', 'health' => 'health', 'budget' => 'budget spent'][$sort] ?? 'date' }}</p>
+                </div>
+
                 <div class="scrollbar-none overflow-x-auto">
                     <div class="min-w-[1120px]">
                         @php
@@ -544,7 +556,7 @@
                             $pageAllOn = $pageIds !== [] && ! array_diff($pageIds, $selectedIds);
                         @endphp
 
-                        <div class="grid {{ $cols }} items-center gap-3 border-b border-navy-100 bg-page/80 px-4 py-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
+                        <div class="grid {{ $cols }} items-center gap-3 border-b border-navy-900/[0.08] bg-page/80 px-4 py-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400">
                             <span>
                                 @can('manage-events')
                                     <input type="checkbox" @checked($pageAllOn)
@@ -556,6 +568,7 @@
                             <span class="text-center">Progress</span><span>Budget</span>
                             <span class="text-center">Attendees</span><span>Health</span><span>Next milestone</span><span></span>
                         </div>
+                        <div class="h-px bg-gold-200/70"></div>
 
                         <div class="divide-y divide-line">
                             @foreach ($rows as $m)
@@ -566,7 +579,8 @@
                                          'relative grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
                                          'bg-gold-50/50 shadow-[inset_3px_0_0_0_theme(colors.gold.500)]' => $on && ! $ticked,
                                          'bg-red-50/50' => $ticked,
-                                         'hover:bg-page/60' => ! $on && ! $ticked,
+                                         'bg-page/40' => ! $on && ! $ticked && $loop->even,
+                                         'hover:bg-page/70' => ! $on && ! $ticked,
                                      ])>
                                     {{-- a status-colour thread down the row's own left edge, so
                                          the eye can scan "who's in trouble" down the column of
@@ -583,16 +597,21 @@
                                     </span>
 
                                     <div class="flex min-w-0 items-center gap-3">
-                                        <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50 ring-1 ring-navy-100">
-                                            @if ($m['cover'])
-                                                <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover">
-                                            @else
-                                                <x-event-crest :event="$m['event']" class="h-full w-full" />
-                                            @endif
+                                        <span class="grid h-11 w-14 shrink-0 place-items-center rounded-xl bg-white p-[3px] shadow-sm ring-1 ring-navy-100">
+                                            <span class="h-full w-full overflow-hidden rounded-[8px]">
+                                                @if ($m['cover'])
+                                                    <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover">
+                                                @else
+                                                    <x-event-crest :event="$m['event']" class="h-full w-full" />
+                                                @endif
+                                            </span>
                                         </span>
                                         <span class="min-w-0">
                                             <span class="block truncate text-[13px] font-bold text-navy-950">{{ $m['name'] }}</span>
-                                            <span class="block truncate text-[10.5px] text-muted">{{ $m['description'] ?: ($m['client'] ?: 'No description') }}</span>
+                                            <span class="flex items-center gap-1.5">
+                                                <span class="shrink-0 font-mono text-[9px] font-bold tracking-wider text-gold-600/80">EV-{{ str_pad($m['id'], 4, '0', STR_PAD_LEFT) }}</span>
+                                                <span class="truncate text-[10.5px] text-muted">{{ $m['description'] ?: ($m['client'] ?: 'No description') }}</span>
+                                            </span>
                                         </span>
                                     </div>
 
@@ -709,7 +728,7 @@
                                     <span class="absolute top-1" style="left: {{ $month['left'] }}%">
                                         <span @class([
                                             'rounded-lg px-2 py-1 text-[10.5px] font-bold uppercase tracking-[0.14em]',
-                                            'bg-navy-950 text-white' => $month['current'],
+                                            'bg-gold-500 text-navy-950' => $month['current'],
                                             'text-navy-400' => ! $month['current'],
                                         ])>{{ $month['label'] }}</span>
                                     </span>
@@ -723,15 +742,21 @@
                                         <span class="absolute inset-y-0 w-px bg-line/60" style="left: {{ $month['left'] }}%"></span>
                                     @endforeach
                                     @if ($months['todayLeft'] !== null)
+                                        {{-- a flag rather than a dot: this line is the one date on
+                                             the canvas that means something on its own, so it gets
+                                             a marker that reads as "here" from across the page. --}}
                                         <span data-fp-line class="absolute inset-y-0 w-px bg-gold-500/70" style="left: {{ $months['todayLeft'] }}%">
-                                            <span class="absolute -left-[3px] -top-1 h-[7px] w-[7px] rounded-full bg-gold-500 shadow-[0_0_0_3px_rgba(212,175,55,0.25)]"></span>
+                                            <span class="absolute -top-[3px] left-0 h-0 w-0 border-y-[6px] border-l-[9px] border-y-transparent border-l-gold-500 drop-shadow-[0_2px_3px_rgba(212,175,55,0.4)]"></span>
                                         </span>
                                     @endif
                                 </div>
 
                                 @foreach ($lanes as $lane)
-                                    <div class="relative flex items-stretch border-b border-line/70 last:border-b-0">
-                                        <div class="z-10 flex w-[172px] shrink-0 items-center gap-2.5 bg-white py-4 pe-4">
+                                    <div @class([
+                                        'relative flex items-stretch border-b border-line/70 last:border-b-0',
+                                        'bg-page/35' => $loop->even,
+                                    ])>
+                                        <div class="z-10 flex w-[172px] shrink-0 items-center gap-2.5 py-4 pe-4 {{ $loop->even ? 'bg-page/35' : 'bg-white' }}">
                                             <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-page text-navy-400">
                                                 <x-icon :name="$lane['icon']" class="h-4 w-4" />
                                             </span>
@@ -742,12 +767,19 @@
                                         </div>
 
                                         <div class="relative min-h-[108px] flex-1 py-3">
+                                            {{-- the lane's own baseline: where a mission's date sits
+                                                 exactly, plotted as a waypoint rather than left only
+                                                 to the card's own (edge-clamped) position above it. --}}
+                                            <div class="pointer-events-none absolute inset-x-0 bottom-2 h-px bg-line/50" aria-hidden="true"></div>
+
                                             @foreach ($lane['missions'] as $m)
                                                 @php
                                                     $start = $m['event']->starts_at;
                                                     $left = $start ? round($months['from']->diffInDays($start) / $months['span'] * 100, 3) : 0;
                                                     $on = $active && $m['id'] === $active['id'];
                                                 @endphp
+                                                <span class="pointer-events-none absolute bottom-2 z-0 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-full ring-2 ring-white"
+                                                      style="left: {{ $left }}%; background: {{ $m['statusHex'] }}" aria-hidden="true"></span>
                                                 <button type="button" wire:click="activate({{ $m['id'] }})" wire:key="fp-{{ $m['id'] }}"
                                                         @class([
                                                             'absolute top-3 z-10 flex w-[236px] items-center gap-2.5 rounded-2xl border p-2 text-left transition',
@@ -755,12 +787,14 @@
                                                             'border-line bg-white/90 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-lg' => ! $on,
                                                         ])
                                                         style="left: min({{ $left }}%, calc(100% - 236px))">
-                                                    <span class="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-navy-50">
-                                                        @if ($m['cover'])
-                                                            <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover">
-                                                        @else
-                                                            <x-event-crest :event="$m['event']" class="h-full w-full" />
-                                                        @endif
+                                                    <span class="grid h-11 w-14 shrink-0 place-items-center rounded-xl bg-white p-[3px] shadow-sm ring-1 ring-navy-100">
+                                                        <span class="h-full w-full overflow-hidden rounded-[8px]">
+                                                            @if ($m['cover'])
+                                                                <img src="{{ $m['cover'] }}" alt="" class="h-full w-full object-cover">
+                                                            @else
+                                                                <x-event-crest :event="$m['event']" class="h-full w-full" />
+                                                            @endif
+                                                        </span>
                                                     </span>
                                                     <span class="min-w-0 flex-1">
                                                         <span class="block truncate text-[12px] font-bold text-navy-950">{{ $m['name'] }}</span>
