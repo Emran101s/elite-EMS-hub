@@ -22,31 +22,40 @@
     {{-- ══════════ THE STUDIO'S OWN HEADER ══════════ --}}
     <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
         <div class="min-w-0">
-            <h1 class="pf flex items-center gap-2 text-[28px] font-black leading-none text-navy-950">
+            <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-gold-700">New mission</p>
+            <h1 class="pf mt-1 flex items-center gap-2 text-[28px] font-black leading-none text-navy-950">
                 Event Studio <x-icon name="sparkles" class="h-5 w-5 text-gold-500" />
             </h1>
             <p class="mt-1.5 text-[12.5px] text-muted">Define your event. The platform builds everything around it.</p>
         </div>
 
-        <a href="{{ route('events.index') }}" class="ms-auto flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
-            ← Back to events
-        </a>
+        <div class="ms-auto flex flex-wrap items-center gap-2">
+            <a href="{{ route('events.index') }}"
+               class="flex h-10 items-center gap-1.5 rounded-2xl border border-gold-200 bg-gold-50/50 px-3.5 text-[12px] font-semibold text-gold-800 shadow-sm transition hover:border-gold-300 hover:bg-gold-50"
+               title="Open an existing event’s Settings → Duplicate to start from it">
+                <x-icon name="share" class="h-3.5 w-3.5" /> Start from an existing event
+            </a>
+            <a href="{{ route('events.index') }}" class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
+                ← Back to events
+            </a>
+        </div>
     </div>
 
     {{-- ══════════ THE FIVE ROOMS ══════════ --}}
-    <div class="card overflow-hidden">
+    <div class="card relative isolate overflow-hidden">
+        <span class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold-400/80 to-transparent" aria-hidden="true"></span>
         <div class="scrollbar-none flex items-stretch overflow-x-auto">
             @foreach ($steps as $n => [$label, $note])
                 @php $done = $n < $step; $on = $n === $step; @endphp
                 <button type="button" wire:click="goTo({{ $n }})" @disabled($n > $step && ! $done)
                         @class([
                             'group relative flex min-w-[168px] flex-1 items-center gap-2.5 px-4 py-3.5 text-left transition',
-                            'text-navy-950' => $on,
+                            'bg-gold-50/40 text-navy-950' => $on,
                             'text-navy-500 hover:bg-page/60' => ! $on,
                             'cursor-not-allowed opacity-45' => $n > $step,
                         ])>
                     <span @class([
-                        'grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-black transition',
+                        'grid h-7 w-7 shrink-0 place-items-center rounded-xl text-[11px] font-black transition',
                         'bg-gold-500 text-navy-950' => $on,
                         'bg-emerald-500 text-white' => $done,
                         'bg-navy-50 text-navy-400' => ! $on && ! $done,
@@ -54,6 +63,9 @@
 
                     <span class="min-w-0">
                         <span class="block truncate text-[12.5px] font-bold">{{ $label }}</span>
+                        @if ($on)
+                            <span class="mt-0.5 block truncate text-[10.5px] text-muted">{{ $note }}</span>
+                        @endif
                     </span>
 
                     @if ($on)
@@ -70,7 +82,7 @@
         {{-- ─────────── ZONE 1 ─────────── --}}
         <div class="card min-w-0 p-5 lg:p-6">
             <div class="mb-5 flex items-center gap-2.5">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-950 text-[12px] font-black text-gold-400">{{ $step }}</span>
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-navy-950 text-[12px] font-black text-gold-400">{{ $step }}</span>
                 <div class="min-w-0">
                     <h2 class="pf text-[17px] font-bold text-navy-950">{{ $steps[$step][0] }}</h2>
                     <p class="text-[11.5px] text-muted">{{ $steps[$step][1] }}</p>
@@ -137,17 +149,18 @@
                                 @php $on = $template === $key; @endphp
                                 <button type="button" wire:click="chooseTemplate('{{ $key }}')"
                                         @class([
-                                            'group relative flex flex-col items-center gap-2 rounded-2xl border p-3.5 text-center transition',
+                                            'group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border p-3.5 text-center transition',
                                             'border-gold-400 bg-gold-50/60 shadow-[0_10px_26px_-18px_rgba(212,175,55,0.9)]' => $on,
                                             'border-line bg-white hover:-translate-y-0.5 hover:border-gold-200 hover:shadow-sm' => ! $on,
                                         ])>
                                     @if ($on)
+                                        <span class="absolute inset-y-0 start-0 w-[3px] bg-gold-500" aria-hidden="true"></span>
                                         <span class="absolute end-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-gold-500 text-[10px] font-black text-navy-950">✓</span>
                                     @endif
                                     <span @class([
                                         'grid h-11 w-11 place-items-center rounded-xl transition',
                                         'bg-gold-500 text-navy-950' => $on,
-                                        'bg-page text-navy-500 group-hover:bg-navy-50' => ! $on,
+                                        'bg-navy-50 text-navy-500 group-hover:bg-gold-100/70 group-hover:text-gold-700' => ! $on,
                                     ])>
                                         <x-icon :name="$icon" class="h-5 w-5" />
                                     </span>
@@ -229,18 +242,22 @@
                             <p class="eyebrow mb-2">{{ $group }}</p>
                             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                 @foreach ($mods as $key => [$label, $cat, $icon])
-                                    @php $on = in_array($key, $modules, true); @endphp
+                                    @php
+                                        $on = in_array($key, $modules, true);
+                                        $hex = \App\Models\Event::moduleColor($key);
+                                    @endphp
                                     <button type="button" wire:click="toggleModule('{{ $key }}')"
                                             @class([
-                                                'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition',
+                                                'relative flex items-center gap-2.5 overflow-hidden rounded-xl border px-3 py-2.5 text-left transition',
                                                 'border-navy-950 bg-navy-950 text-white' => $on,
                                                 'border-line bg-white text-navy-600 hover:border-navy-200' => ! $on,
                                             ])>
-                                        <span @class([
-                                            'grid h-8 w-8 shrink-0 place-items-center rounded-lg',
-                                            'bg-white/10 text-gold-400' => $on,
-                                            'bg-page text-navy-400' => ! $on,
-                                        ])>
+                                        @if ($on)
+                                            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $hex }}" aria-hidden="true"></span>
+                                        @endif
+                                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
+                                              style="{{ $on ? 'color:'.$hex.';background:'.$hex.'22' : '' }}"
+                                              @class(['bg-navy-50 text-navy-400' => ! $on])>
                                             <x-icon :name="$icon" class="h-4 w-4" />
                                         </span>
                                         <span class="min-w-0 flex-1 truncate text-[12px] font-bold">{{ $label }}</span>
@@ -360,9 +377,9 @@
                          screen whose only control is "Back" reads as a dead end. --}}
                     <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                             class="flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-5 text-[12px] font-black text-navy-950 shadow-[0_12px_26px_-16px_rgba(212,175,55,0.95)] transition hover:brightness-105 disabled:opacity-60">
-                        <span wire:loading.remove wire:target="save">🚀</span>
-                        <span wire:loading wire:target="save">…</span>
-                        <span wire:loading.remove wire:target="save">Launch Event</span>
+                        <span wire:loading.remove wire:target="save" class="flex items-center gap-1.5">
+                            <x-icon name="sparkles" class="h-3.5 w-3.5" /> Launch Event
+                        </span>
                         <span wire:loading wire:target="save">Building…</span>
                     </button>
                 @endif
@@ -401,43 +418,57 @@
                  exists — a preview that is a different shape is not a preview.
                  The cover takes the slack: everything under it is fixed height,
                  so the ratio holds whatever the column width is. --}}
-            <article class="mx-auto flex w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-line bg-white shadow-[0_24px_60px_-38px_rgba(11,31,58,0.55)]"
+            {{-- Same Command Pass language as the Events deck: light field,
+                 framed emblem, barcode — so the preview is the card you will
+                 actually see after launch, not a darker cousin of it. --}}
+            <article class="mx-auto flex w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-white/60 bg-white shadow-[0_24px_60px_-38px_rgba(11,31,58,0.45)] ring-1 ring-navy-950/5"
                      style="aspect-ratio: 66 / 100">
-                {{-- the cover --}}
-                <div class="relative isolate min-h-[150px] flex-1 overflow-hidden bg-navy-950">
-                    @if ($cover)
-                        <img src="{{ $cover->temporaryUrl() }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover">
-                    @else
-                        <div class="absolute inset-0 -z-10" style="background:
-                            radial-gradient(120% 120% at 80% 0%, rgba(212,175,55,.42) 0%, transparent 60%),
-                            linear-gradient(160deg, #0b1f3a, #060f1f)"></div>
-                    @endif
-                    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/60 to-transparent"></div>
+                <div class="relative isolate flex min-h-[150px] flex-1 flex-col overflow-hidden bg-gradient-to-br from-gold-50/80 via-white to-navy-50/60">
+                    <div class="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                        <span class="absolute aspect-square h-[80%] rounded-full border border-dashed border-gold-300/60"></span>
+                        <span class="absolute aspect-square h-[54%] rounded-full border border-dashed border-gold-300/50"></span>
+                        <span class="absolute aspect-square h-[30%] rounded-full border border-navy-100"></span>
+                    </div>
 
-                    <div class="flex justify-end p-3">
-                        <label for="s-cover-quick" class="flex cursor-pointer items-center gap-1.5 rounded-xl bg-navy-950/70 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur transition hover:bg-navy-950">
+                    <div class="relative z-10 flex items-start justify-between p-3">
+                        <span class="inline-flex rounded-full bg-white px-2.5 py-1 text-[9.5px] font-black uppercase tracking-[0.14em] shadow-sm ring-1 ring-navy-100"
+                              style="color: {{ $pStageHex }}">{{ $pStage }}</span>
+                        <label for="s-cover-quick" class="flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-[11px] font-semibold text-navy-700 shadow-sm ring-1 ring-navy-100 transition hover:ring-gold-300">
                             <x-icon name="grid" class="h-3.5 w-3.5" /> Edit cover
                         </label>
                         <input id="s-cover-quick" type="file" wire:model="cover" accept="image/*" class="hidden">
                     </div>
+
+                    <div class="relative z-10 flex flex-1 items-center justify-center py-2">
+                        <div class="grid h-[104px] w-[104px] shrink-0 place-items-center overflow-hidden rounded-[24px] bg-navy-950 shadow-[0_20px_40px_-18px_rgba(11,31,58,0.35)] ring-[5px] ring-white">
+                            @if ($cover)
+                                <img src="{{ $cover->temporaryUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 38%">
+                            @elseif ($logo)
+                                <img src="{{ $logo->temporaryUrl() }}" alt="" class="h-full w-full object-cover">
+                            @else
+                                <span class="pf text-[28px] font-black text-gold-300">{{ mb_strtoupper(mb_substr($pClient ?: $pName, 0, 2)) }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    @php
+                        $barcodeSeed = ($name !== '' ? $name : 'untitled').'|'.($template ?: 'none');
+                        $barcode = collect(str_split(substr(sha1($barcodeSeed), 0, 60), 2))
+                            ->map(fn ($h) => 22 + (hexdec($h) % 78));
+                    @endphp
+                    <div class="relative z-10 mb-3 flex h-4 items-end justify-center gap-[2px] px-6" aria-hidden="true">
+                        @foreach ($barcode as $h)
+                            <span class="w-[2px] rounded-full bg-navy-200" style="height: {{ $h }}%"></span>
+                        @endforeach
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80"></div>
                 </div>
 
-                {{-- the client's mark, straddling the fold --}}
-                <div class="relative px-5">
-                    <span class="absolute -top-9 grid h-[70px] w-[70px] place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white shadow-lg">
-                        @if ($logo)
-                            <img src="{{ $logo->temporaryUrl() }}" alt="" class="h-full w-full object-cover">
-                        @else
-                            <span class="pf text-[19px] font-black text-navy-300">{{ mb_strtoupper(mb_substr($pClient ?: $pName, 0, 2)) }}</span>
-                        @endif
-                    </span>
-                </div>
-
-                <div class="shrink-0 px-5 pb-4 pt-12">
-                    <span class="inline-block rounded-full px-2.5 py-1 text-[9.5px] font-black uppercase tracking-[0.14em]"
-                          style="background: {{ $pStageHex }}1a; color: {{ $pStageHex }}">{{ $pStage }}</span>
-
-                    <h3 class="pf mt-2.5 line-clamp-2 text-[24px] font-black leading-tight {{ $name !== '' ? 'text-navy-950' : 'text-navy-200' }}">{{ $pName }}</h3>
+                <div class="shrink-0 px-5 pb-4 pt-4">
+                    <h3 class="pf line-clamp-2 text-[22px] font-black leading-tight {{ $name !== '' ? 'text-navy-950' : 'text-navy-200' }}">{{ $pName }}</h3>
+                    @if ($pClient)
+                        <p class="mt-1 truncate text-[11.5px] font-semibold text-navy-500">{{ $pClient }}</p>
+                    @endif
 
                     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11.5px] text-navy-600">
                         <span class="flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5 text-navy-300" />{{ $pDates }}</span>
@@ -458,8 +489,8 @@
                         $r = 2 * M_PI * 26;
                         $rings = [
                             ['value' => $readiness['pct'].'%', 'pct' => $readiness['pct'], 'hex' => 'var(--color-gold-500)', 'label' => 'Progress'],
-                            ['value' => count($modules), 'pct' => count($modules) ? min(100, count($modules) / 18 * 100) : 0, 'hex' => '#3B82F6', 'label' => 'Modules'],
-                            ['value' => $budget !== '' ? $curSymbol.\Illuminate\Support\Number::abbreviate((float) $budget, 0) : '—', 'pct' => $budget !== '' ? 100 : 0, 'hex' => '#10B981', 'label' => 'Budget'],
+                            ['value' => count($modules), 'pct' => count($modules) ? min(100, count($modules) / 18 * 100) : 0, 'hex' => 'var(--color-info)', 'label' => 'Modules'],
+                            ['value' => $budget !== '' ? $curSymbol.\Illuminate\Support\Number::abbreviate((float) $budget, 0) : '—', 'pct' => $budget !== '' ? 100 : 0, 'hex' => 'var(--color-emerald-500, #10b981)', 'label' => 'Budget'],
                             ['value' => $pPriorityLabel, 'pct' => 100, 'hex' => $pPriorityHex, 'label' => 'Priority'],
                         ];
                     @endphp
@@ -546,10 +577,11 @@
 
         <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                 class="ms-auto flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-gold-400 to-gold-500 px-7 text-[13.5px] font-black text-navy-950 shadow-[0_14px_30px_-16px_rgba(212,175,55,0.95)] transition hover:brightness-105 disabled:opacity-60">
-            <span wire:loading.remove wire:target="save">🚀</span>
+            <span wire:loading.remove wire:target="save" class="flex items-center gap-2">
+                Launch Event
+                <x-icon name="sparkles" class="h-4 w-4" />
+            </span>
             <span wire:loading wire:target="save">…</span>
-            Launch Event
-            <x-icon name="sparkles" class="h-4 w-4" />
         </button>
     </div>
 </div>
