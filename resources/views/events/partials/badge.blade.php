@@ -4,7 +4,7 @@
     use App\Support\Badge;
     use App\Support\Taxonomy;
 
-    [$w, $h] = Badge::sizeDimensions($template['size']);
+    [$w, $h] = Badge::sizeDimensions($template);
     $theme = $event->theme();
     $accent = $template['accent'] ?: ($theme['accent'] ?? '#D4AF37');
     $ink = $theme['primary'] ?? '#0B1F3A';

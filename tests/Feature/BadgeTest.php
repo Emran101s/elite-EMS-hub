@@ -94,6 +94,79 @@ class BadgeTest extends TestCase
         $this->assertNull($event->fresh()->badge_template);
     }
 
+    public function test_a_custom_size_saves_and_prints_at_its_own_dimensions(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('badge.size', 'custom')
+            ->set('badge.custom_width', 120)
+            ->set('badge.custom_height', 80)
+            ->call('saveBadge')
+            ->assertHasNoErrors();
+
+        $saved = $event->fresh()->badge_template;
+
+        $this->assertSame('custom', $saved['size']);
+        $this->assertSame(120, $saved['custom_width']);
+        $this->assertSame(80, $saved['custom_height']);
+        $this->assertSame([120, 80], Badge::dimensions($event->fresh()));
+    }
+
+    public function test_the_live_preview_resizes_as_custom_dimensions_are_typed(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('showBadge', true)
+            ->set('badge.size', 'custom')
+            ->set('badge.custom_width', 130)
+            ->set('badge.custom_height', 70)
+            ->assertSee('width: 130mm; height: 70mm', false);
+    }
+
+    public function test_a_custom_size_needs_both_dimensions(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('badge.size', 'custom')
+            ->set('badge.custom_width', null)
+            ->set('badge.custom_height', null)
+            ->call('saveBadge')
+            ->assertHasErrors(['badge.custom_width', 'badge.custom_height']);
+
+        $this->assertNull($event->fresh()->badge_template);
+    }
+
+    public function test_a_custom_size_cannot_be_too_small_to_hold_a_name(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('badge.size', 'custom')
+            ->set('badge.custom_width', 10)
+            ->set('badge.custom_height', 10)
+            ->call('saveBadge')
+            ->assertHasErrors(['badge.custom_width', 'badge.custom_height']);
+
+        $this->assertNull($event->fresh()->badge_template);
+    }
+
+    public function test_a_custom_size_cannot_be_a_poster(): void
+    {
+        [$event, , $user] = $this->ctx();
+
+        Livewire::actingAs($user)->test(AttendeesTab::class, ['event' => $event])
+            ->set('badge.size', 'custom')
+            ->set('badge.custom_width', 500)
+            ->set('badge.custom_height', 500)
+            ->call('saveBadge')
+            ->assertHasErrors(['badge.custom_width', 'badge.custom_height']);
+
+        $this->assertNull($event->fresh()->badge_template);
+    }
+
     public function test_a_design_can_be_put_back_to_the_default(): void
     {
         [$event, , $user] = $this->ctx();

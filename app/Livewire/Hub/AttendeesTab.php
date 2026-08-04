@@ -467,14 +467,30 @@ class AttendeesTab extends Component
         Gate::authorize('write');
 
         $this->validate([
-            'badge.size' => ['required', Rule::in(array_keys(Badge::SIZES))],
+            'badge.size' => ['required', Rule::in([...array_keys(Badge::SIZES), Badge::CUSTOM_SIZE])],
+            'badge.custom_width' => [
+                Rule::requiredIf($this->badge['size'] === Badge::CUSTOM_SIZE),
+                'nullable', 'integer', 'min:'.Badge::CUSTOM_MIN_MM, 'max:'.Badge::CUSTOM_MAX_MM,
+            ],
+            'badge.custom_height' => [
+                Rule::requiredIf($this->badge['size'] === Badge::CUSTOM_SIZE),
+                'nullable', 'integer', 'min:'.Badge::CUSTOM_MIN_MM, 'max:'.Badge::CUSTOM_MAX_MM,
+            ],
             'badge.accent' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'badge.footer' => ['nullable', 'string', 'max:80'],
             // Only questions this event actually asks: a key from anywhere
             // else would print a blank line on every badge.
             'badge.lines' => ['nullable', 'array'],
             'badge.lines.*' => [Rule::in($this->event->registrationFields()->pluck('key'))],
-        ], ['badge.accent.regex' => 'A colour must be a hex value like #D4AF37.']);
+        ], [
+            'badge.accent.regex' => 'A colour must be a hex value like #D4AF37.',
+            'badge.custom_width.required' => 'A custom size needs a width.',
+            'badge.custom_height.required' => 'A custom size needs a height.',
+            'badge.custom_width.min' => 'A badge narrower than '.Badge::CUSTOM_MIN_MM.'mm would not hold a name.',
+            'badge.custom_height.min' => 'A badge shorter than '.Badge::CUSTOM_MIN_MM.'mm would not hold a name.',
+            'badge.custom_width.max' => 'A badge over '.Badge::CUSTOM_MAX_MM.'mm is a poster, not a badge.',
+            'badge.custom_height.max' => 'A badge over '.Badge::CUSTOM_MAX_MM.'mm is a poster, not a badge.',
+        ]);
 
         // Only the keys the template declares, so nothing from a browser can
         // put arbitrary JSON on the event.

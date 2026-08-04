@@ -157,8 +157,28 @@
                             @foreach (\App\Support\Badge::SIZES as $key => [$label, $w, $h])
                                 <option value="{{ $key }}">{{ $label }} — {{ $w }} × {{ $h }} mm</option>
                             @endforeach
+                            <option value="{{ \App\Support\Badge::CUSTOM_SIZE }}">Custom size…</option>
                         </select>
                     </label>
+
+                    @if (($badge['size'] ?? null) === \App\Support\Badge::CUSTOM_SIZE)
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">
+                                <span class="field-label !mb-1 !text-eyebrow">Width (mm)</span>
+                                <input type="number" wire:model.live="badge.custom_width"
+                                       min="{{ \App\Support\Badge::CUSTOM_MIN_MM }}" max="{{ \App\Support\Badge::CUSTOM_MAX_MM }}"
+                                       class="input h-10 text-sm">
+                                @error('badge.custom_width')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                            </label>
+                            <label class="block">
+                                <span class="field-label !mb-1 !text-eyebrow">Height (mm)</span>
+                                <input type="number" wire:model.live="badge.custom_height"
+                                       min="{{ \App\Support\Badge::CUSTOM_MIN_MM }}" max="{{ \App\Support\Badge::CUSTOM_MAX_MM }}"
+                                       class="input h-10 text-sm">
+                                @error('badge.custom_height')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                            </label>
+                        </div>
+                    @endif
 
                     <label class="block">
                         <span class="field-label !mb-1 !text-eyebrow">Accent</span>

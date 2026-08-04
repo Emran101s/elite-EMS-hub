@@ -28,9 +28,19 @@ class Badge
         'name_badge' => ['Name badge 90 × 54', 90, 54],
     ];
 
+    /** A stock print run this size isn't cut for, or hits a card-stock supplier's odd format. */
+    public const CUSTOM_SIZE = 'custom';
+
+    /** A badge nobody could hold, or nothing at all. */
+    public const CUSTOM_MIN_MM = 20;
+
+    public const CUSTOM_MAX_MM = 300;
+
     /** What a badge shows unless the event says otherwise. */
     public const DEFAULTS = [
         'size' => 'a6_landscape',
+        'custom_width' => 90,
+        'custom_height' => 54,
         'accent' => null,           // null = the event's own accent colour
         'show_logo' => true,
         'show_organisation' => true,
@@ -97,18 +107,27 @@ class Badge
     /** [width, height] in millimetres. */
     public static function dimensions(Event $event): array
     {
-        return self::sizeDimensions(self::template($event)['size']);
+        return self::sizeDimensions(self::template($event));
     }
 
     /**
-     * [width, height] in millimetres, from a size key directly rather than
-     * re-reading the event's saved template — the one the live editor
-     * preview needs, since it already has an in-progress, unsaved size
-     * choice in its own $template array.
+     * [width, height] in millimetres, from an already-resolved template
+     * array rather than re-reading the event's saved one — the live editor
+     * preview needs this, since it already has an in-progress, unsaved size
+     * (and, for a custom size, unsaved dimensions) in its own $template.
      */
-    public static function sizeDimensions(string $size): array
+    public static function sizeDimensions(array $template): array
     {
-        return array_slice(self::SIZES[$size] ?? self::SIZES['a6_landscape'], 1);
+        if (($template['size'] ?? null) === self::CUSTOM_SIZE) {
+            $clamp = fn ($mm) => max(self::CUSTOM_MIN_MM, min(self::CUSTOM_MAX_MM, (int) $mm));
+
+            return [
+                $clamp($template['custom_width'] ?? self::DEFAULTS['custom_width']),
+                $clamp($template['custom_height'] ?? self::DEFAULTS['custom_height']),
+            ];
+        }
+
+        return array_slice(self::SIZES[$template['size'] ?? null] ?? self::SIZES['a6_landscape'], 1);
     }
 
     /**
