@@ -22,7 +22,9 @@
          tall is furniture — it competes with the work for the eye and costs a
          seventh of a laptop screen on every page.
 
-         Words instead of tiles, still — that lesson holds. But twenty-one words
+         Words instead of tiles, still — that lesson holds, and the roster has
+         grown to twenty-three since (pricing, reports, AI joined later; the
+         width math below is the same shape, just tighter). Twenty-three words
          of equal grey weight told you *where* you were, never *what kind of
          work* you were in. Every module already has a colour in
          Event::MODULE_COLORS (used for document folders and chips elsewhere) —
@@ -39,10 +41,10 @@
         $attention = $header['attention'] ?? [];
     @endphp
     <div class="sticky top-0 z-20 -mx-4 mt-3 border-b border-line bg-page/92 px-4 backdrop-blur lg:-mx-6 lg:px-6">
-        {{-- Twenty-one names need ~1550px and the work area is 1186, so on a
-             desktop they wrap to two rows: everything on screen, nothing to
-             discover by dragging. Narrow screens keep the scroller, where
-             wrapping would make five rows. --}}
+        {{-- Twenty-three names (now with a dot each) still land in two rows on
+             a laptop-width desktop: everything on screen, nothing to discover
+             by dragging. Narrow screens keep the scroller, where wrapping
+             would run to five rows. --}}
         <nav class="scrollbar-none flex items-center gap-x-1 gap-y-1 overflow-x-auto py-1.5 lg:flex-wrap lg:overflow-x-visible"
              aria-label="Event modules">
                 @foreach ($modules as $key => [$label, $note, $icon])
