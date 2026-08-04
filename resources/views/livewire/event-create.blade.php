@@ -153,6 +153,11 @@
                                     </span>
                                     <span class="block text-[12.5px] font-bold text-navy-950">{{ $label }}</span>
                                     <span class="block max-w-[15ch] text-[10.5px] leading-tight text-muted">{{ $blurb }}</span>
+                                    <span @class([
+                                        'mt-0.5 rounded-full px-2 py-px text-[9px] font-bold tabular-nums',
+                                        'bg-gold-100 text-gold-800' => $on,
+                                        'bg-navy-50 text-navy-500' => ! $on,
+                                    ])>{{ count($mods) }} modules</span>
                                 </button>
                             @endforeach
                         </div>

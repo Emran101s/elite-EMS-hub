@@ -5,15 +5,21 @@
 <div class="space-y-4">
 
     {{-- ══ the bar ══ --}}
-    <div class="flex flex-wrap items-center gap-3">
-        <p class="text-[11.5px] text-muted">
-            {{ $templates->count() }} {{ str('template')->plural($templates->count()) }} ·
-            an event starts from a copy and owns it after, so editing one here never rewrites a form already answered.
-        </p>
+    <div class="flex flex-wrap items-end gap-3">
+        <div class="min-w-0 flex-1">
+            <p class="flex items-center gap-2 text-eyebrow font-bold uppercase tracking-[0.18em] text-gold-700">
+                <span class="grid h-7 w-7 place-items-center rounded-lg bg-gold-100/70 text-gold-700"><x-icon name="clipboard" class="h-3.5 w-3.5" /></span>
+                Registration templates
+            </p>
+            <p class="mt-1.5 text-[12.5px] text-muted">
+                {{ $templates->count() }} {{ str('template')->plural($templates->count()) }} ·
+                an event starts from a copy and owns it after, so editing one here never rewrites a form already answered.
+            </p>
+        </div>
 
         @if ($may)
             <button type="button" wire:click="newTemplate"
-                    class="ms-auto flex h-10 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
+                    class="flex h-10 shrink-0 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
                 ＋ New template
             </button>
         @endif
@@ -141,9 +147,10 @@
          the event it starts. --}}
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         @forelse ($templates as $t)
-            <div wire:key="tpl-{{ $t->id }}" class="card flex flex-col p-4 transition hover:shadow-[0_18px_40px_-24px_rgba(11,31,58,0.35)]">
+            <div wire:key="tpl-{{ $t->id }}" class="card relative flex flex-col overflow-hidden p-4 transition hover:shadow-[0_18px_40px_-24px_rgba(11,31,58,0.35)]">
+                <span class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold-400/70 to-transparent" aria-hidden="true"></span>
                 <div class="flex items-start gap-3">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-100/70 text-gold-700">
                         <x-icon name="clipboard" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">

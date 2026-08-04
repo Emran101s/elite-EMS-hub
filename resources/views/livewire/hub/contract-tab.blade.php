@@ -618,12 +618,18 @@
                                 <div class="flex items-start gap-2.5">
                                     <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-black text-gold-400">{{ $bi + 1 }}</span>
                                     <div class="grid min-w-0 flex-1 gap-1.5">
-                                        <input type="text" value="{{ $b['title_en'] ?? '' }}" placeholder="Clause title (English)"
-                                               wire:change="updateBlockField('{{ $b['id'] }}', 'title_en', $event.target.value)"
-                                               class="{{ $in }} !bg-white !py-1.5 !text-xs !font-bold">
-                                        <input type="text" dir="rtl" value="{{ $b['title_ar'] ?? '' }}" placeholder="عنوان البند (بالعربية)"
-                                               wire:change="updateBlockField('{{ $b['id'] }}', 'title_ar', $event.target.value)"
-                                               class="{{ $inAr }} !bg-white !py-1.5 !text-xs !font-bold">
+                                        <label class="block">
+                                            <span class="mb-1 inline-flex items-center gap-1 rounded-md bg-navy-50 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-navy-500">EN</span>
+                                            <input type="text" value="{{ $b['title_en'] ?? '' }}" placeholder="Clause title (English)"
+                                                   wire:change="updateBlockField('{{ $b['id'] }}', 'title_en', $event.target.value)"
+                                                   class="{{ $in }} !bg-white !py-1.5 !text-xs !font-bold">
+                                        </label>
+                                        <label class="block">
+                                            <span class="mb-1 inline-flex items-center gap-1 rounded-md bg-gold-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-gold-800">AR</span>
+                                            <input type="text" dir="rtl" value="{{ $b['title_ar'] ?? '' }}" placeholder="عنوان البند (بالعربية)"
+                                                   wire:change="updateBlockField('{{ $b['id'] }}', 'title_ar', $event.target.value)"
+                                                   class="{{ $inAr }} !bg-white !py-1.5 !text-xs !font-bold ring-1 ring-gold-200/60">
+                                        </label>
                                     </div>
                                     @can('manage-contract')
                                         <div class="flex shrink-0 flex-col items-center gap-0.5">
@@ -641,13 +647,17 @@
                                 <div class="mt-2 space-y-2">
                                     @foreach ($b['en'] ?? [] as $p => $para)
                                         <div class="group/para grid gap-1.5">
-                                            <textarea rows="2" placeholder="English text…"
-                                                      wire:change="updateParagraph('{{ $b['id'] }}', 'en', {{ $p }}, $event.target.value)"
-                                                      class="{{ $in }} !bg-white !py-2 !text-xs leading-relaxed">{{ $para }}</textarea>
+                                            <div>
+                                                <span class="mb-1 inline-flex items-center gap-1 rounded-md bg-navy-50 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-navy-500">EN</span>
+                                                <textarea rows="2" placeholder="English text…"
+                                                          wire:change="updateParagraph('{{ $b['id'] }}', 'en', {{ $p }}, $event.target.value)"
+                                                          class="{{ $in }} !bg-white !py-2 !text-xs leading-relaxed">{{ $para }}</textarea>
+                                            </div>
                                             <div class="relative">
+                                                <span class="mb-1 inline-flex items-center gap-1 rounded-md bg-gold-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-gold-800">AR</span>
                                                 <textarea rows="2" dir="rtl" placeholder="النص بالعربية…"
                                                           wire:change="updateParagraph('{{ $b['id'] }}', 'ar', {{ $p }}, $event.target.value)"
-                                                          class="{{ $inAr }} !bg-white !py-2 !text-xs leading-relaxed">{{ $b['ar'][$p] ?? '' }}</textarea>
+                                                          class="{{ $inAr }} !bg-white !py-2 !text-xs leading-relaxed ring-1 ring-gold-200/60">{{ $b['ar'][$p] ?? '' }}</textarea>
                                                 @if (count($b['en']) > 1)
                                                     <button type="button" wire:click="removeParagraph('{{ $b['id'] }}', {{ $p }})"
                                                             class="absolute -right-1 -top-1 hidden h-5 w-5 items-center justify-center rounded-full bg-white text-eyebrow font-bold text-navy-300 shadow ring-1 ring-line hover:text-red-700 group-hover/para:flex"

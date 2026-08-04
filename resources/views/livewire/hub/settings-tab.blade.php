@@ -345,8 +345,26 @@
             <span class="pf text-xl font-bold leading-none text-gold-400/50">06</span>
             <h3 class="pf text-base font-bold text-navy-900">Manage Event</h3>
         </div>
+
+        {{-- Duplicate is the product's "start from this event as a template"
+             path — framed first so it reads as reuse, not a danger action. --}}
+        <div class="mb-4 rounded-2xl border border-gold-200/70 bg-gold-50/40 p-4">
+            <div class="flex flex-wrap items-start gap-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gold-100 text-gold-800">
+                    <x-icon name="share" class="h-4 w-4" />
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[13px] font-bold text-navy-950">Start another event from this one</p>
+                    <p class="mt-0.5 text-[11.5px] text-muted">Copies the structure, modules and settings into a new draft — the cleanest “save as template” the platform has today.</p>
+                </div>
+                <button type="button" wire:click="duplicate"
+                        class="shrink-0 rounded-xl bg-navy-950 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-navy-800">
+                    Duplicate event →
+                </button>
+            </div>
+        </div>
+
         <div class="flex flex-wrap gap-3">
-            <button type="button" wire:click="duplicate" class="rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-semibold text-navy-700 transition hover:border-gold-300">⧉ Duplicate event</button>
             <button type="button" wire:click="archive" wire:confirm="Archive “{{ $event->name }}”? It disappears from lists and the Operations Hub (recoverable)."
                     class="rounded-xl border border-risk/30 bg-risk/5 px-4 py-2.5 text-xs font-semibold text-risk transition hover:bg-risk/10">⌫ Archive event</button>
 
