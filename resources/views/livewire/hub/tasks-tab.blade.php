@@ -19,6 +19,25 @@
 
         {{-- ── toolbar + active view ── --}}
         <div class="min-w-0">
+            {{-- lead chips: scan numbers before the board --}}
+            @php $openChip = max($stats['total'] - $stats['done'], 0); @endphp
+            <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                @foreach ([
+                    ['Open', $openChip, null],
+                    ['Overdue', $stats['overdue'], $stats['overdue'] ? 'text-red-700 ring-red-200 bg-red-50' : null],
+                    ['Mine', $stats['mine'], null],
+                    ['Done', $stats['pct'].'%', null],
+                ] as [$chipLabel, $chipVal, $chipTone])
+                    <span @class([
+                        'inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-eyebrow font-bold ring-1',
+                        $chipTone ?: 'bg-white text-navy-700 ring-line',
+                    ])>
+                        <span class="text-navy-400">{{ $chipLabel }}</span>
+                        <span class="tabular-nums text-navy-950">{{ $chipVal }}</span>
+                    </span>
+                @endforeach
+            </div>
+
             {{-- slim toolbar --}}
             <div class="mb-3 flex flex-wrap items-center gap-2.5">
                 <div class="relative">

@@ -5,82 +5,136 @@
         'declined' => ['Declined', 'bg-red-100 text-red-700'],
         'cancelled' => ['Cancelled', 'bg-navy-100 text-navy-400'],
     ];
+    $moduleHex = \App\Models\Event::moduleColor('speakers');
+    $spacesDefault = $speakers->isNotEmpty() && $speakers->count() <= 6 ? 'cards' : 'list';
 @endphp
 <div>
+    <x-stat-strip class="mb-4" :stats="[
+        ['Speakers', $speakers->count(), 'sparkles', null, null, $keynotes ? $keynotes.' keynote' : null],
+        ['Confirmed', $confirmed, 'check', $speakers->count() ? round($confirmed / max($speakers->count(), 1) * 100) : null, 'bg-emerald-500', null, 'text-emerald-600'],
+        ['Keynotes', $keynotes, 'star', null, null, null, 'text-gold-600'],
+        ['Speaker fees', $event->money($feeTotal), 'currency', null, null, null, 'text-navy-900'],
+    ]" />
+
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div class="min-w-0">
-    @if ($speakers->isEmpty())
-        <x-empty icon="sparkles" title="No speakers yet"
-                 hint="Add keynotes, panellists and moderators — track invitations, confirmations and fees.">
-            <x-slot:actions>
-                <button type="button" wire:click="newItem" class="btn-gold h-10 px-5 text-xs">＋ Add the first speaker</button>
-            </x-slot:actions>
-        </x-empty>
-    @else
-        <x-bulk-bar :count="$this->selectedCount()" noun="speaker" />
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            @foreach ($speakers as $s)
-                @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
-                <div wire:key="sp-{{ $s->id }}" class="group/sp op-card {{ $this->isSelected($s->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
-                    <div class="flex flex-1 flex-col p-5">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex min-w-0 items-center gap-3">
-                                <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
-                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-900 text-sm font-bold text-gold-300">{{ $s->initials() }}</span>
-                                <div class="min-w-0">
-                                    <p class="pf flex items-center gap-1.5 text-sm font-bold text-navy-900">{{ $s->name }}
-                                        @if ($s->is_keynote)<span class="pill bg-gold-500/20 text-gold-700">Keynote</span>@endif
-                                    </p>
-                                    <p class="truncate text-micro text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
-                                </div>
-                            </div>
-                            <span class="pill shrink-0 {{ $stClass }}">{{ $stLabel }}</span>
-                        </div>
-
-                        @if ($s->topic)<p class="mt-3 rounded-xl bg-page/60 px-3 py-2 text-xs italic text-navy-700">“{{ $s->topic }}”</p>@endif
-                    </div>
-
-                    {{-- dark navy footer: fee + hover actions --}}
-                    <div class="op-card-foot">
-                        <span class="truncate text-eyebrow font-semibold text-navy-700">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
-                        <div class="ml-auto flex items-center gap-1 opacity-0 transition group-hover/sp:opacity-100">
-                            @if ($s->status !== 'confirmed')
-                                <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-lg bg-emerald-400/20 px-2 py-1 text-eyebrow font-bold text-emerald-300 hover:bg-emerald-400/30">✓ Confirm</button>
-                            @endif
-                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-white/10 px-1.5 py-1 text-eyebrow font-bold text-navy-700 hover:bg-white/20">✎</button>
-                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-red-400/15 px-1.5 py-1 text-eyebrow font-bold text-red-300 hover:bg-red-400/25">✕</button>
-                        </div>
+        <div class="min-w-0" x-data="{
+                 mode: (() => {
+                     const saved = localStorage.getItem('elitehub.speakers.mode');
+                     return saved === 'list' || saved === 'cards' ? saved : @js($spacesDefault);
+                 })(),
+                 setMode(m) { this.mode = m; localStorage.setItem('elitehub.speakers.mode', m); }
+             }">
+            @if ($speakers->isEmpty())
+                <x-empty icon="sparkles" title="No speakers yet"
+                         hint="Add keynotes, panellists and moderators — track invitations, confirmations and fees.">
+                    <x-slot:actions>
+                        <button type="button" wire:click="newItem" class="btn-gold h-10 px-5 text-xs">＋ Add the first speaker</button>
+                    </x-slot:actions>
+                </x-empty>
+            @else
+                <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                    <x-bulk-bar :count="$this->selectedCount()" noun="speaker" />
+                    <div class="ms-auto flex items-center gap-2">
+                        <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
+                            <button type="button" @click="setMode('list')"
+                                    :class="mode === 'list' ? 'bg-navy-950 text-white' : 'text-navy-500 hover:text-navy-900'"
+                                    class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold transition">List</button>
+                            <button type="button" @click="setMode('cards')"
+                                    :class="mode === 'cards' ? 'bg-navy-950 text-white' : 'text-navy-500 hover:text-navy-900'"
+                                    class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold transition">Cards</button>
+                        </span>
+                        <button type="button" wire:click="newItem" class="btn-gold h-8 px-3 text-xs">＋ Add Speaker</button>
                     </div>
                 </div>
-            @endforeach
-        </div>
-    @endif
+
+                <div x-show="mode === 'list'" x-cloak class="card overflow-hidden">
+                    <ul class="divide-y divide-line">
+                        @foreach ($speakers as $s)
+                            @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
+                            <li wire:key="sp-list-{{ $s->id }}" class="group flex items-center gap-2.5 px-3.5 py-2 transition hover:bg-page/40 {{ $this->isSelected($s->id) ? 'bg-navy-50/60' : '' }}">
+                                <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-bold text-gold-300">{{ $s->initials() }}</span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-[13px] font-bold text-navy-900">
+                                        {{ $s->name }}
+                                        @if ($s->is_keynote)<span class="ms-1 rounded bg-gold-100 px-1 text-eyebrow font-bold uppercase text-gold-700">Keynote</span>@endif
+                                    </p>
+                                    <p class="truncate text-eyebrow text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}@if ($s->topic) · “{{ \Illuminate\Support\Str::limit($s->topic, 40) }}”@endif</p>
+                                </div>
+                                <span class="pill shrink-0 {{ $stClass }}">{{ $stLabel }}</span>
+                                <span class="hidden w-20 shrink-0 text-right text-eyebrow font-bold tabular-nums text-navy-900 sm:block">{{ $s->fee_cents ? $event->money($s->fee_cents) : '—' }}</span>
+                                <span class="flex gap-0.5 opacity-0 transition group-hover:opacity-100">
+                                    @if ($s->status !== 'confirmed')
+                                        <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-eyebrow font-bold text-emerald-700 hover:bg-emerald-100">✓</button>
+                                    @endif
+                                    <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
+                                    <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div x-show="mode === 'cards'" x-cloak class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($speakers as $s)
+                        @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
+                        <div wire:key="sp-card-{{ $s->id }}" class="group/sp op-card {{ $this->isSelected($s->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
+                            <div class="flex flex-1 flex-col p-3.5">
+                                <div class="flex items-start justify-between gap-2.5">
+                                    <div class="flex min-w-0 items-center gap-2.5">
+                                        <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button>
+                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-sm font-bold text-gold-300">{{ $s->initials() }}</span>
+                                        <div class="min-w-0">
+                                            <p class="pf flex flex-wrap items-center gap-1.5 text-sm font-bold text-navy-900">{{ $s->name }}
+                                                @if ($s->is_keynote)<span class="pill bg-gold-500/20 text-gold-700">Keynote</span>@endif
+                                            </p>
+                                            <p class="truncate text-micro text-muted">{{ $s->title }}@if ($s->title && $s->organization) · @endif{{ $s->organization }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="pill shrink-0 {{ $stClass }}">{{ $stLabel }}</span>
+                                </div>
+                                @if ($s->topic)<p class="mt-2.5 rounded-lg bg-page/60 px-2.5 py-1.5 text-xs italic text-navy-700">“{{ $s->topic }}”</p>@endif
+                            </div>
+                            <div class="op-card-foot">
+                                <span class="truncate text-eyebrow font-semibold text-navy-700">{{ $s->fee_cents ? $event->money($s->fee_cents).' fee' : 'No fee' }}</span>
+                                <div class="ms-auto flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover/sp:opacity-100">
+                                    @if ($s->status !== 'confirmed')
+                                        <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-md bg-emerald-50 px-2 py-0.5 text-eyebrow font-bold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100">✓ Confirm</button>
+                                    @endif
+                                    <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300">✎</button>
+                                    <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
-        {{-- ══ Speakers Control Center ══ --}}
         <div class="xl:sticky xl:top-4 xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Speakers Control Center</span>
+                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
+                        <x-icon name="sparkles" class="h-3.5 w-3.5" />
+                    </span>
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Speakers Control</span>
                 </div>
-                <div class="border-b border-line p-4">
-                    <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
-                    <div class="space-y-1.5 text-xs">
+                <div class="border-b border-line p-3">
+                    <p class="field-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>
+                    <div class="space-y-1 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Speakers</span><span class="font-bold text-navy-900">{{ $speakers->count() }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Confirmed</span><span class="font-bold text-emerald-700">{{ $confirmed }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Keynotes</span><span class="font-bold text-navy-900">{{ $keynotes }}</span></div>
                         <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">Speaker fees</span><span class="font-bold text-navy-900">{{ $event->money($feeTotal) }}</span></div>
                     </div>
                 </div>
-                <div class="p-4">
-                    <button type="button" wire:click="newItem" class="btn-gold h-10 w-full text-xs">＋ Add Speaker</button>
+                <div class="p-3">
+                    <button type="button" wire:click="newItem" class="btn-gold h-9 w-full text-xs">＋ Add Speaker</button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- modal --}}
     @if ($showForm)
         <x-modal :title="$editingId ? 'Edit speaker' : 'New speaker'" max="xl" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">

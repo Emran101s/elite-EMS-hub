@@ -18,9 +18,9 @@
         ['Resolved', $resolved->count(), 'check', round($resolved->count() / $total * 100), 'bg-track', 'mitigated or closed', 'text-emerald-600'],
     ]" />
 
-    <div class="mb-4 flex items-center justify-between">
-        <p class="text-xs text-muted">Open risks with severity ≥ 20 cap the Event Health Score at "At Risk".</p>
-        <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-10 px-4 text-xs">＋ Register Risk</button>
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p class="text-eyebrow text-muted">Open risks with severity ≥ 20 cap Event Health at “At Risk”.</p>
+        <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-9 px-3.5 text-xs">＋ Register Risk</button>
     </div>
 
     @if ($showForm)
@@ -69,45 +69,52 @@
         </form>
     @endif
 
-    <div class="card divide-y divide-line">
-        <div class="hidden grid-cols-12 gap-3 px-6 py-3 text-eyebrow font-semibold uppercase tracking-wide text-muted md:grid">
-            <span class="col-span-4">Risk</span>
-            <span class="col-span-2">Category</span>
-            <span class="col-span-2 text-center">Severity (P×I)</span>
-            <span class="col-span-1">Owner</span>
-            <span class="col-span-3 text-right">Status · Actions</span>
-        </div>
-        @forelse ($risks as $risk)
-            <div class="group/risk grid grid-cols-2 items-center gap-3 px-6 py-4 md:grid-cols-12">
-                <div class="col-span-2 md:col-span-4">
-                    <p class="text-sm font-semibold text-navy-900">{{ $risk->title }}</p>
-                    @if ($risk->mitigation)<p class="mt-0.5 text-xs text-muted">Mitigation: {{ $risk->mitigation }}</p>@endif
-                </div>
-                <p class="text-xs text-muted md:col-span-2">{{ str($risk->category)->replace('_', ' ')->title() }}</p>
-                <div class="md:col-span-2 md:text-center">
-                    <span @class([
-                            'inline-flex rounded-full px-2.5 py-1 text-xs font-bold',
-                            'bg-risk/10 text-red-700' => $risk->severity() >= 15,
-                            'bg-warn/10 text-amber-700' => $risk->severity() >= 8 && $risk->severity() < 15,
-                            'bg-navy-50 text-navy-600' => $risk->severity() < 8,
-                        ])>{{ $risk->probability }}×{{ $risk->impact }} = {{ $risk->severity() }}</span>
-                </div>
-                <p class="truncate text-xs text-muted md:col-span-1">{{ $risk->owner?->name ? str($risk->owner->name)->before(' ') : '—' }}</p>
-                <div class="flex items-center justify-end gap-1.5 md:col-span-3">
-                    <x-status-badge :status="$risk->status" />
-                    @if ($risk->isOpen())
-                        <span class="flex gap-1 opacity-0 transition group-hover/risk:opacity-100">
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'mitigated')" class="rounded-lg bg-track/10 px-2 py-1 text-eyebrow font-bold text-emerald-700 hover:bg-track/20" title="Mark mitigated">✓</button>
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'escalated')" class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Escalate">▲</button>
-                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'closed')" class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Close">✕</button>
-                        </span>
-                    @else
-                        <button type="button" wire:click="setStatus({{ $risk->id }}, 'open')" class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 opacity-0 transition hover:bg-navy-100 group-hover/risk:opacity-100" title="Reopen">↺</button>
-                    @endif
-                </div>
+    @if ($risks->isEmpty())
+        <x-empty icon="flag" title="Risk register is empty"
+                 hint="Register the first risk so severity feeds Event Health — open risks with severity ≥ 20 cap the score at “At Risk”.">
+            <x-slot:actions>
+                <button type="button" wire:click="$set('showForm', true)" class="btn-gold btn-sm">＋ Register the first risk</button>
+            </x-slot:actions>
+        </x-empty>
+    @else
+        <div class="card divide-y divide-line overflow-hidden">
+            <div class="hidden grid-cols-12 gap-3 bg-page/40 px-4 py-2 text-eyebrow font-semibold uppercase tracking-wide text-muted md:grid">
+                <span class="col-span-4">Risk</span>
+                <span class="col-span-2">Category</span>
+                <span class="col-span-2 text-center">Severity (P×I)</span>
+                <span class="col-span-1">Owner</span>
+                <span class="col-span-3 text-right">Status · Actions</span>
             </div>
-        @empty
-            <p class="px-6 py-12 text-center text-sm text-muted">Risk register is empty — register the first risk to feed the health engine.</p>
-        @endforelse
-    </div>
+            @foreach ($risks as $risk)
+                <div class="group/risk grid grid-cols-2 items-center gap-2 px-4 py-2.5 md:grid-cols-12 md:gap-3">
+                    <div class="col-span-2 md:col-span-4">
+                        <p class="text-sm font-semibold text-navy-900">{{ $risk->title }}</p>
+                        @if ($risk->mitigation)<p class="mt-0.5 truncate text-eyebrow text-muted">{{ $risk->mitigation }}</p>@endif
+                    </div>
+                    <p class="text-xs text-muted md:col-span-2">{{ str($risk->category)->replace('_', ' ')->title() }}</p>
+                    <div class="md:col-span-2 md:text-center">
+                        <span @class([
+                                'inline-flex rounded-full px-2 py-0.5 text-eyebrow font-bold',
+                                'bg-risk/10 text-red-700' => $risk->severity() >= 15,
+                                'bg-warn/10 text-amber-700' => $risk->severity() >= 8 && $risk->severity() < 15,
+                                'bg-navy-50 text-navy-600' => $risk->severity() < 8,
+                            ])>{{ $risk->probability }}×{{ $risk->impact }} = {{ $risk->severity() }}</span>
+                    </div>
+                    <p class="truncate text-xs text-muted md:col-span-1">{{ $risk->owner?->name ? str($risk->owner->name)->before(' ') : '—' }}</p>
+                    <div class="flex items-center justify-end gap-1.5 md:col-span-3">
+                        <x-status-badge :status="$risk->status" />
+                        @if ($risk->isOpen())
+                            <span class="flex gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover/risk:opacity-100">
+                                <button type="button" wire:click="setStatus({{ $risk->id }}, 'mitigated')" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-emerald-700 ring-1 ring-line hover:ring-emerald-300" title="Mark mitigated">✓</button>
+                                <button type="button" wire:click="setStatus({{ $risk->id }}, 'escalated')" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-red-700 ring-1 ring-line hover:ring-red-300" title="Escalate">▲</button>
+                                <button type="button" wire:click="setStatus({{ $risk->id }}, 'closed')" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-navy-300" title="Close">✕</button>
+                            </span>
+                        @else
+                            <button type="button" wire:click="setStatus({{ $risk->id }}, 'open')" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line opacity-100 sm:opacity-0 sm:transition sm:group-hover/risk:opacity-100" title="Reopen">↺</button>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 </div>

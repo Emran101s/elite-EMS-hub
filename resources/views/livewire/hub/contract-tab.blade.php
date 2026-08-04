@@ -46,6 +46,11 @@
     ═════════════════════════════════════════════════════════════ --}}
     <div x-data="{ view: 'deck' }" class="space-y-4">
 
+        @php
+            $signedCount = $contracts->where('status', 'signed')->count();
+            $pendingCount = $contracts->whereIn('status', ['draft', 'sent', 'partially_signed'])->count();
+        @endphp
+
         <div class="flex flex-wrap items-center gap-3">
             <div>
                 <p class="text-eyebrow font-bold uppercase tracking-[0.28em] text-gold-600">Contract Studio</p>
@@ -53,6 +58,21 @@
             </div>
 
             @if ($contracts->isNotEmpty())
+                <div class="flex flex-wrap items-center gap-1.5 sm:ml-2">
+                    <span class="inline-flex h-7 items-center gap-1.5 rounded-lg bg-white px-2.5 text-eyebrow font-bold text-navy-700 ring-1 ring-line">
+                        <span class="text-navy-400">Docs</span>
+                        <span class="tabular-nums text-navy-950">{{ $contracts->count() }}</span>
+                    </span>
+                    <span class="inline-flex h-7 items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-eyebrow font-bold text-emerald-800 ring-1 ring-emerald-200">
+                        <span class="text-emerald-600/80">Signed</span>
+                        <span class="tabular-nums">{{ $signedCount }}</span>
+                    </span>
+                    <span class="inline-flex h-7 items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 text-eyebrow font-bold text-amber-800 ring-1 ring-amber-200">
+                        <span class="text-amber-600/80">Pending</span>
+                        <span class="tabular-nums">{{ $pendingCount }}</span>
+                    </span>
+                </div>
+
                 <div class="ml-auto flex rounded-xl border border-line bg-white p-0.5">
                     @foreach (['deck' => 'The Deck', 'pipe' => 'Pipeline'] as $v => $vl)
                         <button type="button" @click="view = '{{ $v }}'"

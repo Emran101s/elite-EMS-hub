@@ -55,7 +55,7 @@
                 Event Overview
             </h3>
             <span class="rounded-full bg-gold-50 px-2.5 py-1 text-[0.62rem] font-bold text-gold-700 ring-1 ring-gold-200">
-                ✦ {{ str($event->stage)->replace('_', ' ')->title() }} Phase
+                {{ str($event->stage)->replace('_', ' ')->title() }}
             </span>
         </div>
 
@@ -108,7 +108,7 @@
                             'bg-track/10 text-emerald-700 ring-track/30' => $riskWord === 'Low',
                             'bg-warn/10 text-amber-700 ring-warn/30' => $riskWord === 'Medium',
                             'bg-risk/10 text-red-700 ring-risk/30' => $riskWord === 'High',
-                        ])>✓ {{ $riskWord }}</span>
+                        ])>{{ $riskWord }}</span>
                 </dd>
                 <dt class="mt-1 text-3xs text-muted">Risk Level</dt>
             </div>
@@ -116,7 +116,7 @@
 
         @if ($health['critical_risk'])
             <p class="mt-4 rounded-xl bg-risk/10 px-3.5 py-2 text-[0.68rem] font-medium text-red-700 ring-1 ring-risk/30">
-                ⚠ Health capped at "At Risk": {{ $health['critical_risk'] }}
+                Health capped at “At Risk”: {{ $health['critical_risk'] }}
             </p>
         @endif
     </div>
@@ -184,24 +184,16 @@
                     <span class="shrink-0 text-3xs text-muted">{{ $alert['when']?->diffForHumans(short: true) }}</span>
                 </li>
             @empty
-                <li class="text-xs text-muted">All quiet — no active alerts. 🎉</li>
+                <li class="text-xs text-muted">All quiet — no active alerts.</li>
             @endforelse
         </ul>
     </div>
 </div>
 
-{{-- ══ Row 1b: Delivery status — brief, contract, plan and speakers at a glance ══ --}}
+{{-- ══ Delivery doors: one job each — status, then open the module ══ --}}
 @php
     use App\Support\Workflow;
 
-    // The document's status, named and coloured by the one list that owns it
-    // — Workflow::rows('contract_status'), which is what Settings renames and
-    // recolours. This used to be a copy of that list living here, and it was
-    // missing two of the five statuses: a partly-signed contract took the whole
-    // Overview tab down with "Undefined array key".
-    //
-    // The colour is a hex from the list, so a status added later arrives with
-    // its own colour instead of needing a class written for it here.
     $docChip = function (?string $status): array {
         if (! $status) {
             return ['Not started', 'color: #94A3B8; background: #94A3B815; box-shadow: inset 0 0 0 1px #94A3B833'];
@@ -218,61 +210,45 @@
     [$contractLabel, $contractStyle] = $docChip($contract?->status);
     [$briefLabel, $briefStyle] = $brief ? ['Ready', $docChip('signed')[1]] : $docChip(null);
 @endphp
-<div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-
-    {{-- Speakers --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card p-5">
+<div class="mt-5 grid gap-3 sm:grid-cols-3">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card px-4 py-3.5">
         <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('speakers') }}" aria-hidden="true"></span>
-        <div class="flex items-center justify-between">
-            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
-                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('speakers') }}; background: {{ $badge('speakers') }}15">
-                    <x-icon name="sparkles" class="h-3.5 w-3.5" />
-                </span>
-                Speakers
-            </h3>
-            <span class="text-3xs font-bold text-muted">roster</span>
+        <div class="flex items-center gap-2">
+            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('speakers') }}; background: {{ $badge('speakers') }}15">
+                <x-icon name="sparkles" class="h-3.5 w-3.5" />
+            </span>
+            <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
+            <span class="ms-auto pf text-lg font-bold tabular-nums text-navy-900">{{ $speakerCount }}</span>
         </div>
-        <p class="mt-3 text-2xl font-bold text-navy-900">{{ $speakerCount }}</p>
-        <p class="mt-2 text-[0.62rem] text-muted">
-            {{ $speakersConfirmed }} confirmed · {{ max($speakerCount - $speakersConfirmed, 0) }} pending
-        </p>
+        <p class="mt-1.5 text-[0.62rem] text-muted">{{ $speakersConfirmed }} confirmed · {{ max($speakerCount - $speakersConfirmed, 0) }} pending</p>
     </a>
 
-    {{-- Brief --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card p-5">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card px-4 py-3.5">
         <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('brief') }}" aria-hidden="true"></span>
-        <div class="flex items-center justify-between">
-            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
-                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('brief') }}; background: {{ $badge('brief') }}15">
-                    <x-icon name="clipboard" class="h-3.5 w-3.5" />
-                </span>
-                Event Brief
-            </h3>
+        <div class="flex items-center gap-2">
+            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('brief') }}; background: {{ $badge('brief') }}15">
+                <x-icon name="clipboard" class="h-3.5 w-3.5" />
+            </span>
+            <h3 class="pf text-sm font-bold text-navy-900">Brief</h3>
+            <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
         </div>
-        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
-        <p class="mt-2 text-[0.62rem] text-muted">The front-door document that drives the plan.</p>
     </a>
 
-    {{-- Contract --}}
-    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card p-5">
+    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card px-4 py-3.5">
         <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('contract') }}" aria-hidden="true"></span>
-        <div class="flex items-center justify-between">
-            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
-                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('contract') }}; background: {{ $badge('contract') }}15">
-                    <x-icon name="identification" class="h-3.5 w-3.5" />
-                </span>
-                Contract
-            </h3>
-            @if ($contract)<span class="text-3xs font-bold text-muted">{{ $contract->reference }}</span>@endif
+        <div class="flex items-center gap-2">
+            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('contract') }}; background: {{ $badge('contract') }}15">
+                <x-icon name="identification" class="h-3.5 w-3.5" />
+            </span>
+            <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
+            <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
         </div>
-        <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
-        <p class="mt-2 text-[0.62rem] text-muted">
-            @if ($contract)
-                {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }} estimated
-                @php $cpCollected = $contract->payments->sum('paid_cents'); @endphp
-                @if ($cpCollected > 0)· <b class="text-emerald-700">{{ $sym }}{{ $gap }}{{ number_format($cpCollected / 100) }} collected</b>@endif
-            @else Not generated yet. @endif
-        </p>
+        @if ($contract)
+            <p class="mt-1.5 truncate text-[0.62rem] text-muted">
+                {{ $contract->reference }}
+                · {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }}
+            </p>
+        @endif
     </a>
 </div>
 
@@ -417,71 +393,63 @@
     </div>
 </div>
 
-{{-- ══ Row 3: Upcoming Deadlines · AI Recommendations ══ --}}
+{{-- ══ Deadlines · Attention · Activity ══ --}}
 <div class="mt-5 grid gap-5 xl:grid-cols-3">
-
-    <div class="card p-5 xl:col-span-2">
-        <div class="mb-4 flex items-center justify-between">
-            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('tasks') }}; background: {{ $badge('tasks') }}15">
-                    <x-icon name="calendar" class="h-4 w-4" />
+    <div class="card p-4 xl:col-span-2">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('tasks') }}; background: {{ $badge('tasks') }}15">
+                    <x-icon name="calendar" class="h-3.5 w-3.5" />
                 </span>
-                Upcoming Deadlines
+                Upcoming deadlines
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'tasks']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">All tasks →</a>
         </div>
-        <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        <div class="divide-y divide-line">
             @forelse ($event->tasks->where('status', '!=', 'done')->whereNotNull('due_on')->sortBy('due_on')->take(5) as $task)
                 @php $days = (int) now()->startOfDay()->diffInDays($task->due_on, false); @endphp
-                <div class="flex items-start gap-2.5 rounded-2xl border border-line px-3 py-3">
-                    <span class="flex shrink-0 flex-col items-center rounded-xl border border-line px-2 py-1">
-                        <span class="text-[0.55rem] font-bold uppercase text-gold-600">{{ $task->due_on->format('M') }}</span>
-                        <span class="text-sm font-bold text-navy-900">{{ $task->due_on->format('d') }}</span>
+                <div class="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                    <span class="w-12 shrink-0 text-center">
+                        <span class="block text-[0.55rem] font-bold uppercase text-gold-600">{{ $task->due_on->format('M') }}</span>
+                        <span class="block text-sm font-bold leading-none text-navy-900">{{ $task->due_on->format('d') }}</span>
                     </span>
-                    <span class="min-w-0">
-                        <span class="line-clamp-2 text-[0.68rem] font-semibold leading-snug text-navy-900">{{ $task->title }}</span>
-                        <span class="mt-0.5 block text-3xs font-semibold {{ $days < 3 ? 'text-risk' : 'text-muted' }}">
-                            {{ $days < 0 ? abs($days).' days overdue' : ($days === 0 ? 'due today' : $days.' days left') }}
-                        </span>
+                    <span class="min-w-0 flex-1 truncate text-xs font-semibold text-navy-900">{{ $task->title }}</span>
+                    <span class="shrink-0 text-3xs font-semibold {{ $days < 3 ? 'text-risk' : 'text-muted' }}">
+                        {{ $days < 0 ? abs($days).'d overdue' : ($days === 0 ? 'today' : $days.'d left') }}
                     </span>
                 </div>
             @empty
-                <p class="col-span-full text-xs text-muted">No open deadlines.</p>
+                <p class="text-xs text-muted">No open deadlines.</p>
             @endforelse
         </div>
     </div>
 
-    <div class="card p-5">
+    <div class="card p-4">
         <div class="mb-3 flex items-center justify-between">
-            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold-50 text-gold-600">
-                    <x-icon name="sparkles" class="h-4 w-4" />
+            <h3 class="flex items-center gap-2 pf text-sm font-bold text-navy-900">
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gold-50 text-gold-600">
+                    <x-icon name="sparkles" class="h-3.5 w-3.5" />
                 </span>
-                AI Recommendations
+                Needs attention
             </h3>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">View all</a>
+            <a href="{{ route('events.hub', [$event, 'tab' => 'ai']) }}" class="text-[0.65rem] font-semibold text-info hover:underline">AI →</a>
         </div>
-        <ul class="space-y-2.5 text-xs text-navy-800">
-            @foreach (array_slice($ai['attention'], 0, 3) as $point)
-                <li class="flex gap-2"><span class="mt-0.5 text-gold-600">◎</span> {{ $point }}</li>
-            @endforeach
-            @if (($health['components']['budget'] ?? 0) >= 81)
-                <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Budget is healthy. Keep monitoring production costs.</li>
-            @endif
-            @if (empty($ai['attention']))
-                <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> No blockers detected — keep executing the plan.</li>
-            @endif
+        <ul class="space-y-2 text-xs text-navy-800">
+            @forelse (array_slice($ai['attention'] ?? [], 0, 4) as $point)
+                <li class="flex gap-2"><span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-gold-500"></span> {{ $point }}</li>
+            @empty
+                <li class="text-muted">No blockers detected.</li>
+            @endforelse
         </ul>
     </div>
 </div>
 
-{{-- ══ Row 4: Audit trail — every decision has an author ══ --}}
-@php $activity = $event->auditLogs()->with('user')->limit(8)->get(); @endphp
+@php $activity = $event->auditLogs()->with('user')->limit(6)->get(); @endphp
 @if ($activity->isNotEmpty())
-    <div class="mt-5 card p-5">
-        <div class="mb-3 flex items-center justify-between">
-            <h3 class="pf text-base font-bold text-navy-900">Recent Activity</h3>
-            <span class="text-3xs font-bold uppercase tracking-[0.14em] text-muted">Audit trail</span>
+    <div class="mt-5 card p-4">
+        <div class="mb-2 flex items-center justify-between">
+            <h3 class="pf text-sm font-bold text-navy-900">Recent activity</h3>
+            <span class="text-3xs font-bold uppercase tracking-[0.14em] text-muted">Audit</span>
         </div>
         <ul class="divide-y divide-line">
             @foreach ($activity as $log)
@@ -489,11 +457,8 @@
                     @if ($log->user)<x-user-avatar :user="$log->user" size="h-5 w-5" text="text-[0.45rem]" />@endif
                     <span class="min-w-0 flex-1">
                         <span class="font-semibold text-navy-900">{{ $log->user?->name ?? 'System' }}</span>
-                        <span class="text-muted">{{ ['created' => 'created', 'updated' => 'changed', 'deleted' => 'deleted'][$log->action] }}</span>
+                        <span class="text-muted">{{ ['created' => 'created', 'updated' => 'changed', 'deleted' => 'deleted'][$log->action] ?? $log->action }}</span>
                         <span class="font-semibold text-navy-800">{{ $log->label }}</span>
-                        @if ($log->summary())
-                            <span class="block truncate text-[0.62rem] text-muted">{{ $log->summary() }}</span>
-                        @endif
                     </span>
                     <span class="shrink-0 text-[0.62rem] text-muted">{{ $log->created_at->diffForHumans(short: true) }}</span>
                 </li>

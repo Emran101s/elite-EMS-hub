@@ -1,46 +1,32 @@
 @php
     $blockStatuses = \App\Models\EventRoomBlock::STATUSES;
+    $moduleHex = \App\Models\Event::moduleColor('accommodation');
+    $pct = $roomsHeld > 0 ? (int) round($roomsNamed / $roomsHeld * 100) : 0;
+    $stillToName = max(0, $roomsHeld - $roomsNamed);
 @endphp
 <div>
     <datalist id="room-categories">
         @foreach (\App\Support\Taxonomy::values('room_category') as $c)<option value="{{ $c }}"></option>@endforeach
     </datalist>
-    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div class="min-w-0 space-y-4">
 
-            {{-- ══ fill rail: the one number that matters ══ --}}
-            @if ($blocks->isNotEmpty())
-                @php $pct = $roomsHeld > 0 ? (int) round($roomsNamed / $roomsHeld * 100) : 0; @endphp
-                <div class="card overflow-hidden">
-                    <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
-                        <div>
-                            <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Rooming list</p>
-                            <p class="pf mt-0.5 text-2xl font-bold leading-none text-navy-900">
-                                {{ $roomsNamed }}<span class="text-base font-semibold text-navy-300"> / {{ $roomsHeld }}</span>
-                            </p>
-                            <p class="mt-0.5 text-eyebrow text-muted">rooms named</p>
-                        </div>
-                        <div class="min-w-[160px] flex-1">
-                            <div class="h-2.5 overflow-hidden rounded-full bg-navy-100">
-                                <div class="h-full rounded-full bg-gold-400 transition-all" style="width: {{ $pct }}%"></div>
-                            </div>
-                            <p class="mt-1.5 text-eyebrow text-muted">
-                                {{ $pct }}% filled · <span class="font-semibold text-navy-700">{{ max(0, $roomsHeld - $roomsNamed) }}</span> still to name
-                            </p>
-                        </div>
-                        <div class="flex gap-5 border-l border-line pl-5">
-                            <div>
-                                <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Blocks</p>
-                                <p class="pf text-lg font-bold text-navy-900">{{ $blocks->count() }}</p>
-                            </div>
-                            <div>
-                                <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Room-nights</p>
-                                <p class="pf text-lg font-bold text-navy-900">{{ $roomNightsTotal }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
+    @if ($blocks->isNotEmpty())
+        <x-module-head eyebrow="Rooming list"
+                       :ring="$pct"
+                       :ring-label="$pct.'%'"
+                       :figures="[
+                           ['Named', $roomsNamed.' / '.$roomsHeld, 'text-white', $stillToName ? $stillToName.' still to name' : 'Fully named'],
+                           ['Blocks', $blocks->count(), 'text-white', null],
+                           ['Room-nights', $roomNightsTotal, 'text-white', null],
+                       ]"
+                       class="mb-4">
+            <x-slot:actions>
+                <button type="button" wire:click="newBlock" class="btn-gold h-9 px-3.5 text-xs">＋ New block</button>
+            </x-slot:actions>
+        </x-module-head>
+    @endif
+
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div class="min-w-0 space-y-3">
 
             @if ($blocks->isEmpty())
                 <x-empty icon="home" title="No room blocks yet"
@@ -345,8 +331,10 @@
         <div class="xl:sticky xl:top-12 xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Accommodation Control Center</span>
+                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
+                        <x-icon name="{{ \App\Models\Event::moduleIcon('accommodation') }}" class="h-3.5 w-3.5" />
+                    </span>
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Stay Control</span>
                 </div>
                 <div class="border-b border-line p-4">
                     <p class="field-label !mb-2 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Summary</p>

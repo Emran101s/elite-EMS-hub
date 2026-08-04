@@ -6,45 +6,32 @@
         'silver' => 'bg-navy-100 text-navy-700', 'bronze' => 'bg-amber-100 text-amber-800',
     ];
     $tone = fn ($name) => $pkgTone[mb_strtolower($name)] ?? 'bg-navy-50 text-navy-700';
+    $moduleHex = \App\Models\Event::moduleColor('sponsors');
 @endphp
 
 <div>
+    <x-stat-strip class="mb-3" :stats="[
+        ['Sponsors', $soldCount, 'star', null, null, null],
+        ['Committed', $fmt($committed), 'currency', $target > 0 ? $progressPct : null, $progressPct >= 100 ? 'bg-emerald-500' : 'bg-gold-400', $target ? 'of '.$fmt($target) : 'Set a target →', 'text-navy-900'],
+        ['Received', $fmt($received), 'check', null, null, null, 'text-emerald-600'],
+        ['Packages', $packages->count(), 'archive', null, null, 'In the catalog'],
+    ]" />
+
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+        <label class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-eyebrow font-bold uppercase tracking-wide text-muted shadow-sm">
+            Target
+            <span class="text-navy-300">{{ $event->currencySymbol() }}</span>
+            <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="sponsorshipTarget" placeholder="0" class="w-24 border-0 bg-transparent p-0 text-right text-sm font-bold text-navy-900 focus:outline-none focus:ring-0">
+        </label>
+        @if ($target > 0 && $committed < $target)
+            <p class="text-eyebrow text-muted">{{ $fmt($target - $committed) }} left to target</p>
+        @endif
+        <button type="button" wire:click="newItem" class="btn-gold ms-auto h-9 px-3.5 text-xs">＋ Sell a sponsorship</button>
+    </div>
+
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         {{-- ══════════ MAIN ══════════ --}}
         <div class="min-w-0">
-            {{-- target vs actual header --}}
-            <div class="card mb-4 p-5">
-                <div class="flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                        <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Sponsorship income</p>
-                        <p class="mt-1 text-2xl font-bold text-navy-900">{{ $fmt($committed) }} <span class="text-sm font-semibold text-muted">committed</span></p>
-                        <p class="text-xs text-emerald-700">{{ $fmt($received) }} received · {{ $soldCount }} {{ str('sponsor')->plural($soldCount) }}</p>
-                    </div>
-                    <div class="text-right">
-                        <label class="text-eyebrow font-bold uppercase tracking-wide text-muted">Target</label>
-                        <div class="mt-0.5 flex items-center gap-1">
-                            <span class="text-sm font-bold text-navy-300">{{ $event->currencySymbol() }}</span>
-                            <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="sponsorshipTarget" placeholder="0" class="input h-9 w-28 text-right text-base font-bold">
-                        </div>
-                    </div>
-                </div>
-                @if ($target > 0)
-                    <div class="mt-3">
-                        <div class="mb-1 flex justify-between text-eyebrow font-semibold text-muted">
-                            <span>{{ $fmt($committed) }} of {{ $fmt($target) }}</span>
-                            <span class="{{ $progressPct >= 100 ? 'text-emerald-600' : 'text-navy-700' }}">{{ $progressPct }}%</span>
-                        </div>
-                        <div class="h-2 overflow-hidden rounded-full bg-navy-100">
-                            <div class="h-full rounded-full {{ $progressPct >= 100 ? 'bg-emerald-500' : 'bg-gold-500' }}" style="width: {{ $progressPct }}%"></div>
-                        </div>
-                        @if ($committed < $target)
-                            <p class="mt-1.5 text-eyebrow text-muted">{{ $fmt($target - $committed) }} left to reach target.</p>
-                        @endif
-                    </div>
-                @endif
-            </div>
-
-            {{-- sponsors list --}}
             @if ($sponsors->isEmpty())
                 <x-empty icon="star" title="No sponsors sold yet"
                          hint="Set your package prices in the catalog, then sell a package — the amount fills in automatically and rolls up into the budget's income.">
@@ -58,32 +45,32 @@
                     <table class="w-full min-w-[560px]">
                         <thead>
                             <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
-                                <th class="w-8 pl-4"></th>
-                                <th class="px-5 py-2.5">Sponsor</th>
-                                <th class="px-3 py-2.5">Package</th>
-                                <th class="px-3 py-2.5 text-right">Amount</th>
-                                <th class="px-3 py-2.5 text-right">Paid</th>
-                                <th class="px-3 py-2.5 text-center">Status</th>
-                                <th class="px-3 py-2.5 text-right">Actions</th>
+                                <th class="w-8 pl-3.5"></th>
+                                <th class="px-3.5 py-2">Sponsor</th>
+                                <th class="px-2.5 py-2">Package</th>
+                                <th class="px-2.5 py-2 text-right">Amount</th>
+                                <th class="px-2.5 py-2 text-right">Paid</th>
+                                <th class="px-2.5 py-2 text-center">Status</th>
+                                <th class="px-2.5 py-2 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($sponsors as $s)
                                 @php [$stLabel, $stClass] = $stMeta[$s->payment_status] ?? $stMeta['pending']; @endphp
                                 <tr wire:key="sp-{{ $s->id }}" class="group/sp border-b border-line last:border-0 hover:bg-page/30 {{ $this->isSelected($s->id) ? 'bg-navy-50/60' : '' }}">
-                                    <td class="pl-4"><button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button></td>
-                                    <td class="px-5 py-3">
-                                        <p class="text-sm font-semibold text-navy-900">{{ $s->name }}</p>
+                                    <td class="pl-3.5"><button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-navy-200 text-transparent hover:border-navy-400' }}" title="Select">✓</button></td>
+                                    <td class="px-3.5 py-2">
+                                        <p class="text-[13px] font-semibold text-navy-900">{{ $s->name }}</p>
                                         @if ($s->notes)<p class="truncate text-eyebrow text-muted">{{ $s->notes }}</p>@endif
                                     </td>
-                                    <td class="px-3 py-3">@if ($s->package)<span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $tone($s->package) }}">{{ $s->package }}</span>@else<span class="text-muted">—</span>@endif</td>
-                                    <td class="px-3 py-3 text-right text-xs font-bold text-navy-900">{{ $s->amount_cents ? $fmt($s->amount_cents) : '—' }}</td>
-                                    <td class="px-3 py-3 text-right text-xs font-semibold text-emerald-700">{{ $s->paid_cents ? $fmt($s->paid_cents) : '—' }}</td>
-                                    <td class="px-3 py-3 text-center"><span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span></td>
-                                    <td class="px-3 py-3">
+                                    <td class="px-2.5 py-2">@if ($s->package)<span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $tone($s->package) }}">{{ $s->package }}</span>@else<span class="text-muted">—</span>@endif</td>
+                                    <td class="px-2.5 py-2 text-right text-xs font-bold tabular-nums text-navy-900">{{ $s->amount_cents ? $fmt($s->amount_cents) : '—' }}</td>
+                                    <td class="px-2.5 py-2 text-right text-xs font-semibold tabular-nums text-emerald-700">{{ $s->paid_cents ? $fmt($s->paid_cents) : '—' }}</td>
+                                    <td class="px-2.5 py-2 text-center"><span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span></td>
+                                    <td class="px-2.5 py-2">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition group-hover/sp:opacity-100">
-                                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                            <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
+                                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -98,8 +85,10 @@
         <div class="xl:sticky xl:top-12 xl:h-fit">
             <div class="cc-panel">
                 <div class="cc-head">
-                    <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Sponsors Control Center</span>
+                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
+                        <x-icon name="star" class="h-3.5 w-3.5" />
+                    </span>
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Sponsors Control</span>
                     <span class="relative ml-auto text-eyebrow font-semibold text-muted">{{ $packages->count() }} pkgs</span>
                 </div>
 

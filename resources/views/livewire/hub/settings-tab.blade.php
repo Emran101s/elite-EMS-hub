@@ -1,10 +1,39 @@
 <div>
     <style>.pf{font-family:'Spectral',Georgia,serif}</style>
+    @php
+        $settingsHex = \App\Models\Event::moduleColor('settings') !== '#0B1F3A'
+            ? \App\Models\Event::moduleColor('settings')
+            : '#0B1F3A';
+        $enabledCount = is_array($event->enabled_modules)
+            ? count($event->enabled_modules)
+            : count(\App\Models\Event::HUB_MODULES);
+    @endphp
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+        <span class="inline-flex h-8 items-center gap-2 rounded-xl bg-white px-3 text-eyebrow font-bold text-navy-700 ring-1 ring-line">
+            <span class="flex h-5 w-5 items-center justify-center rounded-md text-white" style="background: {{ $settingsHex }}">
+                <x-icon name="cog" class="h-3 w-3" />
+            </span>
+            Event settings
+        </span>
+        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-navy-700 ring-1 ring-line">
+            <span class="text-navy-400">Stage</span>
+            <span>{{ str($event->stage)->replace('_', ' ')->title() }}</span>
+        </span>
+        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-navy-700 ring-1 ring-line">
+            <span class="text-navy-400">Modules on</span>
+            <span class="tabular-nums">{{ $enabledCount }}</span>
+        </span>
+        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-navy-700 ring-1 ring-line">
+            <span class="text-navy-400">Currency</span>
+            <span>{{ $event->currency }}</span>
+        </span>
+    </div>
+
     <div class="flex gap-6">
         {{-- section rail --}}
         <aside class="hidden w-52 shrink-0 lg:block">
             <nav class="sticky top-12 space-y-0.5">
-                <p class="mb-2 px-2 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-300">Event Settings</p>
+                <p class="mb-2 px-2 text-eyebrow font-bold uppercase tracking-[0.2em] text-navy-300">Sections</p>
                 <a href="#s-details" class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-micro text-navy-500 transition hover:bg-gold-50/60 hover:text-navy-900">
                     <span class="w-4 text-right text-eyebrow font-bold text-gold-700/70">01</span>
                     <span class="truncate">Event Details</span>

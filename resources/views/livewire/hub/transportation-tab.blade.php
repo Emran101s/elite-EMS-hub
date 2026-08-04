@@ -772,7 +772,9 @@
     {{-- ══ Transport Control Center — inline box (no more hanging dock) ══ --}}
     <div class="cc-panel mt-6 w-full max-w-sm">
         <div class="cc-head">
-            <x-icon name="sparkles" class="relative h-4 w-4 text-gold-600" />
+            <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleColor }}">
+                <x-icon name="truck" class="h-3.5 w-3.5" />
+            </span>
             <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-navy-900">Transport Control Center</span>
         </div>
                 <div class="border-b border-line p-4">

@@ -18,8 +18,21 @@
         @include('livewire.hub.partials.document-drawer')
     </x-dock>
 @else
-    {{-- Full-width library on the Documents tab. --}}
-    <div class="card overflow-hidden">
-        @include('livewire.hub.partials.document-drawer')
+    {{-- Full-width library on the Documents tab. One root for Livewire. --}}
+    <div>
+        @if ($library && ($inLibraryWall ?? false))
+            @php
+                $drawerDocs = collect($wall)->sum('documents');
+                $drawerFolders = collect($wall)->sum('folders');
+            @endphp
+            <x-stat-strip class="mb-3" :stats="[
+                ['Drawers', collect($wall)->count(), 'archive', null, null, 'One per module'],
+                ['Files', $drawerDocs, 'list', null, null, 'Across all drawers'],
+                ['Folders', $drawerFolders, 'grid', null, null, null],
+            ]" />
+        @endif
+        <div class="card overflow-hidden">
+            @include('livewire.hub.partials.document-drawer')
+        </div>
     </div>
 @endif
