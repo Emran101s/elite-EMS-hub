@@ -69,6 +69,10 @@
          of the book" before the digit underneath confirms it. "In the book" is
          always full — it is the panel's own reference circle, not a metric. --}}
     <div class="relative isolate overflow-hidden rounded-[20px] bg-navy-950 shadow-[0_20px_50px_-30px_rgba(11,31,58,0.55)]">
+        <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+            <div class="absolute inset-0 bg-[radial-gradient(90%_120%_at_100%_0%,rgba(212,175,55,0.12),transparent_55%)]"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(70%_90%_at_0%_100%,rgba(59,90,133,0.28),transparent_60%)]"></div>
+        </div>
         <p class="flex items-center gap-2 px-4 pt-4 text-eyebrow font-bold uppercase tracking-[0.22em] text-white/30 lg:px-5">Instrument panel</p>
         <div class="grid grid-cols-2 divide-x divide-y divide-white/[0.05] sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
             @foreach ($figures as $f)
@@ -131,7 +135,7 @@
             <div class="card overflow-hidden">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
                     <h3 class="flex items-center gap-2 pf text-[15px] font-bold text-navy-950">
-                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600"><x-icon name="calendar" class="h-3.5 w-3.5" /></span>
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-500"><x-icon name="calendar" class="h-3.5 w-3.5" /></span>
                         The week ahead
                     </h3>
                     <p class="text-[11.5px] text-muted">Sessions, movements and deadlines, day by day.</p>
@@ -222,16 +226,21 @@
                     @endif
                 </div>
 
-                <div class="grid grid-cols-2 divide-x divide-line border-t border-line sm:grid-cols-4">
+                <div class="grid grid-cols-2 divide-x divide-line border-t border-line bg-page/40 sm:grid-cols-4">
                     @foreach ([
-                        ['Contracted', \App\Livewire\EventsIndex::shortMoney($money['income'], $money['currency'])],
-                        ['Cost', \App\Livewire\EventsIndex::shortMoney($money['cost'], $money['currency'])],
-                        ['Net', \App\Livewire\EventsIndex::shortMoney($money['net'], $money['currency'])],
-                        ['Margin', $money['pricedMargin'] === null ? '—' : $money['pricedMargin'].'%'],
-                    ] as [$label, $value])
-                        <a href="{{ route('finance.index') }}" class="px-4 py-3 transition hover:bg-page/60">
-                            <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-400">{{ $label }}</p>
-                            <p class="pf mt-1 text-[17px] font-black leading-none text-navy-950">{{ $value }}</p>
+                        ['Contracted', \App\Livewire\EventsIndex::shortMoney($money['income'], $money['currency']), 'currency'],
+                        ['Cost', \App\Livewire\EventsIndex::shortMoney($money['cost'], $money['currency']), 'clipboard'],
+                        ['Net', \App\Livewire\EventsIndex::shortMoney($money['net'], $money['currency']), 'chart'],
+                        ['Margin', $money['pricedMargin'] === null ? '—' : $money['pricedMargin'].'%', 'sparkles'],
+                    ] as [$label, $value, $icon])
+                        <a href="{{ route('finance.index') }}" class="flex items-start gap-2.5 px-4 py-3 transition hover:bg-page/80">
+                            <span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gold-100/60 text-gold-700">
+                                <x-icon :name="$icon" class="h-3.5 w-3.5" />
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block text-eyebrow font-bold uppercase tracking-[0.12em] text-navy-400">{{ $label }}</span>
+                                <span class="pf mt-1 block text-[17px] font-black leading-none text-navy-950">{{ $value }}</span>
+                            </span>
                         </a>
                     @endforeach
                 </div>
@@ -258,12 +267,12 @@
                     @forelse ($signals as $s)
                         @php
                             $sev = match ($s['tone']) {
-                                'red' => ['bar' => 'bg-danger', 'dot' => 'bg-danger', 'ink' => 'text-danger-ink'],
-                                'amber' => ['bar' => 'bg-warning', 'dot' => 'bg-warning', 'ink' => 'text-warning-ink'],
-                                default => ['bar' => null, 'dot' => 'bg-navy-300', 'ink' => 'text-navy-900'],
+                                'red' => ['bar' => 'bg-danger', 'dot' => 'bg-danger', 'ink' => 'text-danger-ink', 'wash' => 'bg-danger-soft/40'],
+                                'amber' => ['bar' => 'bg-warning', 'dot' => 'bg-warning', 'ink' => 'text-warning-ink', 'wash' => 'bg-warning-soft/40'],
+                                default => ['bar' => null, 'dot' => 'bg-navy-300', 'ink' => 'text-navy-900', 'wash' => ''],
                             };
                         @endphp
-                        <a href="{{ $s['href'] }}" class="relative flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-page/60">
+                        <a href="{{ $s['href'] }}" @class(['relative flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-page/60', $sev['wash']])>
                             @if ($sev['bar'])
                                 <span class="absolute inset-y-0 left-0 w-[3px] {{ $sev['bar'] }}"></span>
                             @endif
@@ -278,7 +287,9 @@
                         </a>
                     @empty
                         <div class="px-4 py-7 text-center">
-                            <x-icon name="check" class="mx-auto h-6 w-6 text-success" />
+                            <span class="mx-auto grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                                <x-icon name="check" class="h-4 w-4" />
+                            </span>
                             <p class="mt-2 text-[11.5px] font-semibold text-navy-700">Nothing flagged anywhere.</p>
                             <p class="mt-0.5 text-[10.5px] text-muted">The advisor scans every open event — this is what a clean book looks like.</p>
                         </div>
@@ -296,6 +307,12 @@
                 </div>
                 <div class="divide-y divide-line">
                     @forelse ($events->sortBy('starts_at')->take(6) as $e)
+                        @php
+                            $live = $e->starts_at
+                                && $e->starts_at->copy()->startOfDay()->lte($now)
+                                && ($e->ends_at ?? $e->starts_at)->copy()->endOfDay()->gte($now);
+                            $daysOut = $e->starts_at ? (int) $now->diffInDays($e->starts_at, false) : null;
+                        @endphp
                         <a href="{{ route('events.hub', $e) }}" class="flex items-center gap-2.5 px-3 py-2.5 transition hover:bg-page/60">
                             <span class="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl ring-1 ring-navy-900/[0.06]">
                                 @if ($e->coverUrl())
@@ -307,12 +324,25 @@
                             </span>
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-[12px] font-bold text-navy-900">{{ $e->name }}</span>
-                                <span class="block truncate text-[10.5px] text-muted">{{ $e->starts_at?->format('j M Y') ?? 'No dates' }}</span>
+                                <span class="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-muted">
+                                    <span class="truncate">{{ $e->starts_at?->format('j M Y') ?? 'No dates' }}</span>
+                                    @if ($live)
+                                        <span class="shrink-0 rounded-full bg-emerald-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-emerald-700">Live</span>
+                                    @elseif ($daysOut !== null && $daysOut >= 0 && $daysOut <= 14)
+                                        <span class="shrink-0 rounded-full bg-gold-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gold-800">{{ $daysOut }}d</span>
+                                    @endif
+                                </span>
                             </span>
                             <x-health-ring :percent="$e->progress" :group="$e->healthGroup()" size="h-7 w-7" :label="false" class="shrink-0" />
                         </a>
                     @empty
-                        <p class="px-4 py-6 text-center text-[11.5px] text-muted">No events yet — once you add one, it'll show up here first.</p>
+                        <div class="px-4 py-6 text-center">
+                            <span class="mx-auto grid h-9 w-9 place-items-center rounded-xl bg-navy-50 text-navy-400">
+                                <x-icon name="calendar" class="h-4 w-4" />
+                            </span>
+                            <p class="mt-2 text-[11.5px] font-semibold text-navy-700">No events yet</p>
+                            <p class="mt-0.5 text-[10.5px] text-muted">Once you add one, it'll show up here first.</p>
+                        </div>
                     @endforelse
                 </div>
                 @if ($events->isNotEmpty())
