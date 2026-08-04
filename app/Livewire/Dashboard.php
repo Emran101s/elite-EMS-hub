@@ -62,6 +62,10 @@ class Dashboard extends Component
         $advisor = app(PortfolioAdvisor::class);
         $signals = $advisor->attention($events);
 
+        // One pass over each table for the whole seven-day window, instead of
+        // dayAt()'s old one-query-per-table-per-day (8 days × ~4 queries).
+        $window = $this->loadWindow($today, $today->copy()->addDays(6), $ids);
+
         return view('livewire.dashboard', [
             'now' => $today,
             'events' => $events,
@@ -76,11 +80,11 @@ class Dashboard extends Component
             'signals' => $signals->take(5),
             'signalCount' => $signals->count(),
 
-            'today' => $this->dayAt($today, $ids),
-            'week' => collect(range(0, 6))->map(function (int $offset) use ($today, $ids, $events) {
+            'today' => $window[$today->toDateString()],
+            'week' => collect(range(0, 6))->map(function (int $offset) use ($today, $events, $window) {
                 $day = $today->copy()->addDays($offset);
 
-                return $this->dayAt($day, $ids) + [
+                return $window[$day->toDateString()] + [
                     'date' => $day,
                     'today' => $offset === 0,
                     // An event starting or ending is the thing you would circle
@@ -106,35 +110,73 @@ class Dashboard extends Component
     }
 
     /**
-     * What lands on one day, across every module.
+     * What lands on each day of a window, across every module — one query per
+     * table for the whole window rather than dayAt()'s old per-day queries,
+     * which cost the week strip up to ~28 round trips on its own.
      *
-     * @return array{sessions:int,movements:int,tasks:int,arrivals:int,load:int}
+     * @return array<string, array{sessions:int,movements:int,tasks:int,arrivals:int,load:int}>
      */
-    private function dayAt(Carbon $day, array $ids): array
+    private function loadWindow(Carbon $start, Carbon $end, array $ids): array
     {
-        $sessions = EventAgendaSession::whereIn('event_id', $ids)
-            ->whereHas('day', fn ($q) => $q->whereDate('date', $day))->count();
+        $days = [];
+        for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addDay()) {
+            $days[$cursor->toDateString()] = ['sessions' => 0, 'movements' => 0, 'tasks' => 0, 'arrivals' => 0];
+        }
 
-        $movements = EventTransport::whereIn('event_id', $ids)
-            ->whereDate('depart_at', $day)
-            ->whereNotIn('status', ['cancelled'])->count();
+        // whereDate() (not whereBetween on the raw column) throughout: these
+        // date/datetime columns can carry a stored time part, and dayAt() used
+        // whereDate() per day precisely to ignore it — a plain whereBetween
+        // string-compares the column and silently drops the end-of-range day.
+        EventAgendaSession::whereIn('event_id', $ids)
+            ->whereHas('day', fn ($q) => $q->whereDate('date', '>=', $start->toDateString())
+                ->whereDate('date', '<=', $end->toDateString()))
+            ->with('day:id,date')
+            ->get(['id', 'agenda_day_id'])
+            ->each(function (EventAgendaSession $session) use (&$days) {
+                $key = $session->day->date->toDateString();
+                if (isset($days[$key])) {
+                    $days[$key]['sessions']++;
+                }
+            });
 
-        $tasks = Task::whereIn('event_id', $ids)
+        // Movements and arrivals both read from the same rows: a movement
+        // counts unless cancelled, an arrival's passengers count regardless
+        // (an arrival that got cancelled after people already boarded still
+        // happened) — the same two rules dayAt() applied per day.
+        EventTransport::whereIn('event_id', $ids)
+            ->whereDate('depart_at', '>=', $start->toDateString())
+            ->whereDate('depart_at', '<=', $end->toDateString())
+            ->get(['id', 'event_id', 'depart_at', 'type', 'status', 'passengers'])
+            ->each(function (EventTransport $movement) use (&$days) {
+                $key = $movement->depart_at->toDateString();
+                if (! isset($days[$key])) {
+                    return;
+                }
+                if ($movement->status !== 'cancelled') {
+                    $days[$key]['movements']++;
+                }
+                if ($movement->type === 'arrival') {
+                    $days[$key]['arrivals'] += (int) $movement->passengers;
+                }
+            });
+
+        Task::whereIn('event_id', $ids)
             ->whereNotIn('status', ['done', 'approved', 'cancelled'])
-            ->whereDate('due_on', $day)->count();
+            ->whereDate('due_on', '>=', $start->toDateString())
+            ->whereDate('due_on', '<=', $end->toDateString())
+            ->get(['id', 'due_on'])
+            ->each(function (Task $task) use (&$days) {
+                $key = $task->due_on->toDateString();
+                if (isset($days[$key])) {
+                    $days[$key]['tasks']++;
+                }
+            });
 
-        // Arrivals: transfers marked as an inbound pickup on the day.
-        $arrivals = EventTransport::whereIn('event_id', $ids)
-            ->whereDate('depart_at', $day)
-            ->where('type', 'arrival')->sum('passengers');
+        foreach ($days as $key => $counts) {
+            $days[$key]['load'] = $counts['sessions'] + $counts['movements'] + $counts['tasks'];
+        }
 
-        return [
-            'sessions' => $sessions,
-            'movements' => $movements,
-            'tasks' => $tasks,
-            'arrivals' => (int) $arrivals,
-            'load' => $sessions + $movements + $tasks,
-        ];
+        return $days;
     }
 
     /** The strip, in the language every other page opens with. */

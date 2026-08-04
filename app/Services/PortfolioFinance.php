@@ -65,7 +65,7 @@ class PortfolioFinance
     private function events(): Collection
     {
         return $this->eventsMemo ??= Event::whereNull('archived_at')
-            ->with(['budgetItems', 'incomeItems', 'sponsors', 'exhibitors', 'client',
+            ->with(['budgetItems', 'incomeItems', 'sponsors', 'exhibitors', 'client', 'invoices',
                 'contract.payments', 'contracts.payments'])
             ->orderBy('starts_at')
             ->get();
