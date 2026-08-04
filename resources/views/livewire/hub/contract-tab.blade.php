@@ -328,12 +328,15 @@
                     <button type="button" wire:click="discard" wire:confirm="Discard your unsaved changes?"
                             class="h-9 rounded-xl px-3 text-micro font-bold text-white/50 transition hover:text-white/90">Discard</button>
                 @endif
-                <button type="button" wire:click="save" @disabled(! $dirty)
+                <button type="button" wire:click="save" @disabled(! $dirty) wire:loading.attr="disabled" wire:target="save"
                         @class([
                             'h-9 rounded-xl px-4 text-micro font-bold transition',
                             'bg-white text-navy-900 shadow hover:brightness-95' => $dirty,
                             'bg-white/5 text-white/30 ring-1 ring-white/10' => ! $dirty,
-                        ])>{{ $dirty ? 'Save changes' : 'Saved' }}</button>
+                        ])>
+                    <span wire:loading.remove wire:target="save">{{ $dirty ? 'Save changes' : 'Saved' }}</span>
+                    <span wire:loading wire:target="save">Saving…</span>
+                </button>
 
                 @if ($type === 'client')
                     <a href="{{ route('events.contract.pdf', $event) }}" target="_blank"
@@ -886,9 +889,10 @@
             </span>
             <button type="button" wire:click="discard" wire:confirm="Discard your unsaved changes?"
                     class="rounded-lg px-3 py-1.5 text-xs font-bold text-white/55 transition hover:text-white">Discard</button>
-            <button type="button" wire:click="save"
+            <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                     class="rounded-lg bg-white px-5 py-1.5 text-xs font-black text-navy-900 shadow transition hover:brightness-95">
-                Save changes
+                <span wire:loading.remove wire:target="save">Save changes</span>
+                <span wire:loading wire:target="save">Saving…</span>
             </button>
         </div>
     </div>
