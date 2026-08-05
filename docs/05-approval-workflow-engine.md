@@ -12,6 +12,16 @@ something else:
   audit-logged — the model doesn't drown its history in edits to the request itself.
 - Gated by `Gate::authorize('decide-approvals', ...)`, which requires **manager** rank or
   above (see [07-user-roles-and-permissions.md](07-user-roles-and-permissions.md)).
+- **Multi-step chains** (`approval_steps`, model `ApprovalStep`): every approval is a
+  sequence of one or more ordered steps — a step can be left unassigned (any manager, the
+  original behavior) or named to a specific person. `EventApproval.status` is **derived**
+  from its steps (`EventApproval::syncStatusFromSteps()`), the same "derive, don't
+  duplicate" shape as `EventContract`'s signatories, not typed in by `decide()` directly.
+  A rejection or revision request on any step ends the chain immediately — remaining
+  steps are marked `skipped` rather than left dangling as still-pending. Approval requires
+  every step to say yes, in order; a step assigned to someone specific is theirs alone to
+  decide. `EventApproval::booted()` guarantees a bare `create()` still gets one default
+  step, so nothing that predates chains (or skips the form) is left undecidable.
 
 A second, parallel approval flow exists for **budget revisions** specifically:
 `EventBudgetVersion` (`pending` / `approved` / `rejected` / `superseded`) — a budget change
@@ -25,9 +35,9 @@ the same idea of a status that means something specific and is computed, not typ
 
 ## What this is not yet
 
-- There's no generic, configurable **workflow engine** (multi-step chains, conditional
-  routing, delegate-to, escalation on timeout). Every approval type today is a single
-  pending → decided step.
+- Multi-step chains landed; **conditional routing, delegate-to, and escalation on
+  timeout** are still not built — a step's approver is fixed at request time, nobody can
+  hand off a step they can't get to, and nothing escalates a step that's sat too long.
 - There's no notification/reminder system tied to a pending approval sitting too long —
   the Health Engine's attention list surfaces pending approvals, but nothing pushes.
 - Approvals aren't yet linked into the Commercial Command Center's future RFQ/Quotation

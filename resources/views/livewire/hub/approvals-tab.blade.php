@@ -35,6 +35,28 @@
                 <label class="field-label !mb-1 !text-eyebrow" for="a-notes">Notes</label>
                 <input id="a-notes" type="text" wire:model="notes" class="input h-9 text-sm" placeholder="Optional context">
             </div>
+
+            <div class="sm:col-span-2 xl:col-span-4">
+                <p class="field-label !mb-1 !text-eyebrow">Who signs off, in order</p>
+                <p class="mb-2 text-eyebrow text-muted">Leave a step's approver blank for "any manager" — the platform's default. Add a step to require a second, later decision.</p>
+                <div class="space-y-1.5">
+                    @foreach ($steps as $i => $step)
+                        <div class="flex items-center gap-1.5">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-50 text-eyebrow font-bold text-navy-500">{{ $i + 1 }}</span>
+                            <input type="text" wire:model="steps.{{ $i }}.label" class="input h-9 flex-1 text-sm" placeholder="Step name (optional) — e.g. Finance">
+                            <select wire:model="steps.{{ $i }}.approver_id" class="input h-9 w-40 text-sm">
+                                <option value="">Any manager</option>
+                                @foreach ($managers as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach
+                            </select>
+                            @if (count($steps) > 1)
+                                <button type="button" wire:click="removeStep({{ $i }})" class="shrink-0 rounded-lg px-2 py-1.5 text-eyebrow font-bold text-navy-300 hover:bg-red-50 hover:text-red-600">✕</button>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                <button type="button" wire:click="addStep" class="mt-1.5 text-eyebrow font-semibold text-gold-700 hover:underline">＋ Add another step</button>
+            </div>
+
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
                 <button type="button" wire:click="$set('showForm', false)" class="h-9 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
                 <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-9 px-5 text-xs">
@@ -63,6 +85,13 @@
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($pending as $approval)
+                        @php
+                            $steps = $approval->steps;
+                            $current = $steps->firstWhere('status', 'pending');
+                            $currentIndex = $current ? $steps->search(fn ($s) => $s->id === $current->id) : null;
+                            $isChain = $steps->count() > 1;
+                            $assignedElsewhere = $current?->approver_id && $current->approver_id !== auth()->id();
+                        @endphp
                         <li class="px-4 py-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
@@ -72,6 +101,9 @@
                                         · {{ $approval->requester?->name ?? '—' }}
                                         · {{ $approval->created_at->diffForHumans() }}
                                     </p>
+                                    @if ($isChain && $current)
+                                        <p class="mt-1 text-eyebrow font-semibold text-navy-600">Step {{ $currentIndex + 1 }} of {{ $steps->count() }} — awaiting {{ $current->assigneeLabel() }}</p>
+                                    @endif
                                     @if ($approval->notes)
                                         <p class="mt-1 truncate text-eyebrow text-navy-600">{{ $approval->notes }}</p>
                                     @endif
@@ -82,6 +114,8 @@
                             @can('decide-approvals')
                                 @if ($approval->requested_by === auth()->id())
                                     <p class="mt-2 text-eyebrow font-semibold text-muted">You raised this — a different manager decides it.</p>
+                                @elseif ($assignedElsewhere)
+                                    <p class="mt-2 text-eyebrow font-semibold text-muted">Assigned to {{ $current->assigneeLabel() }} — not yours to decide.</p>
                                 @else
                                     <div class="mt-2 flex flex-wrap gap-1.5">
                                         <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
@@ -123,6 +157,7 @@
                                     {{ str($approval->type)->title() }}
                                     · {{ $approval->decider?->name ?? '—' }}
                                     · {{ $approval->decided_at?->diffForHumans() }}
+                                    @if ($approval->steps->count() > 1) · {{ $approval->steps->count() }}-step chain @endif
                                 </p>
                             </div>
                             <x-status-badge :status="$approval->status" />
