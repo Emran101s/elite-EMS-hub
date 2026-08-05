@@ -70,4 +70,49 @@ class ContractAppendicesTest extends TestCase
 
         $this->assertNotEmpty($blocks);
     }
+
+    public function test_the_price_list_is_offered_as_an_appendix(): void
+    {
+        $this->assertArrayHasKey('pricing', ContractAppendices::LIBRARY);
+    }
+
+    public function test_pulling_the_price_list_appendix_shows_sell_prices_grouped_by_category(): void
+    {
+        [$event, $contract] = $this->ctx();
+        $event->invoiceItems()->delete();
+
+        $event->invoiceItems()->create([
+            'name' => 'Bed & breakfast, single', 'category' => 'Accommodation', 'unit' => 'room_night',
+            'cost_cents' => 12000, 'sell_cents' => 17000, 'currency' => 'USD', 'active' => true,
+        ]);
+        $event->invoiceItems()->create([
+            'name' => 'Interpretation booth', 'category' => 'Interpretation', 'unit' => 'day',
+            'cost_cents' => 50000, 'sell_cents' => 70000, 'currency' => 'USD', 'active' => true,
+        ]);
+        $event->invoiceItems()->create([
+            'name' => 'Retired item', 'category' => 'Old', 'unit' => 'item',
+            'cost_cents' => 100, 'sell_cents' => 200, 'currency' => 'USD', 'active' => false,
+        ]);
+
+        [$blocks, $summary] = ContractAppendices::pull('pricing', $event->fresh(), $contract);
+
+        $this->assertSame('2 items', $summary, 'the retired item must not be offered to a client');
+
+        $flat = collect($blocks)->pluck('items')->flatten(1);
+        $accommodation = $flat->firstWhere('l_en', 'Bed & breakfast, single');
+        $this->assertStringContainsString('170.00', $accommodation['t_en']);
+        $this->assertStringNotContainsString('120.00', json_encode($blocks), 'internal cost must never appear in a client-facing appendix');
+        $this->assertStringNotContainsString('Retired item', json_encode($blocks));
+    }
+
+    public function test_pulling_the_price_list_appendix_handles_no_active_items(): void
+    {
+        [$event, $contract] = $this->ctx();
+        $event->invoiceItems()->update(['active' => false]);
+
+        [$blocks, $summary] = ContractAppendices::pull('pricing', $event->fresh(), $contract);
+
+        $this->assertSame([], $blocks);
+        $this->assertSame('The price list has no active items yet', $summary);
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventContract;
+use App\Models\EventInvoiceItem;
 
 /**
  * The annexes: what a contract can carry behind its signatures.
@@ -33,6 +34,7 @@ class ContractAppendices
         'budget' => ['Estimated Budget', 'الموازنة التقديرية', 'budget'],
         'programme' => ['Event Programme', 'برنامج الفعالية', 'agenda'],
         'venue' => ['Venue and Technical Requirements', 'متطلبات القاعات والتجهيزات الفنية', 'venue'],
+        'pricing' => ['Price List', 'قائمة الأسعار', 'pricing'],
         'acceptance' => ['Certificate of Services Rendered', 'محضر إنجاز الخدمات', 'form'],
         'blank' => ['Untitled Appendix', 'ملحق بلا عنوان', 'typed'],
     ];
@@ -80,6 +82,7 @@ class ContractAppendices
             'budget' => self::fromBudget($event, $contract),
             'agenda' => self::fromAgenda($event),
             'venue' => self::fromVenue($event),
+            'pricing' => self::fromPricing($event),
             'brief' => self::fromBrief($event),
             default => [[], 'Nothing to pull'],
         };
@@ -147,6 +150,59 @@ class ContractAppendices
         ];
 
         return [$blocks, $items->flatten()->count().' lines · '.$money($total)];
+    }
+
+    /**
+     * The event's own price list — what it will invoice at, one rate per
+     * unit. Unlike the budget appendix this carries no total: a rate card
+     * lists what a room or a transfer costs per unit, not what this event is
+     * committed to buying of it — summing "one of everything priced" would
+     * read as a bill nobody agreed to.
+     *
+     * Only what the event actually sells, never what it costs — an invoice
+     * item's sell price is the only figure a client-facing document shows.
+     */
+    private static function fromPricing(Event $event): array
+    {
+        $cur = $event->currency ?: \App\Models\CompanyProfile::currency();
+        $money = fn (int $c) => \App\Support\Money::forDocument($c, $cur);
+
+        $items = $event->invoiceItems()->active()->orderBy('category')->orderBy('sort')->get()
+            ->groupBy(fn (EventInvoiceItem $i) => $i->category ?: 'Uncategorised');
+
+        if ($items->isEmpty()) {
+            return [[], 'The price list has no active items yet'];
+        }
+
+        $blocks = [[
+            'id' => 'ax0',
+            'type' => 'prose',
+            'title_en' => 'Rates',
+            'title_ar' => 'الأسعار',
+            'en' => ['Rates below are per unit, as priced for this event. The amount invoiced depends on the quantities and services actually used.'],
+            'ar' => ['الأسعار أدناه لكل وحدة، كما تم تسعيرها لهذه الفعالية. ويعتمد المبلغ المفوتَر على الكميات والخدمات المستخدمة فعليًا.'],
+            'items' => [], 'rows' => [],
+        ]];
+
+        foreach ($items as $category => $lines) {
+            $blocks[] = [
+                'id' => 'ax'.(count($blocks) + 1),
+                'type' => 'bullets',
+                'title_en' => (string) $category,
+                'title_ar' => '',
+                'en' => [],
+                'ar' => [],
+                'items' => $lines->map(fn (EventInvoiceItem $i) => [
+                    'l_en' => $i->name.($i->code ? ' ('.$i->code.')' : ''),
+                    'l_ar' => '',
+                    't_en' => $money($i->sell_cents).' '.mb_strtolower($i->unitLabel()),
+                    't_ar' => '',
+                ])->values()->all(),
+                'rows' => [],
+            ];
+        }
+
+        return [$blocks, $items->flatten()->count().' items'];
     }
 
     /** The programme, day by day, as it stands in the Agenda. */
