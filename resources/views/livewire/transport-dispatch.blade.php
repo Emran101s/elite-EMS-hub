@@ -1,6 +1,7 @@
 @php
     $span = $board['spanMinutes'];
     $start = $board['start'];
+    $moduleHex = \App\Models\Event::moduleColor('transportation');
     // Bar geometry: where a run sits on the axis and how wide it is.
     $geo = function ($m) use ($start, $span) {
         $s = $m->effectiveDeparture();
@@ -16,6 +17,7 @@
 <div>
     {{-- ══ header strip ══ --}}
     <div class="strip-dark -mx-4 -mt-4 mb-4 !rounded-none px-4 py-4 text-white sm:-mx-6 sm:-mt-6 sm:px-6">
+        <div class="mb-3 h-0.5 w-12 rounded-full" style="background: {{ $moduleHex }}" aria-hidden="true"></div>
         <div class="flex flex-wrap items-center gap-3">
             <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}"
                class="text-xs font-semibold text-white/50 hover:text-white">← Transportation</a>
@@ -32,7 +34,12 @@
                 </span>
             @endif
         </div>
-        <h1 class="mt-2 text-2xl font-black leading-tight">Dispatch Board</h1>
+        <h1 class="mt-2 flex items-center gap-2.5 text-2xl font-black leading-tight">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg text-white" style="background: {{ $moduleHex }}">
+                <x-icon name="truck" class="h-4 w-4" />
+            </span>
+            Dispatch Board
+        </h1>
         <p class="text-xs text-white/55">{{ $event->name }} · drag a run onto another {{ $groupBy }} to reassign</p>
     </div>
 
@@ -66,7 +73,7 @@
     </div>
 
     @if ($flash)
-        <p class="mb-4 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800">{{ $flash }}</p>
+        <x-alert tone="ok" class="mb-4">{{ $flash }}</x-alert>
     @endif
 
     {{-- On a phone a Gantt is a lie — say so rather than break the layout. --}}

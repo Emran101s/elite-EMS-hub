@@ -3,6 +3,7 @@
     // live" signal comes from the navy header strip and the pulsing pill — not
     // from a dark page, which reads as a different product.
     $tap = 'flex-1 rounded-xl px-3 py-3 text-sm font-bold transition active:scale-[0.98]';
+    $moduleHex = \App\Models\Event::moduleColor('transportation');
 @endphp
 
 <div wire:poll.30s>
@@ -10,6 +11,7 @@
     {{-- ══ live header strip: the one navy band, carrying the identity.
          Uses the approved .strip-dark tone — near-black was rejected before. ══ --}}
     <div class="strip-dark -mx-4 -mt-4 mb-4 !rounded-none px-4 py-4 text-white sm:-mx-6 sm:-mt-6 sm:px-6">
+        <div class="mb-3 h-0.5 w-12 rounded-full" style="background: {{ $moduleHex }}" aria-hidden="true"></div>
         <div class="flex flex-wrap items-center gap-3">
             <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}"
                class="text-xs font-semibold text-white/50 hover:text-white">← Transportation</a>
@@ -19,7 +21,12 @@
             </span>
             <span class="pf text-lg font-black tabular-nums">{{ now()->format('H:i') }}</span>
         </div>
-        <h1 class="mt-2 text-2xl font-black leading-tight">Transport · Live</h1>
+        <h1 class="mt-2 flex items-center gap-2.5 text-2xl font-black leading-tight">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg text-white" style="background: {{ $moduleHex }}">
+                <x-icon name="truck" class="h-4 w-4" />
+            </span>
+            Transport · Live
+        </h1>
         <p class="text-xs text-white/55">Event-day operations · {{ $event->name }}</p>
     </div>
 
@@ -56,7 +63,7 @@
     @endif
 
     @if ($flash)
-        <p class="mb-4 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800">{{ $flash }}</p>
+        <x-alert tone="ok" class="mb-4">{{ $flash }}</x-alert>
     @endif
 
     {{-- ══ the board ══ --}}
