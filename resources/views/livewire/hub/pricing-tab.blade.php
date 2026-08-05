@@ -5,73 +5,45 @@
     $cur = $event->currency ?: 'JOD';
     $money = fn ($c) => number_format($c / 100, 2);
     $margin = $totals['sell'] - $totals['cost'];
+    $marginPct = $totals['sell'] > 0 ? (int) round($margin / $totals['sell'] * 100) : null;
 @endphp
 
-<div class="space-y-4">
+<div class="space-y-3">
 
-    {{-- ══ what the list is worth ══ --}}
-    <div class="card flex flex-wrap items-center gap-x-6 gap-y-3 p-4">
-        <div>
-            <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Priced to sell</p>
-            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-950">{{ \App\Support\Money::forDocument($totals['sell'], $cur) }}</p>
-        </div>
-        <span class="h-9 w-px bg-line"></span>
-        <div>
-            <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Costs us</p>
-            <p class="pf mt-0.5 text-[20px] font-black leading-none text-navy-800">{{ \App\Support\Money::forDocument($totals['cost'], $cur) }}</p>
-        </div>
-        <span class="h-9 w-px bg-line"></span>
-        <div>
-            <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Margin</p>
-            <p class="pf mt-0.5 text-[20px] font-black leading-none {{ $margin < 0 ? 'text-risk' : 'text-emerald-700' }}">
-                {{ $margin < 0 ? '−' : '' }}{{ \App\Support\Money::forDocument(abs($margin), $cur) }}
-                @if ($totals['sell'] > 0)
-                    <span class="text-[12px] font-bold text-navy-400">{{ round($margin / $totals['sell'] * 100) }}%</span>
-                @endif
-            </p>
-        </div>
-
-        {{-- Selling below cost is worth saying out loud rather than leaving in
-             a column somebody has to scan for. --}}
-        @if ($underwater->isNotEmpty())
-            <p class="ms-auto rounded-xl bg-red-50 px-3 py-1.5 text-[11.5px] font-bold text-red-700">
-                {{ $underwater->count() }} {{ str('item')->plural($underwater->count()) }} priced below cost
-            </p>
-        @endif
-    </div>
+    <x-stat-strip class="mb-0" :stats="[
+        ['Items', $items->count(), 'archive', null, null, $underwater->isNotEmpty() ? $underwater->count().' below cost' : null, $underwater->isNotEmpty() ? 'text-red-700' : 'text-navy-900'],
+        ['Priced to sell', \App\Support\Money::forDocument($totals['sell'], $cur), 'currency', null, null, null, 'text-navy-900'],
+        ['Costs us', \App\Support\Money::forDocument($totals['cost'], $cur), 'list', null, null, null],
+        ['Margin', ($margin < 0 ? '−' : '').\App\Support\Money::forDocument(abs($margin), $cur), 'chart', $marginPct !== null ? max(0, min(100, abs($marginPct))) : null, $margin < 0 ? 'bg-risk' : 'bg-track', $marginPct !== null ? $marginPct.'%' : null, $margin < 0 ? 'text-risk' : 'text-emerald-700'],
+    ]" />
 
     {{-- ══ the bar ══ --}}
     <div class="flex flex-wrap items-center gap-2">
         <div class="relative">
-            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
+            <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
             <input type="search" wire:model.live.debounce.300ms="q" placeholder="Item, code, category…"
-                   class="input h-10 w-52 !rounded-2xl !py-0 !ps-9 text-xs xl:w-64">
+                   class="input h-9 w-52 !py-0 !ps-8 text-xs xl:w-64">
         </div>
 
-        <label class="flex h-10 cursor-pointer items-center gap-2 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-600 shadow-sm">
+        <label class="flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3 text-eyebrow font-semibold text-navy-600 shadow-sm">
             <input type="checkbox" wire:model.live="showInactive" class="h-3.5 w-3.5 rounded border-navy-300"> Show retired
         </label>
 
-        <p class="text-[11.5px] text-muted">{{ $items->count() }} {{ str('item')->plural($items->count()) }}</p>
-
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('events.pricing.template', $event) }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
+               class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
                 <x-icon name="archive" class="h-3.5 w-3.5 text-navy-400" /> Template
             </a>
 
             @if ($may)
                 <button type="button" wire:click="toggleCatalogue"
-                        @class(['flex h-10 items-center gap-1.5 rounded-2xl border px-3.5 text-[12px] font-semibold shadow-sm transition',
+                        @class(['flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold shadow-sm transition',
                             'border-gold-300 bg-gold-50 text-gold-800' => $showCatalogue,
                             'border-line bg-white text-navy-700 hover:border-gold-300' => ! $showCatalogue])>
-                    <x-icon name="list" class="h-3.5 w-3.5" /> From the house list
+                    <x-icon name="list" class="h-3.5 w-3.5" /> House list
                 </button>
 
-                <button type="button" wire:click="newItem"
-                        class="flex h-10 items-center rounded-2xl bg-navy-950 px-4 text-[12px] font-bold text-white shadow-[0_10px_24px_-14px_rgba(11,31,58,0.9)] transition hover:bg-navy-800">
-                    ＋ New item
-                </button>
+                <button type="button" wire:click="newItem" class="btn-gold h-9 px-3.5 text-xs">＋ New item</button>
             @endif
         </div>
     </div>
@@ -292,9 +264,9 @@
         <div class="space-y-3">
             @foreach ($groups as $group => $rows)
                 <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
-                    <div class="flex items-center gap-2 border-b border-line bg-navy-50/50 px-4 py-2">
-                        <span class="text-[12px] font-black uppercase tracking-[0.14em] text-navy-700">{{ $group }}</span>
-                        <span class="text-[11px] font-semibold text-navy-300">{{ $rows->count() }}</span>
+                    <div class="flex items-center gap-2 border-b border-line bg-page/50 px-3.5 py-1.5">
+                        <span class="text-eyebrow font-black uppercase tracking-[0.14em] text-navy-700">{{ $group }}</span>
+                        <span class="text-eyebrow font-semibold text-navy-300">{{ $rows->count() }}</span>
                         {{-- Who supplies it, which the category does not say. --}}
                         @foreach ($rows->pluck('section')->filter()->unique() as $sec)
                             <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-navy-500 ring-1 ring-line">
@@ -307,7 +279,7 @@
                         <div class="min-w-[880px]">
                             @php $cols = 'grid-cols-[100px_1fr_170px_104px_104px_110px_86px]'; @endphp
 
-                            <div class="grid {{ $cols }} gap-3 border-b border-line/70 px-4 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
+                            <div class="grid {{ $cols }} gap-3 border-b border-line/70 px-3.5 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
                                 <span>Code</span><span>Item</span><span>Sold by</span>
                                 <span class="text-end">Costs us</span><span class="text-end">We charge</span>
                                 <span class="text-end">Margin</span><span></span>
@@ -315,7 +287,7 @@
 
                             @foreach ($rows as $item)
                                 <div wire:key="ei-{{ $item->id }}"
-                                     class="grid {{ $cols }} items-center gap-3 border-b border-line/50 px-4 py-2 transition last:border-0 hover:bg-navy-50/30 {{ $item->active ? '' : 'opacity-50' }}">
+                                     class="grid {{ $cols }} items-center gap-3 border-b border-line/50 px-3.5 py-1.5 transition last:border-0 hover:bg-page/40 {{ $item->active ? '' : 'opacity-50' }}">
 
                                     <span class="truncate font-mono text-[11px] font-semibold text-navy-500">{{ $item->code ?: '—' }}</span>
 
