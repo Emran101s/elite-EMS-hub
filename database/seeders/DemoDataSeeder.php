@@ -360,7 +360,7 @@ class DemoDataSeeder extends Seeder
             ['Tech Expo 2026', 'Additional production budget', 'budget', 'pending', 'Khalid Mansour', null],
             ['GJU Career Fair', 'University branding kit', 'design', 'approved', 'Layla Haddad', 'Emran Ahmed'],
         ] as [$eventName, $title, $type, $status, $requester, $decider]) {
-            \App\Models\EventApproval::updateOrCreate(
+            $approval = \App\Models\EventApproval::updateOrCreate(
                 ['event_id' => $events[$eventName]->id, 'title' => $title],
                 [
                     'type' => $type, 'status' => $status,
@@ -368,6 +368,18 @@ class DemoDataSeeder extends Seeder
                     'decided_by' => $decider ? $team[$decider]->id : null,
                     'decided_at' => $decider ? now()->subDays(3) : null,
                 ]);
+
+            // booted() mints a pending default step on create — keep it in
+            // lockstep with the parent's status so migrate:fresh --seed does
+            // not leave an "approved" request with a step still waiting.
+            $step = $approval->steps()->first()
+                ?? $approval->steps()->create(['position' => 1]);
+
+            $step->update([
+                'status' => $status === 'pending' ? 'pending' : $status,
+                'decided_by' => $decider ? $team[$decider]->id : null,
+                'decided_at' => $decider ? now()->subDays(3) : null,
+            ]);
         }
 
         // ── Supplier pipeline statuses ──────────────────────────────────

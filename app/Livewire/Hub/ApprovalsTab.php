@@ -53,7 +53,39 @@ class ApprovalsTab extends Component
             'title' => ['required', 'string', 'max:160'],
             'type' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('approval_type')))],
             'notes' => ['nullable', 'string', 'max:500'],
+            'steps' => ['required', 'array', 'min:1'],
+            'steps.*.label' => ['nullable', 'string', 'max:80'],
+            'steps.*.approver_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
+
+        // A chain that names the requester as a step can never finish — they
+        // cannot decide their own request, and nobody else can decide a step
+        // assigned to them. Catch it at submit, not when the queue is stuck.
+        foreach (array_values($this->steps) as $i => $step) {
+            $assigneeId = $step['approver_id'] !== '' && $step['approver_id'] !== null
+                ? (int) $step['approver_id']
+                : null;
+
+            if ($assigneeId === null) {
+                continue;
+            }
+
+            if ($assigneeId === auth()->id()) {
+                $this->addError("steps.{$i}.approver_id", 'You cannot assign a step to yourself.');
+
+                continue;
+            }
+
+            $assignee = User::find($assigneeId);
+
+            if (! $assignee?->isAtLeast('manager')) {
+                $this->addError("steps.{$i}.approver_id", 'Only a manager can be named on a step.');
+            }
+        }
+
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return null;
+        }
 
         $approval = $this->event->approvals()->create([
             'title' => $this->title,
@@ -66,14 +98,20 @@ class ApprovalsTab extends Component
         // Position 1 already exists — EventApproval::booted() creates it the
         // moment the approval itself does — so this overwrites it with what
         // was actually configured rather than colliding with it.
-        foreach (array_values($this->steps) as $i => $step) {
+        $configured = array_values($this->steps);
+
+        foreach ($configured as $i => $step) {
             $approval->steps()->updateOrCreate(['position' => $i + 1], [
                 'label' => trim((string) ($step['label'] ?? '')) ?: null,
-                'approver_id' => $step['approver_id'] ?: null,
+                'approver_id' => $step['approver_id'] !== '' && $step['approver_id'] !== null
+                    ? (int) $step['approver_id']
+                    : null,
             ]);
         }
 
-        $chained = count($this->steps) > 1 ? ' ('.count($this->steps).'-step chain)' : '';
+        $approval->steps()->where('position', '>', count($configured))->delete();
+
+        $chained = count($configured) > 1 ? ' ('.count($configured).'-step chain)' : '';
         session()->flash('status', "Approval requested: “{$this->title}”{$chained}.");
 
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);

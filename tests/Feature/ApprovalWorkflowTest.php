@@ -161,4 +161,39 @@ class ApprovalWorkflowTest extends TestCase
             ->call('removeStep', 0)
             ->assertCount('steps', 1);
     }
+
+    public function test_you_cannot_assign_a_step_to_yourself(): void
+    {
+        [$event, , , $sara] = $this->ctx();
+
+        Livewire::actingAs($sara)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Stuck if self-assigned')
+            ->set('steps', [['label' => 'Me', 'approver_id' => $sara->id]])
+            ->call('save')
+            ->assertHasErrors(['steps.0.approver_id']);
+
+        $this->assertNull($event->approvals()->where('title', 'Stuck if self-assigned')->first());
+    }
+
+    public function test_needs_revision_stops_the_chain_and_skips_the_rest(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Concept to revise')
+            ->set('steps', [
+                ['label' => 'Ops', 'approver_id' => $layla->id],
+                ['label' => 'Finance', 'approver_id' => $sara->id],
+            ])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'needs_revision');
+
+        $approval->refresh();
+        $this->assertSame('needs_revision', $approval->status);
+        $this->assertSame('skipped', $approval->steps->firstWhere('label', 'Finance')->status);
+    }
 }

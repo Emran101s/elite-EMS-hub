@@ -52,8 +52,10 @@
                                 <button type="button" wire:click="removeStep({{ $i }})" class="shrink-0 rounded-lg px-2 py-1.5 text-eyebrow font-bold text-navy-300 hover:bg-red-50 hover:text-red-600">✕</button>
                             @endif
                         </div>
+                        @error('steps.'.$i.'.approver_id') <p class="ms-8 text-xs text-risk">{{ $message }}</p> @enderror
                     @endforeach
                 </div>
+                @error('steps') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                 <button type="button" wire:click="addStep" class="mt-1.5 text-eyebrow font-semibold text-gold-700 hover:underline">＋ Add another step</button>
             </div>
 
@@ -103,6 +105,12 @@
                                     </p>
                                     @if ($isChain && $current)
                                         <p class="mt-1 text-eyebrow font-semibold text-navy-600">Step {{ $currentIndex + 1 }} of {{ $steps->count() }} — awaiting {{ $current->assigneeLabel() }}</p>
+                                        @php $done = $steps->whereIn('status', ['approved', 'rejected', 'needs_revision']); @endphp
+                                        @if ($done->isNotEmpty())
+                                            <p class="mt-0.5 text-eyebrow text-muted">
+                                                {{ $done->map(fn ($s) => $s->assigneeLabel().' ✓')->join(' · ') }}
+                                            </p>
+                                        @endif
                                     @endif
                                     @if ($approval->notes)
                                         <p class="mt-1 truncate text-eyebrow text-navy-600">{{ $approval->notes }}</p>
@@ -150,17 +158,52 @@
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($decided as $approval)
-                        <li class="flex items-center justify-between gap-3 px-4 py-2.5">
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
-                                <p class="truncate text-eyebrow text-muted">
-                                    {{ str($approval->type)->title() }}
-                                    · {{ $approval->decider?->name ?? '—' }}
-                                    · {{ $approval->decided_at?->diffForHumans() }}
-                                    @if ($approval->steps->count() > 1) · {{ $approval->steps->count() }}-step chain @endif
-                                </p>
+                        @php $isChain = $approval->steps->count() > 1; @endphp
+                        <li class="px-4 py-2.5">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
+                                    <p class="truncate text-eyebrow text-muted">
+                                        {{ str($approval->type)->title() }}
+                                        · {{ $approval->decider?->name ?? '—' }}
+                                        · {{ $approval->decided_at?->diffForHumans() }}
+                                        @if ($isChain) · {{ $approval->steps->count() }}-step chain @endif
+                                    </p>
+                                </div>
+                                <x-status-badge :status="$approval->status" />
                             </div>
-                            <x-status-badge :status="$approval->status" />
+                            @if ($isChain)
+                                <ol class="mt-1.5 space-y-0.5">
+                                    @foreach ($approval->steps as $step)
+                                        @php
+                                            $stepTone = match ($step->status) {
+                                                'approved' => 'text-emerald-700',
+                                                'rejected' => 'text-red-700',
+                                                'needs_revision' => 'text-amber-700',
+                                                'skipped' => 'text-navy-300',
+                                                default => 'text-muted',
+                                            };
+                                            $stepMark = match ($step->status) {
+                                                'approved' => '✓',
+                                                'rejected' => '✕',
+                                                'needs_revision' => '↺',
+                                                'skipped' => '—',
+                                                default => '·',
+                                            };
+                                        @endphp
+                                        <li class="flex items-center gap-1.5 text-eyebrow {{ $stepTone }}">
+                                            <span class="w-3 shrink-0 font-bold">{{ $stepMark }}</span>
+                                            <span class="min-w-0 truncate">
+                                                {{ $step->assigneeLabel() }}
+                                                @if ($step->decider && $step->status !== 'skipped')
+                                                    <span class="text-muted">· {{ $step->decider->name }}</span>
+                                                @endif
+                                                <span class="text-muted">· {{ str($step->status)->replace('_', ' ') }}</span>
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            @endif
                         </li>
                     @endforeach
                 </ul>
