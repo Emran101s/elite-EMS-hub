@@ -42,11 +42,19 @@ cross-file status-colour maps were each defined once instead of scattered, after
 bugs (a currency mismatch, a drifted status colour) traced back to duplication. Full detail
 in [10-current-codebase-assessment.md](10-current-codebase-assessment.md).
 
+## Recently completed: Stage 3 — shared UX chrome
+
+**Stage 3 — loading/error states + confirm dialog.** One confirm host
+(`<x-confirm-host>` + `window.ebhConfirm`) replaces browser `wire:confirm` on the
+high-traffic surfaces (Events index, Speakers, Venue, Sponsors, F&B, Exhibition,
+Settings archive). Session flashes use `<x-alert>`; button busy labels use
+`<x-busy>`. Remaining `wire:confirm` call sites migrate onto `<x-confirm>` as those
+screens are touched.
+
 ## Deferred, not started (explicitly sequenced for later)
 
-- **Stage 3** — loading/error states, a shared confirm-dialog component.
-- **Stage 4** — performance: the Dashboard's `dayAt()` N+1 query, a missing `invoices`
-  relation in `EventHealthService::RELATIONS`.
+- **Stage 4** — performance: a missing `invoices` relation in
+  `EventHealthService::RELATIONS` (Dashboard `dayAt()` N+1 was fixed earlier).
 - **Stage 5** — security/robustness: badge-token hardening, HTTP security headers, soft
   deletes, missing FK indexes, a real `EventPolicy` (today's authorization is gate-based,
   not policy-object-based).
@@ -58,5 +66,5 @@ in [10-current-codebase-assessment.md](10-current-codebase-assessment.md).
 
 Don't start multi-tenancy, a portal, or a notification system opportunistically while doing
 something else — each is a large, deliberate decision (see
-[01-product-vision.md](01-product-vision.md)). Stages 3–5 are the honest "finish what's
+[01-product-vision.md](01-product-vision.md)). Stages 4–5 are the honest "finish what's
 already started" backlog and are the safer place to pick up incremental work.

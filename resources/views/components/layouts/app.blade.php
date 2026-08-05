@@ -74,22 +74,21 @@
         @endunless
 
         @if (session('status'))
-            <div class="mb-5 rounded-xl bg-track/10 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-track/30">
-                {{ session('status') }}
-            </div>
+            <x-alert tone="ok" class="mb-5">{{ session('status') }}</x-alert>
         @endif
 
         {{-- A blocked/rejected action is not the same event as a saved one —
              it needs its own key, or every "you can't do that" reads as a
              success. See docs/10-current-codebase-assessment.md. --}}
         @if (session('error'))
-            <div class="mb-5 rounded-xl bg-risk/10 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-risk/30">
-                {{ session('error') }}
-            </div>
+            <x-alert tone="risk" class="mb-5">{{ session('error') }}</x-alert>
         @endif
 
         <div class="pb-6">{{ $slot }}</div>
     </main>
 </div>
+
+{{-- Stage 3: one confirm dialog for the app — see <x-confirm>. --}}
+<x-confirm-host />
 </body>
 </html>

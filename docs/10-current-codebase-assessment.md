@@ -55,8 +55,8 @@ dates, and status colour`) — read those for the exact file lists.
 - **Robustness**: no HTTP security headers configured, no soft deletes, some missing
   foreign-key indexes, authorization is gate-based rather than backed by a formal
   `EventPolicy` per model.
-- **UX**: no shared loading/error state pattern, no shared confirm-dialog component — each
-  screen currently handles these ad hoc.
+- **UX**: Stage 3 landed shared `<x-confirm>` / `<x-alert>` / `<x-busy>`; remaining
+  `wire:confirm` call sites still migrate opportunistically.
 - **Stale doc, corrected in this handover**: `CLAUDE.md` described an in-progress "ORBIT"
   design system that was actually reverted weeks earlier; it referenced a
   `App\Support\Tone` class and CSS token files that no longer exist. Fixed as part of this

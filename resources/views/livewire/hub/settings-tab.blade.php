@@ -394,8 +394,10 @@
         </div>
 
         <div class="flex flex-wrap gap-3">
-            <button type="button" wire:click="archive" wire:confirm="Archive “{{ $event->name }}”? It disappears from lists and the Operations Hub (recoverable)."
-                    class="rounded-xl border border-risk/30 bg-risk/5 px-4 py-2.5 text-xs font-semibold text-risk transition hover:bg-risk/10">⌫ Archive event</button>
+            <x-confirm title="Archive “{{ $event->name }}”?"
+                       body="It disappears from lists and the Operations Hub (recoverable)."
+                       confirm="Archive" tone="warn" run="$wire.archive()"
+                       class="rounded-xl border border-risk/30 bg-risk/5 px-4 py-2.5 text-xs font-semibold text-risk transition hover:bg-risk/10">⌫ Archive event</x-confirm>
 
             @unless ($showDelete)
                 <button type="button" wire:click="askToDelete"

@@ -527,11 +527,14 @@
                     <button type="button" wire:click="clearSelection"
                             class="text-[11.5px] font-semibold text-navy-500 hover:text-navy-800">Clear</button>
 
-                    <button type="button" wire:click="deleteSelected"
-                            wire:confirm="Delete {{ count($selectedIds) }} {{ str('event')->plural(count($selectedIds)) }} permanently?&#10;&#10;Their tasks, budgets, documents, contracts and bookings go with them. Invoices and proposals are kept, unattached.&#10;&#10;This cannot be undone."
+                    <x-confirm
+                            title="Delete {{ count($selectedIds) }} {{ str('event')->plural(count($selectedIds)) }} permanently?"
+                            :body="'Their tasks, budgets, documents, contracts and bookings go with them. Invoices and proposals are kept, unattached.'.PHP_EOL.PHP_EOL.'This cannot be undone.'"
+                            confirm="Delete permanently"
+                            run="$wire.deleteSelected()"
                             class="ms-auto rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-700">
                         Delete permanently
-                    </button>
+                    </x-confirm>
                 </div>
             @endif
 
@@ -655,15 +658,18 @@
                                             <a href="{{ route('events.hub', $m['event']) }}" class="block px-3 py-2 text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">Open event</a>
                                             <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }}</button>
                                             <button type="button" wire:click="duplicate({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">Duplicate</button>
-                                            <button type="button" wire:click="archive({{ $m['id'] }})" wire:confirm="Archive “{{ $m['name'] }}”? It leaves every board and list."
-                                                    class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-600 transition hover:bg-red-50">Archive</button>
+                                            <x-confirm title="Archive “{{ $m['name'] }}”?" body="It leaves every board and list." confirm="Archive" tone="warn" run="$wire.archive({{ $m['id'] }})"
+                                                       class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-600 transition hover:bg-red-50">Archive</x-confirm>
                                             @can('manage-events')
                                                 {{-- Permanent, so it says so and it says what it takes.
                                                      The event's own Settings has the full inventory and
                                                      asks for the name; this is the quick one. --}}
-                                                <button type="button" wire:click="deleteEvent({{ $m['id'] }})"
-                                                        wire:confirm="Delete “{{ $m['name'] }}” permanently?&#10;&#10;Its tasks, budget, documents, contracts and bookings go with it. Invoices and proposals are kept, unattached.&#10;&#10;This cannot be undone."
-                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">Delete permanently</button>
+                                                <x-confirm
+                                                        title="Delete “{{ $m['name'] }}” permanently?"
+                                                        :body="'Its tasks, budget, documents, contracts and bookings go with it. Invoices and proposals are kept, unattached.'.PHP_EOL.PHP_EOL.'This cannot be undone.'"
+                                                        confirm="Delete permanently"
+                                                        run="$wire.deleteEvent({{ $m['id'] }})"
+                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">Delete permanently</x-confirm>
                                             @endcan
                                         </div>
                                     </details>

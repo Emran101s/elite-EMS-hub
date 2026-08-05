@@ -38,8 +38,7 @@
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
                 <button type="button" wire:click="$set('showForm', false)" class="h-9 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
                 <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-9 px-5 text-xs">
-                    <span wire:loading.remove wire:target="save">Submit Request</span>
-                    <span wire:loading wire:target="save">Submitting…</span>
+                    <x-busy target="save" busy="Submitting…">Submit Request</x-busy>
                 </button>
             </div>
         </form>

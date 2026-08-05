@@ -119,9 +119,10 @@
                                     {{ $f->documents_count }} {{ \Illuminate\Support\Str::plural('file', $f->documents_count) }}
                                 </p>
                             </div>
-                            <button type="button" wire:click="deleteFolder({{ $f->id }})"
-                                    wire:confirm="Delete “{{ $f->name }}”? Its files move up to {{ \App\Models\Event::moduleLabel($activeModule) }}."
-                                    class="shrink-0 rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/f:opacity-100">✕</button>
+                            <x-confirm title="Delete “{{ $f->name }}”?"
+                                       body="Its files move up to {{ \App\Models\Event::moduleLabel($activeModule) }}."
+                                       confirm="Delete" run="$wire.deleteFolder({{ $f->id }})"
+                                       class="shrink-0 rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/f:opacity-100">✕</x-confirm>
                         </div>
                     @endforeach
                 </div>
@@ -222,9 +223,10 @@
                                 @endif
                                 <a href="{{ route('events.documents.download', [$event, $doc]) }}"
                                    class="rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-700 hover:bg-navy-100">Download</a>
-                                <button type="button" wire:click="delete({{ $doc->id }})"
-                                        wire:confirm="Delete “{{ $doc->name }}”? The file is removed for good."
-                                        class="rounded-lg px-1.5 py-1.5 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/doc:opacity-100">✕</button>
+                                <x-confirm title="Delete “{{ $doc->name }}”?"
+                                           body="The file is removed for good."
+                                           confirm="Delete" run="$wire.delete({{ $doc->id }})"
+                                           class="rounded-lg px-1.5 py-1.5 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover/doc:opacity-100">✕</x-confirm>
                             </div>
                         </div>
                     @endforeach

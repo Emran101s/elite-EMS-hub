@@ -89,17 +89,19 @@
                             <button type="button" wire:click.stop="duplicate({{ $event->id }})" class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
                                 <x-icon name="archive" class="h-3.5 w-3.5 text-navy-500" /> Duplicate
                             </button>
-                            <button type="button" wire:click.stop="archive({{ $event->id }})"
-                                    wire:confirm="Archive “{{ $event->name }}”? It will disappear from lists and the Operations Hub."
-                                    class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
+                            <x-confirm title="Archive “{{ $event->name }}”?"
+                                       body="It will disappear from lists and the Operations Hub."
+                                       confirm="Archive" tone="warn" run="$wire.archive({{ $event->id }})"
+                                       class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60">
                                 <x-icon name="logout" class="h-3.5 w-3.5 text-navy-500" /> Archive
-                            </button>
+                            </x-confirm>
                             @can('manage-events')
-                                <button type="button" wire:click.stop="deleteEvent({{ $event->id }})"
-                                        wire:confirm="Permanently DELETE “{{ $event->name }}”?&#10;&#10;This erases the event and everything in it — plan, tasks, agenda, budget, suppliers, files. It cannot be undone.&#10;&#10;Archive instead if you just want it out of the way."
-                                        class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-risk transition hover:bg-risk/5">
+                                <x-confirm title="Permanently delete “{{ $event->name }}”?"
+                                           :body="'This erases the event and everything in it — plan, tasks, agenda, budget, suppliers, files. It cannot be undone.'.PHP_EOL.PHP_EOL.'Archive instead if you just want it out of the way.'"
+                                           confirm="Delete forever" run="$wire.deleteEvent({{ $event->id }})"
+                                           class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-risk transition hover:bg-risk/5">
                                     <x-icon name="dots" class="h-3.5 w-3.5" /> Delete forever
-                                </button>
+                                </x-confirm>
                             @endcan
                         </div>
                     </details>

@@ -70,7 +70,8 @@
                                     <td class="px-2.5 py-2">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition group-hover/sp:opacity-100">
                                             <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                            <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                            <x-confirm title="Remove {{ $s->name }}?" confirm="Remove" run="$wire.delete({{ $s->id }})"
+                                                       class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                         </div>
                                     </td>
                                 </tr>
@@ -132,7 +133,8 @@
                                     <span class="flex shrink-0 items-center gap-1 opacity-0 transition group-hover/pkg:opacity-100">
                                         <a href="{{ route('events.sponsorship', $event) }}?package={{ urlencode($p->name) }}" target="_blank" class="rounded bg-gold-50 px-1.5 py-0.5 text-eyebrow font-bold text-gold-700 hover:bg-gold-100" title="Generate this package sheet">↗</a>
                                         <button type="button" wire:click="startEditPackage({{ $p->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Edit name, price & benefits">✎</button>
-                                        <button type="button" wire:click="deletePackage({{ $p->id }})" wire:confirm="Remove the “{{ $p->name }}” package? Sold sponsors keep their amount." class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete package">✕</button>
+                                        <x-confirm title="Remove the “{{ $p->name }}” package?" body="Sold sponsors keep their amount." confirm="Remove" run="$wire.deletePackage({{ $p->id }})"
+                                                   class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete package">✕</x-confirm>
                                     </span>
                                 </div>
                             @endif

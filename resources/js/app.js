@@ -43,7 +43,54 @@ document.addEventListener('alpine:init', () => {
             this.open = null;
         },
     });
+
+    // ── Confirm dialog (Stage 3) ───────────────────────────────────────────
+    // Browser wire:confirm is a native alert with no brand and no Escape/outside
+    // handling that matches our modals. Triggers call window.ebhConfirm({…});
+    // the host lives once in the app layout (<x-confirm-host>).
+    window.Alpine.data('ebhConfirmHost', () => ({
+        open: false,
+        title: '',
+        body: '',
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        tone: 'danger',
+        run: null,
+
+        init() {
+            window.addEventListener('ebh-confirm', (e) => this.show(e.detail || {}));
+        },
+
+        show(detail) {
+            this.title = detail.title || 'Are you sure?';
+            this.body = detail.body || '';
+            this.confirmLabel = detail.confirmLabel || 'Confirm';
+            this.cancelLabel = detail.cancelLabel || 'Cancel';
+            this.tone = detail.tone || 'danger';
+            this.run = typeof detail.run === 'function' ? detail.run : null;
+            this.open = true;
+            this.$nextTick(() => this.$refs.confirmBtn?.focus());
+        },
+
+        close() {
+            this.open = false;
+            this.run = null;
+        },
+
+        async accept() {
+            const fn = this.run;
+            this.close();
+            if (typeof fn === 'function') {
+                await fn();
+            }
+        },
+    }));
 });
+
+/** Open the shared confirm dialog. Prefer <x-confirm run="…"> in Blade. */
+window.ebhConfirm = (detail) => {
+    window.dispatchEvent(new CustomEvent('ebh-confirm', { detail }));
+};
 
 // ── Disclosure menus ──────────────────────────────────────────────────────
 // A native <details> opens and closes on its own summary and nothing else, so

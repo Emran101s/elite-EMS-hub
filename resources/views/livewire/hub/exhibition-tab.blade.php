@@ -70,7 +70,8 @@
                             <td class="px-2.5 py-2">
                                 <div class="flex items-center justify-end gap-1 opacity-0 transition group-hover/ex:opacity-100">
                                     <button type="button" wire:click="edit({{ $x->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                    <button type="button" wire:click="delete({{ $x->id }})" wire:confirm="Remove {{ $x->company }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                    <x-confirm title="Remove {{ $x->company }}?" confirm="Remove" run="$wire.delete({{ $x->id }})"
+                                               class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                 </div>
                             </td>
                         </tr>

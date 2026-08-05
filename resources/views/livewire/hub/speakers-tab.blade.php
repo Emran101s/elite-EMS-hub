@@ -68,7 +68,8 @@
                                         <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-eyebrow font-bold text-emerald-700 hover:bg-emerald-100">✓</button>
                                     @endif
                                     <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                    <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                    <x-confirm title="Remove {{ $s->name }}?" confirm="Remove" run="$wire.delete({{ $s->id }})"
+                                               class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                 </span>
                             </li>
                         @endforeach
@@ -102,7 +103,8 @@
                                         <button type="button" wire:click="setStatus({{ $s->id }}, 'confirmed')" class="rounded-md bg-emerald-50 px-2 py-0.5 text-eyebrow font-bold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100">✓ Confirm</button>
                                     @endif
                                     <button type="button" wire:click="edit({{ $s->id }})" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300">✎</button>
-                                    <button type="button" wire:click="delete({{ $s->id }})" wire:confirm="Remove {{ $s->name }}?" class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                    <x-confirm title="Remove {{ $s->name }}?" confirm="Remove" run="$wire.delete({{ $s->id }})"
+                                               class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                 </div>
                             </div>
                         </div>

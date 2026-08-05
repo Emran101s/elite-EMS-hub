@@ -235,8 +235,7 @@
             <div class="mt-3 flex flex-wrap items-center gap-2">
                 <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                         class="rounded-xl bg-navy-950 px-3.5 py-2 text-[12px] font-bold text-white transition hover:bg-navy-800">
-                    <span wire:loading.remove wire:target="save">{{ $editingId ? 'Save' : 'Add it' }}</span>
-                    <span wire:loading wire:target="save">Saving…</span>
+                    <x-busy target="save" busy="Saving…">{{ $editingId ? 'Save' : 'Add it' }}</x-busy>
                 </button>
                 <button type="button" wire:click="cancel"
                         class="rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:text-navy-700">Cancel</button>
@@ -287,7 +286,7 @@
 
                             @foreach ($rows as $item)
                                 <div wire:key="ei-{{ $item->id }}"
-                                     class="grid {{ $cols }} items-center gap-3 border-b border-line/50 px-3.5 py-1.5 transition last:border-0 hover:bg-page/40 {{ $item->active ? '' : 'opacity-50' }}">
+                                     class="group grid {{ $cols }} items-center gap-3 border-b border-line/50 px-3.5 py-1.5 transition last:border-0 hover:bg-page/40 {{ $item->active ? '' : 'opacity-50' }}">
 
                                     <span class="truncate font-mono text-[11px] font-semibold text-navy-500">{{ $item->code ?: '—' }}</span>
 
@@ -316,12 +315,17 @@
                                         @endif
                                     </span>
 
-                                    <span class="text-end">
+                                    <span class="flex items-center justify-end gap-1 text-end">
                                         @if ($may)
                                             <button type="button" wire:click="toggleActive({{ $item->id }})"
                                                     class="rounded-lg px-2 py-1 text-[10.5px] font-bold transition {{ $item->active ? 'text-navy-400 hover:bg-navy-50 hover:text-navy-700' : 'text-emerald-600 hover:bg-emerald-50' }}">
                                                 {{ $item->active ? 'Retire' : 'Restore' }}
                                             </button>
+                                            <button type="button" wire:click="edit({{ $item->id }})" title="Edit"
+                                                    class="rounded-lg px-1.5 py-1 text-[11px] font-bold text-navy-400 opacity-0 transition hover:bg-navy-50 hover:text-navy-700 group-hover:opacity-100">✎</button>
+                                            <button type="button" wire:click="destroy({{ $item->id }})"
+                                                    wire:confirm="Delete “{{ $item->name }}” from this event's price list? This doesn't affect invoices already raised from it."
+                                                    title="Delete" class="rounded-lg bg-risk/10 px-1.5 py-1 text-[11px] font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                                         @endif
                                     </span>
                                 </div>

@@ -191,7 +191,8 @@
                                            class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100"
                                            title="AV & equipment prep sheet">↧ Equip</a>
                                         <button type="button" wire:click="editRoom({{ $room->id }})" class="rounded-md bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
-                                        <button type="button" wire:click="deleteRoom({{ $room->id }})" wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less." class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
+                                        <x-confirm title="Delete “{{ $room->name }}”?" body="Sessions here become room-less." confirm="Delete" run="$wire.deleteRoom({{ $room->id }})"
+                                                   class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</x-confirm>
                                     </span>
                                 </div>
                             </li>
@@ -259,9 +260,8 @@
                                        title="AV & equipment prep sheet">↧ Equip</a>
                                     <button type="button" wire:click="editRoom({{ $room->id }})"
                                             class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 ring-1 ring-line hover:ring-gold-300" title="Edit">✎</button>
-                                    <button type="button" wire:click="deleteRoom({{ $room->id }})"
-                                            wire:confirm="Delete “{{ $room->name }}”? Sessions here become room-less."
-                                            class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
+                                    <x-confirm title="Delete “{{ $room->name }}”?" body="Sessions here become room-less." confirm="Delete" run="$wire.deleteRoom({{ $room->id }})"
+                                               class="rounded-md bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</x-confirm>
                                 </div>
                             </div>
                         </div>
