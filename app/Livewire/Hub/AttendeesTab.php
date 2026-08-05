@@ -423,17 +423,17 @@ class AttendeesTab extends Component
     }
 
     /**
-     * A new link, when the old one has been shared somewhere it should not
-     * have been. Everyone who already registered keeps their place; only the
-     * URL changes.
+     * A new registration link, when the old one has been shared somewhere it
+     * should not have been. Everyone who already registered keeps their place;
+     * printed badges keep working — check-in has its own secret.
      */
     public function newRegistrationLink(): void
     {
         Gate::authorize('write');
 
-        $this->event->update(['registration_token' => Str::lower(Str::random(24))]);
+        $this->event->update(['registration_token' => Event::newRegistrationToken()]);
 
-        session()->flash('status', 'New registration link. The old one no longer opens anything.');
+        session()->flash('status', 'New registration link. The old one no longer opens the form — printed badges are unchanged.');
     }
 
     public function saveRegistrationSettings(): void

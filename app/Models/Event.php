@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'module_budget_categories', 'budget_locked_at', 'progress', 'expected_participants',
-    'registration_token', 'registration_open', 'registration_capacity', 'registration_note', 'badge_template',
+    'registration_token', 'checkin_token', 'registration_open', 'registration_capacity', 'registration_note', 'badge_template',
     'primary_color', 'secondary_color', 'accent_color', 'text_color', 'archived_at', 'enabled_modules', 'priority',
 ])]
 class Event extends Model
@@ -994,16 +994,37 @@ class Event extends Model
         return $this->registration_token;
     }
 
+    /**
+     * Secret on printed badges / check-in URLs — separate from registration.
+     *
+     * Rotating the registration link must not break every QR already on a
+     * lanyard. Check-in has its own token for that reason.
+     */
+    public function checkinToken(): string
+    {
+        if (! $this->checkin_token) {
+            $this->forceFill(['checkin_token' => self::newCheckinToken()])->save();
+        }
+
+        return $this->checkin_token;
+    }
+
     public static function newRegistrationToken(): string
+    {
+        return Str::lower(Str::random(24));
+    }
+
+    public static function newCheckinToken(): string
     {
         return Str::lower(Str::random(24));
     }
 
     protected static function booted(): void
     {
-        // Every event has its link from the moment it exists.
+        // Every event has its links from the moment it exists.
         static::creating(function (self $event) {
             $event->registration_token ??= self::newRegistrationToken();
+            $event->checkin_token ??= self::newCheckinToken();
         });
 
         static::updated(function (self $event) {

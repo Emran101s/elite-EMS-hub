@@ -55,7 +55,7 @@ class SessionCheckInTest extends TestCase
     private function scan(Event $event, EventAttendee $a)
     {
         return Livewire::test(CheckInScan::class, [
-            'token' => $event->registrationToken(), 'reference' => $a->reference(),
+            'token' => $event->checkinToken(), 'reference' => $a->checkInCode(),
         ]);
     }
 

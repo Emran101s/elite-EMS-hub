@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Event;
 use App\Models\EventAttendee;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,9 +17,9 @@ use Livewire\Component;
  *
  * Unauthenticated, like the registration page, and for the same reason: the
  * person on the door may be a volunteer with a borrowed phone. What protects
- * it is that the URL is unguessable — you need the event's token AND the
- * attendee's reference — and that the only thing it can do is mark somebody
- * present. It cannot read the list, edit anyone, or say who else is coming.
+ * it is that the URL needs the event's check-in token AND a signed attendee
+ * code — and that the only thing it can do is mark somebody present. It
+ * cannot read the list, edit anyone, or say who else is coming.
  */
 #[Layout('components.layouts.guest', ['width' => 'max-w-md'])]
 class CheckInScan extends Component
@@ -27,13 +28,35 @@ class CheckInScan extends Component
 
     public ?EventAttendee $attendee = null;
 
-    /** found | already | cancelled | unknown | done */
+    /** found | already | cancelled | unknown | done | throttled */
     public string $state = 'unknown';
 
     public function mount(string $token, string $reference): void
     {
-        $this->event = Event::where('registration_token', $token)->firstOrFail();
-        $this->attendee = EventAttendee::findByReference($this->event->id, $reference);
+        $ip = request()->ip() ?? '0.0.0.0';
+        $throttleKey = 'checkin:'.$token.':'.$ip;
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 60)) {
+            $this->state = 'throttled';
+            // A throwaway event so the view still has something typed; the
+            // throttle screen never reads it.
+            $this->event = new Event(['name' => '—']);
+
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
+        // Prefer the dedicated check-in secret; accept the registration token
+        // only so badges printed before the split still open the door.
+        $this->event = Event::query()
+            ->where(fn ($q) => $q->where('checkin_token', $token)->orWhere('registration_token', $token))
+            ->firstOrFail();
+
+        $legacy = hash_equals((string) $this->event->registration_token, $token)
+            && ! hash_equals((string) $this->event->checkin_token, $token);
+
+        $this->attendee = EventAttendee::findForCheckIn($this->event->id, $reference, $legacy);
 
         $this->state = match (true) {
             ! $this->attendee => 'unknown',
@@ -55,6 +78,16 @@ class CheckInScan extends Component
         if ($this->state !== 'found') {
             return;
         }
+
+        $key = 'checkin-admit:'.$this->event->id.':'.(request()->ip() ?? '0.0.0.0');
+
+        if (RateLimiter::tooManyAttempts($key, 30)) {
+            $this->state = 'throttled';
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
 
         $this->attendee->update([
             'status' => 'checked_in',
@@ -95,7 +128,7 @@ class CheckInScan extends Component
      */
     public function admitToSession(int $sessionId): void
     {
-        if (! $this->attendee || $this->attendee->status === 'cancelled') {
+        if (! $this->attendee || $this->attendee->status === 'cancelled' || $this->state === 'throttled') {
             return;
         }
 
@@ -119,6 +152,6 @@ class CheckInScan extends Component
 
     public function render()
     {
-        return view('livewire.check-in-scan')->title('Check-in · '.$this->event->name);
+        return view('livewire.check-in-scan');
     }
 }

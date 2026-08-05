@@ -272,8 +272,8 @@ class SettingsTab extends Component
 
     public function duplicate()
     {
-        Gate::authorize('manage-events');
-        $copy = $this->event->replicate(['progress']);
+        $this->authorize('duplicate', $this->event);
+        $copy = $this->event->replicate(['progress', 'registration_token', 'checkin_token']);
         $copy->name = $this->event->name.' (Copy)';
         $copy->stage = 'draft';
         $copy->status = 'planning';
@@ -288,7 +288,7 @@ class SettingsTab extends Component
 
     public function archive()
     {
-        Gate::authorize('manage-events');
+        $this->authorize('archive', $this->event);
         $this->event->update(['archived_at' => now()]);
 
         return $this->redirectRoute('events.index');
@@ -303,7 +303,7 @@ class SettingsTab extends Component
 
     public function askToDelete(): void
     {
-        Gate::authorize('manage-events');
+        $this->authorize('delete', $this->event);
 
         $this->showDelete = true;
         $this->confirmName = '';
@@ -325,7 +325,7 @@ class SettingsTab extends Component
      */
     public function destroyEvent()
     {
-        Gate::authorize('manage-events');
+        $this->authorize('delete', $this->event);
 
         if (mb_strtolower(trim($this->confirmName)) !== mb_strtolower(trim($this->event->name))) {
             $this->addError('confirmName', 'Type the event name exactly to confirm.');

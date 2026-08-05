@@ -123,7 +123,7 @@ class EventsIndex extends Component
         $this->authorize('duplicate', Event::class);
         $source = Event::whereNull('archived_at')->findOrFail($eventId);
 
-        $copy = $source->replicate(['progress']);
+        $copy = $source->replicate(['progress', 'registration_token', 'checkin_token']);
         $copy->name = $source->name.' (Copy)';
         $copy->stage = 'draft';
         $copy->progress = 0;

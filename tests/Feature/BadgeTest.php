@@ -239,8 +239,9 @@ class BadgeTest extends TestCase
 
         $url = Badge::checkInUrl($attendee);
 
-        $this->assertStringContainsString($event->registrationToken(), $url);
-        $this->assertStringContainsString($attendee->reference(), $url);
+        $this->assertStringContainsString($event->checkinToken(), $url);
+        $this->assertStringNotContainsString($event->registrationToken(), $url);
+        $this->assertStringContainsString($attendee->checkInCode(), $url);
         $this->assertStringStartsWith('data:image/svg+xml;base64,', Badge::qr($url));
     }
 
@@ -249,8 +250,8 @@ class BadgeTest extends TestCase
         [$event, $attendee] = $this->ctx();
 
         $screen = Livewire::test(CheckInScan::class, [
-            'token' => $event->registrationToken(),
-            'reference' => $attendee->reference(),
+            'token' => $event->checkinToken(),
+            'reference' => $attendee->checkInCode(),
         ])->assertSet('state', 'found')->assertSee('Layla Haddad');
 
         $screen->call('admit')->assertSet('state', 'done');
@@ -266,8 +267,8 @@ class BadgeTest extends TestCase
         $attendee->update(['status' => 'checked_in', 'checked_in_at' => now()->subHour()]);
 
         Livewire::test(CheckInScan::class, [
-            'token' => $event->registrationToken(),
-            'reference' => $attendee->reference(),
+            'token' => $event->checkinToken(),
+            'reference' => $attendee->checkInCode(),
         ])
             ->assertSet('state', 'already')
             ->assertSee('Already checked in')
@@ -284,8 +285,8 @@ class BadgeTest extends TestCase
         $attendee->update(['status' => 'cancelled']);
 
         Livewire::test(CheckInScan::class, [
-            'token' => $event->registrationToken(),
-            'reference' => $attendee->reference(),
+            'token' => $event->checkinToken(),
+            'reference' => $attendee->checkInCode(),
         ])
             ->assertSet('state', 'cancelled')
             ->call('admit')
@@ -302,8 +303,8 @@ class BadgeTest extends TestCase
         $theirs = $other->attendees()->create(['name' => 'Wrong Door', 'email' => 'wd@example.org', 'status' => 'registered']);
 
         Livewire::test(CheckInScan::class, [
-            'token' => $event->registrationToken(),
-            'reference' => $theirs->reference(),
+            'token' => $event->checkinToken(),
+            'reference' => $theirs->checkInCode(),
         ])->assertSet('state', 'unknown')->assertSee('not on the list');
 
         $this->assertNull($theirs->fresh()->checked_in_at);
@@ -313,7 +314,7 @@ class BadgeTest extends TestCase
     {
         [, $attendee] = $this->ctx();
 
-        $this->get(route('checkin.scan', ['token' => 'nope', 'reference' => $attendee->reference()]))
+        $this->get(route('checkin.scan', ['token' => 'nope', 'reference' => $attendee->checkInCode()]))
             ->assertNotFound();
     }
 
@@ -323,8 +324,53 @@ class BadgeTest extends TestCase
 
         // A volunteer on the door has a borrowed phone, not an account.
         $this->get(route('checkin.scan', [
+            'token' => $event->checkinToken(),
+            'reference' => $attendee->checkInCode(),
+        ]))->assertOk()->assertSee('Ready to admit');
+    }
+
+    /** Guessing the badge number without the HMAC must not open the door. */
+    public function test_a_forged_badge_number_without_the_signature_is_refused(): void
+    {
+        [$event, $attendee] = $this->ctx();
+
+        Livewire::test(CheckInScan::class, [
+            'token' => $event->checkinToken(),
+            'reference' => strtolower($attendee->reference()).'-deadbeefcafe',
+        ])->assertSet('state', 'unknown');
+
+        Livewire::test(CheckInScan::class, [
+            'token' => $event->checkinToken(),
+            'reference' => $attendee->reference(),
+        ])->assertSet('state', 'unknown');
+
+        $this->assertNull($attendee->fresh()->checked_in_at);
+    }
+
+    /** Rotating a leaked registration link must not break printed badges. */
+    public function test_rotating_registration_leaves_check_in_working(): void
+    {
+        [$event, $attendee] = $this->ctx();
+        $checkin = $event->checkinToken();
+
+        $event->update(['registration_token' => Event::newRegistrationToken()]);
+
+        $this->assertSame($checkin, $event->fresh()->checkinToken());
+
+        Livewire::test(CheckInScan::class, [
+            'token' => $checkin,
+            'reference' => $attendee->checkInCode(),
+        ])->assertSet('state', 'found');
+    }
+
+    /** Badges printed before the token split still open via the registration token. */
+    public function test_a_legacy_registration_token_qr_still_admits(): void
+    {
+        [$event, $attendee] = $this->ctx();
+
+        Livewire::test(CheckInScan::class, [
             'token' => $event->registrationToken(),
             'reference' => $attendee->reference(),
-        ]))->assertOk()->assertSee('Ready to admit');
+        ])->assertSet('state', 'found');
     }
 }

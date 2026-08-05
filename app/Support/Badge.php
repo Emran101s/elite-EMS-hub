@@ -155,15 +155,17 @@ class Badge
     /**
      * What a badge's QR carries: the check-in URL for that person.
      *
-     * A URL rather than a bare code, so any phone camera opens the right page
-     * without a special scanner app — which on show day is the difference
-     * between a queue and a door that moves.
+     * Uses the event's check-in token (not the registration link) and a signed
+     * attendee code, so rotating a leaked registration URL does not invalidate
+     * every printed badge, and a guessed badge number alone cannot open the door.
      */
     public static function checkInUrl(EventAttendee $attendee): string
     {
+        $attendee->loadMissing('event');
+
         return route('checkin.scan', [
-            'token' => $attendee->event->registrationToken(),
-            'reference' => $attendee->reference(),
+            'token' => $attendee->event->checkinToken(),
+            'reference' => $attendee->checkInCode(),
         ]);
     }
 }

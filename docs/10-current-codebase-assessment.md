@@ -52,9 +52,8 @@ dates, and status colour`) — read those for the exact file lists.
 - **Performance**: Stage 4 added `invoices.lines.payment` to `EventHealthService::RELATIONS`
   and uses overdue outstanding invoices in budget health + the advisor. Dashboard
   `dayAt()` N+1 was fixed earlier.
-- **Robustness**: no HTTP security headers configured, no soft deletes, some missing
-  foreign-key indexes, authorization is gate-based rather than backed by a formal
-  `EventPolicy` per model. (Stage 5.)
+- **Robustness**: Stage 5 landed security headers (CSP still deferred), soft deletes on
+  invoices/budget items, FK indexes, `EventPolicy`, and hardened badge check-in tokens.
 - **UX**: Stage 3 landed shared `<x-confirm>` / `<x-alert>` / `<x-busy>`; remaining
   `wire:confirm` call sites still migrate opportunistically.
 - **Stale doc, corrected in this handover**: `CLAUDE.md` described an in-progress "ORBIT"

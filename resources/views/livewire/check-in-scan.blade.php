@@ -6,12 +6,15 @@
         'done'      => ['bg-emerald-50 text-emerald-600', '✓', 'Admitted'],
         'already'   => ['bg-amber-50 text-amber-600', '!', 'Already checked in'],
         'cancelled' => ['bg-red-50 text-risk', '✕', 'This registration was cancelled'],
+        'throttled' => ['bg-amber-50 text-amber-700', '…', 'Slow down'],
         default     => ['bg-navy-50 text-navy-400', '?', 'Badge not recognised'],
     };
 @endphp
 
 <div class="w-full text-center">
-    <p class="eyebrow-gold">{{ $event->name }}</p>
+    @if ($state !== 'throttled')
+        <p class="eyebrow-gold">{{ $event->name }}</p>
+    @endif
 
     <div class="card mt-3 p-6">
         <span class="mx-auto grid h-16 w-16 place-items-center rounded-full text-3xl {{ $tone }}">{{ $glyph }}</span>
@@ -51,6 +54,10 @@
             <p class="mt-4 text-sm text-muted">
                 Admitted at {{ $attendee->checked_in_at?->format('H:i') }}. If that was not them, find a supervisor.
             </p>
+        @elseif ($state === 'throttled')
+            <p class="mx-auto mt-4 max-w-[34ch] text-sm text-muted">
+                Too many scans from this phone just now. Wait a minute and try again.
+            </p>
         @elseif ($state === 'unknown')
             <p class="mx-auto mt-4 max-w-[34ch] text-sm text-muted">
                 This badge is not on the list for this event. Check they are at the right door, or register them at the desk.
@@ -64,7 +71,7 @@
              session in front of them. --}}
         @php $today = $this->sessionsToday(); @endphp
 
-        @if ($attendee && $state !== 'unknown' && $state !== 'cancelled' && $today->isNotEmpty())
+        @if ($attendee && ! in_array($state, ['unknown', 'cancelled', 'throttled'], true) && $today->isNotEmpty())
             <div class="mt-5 border-t border-line pt-4 text-left">
                 <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Booked today</p>
 

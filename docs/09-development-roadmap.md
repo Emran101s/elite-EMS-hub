@@ -58,11 +58,18 @@ eager-loads `invoices.lines.payment` (lines + payment are what money math needs)
 Overdue outstanding invoices pull the budget component down and surface in the
 advisor attention list. Dashboard `dayAt()` N+1 was already fixed earlier.
 
+## Recently completed: Stage 5 — security / robustness
+
+**Stage 5.** Security headers middleware (CSP deferred — PDF/fonts need their own
+allowlist). Soft deletes on invoices and budget items. Missing FK indexes added.
+`EventPolicy` for create/update/archive/duplicate/delete. Badge check-in now uses a
+separate `checkin_token` and a signed attendee code so rotating a leaked registration
+link does not invalidate printed badges, and a guessed badge number alone cannot open
+the door; check-in scans are rate-limited.
+
 ## Deferred, not started (explicitly sequenced for later)
 
-- **Stage 5** — security/robustness: badge-token hardening, HTTP security headers, soft
-  deletes, missing FK indexes, a real `EventPolicy` (today's authorization is gate-based,
-  not policy-object-based).
+- **CSP allowlist** — deliberate follow-up so headless Chrome PDFs and Google Fonts keep working.
 - **Supplier Portal, Client Portal, RFQ/Quotation objects, notifications, knowledge base,
   multi-tenant SaaS** — priority items 5, 6, 9, 10 above, and the RFQ/Quotation gap noted
   in [03-command-center-architecture.md](03-command-center-architecture.md).
@@ -71,5 +78,5 @@ advisor attention list. Dashboard `dayAt()` N+1 was already fixed earlier.
 
 Don't start multi-tenancy, a portal, or a notification system opportunistically while doing
 something else — each is a large, deliberate decision (see
-[01-product-vision.md](01-product-vision.md)). Stage 5 is the honest "finish what's
-already started" backlog and is the safer place to pick up incremental work.
+[01-product-vision.md](01-product-vision.md)). The honest backlog above is the safer place
+to pick up incremental work.

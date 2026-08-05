@@ -69,24 +69,75 @@ class EventAttendee extends Model
     }
 
     /**
-     * The short code on the badge, and what a check-in scan looks up.
+     * The short code printed on the badge for humans to read aloud.
      *
      * Derived from the id rather than stored: it cannot drift, cannot collide,
-     * and there is no column to backfill for the thousands of attendees who
-     * were imported before badges existed. Base 36 keeps it short enough to
-     * read aloud down a phone when a scanner will not cooperate.
+     * and there is no column to backfill. Base 36 keeps it short enough to
+     * read down a phone when a scanner will not cooperate.
+     *
+     * This is NOT what the QR URL looks up — see checkInCode(). A sequential
+     * id on its own is guessable once the event token is known.
      */
     public function reference(): string
     {
         return strtoupper(str_pad(base_convert((string) $this->id, 10, 36), 4, '0', STR_PAD_LEFT));
     }
 
-    /** Find an attendee of this event by the code on their badge. */
+    /**
+     * Opaque check-in code embedded in the badge QR.
+     *
+     * Format: {reference}-{hmac}. The reference alone is useless — the HMAC
+     * is keyed by the event's check-in token and the app key, so forging a
+     * scan for car #42 requires forging the signature, not just counting up.
+     */
+    public function checkInCode(): string
+    {
+        return strtolower($this->reference()).'-'.$this->checkInSignature();
+    }
+
+    public function checkInSignature(): string
+    {
+        return substr(hash_hmac('sha256', $this->event_id.'|'.$this->id, $this->checkInSigningKey()), 0, 12);
+    }
+
+    private function checkInSigningKey(): string
+    {
+        $event = $this->relationLoaded('event') ? $this->event : $this->event()->first();
+
+        return ($event?->checkinToken() ?? '').'|'.(string) config('app.key');
+    }
+
+    /** Find an attendee of this event by the human-readable badge code. */
     public static function findByReference(int $eventId, string $reference): ?self
     {
         $id = (int) base_convert(ltrim(strtolower(trim($reference)), '0') ?: '0', 36, 10);
 
         return $id > 0 ? self::where('event_id', $eventId)->find($id) : null;
+    }
+
+    /**
+     * Resolve a QR payload for this event.
+     *
+     * Prefers the signed check-in code. Bare references are only accepted when
+     * `$allowLegacy` is true (old QRs that still carry the registration token)
+     * so a guessed badge number against the check-in token cannot open the door.
+     */
+    public static function findForCheckIn(int $eventId, string $code, bool $allowLegacy = false): ?self
+    {
+        $code = trim($code);
+
+        if (str_contains($code, '-')) {
+            [$ref, $sig] = explode('-', strtolower($code), 2);
+            $attendee = self::findByReference($eventId, $ref);
+
+            if ($attendee && hash_equals($attendee->checkInSignature(), $sig)) {
+                return $attendee;
+            }
+
+            return null;
+        }
+
+        return $allowLegacy ? self::findByReference($eventId, $code) : null;
     }
 
     public function statusMeta(): array
