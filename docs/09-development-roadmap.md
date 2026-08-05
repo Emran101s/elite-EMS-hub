@@ -51,10 +51,15 @@ Settings archive). Session flashes use `<x-alert>`; button busy labels use
 `<x-busy>`. Remaining `wire:confirm` call sites migrate onto `<x-confirm>` as those
 screens are touched.
 
+## Recently completed: Stage 4 — health score + invoices
+
+**Stage 4 — performance + collection signal.** `EventHealthService::RELATIONS` now
+eager-loads `invoices.lines.payment` (lines + payment are what money math needs).
+Overdue outstanding invoices pull the budget component down and surface in the
+advisor attention list. Dashboard `dayAt()` N+1 was already fixed earlier.
+
 ## Deferred, not started (explicitly sequenced for later)
 
-- **Stage 4** — performance: a missing `invoices` relation in
-  `EventHealthService::RELATIONS` (Dashboard `dayAt()` N+1 was fixed earlier).
 - **Stage 5** — security/robustness: badge-token hardening, HTTP security headers, soft
   deletes, missing FK indexes, a real `EventPolicy` (today's authorization is gate-based,
   not policy-object-based).
@@ -66,5 +71,5 @@ screens are touched.
 
 Don't start multi-tenancy, a portal, or a notification system opportunistically while doing
 something else — each is a large, deliberate decision (see
-[01-product-vision.md](01-product-vision.md)). Stages 4–5 are the honest "finish what's
-already started" backlog and are the safer place to pick up incremental work.
+[01-product-vision.md](01-product-vision.md)). Stage 5 is the honest "finish what's
+already started" backlog and is the safer place to pick up incremental work.

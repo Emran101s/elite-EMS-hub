@@ -49,12 +49,12 @@ dates, and status colour`) — read those for the exact file lists.
 
 ## Known, documented gaps (deferred, not hidden)
 
-- **Performance**: the Dashboard's `dayAt()` helper does an N+1 query; `EventHealthService::RELATIONS`
-  is missing an `invoices` relation, which likely means invoice data isn't eager-loaded
-  into the health score computation.
+- **Performance**: Stage 4 added `invoices.lines.payment` to `EventHealthService::RELATIONS`
+  and uses overdue outstanding invoices in budget health + the advisor. Dashboard
+  `dayAt()` N+1 was fixed earlier.
 - **Robustness**: no HTTP security headers configured, no soft deletes, some missing
   foreign-key indexes, authorization is gate-based rather than backed by a formal
-  `EventPolicy` per model.
+  `EventPolicy` per model. (Stage 5.)
 - **UX**: Stage 3 landed shared `<x-confirm>` / `<x-alert>` / `<x-busy>`; remaining
   `wire:confirm` call sites still migrate opportunistically.
 - **Stale doc, corrected in this handover**: `CLAUDE.md` described an in-progress "ORBIT"

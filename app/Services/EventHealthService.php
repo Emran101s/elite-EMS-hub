@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Invoice;
 
 /**
  * Explainable Event Health Score.
@@ -35,10 +36,20 @@ class EventHealthService
     }
 
     /**
-     * The relations breakdown() reads. Eager-load these before scoring a set of
-     * events, or each score silently costs one query per relation per event.
+     * The relations breakdown() and aiSummary() read. Eager-load these before
+     * scoring a set of events, or each score silently costs one query per
+     * relation per event.
+     *
+     * `invoices.lines.payment` is here because budget health and the advisor
+     * both look at issued invoices (overdue cash, unscheduled collections).
+     * Lines + payment are what Invoice::totalCents() / unscheduledPaidCents()
+     * need — loading bare `invoices` still N+1s the moment money is summed.
      */
-    public const RELATIONS = ['tasks', 'risks', 'approvals', 'budgetItems', 'agendaSessions', 'rooms', 'suppliers', 'venue', 'transport.manifest', 'transferGuests'];
+    public const RELATIONS = [
+        'tasks', 'risks', 'approvals', 'budgetItems', 'agendaSessions', 'rooms',
+        'suppliers', 'venue', 'transport.manifest', 'transferGuests',
+        'invoices.lines.payment',
+    ];
 
     private const WEIGHTS = [
         'tasks' => 30,
@@ -150,6 +161,13 @@ class EventHealthService
             $attention[] = $overdue->count().' overdue '.str('task')->plural($overdue->count()).', next: “'.$overdue->sortBy('due_on')->first()->title.'”';
         }
 
+        $lateInvoices = $event->invoices->filter(fn (Invoice $invoice) => $invoice->state() === 'overdue');
+        if ($lateInvoices->isNotEmpty()) {
+            $owed = (int) $lateInvoices->sum(fn (Invoice $invoice) => $invoice->outstandingCents());
+            $attention[] = $lateInvoices->count().' overdue '.str('invoice')->plural($lateInvoices->count())
+                .' — '.$event->money($owed).' still out.';
+        }
+
         if ($event->agendaSessions->isEmpty()) {
             $attention[] = 'Agenda is empty — no sessions scheduled yet.';
         }
@@ -175,7 +193,7 @@ class EventHealthService
     }
 
     /**
-     * Budget health, against both things a budget can go wrong against.
+     * Budget health, against the things a budget can go wrong against.
      *
      * This used to compare actual with estimate only — are our costs coming in
      * where we said. That is a real question, but it left an event forecast at
@@ -184,16 +202,21 @@ class EventHealthService
      * committed past its cap is not healthy; it is the single most useful thing
      * the score can tell you, and it was the one thing it could not.
      *
-     * Both are measured and the worse one wins, so neither hides the other.
+     * Collection is the third leg: an issued invoice past its due date with
+     * money still out is a budget problem the cost lines alone cannot see.
+     * Each measure is taken and the worst one wins, so none of them hide the
+     * others.
      */
     private function budgetScore(Event $event): ?int
     {
         $estimated = (int) $event->budgetItems->sum('estimated_cents');
         $cost = $event->costForecast();
+        $overdueOwed = $this->overdueInvoiceCents($event);
 
         // A cap with nothing planned against it yet is not a healthy budget or
-        // an unhealthy one — it is a budget nobody has written.
-        if ($estimated === 0 && $cost['forecast'] === 0) {
+        // an unhealthy one — it is a budget nobody has written. Overdue cash
+        // alone is still something to judge.
+        if ($estimated === 0 && $cost['forecast'] === 0 && $overdueOwed === 0) {
             return null;
         }
 
@@ -214,7 +237,21 @@ class EventHealthService
                 : max(0, 100 - (int) round($cost['over'] / $cost['cap'] * 200));
         }
 
+        // Collection: billed and past due, still unpaid.
+        if ($overdueOwed > 0) {
+            $against = max((int) ($event->budget_cents ?? 0), $estimated, $overdueOwed);
+            $scores[] = max(0, 100 - (int) round($overdueOwed / $against * 200));
+        }
+
         return $scores === [] ? null : min($scores);
+    }
+
+    /** Outstanding cents on sent invoices whose due date has passed. */
+    private function overdueInvoiceCents(Event $event): int
+    {
+        return (int) $event->invoices
+            ->filter(fn (Invoice $invoice) => $invoice->state() === 'overdue')
+            ->sum(fn (Invoice $invoice) => $invoice->outstandingCents());
     }
 
     private function supplierScore(Event $event): ?int
