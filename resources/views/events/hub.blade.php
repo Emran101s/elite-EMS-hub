@@ -17,63 +17,85 @@
     <x-event-header :event="$event" :header="$header" />
 
     {{-- ══ Module nav ══
-         Twenty-one modules used to be twenty-one tiles: icon, name, a sub-label
-         on the active one, 44px a row, three rows, 136px. A row of buttons that
-         tall is furniture — it competes with the work for the eye and costs a
-         seventh of a laptop screen on every page.
-
-         Words instead of tiles, still — that lesson holds, and the roster has
-         grown to twenty-three since (pricing, reports, AI joined later; the
-         width math below is the same shape, just tighter). Twenty-three words
-         of equal grey weight told you *where* you were, never *what kind of
-         work* you were in. Every module already has a colour in
-         Event::MODULE_COLORS (used for document folders and chips elsewhere) —
-         Plan is blue, Programme teal, Logistics amber, Exhibition violet, Sell
-         green, Risks red. The nav now wears that: a small dot per module, and
-         the active one becomes a solid pill in its own colour. Quiet until you
-         look at it — one row is grey, one is not — and the colour underneath
-         you tells you which family of work you're standing in before you've
-         read a single word. Costs the same handful of rows as before. ══ --}}
+         Twenty-three equal-weight pills wrapping to two rows was furniture —
+         a seventh of a laptop screen before the work started. The strip is now
+         a single row: the daily doors stay visible, everything else lives under
+         More (grouped by the same families MODULE_COLORS already implies). The
+         tab you are on is always promoted into the strip, so you never lose
+         your place. Words still, not icon tiles — that lesson holds. Colour
+         dots still name the family. ══ --}}
     @php
         $modules = \App\Models\Event::HUB_TABS;
-        // Where the work is. Only modules with something genuinely waiting
-        // appear here — see EventCommandHeader::attention().
         $attention = $header['attention'] ?? [];
+
+        // Daily doors — keep these on the strip. Order is deliberate: plan →
+        // programme → place → people → risk, with Overview as home.
+        $primaryKeys = ['overview', 'brief', 'contract', 'tasks', 'budget', 'agenda', 'venue', 'attendees', 'risks'];
+
+        $enabled = collect($modules)->keys()->filter(fn ($key) => $event->moduleEnabled($key))->values();
+
+        $primary = collect($primaryKeys)->filter(fn ($key) => $enabled->contains($key))->values();
+        if ($enabled->contains($tab) && ! $primary->contains($tab)) {
+            $primary = $primary->push($tab);
+        }
+
+        $overflowKeys = $enabled->reject(fn ($key) => $primary->contains($key))->values();
+
+        // Same family language as MODULE_COLORS — Plan blue, Programme teal,
+        // Logistics amber, Exhibition violet, Sell green, Grow grey/gold.
+        $families = [
+            'Plan' => ['planning', 'pricing', 'approvals'],
+            'Programme' => ['speakers'],
+            'Logistics' => ['suppliers', 'transportation', 'accommodation', 'catering'],
+            'Partners' => ['exhibition', 'sponsors'],
+            'Library' => ['files', 'reports'],
+            'System' => ['ai', 'settings'],
+        ];
+
+        $overflowByFamily = collect($families)->map(
+            fn (array $keys) => collect($keys)->filter(fn ($key) => $overflowKeys->contains($key))->values()
+        )->filter->isNotEmpty();
+
+        // Anything enabled that isn't in a family bucket still shows (forward-safe).
+        $bucketed = $overflowByFamily->flatten();
+        $ungrouped = $overflowKeys->reject(fn ($key) => $bucketed->contains($key))->values();
+        if ($ungrouped->isNotEmpty()) {
+            $overflowByFamily = $overflowByFamily->put('More', $ungrouped);
+        }
+
+        $overflowAttention = $overflowKeys->sum(fn ($key) => (int) ($attention[$key]['count'] ?? 0));
+        $overflowAlarm = $overflowKeys->contains(fn ($key) => ($attention[$key]['tone'] ?? null) === 'alarm');
+
+        $tabLink = function (string $key, bool $inMenu = false) use ($modules, $tab, $attention): array {
+            [$label, $note] = $modules[$key];
+            $active = $tab === $key;
+            $hex = \App\Models\Event::moduleColor($key);
+            $n = $attention[$key] ?? null;
+
+            return compact('label', 'note', 'active', 'hex', 'n', 'inMenu');
+        };
     @endphp
-    <div class="sticky top-0 z-20 -mx-4 mt-3 border-b border-line bg-page/92 px-4 backdrop-blur lg:-mx-6 lg:px-6">
-        {{-- Twenty-three names (now with a dot each) still land in two rows on
-             a laptop-width desktop: everything on screen, nothing to discover
-             by dragging. Narrow screens keep the scroller, where wrapping
-             would run to five rows. --}}
-        <nav class="scrollbar-none flex items-center gap-x-1 gap-y-1 overflow-x-auto py-1.5 lg:flex-wrap lg:overflow-x-visible"
-             aria-label="Event modules">
-                @foreach ($modules as $key => [$label, $note, $icon])
-                    @continue (! $event->moduleEnabled($key))
-                    @php
-                        $active = $tab === $key;
-                        $hex = \App\Models\Event::moduleColor($key);
-                    @endphp
+    <div class="sticky top-0 z-20 -mx-4 mt-3 border-b border-line bg-page/92 px-4 backdrop-blur lg:-mx-6 lg:px-6"
+         x-data="{ more: false }"
+         @keydown.escape.window="more = false">
+        <nav class="flex items-center gap-1 py-1.5" aria-label="Event modules">
+            <div class="scrollbar-none flex min-w-0 flex-1 items-center gap-x-0.5 overflow-x-auto">
+                @foreach ($primary as $key)
+                    @php extract($tabLink($key)); @endphp
                     <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
                        @if ($active) aria-current="page" @endif
                        title="{{ $note }}"
                        @class([
-                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[6px] text-[12.5px] font-bold transition',
+                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[5px] text-[12px] font-bold transition',
                            'text-white shadow-[0_6px_14px_-6px_rgba(11,31,58,0.55)]' => $active,
                            'font-semibold text-navy-400 hover:bg-navy-50 hover:text-navy-900' => ! $active,
                        ])
                        style="{{ $active ? 'background:' . $hex . ';' : '' }}">
-                        {{-- No icon glyph — the word already names the module, and
-                             twenty-one icons cost 441px, a third row on its own.
-                             The dot carries the colour instead, for a tenth the width. --}}
                         <span class="h-[5px] w-[5px] shrink-0 rounded-full transition"
                               style="background: {{ $active ? 'rgba(255,255,255,.85)' : $hex }}; opacity: {{ $active ? 1 : 0.5 }}"
                               aria-hidden="true"></span>
                         {{ $label }}
-
-                        {{-- What is waiting behind this module. Twenty-one names of
-                             equal weight mean the only way to learn whether Risks
-                             has anything in it is to open Risks. --}}
-                        @if ($n = $attention[$key] ?? null)
+                        @if ($n)
                             <span title="{{ $n['why'] }}" @class([
                                 'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
                                 'bg-white/25 text-white' => $active,
@@ -83,11 +105,75 @@
                         @endif
                     </a>
                 @endforeach
+            </div>
+
+            @if ($overflowKeys->isNotEmpty())
+                <div class="relative shrink-0 ps-1">
+                    <button type="button"
+                            @click="more = ! more"
+                            :aria-expanded="more.toString()"
+                            aria-haspopup="true"
+                            aria-controls="hub-modules-more"
+                            class="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-bold transition"
+                            :class="more ? 'bg-navy-900 text-white' : 'text-navy-500 hover:bg-navy-50 hover:text-navy-900'">
+                        More
+                        @if ($overflowAttention > 0)
+                            <span @class([
+                                'grid h-[16px] min-w-[16px] place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
+                                'bg-risk/20 text-red-700' => $overflowAlarm,
+                                'bg-gold-100 text-gold-800' => ! $overflowAlarm,
+                            ])
+                                  :class="more ? '!bg-white/25 !text-white' : ''">{{ $overflowAttention > 99 ? '99+' : $overflowAttention }}</span>
+                        @endif
+                        <svg class="h-3 w-3 opacity-60 transition" :class="more && 'rotate-180'" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <div id="hub-modules-more"
+                         x-show="more"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-1"
+                         @click.outside="more = false"
+                         class="absolute end-0 top-full z-30 mt-1.5 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_24px_50px_-28px_rgba(11,31,58,0.55)]">
+                        <div class="max-h-[min(28rem,70vh)] overflow-y-auto p-2">
+                            @foreach ($overflowByFamily as $family => $keys)
+                                <p class="px-2.5 pb-1 pt-2 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-300 first:pt-1">{{ $family }}</p>
+                                <div class="grid gap-0.5">
+                                    @foreach ($keys as $key)
+                                        @php extract($tabLink($key, true)); @endphp
+                                        <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
+                                           @click="more = false"
+                                           title="{{ $note }}"
+                                           @class([
+                                               'flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition',
+                                               'bg-navy-50 text-navy-900' => $active,
+                                               'text-navy-700 hover:bg-page' => ! $active,
+                                           ])>
+                                            <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $hex }}" aria-hidden="true"></span>
+                                            <span class="min-w-0 flex-1 truncate">{{ $label }}</span>
+                                            <span class="truncate text-eyebrow font-medium text-navy-300">{{ $note }}</span>
+                                            @if ($n)
+                                                <span title="{{ $n['why'] }}" @class([
+                                                    'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
+                                                    'bg-risk/12 text-red-700' => $n['tone'] === 'alarm',
+                                                    'bg-gold-100 text-gold-800' => $n['tone'] !== 'alarm',
+                                                ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
+                                            @endif
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
         </nav>
-        {{-- Edge fades hint the scroller holds more than what's on screen —
-             only matters below lg, where the nav scrolls instead of wraps. --}}
-        <span class="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-page to-transparent lg:hidden" aria-hidden="true"></span>
-        <span class="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-page to-transparent lg:hidden" aria-hidden="true"></span>
     </div>
 
     <div class="mt-5">
