@@ -167,6 +167,84 @@ class RoomLayoutTest extends TestCase
         $this->assertSame(0, $room->seatCount());
     }
 
+    public function test_requirement_can_be_added_then_edited_in_place(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->set('reqName', 'Main LED Screen')
+            ->set('reqCost', '6670')
+            ->set('reqQty', '1')
+            ->set('reqDays', '3')
+            ->call('addRequirement');
+
+        $req = $room->fresh()->requirements[0];
+        $this->assertSame('Main LED Screen', $req['name']);
+        $this->assertSame(667000, $req['cost_cents']);
+        $id = $req['id'];
+
+        // Editing loads the existing line into the form rather than adding a new one.
+        $c->call('editRequirement', $id)
+            ->assertSet('reqName', 'Main LED Screen')
+            ->assertSet('reqCost', '6670')
+            ->assertSet('reqDays', '3')
+            ->set('reqName', 'Main LED Wall')
+            ->set('reqCost', '5500')
+            ->call('addRequirement');
+
+        $room->refresh();
+        $this->assertCount(1, $room->requirements, 'editing must update in place, not append a second line');
+        $this->assertSame('Main LED Wall', $room->requirements[0]['name']);
+        $this->assertSame(550000, $room->requirements[0]['cost_cents']);
+        $this->assertSame($id, $room->requirements[0]['id'], 'the id is preserved across an edit');
+    }
+
+    public function test_editing_requirement_preserves_its_status(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+        $room->update(['requirements' => [
+            ['id' => 'req1', 'name' => 'Projector', 'cost_cents' => 9000, 'qty' => 1, 'days' => 1, 'status' => 'confirmed'],
+        ]]);
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('editRequirement', 'req1')
+            ->set('reqCost', '95')
+            ->call('addRequirement');
+
+        $this->assertSame('confirmed', $room->fresh()->requirements[0]['status']);
+    }
+
+    public function test_cancel_edit_requirement_discards_the_form(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+        $room->update(['requirements' => [
+            ['id' => 'req1', 'name' => 'Projector', 'cost_cents' => 9000, 'qty' => 1, 'days' => 1, 'status' => 'needed'],
+        ]]);
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('editRequirement', 'req1')
+            ->set('reqName', 'Something else entirely')
+            ->call('cancelEditRequirement')
+            ->assertSet('reqName', '')
+            ->assertSet('editingReqId', null);
+
+        $this->assertSame('Projector', $room->fresh()->requirements[0]['name']);
+    }
+
+    public function test_removing_the_line_being_edited_clears_the_form(): void
+    {
+        [$event, $room, $user] = $this->ctx();
+        $room->update(['requirements' => [
+            ['id' => 'req1', 'name' => 'Projector', 'cost_cents' => 9000, 'qty' => 1, 'days' => 1, 'status' => 'needed'],
+        ]]);
+
+        Livewire::actingAs($user)->test(RoomLayoutBuilder::class, ['event' => $event, 'room' => $room])
+            ->call('editRequirement', 'req1')
+            ->call('removeRequirement', 'req1')
+            ->assertSet('editingReqId', null)
+            ->assertSet('reqName', '');
+    }
+
     public function test_builder_rejects_foreign_room(): void
     {
         [$event, , $user] = $this->ctx();

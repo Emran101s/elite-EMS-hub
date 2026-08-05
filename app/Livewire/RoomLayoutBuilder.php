@@ -83,6 +83,9 @@ class RoomLayoutBuilder extends Component
 
     public string $reqDays = '';
 
+    /** Set while the form above is editing an existing line rather than adding a new one. */
+    public ?string $editingReqId = null;
+
     public function mount(Event $event, EventRoom $room): void
     {
         abort_unless($room->event_id === $event->id, 404);
@@ -526,9 +529,8 @@ class RoomLayoutBuilder extends Component
             'reqQty' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'reqDays' => ['nullable', 'integer', 'min:1', 'max:365'],
         ]);
-        $reqs = $this->room->requirements ?? [];
-        $reqs[] = [
-            'id' => Str::random(8),
+
+        $fields = [
             'name' => trim($this->reqName),
             // The price is per unit per day. Twelve microphones for five days is
             // 12 × 5 here rather than a total somebody multiplied in their head —
@@ -537,9 +539,44 @@ class RoomLayoutBuilder extends Component
             'qty' => $this->reqQty !== '' ? (int) $this->reqQty : 1,
             'days' => $this->reqDays !== '' ? (int) $this->reqDays : 1,
         ];
+
+        if ($this->editingReqId !== null) {
+            $reqs = collect($this->room->requirements ?? [])->map(function ($row) use ($fields) {
+                if (($row['id'] ?? null) !== $this->editingReqId) {
+                    return $row;
+                }
+
+                return $fields + ['id' => $row['id'], 'status' => $row['status'] ?? 'needed'];
+            })->values()->all();
+        } else {
+            $reqs = $this->room->requirements ?? [];
+            $reqs[] = $fields + ['id' => Str::random(8)];
+        }
+
         $this->room->update(['requirements' => $reqs]);
         $this->room->refresh();
-        $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays']);
+        $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays', 'editingReqId']);
+    }
+
+    /** Load an existing line into the form above so it edits in place instead of adding a new one. */
+    public function editRequirement(string $id): void
+    {
+        $row = collect($this->room->requirements ?? [])->firstWhere('id', $id);
+
+        if (! $row) {
+            return;
+        }
+
+        $this->editingReqId = $id;
+        $this->reqName = $row['name'] ?? '';
+        $this->reqCost = isset($row['cost_cents']) ? rtrim(rtrim(number_format($row['cost_cents'] / 100, 2, '.', ''), '0'), '.') : '';
+        $this->reqQty = isset($row['qty']) && $row['qty'] > 1 ? (string) $row['qty'] : '';
+        $this->reqDays = isset($row['days']) && $row['days'] > 1 ? (string) $row['days'] : '';
+    }
+
+    public function cancelEditRequirement(): void
+    {
+        $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays', 'editingReqId']);
     }
 
     /**
@@ -577,6 +614,10 @@ class RoomLayoutBuilder extends Component
             'requirements' => collect($this->room->requirements ?? [])->reject(fn ($r) => ($r['id'] ?? null) === $id)->values()->all(),
         ]);
         $this->room->refresh();
+
+        if ($this->editingReqId === $id) {
+            $this->reset(['reqName', 'reqCost', 'reqQty', 'reqDays', 'editingReqId']);
+        }
     }
 
     /** Fill the requirement form from a catalog entry. */

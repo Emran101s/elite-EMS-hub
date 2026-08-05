@@ -479,7 +479,10 @@
                     <input type="number" min="1" wire:model="reqQty" wire:keydown.enter="addRequirement" placeholder="Qty" title="How many" class="input h-10 w-16 text-sm">
                     <span class="text-eyebrow font-semibold text-muted">×</span>
                     <input type="number" min="1" wire:model="reqDays" wire:keydown.enter="addRequirement" placeholder="Days" title="For how many days" class="input h-10 w-16 text-sm">
-                    <button type="button" wire:click="addRequirement" class="btn-gold h-10 shrink-0 px-4 text-xs">＋ Add</button>
+                    <button type="button" wire:click="addRequirement" class="btn-gold h-10 shrink-0 px-4 text-xs">{{ $editingReqId ? '✓ Save' : '＋ Add' }}</button>
+                    @if ($editingReqId)
+                        <button type="button" wire:click="cancelEditRequirement" class="h-10 shrink-0 rounded-xl px-3 text-xs font-bold text-navy-400 transition hover:text-navy-700">Cancel</button>
+                    @endif
                 </div>
                 <p class="mb-3 text-eyebrow text-muted">
                     The rate is <b>per unit, per day</b> — 12 table microphones over 5 days is 12 × 5, not a total worked out on paper.
@@ -489,7 +492,7 @@
 
                 <ul class="divide-y divide-line">
                     @forelse ($reqs as $req)
-                        <li wire:key="dreq-{{ $req['id'] }}" class="group flex items-center justify-between gap-2 py-2.5">
+                        <li wire:key="dreq-{{ $req['id'] }}" @class(['group flex items-center justify-between gap-2 py-2.5', 'rounded-lg bg-gold-50/60 px-2' => $editingReqId === $req['id']])>
                             @php
                                 $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1));
                                 $rSt = $req['status'] ?? 'needed';
@@ -520,6 +523,7 @@
                                         title="Needed → Requested → Confirmed → On-site"
                                         class="rounded-full px-2 py-0.5 text-eyebrow font-bold transition hover:opacity-75 {{ $stClass }}">{{ $stLabel }}</button>
                                 <span class="text-sm font-semibold text-navy-900">{{ $event->money(\App\Models\EventRoom::requirementCents($req)) }}</span>
+                                <button type="button" wire:click="editRequirement('{{ $req['id'] }}')" title="Edit" class="rounded-lg px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 opacity-0 transition hover:bg-navy-50 hover:text-navy-700 group-hover:opacity-100">✎</button>
                                 <button type="button" wire:click="removeRequirement('{{ $req['id'] }}')" class="rounded-lg bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
                             </span>
                         </li>
