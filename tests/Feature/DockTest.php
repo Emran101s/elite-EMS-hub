@@ -54,7 +54,7 @@ class DockTest extends TestCase
         $this->movement($event);
 
         $c = Livewire::actingAs($user)->test(TransportationTab::class, ['event' => $event])
-            ->assertSee('Transport Control Center')
+            ->assertSee('Transport Control')
             ->assertSee('Vehicles required', false);
 
         // The dock keeps the rail inside this component, so wire:click still
@@ -92,9 +92,9 @@ class DockTest extends TestCase
         $this->assertStringNotContainsString("dock.toggle('controls')", $html);
         $this->assertStringNotContainsString("dock.toggle('documents')", $html);
 
-        // Controls now live inline as a Control Center box; documents are only
+        // Controls now live inline as a control rail; documents are only
         // on the Documents tab.
-        $this->assertStringContainsString('Transport Control Center', $html);
+        $this->assertStringContainsString('Transport Control', $html);
     }
 
     public function test_the_docked_summary_reflects_real_numbers(): void

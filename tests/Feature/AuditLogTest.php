@@ -91,7 +91,7 @@ class AuditLogTest extends TestCase
 
         $this->actingAs($user)->get(route('events.hub', $event))
             ->assertOk()
-            ->assertSee('Recent Activity')
-            ->assertSee('Audit trail');
+            ->assertSee('Recent activity')
+            ->assertSee('Audit');
     }
 }
