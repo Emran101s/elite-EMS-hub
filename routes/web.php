@@ -63,6 +63,7 @@ use App\Livewire\ReportsOverview;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\SponsorPackagesSettings;
+use App\Livewire\SuppliersManager;
 use App\Livewire\TaxonomySettings;
 use App\Livewire\TeamRoster;
 use App\Livewire\TransportDispatch;
@@ -268,9 +269,7 @@ Route::middleware('auth')->group(function () {
             ->pipe(fn ($by) => collect(Task::statuses())->mapWithKeys(fn ($s) => [$s => (int) ($by[$s] ?? 0)])),
     ]))->name('tasks.index');
 
-    Route::get('/suppliers', fn () => view('modules.suppliers', [
-        'suppliers' => Supplier::withCount('events')->orderByDesc('rating')->get(),
-    ]))->name('suppliers.index');
+    Route::get('/suppliers', SuppliersManager::class)->name('suppliers.index');
 
     Route::get('/venues', VenuesManager::class)->name('venues.index');
 
