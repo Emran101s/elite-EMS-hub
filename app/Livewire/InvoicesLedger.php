@@ -89,8 +89,7 @@ class InvoicesLedger extends Component
     {
         Gate::authorize('manage-contract');
 
-        $invoice = Invoice::create([
-            'number' => Invoice::nextNumber(),
+        $invoice = Invoice::createNumbered([
             'status' => 'draft',
             'currency' => CompanyProfile::currency(),
             // The house fee, so it is on the document before anybody has to

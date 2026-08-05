@@ -66,8 +66,7 @@ class ProposalsDesk extends Component
     {
         Gate::authorize('manage-contract');
 
-        $proposal = Proposal::create([
-            'number' => Proposal::nextNumber(),
+        $proposal = Proposal::createNumbered([
             'title' => 'New proposal',
             'status' => 'draft',
             'currency' => CompanyProfile::currency(),

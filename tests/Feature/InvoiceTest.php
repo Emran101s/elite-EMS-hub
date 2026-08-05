@@ -412,4 +412,58 @@ class InvoiceTest extends TestCase
 
         $this->assertSame(100_00, $p->fresh()->paid_cents);
     }
+
+    /**
+     * Two requests raising an invoice at nearly the same moment can both
+     * compute the same "next" number before either has inserted — the second
+     * one used to surface as a raw 500 (UniqueConstraintViolationException)
+     * instead of quietly getting the number just past it.
+     */
+    public function test_a_number_collision_retries_instead_of_crashing(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $seen = 0;
+        Invoice::creating(function (Invoice $invoice) use (&$seen) {
+            $seen++;
+            // Only steal the number on the very first attempt — simulating a
+            // concurrent request whose insert commits in the gap between our
+            // nextNumber() check and our own insert.
+            if ($seen === 1) {
+                \Illuminate\Support\Facades\DB::table('invoices')->insert([
+                    'number' => $invoice->number, 'status' => 'draft', 'currency' => 'JOD',
+                    'fee_pct' => 0, 'issued_on' => now(), 'due_on' => now()->addDays(30),
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+        });
+
+        $invoice = Invoice::createNumbered(['status' => 'draft', 'currency' => 'JOD', 'fee_pct' => 0]);
+
+        $this->assertGreaterThan(1, $seen, 'the first attempt must have collided for this test to prove anything');
+        $this->assertSame(2, Invoice::count(), 'the row that won the race and our own retried one');
+        $this->assertNotNull($invoice->id, 'the retry must succeed rather than surface the collision');
+    }
+
+    public function test_the_same_number_collision_is_handled_for_proposals(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $seen = 0;
+        \App\Models\Proposal::creating(function (\App\Models\Proposal $proposal) use (&$seen) {
+            $seen++;
+            if ($seen === 1) {
+                \Illuminate\Support\Facades\DB::table('proposals')->insert([
+                    'number' => $proposal->number, 'title' => 'Taken first', 'status' => 'draft', 'currency' => 'JOD',
+                    'fee_pct' => 0, 'issued_on' => now(), 'valid_until' => now()->addDays(30),
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+        });
+
+        $proposal = \App\Models\Proposal::createNumbered(['title' => 'New proposal', 'status' => 'draft', 'currency' => 'JOD', 'fee_pct' => 0]);
+
+        $this->assertGreaterThan(1, $seen, 'the first attempt must have collided for this test to prove anything');
+        $this->assertNotNull($proposal->id);
+    }
 }

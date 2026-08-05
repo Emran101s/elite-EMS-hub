@@ -221,15 +221,33 @@ class Proposal extends Model
         return $number;
     }
 
+    /**
+     * Create a proposal with a fresh number, retrying the number on collision.
+     *
+     * Same contention as Invoice::createNumbered() — two requests raising a
+     * proposal at nearly the same moment can both see the same free number.
+     */
+    public static function createNumbered(array $attributes): self
+    {
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            try {
+                return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if ($attempt === 5) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
     /** Start an offer against a deal, carrying across what is already known. */
     public static function forDeal(Deal $deal): self
     {
-        $proposal = static::create([
+        $proposal = static::createNumbered([
             'deal_id' => $deal->id,
             'client_id' => $deal->client_id,
             'contact_id' => $deal->contact_id,
             'owner_id' => $deal->owner_id ?? auth()->id(),
-            'number' => static::nextNumber(),
             'title' => $deal->title,
             'status' => 'draft',
             'currency' => $deal->currency ?: CompanyProfile::currency(),

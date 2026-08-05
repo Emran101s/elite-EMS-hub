@@ -312,6 +312,27 @@ class Invoice extends Model
     }
 
     /**
+     * Create an invoice with a fresh number, retrying the number on collision.
+     *
+     * nextNumber() checks the number is free, then this inserts it — two
+     * requests raising an invoice at nearly the same moment can both see the
+     * same gap and both try to claim it, and the second one hit the unique
+     * index as a 500 instead of just getting the next number along.
+     */
+    public static function createNumbered(array $attributes): self
+    {
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            try {
+                return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if ($attempt === 5) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
      * Raise a draft invoice against a contract installment.
      *
      * The line copies the installment's figures rather than referring to them:
@@ -323,11 +344,10 @@ class Invoice extends Model
         $event = $payment->event;
         $contract = $payment->contract;
 
-        $invoice = static::create([
+        $invoice = static::createNumbered([
             'event_id' => $payment->event_id,
             'contract_id' => $payment->contract_id,
             'client_id' => $event?->client_id,
-            'number' => static::nextNumber(),
             'status' => 'draft',
             // The event's own currency where it has one, the house currency
             // otherwise — never a constant nobody can change.
