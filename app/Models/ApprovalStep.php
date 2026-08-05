@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * back into a single status — the same "derive, don't duplicate" shape as
  * EventContract's signatories.
  */
-#[Fillable(['approval_id', 'position', 'label', 'approver_id', 'status', 'decided_by', 'decided_at', 'notes'])]
+#[Fillable(['approval_id', 'position', 'label', 'approver_id', 'min_role', 'status', 'decided_by', 'decided_at', 'notes'])]
 class ApprovalStep extends Model
 {
     public const STATUSES = ['pending', 'approved', 'rejected', 'needs_revision', 'skipped'];
@@ -45,9 +45,38 @@ class ApprovalStep extends Model
         return $this->status === 'pending';
     }
 
-    /** Whoever this step is named for, or "any manager" when it isn't assigned to one. */
+    /** Whoever this step is named for, or "any manager"/"any {role}" when it isn't. */
     public function assigneeLabel(): string
     {
-        return $this->label ?: ($this->approver?->name ?? 'Any manager');
+        if ($this->label) {
+            return $this->label;
+        }
+
+        if ($this->approver) {
+            return $this->approver->name;
+        }
+
+        return 'Any '.($this->min_role ?: 'manager');
+    }
+
+    /**
+     * Whether this specific step is this specific user's to decide — on top
+     * of, not instead of, the baseline `decide-approvals` gate every step
+     * still requires. A step named for somebody is theirs alone; a step
+     * raised above the baseline (conditional routing's admin step) needs
+     * that seniority; a step naming neither is any manager, which the gate
+     * already covers.
+     */
+    public function decidableBy(User $user): bool
+    {
+        if ($this->approver_id) {
+            return $this->approver_id === $user->id;
+        }
+
+        if ($this->min_role) {
+            return $user->isAtLeast($this->min_role);
+        }
+
+        return true;
     }
 }

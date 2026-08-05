@@ -23,12 +23,16 @@ class DefaultsSettings extends Component
 
     public string $newTicket = '';
 
+    /** Blank means the policy is off — no approval ever gets an automatic admin step. */
+    public string $approvalThreshold = '';
+
     public function mount(): void
     {
         $p = CompanyProfile::current();
         $this->categories = $p->budgetCategories();
         $this->tickets = $p->ticketTypes();
         $this->fee = rtrim(rtrim(number_format((float) $p->default_management_fee_pct, 2, '.', ''), '0'), '.');
+        $this->approvalThreshold = $p->approval_threshold_cents !== null ? (string) ($p->approval_threshold_cents / 100) : '';
     }
 
     public function addTicket(): void
@@ -90,12 +94,18 @@ class DefaultsSettings extends Component
     public function save(): void
     {
         Gate::authorize('write');
-        $this->validate(['fee' => ['required', 'numeric', 'min:0', 'max:100']]);
+        $this->validate([
+            'fee' => ['required', 'numeric', 'min:0', 'max:100'],
+            'approvalThreshold' => ['nullable', 'numeric', 'min:0'],
+        ]);
 
         CompanyProfile::current()->update([
             'default_budget_categories' => array_values(array_filter(array_map('trim', $this->categories))),
             'default_ticket_types' => array_values(array_filter(array_map('trim', $this->tickets))),
             'default_management_fee_pct' => (float) $this->fee,
+            'approval_threshold_cents' => $this->approvalThreshold !== ''
+                ? (int) round((float) $this->approvalThreshold * 100)
+                : null,
         ]);
 
         session()->flash('status', 'Defaults saved — new events will use them.');

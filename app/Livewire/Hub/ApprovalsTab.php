@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Hub;
 
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\User;
 use App\Support\Taxonomy;
@@ -19,6 +20,9 @@ class ApprovalsTab extends Component
     public string $type = 'budget';
 
     public string $notes = '';
+
+    /** What the request is worth — only budget/payment types route on it. */
+    public string $amount = '';
 
     /**
      * The chain being built: each row is ['label' => ?string, 'approver_id' => ?int].
@@ -53,6 +57,7 @@ class ApprovalsTab extends Component
             'title' => ['required', 'string', 'max:160'],
             'type' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('approval_type')))],
             'notes' => ['nullable', 'string', 'max:500'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
             'steps' => ['required', 'array', 'min:1'],
             'steps.*.label' => ['nullable', 'string', 'max:80'],
             'steps.*.approver_id' => ['nullable', 'integer', 'exists:users,id'],
@@ -91,6 +96,7 @@ class ApprovalsTab extends Component
             'title' => $this->title,
             'type' => $this->type,
             'notes' => $this->notes ?: null,
+            'amount_cents' => $this->amount !== '' ? (int) round((float) $this->amount * 100) : null,
             'status' => 'pending',
             'requested_by' => auth()->id(),
         ]);
@@ -111,7 +117,21 @@ class ApprovalsTab extends Component
 
         $approval->steps()->where('position', '>', count($configured))->delete();
 
-        $chained = count($configured) > 1 ? ' ('.count($configured).'-step chain)' : '';
+        // Conditional routing: over the house threshold, a budget or payment
+        // request gets one more step nobody configured by hand — gated to
+        // admin rank, appended after whatever the requester built.
+        $escalated = false;
+        if ($approval->fresh()->needsAdminStep()) {
+            $approval->steps()->create([
+                'position' => count($configured) + 1,
+                'label' => 'Admin sign-off (over threshold)',
+                'min_role' => 'admin',
+            ]);
+            $escalated = true;
+        }
+
+        $stepCount = count($configured) + ($escalated ? 1 : 0);
+        $chained = $stepCount > 1 ? ' ('.$stepCount.'-step chain'.($escalated ? ', admin sign-off required' : '').')' : '';
         session()->flash('status', "Approval requested: “{$this->title}”{$chained}.");
 
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
@@ -133,9 +153,14 @@ class ApprovalsTab extends Component
             return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
         }
 
-        // A step named for somebody specific is theirs to decide, not the queue's.
-        if ($step->approver_id && $step->approver_id !== auth()->id()) {
-            session()->flash('error', "This step is assigned to {$step->approver?->name} — you can't decide it.");
+        // A step named for somebody specific, or raised above the baseline
+        // (an admin sign-off conditional routing added), is not the queue's
+        // to decide — only the person or the seniority it names.
+        if (! $step->decidableBy(auth()->user())) {
+            $message = $step->approver_id
+                ? "This step is assigned to {$step->approver?->name} — you can't decide it."
+                : "This step needs {$step->min_role} rank or above — you can't decide it.";
+            session()->flash('error', $message);
 
             return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
         }
@@ -163,6 +188,7 @@ class ApprovalsTab extends Component
             'pending' => $this->event->approvals()->with(['requester', 'steps.approver'])->where('status', 'pending')->latest()->get(),
             'decided' => $this->event->approvals()->with(['requester', 'decider', 'steps.approver', 'steps.decider'])->whereNot('status', 'pending')->latest('decided_at')->get(),
             'managers' => User::query()->get()->filter(fn (User $u) => $u->isAtLeast('manager'))->values(),
+            'threshold' => CompanyProfile::approvalThresholdCents(),
         ]);
     }
 }

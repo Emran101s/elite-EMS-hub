@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes', 'source_type', 'source_id'])]
+#[Fillable(['event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes', 'source_type', 'source_id', 'amount_cents'])]
 class EventApproval extends Model
 {
     use Auditable;
@@ -20,9 +20,27 @@ class EventApproval extends Model
 
     public const STATUSES = ['pending', 'approved', 'rejected', 'needs_revision'];
 
+    /** The only types an amount routes on — the rest never carry a figure worth gating. */
+    public const AMOUNT_GATED_TYPES = ['budget', 'payment'];
+
     protected function casts(): array
     {
-        return ['decided_at' => 'datetime'];
+        return ['decided_at' => 'datetime', 'amount_cents' => 'integer'];
+    }
+
+    /**
+     * Conditional routing: a budget or payment request over the house
+     * threshold needs an admin's sign-off in addition to a manager's — the
+     * chain gets a second step nobody had to configure by hand.
+     */
+    public function needsAdminStep(): bool
+    {
+        $threshold = CompanyProfile::approvalThresholdCents();
+
+        return $threshold !== null
+            && in_array($this->type, self::AMOUNT_GATED_TYPES, true)
+            && $this->amount_cents !== null
+            && $this->amount_cents > $threshold;
     }
 
     /**

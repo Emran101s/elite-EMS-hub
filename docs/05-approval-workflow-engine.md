@@ -22,6 +22,13 @@ something else:
   every step to say yes, in order; a step assigned to someone specific is theirs alone to
   decide. `EventApproval::booted()` guarantees a bare `create()` still gets one default
   step, so nothing that predates chains (or skips the form) is left undecidable.
+- **Conditional routing**: `CompanyProfile::approval_threshold_cents` (Settings → Defaults
+  & Templates, blank means off) — a `budget` or `payment` approval (`EventApproval::
+  AMOUNT_GATED_TYPES`) whose `amount_cents` exceeds the threshold gets one more step
+  appended automatically, gated to **admin** rank via `ApprovalStep.min_role` rather than
+  a named person. `ApprovalStep::decidableBy()` is the one place that checks all three
+  shapes a step can take — named person, minimum role, or (both null) any manager — so
+  `decide()` and the pending-queue display never disagree about who a step belongs to.
 
 A second, parallel approval flow exists for **budget revisions** specifically:
 `EventBudgetVersion` (`pending` / `approved` / `rejected` / `superseded`) — a budget change
@@ -35,9 +42,10 @@ the same idea of a status that means something specific and is computed, not typ
 
 ## What this is not yet
 
-- Multi-step chains landed; **conditional routing, delegate-to, and escalation on
-  timeout** are still not built — a step's approver is fixed at request time, nobody can
-  hand off a step they can't get to, and nothing escalates a step that's sat too long.
+- Multi-step chains and conditional routing (amount-based, for now) landed;
+  **delegate-to and escalation on timeout** are still not built — a step's approver is
+  fixed at request time, nobody can hand off a step they can't get to, and nothing
+  escalates a step that's sat too long.
 - There's no notification/reminder system tied to a pending approval sitting too long —
   the Health Engine's attention list surfaces pending approvals, but nothing pushes.
 - Approvals aren't yet linked into the Commercial Command Center's future RFQ/Quotation

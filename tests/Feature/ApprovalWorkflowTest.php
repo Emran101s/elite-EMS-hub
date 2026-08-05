@@ -196,4 +196,90 @@ class ApprovalWorkflowTest extends TestCase
         $this->assertSame('needs_revision', $approval->status);
         $this->assertSame('skipped', $approval->steps->firstWhere('label', 'Finance')->status);
     }
+
+    // ── Conditional routing: an amount over the house threshold escalates ──
+
+    private function admin(): User
+    {
+        // super_admin outranks admin, so it satisfies an "at least admin" step too.
+        return User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
+    }
+
+    public function test_escalation_is_off_by_default(): void
+    {
+        [$event, $requester] = $this->ctx();
+        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => null]);
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Huge budget line')
+            ->set('type', 'budget')
+            ->set('amount', '500000')
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+        $this->assertCount(1, $approval->steps, 'no threshold configured means no escalation, however large the amount');
+    }
+
+    public function test_a_budget_request_under_threshold_does_not_escalate(): void
+    {
+        [$event, $requester] = $this->ctx();
+        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Small budget line')
+            ->set('type', 'budget')
+            ->set('amount', '500')
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+        $this->assertCount(1, $approval->steps);
+    }
+
+    public function test_a_budget_request_over_threshold_gets_an_automatic_admin_step(): void
+    {
+        [$event, $requester, $layla] = $this->ctx();
+        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Large budget revision')
+            ->set('type', 'budget')
+            ->set('amount', '15000')
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+        $this->assertCount(2, $approval->steps, 'nobody configured a second step — the threshold did');
+        $this->assertSame('admin', $approval->steps->last()->min_role);
+        $this->assertNull($approval->steps->last()->approver_id);
+
+        // A manager decides step 1 as usual…
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+        $approval->refresh();
+        $this->assertSame('pending', $approval->status, 'the admin step is still owed');
+
+        // …but cannot decide the admin step, even though they are a manager.
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+        $this->assertSame('pending', $approval->fresh()->status, "a manager isn't an admin");
+
+        // An admin (or above) can.
+        Livewire::actingAs($this->admin())->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+        $this->assertSame('approved', $approval->fresh()->status);
+    }
+
+    public function test_a_venue_request_never_escalates_regardless_of_amount(): void
+    {
+        [$event, $requester] = $this->ctx();
+        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 100]);
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Venue change')
+            ->set('type', 'venue')
+            ->set('amount', '999999')
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+        $this->assertCount(1, $approval->steps, 'venue is not an amount-gated type');
+    }
 }

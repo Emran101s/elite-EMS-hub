@@ -73,6 +73,17 @@
             @error('fee')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
         </div>
 
+        {{-- approval conditional-routing threshold --}}
+        <div class="card p-5">
+            <p class="text-sm font-bold text-navy-900">Approval escalation threshold</p>
+            <p class="mb-3 text-micro text-muted">A budget or payment approval over this amount automatically gets a required Admin sign-off step, on top of a manager's. Leave blank to turn this off.</p>
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-navy-600">{{ \App\Models\CompanyProfile::currency() }}</span>
+                <input type="number" step="0.01" min="0" wire:model="approvalThreshold" class="input h-10 w-40 text-sm" placeholder="No threshold">
+            </div>
+            @error('approvalThreshold')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+        </div>
+
         <div class="flex justify-end">
             <button type="submit" class="btn-navy h-10 px-6 text-xs">Save defaults</button>
         </div>

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'name', 'logo_path', 'default_currency', 'default_timezone',
     'default_budget_categories', 'default_management_fee_pct', 'default_ticket_types', 'default_sponsor_packages',
-    'country', 'city', 'email', 'phone', 'website', 'address', 'bank_accounts',
+    'country', 'city', 'email', 'phone', 'website', 'address', 'bank_accounts', 'approval_threshold_cents',
 ])]
 class CompanyProfile extends Model
 {
@@ -43,6 +43,19 @@ class CompanyProfile extends Model
     public static function feePct(): float
     {
         return (float) (self::house()?->default_management_fee_pct ?? 15.0);
+    }
+
+    /**
+     * Settings → Company → the figure that triggers an extra approval step.
+     *
+     * Null means the policy is off — a budget or payment request routes on a
+     * single step, exactly as it always has, until a house sets this.
+     */
+    public static function approvalThresholdCents(): ?int
+    {
+        $v = self::house()?->approval_threshold_cents;
+
+        return $v !== null ? (int) $v : null;
     }
 
     /** The fields one bank account holds, in the order a document prints them. */

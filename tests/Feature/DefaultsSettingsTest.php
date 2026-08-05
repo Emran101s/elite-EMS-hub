@@ -66,4 +66,24 @@ class DefaultsSettingsTest extends TestCase
 
         $c->set('newCategory', 'c')->call('addCategory')->assertHasErrors('newCategory'); // dup (case-insensitive)
     }
+
+    public function test_the_approval_threshold_can_be_set_and_cleared(): void
+    {
+        $user = $this->boot();
+
+        Livewire::actingAs($user)->test(DefaultsSettings::class)
+            ->set('approvalThreshold', '10000')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1_000_000, CompanyProfile::current()->approval_threshold_cents);
+
+        // blank turns the policy back off, not zero — a zero threshold would
+        // escalate every priced request, which "off" must not mean.
+        Livewire::actingAs($user)->test(DefaultsSettings::class)
+            ->set('approvalThreshold', '')
+            ->call('save');
+
+        $this->assertNull(CompanyProfile::current()->approval_threshold_cents);
+    }
 }

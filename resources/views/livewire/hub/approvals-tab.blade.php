@@ -35,6 +35,14 @@
                 <label class="field-label !mb-1 !text-eyebrow" for="a-notes">Notes</label>
                 <input id="a-notes" type="text" wire:model="notes" class="input h-9 text-sm" placeholder="Optional context">
             </div>
+            <div>
+                <label class="field-label !mb-1 !text-eyebrow" for="a-amount">Amount</label>
+                <input id="a-amount" type="number" min="0" step="0.01" wire:model="amount" class="input h-9 text-sm" placeholder="Optional">
+                @error('amount') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                @if ($threshold && in_array($type, \App\Models\EventApproval::AMOUNT_GATED_TYPES, true))
+                    <p class="mt-1 text-eyebrow text-muted">Over {{ $event->money($threshold) }} adds a required Admin sign-off step automatically.</p>
+                @endif
+            </div>
 
             <div class="sm:col-span-2 xl:col-span-4">
                 <p class="field-label !mb-1 !text-eyebrow">Who signs off, in order</p>
@@ -92,7 +100,7 @@
                             $current = $steps->firstWhere('status', 'pending');
                             $currentIndex = $current ? $steps->search(fn ($s) => $s->id === $current->id) : null;
                             $isChain = $steps->count() > 1;
-                            $assignedElsewhere = $current?->approver_id && $current->approver_id !== auth()->id();
+                            $assignedElsewhere = $current && ! $current->decidableBy(auth()->user());
                         @endphp
                         <li class="px-4 py-3">
                             <div class="flex items-start justify-between gap-3">
@@ -123,7 +131,13 @@
                                 @if ($approval->requested_by === auth()->id())
                                     <p class="mt-2 text-eyebrow font-semibold text-muted">You raised this — a different manager decides it.</p>
                                 @elseif ($assignedElsewhere)
-                                    <p class="mt-2 text-eyebrow font-semibold text-muted">Assigned to {{ $current->assigneeLabel() }} — not yours to decide.</p>
+                                    <p class="mt-2 text-eyebrow font-semibold text-muted">
+                                        @if ($current->approver_id)
+                                            Assigned to {{ $current->assigneeLabel() }} — not yours to decide.
+                                        @else
+                                            Needs {{ $current->min_role }} rank or above — not yours to decide.
+                                        @endif
+                                    </p>
                                 @else
                                     <div class="mt-2 flex flex-wrap gap-1.5">
                                         <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
