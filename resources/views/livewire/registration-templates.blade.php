@@ -131,9 +131,10 @@
                         class="rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:text-navy-700">Cancel</button>
 
                 @if ($editingId)
-                    <button type="button" wire:click="destroy({{ $editingId }})"
-                            wire:confirm="Delete this template?&#10;&#10;Events already started from it keep the form they have — a template is copied, not linked."
-                            class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">Delete</button>
+                    <x-confirm title="Delete this template?"
+                               body="Events already started from it keep the form they have — a template is copied, not linked."
+                               confirm="Delete" run="$wire.destroy({{ $editingId }})"
+                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">Delete</x-confirm>
                 @endif
             </div>
         </div>

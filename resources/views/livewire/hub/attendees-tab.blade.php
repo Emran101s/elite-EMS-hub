@@ -229,7 +229,10 @@
                         @error('badge.footer')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
                     </label>
 
-                    <button type="button" wire:click="resetBadge" wire:confirm="Put the badge design back to the default?" class="btn-ghost btn-xs">Reset to default</button>
+                    <x-confirm title="Put the badge design back to the default?"
+                               confirm="Reset" tone="warn"
+                               run="$wire.resetBadge()"
+                               class="btn-ghost btn-xs">Reset to default</x-confirm>
                 </div>
 
                 {{-- ── the preview ── --}}
@@ -272,9 +275,11 @@
                        onfocus="this.select()"
                        class="input h-10 min-w-0 flex-1 bg-page/60 font-mono text-[12px] text-navy-600">
                 <a href="{{ $event->registrationUrl() }}" target="_blank" class="btn-ghost btn-sm shrink-0">Open ↗</a>
-                <button type="button" wire:click="newRegistrationLink"
-                        wire:confirm="Make a new link? The current one stops working immediately. Everyone who has already registered keeps their place."
-                        class="btn-ghost btn-sm shrink-0" title="Use this if the link has been shared somewhere it should not have been">New link</button>
+                <x-confirm title="Make a new link?"
+                        body="The current one stops working immediately. Everyone who has already registered keeps their place."
+                        confirm="New link" tone="warn"
+                        run="$wire.newRegistrationLink()"
+                        class="btn-ghost btn-sm shrink-0">New link</x-confirm>
             </div>
 
             <div class="mt-4 grid gap-3 sm:grid-cols-[160px_minmax(0,1fr)]">
@@ -369,7 +374,10 @@
                         <td class="px-3 py-2.5">
                             <div class="flex items-center justify-end gap-1">
                                 <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
-                                <button type="button" wire:click.stop="delete({{ $a->id }})" wire:confirm="Remove {{ $a->name }}?" class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
+                                <x-confirm title="Remove {{ $a->name }}?"
+                                           confirm="Remove"
+                                           run="$wire.delete({{ $a->id }})"
+                                           class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</x-confirm>
                             </div>
                         </td>
                     </tr>
@@ -446,7 +454,10 @@
                     </div>
                     <div class="mt-1 flex items-center gap-3">
                         @if ($editingId)
-                            <button type="button" wire:click="delete({{ $editingId }})" wire:confirm="Remove this attendee?" class="rounded-xl px-3 py-2 text-xs font-bold text-risk transition hover:bg-risk/5">Delete</button>
+                            <x-confirm title="Remove this attendee?"
+                                       confirm="Remove"
+                                       run="$wire.delete({{ $editingId }})"
+                                       class="rounded-xl px-3 py-2 text-xs font-bold text-risk transition hover:bg-risk/5">Delete</x-confirm>
                         @endif
                         <div class="ml-auto flex gap-2">
                             <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>

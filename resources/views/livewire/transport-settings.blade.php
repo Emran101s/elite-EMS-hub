@@ -47,9 +47,10 @@
                             <span class="w-14 text-eyebrow text-muted">passengers</span>
                         </div>
 
-                        <button type="button" wire:click="deleteVehicle({{ $v->id }})"
-                                wire:confirm="Delete “{{ $v->name }}”? Movements already using it keep their details."
-                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</button>
+                        <x-confirm title="Delete “{{ $v->name }}”?"
+                                   body="Movements already using it keep their details."
+                                   confirm="Delete" run="$wire.deleteVehicle({{ $v->id }})"
+                                   class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</x-confirm>
                     </div>
                 @endforeach
             </div>
@@ -88,9 +89,9 @@
                                wire:change="updateService({{ $s->id }}, $event.target.value)"
                                class="flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold {{ $s->is_active ? 'text-navy-900' : 'text-navy-400' }} hover:border-line focus:border-gold-400 focus:bg-white focus:outline-none">
 
-                        <button type="button" wire:click="deleteService({{ $s->id }})"
-                                wire:confirm="Delete “{{ $s->name }}”?"
-                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</button>
+                        <x-confirm title="Delete “{{ $s->name }}”?"
+                                   confirm="Delete" run="$wire.deleteService({{ $s->id }})"
+                                   class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</x-confirm>
                     </div>
                 @endforeach
             </div>
@@ -138,9 +139,10 @@
                             @endforeach
                         </select>
 
-                        <button type="button" wire:click="deleteDriver({{ $d->id }})"
-                                wire:confirm="Delete {{ $d->name }}? Trips they were assigned to are kept — they just lose their driver."
-                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</button>
+                        <x-confirm title="Delete {{ $d->name }}?"
+                                   body="Trips they were assigned to are kept — they just lose their driver."
+                                   confirm="Delete" run="$wire.deleteDriver({{ $d->id }})"
+                                   class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</x-confirm>
                     </div>
                 @empty
                     <p class="px-5 py-6 text-center text-xs text-muted">
@@ -205,9 +207,10 @@
                             @endforeach
                         </select>
 
-                        <button type="button" wire:click="deleteFleetVehicle({{ $v->id }})"
-                                wire:confirm="Delete {{ $v->label() }}? Trips it was assigned to are kept."
-                                class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</button>
+                        <x-confirm title="Delete {{ $v->label() }}?"
+                                   body="Trips it was assigned to are kept."
+                                   confirm="Delete" run="$wire.deleteFleetVehicle({{ $v->id }})"
+                                   class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:bg-risk/10 hover:text-red-700 group-hover:opacity-100">✕</x-confirm>
                     </div>
                 @empty
                     <p class="px-5 py-6 text-center text-xs text-muted">

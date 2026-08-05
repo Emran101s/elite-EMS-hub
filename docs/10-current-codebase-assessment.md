@@ -55,8 +55,8 @@ dates, and status colour`) — read those for the exact file lists.
 - **Robustness**: Stage 5 landed security headers including CSP (Bunny fonts + Livewire
   allowlist; nonce tightening still deferred), soft deletes on invoices/budget items,
   FK indexes, `EventPolicy`, and hardened badge check-in tokens.
-- **UX**: Stage 3 landed shared `<x-confirm>` / `<x-alert>` / `<x-busy>`; remaining
-  `wire:confirm` call sites still migrate opportunistically.
+- **UX**: Stage 3 landed shared `<x-confirm>` / `<x-alert>` / `<x-busy>`; browser
+  `wire:confirm` call sites in `resources/views` are migrated onto that chrome.
 - **Stale doc, corrected in this handover**: `CLAUDE.md` described an in-progress "ORBIT"
   design system that was actually reverted weeks earlier; it referenced a
   `App\Support\Tone` class and CSS token files that no longer exist. Fixed as part of this

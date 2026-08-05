@@ -59,9 +59,10 @@
                                     <span class="pill bg-gold-50 text-gold-700 ring-1 ring-gold-200">★ {{ number_format($supplier->rating, 1) }}</span>
                                     <span class="flex items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                                         <button type="button" wire:click="edit({{ $supplier->id }})" title="Edit" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                        <button type="button" wire:click="delete({{ $supplier->id }})"
-                                                wire:confirm="Delete “{{ $supplier->name }}”? Events using it keep working — they just lose the vendor link."
-                                                title="Delete" class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                        <x-confirm title="Delete “{{ $supplier->name }}”?"
+                                                   body="Events using it keep working — they just lose the vendor link."
+                                                   confirm="Delete" run="$wire.delete({{ $supplier->id }})"
+                                                   class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                     </span>
                                 </div>
                             </div>

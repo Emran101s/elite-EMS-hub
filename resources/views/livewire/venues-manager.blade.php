@@ -62,9 +62,10 @@
                                 </div>
                                 <div class="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                                     <button type="button" wire:click="edit({{ $venue->id }})" class="rounded-lg bg-navy-50 px-1.5 py-1 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                                    <button type="button" wire:click="delete({{ $venue->id }})"
-                                            wire:confirm="Delete “{{ $venue->name }}”? Events using it keep working — they just lose the venue link."
-                                            class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                                    <x-confirm title="Delete “{{ $venue->name }}”?"
+                                               body="Events using it keep working — they just lose the venue link."
+                                               confirm="Delete" run="$wire.delete({{ $venue->id }})"
+                                               class="rounded-lg bg-risk/10 px-1.5 py-1 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                 </div>
                             </div>
 

@@ -21,8 +21,11 @@
                         <input type="text" value="{{ $t->name }}" @change="$wire.updateTrack({{ $t->id }}, 'name', $event.target.value)"
                                class="input h-8 flex-1 text-sm font-bold">
                         <span class="shrink-0 rounded-full bg-navy-50 px-1.5 text-eyebrow font-bold text-navy-400" title="items">{{ $t->items()->count() }}</span>
-                        <button type="button" wire:click="deleteTrack({{ $t->id }})" wire:confirm="Delete track “{{ $t->name }}”? Its items move to another track."
-                                class="shrink-0 rounded-md px-1.5 py-1 text-micro text-navy-300 transition hover:bg-risk/10 hover:text-risk" title="Delete track">✕</button>
+                        <x-confirm title="Delete track “{{ $t->name }}”?"
+                                body="Its items move to another track."
+                                confirm="Delete"
+                                run="$wire.deleteTrack({{ $t->id }})"
+                                class="shrink-0 rounded-md px-1.5 py-1 text-micro text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</x-confirm>
                     </div>
                     <input type="text" value="{{ $t->goal }}" @change="$wire.updateTrack({{ $t->id }}, 'goal', $event.target.value)"
                            placeholder="Goal — what this phase is meant to achieve…"

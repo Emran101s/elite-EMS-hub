@@ -6,7 +6,7 @@
             <p class="text-xs text-muted">Your standard sponsorship tiers — every new event seeds its packages from this list.</p>
         </div>
         <div class="flex items-center gap-2">
-            <button type="button" wire:click="resetPackages" wire:confirm="Reset to the standard package list?" class="text-eyebrow font-semibold text-navy-400 hover:text-navy-700">↺ Reset to standard</button>
+            <x-confirm title="Reset to the standard package list?" confirm="Reset" tone="warn" run="$wire.resetPackages" class="text-eyebrow font-semibold text-navy-400 hover:text-navy-700">↺ Reset to standard</x-confirm>
             <button type="button" wire:click="addPackage" class="btn-gold h-10 px-4 text-xs">＋ Add package</button>
         </div>
     </div>

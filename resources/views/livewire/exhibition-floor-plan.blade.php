@@ -94,7 +94,10 @@
                     </div>
                 </div>
                 @if ($halls->count() > 1)
-                    <button type="button" wire:click="deleteHall({{ $hall?->id }})" wire:confirm="Delete “{{ $hall?->name }}”? Its booths return to the tray." class="mt-2.5 text-eyebrow font-bold text-risk hover:underline">Delete this hall</button>
+                    <x-confirm title="Delete “{{ $hall?->name }}”?"
+                               body="Its booths return to the tray."
+                               confirm="Delete" run="$wire.deleteHall({{ $hall?->id }})"
+                               class="mt-2.5 text-eyebrow font-bold text-risk hover:underline">Delete this hall</x-confirm>
                 @endif
             </div>
 
@@ -144,7 +147,10 @@
                         <div class="mb-2 rounded-lg bg-navy-50/60 px-2.5 py-2">
                             <p class="truncate text-xs font-bold text-navy-900">{{ $selected->exhibitor->company }}</p>
                             <p class="text-eyebrow text-muted">{{ ucfirst($selected->exhibitor->status) }} · {{ $event->money($selected->exhibitor->fee_cents) }} fee</p>
-                            <button type="button" wire:click="releaseExhibitor({{ $selected->id }})" wire:confirm="Release {{ $selected->exhibitor->company }}? The booth goes back on sale." class="mt-1 text-eyebrow font-bold text-risk hover:underline">Release booth</button>
+                            <x-confirm title="Release {{ $selected->exhibitor->company }}?"
+                                       body="The booth goes back on sale."
+                                       confirm="Remove" run="$wire.releaseExhibitor({{ $selected->id }})"
+                                       class="mt-1 text-eyebrow font-bold text-risk hover:underline">Release booth</x-confirm>
                         </div>
                     @elseif ($waiting->isNotEmpty())
                         <select wire:change="assignExhibitor({{ $selected->id }}, $event.target.value)" class="input mb-2 h-9 w-full text-xs">
@@ -178,7 +184,10 @@
                                 <button type="button" wire:click="resizeBooth({{ $selected->id }}, 'h', 0.5)" class="seg-step !h-7 !w-7">+</button>
                             </span>
                         </div>
-                        <button type="button" wire:click="deleteBooth({{ $selected->id }})" wire:confirm="Delete booth {{ $selected->number }}?{{ $selected->exhibitor ? ' '.$selected->exhibitor->company.' returns to the waiting list.' : '' }}" class="mt-1 h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Delete booth</button>
+                        <x-confirm title="Delete booth {{ $selected->number }}?"
+                                   :body="$selected->exhibitor ? $selected->exhibitor->company.' returns to the waiting list.' : null"
+                                   confirm="Delete" run="$wire.deleteBooth({{ $selected->id }})"
+                                   class="mt-1 h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Delete booth</x-confirm>
                     </div>
                 @elseif ($selected && $selectedKind === 'fixture')
                     <input type="text" value="{{ $selected['label'] }}" wire:change="renameFixture('{{ $selected['id'] }}', $event.target.value)" wire:key="fxlabel-{{ $selected['id'] }}" class="input mb-3 h-9 w-full text-sm font-bold">

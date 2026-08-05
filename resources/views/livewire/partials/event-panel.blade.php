@@ -92,11 +92,12 @@
                     <a href="{{ route('events.hub', $event) }}" class="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60"><x-icon name="home" class="h-3.5 w-3.5 text-navy-500" /> Open hub</a>
                     <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60"><x-icon name="cog" class="h-3.5 w-3.5 text-navy-500" /> Edit</a>
                     <button type="button" wire:click="duplicate({{ $event->id }})" class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-gold-50/60"><x-icon name="archive" class="h-3.5 w-3.5 text-navy-500" /> Duplicate</button>
-                    <button type="button" wire:click="archive({{ $event->id }})" wire:confirm="Archive “{{ $event->name }}”?" class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-navy-50"><x-icon name="logout" class="h-3.5 w-3.5 text-navy-500" /> Archive</button>
+                    <x-confirm title="Archive “{{ $event->name }}”?" confirm="Archive" tone="warn" run="$wire.archive({{ $event->id }})" class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-navy-700 transition hover:bg-navy-50"><x-icon name="logout" class="h-3.5 w-3.5 text-navy-500" /> Archive</x-confirm>
                     @can('manage-events')
-                        <button type="button" wire:click="deleteEvent({{ $event->id }})"
-                                wire:confirm="Permanently DELETE “{{ $event->name }}”?&#10;&#10;This erases the event and everything in it. It cannot be undone."
-                                class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-risk transition hover:bg-risk/5"><x-icon name="dots" class="h-3.5 w-3.5" /> Delete forever</button>
+                        <x-confirm title="Permanently delete “{{ $event->name }}”?"
+                                   body="This erases the event and everything in it. It cannot be undone."
+                                   confirm="Delete" run="$wire.deleteEvent({{ $event->id }})"
+                                   class="flex w-full items-center gap-2.5 border-t border-line px-3.5 py-2.5 text-left text-xs font-semibold text-risk transition hover:bg-risk/5"><x-icon name="dots" class="h-3.5 w-3.5" /> Delete forever</x-confirm>
                     @endcan
                 </div>
             </details>

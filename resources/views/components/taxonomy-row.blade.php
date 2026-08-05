@@ -59,12 +59,11 @@
             {{ $term->is_active ? '◉' : '○' }}
         </button>
         <button type="button" wire:click="edit({{ $term->id }})" class="btn-ghost btn-xs">Edit</button>
-        <button type="button" wire:click="delete({{ $term->id }})"
-                wire:confirm="{{ match (true) {
+        <x-confirm :title="match (true) {
                     $used > 0 => number_format($used).' record'.($used === 1 ? '' : 's').' still use “'.$term->label.'”, so it will be hidden rather than deleted and they keep their label. Continue?',
                     $term->is_system => 'The platform names “'.$term->label.'” in its own code, so it will be hidden rather than deleted. Continue?',
                     default => 'Delete “'.$term->label.'”? Nothing is using it.',
-                } }}"
-                class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</button>
+                }" confirm="Delete" run="$wire.delete({{ $term->id }})"
+                   class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</x-confirm>
     </div>
 </div>

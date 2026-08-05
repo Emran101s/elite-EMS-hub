@@ -6,8 +6,10 @@
     <div x-show="open" x-cloak @click.outside="open = false" x-transition
          class="absolute right-0 top-6 z-30 w-32 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-[0_20px_50px_-18px_rgba(11,31,58,0.5)]">
         <button type="button" wire:click="openTask({{ $item->id }})" @click="open = false" class="block w-full px-3 py-1.5 text-left text-micro font-semibold text-navy-700 transition hover:bg-navy-50">Edit details</button>
-        <button type="button" wire:click="deleteTask({{ $item->id }})" @click="open = false"
-                wire:confirm="Delete “{{ \Illuminate\Support\Str::limit($item->title ?: 'this task', 40) }}”?"
-                class="block w-full px-3 py-1.5 text-left text-micro font-semibold text-risk transition hover:bg-risk/10">Delete</button>
+        <x-confirm title="Delete “{{ \Illuminate\Support\Str::limit($item->title ?: 'this task', 40) }}”?"
+                confirm="Delete"
+                run="$wire.deleteTask({{ $item->id }})"
+                @click="open = false"
+                class="block w-full px-3 py-1.5 text-left text-micro font-semibold text-risk transition hover:bg-risk/10">Delete</x-confirm>
     </div>
 </div>

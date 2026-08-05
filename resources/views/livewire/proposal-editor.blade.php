@@ -37,10 +37,10 @@
                         class="flex h-9 items-center rounded-xl bg-navy-950 px-3.5 text-[12px] font-bold text-white transition hover:bg-navy-800">
                     Send it
                 </button>
-                <button type="button" wire:click="destroyDraft" wire:confirm="Delete this draft?"
-                        class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
+                <x-confirm title="Delete this draft?" confirm="Delete" run="$wire.destroyDraft"
+                           class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
                     Delete
-                </button>
+                </x-confirm>
 
             @elseif ($may && $state === 'expired')
                 <button type="button" wire:click="extend"
@@ -49,11 +49,12 @@
                 </button>
 
             @elseif ($may && $state === 'sent')
-                <button type="button" wire:click="accept"
-                        wire:confirm="Accepted? This wins the deal and opens the event."
-                        class="flex h-9 items-center rounded-xl bg-emerald-600 px-3.5 text-[12px] font-bold text-white transition hover:bg-emerald-700">
+                <x-confirm title="Accepted?"
+                           body="This wins the deal and opens the event."
+                           confirm="Accept" tone="neutral" run="$wire.accept"
+                           class="flex h-9 items-center rounded-xl bg-emerald-600 px-3.5 text-[12px] font-bold text-white transition hover:bg-emerald-700">
                     Accepted
-                </button>
+                </x-confirm>
                 <input type="text" wire:model="reason" placeholder="Reason…"
                        class="input h-9 w-[110px] !rounded-xl text-[11.5px]">
                 <button type="button" wire:click="decline"

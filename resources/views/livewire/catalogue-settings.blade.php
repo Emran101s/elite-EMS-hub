@@ -225,11 +225,12 @@
                 </label>
 
                 @if ($editingId)
-                    <button type="button" wire:click="destroy({{ $editingId }})"
-                            wire:confirm="Delete this item? Retiring it instead keeps it on the invoices that used it."
-                            class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
+                    <x-confirm title="Delete this item?"
+                               body="Retiring it instead keeps it on the invoices that used it."
+                               confirm="Delete" run="$wire.destroy({{ $editingId }})"
+                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
                         Delete
-                    </button>
+                    </x-confirm>
                 @endif
             </div>
         </div>

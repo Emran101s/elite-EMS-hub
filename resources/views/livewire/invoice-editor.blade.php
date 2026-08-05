@@ -38,17 +38,19 @@
                         class="flex h-9 items-center rounded-xl bg-navy-950 px-3.5 text-[12px] font-bold text-white transition hover:bg-navy-800">
                     Mark sent
                 </button>
-                <button type="button" wire:click="destroyDraft"
-                        wire:confirm="Delete this draft? Its number will not be reused."
-                        class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
+                <x-confirm title="Delete this draft?"
+                           body="Its number will not be reused."
+                           confirm="Delete" run="$wire.destroyDraft"
+                           class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
                     Delete
-                </button>
+                </x-confirm>
             @elseif ($may && $state !== 'void')
-                <button type="button" wire:click="void"
-                        wire:confirm="Void this invoice? The number stays in the book with the reason beside it."
-                        class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-navy-50 hover:text-navy-700">
+                <x-confirm title="Void this invoice?"
+                           body="The number stays in the book with the reason beside it."
+                           confirm="Void" run="$wire.void"
+                           class="flex h-9 items-center rounded-xl px-3 text-[12px] font-bold text-navy-400 transition hover:bg-navy-50 hover:text-navy-700">
                     Void
-                </button>
+                </x-confirm>
             @endif
         </div>
     </div>

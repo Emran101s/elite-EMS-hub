@@ -189,9 +189,11 @@
 
                 <span class="w-20 shrink-0 text-end">
                     @if ($may && ! $field->isLocked())
-                        <button type="button" wire:click="remove({{ $field->id }})"
-                                wire:confirm="Take “{{ $field->label }}” off the form?&#10;&#10;Answers already given are kept on the people who gave them."
-                                class="rounded-lg px-2 py-1 text-[10.5px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">Remove</button>
+                        <x-confirm title="Take “{{ $field->label }}” off the form?"
+                                body="Answers already given are kept on the people who gave them."
+                                confirm="Remove" tone="warn"
+                                run="$wire.remove({{ $field->id }})"
+                                class="rounded-lg px-2 py-1 text-[10.5px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">Remove</x-confirm>
                     @elseif ($field->isLocked())
                         <span class="text-[10.5px] italic text-navy-300" title="A person cannot be identified, badged or checked in without this">Always asked</span>
                     @endif

@@ -172,10 +172,10 @@
 
                                     {{-- delete on hover — any document, client included --}}
                                     @can('manage-contract')
-                                        <button type="button" wire:click.stop="deleteContract({{ $c->id }})"
-                                                wire:confirm="Delete “{{ $c->displayTitle() }}”? This removes the document and its signatures for good."
-                                                class="absolute right-1.5 top-1.5 z-10 rounded-md bg-navy-900/60 px-1.5 py-0.5 text-eyebrow font-bold text-white/70 opacity-0 backdrop-blur-sm transition hover:bg-red-600/80 hover:text-white group-hover:opacity-100"
-                                                title="Delete this document">✕</button>
+                                        <x-confirm title="Delete “{{ $c->displayTitle() }}”?"
+                                                   body="This removes the document and its signatures for good."
+                                                   confirm="Delete" run="$wire.deleteContract({{ $c->id }})"
+                                                   class="absolute right-1.5 top-1.5 z-10 rounded-md bg-navy-900/60 px-1.5 py-0.5 text-eyebrow font-bold text-white/70 opacity-0 backdrop-blur-sm transition hover:bg-red-600/80 hover:text-white group-hover:opacity-100">✕</x-confirm>
                                     @endcan
 
                                     {{-- wax seal over the paper's corner when fully signed --}}
@@ -345,8 +345,8 @@
                 <button type="button" wire:click="cycleStatus" class="h-9 rounded-xl bg-white/5 px-3 text-micro font-bold text-white/70 ring-1 ring-white/15 transition hover:text-white" title="Advance status">Advance →</button>
 
                 @if ($dirty)
-                    <button type="button" wire:click="discard" wire:confirm="Discard your unsaved changes?"
-                            class="h-9 rounded-xl px-3 text-micro font-bold text-white/50 transition hover:text-white/90">Discard</button>
+                    <x-confirm title="Discard your unsaved changes?" confirm="Discard" tone="warn" run="$wire.discard"
+                               class="h-9 rounded-xl px-3 text-micro font-bold text-white/50 transition hover:text-white/90">Discard</x-confirm>
                 @endif
                 <button type="button" wire:click="save" @disabled(! $dirty) wire:loading.attr="disabled" wire:target="save"
                         @class([
@@ -364,8 +364,10 @@
                        class="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-4 text-micro font-bold text-navy-950 shadow transition hover:brightness-105">
                         ↧ Export PDF
                     </a>
-                    <button type="button" wire:click="resetContract" wire:confirm="Reset the contract to defaults? Your edits will be replaced."
-                            class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/5 hover:text-white/80" title="Reset to defaults">↺</button>
+                    <x-confirm title="Reset the contract to defaults?"
+                               body="Your edits will be replaced."
+                               confirm="Reset" tone="warn" run="$wire.resetContract"
+                               class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/5 hover:text-white/80">↺</x-confirm>
                 @else
                     {{-- Every other type exports through the shared document sheet. --}}
                     <a href="{{ route('events.contract.doc.pdf', [$event, $contractId]) }}" target="_blank"
@@ -376,9 +378,9 @@
                 @endif
 
                 @can('manage-contract')
-                    <button type="button" wire:click="deleteContract({{ $contractId }})"
-                            wire:confirm="Delete this document and its signatures for good?"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-risk/20 hover:text-red-300" title="Delete this document">🗑</button>
+                    <x-confirm title="Delete this document and its signatures for good?"
+                               confirm="Delete" run="$wire.deleteContract({{ $contractId }})"
+                               class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-risk/20 hover:text-red-300">🗑</x-confirm>
                 @endcan
             </div>
         </div>
@@ -457,10 +459,10 @@
                                 @endforeach
 
                                 @can('manage-contract')
-                                    <button type="button" wire:click="refillFromTemplate"
-                                            wire:confirm="Rewrite the body from the standard {{ strtolower($tLabel) }} template with the current details? Your edits to the body will be replaced."
-                                            class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700"
-                                            title="Re-generate the clauses with the chosen counterparty and details">↻ Refill body</button>
+                                    <x-confirm title="Rewrite the body from the standard {{ strtolower($tLabel) }} template with the current details?"
+                                               body="Your edits to the body will be replaced."
+                                               confirm="Rewrite" run="$wire.refillFromTemplate"
+                                               class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700">↻ Refill body</x-confirm>
                                 @endcan
                             </div>
                         </div>
@@ -549,11 +551,12 @@
                                     {{-- The figure is on the button, so a pull is never a
                                          mystery: you can see what is coming before it comes. --}}
                                     @php $fromBudget = $event->costForecast(); @endphp
-                                    <button type="button" wire:click="syncBudget"
-                                            wire:confirm="Copy {{ $fromBudget['forecast'] ? $event->money($fromBudget['forecast']) : 'the budget' }} into the contract value? This overwrites the figure once — it does not link them."
-                                            class="text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700">
+                                    <x-confirm title="Copy {{ $fromBudget['forecast'] ? $event->money($fromBudget['forecast']) : 'the budget' }} into the contract value?"
+                                               body="This overwrites the figure once — it does not link them."
+                                               confirm="Copy" tone="neutral" run="$wire.syncBudget"
+                                               class="text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-gold-700">
                                         ↻ From budget @if ($fromBudget['forecast'])· {{ $event->money($fromBudget['forecast']) }}@endif
-                                    </button>
+                                    </x-confirm>
                                 </div>
 
                                 @if ($budgetFlash)
@@ -628,9 +631,10 @@
                         @can('manage-contract')
                             <div class="flex items-center justify-end gap-2">
                                 @unless ($editingAx)
-                                    <button type="button" wire:click="restoreStandardBlocks"
-                                            wire:confirm="Restore the standard clause set? Any edits to the body will be replaced."
-                                            class="btn-ghost btn-xs" title="Put the standard clauses back">↺ Restore standard</button>
+                                    <x-confirm title="Restore the standard clause set?"
+                                               body="Any edits to the body will be replaced."
+                                               confirm="Restore" tone="warn" run="$wire.restoreStandardBlocks"
+                                               class="btn-ghost btn-xs">↺ Restore standard</x-confirm>
                                 @endunless
                                 <button type="button" wire:click="addBlock" class="btn-gold btn-xs">＋ Add section</button>
                             </div>
@@ -660,9 +664,9 @@
                                                     class="rounded-md px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 hover:bg-navy-50 hover:text-navy-800 disabled:opacity-25" title="Move up">↑</button>
                                             <button type="button" wire:click="moveBlock('{{ $b['id'] }}', 1)" @disabled($bi === count($data['blocks']) - 1)
                                                     class="rounded-md px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 hover:bg-navy-50 hover:text-navy-800 disabled:opacity-25" title="Move down">↓</button>
-                                            <button type="button" wire:click="deleteBlock('{{ $b['id'] }}')"
-                                                    wire:confirm="Delete “{{ $b['title_en'] ?? 'this clause' }}” from this contract?"
-                                                    class="rounded-md px-1.5 py-0.5 text-eyebrow font-bold text-navy-300 hover:bg-risk/10 hover:text-red-700" title="Delete clause">✕</button>
+                                            <x-confirm title="Delete “{{ $b['title_en'] ?? 'this clause' }}” from this contract?"
+                                                       confirm="Delete" run="$wire.deleteBlock('{{ $b['id'] }}')"
+                                                       class="rounded-md px-1.5 py-0.5 text-eyebrow font-bold text-navy-300 hover:bg-risk/10 hover:text-red-700">✕</x-confirm>
                                         </div>
                                     @endcan
                                 </div>
@@ -763,9 +767,10 @@
                                             <div class="flex shrink-0 flex-col gap-0.5">
                                                 <button type="button" wire:click="moveAppendix('{{ $ax['slug'] }}', -1)" @disabled($ai === 0) class="btn-ghost btn-xs disabled:opacity-25">↑</button>
                                                 <button type="button" wire:click="moveAppendix('{{ $ax['slug'] }}', 1)" @disabled($ai === count($axList) - 1) class="btn-ghost btn-xs disabled:opacity-25">↓</button>
-                                                <button type="button" wire:click="deleteAppendix('{{ $ax['slug'] }}')"
-                                                        wire:confirm="Remove this appendix? Any reference to it in the contract text will break until you fix it."
-                                                        class="btn-ghost btn-xs text-risk">✕</button>
+                                                <x-confirm title="Remove this appendix?"
+                                                           body="Any reference to it in the contract text will break until you fix it."
+                                                           confirm="Remove" run="$wire.deleteAppendix('{{ $ax['slug'] }}')"
+                                                           class="btn-ghost btn-xs text-risk">✕</x-confirm>
                                             </div>
                                         @endcan
                                     </div>
@@ -786,9 +791,10 @@
                                         <span class="ms-auto flex gap-1.5">
                                             @if (($ax['source'] ?? null) && ! in_array($ax['source'], ['typed', 'form'], true))
                                                 @can('manage-contract')
-                                                    <button type="button" wire:click="pullAppendix('{{ $ax['slug'] }}')"
-                                                            wire:confirm="Replace this appendix with a fresh snapshot from the module? Anything typed here will be lost."
-                                                            class="btn-ghost btn-xs">⇣ {{ ($ax['pulled_at'] ?? null) ? 'Refresh' : 'Pull' }}</button>
+                                                    <x-confirm title="Replace this appendix with a fresh snapshot from the module?"
+                                                               body="Anything typed here will be lost."
+                                                               confirm="Replace" run="$wire.pullAppendix('{{ $ax['slug'] }}')"
+                                                               class="btn-ghost btn-xs">⇣ {{ ($ax['pulled_at'] ?? null) ? 'Refresh' : 'Pull' }}</x-confirm>
                                                 @endcan
                                             @endif
                                             <button type="button" wire:click="editAppendix('{{ $ax['slug'] }}')" class="btn-ghost btn-xs">Open →</button>
@@ -844,10 +850,11 @@
                                     @if ($s->isSigned())
                                         <button type="button" wire:click="unsign({{ $s->id }})" class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-navy-900" title="Undo this signature">↺ Unsign</button>
                                     @else
-                                        <button type="button" wire:click="recordSignature({{ $s->id }})"
-                                                wire:confirm="Record {{ $s->name ?: 'this party' }} as having signed? This stamps the date and locks their name to the current document."
-                                                @disabled(! $s->name)
-                                                class="rounded-lg bg-navy-900 px-3 py-1.5 text-eyebrow font-bold text-white transition hover:bg-navy-800 disabled:opacity-40">✒️ Mark signed</button>
+                                        <x-confirm title="Record {{ $s->name ?: 'this party' }} as having signed?"
+                                                   body="This stamps the date and locks their name to the current document."
+                                                   confirm="Record" tone="neutral" run="$wire.recordSignature({{ $s->id }})"
+                                                   @disabled(! $s->name)
+                                                   class="rounded-lg bg-navy-900 px-3 py-1.5 text-eyebrow font-bold text-white transition hover:bg-navy-800 disabled:opacity-40">✒️ Mark signed</x-confirm>
                                         <button type="button" wire:click="removeSignatory({{ $s->id }})"
                                                 class="rounded-lg px-1.5 py-1.5 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:text-red-700 group-hover:opacity-100" title="Remove signatory">✕</button>
                                     @endif
@@ -907,8 +914,8 @@
             <span class="flex items-center gap-2 text-xs font-semibold text-amber-200">
                 <span class="h-2 w-2 animate-pulse rounded-full bg-amber-400"></span> Unsaved changes
             </span>
-            <button type="button" wire:click="discard" wire:confirm="Discard your unsaved changes?"
-                    class="rounded-lg px-3 py-1.5 text-xs font-bold text-white/55 transition hover:text-white">Discard</button>
+            <x-confirm title="Discard your unsaved changes?" confirm="Discard" tone="warn" run="$wire.discard"
+                       class="rounded-lg px-3 py-1.5 text-xs font-bold text-white/55 transition hover:text-white">Discard</x-confirm>
             <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                     class="rounded-lg bg-white px-5 py-1.5 text-xs font-black text-navy-900 shadow transition hover:brightness-95">
                 <span wire:loading.remove wire:target="save">Save changes</span>

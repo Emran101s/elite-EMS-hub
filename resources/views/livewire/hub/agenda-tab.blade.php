@@ -379,8 +379,11 @@
                                                             <button type="button" data-block-action wire:click.stop="toggleFlag({{ $sess->id }})"
                                                                     class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-eyebrow shadow ring-1 ring-black/5 transition hover:bg-white {{ $sess->flagged ? '' : 'grayscale' }}"
                                                                     title="{{ $sess->flagged ? 'Remove flag' : 'Flag' }}">🚩</button>
-                                                            <button type="button" data-block-action wire:click.stop="deleteSession({{ $sess->id }})" wire:confirm="Delete “{{ $sess->title }}”?"
-                                                                    class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-micro font-bold text-red-600 shadow ring-1 ring-black/5 transition hover:bg-white" title="Delete session">✕</button>
+                                                            <x-confirm title="Delete “{{ $sess->title }}”?"
+                                                                    confirm="Delete"
+                                                                    run="$wire.deleteSession({{ $sess->id }})"
+                                                                    data-block-action
+                                                                    class="flex h-5 w-5 items-center justify-center rounded-md bg-white/95 text-micro font-bold text-red-600 shadow ring-1 ring-black/5 transition hover:bg-white">✕</x-confirm>
                                                         </span>
                                                     </div>
                                                 @endforeach
@@ -687,7 +690,10 @@
                             <span>🚩 Flag</span>
                         </label>
                         @if ($editingId)
-                            <button type="button" wire:click="deleteSession({{ $editingId }})" wire:confirm="Delete this session?" class="rounded-2xl px-4 py-2.5 text-sm font-bold text-risk transition hover:bg-risk/5">Delete</button>
+                            <x-confirm title="Delete this session?"
+                                       confirm="Delete"
+                                       run="$wire.deleteSession({{ $editingId }})"
+                                       class="rounded-2xl px-4 py-2.5 text-sm font-bold text-risk transition hover:bg-risk/5">Delete</x-confirm>
                         @endif
                         <span class="mr-auto"></span>
                         <button type="button" wire:click="closeForm" class="rounded-2xl bg-fill px-6 py-2.5 text-sm font-bold text-navy-700 transition hover:bg-line">Cancel</button>

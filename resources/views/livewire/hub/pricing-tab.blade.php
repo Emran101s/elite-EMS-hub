@@ -245,11 +245,13 @@
                 </label>
 
                 @if ($editingId)
-                    <button type="button" wire:click="destroy({{ $editingId }})"
-                            wire:confirm="Delete this item? Retiring it keeps it on the invoices that used it."
-                            class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
+                    <x-confirm title="Delete this item?"
+                               body="Retiring it keeps it on the invoices that used it."
+                               confirm="Delete"
+                               run="$wire.destroy({{ $editingId }})"
+                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-navy-400 transition hover:bg-red-50 hover:text-red-600">
                         Delete
-                    </button>
+                    </x-confirm>
                 @endif
             </div>
         </div>
@@ -323,9 +325,11 @@
                                             </button>
                                             <button type="button" wire:click="edit({{ $item->id }})" title="Edit"
                                                     class="rounded-lg px-1.5 py-1 text-[11px] font-bold text-navy-400 opacity-0 transition hover:bg-navy-50 hover:text-navy-700 group-hover:opacity-100">✎</button>
-                                            <button type="button" wire:click="destroy({{ $item->id }})"
-                                                    wire:confirm="Delete “{{ $item->name }}” from this event's price list? This doesn't affect invoices already raised from it."
-                                                    title="Delete" class="rounded-lg bg-risk/10 px-1.5 py-1 text-[11px] font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
+                                            <x-confirm title="Delete “{{ $item->name }}” from this event's price list?"
+                                                       body="This doesn't affect invoices already raised from it."
+                                                       confirm="Delete"
+                                                       run="$wire.destroy({{ $item->id }})"
+                                                       class="rounded-lg bg-risk/10 px-1.5 py-1 text-[11px] font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</x-confirm>
                                         @endif
                                     </span>
                                 </div>

@@ -55,9 +55,10 @@
                                 <a href="{{ route('crm.client', $c) }}" wire:click.stop
                                    class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 transition hover:bg-navy-900 hover:text-white">Record →</a>
                                 <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
-                                <button type="button" wire:click.stop="delete({{ $c->id }})"
-                                        wire:confirm="Delete {{ $c->name }}?{{ $c->events_count ? ' '.$c->events_count.' event(s) will be unlinked.' : '' }}"
-                                        class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</button>
+                                <x-confirm title="Delete {{ $c->name }}?"
+                                           :body="$c->events_count ? $c->events_count.' event(s) will be unlinked.' : null"
+                                           confirm="Delete" run="$wire.delete({{ $c->id }})"
+                                           class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</x-confirm>
                             </div>
                         </td>
                     </tr>

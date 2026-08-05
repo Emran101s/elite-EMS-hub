@@ -122,7 +122,11 @@
 
         {{-- footer --}}
         <div class="flex shrink-0 items-center gap-2 border-t border-line bg-page/40 px-5 py-3">
-            <button type="button" wire:click="deleteItem({{ $selected->id }})" wire:confirm="Delete “{{ $selected->title }}”? Its subtasks go with it." class="rounded-lg px-2.5 py-1.5 text-micro font-bold text-risk transition hover:bg-risk/10">Delete</button>
+            <x-confirm title="Delete “{{ $selected->title }}”?"
+                       body="Its subtasks go with it."
+                       confirm="Delete"
+                       run="$wire.deleteItem({{ $selected->id }})"
+                       class="rounded-lg px-2.5 py-1.5 text-micro font-bold text-risk transition hover:bg-risk/10">Delete</x-confirm>
             <span class="ml-auto flex items-center gap-1.5 text-eyebrow font-semibold text-navy-400">
                 <span wire:loading class="flex items-center gap-1 text-gold-600"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-gold-500"></span>Saving…</span>
                 <span wire:loading.remove class="flex items-center gap-1 text-emerald-600"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Saved</span>

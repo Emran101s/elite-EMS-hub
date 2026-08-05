@@ -140,8 +140,8 @@
                         <button type="button" wire:click="clearSelection"
                                 class="rounded-lg px-2 py-1.5 text-eyebrow font-bold text-navy-400 hover:text-navy-700">Cancel</button>
                     @endif
-                    <button type="button" wire:click="clearAll" wire:confirm="Delete everything on the plan?" @disabled(empty($elements))
-                            class="ml-auto rounded-lg border border-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-risk transition enabled:hover:bg-risk/5 disabled:opacity-40">Clear all</button>
+                    <x-confirm title="Delete everything on the plan?" confirm="Clear" run="$wire.clearAll" @disabled(empty($elements))
+                               class="ml-auto rounded-lg border border-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-risk transition enabled:hover:bg-risk/5 disabled:opacity-40">Clear all</x-confirm>
                 </div>
 
                 <div class="mx-auto shrink-0" style="width:960px;">
@@ -242,7 +242,7 @@
                     {{-- rail header --}}
                     <div class="flex items-center justify-between border-b border-line bg-navy-900 px-4 py-3">
                         <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-300">Inspector</span>
-                        <button type="button" wire:click="clearAll" wire:confirm="Clear the whole layout?" @disabled(empty($elements)) class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-risk/70 disabled:opacity-30">Clear</button>
+                        <x-confirm title="Clear the whole layout?" confirm="Clear" run="$wire.clearAll" @disabled(empty($elements)) class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-risk/70 disabled:opacity-30">Clear</x-confirm>
                     </div>
 
                     {{-- Room dimensions --}}

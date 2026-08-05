@@ -47,11 +47,10 @@ in [10-current-codebase-assessment.md](10-current-codebase-assessment.md).
 ## Recently completed: Stage 3 — shared UX chrome
 
 **Stage 3 — loading/error states + confirm dialog.** One confirm host
-(`<x-confirm-host>` + `window.ebhConfirm`) replaces browser `wire:confirm` on the
-high-traffic surfaces (Events index, Speakers, Venue, Sponsors, F&B, Exhibition,
-Settings archive). Session flashes use `<x-alert>`; button busy labels use
-`<x-busy>`. Remaining `wire:confirm` call sites migrate onto `<x-confirm>` as those
-screens are touched.
+(`<x-confirm-host>` + `window.ebhConfirm`) replaces browser `wire:confirm` across
+hub tabs, CRM/settings managers, editors, and shared components. Session flashes
+use `<x-alert>`; button busy labels use `<x-busy>`. Non-button gates (e.g. brief
+template `<select>`) call `window.ebhConfirm` directly.
 
 ## Recently completed: Stage 4 — health score + invoices
 

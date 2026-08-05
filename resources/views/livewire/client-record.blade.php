@@ -99,9 +99,9 @@
                                             class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-gold-50 hover:text-gold-600">★</button>
                                 @endunless
                                 <button type="button" wire:click="editContact({{ $contact->id }})" class="btn-ghost btn-xs">Edit</button>
-                                <button type="button" wire:click="deleteContact({{ $contact->id }})"
-                                        wire:confirm="Remove {{ $contact->name }} from this client?"
-                                        class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</button>
+                                <x-confirm title="Remove {{ $contact->name }} from this client?"
+                                           confirm="Remove" run="$wire.deleteContact({{ $contact->id }})"
+                                           class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</x-confirm>
                             </div>
                         </div>
                     @empty

@@ -87,11 +87,13 @@
                             <a href="{{ route('events.rooming.pdf', [$event, $b]) }}" target="_blank"
                                class="rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-700 transition hover:bg-navy-100"
                                title="Rooming list PDF — no rates">PDF</a>
-                            <button type="button" wire:click="delete({{ $b->id }})"
-                                    wire:confirm="Delete the {{ $b->hotel }} block and its {{ $b->rooms->count() }} named {{ \Illuminate\Support\Str::plural('guest', $b->rooms->count()) }}? This cannot be undone."
+                            <x-confirm title="Delete the {{ $b->hotel }} block and its {{ $b->rooms->count() }} named {{ \Illuminate\Support\Str::plural('guest', $b->rooms->count()) }}?"
+                                    body="This cannot be undone."
+                                    confirm="Delete"
+                                    run="$wire.delete({{ $b->id }})"
                                     class="rounded-lg bg-risk/10 px-2.5 py-1.5 text-eyebrow font-bold text-red-700 transition hover:bg-risk/20">
                                 Delete
-                            </button>
+                            </x-confirm>
                         </div>
                     </div>
 

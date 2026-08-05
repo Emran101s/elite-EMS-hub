@@ -150,9 +150,10 @@
         </div>
 
         <div class="flex items-center gap-2 border-t border-line bg-page/40 px-7 py-4">
-            <button type="button" wire:click="deleteTask({{ $detail->id }})"
-                    wire:confirm="Delete “{{ $detail->title }}”?"
-                    class="rounded-xl px-3 py-2 text-xs font-bold text-risk transition hover:bg-risk/10">Delete</button>
+            <x-confirm title="Delete “{{ $detail->title }}”?"
+                    confirm="Delete"
+                    run="$wire.deleteTask({{ $detail->id }})"
+                    class="rounded-xl px-3 py-2 text-xs font-bold text-risk transition hover:bg-risk/10">Delete</x-confirm>
             <span class="ms-auto text-eyebrow text-muted">Every change saves as you make it</span>
             <button type="button" wire:click="closeTask" class="btn-navy h-10 px-6 text-sm">Done</button>
         </div>

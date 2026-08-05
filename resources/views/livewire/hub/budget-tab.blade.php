@@ -198,7 +198,10 @@
                         <span class="{{ $tin }} font-semibold text-emerald-700">{{ $fmt($inc->amount_cents) }}</span>
                         <div class="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-lg border border-line bg-white px-1 py-0.5 shadow-sm group-hover/inc:flex">
                             <button type="button" wire:click="editIncome({{ $inc->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">✎</button>
-                            <button type="button" wire:click="deleteIncome({{ $inc->id }})" wire:confirm="Delete this income line?" class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</button>
+                            <x-confirm title="Delete this income line?"
+                                       confirm="Delete"
+                                       run="$wire.deleteIncome({{ $inc->id }})"
+                                       class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                         </div>
                     </div>
                 @endforeach
@@ -305,14 +308,20 @@
                                                                     class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-gold-100 hover:text-gold-700"
                                                                     title="Charge every unquoted line in {{ $section['name'] }} at cost plus {{ $pct }}%">+{{ $pct }}%</button>
                                                         @endforeach
-                                                        <button type="button" wire:click="clearCategoryPricing('{{ $catArg }}')"
-                                                                wire:confirm="Put every line in “{{ $section['name'] }}” back on the {{ rtrim(rtrim(number_format($feePct, 2), '0'), '.') }}% management fee? Any prices typed by hand are cleared."
-                                                                class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 hover:bg-navy-100" title="Back to the management fee">↺</button>
+                                                        <x-confirm title="Put every line in “{{ $section['name'] }}” back on the {{ rtrim(rtrim(number_format($feePct, 2), '0'), '.') }}% management fee?"
+                                                                body="Any prices typed by hand are cleared."
+                                                                confirm="Clear" tone="warn"
+                                                                run="$wire.clearCategoryPricing('{{ $catArg }}')"
+                                                                class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-400 hover:bg-navy-100">↺</x-confirm>
                                                     @endif
                                                     <button type="button" wire:click="newLine('{{ $catArg }}')" class="rounded bg-gold-50 px-1.5 py-0.5 text-eyebrow font-bold text-gold-700 hover:bg-gold-100" title="Add line">＋ line</button>
                                                     @if ($section['id'])
                                                         <button type="button" wire:click="startRenameCategory({{ $section['id'] }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Rename category">✎</button>
-                                                        <button type="button" wire:click="deleteCategory({{ $section['id'] }})" wire:confirm="Delete “{{ $section['name'] }}”? Any lines move to another category." class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete category">✕</button>
+                                                        <x-confirm title="Delete “{{ $section['name'] }}”?"
+                                                                   body="Any lines move to another category."
+                                                                   confirm="Delete"
+                                                                   run="$wire.deleteCategory({{ $section['id'] }})"
+                                                                   class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                                     @endif
                                                 </span>
                                             @endunless
@@ -411,7 +420,10 @@
                                                 @else
                                                     <button type="button" wire:click="duplicateLine({{ $item->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Duplicate">⧉</button>
                                                     <button type="button" wire:click="editLine({{ $item->id }})" class="rounded bg-navy-50 px-1.5 py-0.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100" title="Edit">✎</button>
-                                                    <button type="button" wire:click="deleteLine({{ $item->id }})" wire:confirm="Delete this line?" class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20" title="Delete">✕</button>
+                                                    <x-confirm title="Delete this line?"
+                                                               confirm="Delete"
+                                                               run="$wire.deleteLine({{ $item->id }})"
+                                                               class="rounded bg-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-risk/20">✕</x-confirm>
                                                 @endif
                                             </div>
                                         </div>
@@ -664,7 +676,11 @@
                     @endunless
                     <a href="{{ route('events.budget.pdf', $event) }}" class="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-gold-300 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ Export PDF</a>
                     @if (! $event->budgetLocked() && ! $items->isEmpty())
-                        <button type="button" wire:click="clearAllLines" wire:confirm="Delete ALL budget lines? This cannot be undone." class="h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Clear all lines</button>
+                        <x-confirm title="Delete ALL budget lines?"
+                                   body="This cannot be undone."
+                                   confirm="Clear"
+                                   run="$wire.clearAllLines()"
+                                   class="h-9 w-full rounded-xl border border-line bg-white text-xs font-semibold text-navy-700 transition hover:border-risk/40 hover:text-risk">Clear all lines</x-confirm>
                     @endif
                     <p class="pt-0.5 text-center text-eyebrow text-muted">{{ $items->count() }} {{ str('line')->plural($items->count()) }} · {{ $sections->count() }} {{ str('section')->plural($sections->count()) }}</p>
                 </div>

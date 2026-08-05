@@ -39,9 +39,9 @@
             </div>
             <div class="flex shrink-0 items-center gap-2">
                 @if ($changed)
-                    <button type="button" wire:click="restore"
-                            wire:confirm="Put “{{ $setLabel }}” back to the wording and colours it shipped with?"
-                            class="btn-ghost btn-sm">Restore defaults</button>
+                    <x-confirm title="Put “{{ $setLabel }}” back to the wording and colours it shipped with?"
+                               confirm="Restore" tone="warn" run="$wire.restore"
+                               class="btn-ghost btn-sm">Restore defaults</x-confirm>
                 @endif
                 <button type="button" wire:click="save" class="btn-gold btn-sm">Save</button>
             </div>

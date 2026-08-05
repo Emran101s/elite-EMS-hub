@@ -13,8 +13,20 @@
                 <p class="text-eyebrow font-bold uppercase tracking-[0.32em] text-gold-400">Event Dossier</p>
                 <p class="text-sm font-semibold text-white">Event Brief</p>
             </div>
-            <select wire:change="switchTemplate($event.target.value)"
-                    wire:confirm="Switch template? This replaces the section content with that template's content set."
+            <select
+                    x-data="{ current: @js($template) }"
+                    x-on:change="
+                        const next = $event.target.value;
+                        if (next === current) return;
+                        $event.target.value = current;
+                        window.ebhConfirm({
+                            title: 'Switch template?',
+                            body: 'This replaces the section content with that template\'s content set.',
+                            confirmLabel: 'Switch',
+                            tone: 'warn',
+                            run: () => { current = next; $wire.switchTemplate(next); },
+                        });
+                    "
                     class="ml-3 h-8 rounded-xl border border-white/15 bg-white/5 px-2 text-micro font-semibold text-white focus:outline-none">
                 @foreach ($templates as $tk => $tname)
                     <option class="text-navy-900" value="{{ $tk }}" @selected($template === $tk)>{{ $tname }}</option>
@@ -34,14 +46,19 @@
                     class="flex h-9 items-center gap-1.5 rounded-xl px-3 text-micro font-bold transition {{ $status === 'approved' ? 'bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30' : 'bg-white/5 text-white/60 ring-1 ring-white/15 hover:text-white' }}">
                 {{ $status === 'approved' ? '✓ Approved' : 'Approve' }}
             </button>
-            <button type="button" wire:click="generatePlan"
-                    wire:confirm="Generate from this brief? Budget categories, risks and sponsor packages will be created. Existing items are never overwritten."
+            <x-confirm title="Generate from this brief?"
+                    body="Budget categories, risks and sponsor packages will be created. Existing items are never overwritten."
+                    confirm="Generate" tone="neutral"
+                    run="$wire.generatePlan()"
                     @disabled($status !== 'approved')
-                    title="{{ $status === 'approved' ? 'Generate plan, budget, risks, sponsors & approvals' : 'Approve the brief first' }}"
                     class="flex h-9 items-center gap-1.5 rounded-xl px-3 text-micro font-bold transition {{ $status === 'approved' ? 'bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/15' : 'cursor-not-allowed bg-white/5 text-white/25 ring-1 ring-white/10' }}">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg> Generate plan
-            </button>
-            <button type="button" wire:click="resetToTemplate" wire:confirm="Reset all sections to the template? Your edits will be replaced." class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/5 hover:text-white/80" title="Reset to template">↺</button>
+            </x-confirm>
+            <x-confirm title="Reset all sections to the template?"
+                       body="Your edits will be replaced."
+                       confirm="Reset" tone="warn"
+                       run="$wire.resetToTemplate()"
+                       class="flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/5 hover:text-white/80">↺</x-confirm>
             <a href="{{ route('events.brief.pdf', $event) }}" target="_blank"
                class="flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-4 text-micro font-bold text-navy-950 shadow transition hover:brightness-105">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Export PDF
@@ -142,11 +159,13 @@
                             <span class="text-[11px] text-muted">Changes save as you type.</span>
                         @endif
 
-                        <button type="button" wire:click="removeSection('{{ $key }}')"
-                                wire:confirm="Take “{{ $title }}” off this brief?&#10;&#10;What you have written in it is kept, and you can put the section back."
+                        <x-confirm title="Take “{{ $title }}” off this brief?"
+                                body="What you have written in it is kept, and you can put the section back."
+                                confirm="Remove" tone="warn"
+                                run="$wire.removeSection('{{ $key }}')"
                                 class="ms-auto text-[11.5px] font-semibold text-navy-400 transition hover:text-red-600">
                             Remove this section
-                        </button>
+                        </x-confirm>
                     </div>
                 </x-accordion-section>
             @endforeach
