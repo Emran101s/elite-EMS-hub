@@ -61,19 +61,21 @@ advisor attention list. Dashboard `dayAt()` N+1 was already fixed earlier.
 
 ## Recently completed: Stage 5 — security / robustness
 
-**Stage 5.** Security headers middleware (CSP deferred — PDF/fonts need their own
-allowlist). Soft deletes on invoices and budget items. Missing FK indexes added.
-`EventPolicy` for create/update/archive/duplicate/delete. Badge check-in now uses a
-separate `checkin_token` and a signed attendee code so rotating a leaked registration
-link does not invalidate printed badges, and a guessed badge number alone cannot open
-the door; check-in scans are rate-limited.
+**Stage 5.** Security headers middleware including a Content-Security-Policy
+allowlist (`fonts.bunny.net`, `data:`/`blob:` images for badge QRs, Livewire/Alpine
+`unsafe-inline`/`unsafe-eval`, local Vite HMR in `local` only). Soft deletes on
+invoices and budget items. Missing FK indexes added. `EventPolicy` for
+create/update/archive/duplicate/delete. Badge check-in uses a separate
+`checkin_token` and a signed attendee code so rotating a leaked registration
+link does not invalidate printed badges; check-in scans are rate-limited.
 
 ## Deferred, not started (explicitly sequenced for later)
 
-- **CSP allowlist** — deliberate follow-up so headless Chrome PDFs and Google Fonts keep working.
 - **Supplier Portal, Client Portal, RFQ/Quotation objects, notifications, knowledge base,
   multi-tenant SaaS** — priority items 5, 6, 9, 10 above, and the RFQ/Quotation gap noted
   in [03-command-center-architecture.md](03-command-center-architecture.md).
+- **CSP tightening** — replace `unsafe-inline` / `unsafe-eval` with nonces once Livewire
+  script surfaces allow it without breaking the hub.
 
 ## Rule for whoever (or whatever AI) picks this up next
 
