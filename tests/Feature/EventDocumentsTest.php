@@ -140,6 +140,19 @@ class EventDocumentsTest extends TestCase
         $this->assertSame('transportation', $doc->fresh()->module);
     }
 
+    public function test_the_reassign_control_renders_on_the_page(): void
+    {
+        [$event, $user] = $this->ctx();
+
+        $c = Livewire::actingAs($user)->test(ModuleDocuments::class,
+            ['event' => $event, 'module' => 'accommodation'])
+            ->set('upload', $this->pdf())->call('store');
+
+        $doc = $event->documents()->firstOrFail();
+
+        $c->assertSee('wire:change="reassign('.$doc->id.', $event.target.value)"', false);
+    }
+
     public function test_the_library_wall_lists_every_drawer_with_its_colour(): void
     {
         [$event, $user] = $this->ctx();

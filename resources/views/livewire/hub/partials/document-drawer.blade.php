@@ -216,6 +216,14 @@
                                 </select>
                             @endif
 
+                            <select wire:change="reassign({{ $doc->id }}, $event.target.value)"
+                                    class="{{ $dock ? 'hidden' : 'hidden lg:block' }} shrink-0 rounded-lg border border-line bg-white px-2 py-1 text-eyebrow text-navy-600 focus:border-gold-400 focus:outline-none"
+                                    title="File under a different module">
+                                @foreach (\App\Models\Event::HUB_MODULES as $mKey => $mMeta)
+                                    <option value="{{ $mKey }}" @selected($doc->module === $mKey)>{{ $mMeta[0] }}</option>
+                                @endforeach
+                            </select>
+
                             <div class="flex shrink-0 items-center gap-1">
                                 @if ($doc->isViewable())
                                     <a href="{{ route('events.documents.view', [$event, $doc]) }}" target="_blank"
