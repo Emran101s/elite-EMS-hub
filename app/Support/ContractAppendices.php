@@ -209,8 +209,8 @@ class ContractAppendices
                 'l_ar' => '',
                 't_en' => collect([
                     $r->capacity ? $r->capacity.' persons' : null,
-                    $r->layout,
-                    $r->equipment,
+                    $r->type ? str($r->type)->replace('_', ' ')->title() : null,
+                    collect($r->requirements ?? [])->pluck('name')->filter()->implode(', ') ?: null,
                 ])->filter()->implode(' · '),
                 't_ar' => '',
             ])->values()->all(),
