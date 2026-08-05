@@ -128,9 +128,20 @@
                             </div>
 
                             @can('decide-approvals')
-                                @if ($approval->requested_by === auth()->id())
+                                @php
+                                    $canDecide = $approval->requested_by !== auth()->id()
+                                        && $current
+                                        && $current->decidableBy(auth()->user());
+                                    $canDelegate = $current && $current->delegatableBy(auth()->user(), $approval);
+                                    $delegateTargets = $canDelegate
+                                        ? $managers->filter(fn ($m) => $m->id !== auth()->id()
+                                            && $current->canReceiveDelegation($m, $approval)
+                                            && $m->id !== $current->approver_id)
+                                        : collect();
+                                @endphp
+                                @if ($approval->requested_by === auth()->id() && ! $canDelegate)
                                     <p class="mt-2 text-eyebrow font-semibold text-muted">You raised this — a different manager decides it.</p>
-                                @elseif ($assignedElsewhere)
+                                @elseif ($assignedElsewhere && ! $canDelegate)
                                     <p class="mt-2 text-eyebrow font-semibold text-muted">
                                         @if ($current->approver_id)
                                             Assigned to {{ $current->assigneeLabel() }} — not yours to decide.
@@ -139,14 +150,51 @@
                                         @endif
                                     </p>
                                 @else
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
-                                        <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
-                                                class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-emerald-700 ring-1 ring-line hover:ring-emerald-300">✓ Approve</button>
-                                        <button type="button" wire:click="decide({{ $approval->id }}, 'rejected')"
-                                                class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-red-700 ring-1 ring-line hover:ring-red-300">✕ Reject</button>
-                                        <button type="button" wire:click="decide({{ $approval->id }}, 'needs_revision')"
-                                                class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-amber-700 ring-1 ring-line hover:ring-amber-300">↺ Revise</button>
-                                    </div>
+                                    @if ($canDecide)
+                                        <div class="mt-2 flex flex-wrap gap-1.5">
+                                            <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-emerald-700 ring-1 ring-line hover:ring-emerald-300">✓ Approve</button>
+                                            <button type="button" wire:click="decide({{ $approval->id }}, 'rejected')"
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-red-700 ring-1 ring-line hover:ring-red-300">✕ Reject</button>
+                                            <button type="button" wire:click="decide({{ $approval->id }}, 'needs_revision')"
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-amber-700 ring-1 ring-line hover:ring-amber-300">↺ Revise</button>
+                                        </div>
+                                    @elseif ($assignedElsewhere)
+                                        <p class="mt-2 text-eyebrow font-semibold text-muted">
+                                            @if ($current->approver_id)
+                                                Assigned to {{ $current->assigneeLabel() }} — not yours to decide.
+                                            @else
+                                                Needs {{ $current->min_role }} rank or above — not yours to decide.
+                                            @endif
+                                        </p>
+                                    @elseif ($approval->requested_by === auth()->id())
+                                        <p class="mt-2 text-eyebrow font-semibold text-muted">You raised this — a different manager decides it.</p>
+                                    @endif
+
+                                    @if ($canDelegate && $delegateTargets->isNotEmpty())
+                                        <div class="mt-2">
+                                            @if ($delegatingId === $approval->id)
+                                                <div class="flex flex-wrap items-center gap-1.5">
+                                                    <select wire:model="delegateTo" class="input h-8 min-w-[10rem] flex-1 text-eyebrow">
+                                                        <option value="">Hand off to…</option>
+                                                        @foreach ($delegateTargets as $m)
+                                                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button" wire:click="delegate({{ $approval->id }})"
+                                                            class="rounded-md bg-navy-900 px-2 py-1 text-eyebrow font-bold text-white hover:bg-navy-800">Hand off</button>
+                                                    <button type="button" wire:click="cancelDelegate"
+                                                            class="rounded-md px-2 py-1 text-eyebrow font-semibold text-muted hover:text-navy-900">Cancel</button>
+                                                </div>
+                                                @error('delegateTo') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                                            @else
+                                                <button type="button" wire:click="startDelegate({{ $approval->id }})"
+                                                        class="text-eyebrow font-semibold text-navy-500 underline-offset-2 hover:text-navy-900 hover:underline">
+                                                    Hand off to someone else
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endif
                                 @endif
                             @else
                                 <p class="mt-2 text-eyebrow text-muted">Awaiting a manager’s decision.</p>

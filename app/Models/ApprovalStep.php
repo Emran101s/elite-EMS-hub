@@ -79,4 +79,52 @@ class ApprovalStep extends Model
 
         return true;
     }
+
+    /**
+     * Who may hand this pending step to somebody else.
+     *
+     * The named assignee (or anyone who can currently decide an open /
+     * role-gated step) can hand it off — except the requester, who must
+     * never steer their own chain. Admins can always reassign — the escape
+     * hatch when the named person is away and the queue is stuck. Baseline
+     * `decide-approvals` is still required at the call site.
+     */
+    public function delegatableBy(User $user, EventApproval $approval): bool
+    {
+        if (! $this->isPending()) {
+            return false;
+        }
+
+        if ($user->isAtLeast('admin')) {
+            return true;
+        }
+
+        if ($approval->requested_by === $user->id) {
+            return false;
+        }
+
+        return $this->decidableBy($user);
+    }
+
+    /**
+     * Whether this user is an eligible hand-off target for this step —
+     * manager floor, seniority for role-gated steps, never the requester
+     * (same stuck-chain rule as assign-at-create).
+     */
+    public function canReceiveDelegation(User $candidate, EventApproval $approval): bool
+    {
+        if ($candidate->id === $approval->requested_by) {
+            return false;
+        }
+
+        if (! $candidate->isAtLeast('manager')) {
+            return false;
+        }
+
+        if ($this->min_role && ! $candidate->isAtLeast($this->min_role)) {
+            return false;
+        }
+
+        return true;
+    }
 }

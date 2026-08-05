@@ -282,4 +282,140 @@ class ApprovalWorkflowTest extends TestCase
         $approval = $event->approvals()->latest('id')->firstOrFail();
         $this->assertCount(1, $approval->steps, 'venue is not an amount-gated type');
     }
+
+    // ── Delegate-to: hand a pending step to another eligible manager ──
+
+    public function test_assignee_can_hand_their_step_to_another_manager(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Needs a hand-off')
+            ->set('steps', [['label' => 'Ops', 'approver_id' => $layla->id]])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $sara->id)
+            ->call('delegate', $approval->id);
+
+        $step = $approval->fresh()->currentStep();
+        $this->assertSame($sara->id, $step->approver_id);
+        $this->assertSame('pending', $approval->fresh()->status);
+
+        // Layla no longer owns it — Sara does.
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+        $this->assertSame('pending', $approval->fresh()->status);
+
+        Livewire::actingAs($sara)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+        $this->assertSame('approved', $approval->fresh()->status);
+    }
+
+    public function test_a_manager_cannot_hand_off_someone_elses_named_step(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Sara owns this')
+            ->set('steps', [['label' => 'Finance', 'approver_id' => $sara->id]])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $this->admin()->id)
+            ->call('delegate', $approval->id);
+
+        $this->assertSame($sara->id, $approval->fresh()->currentStep()->approver_id, 'Layla must not steal Sara’s step');
+    }
+
+    public function test_admin_can_reassign_a_stuck_named_step(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Stuck on Layla')
+            ->set('steps', [['label' => 'Ops', 'approver_id' => $layla->id]])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($this->admin())->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $sara->id)
+            ->call('delegate', $approval->id);
+
+        $this->assertSame($sara->id, $approval->fresh()->currentStep()->approver_id);
+    }
+
+    public function test_cannot_hand_a_step_to_the_requester(): void
+    {
+        [$event, $requester, $layla] = $this->ctx();
+        $requesterAsManager = User::where('email', 'sara.alrashid@elitebhub.com')->firstOrFail();
+
+        Livewire::actingAs($requesterAsManager)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Self-request hand-off trap')
+            ->set('steps', [['label' => 'Ops', 'approver_id' => $layla->id]])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $requesterAsManager->id)
+            ->call('delegate', $approval->id)
+            ->assertHasErrors(['delegateTo']);
+
+        $this->assertSame($layla->id, $approval->fresh()->currentStep()->approver_id);
+    }
+
+    public function test_admin_step_can_only_be_handed_to_an_admin(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Large budget needing admin')
+            ->set('type', 'budget')
+            ->set('amount', '15000')
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($layla)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('decide', $approval->id, 'approved');
+
+        // Current step is the auto admin step — a manager target must be rejected.
+        Livewire::actingAs($this->admin())->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $sara->id)
+            ->call('delegate', $approval->id)
+            ->assertHasErrors(['delegateTo']);
+
+        $this->assertNull($approval->fresh()->currentStep()->approver_id);
+        $this->assertSame('admin', $approval->fresh()->currentStep()->min_role);
+    }
+
+    public function test_coordinator_cannot_delegate(): void
+    {
+        [$event, $requester, $layla, $sara] = $this->ctx();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->set('title', 'Coordinator try')
+            ->set('steps', [['label' => 'Ops', 'approver_id' => $layla->id]])
+            ->call('save');
+
+        $approval = $event->approvals()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
+            ->call('startDelegate', $approval->id)
+            ->set('delegateTo', (string) $sara->id)
+            ->call('delegate', $approval->id)
+            ->assertForbidden();
+    }
 }

@@ -42,10 +42,13 @@ the same idea of a status that means something specific and is computed, not typ
 
 ## What this is not yet
 
-- Multi-step chains and conditional routing (amount-based, for now) landed;
-  **delegate-to and escalation on timeout** are still not built — a step's approver is
-  fixed at request time, nobody can hand off a step they can't get to, and nothing
-  escalates a step that's sat too long.
+- Multi-step chains, conditional routing (amount-based), and **delegate-to** landed.
+  The current step's assignee (or any manager who can decide an open / role-gated step)
+  can hand it to another eligible manager; admins can reassign a stuck named step.
+  Hand-off never decides the step — it only renames who owns it. Targets must still clear
+  the same floor as assign-at-create (manager; meet `min_role` if set; never the requester).
+- **Escalation on timeout** is still not built — nothing auto-moves a step that's sat too
+  long (and a push notification/reminder system is a separate deferred piece).
 - There's no notification/reminder system tied to a pending approval sitting too long —
   the Health Engine's attention list surfaces pending approvals, but nothing pushes.
 - Approvals aren't yet linked into the Commercial Command Center's future RFQ/Quotation

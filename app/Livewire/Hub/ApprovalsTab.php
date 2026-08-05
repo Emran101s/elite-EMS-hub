@@ -31,9 +31,29 @@ class ApprovalsTab extends Component
      */
     public array $steps = [['label' => '', 'approver_id' => '']];
 
+    /** Pending approval whose hand-off picker is open in the queue. */
+    public ?int $delegatingId = null;
+
+    /** User id chosen in that picker. */
+    public string $delegateTo = '';
+
     public function mount(): void
     {
         $this->showForm = request('action') === 'add';
+    }
+
+    public function startDelegate(int $approvalId): void
+    {
+        $this->delegatingId = $approvalId;
+        $this->delegateTo = '';
+        $this->resetErrorBag('delegateTo');
+    }
+
+    public function cancelDelegate(): void
+    {
+        $this->delegatingId = null;
+        $this->delegateTo = '';
+        $this->resetErrorBag('delegateTo');
     }
 
     public function addStep(): void
@@ -178,6 +198,69 @@ class ApprovalsTab extends Component
         $label = $step->assigneeLabel();
         $stepNote = $approval->steps()->count() > 1 ? " — {$label}'s step" : '';
         session()->flash('status', "“{$approval->title}”{$stepNote} ".str($decision)->replace('_', ' ').'.');
+
+        return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
+    }
+
+    /**
+     * Hand the current pending step to another eligible manager.
+     * Does not decide the step — only renames who owns it.
+     */
+    public function delegate(int $approvalId)
+    {
+        Gate::authorize('decide-approvals');
+
+        $approval = $this->event->approvals()->whereKey($approvalId)->where('status', 'pending')->firstOrFail();
+        $step = $approval->currentStep();
+        abort_if($step === null, 404);
+
+        if (! $step->delegatableBy(auth()->user(), $approval)) {
+            session()->flash('error', 'You can’t hand this step off — it isn’t yours to reassign.');
+
+            return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
+        }
+
+        $this->validate([
+            'delegateTo' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $toId = (int) $this->delegateTo;
+
+        if ($toId === auth()->id()) {
+            $this->addError('delegateTo', 'Hand the step to someone else — not yourself.');
+
+            return null;
+        }
+
+        if ($step->approver_id === $toId) {
+            $this->addError('delegateTo', 'That person already holds this step.');
+
+            return null;
+        }
+
+        $to = User::findOrFail($toId);
+
+        if (! $step->canReceiveDelegation($to, $approval)) {
+            $reason = $to->id === $approval->requested_by
+                ? 'The requester can’t be given their own step to decide.'
+                : ($step->min_role && ! $to->isAtLeast($step->min_role)
+                    ? "This step needs {$step->min_role} rank or above."
+                    : 'Only a manager can receive a hand-off.');
+            $this->addError('delegateTo', $reason);
+
+            return null;
+        }
+
+        $fromLabel = $step->assigneeLabel();
+        $note = trim(($step->notes ? $step->notes."\n" : '').'Handed off from '.$fromLabel.' to '.$to->name.' by '.auth()->user()->name.' on '.now()->toDateString().'.');
+
+        $step->update([
+            'approver_id' => $to->id,
+            'notes' => $note,
+        ]);
+
+        $this->cancelDelegate();
+        session()->flash('status', "“{$approval->title}” handed to {$to->name}.");
 
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
     }

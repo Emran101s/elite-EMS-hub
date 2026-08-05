@@ -5,8 +5,8 @@
 1. Company Command Center — **built**
 2. Event Command Center — **built**
 3. Event life cycle — **built** (`Event::STAGES`)
-4. Approval workflow engine — **multi-step chains and amount-based conditional routing
-   built**; delegate-to, escalation-on-timeout, and notifications still not started (see
+4. Approval workflow engine — **multi-step chains, amount-based conditional routing, and
+   delegate-to built**; escalation-on-timeout and notifications still not started (see
    [05-approval-workflow-engine.md](05-approval-workflow-engine.md))
 5. Supplier portal — **not built**
 6. Client portal — **not built**
