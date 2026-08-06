@@ -50,11 +50,32 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      # Browsers live outside node_modules, so they need their own cache or
+      # every run re-downloads ~200 MB.
+      - name: Cache Puppeteer browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: puppeteer-${{ runner.os }}-
+
       # NOT --ignore-scripts: puppeteer's install script downloads the Chromium
       # that Browsershot drives. Several dozen tests assert a real
       # application/pdf response, so without this the PDF suite fails.
       - name: Install Node dependencies
         run: npm ci
+
+      # Browsershot hard-codes `headless: 'shell'` (browser.cjs:117), which
+      # resolves to the chrome-headless-shell binary — a *separate* download
+      # from `chrome`. npm ci alone left only `chrome` on the runner and all 34
+      # PDF tests failed with "Could not find chrome-headless-shell". Both are
+      # installed explicitly here; `|| true` on chrome because the shell binary
+      # is the one that actually matters.
+      - name: Install headless Chrome for Browsershot
+        run: |
+          npx puppeteer browsers install chrome-headless-shell
+          npx puppeteer browsers install chrome || true
+          ls ~/.cache/puppeteer
 
       # public/build is gitignored. RendersChromePdf::compiledCss() reads the
       # Vite manifest and silently returns '' when it is missing — so the PDF
