@@ -9,8 +9,8 @@ FROM php:${PHP_VERSION}-fpm-bookworm
 
 ARG NODE_VERSION=22
 # Must match what `npx puppeteer browsers install chrome-headless-shell`
-# resolves for the locked puppeteer in package-lock.json (25.3.0 → 150.0.7871.24).
-ARG CHROME_HEADLESS_SHELL_VERSION=150.0.7871.24
+# resolves for the locked puppeteer in package-lock.json (25.4.0 → 151.0.7922.47).
+ARG CHROME_HEADLESS_SHELL_VERSION=151.0.7922.47
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PUPPETEER_CACHE_DIR=/var/www/.cache/puppeteer \

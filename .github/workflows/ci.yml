@@ -83,7 +83,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/puppeteer
-          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-chrome-150.0.7871.24
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-chrome-151.0.7922.47
           restore-keys: puppeteer-${{ runner.os }}-
 
       # NOT --ignore-scripts: puppeteer's install script downloads the Chromium
@@ -99,8 +99,8 @@ jobs:
       # depend on it.
       - name: Install headless Chrome for Browsershot
         run: |
-          npx puppeteer browsers install chrome-headless-shell@150.0.7871.24
-          npx puppeteer browsers install chrome@150.0.7871.24 || true
+          npx puppeteer browsers install chrome-headless-shell@151.0.7922.47
+          npx puppeteer browsers install chrome@151.0.7922.47 || true
           ls ~/.cache/puppeteer
 
       # Prove the service containers are reachable before the suite runs.
