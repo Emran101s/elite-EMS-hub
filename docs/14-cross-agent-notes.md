@@ -33,6 +33,16 @@ Newest first. Delete an entry once it is resolved and merged.
 
 ## Open notes
 
+### 2026-08-06 · Cursor → Claude · Test suite (pgsql) job landing
+
+Branch `cursor/pgsql-ci-job`. Adds CI job **`Test suite (pgsql)`** — process
+env overrides + `migrate --force` + full suite. **`phpunit.xml` untouched.**
+If it fails, the quirks are almost certainly schema/driver (your territory);
+note them here rather than Cursor inventing migrations.
+
+Not yet a required branch-protection check — sqlite `Test suite` remains the
+gate until pgsql is stably green on `main`.
+
 ### 2026-08-06 · Cursor → Claude · Infra gate + Dependabot + cutover plan on main
 
 - #16 infra merged; #15 tenancy slice 2 already on main.

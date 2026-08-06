@@ -34,10 +34,10 @@ keep `.github/workflows/ci.yml` on the same tag.
 
 ## CI services
 
-`Test suite` brings up Postgres 16 and Redis 7 as service containers (health-
-checked). PHPUnit still uses in-memory SQLite today so the suite stays fast and
-does not race Claude's tenancy migrations. The services prove the runners can
-reach both before the schema cutover.
+`Test suite` still runs on in-memory SQLite. `Test suite (pgsql)` migrates and
+runs the same suite against the Postgres 16 service (`elitehub_test`). See
+[17-postgres-cutover-plan.md](17-postgres-cutover-plan.md). Redis remains a
+smoke-check on the sqlite job for cache/session cutover readiness.
 
 ## Staging
 

@@ -100,23 +100,24 @@ jobs / cache.
 
 ---
 
-## CI test database (proposal only)
+## CI test database
 
-**Do not change `phpunit.xml` in the cutover PR.** Proposed sequence:
+**`phpunit.xml` is still sqlite `:memory:`.** That is intentional.
 
-1. **Keep** the current in-memory SQLite job as the required `Test suite`
-   check until a Postgres job is proven green on `main`.
-2. **Add** (Cursor, later PR) an optional / required matrix entry or second
-   job, e.g. `Test suite (pgsql)`, that:
-   - uses the existing `postgres` service (`elitehub_test` / user `elitehub`),
-   - sets `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_DATABASE=elitehub_test`,
-   - runs `php artisan migrate --force` then `php artisan test`,
-   - does **not** edit `phpunit.xml`; overrides via job `env:`.
-3. When that job is stable for a full week, Claude (or a joint PR) may flip
-   `phpunit.xml` or drop the sqlite job — that is a deliberate second
-   decision, not part of environment bring-up.
+| Job | Name | Database |
+|---|---|---|
+| `tests` | `Test suite` | sqlite in-memory (required check today) |
+| `tests_pgsql` | `Test suite (pgsql)` | Postgres 16 service `elitehub_test` |
 
-SQLite vs Postgres quirks Claude should watch for when the pgsql job exists:
+The pgsql job overrides `DB_*` via process env (PHPUnit does not clobber
+existing env unless `force="true"`), runs `php artisan migrate --force`, then
+the full suite. No `phpunit.xml` edit.
+
+**Required-check policy:** keep `Test suite` (+ `Static checks`) as the merge
+gate until `Test suite (pgsql)` is green on `main` for a stretch. Then add it
+to branch protection and only later discuss retiring sqlite from `phpunit.xml`.
+
+SQLite vs Postgres quirks Claude should watch for when the pgsql job fails:
 
 - boolean storage / casting,
 - JSON vs JSONB columns (prefer JSONB in any new Postgres-only migration),
@@ -219,15 +220,15 @@ script must not add columns or rewrite migrations.
 
 ---
 
-## Suggested PR sequence (after this doc merges)
+## Suggested PR sequence
 
-1. `cursor/pgsql-ci-job` — add optional/required `Test suite (pgsql)` job with
-   env overrides; leave `phpunit.xml` untouched.
+1. ~~`cursor/pgsql-ci-job`~~ — landed: `Test suite (pgsql)` in `ci.yml`.
 2. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.sh` (or PHP) +
    dry-run on a staging Compose volume.
 3. Staging cutover (ops, not a code PR).
 4. Production cutover (ops).
-5. Only then: discuss retiring sqlite from `phpunit.xml`.
+5. Only then: discuss retiring sqlite from `phpunit.xml` / making pgsql a
+   required check.
 
 Related: [16-infrastructure.md](16-infrastructure.md),
 [15-database-backups.md](15-database-backups.md),
