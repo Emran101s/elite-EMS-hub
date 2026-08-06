@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Append-only activity record. Written by the Auditable trait, never edited. */
-#[Fillable(['user_id', 'event_id', 'action', 'auditable_type', 'auditable_id', 'label', 'changes'])]
+#[Fillable(['tenant_id',
+    'user_id', 'event_id', 'action', 'auditable_type', 'auditable_id', 'label', 'changes'])]
 class AuditLog extends Model
 {
+    use BelongsToTenant;
+
     public const UPDATED_AT = null;
 
     /**

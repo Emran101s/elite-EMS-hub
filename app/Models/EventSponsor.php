@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'name', 'package', 'amount_cents', 'paid_cents', 'payment_status', 'booth', 'logo_path', 'notes'])]
+#[Fillable(['tenant_id',
+    'event_id', 'name', 'package', 'amount_cents', 'paid_cents', 'payment_status', 'booth', 'logo_path', 'notes'])]
 class EventSponsor extends Model
 {
+    use BelongsToTenant;
+
     public const PAYMENT_STATUSES = ['pending', 'partial', 'paid'];
 
     /**

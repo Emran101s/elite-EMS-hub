@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'transport_id', 'attendee_id', 'name', 'category', 'direction', 'airline', 'phone', 'email', 'flight_no',
+#[Fillable(['tenant_id',
+    'event_id', 'transport_id', 'attendee_id', 'name', 'category', 'direction', 'airline', 'phone', 'email', 'flight_no',
     'arrival_on', 'arrival_time', 'pickup_time', 'pickup_point', 'drop_point', 'hotel', 'venue_id', 'notes', 'luggage_note',
     'protocol_note', 'no_show_at', 'position', 'vehicle_no'])]
 class EventTransportPassenger extends Model
 {
+    use BelongsToTenant;
+
     /**
      * Who this person is to the event. One field, and it's what turns a single
      * undifferentiated list into the VIP sheet, the speaker sheet and the

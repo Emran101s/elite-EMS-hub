@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,7 +16,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ProposalLine extends Model
 {
-    protected $fillable = ['proposal_id', 'description', 'detail', 'qty', 'unit_cents', 'optional', 'sort'];
+    use BelongsToTenant;
+
+    protected $fillable = ['tenant_id', 'proposal_id', 'description', 'detail', 'qty', 'unit_cents', 'optional', 'sort'];
 
     protected function casts(): array
     {

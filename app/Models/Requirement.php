@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,9 +11,12 @@ use Illuminate\Database\Eloquent\Model;
  * picks entries when adding requirements to a venue or event (name + default
  * price auto-fill, still editable per use).
  */
-#[Fillable(['name', 'unit_price_cents', 'notes'])]
+#[Fillable(['tenant_id',
+    'name', 'unit_price_cents', 'notes'])]
 class Requirement extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return ['unit_price_cents' => 'integer'];

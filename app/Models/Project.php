@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'status', 'description', 'starts_on', 'ends_on', 'budget_cents'])]
+#[Fillable(['tenant_id',
+    'name', 'status', 'description', 'starts_on', 'ends_on', 'budget_cents'])]
 class Project extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ProjectFactory> */
     use HasFactory;
 

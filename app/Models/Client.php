@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['name', 'logo_path', 'organization', 'contact_name', 'email', 'phone', 'website', 'notes'])]
+#[Fillable(['tenant_id',
+    'name', 'logo_path', 'organization', 'contact_name', 'email', 'phone', 'website', 'notes'])]
 class Client extends Model
 {
+    use BelongsToTenant;
+
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);

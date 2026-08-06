@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\CompanyProfile;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Carbon;
 
 /**
  * A demand for money, issued on a date, with a number on it.
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Invoice extends Model
 {
     use Auditable, SoftDeletes;
+    use BelongsToTenant;
 
     /** Issuing and money are decisions; a typo in the notes is not. */
     public const AUDIT_FIELDS = ['status', 'paid_cents', 'paid_at', 'issued_on', 'due_on'];
@@ -42,7 +45,7 @@ class Invoice extends Model
         'void' => ['Void', '#CBD5E1'],
     ];
 
-    protected $fillable = ['event_id', 'contract_id', 'client_id', 'number', 'status',
+    protected $fillable = ['tenant_id', 'event_id', 'contract_id', 'client_id', 'number', 'status',
         'currency', 'issued_on', 'due_on', 'tax_pct', 'fee_pct', 'paid_cents', 'paid_at',
         'bill_to', 'notes', 'terms'];
 
@@ -297,7 +300,7 @@ class Invoice extends Model
     /** "EBH-INV-2026-014" — sequential within the year it is raised. */
     public static function nextNumber(?\DateTimeInterface $on = null): string
     {
-        $year = ($on ? \Illuminate\Support\Carbon::instance($on) : now())->format('Y');
+        $year = ($on ? Carbon::instance($on) : now())->format('Y');
 
         $seq = static::where('number', 'like', 'EBH-INV-'.$year.'-%')->count() + 1;
 
@@ -324,7 +327,7 @@ class Invoice extends Model
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
                 return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            } catch (UniqueConstraintViolationException $e) {
                 if ($attempt === 5) {
                     throw $e;
                 }

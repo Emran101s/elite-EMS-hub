@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
+    'tenant_id',
     'event_id', 'name', 'email', 'phone', 'organization', 'job_title',
     'ticket_type', 'status', 'amount_cents', 'vip', 'dietary', 'notes', 'answers', 'checked_in_at',
 ])]
 class EventAttendee extends Model
 {
+    use BelongsToTenant;
+
     /** Registration lifecycle. */
     public const STATUSES = ['registered', 'confirmed', 'checked_in', 'cancelled'];
 
@@ -40,7 +45,7 @@ class EventAttendee extends Model
      * string cannot be counted against a room's capacity or handed to whoever
      * is standing at the door.
      */
-    public function sessions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function sessions(): BelongsToMany
     {
         return $this->belongsToMany(EventAgendaSession::class, 'attendee_session')
             ->withPivot('checked_in_at')

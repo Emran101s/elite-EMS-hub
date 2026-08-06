@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'capacity', 'is_active', 'position'])]
+#[Fillable(['tenant_id',
+    'name', 'capacity', 'is_active', 'position'])]
 class VehicleType extends Model
 {
+    use BelongsToTenant;
+
     /**
      * Shipped presets. Only the ones marked active appear when you add a movement;
      * the rest wait in Settings → Transport until you need them.

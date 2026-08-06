@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class InvoiceLine extends Model
 {
-    protected $fillable = ['invoice_id', 'payment_id', 'description', 'qty', 'unit_cents', 'sort'];
+    use BelongsToTenant;
+
+    protected $fillable = ['tenant_id', 'invoice_id', 'payment_id', 'description', 'qty', 'unit_cents', 'sort'];
 
     /**
      * A line changing changes the invoice, and the invoice owes its

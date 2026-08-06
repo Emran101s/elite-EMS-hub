@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,9 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * back into a single status — the same "derive, don't duplicate" shape as
  * EventContract's signatories.
  */
-#[Fillable(['approval_id', 'position', 'label', 'approver_id', 'min_role', 'status', 'decided_by', 'decided_at', 'notes'])]
+#[Fillable(['tenant_id',
+    'approval_id', 'position', 'label', 'approver_id', 'min_role', 'status', 'decided_by', 'decided_at', 'notes'])]
 class ApprovalStep extends Model
 {
+    use BelongsToTenant;
+
     public const STATUSES = ['pending', 'approved', 'rejected', 'needs_revision', 'skipped'];
 
     protected function casts(): array

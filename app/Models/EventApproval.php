@@ -3,15 +3,18 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes', 'source_type', 'source_id', 'amount_cents'])]
+#[Fillable(['tenant_id',
+    'event_id', 'title', 'type', 'status', 'requested_by', 'decided_by', 'decided_at', 'notes', 'source_type', 'source_id', 'amount_cents'])]
 class EventApproval extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['status', 'decided_by', 'title'];

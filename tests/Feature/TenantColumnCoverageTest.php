@@ -71,17 +71,36 @@ class TenantColumnCoverageTest extends TestCase
             if (in_array($table, self::EXEMPT, true) || ! Schema::hasColumn($table, 'tenant_id')) {
                 continue;
             }
-            $indexed = collect(DB::select("PRAGMA index_list('{$table}')"))
-                ->contains(fn ($i) => collect(DB::select("PRAGMA index_info('{$i->name}')"))
-                    ->contains(fn ($c) => $c->name === 'tenant_id'));
-
-            if (! $indexed) {
+            if (! $this->hasIndexOn($table, 'tenant_id')) {
                 $unindexed[] = $table;
             }
         }
 
         $this->assertSame([], $unindexed,
             'tenant_id must be indexed — every query is about to filter on it.');
+    }
+
+    /**
+     * Driver-aware on purpose: a CI job now also runs this suite against
+     * Postgres (see docs/17-postgres-cutover-plan.md), and PRAGMA is
+     * SQLite-only. Postgres has no information_schema view for "which columns
+     * are indexed" — that MySQL-only shortcut (information_schema.statistics)
+     * does not exist here — so this reads pg_indexes' index definition text
+     * instead, which is what psql itself does under \d.
+     */
+    private function hasIndexOn(string $table, string $column): bool
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => collect(DB::select("PRAGMA index_list('{$table}')"))
+                ->contains(fn ($i) => collect(DB::select("PRAGMA index_info('{$i->name}')"))
+                    ->contains(fn ($c) => $c->name === $column)),
+
+            'pgsql' => collect(DB::select(
+                'select indexdef from pg_indexes where tablename = ?', [$table]
+            ))->contains(fn ($row) => preg_match('/\('.preg_quote($column, '/').'[,)]/', $row->indexdef) === 1),
+
+            default => throw new \RuntimeException('hasIndexOn() has no implementation for driver: '.DB::connection()->getDriverName()),
+        };
     }
 
     public function test_existing_rows_are_attributed_to_the_default_tenant(): void

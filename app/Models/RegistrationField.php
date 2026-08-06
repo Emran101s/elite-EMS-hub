@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -21,7 +23,9 @@ use Illuminate\Support\Str;
  */
 class RegistrationField extends Model
 {
-    protected $fillable = ['event_id', 'key', 'label', 'type', 'required',
+    use BelongsToTenant;
+
+    protected $fillable = ['tenant_id', 'event_id', 'key', 'label', 'type', 'required',
         'options', 'help', 'placeholder', 'maps_to', 'position', 'active'];
 
     protected $casts = [
@@ -94,7 +98,7 @@ class RegistrationField extends Model
      * session added, renamed or moved after the form was built would otherwise
      * be offered under a name that no longer exists, or not offered at all.
      */
-    public function sessionChoices(): \Illuminate\Support\Collection
+    public function sessionChoices(): Collection
     {
         if (! $this->isSessions()) {
             return collect();

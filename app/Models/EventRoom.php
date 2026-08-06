@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -10,9 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['event_id', 'name', 'type', 'capacity', 'cost_cents', 'days', 'setup_days', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
+#[Fillable(['tenant_id',
+    'event_id', 'name', 'type', 'capacity', 'cost_cents', 'days', 'setup_days', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
 class EventRoom extends Model
 {
+    use BelongsToTenant;
+
     public const TYPES = ['main_hall', 'breakout', 'exhibition', 'registration', 'vip', 'catering'];
 
     /** Layout element presets: type => [label, seats, w, h, group]. group: seating | staging. */

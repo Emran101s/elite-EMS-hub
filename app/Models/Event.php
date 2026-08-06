@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Events\EventStageChanged;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use App\Services\EventHealthService;
+use App\Support\Money;
 use App\Support\Workflow;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,9 +16,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 #[Fillable([
+    'tenant_id',
     'name', 'description', 'type', 'stage', 'city', 'country', 'timezone',
     'venue_id', 'project_id', 'client_id', 'project_manager_id', 'cover_path', 'logo_path',
     'starts_at', 'ends_at', 'budget_cents', 'client_target_cents', 'sponsorship_target_cents', 'exhibition_target_cents', 'exhibition_fixtures', 'event_requirements', 'currency', 'management_fee_pct', 'planner_config', 'budget_status', 'module_budget_categories', 'budget_locked_at', 'progress', 'expected_participants',
@@ -25,6 +30,7 @@ use Illuminate\Support\Str;
 class Event extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['stage', 'archived_at', 'budget_status', 'budget_cents', 'name', 'starts_at', 'ends_at'];
@@ -333,7 +339,7 @@ class Event extends Model
     /** Format a cents amount in any supported currency code. See App\Support\Money. */
     public static function moneyIn(?int $cents, string $currency): string
     {
-        return \App\Support\Money::forScreen($cents, $currency);
+        return Money::forScreen($cents, $currency);
     }
 
     /** Number of calendar days the event spans (inclusive). */
@@ -925,7 +931,7 @@ class Event extends Model
     }
 
     /** The live form: the questions, seeded on first use. */
-    public function registrationForm(): \Illuminate\Support\Collection
+    public function registrationForm(): Collection
     {
         if (! $this->registrationFields()->exists()) {
             $this->seedRegistrationForm();
@@ -1033,7 +1039,7 @@ class Event extends Model
             // there's no honest "from" to report, so nothing to dispatch.
             $from = $event->getOriginal('stage');
             if ($event->wasChanged('stage') && $from !== null) {
-                \App\Events\EventStageChanged::dispatch($event, $from, $event->stage);
+                EventStageChanged::dispatch($event, $from, $event->stage);
             }
         });
     }

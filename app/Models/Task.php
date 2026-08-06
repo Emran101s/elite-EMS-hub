@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\Workflow;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,9 +14,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * A task on an event's board. Deliberately standalone — no sync, no workflow
  * engine, no audit hooks. Six stages a task travels by hand.
  */
-#[Fillable(['event_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'area', 'track_id', 'due_on', 'start_on', 'checklist', 'sort'])]
+#[Fillable(['tenant_id',
+    'event_id', 'assignee_id', 'title', 'description', 'status', 'priority', 'area', 'track_id', 'due_on', 'start_on', 'checklist', 'sort'])]
 class Task extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<TaskFactory> */
     use HasFactory;
 

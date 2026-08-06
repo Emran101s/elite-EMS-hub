@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Concerns\Auditable;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,12 +13,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'title', 'role', 'avatar_path'])]
+#[Fillable(['tenant_id',
+    'name', 'email', 'password', 'title', 'role', 'avatar_path'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use Auditable, HasFactory, Notifiable;
+
+    use BelongsToTenant;
 
     /**
      * What is worth recording about an account.

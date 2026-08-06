@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -15,9 +16,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Deliberately not a User: drivers are contracted per event, often per day, and
  * will never log in. They get a printed trip sheet and a WhatsApp message.
  */
-#[Fillable(['name', 'phone', 'whatsapp', 'licence_no', 'supplier_id', 'languages', 'rating', 'notes', 'is_active'])]
+#[Fillable(['tenant_id',
+    'name', 'phone', 'whatsapp', 'licence_no', 'supplier_id', 'languages', 'rating', 'notes', 'is_active'])]
 class TransportDriver extends Model
 {
+    use BelongsToTenant;
+
     /** Beyond this a day is unsafe, not merely long. */
     public const DUTY_LIMIT_MINUTES = 12 * 60;
 

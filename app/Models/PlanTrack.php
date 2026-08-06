@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * A Plan Studio track — a user-controlled group (swimlane) that plan items
  * are organised into. Fully editable per event.
  */
-#[Fillable(['event_id', 'name', 'goal', 'color', 'position'])]
+#[Fillable(['tenant_id',
+    'event_id', 'name', 'goal', 'color', 'position'])]
 class PlanTrack extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return ['position' => 'integer'];

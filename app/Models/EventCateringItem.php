@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,10 +16,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * rates, and lumping them into one figure is how "how much is the gala
  * costing" stops having an answer.
  */
-#[Fillable(['event_id', 'title', 'type', 'occasion_date', 'venue_mode', 'room_id', 'location',
+#[Fillable(['tenant_id',
+    'event_id', 'title', 'type', 'occasion_date', 'venue_mode', 'room_id', 'location',
     'headcount', 'cost_cents', 'per_person', 'supplier_id', 'status', 'notes', 'sort_order'])]
 class EventCateringItem extends Model
 {
+    use BelongsToTenant;
+
     /** type => label */
     public const TYPES = [
         'coffee_break' => 'Coffee break',

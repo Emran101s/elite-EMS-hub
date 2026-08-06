@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\Workflow;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,9 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
-#[Fillable(['event_id', 'ref_no', 'type', 'leg', 'is_vip', 'driver_id', 'vehicle_id', 'supplier_id', 'delayed_to', 'issue_note', 'started_at', 'completed_at', 'vehicle_type_id', 'service_type_id', 'vehicles', 'route', 'pickup_from', 'drop_to', 'provider', 'driver_contact', 'depart_at', 'flight_no', 'arrive_at', 'capacity', 'passengers', 'cost_cents', 'status', 'notes'])]
+#[Fillable(['tenant_id',
+    'event_id', 'ref_no', 'type', 'leg', 'is_vip', 'driver_id', 'vehicle_id', 'supplier_id', 'delayed_to', 'issue_note', 'started_at', 'completed_at', 'vehicle_type_id', 'service_type_id', 'vehicles', 'route', 'pickup_from', 'drop_to', 'provider', 'driver_contact', 'depart_at', 'flight_no', 'arrive_at', 'capacity', 'passengers', 'cost_cents', 'status', 'notes'])]
 class EventTransport extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'event_transport';
 
     public const TYPES = ['shuttle', 'coach', 'sedan', 'van', 'vip', 'flight'];

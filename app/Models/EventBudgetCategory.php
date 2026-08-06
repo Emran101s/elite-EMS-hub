@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * are seeded on first use, and the user can add / rename / remove their own.
  * Budget lines link to it by name (EventBudgetItem::category).
  */
-#[Fillable(['event_id', 'name', 'position'])]
+#[Fillable(['tenant_id',
+    'event_id', 'name', 'position'])]
 class EventBudgetCategory extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return ['position' => 'integer'];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 // have to be fillable: without them update() discards the link to the event a
 // deal became, silently, and the win looks like it worked.
 #[Fillable([
+    'tenant_id',
     'client_id', 'contact_id', 'owner_id', 'title', 'stage', 'type',
     'value_cents', 'currency', 'probability', 'expected_close_on',
     'expected_event_on', 'source', 'notes', 'position',
@@ -27,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Deal extends Model
 {
+    use BelongsToTenant;
+
     /**
      * The pipeline. key => [label, default probability, hex].
      * Order is the order of the board.

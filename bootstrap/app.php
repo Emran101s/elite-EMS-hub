@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\AssignRequestId;
 use Illuminate\Foundation\Application;
@@ -16,6 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(AssignRequestId::class);
         $middleware->append(SecurityHeaders::class);
+
+        // Global, not per-route. A per-route opt-in is the thing somebody
+        // forgets on the one route that matters, and an unbound request is
+        // currently an unfiltered one. See App\Support\Tenancy.
+        //
+        // Appended to the global stack, which runs OUTSIDE the 'web' group —
+        // before StartSession/Authenticate resolve $request->user(). Pushed
+        // onto the 'web' group instead (not appended globally) so it runs
+        // after the session/auth middleware that makes the user available.
+        $middleware->web(append: [ResolveTenant::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

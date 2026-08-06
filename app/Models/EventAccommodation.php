@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'block_id', 'hotel', 'venue_id', 'guest', 'attendee_id', 'guest_email', 'guest_phone', 'sharing_with', 'room_type', 'occupancy', 'rooms', 'check_in', 'arrival_time', 'arrival_note', 'check_out', 'departure_time', 'departure_note', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes', 'position'])]
+#[Fillable(['tenant_id',
+    'event_id', 'block_id', 'hotel', 'venue_id', 'guest', 'attendee_id', 'guest_email', 'guest_phone', 'sharing_with', 'room_type', 'occupancy', 'rooms', 'check_in', 'arrival_time', 'arrival_note', 'check_out', 'departure_time', 'departure_note', 'rate_cents', 'cost_cents', 'status', 'confirmation_number', 'notes', 'position'])]
 class EventAccommodation extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'event_accommodations';
 
     public const STATUSES = ['held', 'booked', 'confirmed', 'cancelled'];

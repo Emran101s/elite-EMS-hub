@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['event_id', 'hall_id', 'company', 'contact_name', 'email', 'phone', 'booth_number', 'booth_size', 'package', 'fee_cents', 'paid_cents', 'status', 'notes', 'booth_x', 'booth_y', 'booth_w_m', 'booth_h_m'])]
+#[Fillable(['tenant_id',
+    'event_id', 'hall_id', 'company', 'contact_name', 'email', 'phone', 'booth_number', 'booth_size', 'package', 'fee_cents', 'paid_cents', 'status', 'notes', 'booth_x', 'booth_y', 'booth_w_m', 'booth_h_m'])]
 class EventExhibitor extends Model
 {
+    use BelongsToTenant;
+
     public const PACKAGES = ['standard', 'premium', 'island', 'custom'];
 
     public const STATUSES = ['reserved', 'confirmed', 'paid', 'cancelled'];
