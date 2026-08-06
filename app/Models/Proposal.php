@@ -233,7 +233,12 @@ class Proposal extends Model
     {
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
-                return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
+                // Nested transaction → SAVEPOINT. Postgres aborts the whole
+                // outer txn on unique violation (25P02); SQLite does not.
+                return DB::transaction(fn () => static::create(array_merge(
+                    $attributes,
+                    ['number' => static::nextNumber()],
+                )));
             } catch (UniqueConstraintViolationException $e) {
                 if ($attempt === 5) {
                     throw $e;

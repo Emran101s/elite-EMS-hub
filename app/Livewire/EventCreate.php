@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Event;
+use App\Models\User;
+use App\Models\Venue;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -73,6 +75,7 @@ class EventCreate extends Component
         'outdoor' => ['Outdoor', 'outdoor_event', 'sparkles', ['tasks', 'budget', 'suppliers', 'venue', 'attendees'], 'Outdoor experience'],
         'other' => ['Other', 'public_event', 'dots', ['tasks', 'budget', 'venue', 'attendees'], 'Custom event type'],
     ];
+
     /** Status pills → lifecycle stage. */
     public const STATUS_PILLS = ['lead' => 'draft', 'proposal' => 'proposal', 'confirmed' => 'confirmed'];
 
@@ -313,7 +316,7 @@ class EventCreate extends Component
             'city' => $this->city ?: ($company->city ?: 'TBD'),
             'country' => $this->country ?: ($company->country ?: 'Jordan'),
             'currency' => $this->currency ?: $company->default_currency,
-            'management_fee_pct' => $company->default_management_fee_pct,
+            'management_fee_pct' => $company->default_management_fee_pct ?? 15.0,
             'timezone' => $this->timezone,
             'client_id' => $this->client_id,
             'cover_path' => $this->cover ? 'storage/'.$this->cover->store('event-covers', 'public') : null,
@@ -475,8 +478,8 @@ class EventCreate extends Component
         return view('livewire.event-create', [
             'steps' => self::STEPS,
             'clients' => Client::orderBy('name')->get(),
-            'venues' => \App\Models\Venue::orderBy('name')->get(),
-            'managers' => \App\Models\User::orderBy('name')->get(),
+            'venues' => Venue::orderBy('name')->get(),
+            'managers' => User::orderBy('name')->get(),
             'templates' => self::TEMPLATES,
             'hubModules' => Event::HUB_MODULES,
             'priorities' => Event::PRIORITIES,

@@ -27,7 +27,9 @@ class CompanyProfile extends Model
 
     public static function house(): ?self
     {
-        return self::$house ??= static::query()->first();
+        // Same row as current(): lowest id. Unordered first() could disagree
+        // with current() when legacy duplicate profiles exist.
+        return self::$house ??= static::query()->orderBy('id')->first();
     }
 
     public static function forgetHouse(): void
@@ -175,13 +177,25 @@ class CompanyProfile extends Model
 
     public const TIMEZONES = ['UTC', 'Asia/Amman', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Bahrain', 'Asia/Kuwait', 'Africa/Cairo', 'Europe/London', 'America/New_York'];
 
-    /** The single workspace profile row (created with defaults on first use). */
+    /**
+     * The single workspace profile row (created with defaults on first use).
+     *
+     * Do not key on `id = 1`. `id` is not fillable, so firstOrCreate(['id'=>1])
+     * looked up a row that create() could never write — and under Postgres
+     * RefreshDatabase, sequences do not roll back, so every miss inserted a
+     * new high-id row. Resolve by first row, create without forcing id.
+     */
     public static function current(): self
     {
-        return static::firstOrCreate(['id' => 1], [
+        if ($row = static::query()->orderBy('id')->first()) {
+            return $row;
+        }
+
+        return static::query()->create([
             'name' => 'Elite Business Hub',
             'default_currency' => 'USD',
             'default_timezone' => 'Asia/Amman',
+            'default_management_fee_pct' => 15,
         ]);
     }
 
