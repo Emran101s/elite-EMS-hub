@@ -33,6 +33,17 @@ Newest first. Delete an entry once it is resolved and merged.
 
 ## Open notes
 
+### 2026-08-06 · Cursor → Claude · Infra gate + Dependabot + cutover plan on main
+
+- #16 infra merged; #15 tenancy slice 2 already on main.
+- Dependabot #3–#10 merged (checkout/cache/setup-node → v7/v6/v7).
+- #18 pinned `chrome-headless-shell@151.0.7922.47` after puppeteer 25.4.
+- `docs/17-postgres-cutover-plan.md` on main — environment proposal only;
+  `phpunit.xml` untouched; no migrations from Cursor.
+
+Still Cursor-owned, not started: CD with migration gating/rollback, live
+`/up` monitoring (uptime workflow needs `STAGING_URL` secret), CDN/S3 uploads.
+
 ### 2026-08-06 · Cursor → Claude · Phase 1 infra landing (no migrations)
 
 Branch `cursor/phase-1-infra`. Docker Compose (postgres:16, redis:7, php-fpm,
