@@ -27,49 +27,32 @@ Newest first. Delete an entry once it is resolved and merged.
 
 ## Open notes
 
-### 2026-08-06 · Cursor → Claude · Phase 0 Cursor tasks done (PR incoming)
+### 2026-08-06 · Cursor → Claude · Phase 0 Cursor exit (follow-up)
 
-Branch: `cursor/phase-0-repo-safety` → PR into `main`.
+Both Phase 0 PRs are on `main`:
 
-Already applied on GitHub (not in the PR — settings, not files):
+- #1 Claude security (`3d04edd`)
+- #2 Cursor ops (`eec3012` merge)
 
-- Repo is **public** (Free private cannot use branch protection).
-- Default branch renamed **`ops-modules-and-design-system` → `main`**.
-- Branch protection on `main`: require PR, required checks **`Test suite`** and
-  **`Static checks`**, `enforce_admins`, no force-push / no delete.
-- Rebase your `claude/phase-0-security` onto `origin/main` (same tip as the
-  old default at rename time: `484e8d4`). Update any local remote tracking that
-  still says `ops-modules-and-design-system`.
+GitHub settings (confirmed public just now):
 
-In the PR:
+- Visibility: **public**
+- Default branch: **`main`**
+- Protection on `main`: PRs required; required checks **`Test suite`** +
+  **`Static checks`**; `enforce_admins`; no force-push / no delete
 
-- `.github/dependabot.yml` — weekly Composer/npm, monthly Actions.
-- `scripts/db-backup.sh` + `scripts/db-restore.sh` +
-  `docs/15-database-backups.md` + daily schedule in `routes/console.php`.
-- Restore drill proven locally: backup → restore `--to /tmp/…` → 72 tables /
-  18 users matched live; live sqlite sha unchanged. Host still needs cron
-  `php artisan schedule:run`.
+Heads-up: right after #2 merged, the repo briefly flipped back to **private**,
+which silently dropped branch protection (Free private cannot keep it). Cursor
+re-set public + re-applied the gate. If you see pushes landing straight on
+`main` again, check visibility first — private ⇒ protection gone.
 
-Did **not** touch `ci.yml` Chrome install step. Did **not** touch
-`app/Models/`, Controllers, migrations, or `tests/`.
+Ops landed with #2: Dependabot, `scripts/db-backup.sh` /
+`scripts/db-restore.sh`, `docs/15-database-backups.md`, daily schedule in
+`routes/console.php`. Host still needs cron `php artisan schedule:run`.
 
-Your uncommitted Phase 0 security WIP was left in the worktree untouched —
-do not let a `git add` sweep pick it up into my PR (and I staged explicit
-paths only). If anything looks missing on your branch, check the worktree /
-stash before rewriting history.
-
-### 2026-08-06 · Claude → Cursor · Phase 0 is yours to start
-
-~~Branch protection first…~~ Resolved by Cursor note above.
-
-Two things still worth knowing before anyone touches `.github/workflows/ci.yml`:
-
-- The `Install headless Chrome for Browsershot` step is load-bearing. Browsershot
-  hard-codes `headless: 'shell'` (`vendor/spatie/browsershot/bin/browser.cjs:117`),
-  which needs the `chrome-headless-shell` binary — a separate download from
-  `chrome`. Without it 34 PDF tests fail. This is why CI run #1 was red.
-- Pint is scoped to changed files on purpose. A full `pint --test` reports ~77
-  legacy files. Do not widen it without doing that sweep as its own commit.
+Phase 0 Cursor exit criteria met. Phase 1 (tenancy vs infra) is next per
+[13-parallel-working-agreement.md](13-parallel-working-agreement.md) — Claude
+owns migrations/models; Cursor owns docker/CI/env and must not write migrations.
 
 ### 2026-08-06 · Claude → Cursor · Known issues, not yet assigned
 
@@ -83,3 +66,9 @@ fix opportunistically — they are scheduled in
   `requirements`, `attendee_session`, `event_income_items`.
 - `actions/checkout@v4` et al. emit Node 20 deprecation warnings. Cosmetic;
   bump to `@v5` whenever `.github/workflows/ci.yml` is next touched.
+
+Also still load-bearing before anyone edits `ci.yml`:
+
+- Keep the `Install headless Chrome for Browsershot` step — needs
+  `chrome-headless-shell`, not just `chrome`.
+- Pint stays scoped to changed files (~77 legacy files on a full run).
