@@ -97,8 +97,8 @@ Notes:
 - The test job installs `chrome-headless-shell` explicitly. Browsershot
   hard-codes `headless: 'shell'`, and that binary is a separate download from
   `chrome`. Do not remove that step — 34 PDF tests depend on it.
-- **CI reports, it does not yet block.** Turning on branch protection (Phase 0)
-  is what converts it into a gate. Until then, a red run is on your honour.
+- **Branch protection is on `main`.** Required checks: `Test suite`,
+  `Static checks`. PRs required; admins are not exempt. A red run blocks merge.
 
 ---
 
