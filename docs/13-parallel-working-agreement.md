@@ -16,18 +16,71 @@ agents are guaranteed to see.
 These are not style preferences. Each one exists because its absence cost us
 something.
 
-### 1.1 Never work directly on the default branch
+### 1.1 One worktree per agent, and never work on the default branch
 
-Every change goes on a branch named `<agent>/<short-topic>` and reaches the
-default branch through a pull request.
+Each agent has its **own directory**. They share one `.git`, so branches,
+history and remotes are common, but `git checkout` in one has no effect on the
+other.
+
+| Agent | Directory |
+|---|---|
+| Cursor | `~/Herd/elitehub` (the Herd-served one, `elitehub.test`) |
+| Claude | `~/Herd/elitehub-claude` |
+
+Inside your own directory, every change goes on a branch named
+`<agent>/<short-topic>` and reaches the default branch through a pull request.
 
 ```
 claude/tenancy-schema
 cursor/docker-postgres
 ```
 
-Why: two agents pushing to one branch cannot see each other's uncommitted work.
-That is exactly how `4a975b1` absorbed changes it did not author.
+**Why a separate directory and not just a separate branch.** `git checkout` acts
+on the *working directory*, not on the agent. On 6 Aug 2026 both agents shared
+one folder: Cursor checked out `cursor/phase-0-repo-safety`, and Claude's next
+commit landed on Cursor's branch — because that was simply what the folder had
+checked out. Minutes later the same mechanism left the folder holding the
+pre-fix version of files that were already merged. Branch-per-agent cannot fix
+this; only directory-per-agent can.
+
+**Setting up a new agent worktree** (learned the hard way — each of these steps
+exists because skipping it broke something):
+
+```bash
+git worktree add --detach ~/Herd/elitehub-<agent> origin/main
+cd ~/Herd/elitehub-<agent>
+cp ../elitehub/.env .env         # .env is gitignored, so it does not come along
+composer install                  # do NOT symlink vendor — see below
+npm ci && npm run build           # public/build is gitignored; without it every
+                                  # page-rendering test 500s on the Vite manifest
+```
+
+Then point `DB_DATABASE` at an absolute path to the shared dev database so both
+agents see the same rows:
+
+```
+DB_DATABASE=/Users/emranalitan/Herd/elitehub/database/database.sqlite
+```
+
+SQLite takes one writer at a time, so avoid both agents writing at once. Tests
+are unaffected — `phpunit.xml` pins them to an in-memory database.
+
+> **Never symlink `vendor/`.** It looks like a harmless 127 MB saving and it
+> silently corrupts everything. Composer's autoloader derives `$baseDir` from
+> the *resolved* path of `vendor/`, so a symlinked `vendor` maps `App\` to the
+> **other agent's** `app/` directory. Tests then run against code you are not
+> editing, and pass or fail for reasons that have nothing to do with your
+> changes. Symlinking `node_modules/` is fine.
+
+Verify the setup before trusting it:
+
+```bash
+php -r 'require "vendor/autoload.php";
+  echo (new ReflectionClass("App\Models\Event"))->getFileName(), PHP_EOL;'
+```
+
+It must print a path inside **your** directory. Then `php artisan test` must be
+green before you write a line of code.
 
 ### 1.2 Never `git add .` or `git add -A`
 
