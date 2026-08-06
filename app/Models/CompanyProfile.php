@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
+    'tenant_id',
     'name', 'logo_path', 'default_currency', 'default_timezone',
     'default_budget_categories', 'default_management_fee_pct', 'default_ticket_types', 'default_sponsor_packages',
     'country', 'city', 'email', 'phone', 'website', 'address', 'bank_accounts', 'approval_threshold_cents',
@@ -191,5 +193,17 @@ class CompanyProfile extends Model
             ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
             ->take(2)
             ->implode('');
+    }
+
+    /**
+     * The customer these settings belong to.
+     *
+     * Nullable for now: house() still returns row 1 regardless, so nothing
+     * reads this yet. It becomes required once the global scope lands and
+     * house() starts resolving per tenant instead of per database.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

@@ -17,7 +17,13 @@ Newest first. Delete an entry once it is resolved and merged.
 
 | Tables | Claimed by | Branch | Since | Status |
 |---|---|---|---|---|
-| _(none)_ | | | | |
+| `tenants`, `workspaces`, `workspace_user` (new) | Claude | `claude/tenancy-schema` | 2026-08-06 | **held** |
+| **every existing table** — `tenant_id` column, in a later slice | Claude | `claude/tenancy-*` | 2026-08-06 | **held for Phase 1** |
+
+> **Cursor: this is the wide one.** Phase 1 tenancy adds `tenant_id` to all 71
+> tables. Do not write any migration this phase — not even a small unrelated
+> one — until these clear. Postgres work is environment only (containers,
+> config, CI services); the schema is Claude's.
 
 > Claim rows here before adding a migration. The other agent must not touch the
 > same tables until the claim clears. Migrations are the one change git cannot

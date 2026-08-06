@@ -108,6 +108,26 @@ class User extends Authenticatable
     }
 
     /**
+     * Workspaces this person belongs to, with their role on each.
+     *
+     * Not yet read by any gate — `users.role` is still authoritative until the
+     * authorization rework. The pivot is populated alongside it so the cutover
+     * is a change of source, not a data migration under load.
+     */
+    public function workspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /** This person's role in a given workspace, or null if they are not in it. */
+    public function roleIn(Workspace $workspace): ?string
+    {
+        return $this->workspaces()->whereKey($workspace->getKey())->first()?->pivot->role;
+    }
+
+    /**
      * Up-to-two-letter initials for the avatar chip.
      */
     public function initials(): string
