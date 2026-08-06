@@ -41,7 +41,7 @@ class DealPipeline
                 'city' => $company?->city ?: 'TBD',
                 'country' => $company?->country ?: 'Jordan',
                 'currency' => $deal->currency ?: ($company?->default_currency ?: 'JOD'),
-                'management_fee_pct' => $company?->default_management_fee_pct ?? 0,
+                'management_fee_pct' => $company?->default_management_fee_pct ?? CompanyProfile::feePct(),
                 'timezone' => $company?->default_timezone ?: config('app.timezone'),
                 'budget_cents' => $deal->value_cents,
                 'starts_at' => $deal->expected_event_on,

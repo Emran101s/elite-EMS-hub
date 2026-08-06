@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A demand for money, issued on a date, with a number on it.
@@ -326,7 +327,13 @@ class Invoice extends Model
     {
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
-                return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
+                // Nested transaction → SAVEPOINT. Postgres aborts the whole
+                // outer txn on unique violation (25P02); SQLite does not.
+                // Without a savepoint the collision-retry LIKE never runs.
+                return DB::transaction(fn () => static::create(array_merge(
+                    $attributes,
+                    ['number' => static::nextNumber()],
+                )));
             } catch (UniqueConstraintViolationException $e) {
                 if ($attempt === 5) {
                     throw $e;

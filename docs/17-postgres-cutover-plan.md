@@ -212,8 +212,9 @@ does `pg_dump | gzip`).
 | Work | Owner |
 |---|---|
 | Compose / CI Postgres service, env examples, this plan, copy **script** | Cursor |
-| Migrations, model casts, JSONB column types, fixing pgsql test failures in domain code | Claude |
-| Flipping `phpunit.xml` off sqlite | Joint — only after pgsql CI job is green |
+| Making `Test suite (pgsql)` green (domain quirks: singleton, SQL quoting, savepoints) | Cursor (`cursor/pgsql-green`) |
+| Migrations, model casts, JSONB column types (schema) | Claude |
+| Flipping `phpunit.xml` off sqlite / making pgsql a **required** check | Joint — after pgsql job is green on `main` |
 
 Schema lock remains in force for tenancy slices 3–4. A Postgres cutover
 script must not add columns or rewrite migrations.
@@ -223,12 +224,13 @@ script must not add columns or rewrite migrations.
 ## Suggested PR sequence
 
 1. ~~`cursor/pgsql-ci-job`~~ — landed: `Test suite (pgsql)` in `ci.yml`.
-2. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.sh` (or PHP) +
+2. `cursor/pgsql-green` — fix the ~20 pre-existing pgsql failures; then make
+   **Test suite (pgsql)** a required branch-protection check.
+3. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.sh` (or PHP) +
    dry-run on a staging Compose volume.
-3. Staging cutover (ops, not a code PR).
-4. Production cutover (ops).
-5. Only then: discuss retiring sqlite from `phpunit.xml` / making pgsql a
-   required check.
+4. Staging cutover (ops, not a code PR).
+5. Production cutover (ops).
+6. Only then: discuss retiring sqlite from `phpunit.xml`.
 
 Related: [16-infrastructure.md](16-infrastructure.md),
 [15-database-backups.md](15-database-backups.md),

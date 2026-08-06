@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Global is correct here: only stamps X-Request-Id + Log context from
+        // the raw request/response. Needs no session or $request->user().
+        // (Contrast ResolveTenant below — that one must wait for 'web' auth.)
         $middleware->append(AssignRequestId::class);
         $middleware->append(SecurityHeaders::class);
 

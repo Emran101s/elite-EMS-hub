@@ -1031,6 +1031,9 @@ class Event extends Model
         static::creating(function (self $event) {
             $event->registration_token ??= self::newRegistrationToken();
             $event->checkin_token ??= self::newCheckinToken();
+            // Postgres rejects an explicit NULL on NOT NULL + DEFAULT; SQLite
+            // quietly applied the default. Never let a missing fee reach INSERT.
+            $event->management_fee_pct ??= CompanyProfile::feePct();
         });
 
         static::updated(function (self $event) {

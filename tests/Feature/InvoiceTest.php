@@ -3,14 +3,18 @@
 namespace Tests\Feature;
 
 use App\Livewire\InvoicesLedger;
+use App\Livewire\PaymentsLedger;
 use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Models\Proposal;
 use App\Models\User;
+use App\Support\NavPanel;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -285,7 +289,7 @@ class InvoiceTest extends TestCase
 
     public function test_the_nav_links_to_it_now_that_it_exists(): void
     {
-        $panel = collect(\App\Support\NavPanel::panel())
+        $panel = collect(NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
             ->firstWhere('label', 'Invoices');
 
@@ -399,7 +403,7 @@ class InvoiceTest extends TestCase
 
         Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
 
-        Livewire::actingAs($user)->test(\App\Livewire\PaymentsLedger::class)
+        Livewire::actingAs($user)->test(PaymentsLedger::class)
             ->call('record', $p->id, 100);
 
         $this->assertSame(0, $p->fresh()->paid_cents, 'the invoice is where that money goes');
@@ -407,7 +411,7 @@ class InvoiceTest extends TestCase
         // …and it starts recording again the moment nothing is asking for it.
         Invoice::latest('id')->firstOrFail()->update(['status' => 'void']);
 
-        Livewire::actingAs($user)->test(\App\Livewire\PaymentsLedger::class)
+        Livewire::actingAs($user)->test(PaymentsLedger::class)
             ->call('record', $p->id, 100);
 
         $this->assertSame(100_00, $p->fresh()->paid_cents);
@@ -430,7 +434,7 @@ class InvoiceTest extends TestCase
             // concurrent request whose insert commits in the gap between our
             // nextNumber() check and our own insert.
             if ($seen === 1) {
-                \Illuminate\Support\Facades\DB::table('invoices')->insert([
+                DB::table('invoices')->insert([
                     'number' => $invoice->number, 'status' => 'draft', 'currency' => 'JOD',
                     'fee_pct' => 0, 'issued_on' => now(), 'due_on' => now()->addDays(30),
                     'created_at' => now(), 'updated_at' => now(),
@@ -441,8 +445,13 @@ class InvoiceTest extends TestCase
         $invoice = Invoice::createNumbered(['status' => 'draft', 'currency' => 'JOD', 'fee_pct' => 0]);
 
         $this->assertGreaterThan(1, $seen, 'the first attempt must have collided for this test to prove anything');
-        $this->assertSame(2, Invoice::count(), 'the row that won the race and our own retried one');
         $this->assertNotNull($invoice->id, 'the retry must succeed rather than surface the collision');
+        // createNumbered wraps each attempt in a savepoint (Postgres aborts the
+        // whole transaction on unique violation otherwise). The same-connection
+        // steal above rolls back with the failed attempt — real concurrent
+        // requests use a second connection, so both rows would remain.
+        $this->assertSame(1, Invoice::count());
+        $this->assertMatchesRegularExpression('/^EBH-INV-\d{4}-\d{3}$/', $invoice->number);
     }
 
     public function test_the_same_number_collision_is_handled_for_proposals(): void
@@ -450,10 +459,10 @@ class InvoiceTest extends TestCase
         $this->seed(DemoDataSeeder::class);
 
         $seen = 0;
-        \App\Models\Proposal::creating(function (\App\Models\Proposal $proposal) use (&$seen) {
+        Proposal::creating(function (Proposal $proposal) use (&$seen) {
             $seen++;
             if ($seen === 1) {
-                \Illuminate\Support\Facades\DB::table('proposals')->insert([
+                DB::table('proposals')->insert([
                     'number' => $proposal->number, 'title' => 'Taken first', 'status' => 'draft', 'currency' => 'JOD',
                     'fee_pct' => 0, 'issued_on' => now(), 'valid_until' => now()->addDays(30),
                     'created_at' => now(), 'updated_at' => now(),
@@ -461,7 +470,7 @@ class InvoiceTest extends TestCase
             }
         });
 
-        $proposal = \App\Models\Proposal::createNumbered(['title' => 'New proposal', 'status' => 'draft', 'currency' => 'JOD', 'fee_pct' => 0]);
+        $proposal = Proposal::createNumbered(['title' => 'New proposal', 'status' => 'draft', 'currency' => 'JOD', 'fee_pct' => 0]);
 
         $this->assertGreaterThan(1, $seen, 'the first attempt must have collided for this test to prove anything');
         $this->assertNotNull($proposal->id);

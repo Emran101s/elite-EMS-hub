@@ -3,11 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\Event;
-use App\Models\EventAttendee;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * The desk on the day.
@@ -57,8 +56,8 @@ class ArrivalsDesk extends Component
         return $this->event->attendees()
             ->where(fn ($q) => $q
                 ->whereRaw('lower(name) like ?', [$like])
-                ->orWhereRaw('lower(coalesce(email, "")) like ?', [$like])
-                ->orWhereRaw('lower(coalesce(organization, "")) like ?', [$like]))
+                ->orWhereRaw('lower(coalesce(email, \'\')) like ?', [$like])
+                ->orWhereRaw('lower(coalesce(organization, \'\')) like ?', [$like]))
             ->orderBy('name')
             ->limit(25)
             ->get();

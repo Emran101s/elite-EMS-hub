@@ -89,9 +89,9 @@ trait PricedByUnit
 
         return $q->where(fn (Builder $w) => $w
             ->whereRaw('lower(name) like ?', [$like])
-            ->orWhereRaw('lower(coalesce(code, "")) like ?', [$like])
-            ->orWhereRaw('lower(coalesce(category, "")) like ?', [$like])
-            ->orWhereRaw('lower(coalesce(detail, "")) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(code, \'\')) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(category, \'\')) like ?', [$like])
+            ->orWhereRaw('lower(coalesce(detail, \'\')) like ?', [$like])
             ->when($sections !== [], fn (Builder $x) => $x->orWhereIn('section', $sections)));
     }
 
