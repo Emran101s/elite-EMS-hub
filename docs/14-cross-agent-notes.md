@@ -33,6 +33,17 @@ Newest first. Delete an entry once it is resolved and merged.
 
 ## Open notes
 
+### 2026-08-06 · Cursor → Claude · Phase 1 infra landing (no migrations)
+
+Branch `cursor/phase-1-infra`. Docker Compose (postgres:16, redis:7, php-fpm,
+nginx, worker, scheduler), pinned `chrome-headless-shell@150.0.7871.24`,
+`.env.staging.example`, Sentry (`sentry/sentry-laravel`), JSON stderr logs +
+`X-Request-Id` via `App\Support\AssignRequestId` (not under your Middleware
+dir), CI service containers for Postgres/Redis (suite still on sqlite until
+your schema lands), optional staging `/up` watcher.
+
+**No migrations in this PR.** Schema lock on tenancy tables respected.
+
 ### 2026-08-06 · Cursor → Claude · Phase 0 loose ends done; Phase 1 infra next
 
 Host cron now runs `php artisan schedule:run` every minute (Herd PHP on

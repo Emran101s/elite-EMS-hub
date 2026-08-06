@@ -22,6 +22,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # Environment ready for the Phase 1 Postgres/Redis cutover. PHPUnit still
+    # uses in-memory SQLite (phpunit.xml) so the suite does not depend on
+    # Claude's tenancy migrations landing first.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: elitehub_test
+          POSTGRES_USER: elitehub
+          POSTGRES_PASSWORD: elitehub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U elitehub -d elitehub_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +58,7 @@ jobs:
           # Matches the development machine. composer.json allows ^8.3, so if
           # production ever pins 8.3, add it here as a matrix entry.
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, iconv, intl, sqlite3, pdo_sqlite, gd, zip, bcmath
+          extensions: mbstring, xml, ctype, iconv, intl, sqlite3, pdo_sqlite, pdo_pgsql, redis, gd, zip, bcmath
           coverage: none
 
       - name: Set up Node
@@ -56,7 +83,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/puppeteer
-          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-chrome-150.0.7871.24
           restore-keys: puppeteer-${{ runner.os }}-
 
       # NOT --ignore-scripts: puppeteer's install script downloads the Chromium
@@ -67,15 +94,20 @@ jobs:
 
       # Browsershot hard-codes `headless: 'shell'` (browser.cjs:117), which
       # resolves to the chrome-headless-shell binary — a *separate* download
-      # from `chrome`. npm ci alone left only `chrome` on the runner and all 34
-      # PDF tests failed with "Could not find chrome-headless-shell". Both are
-      # installed explicitly here; `|| true` on chrome because the shell binary
-      # is the one that actually matters.
+      # from `chrome`. Pin matches docker/php/Dockerfile
+      # CHROME_HEADLESS_SHELL_VERSION. Do not remove this step — 34 PDF tests
+      # depend on it.
       - name: Install headless Chrome for Browsershot
         run: |
-          npx puppeteer browsers install chrome-headless-shell
-          npx puppeteer browsers install chrome || true
+          npx puppeteer browsers install chrome-headless-shell@150.0.7871.24
+          npx puppeteer browsers install chrome@150.0.7871.24 || true
           ls ~/.cache/puppeteer
+
+      # Prove the service containers are reachable before the suite runs.
+      - name: Smoke-check Postgres and Redis
+        run: |
+          php -r 'new PDO("pgsql:host=127.0.0.1;port=5432;dbname=elitehub_test", "elitehub", "elitehub"); echo "postgres ok\n";'
+          php -r '$r = new Redis(); $r->connect("127.0.0.1", 6379, 2.0); echo $r->ping() ? "redis ok\n" : exit(1);'
 
       # public/build is gitignored. RendersChromePdf::compiledCss() reads the
       # Vite manifest and silently returns '' when it is missing — so the PDF
@@ -89,8 +121,8 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      # phpunit.xml pins the connection to an in-memory SQLite database, so no
-      # database service is needed here and nothing touches a real file.
+      # phpunit.xml pins the connection to an in-memory SQLite database, so the
+      # suite does not yet write to the Postgres service above.
       - name: Run tests
         run: php artisan test
 

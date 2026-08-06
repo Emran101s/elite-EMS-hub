@@ -1,0 +1,122 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        PHP_VERSION: "8.4"
+        NODE_VERSION: "22"
+        # Pin — bump only with package-lock puppeteer, and keep CI in sync.
+        CHROME_HEADLESS_SHELL_VERSION: "150.0.7871.24"
+    env_file:
+      - .env
+    volumes:
+      # Bind-mount is for local iteration; staging/prod images bake the code in.
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+      - node_modules_data:/var/www/html/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - elitehub
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${APP_HTTP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/up"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elitehub
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        CHROME_HEADLESS_SHELL_VERSION: "150.0.7871.24"
+    command: php artisan queue:work redis --sleep=1 --tries=3 --max-time=3600
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - elitehub
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        CHROME_HEADLESS_SHELL_VERSION: "150.0.7871.24"
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - elitehub
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-elitehub}
+      POSTGRES_USER: ${DB_USERNAME:-elitehub}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-elitehub}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - elitehub
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - elitehub
+
+volumes:
+  postgres_data:
+  redis_data:
+  vendor_data:
+  node_modules_data:
+
+networks:
+  elitehub:
+    driver: bridge
