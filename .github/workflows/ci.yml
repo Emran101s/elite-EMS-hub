@@ -68,7 +68,7 @@ jobs:
           cache: npm
 
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ runner.os }}-php8.4-${{ hashFiles('composer.lock') }}
@@ -80,7 +80,7 @@ jobs:
       # Browsers live outside node_modules, so they need their own cache or
       # every run re-downloads ~200 MB.
       - name: Cache Puppeteer browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/puppeteer
           key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-chrome-150.0.7871.24
