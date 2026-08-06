@@ -156,20 +156,30 @@ Uses Claude's migrations already on `main`. No new migration for the copy.
 
 ### 3. Copy rows
 
-Preferred approaches (pick one in the cutover PR, implement as a **script**
-under `scripts/`, not a migration):
+Implemented: [`scripts/sqlite-to-pgsql.php`](../scripts/sqlite-to-pgsql.php)
+(pure PDO, no migrations). Target = `.env` `DB_*` (must be pgsql). Source =
+a SQLite file (live DB or a `db-backup.sh` snapshot).
 
-| Approach | Pros | Cons |
-|---|---|---|
-| `pgloader` sqlite://… postgresql://… | Battle-tested, type mapping | Extra binary in the runbook |
-| Custom Artisan/`scripts/sqlite-to-pgsql.php` using PDO | Stays in-repo | Must respect FK order + `tenant_id` |
-| `sqlite3 .dump` → hand-edited SQL | Simple for tiny DBs | Fragile; avoid for 71 tables |
+```bash
+# Point .env at Postgres first, then:
+php artisan migrate --force
+php scripts/sqlite-to-pgsql.php --source=storage/backups/elitehub-….sqlite --dry-run
+php scripts/sqlite-to-pgsql.php --source=storage/backups/elitehub-….sqlite --truncate --verify
+```
 
-**FK / tenancy order:** load `tenants` → `workspaces` → `workspace_user` /
-`users` (as applicable) → remaining tenant-scoped tables. Disable triggers /
-defer constraints if the loader supports it; otherwise sort by dependency.
+| Flag | Effect |
+|---|---|
+| `--dry-run` | Intersection tables + counts only |
+| `--truncate` | `TRUNCATE … CASCADE` before insert (safe re-runs) |
+| `--verify` | Per-table `COUNT(*)` must match; spot-checks `tenant_id` |
+| `--skip=a,b` | Extra tables on top of framework defaults |
 
-**Sequences:** after copy, reset Postgres sequences to `MAX(id)` per table.
+**Skipped by default:** `migrations`, `cache*`, `jobs*`, `failed_jobs`,
+`sessions`, `password_reset_tokens`.
+
+**FK / tenancy:** copies under `SET session_replication_role = replica`, then
+resets sequences to `MAX(id)`. Preferred load order starts with `tenants` →
+`users` → `workspaces` → `workspace_user` → `company_profiles`.
 
 **Verification queries (minimum):**
 
@@ -223,12 +233,13 @@ script must not add columns or rewrite migrations.
 ## Suggested PR sequence
 
 1. ~~`cursor/pgsql-ci-job`~~ — landed: `Test suite (pgsql)` in `ci.yml`.
-2. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.sh` (or PHP) +
-   dry-run on a staging Compose volume.
-3. Staging cutover (ops, not a code PR).
-4. Production cutover (ops).
-5. Only then: discuss retiring sqlite from `phpunit.xml` / making pgsql a
-   required check.
+2. `cursor/pgsql-green` (PR #22) — domain quirks so pgsql CI is green; then
+   make **Test suite (pgsql)** a required check (admin).
+3. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.php` + staging
+   dry-run on a Compose volume.
+4. Staging cutover (ops, not a code PR).
+5. Production cutover (ops).
+6. Only then: discuss retiring sqlite from `phpunit.xml`.
 
 Related: [16-infrastructure.md](16-infrastructure.md),
 [15-database-backups.md](15-database-backups.md),
