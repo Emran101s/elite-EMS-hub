@@ -26,7 +26,7 @@ Browsershot hard-codes `headless: 'shell'`. The image and CI install a
 **pinned** `chrome-headless-shell` build:
 
 ```
-CHROME_HEADLESS_SHELL_VERSION=150.0.7871.24
+CHROME_HEADLESS_SHELL_VERSION=151.0.7922.47
 ```
 
 Bump it only together with the locked `puppeteer` in `package-lock.json`, and
