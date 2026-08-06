@@ -22,7 +22,18 @@ class EventDocumentController extends Controller
         return Storage::disk($document->disk)->download($document->path, $this->filename($document));
     }
 
-    /** Same file, shown in the browser — only for types a browser can render. */
+    /**
+     * Same file, shown in the browser — only for types a browser can render.
+     *
+     * Two layers, because the Content-Type here is attacker-supplied (it comes
+     * from the upload) and the app's own CSP allows inline script:
+     *   1. EventDocument::INLINE_MIMES is an allowlist, so an SVG never reaches
+     *      this response in the first place.
+     *   2. The headers below sandbox it anyway — a per-response CSP that
+     *      forbids every source, plus nosniff so the browser cannot decide the
+     *      bytes are really HTML. Defence in depth: if the allowlist is ever
+     *      widened by mistake, this still refuses to execute anything.
+     */
     public function view(Event $event, EventDocument $document): StreamedResponse
     {
         $this->guard($event, $document);
@@ -31,7 +42,11 @@ class EventDocumentController extends Controller
         return Storage::disk($document->disk)->response(
             $document->path,
             $this->filename($document),
-            ['Content-Type' => $document->mime ?: 'application/octet-stream']
+            [
+                'Content-Type' => $document->mime ?: 'application/octet-stream',
+                'Content-Security-Policy' => "default-src 'none'; img-src 'self'; object-src 'none'; sandbox",
+                'X-Content-Type-Options' => 'nosniff',
+            ]
         );
     }
 

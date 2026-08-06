@@ -48,6 +48,29 @@ class EventDocument extends Model
         return strtoupper(pathinfo($this->original_name, PATHINFO_EXTENSION) ?: 'FILE');
     }
 
+    /**
+     * Mime types we are willing to hand a browser to render in a tab.
+     *
+     * An explicit allowlist, deliberately not `image/*`. An SVG is a document
+     * that can carry <script>, so an uploaded .svg served inline from our own
+     * origin runs with the viewer's session — and the app's CSP still allows
+     * inline script. Uploading one is fine; rendering it is not. Anything off
+     * this list is still downloadable, it just never opens in a tab.
+     */
+    public const INLINE_MIMES = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/avif',
+        'application/pdf',
+    ];
+
+    /**
+     * Whether the file *is* an image — a different question from whether it is
+     * safe to render, which is what conflating the two got wrong. Kept for
+     * display decisions (icons, thumbnails); never use it to gate output.
+     */
     public function isImage(): bool
     {
         return str_starts_with((string) $this->mime, 'image/');
@@ -61,7 +84,7 @@ class EventDocument extends Model
     /** Browsers can show these in a tab; everything else is a download. */
     public function isViewable(): bool
     {
-        return $this->isImage() || $this->isPdf();
+        return in_array((string) $this->mime, self::INLINE_MIMES, true);
     }
 
     public function sizeForHumans(): string

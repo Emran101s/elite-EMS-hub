@@ -30,7 +30,15 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($request));
+
+        // Only supply the app-wide policy when the response has not set its own.
+        // A route that streams user-uploaded bytes needs a *stricter* policy
+        // than the hub does — see EventDocumentController::view(), which
+        // sandboxes them — and unconditionally setting the header here silently
+        // replaced it, undoing the hardening it looked like it had.
+        if (! $response->headers->has('Content-Security-Policy')) {
+            $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($request));
+        }
 
         if ($request->isSecure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
