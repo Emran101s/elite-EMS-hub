@@ -18,7 +18,10 @@ class EventBriefTest extends TestCase
 
     private function make(): array
     {
-        $user = User::create(['name' => 'PM', 'email' => 'pm@ebh.test', 'password' => bcrypt('x')]);
+        // 'manager' — the events/{event} route group now requires EventPolicy::view()
+        // (manager+, or team membership), and nothing in this file exercises a
+        // lower-privilege actor deliberately.
+        $user = User::create(['name' => 'PM', 'email' => 'pm@ebh.test', 'password' => bcrypt('x'), 'role' => 'manager']);
         $event = Event::create(['name' => 'Test Summit', 'type' => 'conference', 'city' => 'Amman', 'country' => 'Jordan', 'starts_at' => now(), 'status' => 'planning']);
 
         return [$user, $event];
