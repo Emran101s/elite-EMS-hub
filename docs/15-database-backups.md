@@ -39,12 +39,19 @@ In-place restore first writes a `pre-restore-*.sqlite` safety copy into
 ## Automation
 
 A daily Artisan schedule entry runs the backup script at 02:30 (see
-`routes/console.php`). On any host that should keep backups, cron must call
-the scheduler:
+`routes/console.php`). Cron must call the scheduler every minute so due
+events fire:
 
 ```cron
-* * * * * cd /path/to/elitehub && php artisan schedule:run >> /dev/null 2>&1
+PATH=/Users/emranalitan/Library/Application Support/Herd/bin:/usr/bin:/bin
+* * * * * cd /Users/emranalitan/Herd/elitehub && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+**Installed on the Herd host (2026-08-06).** Verified with
+`crontab -l | grep schedule:run`. A temporary `everyMinute()` schedule
+produced `storage/backups/elitehub-20260806-094801.sqlite` via cron alone
+(nobody ran `scripts/db-backup.sh` by hand); the schedule was then restored
+to `dailyAt('02:30')`. Output also landed in `storage/logs/backup.log`.
 
 Or call the script directly:
 
