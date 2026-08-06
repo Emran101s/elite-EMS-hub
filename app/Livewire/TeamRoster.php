@@ -77,7 +77,11 @@ class TeamRoster extends Component
         }
 
         if ($this->editingId) {
-            User::whereKey($this->editingId)->update($fields);
+            // Through the model, not the query builder: a mass update fires no
+            // Eloquent events, so User's Auditable trait never ran and a role
+            // change made here — the only place a human can make one — left no
+            // record at all.
+            User::findOrFail($this->editingId)->update($fields);
         } else {
             // No invite flow yet — seed a random password; access is granted in a later slice.
             User::create($fields + ['password' => Hash::make(Str::password(24))]);
