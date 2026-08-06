@@ -173,13 +173,28 @@ php scripts/sqlite-to-pgsql.php --source=storage/backups/elitehub-….sqlite --t
 | `--truncate` | `TRUNCATE … CASCADE` before insert (safe re-runs) |
 | `--verify` | Per-table `COUNT(*)` must match; spot-checks `tenant_id` |
 | `--skip=a,b` | Extra tables on top of framework defaults |
+| `--no-replica-role` | Skip FK bypass; rely on preferred table order |
 
 **Skipped by default:** `migrations`, `cache*`, `jobs*`, `failed_jobs`,
 `sessions`, `password_reset_tokens`.
 
-**FK / tenancy:** copies under `SET session_replication_role = replica`, then
-resets sequences to `MAX(id)`. Preferred load order starts with `tenants` →
-`users` → `workspaces` → `workspace_user` → `company_profiles`.
+**Single database:** this app scopes tenants with `tenant_id` columns in one
+DB — not separate per-tenant SQLite files. `--source` is the whole app
+database (or a `db-backup.sh` snapshot of it).
+
+**FK / privileges:** prefers `SET session_replication_role = replica`, then
+resets sequences to `MAX(id)`. That setting needs superuser or
+`GRANT SET ON PARAMETER session_replication_role`. If the grant is missing,
+the script warns and falls back to preferred-order inserts. For managed
+Postgres cutovers, set a privileged role:
+
+```bash
+DB_COPY_USERNAME=cutover_admin DB_COPY_PASSWORD=… \
+  php scripts/sqlite-to-pgsql.php --source=… --truncate --verify
+```
+
+Preferred load order starts with `tenants` → `users` → `workspaces` →
+`workspace_user` → `company_profiles` → CRM spine → `events`.
 
 **Verification queries (minimum):**
 

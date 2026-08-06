@@ -8,8 +8,17 @@
  * Not a migration. Assumes the target schema already exists
  * (`php artisan migrate --force` against pgsql).
  *
+ * Tenancy model: ONE database. Customer data is scoped by `tenant_id`
+ * columns (Claude Phase 1), not separate per-tenant SQLite files. The
+ * `--source` file is the whole app DB (or a backup of it).
+ *
+ * FK bypass: prefers `SET session_replication_role = replica` (needs
+ * superuser or `GRANT SET ON PARAMETER session_replication_role`). If that
+ * fails, falls back to preferred-order inserts. Optional elevated cutover
+ * credentials: `DB_COPY_USERNAME` / `DB_COPY_PASSWORD` (same host/db).
+ *
  * Usage:
- *   php scripts/sqlite-to-pgsql.php [--source=PATH] [--dry-run] [--verify] [--truncate] [--skip=a,b]
+ *   php scripts/sqlite-to-pgsql.php [--source=PATH] [--dry-run] [--verify] [--truncate] [--skip=a,b] [--no-replica-role]
  *
  * Env loading mirrors scripts/db-backup.sh (DB_* only). Process env wins.
  */
@@ -30,13 +39,19 @@ const DEFAULT_SKIP = [
     'password_reset_tokens',
 ];
 
-/** Prefer spine / auth before dependents (cosmetic when replica role is on). */
+/** Prefer spine / auth before dependents (load-bearing when replica role is off). */
 const PREFERRED_ORDER = [
     'tenants',
     'users',
     'workspaces',
     'workspace_user',
     'company_profiles',
+    'clients',
+    'contacts',
+    'venues',
+    'suppliers',
+    'deals',
+    'events',
 ];
 
 final class Cli
@@ -48,6 +63,8 @@ final class Cli
     public bool $verify = false;
 
     public bool $truncate = false;
+
+    public bool $noReplicaRole = false;
 
     /** @var list<string> */
     public array $extraSkip = [];
@@ -70,6 +87,11 @@ final class Cli
             }
             if ($arg === '--truncate') {
                 $c->truncate = true;
+
+                continue;
+            }
+            if ($arg === '--no-replica-role') {
+                $c->noReplicaRole = true;
 
                 continue;
             }
@@ -99,13 +121,15 @@ final class Cli
         $msg = <<<'TXT'
 Usage: php scripts/sqlite-to-pgsql.php [options]
 
-  --source=PATH   SQLite file (default: database/database.sqlite)
-  --dry-run       List intersection tables + row counts; do not write
-  --verify        After copy, compare COUNT(*) per table; exit 1 on mismatch
-  --truncate      TRUNCATE … CASCADE all target tables before insert (re-runs)
-  --skip=a,b      Extra tables to skip (added to framework defaults)
+  --source=PATH      SQLite file (default: database/database.sqlite)
+  --dry-run          List intersection tables + row counts; do not write
+  --verify           After copy, compare COUNT(*) per table; exit 1 on mismatch
+  --truncate         TRUNCATE … CASCADE all target tables before insert (re-runs)
+  --skip=a,b         Extra tables to skip (added to framework defaults)
+  --no-replica-role  Skip session_replication_role; rely on preferred table order
 
 Target connection comes from .env DB_* (must be pgsql).
+Optional elevated cutover role: DB_COPY_USERNAME / DB_COPY_PASSWORD.
 
 TXT;
         fwrite($code === 0 ? STDOUT : STDERR, $msg);
@@ -119,20 +143,22 @@ TXT;
 function loadEnvDb(): array
 {
     $envFile = ROOT.'/.env';
-    $vars = [
-        'DB_CONNECTION' => getenv('DB_CONNECTION') ?: null,
-        'DB_HOST' => getenv('DB_HOST') ?: null,
-        'DB_PORT' => getenv('DB_PORT') ?: null,
-        'DB_DATABASE' => getenv('DB_DATABASE') ?: null,
-        'DB_USERNAME' => getenv('DB_USERNAME') ?: null,
-        'DB_PASSWORD' => getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : null,
+    $keys = [
+        'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD',
+        'DB_COPY_USERNAME', 'DB_COPY_PASSWORD',
     ];
+    $vars = [];
+    foreach ($keys as $key) {
+        $fromEnv = getenv($key);
+        $vars[$key] = $fromEnv !== false ? $fromEnv : null;
+    }
 
     if (is_file($envFile)) {
         $lines = file($envFile, FILE_IGNORE_NEW_LINES) ?: [];
+        $pattern = '/^('.implode('|', $keys).')=(.*)$/';
         foreach ($lines as $line) {
             $line = rtrim($line, "\r");
-            if (! preg_match('/^(DB_CONNECTION|DB_HOST|DB_PORT|DB_DATABASE|DB_USERNAME|DB_PASSWORD)=(.*)$/', $line, $m)) {
+            if (! preg_match($pattern, $line, $m)) {
                 continue;
             }
             $val = $m[2];
@@ -185,11 +211,16 @@ function connectPgsql(array $env): PDO
     $host = $env['DB_HOST'] ?? '127.0.0.1';
     $port = $env['DB_PORT'] ?? '5432';
     $db = $env['DB_DATABASE'] ?? '';
-    $user = $env['DB_USERNAME'] ?? '';
-    $pass = $env['DB_PASSWORD'] ?? '';
+    // Prefer a privileged cutover role when provided (managed Postgres).
+    $user = ($env['DB_COPY_USERNAME'] !== null && $env['DB_COPY_USERNAME'] !== '')
+        ? $env['DB_COPY_USERNAME']
+        : ($env['DB_USERNAME'] ?? '');
+    $pass = ($env['DB_COPY_USERNAME'] !== null && $env['DB_COPY_USERNAME'] !== '')
+        ? (string) ($env['DB_COPY_PASSWORD'] ?? '')
+        : (string) ($env['DB_PASSWORD'] ?? '');
 
     if ($db === '' || $user === '') {
-        fail('DB_DATABASE and DB_USERNAME are required for pgsql');
+        fail('DB_DATABASE and DB_USERNAME (or DB_COPY_USERNAME) are required for pgsql');
     }
 
     $dsn = "pgsql:host={$host};port={$port};dbname={$db}";
@@ -198,6 +229,31 @@ function connectPgsql(array $env): PDO
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
+}
+
+/**
+ * Try to bypass FK checks for unordered inserts. Returns whether replica role is active.
+ */
+function enableFkBypass(PDO $pg, bool $forceOff): bool
+{
+    if ($forceOff) {
+        fwrite(STDERR, "warn: --no-replica-role set; relying on preferred table order only\n");
+
+        return false;
+    }
+
+    try {
+        $pg->exec('SET session_replication_role = replica');
+
+        return true;
+    } catch (PDOException $e) {
+        fwrite(STDERR, 'warn: cannot SET session_replication_role = replica ('.$e->getMessage().")\n");
+        fwrite(STDERR, "warn: falling back to preferred-order inserts. On managed Postgres, either:\n");
+        fwrite(STDERR, "      GRANT SET ON PARAMETER session_replication_role TO <app_user>;\n");
+        fwrite(STDERR, "      or set DB_COPY_USERNAME / DB_COPY_PASSWORD to a privileged cutover role.\n");
+
+        return false;
+    }
 }
 
 /** @return list<string> */
@@ -473,14 +529,14 @@ if (! $cli->truncate) {
 }
 
 echo "\ncopying…\n";
-$pg->exec('SET session_replication_role = replica');
+$replica = enableFkBypass($pg, $cli->noReplicaRole);
 
 $copied = 0;
 try {
     if ($cli->truncate && $tables !== []) {
         $list = implode(', ', array_map('quoteIdentPg', $tables));
         $pg->exec("TRUNCATE TABLE {$list} CASCADE");
-        echo "  truncated ".count($tables)." tables\n";
+        echo '  truncated '.count($tables)." tables\n";
     }
 
     foreach ($tables as $t) {
@@ -494,15 +550,19 @@ try {
         resetSequences($pg, $t);
     }
 } catch (Throwable $e) {
-    try {
-        $pg->exec('SET session_replication_role = DEFAULT');
-    } catch (Throwable) {
-        // ignore
+    if ($replica) {
+        try {
+            $pg->exec('SET session_replication_role = DEFAULT');
+        } catch (Throwable) {
+            // ignore
+        }
     }
     fail($e->getMessage());
 }
 
-$pg->exec('SET session_replication_role = DEFAULT');
+if ($replica) {
+    $pg->exec('SET session_replication_role = DEFAULT');
+}
 echo "copied rows total: {$copied}\n";
 
 if ($cli->verify) {
