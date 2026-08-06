@@ -81,10 +81,20 @@ class TeamRoster extends Component
             // Eloquent events, so User's Auditable trait never ran and a role
             // change made here — the only place a human can make one — left no
             // record at all.
-            User::findOrFail($this->editingId)->update($fields);
+            $user = User::findOrFail($this->editingId);
+            $user->update($fields);
         } else {
             // No invite flow yet — seed a random password; access is granted in a later slice.
-            User::create($fields + ['password' => Hash::make(Str::password(24))]);
+            $user = User::create($fields + ['password' => Hash::make(Str::password(24))]);
+        }
+
+        // What isAtLeast() actually reads (User::activeWorkspace()) is
+        // workspace_user.role, not this row's role column. This is the one
+        // place a human sets a role, so it is the one place that has to keep
+        // both in sync — users.role stays a written, readable mirror; nothing
+        // else in this screen or the audit trail needs to change to know that.
+        if ($workspace = auth()->user()->activeWorkspace()) {
+            $workspace->grant($user, $this->role);
         }
 
         $this->showForm = false;
