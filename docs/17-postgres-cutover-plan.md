@@ -113,9 +113,11 @@ The pgsql job overrides `DB_*` via process env (PHPUnit does not clobber
 existing env unless `force="true"`), runs `php artisan migrate --force`, then
 the full suite. No `phpunit.xml` edit.
 
-**Required-check policy:** keep `Test suite` (+ `Static checks`) as the merge
-gate until `Test suite (pgsql)` is green on `main` for a stretch. Then add it
-to branch protection and only later discuss retiring sqlite from `phpunit.xml`.
+**Required-check policy:** `Test suite (pgsql)` is green on
+`cursor/pgsql-green` / PR #22. Add it to branch protection on `main`
+alongside `Test suite` + `Static checks` (needs a repo admin — Cursor's
+token got `Forbidden` on the protection API). Keep sqlite `phpunit.xml`
+until that gate has held for a stretch; only then discuss retiring it.
 
 SQLite vs Postgres quirks Claude should watch for when the pgsql job fails:
 

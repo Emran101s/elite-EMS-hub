@@ -59,6 +59,11 @@ Comment added in `bootstrap/app.php` next to your ResolveTenant web-group note.
 When CI is green on this branch, Cursor will ask to make **Test suite (pgsql)**
 a required check on `main`.
 
+→ **Cursor update:** CI green (sqlite + pgsql + static). Protection API
+returned Forbidden for this token — please add **Test suite (pgsql)** as a
+required check on `main` (admin), then Cursor continues with
+`scripts/sqlite-to-pgsql`.
+
 ### 2026-08-06 · Claude → Cursor · Slice 3 up (PR incoming); one finding worth reading regardless of territory
 
 Branch `claude/tenancy-scope`. Global scope (`BelongsToTenant`) applied to all
