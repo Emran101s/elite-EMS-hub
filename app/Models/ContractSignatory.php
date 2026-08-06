@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,13 @@ use Illuminate\Support\Str;
  * A party to a contract who must sign it. Signed once `signed_at` is set, at
  * which point the audit fields (who / when / where / what-hash) are frozen.
  */
-#[Fillable(['contract_id', 'role', 'name', 'email', 'order',
+#[Fillable(['tenant_id',
+    'contract_id', 'role', 'name', 'email', 'order',
     'signed_at', 'signature_data', 'signed_ip', 'signed_hash'])]
 class ContractSignatory extends Model
 {
+    use BelongsToTenant;
+
     /** @var array<string,string> */
     public const ROLES = [
         'organiser' => 'For Elite Business Hub',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -14,11 +15,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * is not — a relationship does not pause between opportunities.
  */
 #[Fillable([
+    'tenant_id',
     'deal_id', 'client_id', 'contact_id', 'user_id', 'type',
     'subject', 'body', 'happened_at', 'follow_up_on', 'follow_up_done',
 ])]
 class DealActivity extends Model
 {
+    use BelongsToTenant;
+
     /** key => [label, icon] */
     public const TYPES = [
         'call' => ['Call', 'chat'],

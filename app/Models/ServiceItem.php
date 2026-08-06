@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use App\Models\Concerns\PricedByUnit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -20,10 +21,11 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceItem extends Model
 {
     use Auditable, PricedByUnit;
+    use BelongsToTenant;
 
     public const AUDIT_FIELDS = ['name', 'unit_price_cents', 'unit', 'active'];
 
-    protected $fillable = ['code', 'name', 'category', 'section', 'detail', 'unit',
+    protected $fillable = ['tenant_id', 'code', 'name', 'category', 'section', 'detail', 'unit',
         'unit_price_cents', 'currency', 'tax_pct', 'active', 'sort'];
 
     protected function casts(): array

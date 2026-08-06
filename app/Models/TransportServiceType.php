@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'is_active', 'position'])]
+#[Fillable(['tenant_id',
+    'name', 'is_active', 'position'])]
 class TransportServiceType extends Model
 {
+    use BelongsToTenant;
+
     /**
      * What the movement *is*, as opposed to what it's driven in.
      *

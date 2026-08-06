@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['event_id', 'source_type', 'source_id', 'room_id', 'category', 'description', 'quantity', 'unit_cents', 'estimated_cents', 'approved_cents', 'actual_cents', 'paid_cents', 'sell_cents', 'markup_pct', 'billable', 'supplier_id', 'vendor', 'payment_status', 'flagged', 'invoice_number', 'due_on', 'notes'])]
+#[Fillable(['tenant_id',
+    'event_id', 'source_type', 'source_id', 'room_id', 'category', 'description', 'quantity', 'unit_cents', 'estimated_cents', 'approved_cents', 'actual_cents', 'paid_cents', 'sell_cents', 'markup_pct', 'billable', 'supplier_id', 'vendor', 'payment_status', 'flagged', 'invoice_number', 'due_on', 'notes'])]
 class EventBudgetItem extends Model
 {
+    use BelongsToTenant;
     use SoftDeletes;
 
     /**

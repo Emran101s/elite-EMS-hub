@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'title', 'category', 'probability', 'impact', 'owner_id', 'mitigation', 'status', 'due_on'])]
+#[Fillable(['tenant_id',
+    'event_id', 'title', 'category', 'probability', 'impact', 'owner_id', 'mitigation', 'status', 'due_on'])]
 class EventRisk extends Model
 {
+    use BelongsToTenant;
+
     public const CATEGORIES = ['venue', 'supplier', 'budget', 'client_approval', 'speaker', 'logistics', 'production', 'weather', 'attendance', 'technical'];
 
     public const STATUSES = ['open', 'monitoring', 'mitigated', 'escalated', 'closed'];

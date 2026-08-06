@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -18,7 +19,9 @@ use Illuminate\Support\Collection;
  */
 class RegistrationTemplate extends Model
 {
-    protected $fillable = ['name', 'note', 'fields', 'position'];
+    use BelongsToTenant;
+
+    protected $fillable = ['tenant_id', 'name', 'note', 'fields', 'position'];
 
     protected $casts = ['fields' => 'array', 'position' => 'integer'];
 

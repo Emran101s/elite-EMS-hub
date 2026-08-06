@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\BriefTemplates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,9 @@ use Illuminate\Support\Str;
 
 class EventBrief extends Model
 {
-    protected $fillable = ['event_id', 'template', 'status', 'version', 'data', 'hidden_sections', 'approved_at'];
+    use BelongsToTenant;
+
+    protected $fillable = ['tenant_id', 'event_id', 'template', 'status', 'version', 'data', 'hidden_sections', 'approved_at'];
 
     protected $casts = [
         'data' => 'array',

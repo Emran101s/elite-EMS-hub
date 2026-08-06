@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
 use App\Support\ContractTemplates;
+use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +25,7 @@ use Illuminate\Support\Str;
 class EventContract extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** The `data` JSON autosaves constantly — only real decisions are logged. */
     public const AUDIT_FIELDS = ['status', 'signed_at', 'version', 'type'];
@@ -68,12 +71,12 @@ class EventContract extends Model
 
         return collect(self::STATUSES)
             ->mapWithKeys(fn (string $status) => [$status => [
-                \App\Support\Workflow::label('contract_status', $status),
+                Workflow::label('contract_status', $status),
                 $class[$status] ?? 'bg-navy-50 text-navy-500',
             ]])->all();
     }
 
-    protected $fillable = ['event_id', 'type', 'party_type', 'party_id', 'title', 'language',
+    protected $fillable = ['tenant_id', 'event_id', 'type', 'party_type', 'party_id', 'title', 'language',
         'template_key', 'reference', 'status', 'version', 'data', 'signed_at'];
 
     protected $casts = [

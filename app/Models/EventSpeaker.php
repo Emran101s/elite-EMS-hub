@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['event_id', 'name', 'title', 'organization', 'topic', 'bio', 'email', 'phone', 'photo_url', 'is_keynote', 'status', 'fee_cents', 'sort_order'])]
+#[Fillable(['tenant_id',
+    'event_id', 'name', 'title', 'organization', 'topic', 'bio', 'email', 'phone', 'photo_url', 'is_keynote', 'status', 'fee_cents', 'sort_order'])]
 class EventSpeaker extends Model
 {
+    use BelongsToTenant;
+
     public const STATUSES = ['invited', 'confirmed', 'declined', 'cancelled'];
 
     protected function casts(): array

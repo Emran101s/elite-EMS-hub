@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use App\Models\CompanyProfile;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use App\Services\DealPipeline;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 class Proposal extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     public const AUDIT_FIELDS = ['status', 'issued_on', 'valid_until', 'decided_on'];
 
@@ -44,7 +46,7 @@ class Proposal extends Model
         'declined' => ['Declined', '#DC2626'],
     ];
 
-    protected $fillable = ['deal_id', 'client_id', 'contact_id', 'event_id', 'owner_id',
+    protected $fillable = ['tenant_id', 'deal_id', 'client_id', 'contact_id', 'event_id', 'owner_id',
         'number', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'tax_pct', 'fee_pct',
         'summary', 'terms', 'decided_on', 'decline_reason'];
 
@@ -232,7 +234,7 @@ class Proposal extends Model
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
                 return static::create(array_merge($attributes, ['number' => static::nextNumber()]));
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            } catch (UniqueConstraintViolationException $e) {
                 if ($attempt === 5) {
                     throw $e;
                 }

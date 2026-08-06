@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** One entry in one of the platform's editable lists. */
-#[Fillable(['taxonomy', 'parent_id', 'key', 'label', 'color', 'note', 'position', 'is_active', 'is_system'])]
+#[Fillable(['tenant_id',
+    'taxonomy', 'parent_id', 'key', 'label', 'color', 'note', 'position', 'is_active', 'is_system'])]
 class TaxonomyTerm extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return [

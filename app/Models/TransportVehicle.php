@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -16,9 +17,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * where a guest is told which vehicle to look for; forcing it onto every shuttle
  * would just create a field nobody maintains.
  */
-#[Fillable(['vehicle_type_id', 'plate_no', 'supplier_id', 'model', 'colour', 'year', 'features', 'notes', 'is_active'])]
+#[Fillable(['tenant_id',
+    'vehicle_type_id', 'plate_no', 'supplier_id', 'model', 'colour', 'year', 'features', 'notes', 'is_active'])]
 class TransportVehicle extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return ['year' => 'integer', 'is_active' => 'boolean'];

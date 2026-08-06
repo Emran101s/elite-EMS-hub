@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'source', 'description', 'amount_cents', 'status', 'notes'])]
+#[Fillable(['tenant_id',
+    'event_id', 'source', 'description', 'amount_cents', 'status', 'notes'])]
 class EventIncomeItem extends Model
 {
+    use BelongsToTenant;
+
     /** Manual income sources (sponsorship & exhibition are pulled from their modules). */
     public const SOURCES = [
         'client' => 'Client Fee / Payment',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * A person at a client. Clients used to carry one `contact_name` string, which
  * is fine until the person who signs is not the person who answers the phone.
  */
-#[Fillable(['client_id', 'name', 'title', 'email', 'phone', 'is_primary', 'notes'])]
+#[Fillable(['tenant_id',
+    'client_id', 'name', 'title', 'email', 'phone', 'is_primary', 'notes'])]
 class Contact extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return ['is_primary' => 'boolean'];

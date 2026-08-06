@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,10 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'type', 'address', 'city', 'country', 'capacity',
+#[Fillable(['tenant_id',
+    'name', 'type', 'address', 'city', 'country', 'capacity',
     'contact_name', 'contact_phone', 'contact_email', 'notes'])]
 class Venue extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<VenueFactory> */
     use HasFactory;
 

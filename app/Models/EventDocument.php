@@ -3,17 +3,20 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['event_id', 'module', 'folder_id', 'name', 'original_name', 'path', 'disk', 'mime',
+#[Fillable(['tenant_id',
+    'event_id', 'module', 'folder_id', 'name', 'original_name', 'path', 'disk', 'mime',
     'size', 'uploaded_by', 'notes'])]
 class EventDocument extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     protected function casts(): array
     {

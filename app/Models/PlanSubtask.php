@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** A rich checklist entry owned by a plan item — title, done-state, owner, due date. */
-#[Fillable(['plan_item_id', 'title', 'is_done', 'owner_id', 'due_on', 'position'])]
+#[Fillable(['tenant_id',
+    'plan_item_id', 'title', 'is_done', 'owner_id', 'due_on', 'position'])]
 class PlanSubtask extends Model
 {
+    use BelongsToTenant;
+
     protected function casts(): array
     {
         return [

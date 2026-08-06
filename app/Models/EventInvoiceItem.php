@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use App\Models\Concerns\PricedByUnit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -22,10 +23,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class EventInvoiceItem extends Model
 {
     use Auditable, PricedByUnit;
+    use BelongsToTenant;
 
     public const AUDIT_FIELDS = ['name', 'cost_cents', 'sell_cents', 'unit', 'active'];
 
-    protected $fillable = ['event_id', 'service_item_id', 'code', 'name', 'category', 'section',
+    protected $fillable = ['tenant_id', 'event_id', 'service_item_id', 'code', 'name', 'category', 'section',
         'detail', 'unit', 'cost_cents', 'sell_cents', 'currency', 'tax_pct', 'active', 'sort'];
 
     protected function casts(): array

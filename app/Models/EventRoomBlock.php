@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['event_id', 'supplier_id', 'hotel', 'venue_id', 'room_type', 'occupancy', 'rooms_count', 'rate_cents',
+#[Fillable(['tenant_id',
+    'event_id', 'supplier_id', 'hotel', 'venue_id', 'room_type', 'occupancy', 'rooms_count', 'rate_cents',
     'check_in', 'check_out', 'status', 'confirmation_number', 'cutoff_on', 'notes', 'position'])]
 class EventRoomBlock extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** slug => [label, hex] */
     public const STATUSES = [

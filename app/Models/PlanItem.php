@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,11 +15,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * subtasks, carries clear start/due dates, and records its approval sign-off.
  */
 #[Fillable([
+    'tenant_id',
     'event_id', 'track_id', 'title', 'description', 'status', 'priority',
     'start_on', 'due_on', 'progress_override', 'tags', 'approved_by', 'approved_at', 'position',
 ])]
 class PlanItem extends Model
 {
+    use BelongsToTenant;
+
     /** The six gates: key => [label, hex]. Order is the lifecycle order. */
     public const STATUSES = [
         'todo' => ['To Do', '#94A3B8'],

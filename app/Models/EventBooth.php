@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,10 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * the exhibitor is the buyer. Status is derived from that link so the floor
  * plan, the exhibitor list and the revenue numbers always agree.
  */
-#[Fillable(['event_id', 'hall_id', 'exhibitor_id', 'number', 'price_cents', 'x', 'y', 'w_m', 'h_m', 'notes'])]
+#[Fillable(['tenant_id',
+    'event_id', 'hall_id', 'exhibitor_id', 'number', 'price_cents', 'x', 'y', 'w_m', 'h_m', 'notes'])]
 class EventBooth extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['exhibitor_id', 'price_cents', 'number'];

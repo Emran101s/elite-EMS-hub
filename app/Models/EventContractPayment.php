@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,10 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * money and dates, never stored — a payment can't claim to be settled while
  * cash is missing.
  */
-#[Fillable(['event_id', 'contract_id', 'sort', 'label', 'pct', 'amount_cents', 'due_on', 'paid_cents', 'paid_at', 'note'])]
+#[Fillable(['tenant_id',
+    'event_id', 'contract_id', 'sort', 'label', 'pct', 'amount_cents', 'due_on', 'paid_cents', 'paid_at', 'note'])]
 class EventContractPayment extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** Money movements and date changes are decisions; the rest is noise. */
     public const AUDIT_FIELDS = ['paid_cents', 'paid_at', 'due_on', 'amount_cents'];

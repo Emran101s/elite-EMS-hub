@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'version', 'label', 'status', 'note', 'snapshot', 'totals', 'requested_by', 'decided_by', 'decided_at'])]
+#[Fillable(['tenant_id',
+    'event_id', 'version', 'label', 'status', 'note', 'snapshot', 'totals', 'requested_by', 'decided_by', 'decided_at'])]
 class EventBudgetVersion extends Model
 {
     use Auditable;
+    use BelongsToTenant;
 
     /** Only these changes are audit-worthy — decisions, not noise. */
     public const AUDIT_FIELDS = ['status'];
