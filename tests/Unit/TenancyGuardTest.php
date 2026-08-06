@@ -7,6 +7,7 @@ use App\Models\Event;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
+use Tests\TestCase;
 
 /**
  * The mechanical guarantee behind the whole tenancy retrofit.
@@ -20,7 +21,7 @@ use ReflectionClass;
  * Modelled on AuthorizationGuardTest, which already proved the pattern works
  * on this codebase.
  */
-class TenancyGuardTest extends \Tests\TestCase
+class TenancyGuardTest extends TestCase
 {
     /**
      * Tables carrying tenant_id whose model legitimately does not scope.
