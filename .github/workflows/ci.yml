@@ -126,6 +126,106 @@ jobs:
       - name: Run tests
         run: php artisan test
 
+  # Second required path for the Postgres cutover — env overrides only.
+  # phpunit.xml stays on sqlite; PHPUnit does not overwrite process env
+  # unless force="true". Do not flip phpunit.xml until this job is green
+  # on main for a stretch (see docs/17-postgres-cutover-plan.md).
+  tests_pgsql:
+    name: Test suite (pgsql)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: elitehub_test
+      DB_USERNAME: elitehub
+      DB_PASSWORD: elitehub
+      DB_URL: ''
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: elitehub_test
+          POSTGRES_USER: elitehub
+          POSTGRES_PASSWORD: elitehub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U elitehub -d elitehub_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, gd, zip, bcmath
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer packages
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php8.4-
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Cache Puppeteer browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-chrome-151.0.7922.47
+          restore-keys: puppeteer-${{ runner.os }}-
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install headless Chrome for Browsershot
+        run: |
+          npx puppeteer browsers install chrome-headless-shell@151.0.7922.47
+          npx puppeteer browsers install chrome@151.0.7922.47 || true
+          ls ~/.cache/puppeteer
+
+      - name: Build front-end assets
+        run: npm run build
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          # Mirror job env into .env so artisan migrate and the app agree
+          # (phpunit still overridden by process env above).
+          {
+            echo 'DB_CONNECTION=pgsql'
+            echo 'DB_HOST=127.0.0.1'
+            echo 'DB_PORT=5432'
+            echo 'DB_DATABASE=elitehub_test'
+            echo 'DB_USERNAME=elitehub'
+            echo 'DB_PASSWORD=elitehub'
+            echo 'DB_URL='
+          } >> .env
+
+      - name: Migrate Postgres schema
+        run: php artisan migrate --force
+
+      - name: Run tests on Postgres
+        run: php artisan test
+
   static:
     name: Static checks
     runs-on: ubuntu-latest
