@@ -1,0 +1,36 @@
+name: Staging uptime
+
+# Watches Laravel's /up on the staging URL. No-op unless STAGING_URL is set
+# in repo secrets (e.g. https://staging.hub.example.com).
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping /up
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip when STAGING_URL is unset
+        id: gate
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+        run: |
+          if [ -z "${STAGING_URL}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "STAGING_URL secret not set — skipping."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: GET /up
+        if: steps.gate.outputs.skip == 'false'
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+        run: |
+          set -euo pipefail
+          url="${STAGING_URL%/}/up"
+          code=$(curl -fsS -o /tmp/up-body -w '%{http_code}' "$url")
+          echo "HTTP ${code} from ${url}"
+          test "$code" = "200"

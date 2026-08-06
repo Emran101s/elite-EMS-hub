@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\Logging\RequestIdProcessor;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -103,6 +105,23 @@ return [
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        // Structured JSON on stderr — used by staging/production containers
+        // and anything scraping container logs. Includes request_id via
+        // AssignRequestId → Log::shareContext + RequestIdProcessor.
+        'stderr_json' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => JsonFormatter::class,
+            'processors' => [
+                PsrLogMessageProcessor::class,
+                RequestIdProcessor::class,
+            ],
         ],
 
         'syslog' => [
