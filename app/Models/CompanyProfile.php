@@ -27,7 +27,9 @@ class CompanyProfile extends Model
 
     public static function house(): ?self
     {
-        return self::$house ??= static::query()->first();
+        // Same row as current(): lowest id. Unordered first() could disagree
+        // with current() when legacy duplicate profiles exist.
+        return self::$house ??= static::query()->orderBy('id')->first();
     }
 
     public static function forgetHouse(): void

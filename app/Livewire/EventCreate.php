@@ -316,7 +316,7 @@ class EventCreate extends Component
             'city' => $this->city ?: ($company->city ?: 'TBD'),
             'country' => $this->country ?: ($company->country ?: 'Jordan'),
             'currency' => $this->currency ?: $company->default_currency,
-            'management_fee_pct' => $company->default_management_fee_pct ?? CompanyProfile::feePct(),
+            'management_fee_pct' => $company->default_management_fee_pct ?? 15.0,
             'timezone' => $this->timezone,
             'client_id' => $this->client_id,
             'cover_path' => $this->cover ? 'storage/'.$this->cover->store('event-covers', 'public') : null,
