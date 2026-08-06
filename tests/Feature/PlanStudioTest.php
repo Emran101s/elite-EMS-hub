@@ -163,6 +163,9 @@ class PlanStudioTest extends TestCase
     public function test_plan_pdf_downloads(): void
     {
         [$user, $event] = $this->make();
+        // A coordinator needs a reason to be on this event (EventPolicy::view());
+        // a manager wouldn't, but this test is specifically about a coordinator.
+        $event->teamMembers()->attach($user->id, ['role' => 'coordinator']);
         $event->planItems()->create(['title' => 'Confirm venue', 'status' => 'approved', 'priority' => 'high', 'track_id' => $event->planTracks()->value('id')]);
 
         $res = $this->actingAs($user)->get(route('events.planning.pdf', $event));
