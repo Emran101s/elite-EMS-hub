@@ -113,9 +113,11 @@ The pgsql job overrides `DB_*` via process env (PHPUnit does not clobber
 existing env unless `force="true"`), runs `php artisan migrate --force`, then
 the full suite. No `phpunit.xml` edit.
 
-**Required-check policy:** keep `Test suite` (+ `Static checks`) as the merge
-gate until `Test suite (pgsql)` is green on `main` for a stretch. Then add it
-to branch protection and only later discuss retiring sqlite from `phpunit.xml`.
+**Required-check policy:** `Test suite (pgsql)` is green on
+`cursor/pgsql-green` / PR #22. Add it to branch protection on `main`
+alongside `Test suite` + `Static checks` (needs a repo admin — Cursor's
+token got `Forbidden` on the protection API). Keep sqlite `phpunit.xml`
+until that gate has held for a stretch; only then discuss retiring it.
 
 SQLite vs Postgres quirks Claude should watch for when the pgsql job fails:
 
@@ -237,8 +239,9 @@ does `pg_dump | gzip`).
 | Work | Owner |
 |---|---|
 | Compose / CI Postgres service, env examples, this plan, copy **script** | Cursor |
-| Migrations, model casts, JSONB column types, fixing pgsql test failures in domain code | Claude |
-| Flipping `phpunit.xml` off sqlite | Joint — only after pgsql CI job is green |
+| Making `Test suite (pgsql)` green (domain quirks: singleton, SQL quoting, savepoints) | Cursor (`cursor/pgsql-green`) |
+| Migrations, model casts, JSONB column types (schema) | Claude |
+| Flipping `phpunit.xml` off sqlite / making pgsql a **required** check | Joint — after pgsql job is green on `main` |
 
 Schema lock remains in force for tenancy slices 3–4. A Postgres cutover
 script must not add columns or rewrite migrations.
@@ -248,8 +251,8 @@ script must not add columns or rewrite migrations.
 ## Suggested PR sequence
 
 1. ~~`cursor/pgsql-ci-job`~~ — landed: `Test suite (pgsql)` in `ci.yml`.
-2. `cursor/pgsql-green` (PR #22) — domain quirks so pgsql CI is green; then
-   make **Test suite (pgsql)** a required check (admin).
+2. ~~`cursor/pgsql-green`~~ — landed as PR #22; make **Test suite (pgsql)** a
+   required branch-protection check (admin).
 3. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.php` + staging
    dry-run on a Compose volume.
 4. Staging cutover (ops, not a code PR).

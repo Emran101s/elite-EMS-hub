@@ -15,20 +15,20 @@ use App\Http\Controllers\EventContractPdfController;
 use App\Http\Controllers\EventDocumentController;
 use App\Http\Controllers\EventHubController;
 use App\Http\Controllers\EventPricingTemplateController;
-use App\Http\Controllers\InvoicePdfController;
-use App\Http\Controllers\ProposalPdfController;
-use App\Http\Controllers\ServiceItemTemplateController;
 use App\Http\Controllers\ExhibitionFloorPdfController;
 use App\Http\Controllers\FlowBoardController;
+use App\Http\Controllers\InvoicePdfController;
 use App\Http\Controllers\MasterSchedulePdfController;
 use App\Http\Controllers\NavConceptController;
 use App\Http\Controllers\PlanStudioPdfController;
+use App\Http\Controllers\ProposalPdfController;
 use App\Http\Controllers\RoomEquipmentPdfController;
 use App\Http\Controllers\RoomingListPdfController;
 use App\Http\Controllers\RoomingTemplateController;
 use App\Http\Controllers\RoomLayoutPdfController;
 use App\Http\Controllers\RunOfShowController;
 use App\Http\Controllers\RunOfShowPdfController;
+use App\Http\Controllers\ServiceItemTemplateController;
 use App\Http\Controllers\SponsorshipController;
 use App\Http\Controllers\SupplierOrderPdfController;
 use App\Http\Controllers\TransportManifestPdfController;
@@ -36,29 +36,29 @@ use App\Http\Controllers\TransportManifestTemplateController;
 use App\Http\Controllers\TransportMasterPlanPdfController;
 use App\Http\Controllers\TransportPlanTemplateController;
 use App\Http\Controllers\VipTransferSheetPdfController;
+use App\Livewire\AiAssistant;
+use App\Livewire\ArrivalsDesk;
+use App\Livewire\CatalogueSettings;
 use App\Livewire\CheckInScan;
 use App\Livewire\ClientRecord;
 use App\Livewire\ClientsManager;
 use App\Livewire\CompanySettings;
+use App\Livewire\ContractsRegister;
 use App\Livewire\CrmPipeline;
-use App\Livewire\DefaultsSettings;
 use App\Livewire\Dashboard;
+use App\Livewire\DefaultsSettings;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Livewire\ExhibitionFloorPlan;
-use App\Livewire\ContractsRegister;
 use App\Livewire\FinanceOverview;
-use App\Livewire\ArrivalsDesk;
-use App\Livewire\CatalogueSettings;
-use App\Livewire\RegistrationTemplates;
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
-use App\Livewire\PlanningBoard;
 use App\Livewire\PaymentsLedger;
+use App\Livewire\PlanningBoard;
 use App\Livewire\ProposalEditor;
 use App\Livewire\ProposalsDesk;
 use App\Livewire\PublicRegistration;
-use App\Livewire\AiAssistant;
+use App\Livewire\RegistrationTemplates;
 use App\Livewire\ReportsOverview;
 use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
@@ -76,12 +76,12 @@ use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventSponsor;
 use App\Models\Project;
+use App\Models\RegistrationTemplate;
 use App\Models\Requirement;
 use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\TaxonomyTerm;
 use App\Models\TransportDriver;
-use App\Models\RegistrationTemplate;
 use App\Models\TransportVehicle;
 use App\Models\User;
 use App\Models\Venue;
@@ -131,127 +131,140 @@ Route::middleware('auth')->group(function () {
     Route::get('/events', EventsIndex::class)->name('events.index');
 
     /*
-     * Three agenda documents, one job each — all rendered by headless Chrome
-     * from the app's own design system:
-     *   Programme       → what's on, for delegates
-     *   Master Schedule → every session incl. crew, for the team
-     *   Run of Show     → the cue sheet for show day
+     * Every route below opens a specific event's hub or pulls one of its
+     * documents. Wrapped in EventPolicy::view() — manager+ rank, or being on
+     * that event's own team (event_team_members) — so browsing the list at
+     * /events stays open to everyone in the tenant (unchanged, deliberate
+     * transparency), but opening one you have no reason to be in, or pulling
+     * its contract/budget/attendee PDFs, now 403s instead of just working.
+     * See docs/14-cross-agent-notes.md for what this replaced.
      */
-    Route::get('/events/{event}/programme.pdf', AgendaProgramPdfController::class)
-        ->whereNumber('event')->name('events.agenda.program.pdf');
+    Route::middleware('can:view,event')->group(function () {
 
-    Route::get('/events/{event}/master-schedule.pdf', MasterSchedulePdfController::class)
-        ->whereNumber('event')->name('events.agenda.master.pdf');
+        /*
+         * Three agenda documents, one job each — all rendered by headless Chrome
+         * from the app's own design system:
+         *   Programme       → what's on, for delegates
+         *   Master Schedule → every session incl. crew, for the team
+         *   Run of Show     → the cue sheet for show day
+         */
+        Route::get('/events/{event}/programme.pdf', AgendaProgramPdfController::class)
+            ->whereNumber('event')->name('events.agenda.program.pdf');
 
-    Route::get('/events/{event}/timeline.pdf', AgendaTimelinePdfController::class)
-        ->whereNumber('event')->name('events.agenda.timeline.pdf');
+        Route::get('/events/{event}/master-schedule.pdf', MasterSchedulePdfController::class)
+            ->whereNumber('event')->name('events.agenda.master.pdf');
 
-    Route::get('/events/{event}/run-of-show.pdf', RunOfShowPdfController::class)
-        ->whereNumber('event')->name('events.run-of-show.pdf');
+        Route::get('/events/{event}/timeline.pdf', AgendaTimelinePdfController::class)
+            ->whereNumber('event')->name('events.agenda.timeline.pdf');
 
-    Route::get('/events/{event}/run-of-show', RunOfShowController::class)
-        ->whereNumber('event')->name('events.run-of-show');
+        Route::get('/events/{event}/run-of-show.pdf', RunOfShowPdfController::class)
+            ->whereNumber('event')->name('events.run-of-show.pdf');
 
-    Route::get('/events/{event}/budget.pdf', BudgetPdfController::class)
-        ->whereNumber('event')->name('events.budget.pdf');
+        Route::get('/events/{event}/run-of-show', RunOfShowController::class)
+            ->whereNumber('event')->name('events.run-of-show');
 
-    Route::get('/events/{event}/exhibition-floor', ExhibitionFloorPlan::class)
-        ->whereNumber('event')->name('events.exhibition-floor');
-    Route::get('/events/{event}/exhibition-floor.pdf', ExhibitionFloorPdfController::class)
-        ->whereNumber('event')->name('events.exhibition-floor.pdf');
+        Route::get('/events/{event}/budget.pdf', BudgetPdfController::class)
+            ->whereNumber('event')->name('events.budget.pdf');
 
-    Route::get('/events/{event}/sponsorship', [SponsorshipController::class, 'show'])
-        ->whereNumber('event')->name('events.sponsorship');
-    Route::get('/events/{event}/sponsorship.pdf', [SponsorshipController::class, 'pdf'])
-        ->whereNumber('event')->name('events.sponsorship.pdf');
+        Route::get('/events/{event}/exhibition-floor', ExhibitionFloorPlan::class)
+            ->whereNumber('event')->name('events.exhibition-floor');
+        Route::get('/events/{event}/exhibition-floor.pdf', ExhibitionFloorPdfController::class)
+            ->whereNumber('event')->name('events.exhibition-floor.pdf');
 
-    Route::get('/events/{event}/plan.pdf', PlanStudioPdfController::class)
-        ->whereNumber('event')->name('events.planning.pdf');
+        Route::get('/events/{event}/sponsorship', [SponsorshipController::class, 'show'])
+            ->whereNumber('event')->name('events.sponsorship');
+        Route::get('/events/{event}/sponsorship.pdf', [SponsorshipController::class, 'pdf'])
+            ->whereNumber('event')->name('events.sponsorship.pdf');
 
-    Route::get('/events/{event}/rooming/{block}.pdf', RoomingListPdfController::class)
-        ->whereNumber('event')->whereNumber('block')->name('events.rooming.pdf');
+        Route::get('/events/{event}/plan.pdf', PlanStudioPdfController::class)
+            ->whereNumber('event')->name('events.planning.pdf');
 
-    Route::get('/events/{event}/rooming/{block}/template.xlsx', RoomingTemplateController::class)
-        ->whereNumber('event')->whereNumber('block')->name('events.rooming.template');
+        Route::get('/events/{event}/rooming/{block}.pdf', RoomingListPdfController::class)
+            ->whereNumber('event')->whereNumber('block')->name('events.rooming.pdf');
 
-    Route::get('/events/{event}/attendees/template.xlsx', AttendeeTemplateController::class)
-        ->whereNumber('event')->name('events.attendees.template');
+        Route::get('/events/{event}/rooming/{block}/template.xlsx', RoomingTemplateController::class)
+            ->whereNumber('event')->whereNumber('block')->name('events.rooming.template');
 
-    // Badges, laid out to fill A4 with cut lines. ?ids= prints a selection.
-    // The desk on the day: for everybody who arrives without a badge to scan,
-    // which is most of the first hour.
-    Route::get('/events/{event}/arrivals', ArrivalsDesk::class)
-        ->whereNumber('event')->name('events.arrivals');
+        Route::get('/events/{event}/attendees/template.xlsx', AttendeeTemplateController::class)
+            ->whereNumber('event')->name('events.attendees.template');
 
-    Route::get('/events/{event}/badges.pdf', BadgeSheetPdfController::class)
-        ->whereNumber('event')->name('events.badges.pdf');
+        // Badges, laid out to fill A4 with cut lines. ?ids= prints a selection.
+        // The desk on the day: for everybody who arrives without a badge to scan,
+        // which is most of the first hour.
+        Route::get('/events/{event}/arrivals', ArrivalsDesk::class)
+            ->whereNumber('event')->name('events.arrivals');
 
-    Route::get('/events/{event}/transport/{transport}/template.xlsx', TransportManifestTemplateController::class)
-        ->whereNumber('event')->whereNumber('transport')->name('events.transport.template');
+        Route::get('/events/{event}/badges.pdf', BadgeSheetPdfController::class)
+            ->whereNumber('event')->name('events.badges.pdf');
 
-    Route::get('/events/{event}/transport/plan-template.xlsx', TransportPlanTemplateController::class)
-        ->whereNumber('event')->name('events.transport.plan-template');
+        Route::get('/events/{event}/transport/{transport}/template.xlsx', TransportManifestTemplateController::class)
+            ->whereNumber('event')->whereNumber('transport')->name('events.transport.template');
 
-    Route::get('/events/{event}/transport.pdf', TransportManifestPdfController::class)
-        ->whereNumber('event')->name('events.transport.pdf');
+        Route::get('/events/{event}/transport/plan-template.xlsx', TransportPlanTemplateController::class)
+            ->whereNumber('event')->name('events.transport.plan-template');
 
-    // Event-day operations: phone-first, its own route so it can be opened
-    // directly on a phone without walking the hub.
-    Route::get('/events/{event}/transport/live', TransportLive::class)
-        ->whereNumber('event')->name('events.transport.live');
+        Route::get('/events/{event}/transport.pdf', TransportManifestPdfController::class)
+            ->whereNumber('event')->name('events.transport.pdf');
 
-    // The dispatch board: lanes against a time axis, for planning and conflict-
-    // checking on a bigger screen.
-    Route::get('/events/{event}/transport/dispatch', TransportDispatch::class)
-        ->whereNumber('event')->name('events.transport.dispatch');
+        // Event-day operations: phone-first, its own route so it can be opened
+        // directly on a phone without walking the hub.
+        Route::get('/events/{event}/transport/live', TransportLive::class)
+            ->whereNumber('event')->name('events.transport.live');
 
-    // The transport document suite — each has exactly one reader.
-    Route::get('/events/{event}/transport/daily-schedule.pdf', DailyMovementSchedulePdfController::class)
-        ->whereNumber('event')->name('events.transport.daily-schedule.pdf');
+        // The dispatch board: lanes against a time axis, for planning and conflict-
+        // checking on a bigger screen.
+        Route::get('/events/{event}/transport/dispatch', TransportDispatch::class)
+            ->whereNumber('event')->name('events.transport.dispatch');
 
-    Route::get('/events/{event}/transport/trip-sheets.pdf', DriverTripSheetPdfController::class)
-        ->whereNumber('event')->name('events.transport.trip-sheet.pdf');
+        // The transport document suite — each has exactly one reader.
+        Route::get('/events/{event}/transport/daily-schedule.pdf', DailyMovementSchedulePdfController::class)
+            ->whereNumber('event')->name('events.transport.daily-schedule.pdf');
 
-    Route::get('/events/{event}/transport/vip-sheets.pdf', VipTransferSheetPdfController::class)
-        ->whereNumber('event')->name('events.transport.vip-sheet.pdf');
+        Route::get('/events/{event}/transport/trip-sheets.pdf', DriverTripSheetPdfController::class)
+            ->whereNumber('event')->name('events.transport.trip-sheet.pdf');
 
-    // Whole-event documents: the client's plan and the vendor's order.
-    Route::get('/events/{event}/transport/plan.pdf', TransportMasterPlanPdfController::class)
-        ->whereNumber('event')->name('events.transport.master-plan.pdf');
+        Route::get('/events/{event}/transport/vip-sheets.pdf', VipTransferSheetPdfController::class)
+            ->whereNumber('event')->name('events.transport.vip-sheet.pdf');
 
-    Route::get('/events/{event}/transport/supplier-order.pdf', SupplierOrderPdfController::class)
-        ->whereNumber('event')->name('events.transport.supplier-order.pdf');
+        // Whole-event documents: the client's plan and the vendor's order.
+        Route::get('/events/{event}/transport/plan.pdf', TransportMasterPlanPdfController::class)
+            ->whereNumber('event')->name('events.transport.master-plan.pdf');
 
-    Route::get('/events/{event}/documents/{document}/download', [EventDocumentController::class, 'download'])
-        ->whereNumber('event')->whereNumber('document')->name('events.documents.download');
-    Route::get('/events/{event}/documents/{document}/view', [EventDocumentController::class, 'view'])
-        ->whereNumber('event')->whereNumber('document')->name('events.documents.view');
+        Route::get('/events/{event}/transport/supplier-order.pdf', SupplierOrderPdfController::class)
+            ->whereNumber('event')->name('events.transport.supplier-order.pdf');
 
-    Route::get('/events/{event}/brief.pdf', EventBriefPdfController::class)
-        ->whereNumber('event')->name('events.brief.pdf');
+        Route::get('/events/{event}/documents/{document}/download', [EventDocumentController::class, 'download'])
+            ->whereNumber('event')->whereNumber('document')->name('events.documents.download');
+        Route::get('/events/{event}/documents/{document}/view', [EventDocumentController::class, 'view'])
+            ->whereNumber('event')->whereNumber('document')->name('events.documents.view');
 
-    Route::get('/events/{event}/invoice-items/template.xlsx', EventPricingTemplateController::class)
-        ->whereNumber('event')->name('events.pricing.template');
+        Route::get('/events/{event}/brief.pdf', EventBriefPdfController::class)
+            ->whereNumber('event')->name('events.brief.pdf');
 
-    Route::get('/events/{event}/contract.pdf', EventContractPdfController::class)
-        ->whereNumber('event')->name('events.contract.pdf');
+        Route::get('/events/{event}/invoice-items/template.xlsx', EventPricingTemplateController::class)
+            ->whereNumber('event')->name('events.pricing.template');
 
-    // Any other document — vendor, speaker, sponsorship, letter — through the
-    // same identity. The client MSA keeps its richer sheet above.
-    Route::get('/events/{event}/contracts/{contract}.pdf', ContractDocumentPdfController::class)
-        ->whereNumber('event')->whereNumber('contract')->name('events.contract.doc.pdf');
+        Route::get('/events/{event}/contract.pdf', EventContractPdfController::class)
+            ->whereNumber('event')->name('events.contract.pdf');
 
-    Route::get('/events/{event}/rooms/{room}/layout', RoomLayoutBuilder::class)
-        ->whereNumber('event')->whereNumber('room')->name('events.room-layout');
+        // Any other document — vendor, speaker, sponsorship, letter — through the
+        // same identity. The client MSA keeps its richer sheet above.
+        Route::get('/events/{event}/contracts/{contract}.pdf', ContractDocumentPdfController::class)
+            ->whereNumber('event')->whereNumber('contract')->name('events.contract.doc.pdf');
 
-    Route::get('/events/{event}/rooms/{room}/layout.pdf', RoomLayoutPdfController::class)
-        ->whereNumber('event')->whereNumber('room')->name('events.room-layout.pdf');
+        Route::get('/events/{event}/rooms/{room}/layout', RoomLayoutBuilder::class)
+            ->whereNumber('event')->whereNumber('room')->name('events.room-layout');
 
-    Route::get('/events/{event}/rooms/{room}/equipment.pdf', RoomEquipmentPdfController::class)
-        ->whereNumber('event')->whereNumber('room')->name('events.room-equipment.pdf');
+        Route::get('/events/{event}/rooms/{room}/layout.pdf', RoomLayoutPdfController::class)
+            ->whereNumber('event')->whereNumber('room')->name('events.room-layout.pdf');
 
-    Route::get('/events/{event}', [EventHubController::class, 'show'])
-        ->whereNumber('event')->name('events.hub');
+        Route::get('/events/{event}/rooms/{room}/equipment.pdf', RoomEquipmentPdfController::class)
+            ->whereNumber('event')->whereNumber('room')->name('events.room-equipment.pdf');
+
+        Route::get('/events/{event}', [EventHubController::class, 'show'])
+            ->whereNumber('event')->name('events.hub');
+
+    });   // end can:view,event
 
     Route::get('/events/create', EventCreate::class)->name('events.create');
 

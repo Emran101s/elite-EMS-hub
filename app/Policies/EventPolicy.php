@@ -13,16 +13,45 @@ use App\Models\User;
  */
 class EventPolicy
 {
+    /**
+     * May this person open the event's hub, or pull one of its ~35 export
+     * routes (contract, budget, invoice, attendee PDFs)?
+     *
+     * This ability did not exist until now. Before it, "authenticated" was
+     * the entire check on every one of those routes — any signed-in viewer
+     * could fetch any tenant's event's contract by changing a number in the
+     * URL. Managers and above keep the tenant-wide visibility every other
+     * gate in this app already gives them (manage-budget, manage-contract,
+     * manage-team are all manager+ with no per-resource check). Below
+     * manager, access narrows to events this person is actually on the team
+     * for — event_team_members already existed and already had real,
+     * UI-editable data in it; nothing was reading it.
+     *
+     * Deliberately NOT applied to EventsIndex's listing query. Browsing the
+     * roster of what events exist is the transparency the tool is built
+     * around — a coordinator not on Event #40's team still sees it in the
+     * list, the same as before. What changes is that opening it, or pulling
+     * its documents, now requires an actual reason to be there.
+     */
+    public function view(User $user, Event $event): bool
+    {
+        if (! $user->isAtLeast('coordinator')) {
+            return false;
+        }
+
+        return $user->isAtLeast('manager') || $event->teamMembers()->whereKey($user->id)->exists();
+    }
+
     /** Creating a new event is routine and additive. */
     public function create(User $user): bool
     {
         return $user->isAtLeast('coordinator');
     }
 
-    /** Editing an existing event's own fields is routine too. */
+    /** Same rule as view() — editing requires the same reason to be here as reading does. */
     public function update(User $user, Event $event): bool
     {
-        return $user->isAtLeast('coordinator');
+        return $this->view($user, $event);
     }
 
     /**
