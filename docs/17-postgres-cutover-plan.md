@@ -1,0 +1,234 @@
+# Postgres cutover plan (environment only)
+
+**Status:** proposal — Cursor owns the environment; Claude owns any schema
+delta required for Postgres quirks. This file does **not** change
+`phpunit.xml`, does **not** add migrations, and does **not** flip
+`DB_CONNECTION` in committed defaults.
+
+Tenancy slices 1–2 are already on `main` (`tenants` / `workspaces` /
+`workspace_user`, plus `tenant_id` on customer tables). The app still runs
+on SQLite in Herd today. Compose and CI already provide Postgres 16 — this
+document is how we point the app at it without breaking Claude's remaining
+slices (global scope, role move, auth rework).
+
+---
+
+## Goals
+
+1. Staging and production run on **Postgres 16**, not SQLite.
+2. Local Herd can stay on SQLite for day-to-day UI work, **or** optionally
+   point at Compose Postgres — both must be documented and supported.
+3. CI keeps a **reachable** Postgres service (already true) and, when Claude
+   is ready, can run a second job (or matrix) against it — without removing
+   the in-memory SQLite suite until that job is green.
+4. One rehearsed **data copy** from the live SQLite file into Postgres before
+   any production cutover.
+
+Non-goals for this doc: writing the copy script as a migration, changing
+`phpunit.xml`, or altering `BelongsToTenant` / policies.
+
+---
+
+## Current state (as of #16)
+
+| Surface | Database today |
+|---|---|
+| Herd `.env` | `DB_CONNECTION=sqlite` → `database/database.sqlite` |
+| `.env.example` | sqlite (local template) |
+| `.env.staging.example` / `.env.production.example` | **pgsql** (already) |
+| `phpunit.xml` | sqlite `:memory:` — **leave alone until Claude agrees** |
+| CI `Test suite` | Postgres 16 + Redis 7 service containers; suite still hits sqlite |
+| `docker-compose.yml` | `postgres:16-alpine` + healthcheck |
+
+---
+
+## Connection config (no schema)
+
+### Staging / production
+
+Already spelled out in `.env.staging.example` and `.env.production.example`:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=postgres          # Compose service name; or the managed host
+DB_PORT=5432
+DB_DATABASE=elitehub_staging   # / elitehub
+DB_USERNAME=elitehub
+DB_PASSWORD=…
+```
+
+PHP image already enables `pdo_pgsql` / `pgsql`. Herd PHP needs the
+`pgsql` extension installed once (`herd` / pecl) if developers point local
+PHP at Compose Postgres.
+
+### Local Herd → Compose Postgres (optional)
+
+```bash
+docker compose up -d postgres redis
+```
+
+In `~/Herd/elitehub/.env` (never committed):
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=elitehub
+DB_USERNAME=elitehub
+DB_PASSWORD=elitehub
+```
+
+Then:
+
+```bash
+php artisan migrate --force          # Claude's migrations, already on main
+php artisan db:seed --class=…        # only if agreed for that environment
+```
+
+Keep a copy of the sqlite file before flipping:
+
+```bash
+./scripts/db-backup.sh
+```
+
+### Redis (same cutover window)
+
+Staging/production examples already use `SESSION_DRIVER=redis`,
+`QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`. Turn those on in the same
+change-window as Postgres so the database is not also carrying sessions /
+jobs / cache.
+
+---
+
+## CI test database (proposal only)
+
+**Do not change `phpunit.xml` in the cutover PR.** Proposed sequence:
+
+1. **Keep** the current in-memory SQLite job as the required `Test suite`
+   check until a Postgres job is proven green on `main`.
+2. **Add** (Cursor, later PR) an optional / required matrix entry or second
+   job, e.g. `Test suite (pgsql)`, that:
+   - uses the existing `postgres` service (`elitehub_test` / user `elitehub`),
+   - sets `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_DATABASE=elitehub_test`,
+   - runs `php artisan migrate --force` then `php artisan test`,
+   - does **not** edit `phpunit.xml`; overrides via job `env:`.
+3. When that job is stable for a full week, Claude (or a joint PR) may flip
+   `phpunit.xml` or drop the sqlite job — that is a deliberate second
+   decision, not part of environment bring-up.
+
+SQLite vs Postgres quirks Claude should watch for when the pgsql job exists:
+
+- boolean storage / casting,
+- JSON vs JSONB columns (prefer JSONB in any new Postgres-only migration),
+- `INSERT OR IGNORE` / upsert syntax,
+- case sensitivity on `LIKE`,
+- autoincrement / sequence behaviour after data copy.
+
+Cursor will not invent migrations to "fix" those — flag them in
+[14-cross-agent-notes.md](14-cross-agent-notes.md) if a pgsql job surfaces them.
+
+---
+
+## Data copy (SQLite → Postgres)
+
+An untested copy is not a cutover. Outline:
+
+### 1. Freeze writes (short window)
+
+Put the app in maintenance mode on the source environment, or take the
+copy from a known backup:
+
+```bash
+./scripts/db-backup.sh
+# source = storage/backups/elitehub-….sqlite
+```
+
+### 2. Empty target schema
+
+On a fresh Postgres database (staging first):
+
+```bash
+php artisan migrate --force --database=pgsql
+```
+
+Uses Claude's migrations already on `main`. No new migration for the copy.
+
+### 3. Copy rows
+
+Preferred approaches (pick one in the cutover PR, implement as a **script**
+under `scripts/`, not a migration):
+
+| Approach | Pros | Cons |
+|---|---|---|
+| `pgloader` sqlite://… postgresql://… | Battle-tested, type mapping | Extra binary in the runbook |
+| Custom Artisan/`scripts/sqlite-to-pgsql.php` using PDO | Stays in-repo | Must respect FK order + `tenant_id` |
+| `sqlite3 .dump` → hand-edited SQL | Simple for tiny DBs | Fragile; avoid for 71 tables |
+
+**FK / tenancy order:** load `tenants` → `workspaces` → `workspace_user` /
+`users` (as applicable) → remaining tenant-scoped tables. Disable triggers /
+defer constraints if the loader supports it; otherwise sort by dependency.
+
+**Sequences:** after copy, reset Postgres sequences to `MAX(id)` per table.
+
+**Verification queries (minimum):**
+
+```sql
+SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM events;
+SELECT COUNT(*) FROM tenants;
+SELECT COUNT(*) FROM events WHERE tenant_id IS NULL;  -- expect 0 after slice 2
+```
+
+Compare counts to SQLite. Spot-check one flagship event's budget lines and
+approvals.
+
+### 4. Restore drill on staging
+
+1. Copy staging Postgres → dump (`pg_dump`).
+2. Load into a throwaway database.
+3. Boot the app against it; hit `/up` and sign in.
+4. Only then schedule production.
+
+`scripts/db-restore.sh` already understands `pgsql` dumps (`.sql` / `.sql.gz`).
+Extend the backup script's default for `DB_CONNECTION=pgsql` hosts (already
+does `pg_dump | gzip`).
+
+### 5. Production cutover checklist
+
+- [ ] Staging copy verified (counts + one real workflow).
+- [ ] `APP_DEBUG=false`, `SESSION_ENCRYPT=true`, redis drivers on.
+- [ ] Backup of SQLite retained off-box for 30 days.
+- [ ] DNS / Herd / Compose `DB_*` pointed at Postgres.
+- [ ] `php artisan migrate --force` (should be no-op if schema pre-applied).
+- [ ] `php artisan up` / remove maintenance.
+- [ ] Watch Sentry + `stderr_json` logs for driver errors for 24h.
+- [ ] Cron `schedule:run` still firing; first nightly backup is a `.sql.gz`.
+
+---
+
+## Ownership split
+
+| Work | Owner |
+|---|---|
+| Compose / CI Postgres service, env examples, this plan, copy **script** | Cursor |
+| Migrations, model casts, JSONB column types, fixing pgsql test failures in domain code | Claude |
+| Flipping `phpunit.xml` off sqlite | Joint — only after pgsql CI job is green |
+
+Schema lock remains in force for tenancy slices 3–4. A Postgres cutover
+script must not add columns or rewrite migrations.
+
+---
+
+## Suggested PR sequence (after this doc merges)
+
+1. `cursor/pgsql-ci-job` — add optional/required `Test suite (pgsql)` job with
+   env overrides; leave `phpunit.xml` untouched.
+2. `cursor/sqlite-to-pgsql-script` — `scripts/sqlite-to-pgsql.sh` (or PHP) +
+   dry-run on a staging Compose volume.
+3. Staging cutover (ops, not a code PR).
+4. Production cutover (ops).
+5. Only then: discuss retiring sqlite from `phpunit.xml`.
+
+Related: [16-infrastructure.md](16-infrastructure.md),
+[15-database-backups.md](15-database-backups.md),
+[17-postgres-cutover-plan.md](17-postgres-cutover-plan.md).
