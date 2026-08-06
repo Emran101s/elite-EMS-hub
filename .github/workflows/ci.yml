@@ -1,0 +1,144 @@
+name: CI
+
+# Runs on every push to any branch, and on every pull request.
+#
+# The push trigger is the one that matters most today: work lands on feature
+# branches directly rather than through PRs, and a broken Blade tag reaching
+# a branch unnoticed is exactly what this pipeline exists to stop.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A new push to the same branch cancels the run still in flight — no point
+# paying for a result nobody will read.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Matches the development machine. composer.json allows ^8.3, so if
+          # production ever pins 8.3, add it here as a matrix entry.
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, sqlite3, pdo_sqlite, gd, zip, bcmath
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php8.4-
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # NOT --ignore-scripts: puppeteer's install script downloads the Chromium
+      # that Browsershot drives. Several dozen tests assert a real
+      # application/pdf response, so without this the PDF suite fails.
+      - name: Install Node dependencies
+        run: npm ci
+
+      # public/build is gitignored. RendersChromePdf::compiledCss() reads the
+      # Vite manifest and silently returns '' when it is missing — so the PDF
+      # tests would still pass, but against unstyled markup. Building here keeps
+      # CI honest about what production actually renders.
+      - name: Build front-end assets
+        run: npm run build
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # phpunit.xml pins the connection to an in-memory SQLite database, so no
+      # database service is needed here and nothing touches a real file.
+      - name: Run tests
+        run: php artisan test
+
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so this branch can be diffed against main below.
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Audit dependencies for known vulnerabilities
+        run: composer audit
+
+      # Style is enforced on CHANGED files only, deliberately.
+      #
+      # Pint has never been run across this codebase: a full `pint --test`
+      # currently reports ~77 files. Making that blocking would fail the first
+      # CI run and force a repo-wide reformat — a huge diff that would collide
+      # with concurrent work and bury real changes in whitespace.
+      #
+      # So: new and modified code must be clean; existing files are
+      # grandfathered. To clear the backlog later, run `./vendor/bin/pint` on a
+      # quiet branch as its own commit, then drop the file filter here.
+      # Work currently lands by pushing straight to the default branch, so
+      # "diff against the default branch" would compare it to itself and check
+      # nothing, forever. Two cases instead:
+      #   pull_request -> compare against the PR's base
+      #   push         -> compare against the branch's previous head
+      # (Pint ignores .blade.php files, so the *.php glob catching them is safe.)
+      - name: Check code style on changed files
+        env:
+          BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${BASE_REF:-}" ]; then
+            git fetch origin "$BASE_REF" --quiet
+            RANGE="origin/${BASE_REF}...HEAD"
+          elif [ -n "${BEFORE:-}" ] && ! echo "$BEFORE" | grep -qE '^0+$' \
+               && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            RANGE="${BEFORE}..HEAD"
+          else
+            # First push of a new branch, or a force-push that orphaned the old
+            # head: fall back to just this commit.
+            RANGE="HEAD~1..HEAD"
+          fi
+
+          echo "Comparing $RANGE"
+          FILES=$(git diff --name-only --diff-filter=ACMR "$RANGE" -- '*.php' || true)
+
+          if [ -z "$FILES" ]; then
+            echo "No PHP files changed — nothing to check."
+            exit 0
+          fi
+
+          echo "Checking style on:"
+          echo "$FILES"
+          echo "$FILES" | xargs ./vendor/bin/pint --test

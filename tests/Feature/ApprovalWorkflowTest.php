@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Hub\ApprovalsTab;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
@@ -208,7 +209,7 @@ class ApprovalWorkflowTest extends TestCase
     public function test_escalation_is_off_by_default(): void
     {
         [$event, $requester] = $this->ctx();
-        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => null]);
+        CompanyProfile::current()->update(['approval_threshold_cents' => null]);
 
         Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
             ->set('title', 'Huge budget line')
@@ -223,7 +224,7 @@ class ApprovalWorkflowTest extends TestCase
     public function test_a_budget_request_under_threshold_does_not_escalate(): void
     {
         [$event, $requester] = $this->ctx();
-        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+        CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
 
         Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
             ->set('title', 'Small budget line')
@@ -238,7 +239,7 @@ class ApprovalWorkflowTest extends TestCase
     public function test_a_budget_request_over_threshold_gets_an_automatic_admin_step(): void
     {
         [$event, $requester, $layla] = $this->ctx();
-        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+        CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
 
         Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
             ->set('title', 'Large budget revision')
@@ -271,7 +272,7 @@ class ApprovalWorkflowTest extends TestCase
     public function test_a_venue_request_never_escalates_regardless_of_amount(): void
     {
         [$event, $requester] = $this->ctx();
-        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 100]);
+        CompanyProfile::current()->update(['approval_threshold_cents' => 100]);
 
         Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
             ->set('title', 'Venue change')
@@ -377,7 +378,7 @@ class ApprovalWorkflowTest extends TestCase
     public function test_admin_step_can_only_be_handed_to_an_admin(): void
     {
         [$event, $requester, $layla, $sara] = $this->ctx();
-        \App\Models\CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
+        CompanyProfile::current()->update(['approval_threshold_cents' => 10_000_00]);
 
         Livewire::actingAs($requester)->test(ApprovalsTab::class, ['event' => $event])
             ->set('title', 'Large budget needing admin')

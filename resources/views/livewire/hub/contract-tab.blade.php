@@ -853,7 +853,7 @@
                                         <x-confirm title="Record {{ $s->name ?: 'this party' }} as having signed?"
                                                    body="This stamps the date and locks their name to the current document."
                                                    confirm="Record" tone="neutral" run="$wire.recordSignature({{ $s->id }})"
-                                                   @disabled(! $s->name)
+                                                   :disabled="! $s->name"
                                                    class="rounded-lg bg-navy-900 px-3 py-1.5 text-eyebrow font-bold text-white transition hover:bg-navy-800 disabled:opacity-40">✒️ Mark signed</x-confirm>
                                         <button type="button" wire:click="removeSignatory({{ $s->id }})"
                                                 class="rounded-lg px-1.5 py-1.5 text-eyebrow font-bold text-navy-300 opacity-0 transition hover:text-red-700 group-hover:opacity-100" title="Remove signatory">✕</button>

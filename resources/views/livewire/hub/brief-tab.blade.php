@@ -50,7 +50,7 @@
                     body="Budget categories, risks and sponsor packages will be created. Existing items are never overwritten."
                     confirm="Generate" tone="neutral"
                     run="$wire.generatePlan()"
-                    @disabled($status !== 'approved')
+                    :disabled="$status !== 'approved'"
                     class="flex h-9 items-center gap-1.5 rounded-xl px-3 text-micro font-bold transition {{ $status === 'approved' ? 'bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/15' : 'cursor-not-allowed bg-white/5 text-white/25 ring-1 ring-white/10' }}">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4.5 12.5H11l-1 9.5 8.5-10.5H12l1-9.5z"/></svg> Generate plan
             </x-confirm>
