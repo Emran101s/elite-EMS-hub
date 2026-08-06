@@ -73,10 +73,46 @@ class User extends Authenticatable
         'super_admin' => 4,
     ];
 
-    /** True when this user's role is the given role or more senior. */
+    private bool $activeWorkspaceResolved = false;
+
+    private ?Workspace $activeWorkspaceCache = null;
+
+    /**
+     * The workspace this person acts in.
+     *
+     * Every tenant has exactly one workspace today, by design — there is no
+     * switcher, and deliberately no plan to build one until a real customer
+     * needs a second. first() is therefore not a placeholder standing in for
+     * missing UI; it is the whole rule, and stays the whole rule until
+     * "which workspace" becomes a question a real person actually has to
+     * answer. Memoized: this is read on every isAtLeast() call, which fires
+     * many times per request across gates and policies.
+     */
+    public function activeWorkspace(): ?Workspace
+    {
+        if (! $this->activeWorkspaceResolved) {
+            $this->activeWorkspaceCache = $this->workspaces()->first();
+            $this->activeWorkspaceResolved = true;
+        }
+
+        return $this->activeWorkspaceCache;
+    }
+
+    /**
+     * True when this user's role is the given role or more senior.
+     *
+     * Reads workspace_user.role — via the pivot already loaded onto
+     * activeWorkspace(), not a second query — falling back to the legacy
+     * users.role column only when no workspace membership exists at all
+     * (should not happen after TeamRoster::save()'s sync, but a missing
+     * membership must degrade to "least privilege that still works," never
+     * throw mid-request).
+     */
     public function isAtLeast(string $role): bool
     {
-        return (self::ROLE_RANK[$this->role] ?? 0) >= (self::ROLE_RANK[$role] ?? PHP_INT_MAX);
+        $effective = $this->activeWorkspace()?->pivot?->role ?? $this->role;
+
+        return (self::ROLE_RANK[$effective] ?? 0) >= (self::ROLE_RANK[$role] ?? PHP_INT_MAX);
     }
 
     /**
