@@ -96,7 +96,11 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            // Same broker/token serves a forgot-password link and a new hire's
+            // first set-password invite (see App\Notifications\TeamInvite). A
+            // forgot-password minute count is fine for someone mid-login; a new
+            // hire may not open the email until after the weekend.
+            'expire' => 4320,
             'throttle' => 60,
         ],
     ],
