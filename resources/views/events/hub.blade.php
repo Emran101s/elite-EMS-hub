@@ -28,9 +28,11 @@
         $modules = \App\Models\Event::HUB_TABS;
         $attention = $header['attention'] ?? [];
 
-        // Daily doors — keep these on the strip. Order is deliberate: plan →
-        // programme → place → people → risk, with Overview as home.
-        $primaryKeys = ['overview', 'brief', 'contract', 'tasks', 'budget', 'agenda', 'venue', 'attendees', 'risks'];
+        // Daily doors — the ones a coordinator opens every day the show is
+        // running, per docs/19's workflow spine. Everything else, however
+        // important, is a few-times-a-project door rather than a daily one,
+        // and lives under More.
+        $primaryKeys = ['overview', 'tasks', 'agenda', 'venue', 'transportation', 'budget'];
 
         $enabled = collect($modules)->keys()->filter(fn ($key) => $event->moduleEnabled($key))->values();
 
@@ -44,10 +46,11 @@
         // Same family language as MODULE_COLORS — Plan blue, Programme teal,
         // Logistics amber, Exhibition violet, Sell green, Grow grey/gold.
         $families = [
-            'Plan' => ['planning', 'pricing', 'approvals'],
+            'Plan' => ['planning', 'pricing', 'approvals', 'brief', 'contract', 'risks'],
             'Programme' => ['speakers'],
-            'Logistics' => ['suppliers', 'transportation', 'accommodation', 'catering'],
+            'Logistics' => ['suppliers', 'accommodation', 'catering'],
             'Partners' => ['exhibition', 'sponsors'],
+            'Sell' => ['attendees'],
             'Library' => ['files', 'reports'],
             'System' => ['ai', 'settings'],
         ];
