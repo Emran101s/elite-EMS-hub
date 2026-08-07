@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Proposal;
 use Illuminate\Support\Str;
 
 /**
@@ -171,6 +172,45 @@ class BudgetSync
     }
 
     /**
+     * Seed the budget from what the client actually agreed to pay.
+     *
+     * Runs once, at the moment a proposal is accepted — not on every budget
+     * load like sync() above, because a proposal does not change after the
+     * figure is signed off. Each priced line becomes a linked line under its
+     * own category, carrying the SELL side only: what this cost the business
+     * to deliver is not something a proposal ever knew, so cost stays at 0
+     * until ops prices it against a real supplier. Optional lines were quoted,
+     * not agreed to, so they seed nothing.
+     */
+    public function syncProposal(Event $event, Proposal $proposal): int
+    {
+        if ($event->budgetLocked()) {
+            return 0;
+        }
+
+        $event->ensureBudgetCategories();
+        $category = $event->budgetCategory('Proposal Pricing')->name;
+
+        $touched = 0;
+
+        foreach ($proposal->lines as $line) {
+            if ($line->optional) {
+                continue;
+            }
+
+            $touched += $this->upsert($event, 'proposal', $line->id, [
+                'category' => $category,
+                'description' => trim($line->description.($line->detail ? ' — '.$line->detail : '')),
+                'quantity' => max(1, (int) round($line->qty)),
+                'sell_cents' => $line->amountCents(),
+                'estimated_cents' => 0,
+            ]);
+        }
+
+        return $touched;
+    }
+
+    /**
      * Module records that hold a commitment the budget cannot count yet.
      *
      * A block of rooms with no rate is the reason somebody stands in front of
@@ -232,7 +272,7 @@ class BudgetSync
             'source_type' => $type,
             'source_id' => $id,
             'unit_cents' => null,
-                        // Not costed yet, which is null — 0 would mean it costs nothing.
+            // Not costed yet, which is null — 0 would mean it costs nothing.
             'actual_cents' => null,
             'paid_cents' => 0,
             'payment_status' => 'pending',

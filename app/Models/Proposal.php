@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
+use App\Services\BudgetSync;
 use App\Services\DealPipeline;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -319,6 +320,12 @@ class Proposal extends Model
             $event = app(DealPipeline::class)->win($deal->fresh());
 
             $this->update(['event_id' => $event->id]);
+
+            // budget_cents (above, via the deal) is the headline total. This is
+            // the line-by-line pricing behind it, so the Budget tab opens
+            // already priced instead of a PM retyping every figure from the
+            // document they just watched get signed.
+            app(BudgetSync::class)->syncProposal($event, $this->load('lines'));
 
             return $event;
         });
