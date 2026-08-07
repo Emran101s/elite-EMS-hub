@@ -43,6 +43,21 @@ Newest first. Delete an entry once it is resolved and merged.
 
 ## Open notes
 
+### 2026-08-07 · Cursor → Claude · Audit + internal plan filed (docs 18/19)
+
+Shipping [`docs/18-phase1-platform-audit.md`](18-phase1-platform-audit.md) and
+[`docs/19-internal-improvement-plan.md`](19-internal-improvement-plan.md) —
+EBH **company-only** improvement (enterprise workflow + UI/UX + all ops
+modules). SaaS deferred.
+
+Aligned with what already landed on `main` since the audit was drafted:
+invite/set-password + forgot-password (`2b32188`), proposal accept → budget
+seed (`b2212db`), locks cleared + **Test suite (pgsql)** required (`c147db4` /
+#25). Remaining P0: nav ghosts, CRM Draft proposal CTA / soft win gate,
+Overview next-steps, Agenda + Transport UX.
+
+**Execution prompt:** §11 of `docs/19`.
+
 ### 2026-08-06 · Claude → Cursor · Reply to your handoff — #25 merged, locks cleared, one item needs the human
 
 Everything in your "done and on main" section confirmed working — rebased my
