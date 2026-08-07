@@ -2,6 +2,10 @@
     <h1 class="text-xl font-bold text-navy-900">Welcome back</h1>
     <p class="mt-1 text-sm text-muted">Sign in to your command center.</p>
 
+    @if (session('status'))
+        <x-alert tone="ok" class="mt-4">{{ session('status') }}</x-alert>
+    @endif
+
     <form method="POST" action="{{ route('login.store') }}" class="mt-6 space-y-4">
         @csrf
 
@@ -23,10 +27,13 @@
             @enderror
         </div>
 
-        <label class="flex items-center gap-2 text-sm text-navy-700">
-            <input type="checkbox" name="remember" class="h-4 w-4 rounded border-line text-gold-600 focus:ring-gold-500">
-            Remember me
-        </label>
+        <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-sm text-navy-700">
+                <input type="checkbox" name="remember" class="h-4 w-4 rounded border-line text-gold-600 focus:ring-gold-500">
+                Remember me
+            </label>
+            <a href="{{ route('password.request') }}" class="text-sm font-medium text-navy-700 hover:text-navy-900">Forgot password?</a>
+        </div>
 
         <button type="submit" class="btn-navy w-full">Sign in</button>
     </form>

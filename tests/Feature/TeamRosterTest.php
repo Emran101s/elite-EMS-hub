@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Livewire\TeamRoster;
 use App\Models\User;
+use App\Notifications\TeamInvite;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -44,6 +46,37 @@ class TeamRosterTest extends TestCase
         $this->assertSame('manager', $created->role);
         $this->assertSame('Logistics Lead', $created->title);
         $this->assertNotEmpty($created->password); // random password seeded
+    }
+
+    public function test_adding_a_member_sends_a_set_password_invite(): void
+    {
+        Notification::fake();
+        $user = $this->boot();
+
+        Livewire::actingAs($user)->test(TeamRoster::class)
+            ->set('name', 'Invited Person')
+            ->set('email', 'invited@elitebhub.com')
+            ->set('role', 'coordinator')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $created = User::where('email', 'invited@elitebhub.com')->firstOrFail();
+        Notification::assertSentTo($created, TeamInvite::class);
+    }
+
+    public function test_editing_a_member_does_not_resend_an_invite(): void
+    {
+        Notification::fake();
+        $user = $this->boot();
+        $other = User::where('email', '!=', $user->email)->firstOrFail();
+
+        Livewire::actingAs($user)->test(TeamRoster::class)
+            ->call('edit', $other->id)
+            ->set('title', 'Updated Title')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        Notification::assertNotSentTo($other, TeamInvite::class);
     }
 
     public function test_photo_upload_sets_avatar_path(): void

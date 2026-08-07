@@ -3,8 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\User;
+use App\Notifications\TeamInvite;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -76,6 +78,8 @@ class TeamRoster extends Component
             $fields['avatar_path'] = 'storage/'.$this->photo->store('avatars', 'public');
         }
 
+        $isNewMember = ! $this->editingId;
+
         if ($this->editingId) {
             // Through the model, not the query builder: a mass update fires no
             // Eloquent events, so User's Auditable trait never ran and a role
@@ -84,8 +88,11 @@ class TeamRoster extends Component
             $user = User::findOrFail($this->editingId);
             $user->update($fields);
         } else {
-            // No invite flow yet — seed a random password; access is granted in a later slice.
+            // Nobody ever types this password — it exists only because the
+            // column is required. The account becomes usable when TeamInvite's
+            // link lets them set their own.
             $user = User::create($fields + ['password' => Hash::make(Str::password(24))]);
+            $user->notify(new TeamInvite(Password::createToken($user)));
         }
 
         // What isAtLeast() actually reads (User::activeWorkspace()) is
@@ -99,7 +106,9 @@ class TeamRoster extends Component
 
         $this->showForm = false;
         $this->reset(['editingId', 'photo']);
-        session()->flash('status', 'Team member saved.');
+        session()->flash('status', $isNewMember
+            ? 'Team member added — an email to set their password has been sent.'
+            : 'Team member saved.');
     }
 
     public function delete(int $id): void
