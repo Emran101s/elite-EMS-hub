@@ -6,8 +6,10 @@ use App\Livewire\ProposalsDesk;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Event;
+use App\Models\EventBudgetItem;
 use App\Models\Proposal;
 use App\Models\User;
+use App\Support\NavPanel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -144,6 +146,52 @@ class ProposalTest extends TestCase
         $this->assertSame($event->id, $deal->event_id);
         $this->assertSame($event->id, $p->event_id, 'and the offer knows what it became');
         $this->assertSame('accepted', $p->state());
+    }
+
+    /**
+     * The point of the whole chain: a PM opening a freshly-won event should
+     * find the Budget tab already priced from what the client agreed to, not
+     * an empty grid waiting for someone to retype the proposal by hand.
+     */
+    public function test_accepting_seeds_the_budget_from_the_priced_lines(): void
+    {
+        $deal = $this->deal(['value_cents' => 0]);
+        $p = Proposal::forDeal($deal); // no lines yet — value_cents was 0
+
+        $p->lines()->create(['description' => 'Venue hire', 'detail' => '3 days', 'qty' => 1, 'unit_cents' => 40_000_00, 'sort' => 1]);
+        $p->lines()->create(['description' => 'AV production', 'qty' => 3, 'unit_cents' => 5_000_00, 'sort' => 2]);
+        $p->lines()->create(['description' => 'Gala dinner', 'qty' => 1, 'unit_cents' => 25_000_00, 'optional' => true, 'sort' => 3]);
+        $p->update(['status' => 'sent']);
+
+        $event = $p->fresh()->load(['lines', 'deal'])->accept();
+
+        $items = EventBudgetItem::where('event_id', $event->id)->where('source_type', 'proposal')->get();
+        $this->assertCount(2, $items, 'the optional line was quoted, not agreed to, so it seeds nothing');
+
+        $venue = $items->firstWhere('description', 'Venue hire — 3 days');
+        $this->assertNotNull($venue);
+        $this->assertSame(40_000_00, $venue->sell_cents, 'the sell side comes from the proposal');
+        $this->assertSame(0, $venue->estimated_cents, 'the cost side is not something a proposal ever knew');
+        $this->assertSame('Proposal Pricing', $venue->category);
+
+        $av = $items->firstWhere('description', 'AV production');
+        $this->assertSame(3, $av->quantity);
+        $this->assertSame(15_000_00, $av->sell_cents);
+    }
+
+    /** Accepting twice must not double the budget lines either. */
+    public function test_accepting_twice_does_not_duplicate_budget_lines(): void
+    {
+        $p = Proposal::forDeal($this->deal());
+        $p->update(['status' => 'sent']);
+
+        $p->fresh()->load(['lines', 'deal'])->accept();
+        $event = $p->fresh()->load(['lines', 'deal'])->accept();
+
+        $this->assertSame(
+            1,
+            EventBudgetItem::where('event_id', $event->id)->where('source_type', 'proposal')->count()
+        );
     }
 
     /** Accepting twice must not open a second event. */
@@ -283,7 +331,7 @@ class ProposalTest extends TestCase
 
     public function test_the_nav_links_to_it_now_that_it_exists(): void
     {
-        $panel = collect(\App\Support\NavPanel::panel())
+        $panel = collect(NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
             ->firstWhere('label', 'Proposals');
 
