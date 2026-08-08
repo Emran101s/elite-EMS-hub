@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
 use App\Models\User;
+use App\Support\NavPanel;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -90,14 +91,31 @@ class PaymentsLedgerTest extends TestCase
     {
         $user = $this->actor();
 
+        // Park the row in a month nothing else can occupy.
+        //
+        // This assertion is about a MONTH's aggregate, so it only means
+        // anything if our row is the only one in its bucket. `subWeek()` used
+        // to be that isolation, and it was not: ensurePayments() always writes
+        // a deposit dated now(), so the current month is never empty. A week
+        // ago only leaves the month on days 1–7 — so this test passed for the
+        // first week of every month and failed for the other three. It went
+        // green for weeks, then blocked every PR from the 8th.
+        //
+        // Two years back is clear by construction: schedules are generated
+        // from now() and the event's starts_at, never from the distant past.
         $p = EventContractPayment::orderBy('id')->firstOrFail();
-        $p->update(['amount_cents' => 0, 'paid_cents' => 0, 'due_on' => now()->subWeek()]);
+        $p->update(['amount_cents' => 0, 'paid_cents' => 0, 'due_on' => now()->subYears(2)->startOfMonth()]);
 
         $this->assertSame(0, $p->fresh()->outstandingCents());
         $this->assertSame('overdue', $p->fresh()->status());
 
         $months = Livewire::actingAs($user)->test(PaymentsLedger::class)->viewData('months');
         $month = $months->first(fn ($m) => $m['rows']->contains('id', $p->id));
+
+        // State the isolation rather than assume it: if seeding ever reaches
+        // back this far, this fails saying so instead of returning a
+        // mysterious non-zero total from somebody else's installment.
+        $this->assertCount(1, $month['rows'], 'the row must be alone in its month for a month-level assertion to mean anything');
 
         $this->assertSame(0, $month['due'], 'nothing is outstanding…');
         $this->assertFalse($month['settled'], '…but the month is not settled while a row is overdue');
@@ -206,7 +224,7 @@ class PaymentsLedgerTest extends TestCase
 
     public function test_the_nav_links_to_it_now_that_it_exists(): void
     {
-        $panel = collect(\App\Support\NavPanel::panel())
+        $panel = collect(NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
             ->firstWhere('label', 'Payments');
 
