@@ -57,6 +57,17 @@ class AgendaTab extends Component
 
     public string $type = 'panel';
 
+    /**
+     * Which lane of the programme this belongs to.
+     *
+     * Load-bearing rather than a label: the track decides whether a session
+     * heads its slot, folds into the all-day strip, or is kept off the public
+     * programme entirely. Until now it could only be set by CSV import, so the
+     * one field that shapes what a delegate sees was the one field the person
+     * building the programme could not reach.
+     */
+    public string $track = '';
+
     public string $format = 'in_person';
 
     public string $status = 'draft';
@@ -229,7 +240,7 @@ class AgendaTab extends Component
 
     public function newSession(?int $dayId = null): void
     {
-        $this->reset(['editingId', 'title', 'description', 'capacity', 'newRoomName']);
+        $this->reset(['editingId', 'title', 'description', 'capacity', 'newRoomName', 'track']);
         $this->speakerRows = [];
         $this->type = 'Panel';
         $this->format = 'in_person';
@@ -252,6 +263,7 @@ class AgendaTab extends Component
         $this->title = $s->title;
         // Show the type prettily; it's normalised back to a slug on save.
         $this->type = str($s->type)->replace('_', ' ')->title()->toString();
+        $this->track = (string) $s->track;
         $this->format = $s->format ?? 'in_person';
         $this->status = $s->status ?? 'draft';
         $this->capacity = (string) ($s->capacity ?? '');
@@ -278,6 +290,7 @@ class AgendaTab extends Component
             'agenda_day_id' => ['required', 'exists:event_agenda_days,id'],
             'room_id' => ['nullable', 'exists:event_rooms,id'],
             'type' => ['required', 'string', 'max:40'],   // built-in or a custom label
+            'track' => ['nullable', 'string', 'max:60'],  // known lane or a custom one
             'format' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('session_format')))],
             'status' => ['required', 'in:'.implode(',', EventAgendaSession::STATUSES)],
             'capacity' => ['nullable', 'integer', 'min:0'],
@@ -301,6 +314,7 @@ class AgendaTab extends Component
             'room_id' => $this->room_id,
             'title' => $this->title,
             'type' => $type,
+            'track' => trim($this->track) ?: null,
             'format' => $this->format,
             'capacity' => $this->capacity !== '' ? (int) $this->capacity : null,
             'starts_at' => $this->starts_at,
@@ -500,23 +514,23 @@ class AgendaTab extends Component
         return $this->event->rooms()
             ->when(trim($this->venueSearch) !== '', fn ($q) => $q->where('name', 'like', '%'.trim($this->venueSearch).'%'))
             ->orderBy('name')->get()->map(function (EventRoom $room) use ($sessions, $conflicts) {
-            $mine = $sessions->where('room_id', $room->id);
+                $mine = $sessions->where('room_id', $room->id);
 
-            // Booked past what the room seats — the "capacity risk" signal.
-            $over = $mine->filter(fn ($s) => $room->capacity > 0 && $s->capacity > $room->capacity);
+                // Booked past what the room seats — the "capacity risk" signal.
+                $over = $mine->filter(fn ($s) => $room->capacity > 0 && $s->capacity > $room->capacity);
 
-            return [
-                'room' => $room,
-                'sessions' => $mine->count(),
-                'conflicts' => $mine->filter(fn ($s) => isset($conflicts[$s->id]))->count(),
-                'over' => $over->count(),
-                'state' => match (true) {
-                    $mine->contains(fn ($s) => isset($conflicts[$s->id])) => 'conflict',
-                    $over->isNotEmpty() => 'warning',
-                    default => 'clear',
-                },
-            ];
-        });
+                return [
+                    'room' => $room,
+                    'sessions' => $mine->count(),
+                    'conflicts' => $mine->filter(fn ($s) => isset($conflicts[$s->id]))->count(),
+                    'over' => $over->count(),
+                    'state' => match (true) {
+                        $mine->contains(fn ($s) => isset($conflicts[$s->id])) => 'conflict',
+                        $over->isNotEmpty() => 'warning',
+                        default => 'clear',
+                    },
+                ];
+            });
     }
 
     /**
@@ -619,6 +633,11 @@ class AgendaTab extends Component
                 ->merge(User::orderBy('name')->pluck('name'))
                 ->unique()->filter()->values(),
             'roles' => Taxonomy::options('speaker_role'),
+            // The lanes that change how the programme draws, plus any this
+            // event already uses — a track typed once should be offered twice.
+            'trackOptions' => collect(AgendaProgram::tracks())
+                ->union($this->event->agendaSessions()->distinct()->pluck('track')
+                    ->filter()->mapWithKeys(fn (string $t) => [$t => 'Already used on this event'])->all()),
             // Built-in types + any custom ones already used, prettified for the datalist.
             'typeOptions' => collect(Taxonomy::labels('session_type'))
                 ->merge($this->event->agendaSessions()->distinct()->pluck('type'))
