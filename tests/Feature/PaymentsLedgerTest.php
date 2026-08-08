@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
 use App\Models\User;
+use App\Support\NavPanel;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -215,7 +216,7 @@ class PaymentsLedgerTest extends TestCase
 
     public function test_the_nav_links_to_it_now_that_it_exists(): void
     {
-        $panel = collect(\App\Support\NavPanel::panel())
+        $panel = collect(NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
             ->firstWhere('label', 'Payments');
 
