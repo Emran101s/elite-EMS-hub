@@ -757,25 +757,534 @@ Catalogues: Supplier, Venue, Requirement, ServiceItem, TaxonomyTerm,
 
 ---
 
-# APPENDIX A — EVENT HUB TABS (exact keys)
+# APPENDICES
+
+All appendices below belong to this same factual inventory. No redesign content.
+
+---
+
+## APPENDIX A — Event Hub tabs (exact registry)
+
+### A.1 `Event::HUB_TABS` — key → [short label, purpose, icon]
+
+| Key | Short label | Purpose | Icon |
+|---|---|---|---|
+| `overview` | Overview | Command centre | `home` |
+| `brief` | Brief | Scope & objectives | `clipboard` |
+| `contract` | Contract | Terms & signatures | `identification` |
+| `planning` | Planning | Strategy & timeline | `list` |
+| `tasks` | Tasks | Work & execution | `clipboard` |
+| `budget` | Budget | Cost & margin | `currency` |
+| `pricing` | Invoice items | Prices for this event | `archive` |
+| `risks` | Risks | What could go wrong | `bell` |
+| `approvals` | Approvals | Decisions pending | `identification` |
+| `agenda` | Agenda | Sessions & schedule | `calendar` |
+| `speakers` | Speakers | Line-up & billing | `sparkles` |
+| `venue` | Venue | Rooms & layouts | `building` |
+| `suppliers` | Suppliers | Vendors & orders | `truck` |
+| `transportation` | Transport | Movements & drivers | `truck` |
+| `accommodation` | Stay | Hotels & rooming | `home` |
+| `catering` | Food & Beverage | Menus, breaks & meals | `cup` |
+| `exhibition` | Exhibition | Floor & stands | `grid` |
+| `sponsors` | Sponsors | Partnerships | `star` |
+| `attendees` | Attendees | Registrations & badges | `users` |
+| `files` | Files | Documents & assets | `archive` |
+| `reports` | Reports | Analytics & insights | `chart` |
+| `ai` | AI | Assistant & insights | `sparkles` |
+| `settings` | Settings | Modules & details | `cog` |
+
+### A.2 `Event::HUB_MODULES` — toggleable (key → [label, category, icon])
+
+`brief`, `contract`, `planning`, `agenda`, `speakers`, `tasks`, `budget`, `suppliers`, `venue`, `transportation`, `accommodation`, `catering`, `exhibition`, `sponsors`, `attendees`, `files`, `risks`, `approvals`, `reports`
+
+### A.3 Always-on tab behaviour
+
+`Event::moduleEnabled($key)` returns `true` for any key **not** listed in `HUB_MODULES` (so `overview`, `ai`, `settings`, and `pricing` are not gated by `enabled_modules`).
+
+### A.4 Hub primary strip vs More (as coded in `hub.blade.php`)
+
+**Primary keys:** `overview`, `tasks`, `agenda`, `venue`, `transportation`, `budget`  
+**More families:** Plan · Programme · Logistics · Partners · Sell · Library · System (see Part 4).
+
+### A.5 Hub blade includes (`resources/views/events/hub/`)
 
 `overview`, `brief`, `contract`, `planning`, `tasks`, `budget`, `pricing`, `risks`, `approvals`, `agenda`, `speakers`, `venue`, `suppliers`, `transportation`, `accommodation`, `catering`, `exhibition`, `sponsors`, `attendees`, `files`, `reports`, `ai`, `settings`
 
-Toggleable modules: all of the above except always-on `overview`, `ai`, `settings` (and `pricing` is always offered in tabs though not in `HUB_MODULES` list — see `moduleEnabled()`: keys not in `HUB_MODULES` return true).
+---
+
+## APPENDIX B — Related internal docs (existing in repo)
+
+Prior documents; this report does not replace them:
+
+| File | Topic |
+|---|---|
+| `docs/01-product-vision.md` | Product vision |
+| `docs/02-platform-architecture.md` | Architecture |
+| `docs/03-command-center-architecture.md` | Command Center |
+| `docs/04-event-life-cycle.md` | Event life cycle |
+| `docs/05-approval-workflow-engine.md` | Approvals |
+| `docs/06-portal-strategy.md` | Portal strategy |
+| `docs/07-user-roles-and-permissions.md` | Roles (partially outdated vs workspace pivot) |
+| `docs/08-design-system-rules.md` | Design system |
+| `docs/09-development-roadmap.md` | Roadmap |
+| `docs/10-current-codebase-assessment.md` | Earlier codebase assessment |
+| `docs/11-github-workflow.md` | GitHub workflow |
+| `docs/12-cursor-handover.md` | Cursor handover |
+| `docs/13-parallel-working-agreement.md` | Parallel agents |
+| `docs/14-cross-agent-notes.md` | Scratchpad |
+| `docs/15-database-backups.md` | Backups |
+| `docs/16-infrastructure.md` | Infrastructure |
+| `docs/17-postgres-cutover-plan.md` | Postgres cutover |
+| `docs/18-phase1-platform-audit.md` | Phase 1 audit |
+| `docs/19-internal-improvement-plan.md` | Internal improvement plan |
 
 ---
 
-# APPENDIX B — RELATED INTERNAL DOCS (EXISTING, NOT REPLACED)
+## APPENDIX C — Complete application route list
 
-These are prior documents in the repo; this report is the factual inventory for consultants. Cross-check if needed:
+Source: `php artisan route:list` on inspection date (framework Livewire/Dusk/storage/`/up` routes omitted). Path is relative to app root.
 
-- `docs/02-platform-architecture.md`  
-- `docs/04-event-life-cycle.md`  
-- `docs/07-user-roles-and-permissions.md`  
-- `docs/10-current-codebase-assessment.md`  
-- `docs/18-phase1-platform-audit.md`  
-- `docs/19-internal-improvement-plan.md`  
+| Method | Path | Route name | Action |
+|---|---|---|---|
+| GET | `/` | `home` | `App\Livewire\Dashboard` |
+| GET | `/ai-assistant` | `ai.index` | `App\Livewire\AiAssistant` |
+| GET | `/checkin/{token}/{reference}` | `checkin.scan` | `App\Livewire\CheckInScan` |
+| GET | `/concept/flow` | `concept.flow` | `FlowBoardController` |
+| GET | `/concept/nav` | `concept.nav` | `NavConceptController` |
+| GET | `/contracts` | `contracts.index` | `App\Livewire\ContractsRegister` |
+| GET | `/crm` | `crm.index` | `App\Livewire\CrmPipeline` |
+| GET | `/crm/clients/{client}` | `crm.client` | `App\Livewire\ClientRecord` |
+| GET | `/events` | `events.index` | `App\Livewire\EventsIndex` |
+| GET | `/events/create` | `events.create` | `App\Livewire\EventCreate` |
+| GET | `/events/{event}` | `events.hub` | `EventHubController@show` |
+| GET | `/events/{event}/arrivals` | `events.arrivals` | `App\Livewire\ArrivalsDesk` |
+| GET | `/events/{event}/attendees/template.xlsx` | `events.attendees.template` | `AttendeeTemplateController` |
+| GET | `/events/{event}/badges.pdf` | `events.badges.pdf` | `BadgeSheetPdfController` |
+| GET | `/events/{event}/brief.pdf` | `events.brief.pdf` | `EventBriefPdfController` |
+| GET | `/events/{event}/budget.pdf` | `events.budget.pdf` | `BudgetPdfController` |
+| GET | `/events/{event}/contract.pdf` | `events.contract.pdf` | `EventContractPdfController` |
+| GET | `/events/{event}/contracts/{contract}.pdf` | `events.contract.doc.pdf` | `ContractDocumentPdfController` |
+| GET | `/events/{event}/documents/{document}/download` | `events.documents.download` | `EventDocumentController@download` |
+| GET | `/events/{event}/documents/{document}/view` | `events.documents.view` | `EventDocumentController@view` |
+| GET | `/events/{event}/exhibition-floor` | `events.exhibition-floor` | `App\Livewire\ExhibitionFloorPlan` |
+| GET | `/events/{event}/exhibition-floor.pdf` | `events.exhibition-floor.pdf` | `ExhibitionFloorPdfController` |
+| GET | `/events/{event}/invoice-items/template.xlsx` | `events.pricing.template` | `EventPricingTemplateController` |
+| GET | `/events/{event}/master-schedule.pdf` | `events.agenda.master.pdf` | `MasterSchedulePdfController` |
+| GET | `/events/{event}/plan.pdf` | `events.planning.pdf` | `PlanStudioPdfController` |
+| GET | `/events/{event}/programme.pdf` | `events.agenda.program.pdf` | `AgendaProgramPdfController` |
+| GET | `/events/{event}/rooming/{block}.pdf` | `events.rooming.pdf` | `RoomingListPdfController` |
+| GET | `/events/{event}/rooming/{block}/template.xlsx` | `events.rooming.template` | `RoomingTemplateController` |
+| GET | `/events/{event}/rooms/{room}/equipment.pdf` | `events.room-equipment.pdf` | `RoomEquipmentPdfController` |
+| GET | `/events/{event}/rooms/{room}/layout` | `events.room-layout` | `App\Livewire\RoomLayoutBuilder` |
+| GET | `/events/{event}/rooms/{room}/layout.pdf` | `events.room-layout.pdf` | `RoomLayoutPdfController` |
+| GET | `/events/{event}/run-of-show` | `events.run-of-show` | `RunOfShowController` |
+| GET | `/events/{event}/run-of-show.pdf` | `events.run-of-show.pdf` | `RunOfShowPdfController` |
+| GET | `/events/{event}/sponsorship` | `events.sponsorship` | `SponsorshipController@show` |
+| GET | `/events/{event}/sponsorship.pdf` | `events.sponsorship.pdf` | `SponsorshipController@pdf` |
+| GET | `/events/{event}/timeline.pdf` | `events.agenda.timeline.pdf` | `AgendaTimelinePdfController` |
+| GET | `/events/{event}/transport.pdf` | `events.transport.pdf` | `TransportManifestPdfController` |
+| GET | `/events/{event}/transport/daily-schedule.pdf` | `events.transport.daily-schedule.pdf` | `DailyMovementSchedulePdfController` |
+| GET | `/events/{event}/transport/dispatch` | `events.transport.dispatch` | `App\Livewire\TransportDispatch` |
+| GET | `/events/{event}/transport/live` | `events.transport.live` | `App\Livewire\TransportLive` |
+| GET | `/events/{event}/transport/plan-template.xlsx` | `events.transport.plan-template` | `TransportPlanTemplateController` |
+| GET | `/events/{event}/transport/plan.pdf` | `events.transport.master-plan.pdf` | `TransportMasterPlanPdfController` |
+| GET | `/events/{event}/transport/supplier-order.pdf` | `events.transport.supplier-order.pdf` | `SupplierOrderPdfController` |
+| GET | `/events/{event}/transport/trip-sheets.pdf` | `events.transport.trip-sheet.pdf` | `DriverTripSheetPdfController` |
+| GET | `/events/{event}/transport/vip-sheets.pdf` | `events.transport.vip-sheet.pdf` | `VipTransferSheetPdfController` |
+| GET | `/events/{event}/transport/{transport}/template.xlsx` | `events.transport.template` | `TransportManifestTemplateController` |
+| GET | `/finance` | `finance.index` | `App\Livewire\FinanceOverview` |
+| GET | `/forgot-password` | `password.request` | `ForgotPasswordController@create` |
+| POST | `/forgot-password` | `password.email` | `ForgotPasswordController@store` |
+| GET | `/invoices` | `invoices.index` | `App\Livewire\InvoicesLedger` |
+| GET | `/invoices/{invoice}` | `invoices.edit` | `App\Livewire\InvoiceEditor` |
+| GET | `/invoices/{invoice}.pdf` | `invoices.pdf` | `InvoicePdfController` |
+| GET | `/login` | `login` | `LoginController@create` |
+| POST | `/login` | `login.store` | `LoginController@store` |
+| POST | `/logout` | `logout` | `LoginController@destroy` |
+| ANY | `/operations-room` | `operations-room` | Redirect → `/` |
+| GET | `/payments` | `payments.index` | `App\Livewire\PaymentsLedger` |
+| GET | `/planning` | `planning.index` | `App\Livewire\PlanningBoard` |
+| GET | `/projects` | `projects.index` | Blade `modules.projects` |
+| GET | `/proposals` | `proposals.index` | `App\Livewire\ProposalsDesk` |
+| GET | `/proposals/{proposal}` | `proposals.edit` | `App\Livewire\ProposalEditor` |
+| GET | `/proposals/{proposal}.pdf` | `proposals.pdf` | `ProposalPdfController` |
+| GET | `/register/{token}` | `register.show` | `App\Livewire\PublicRegistration` |
+| GET | `/reports` | `reports.index` | `App\Livewire\ReportsOverview` |
+| GET | `/requirements` | `requirements.index` | `App\Livewire\RequirementsCatalog` |
+| GET | `/requirements/pdf` | `requirements.pdf` | `EquipmentPdfController` |
+| GET | `/reset-password/{token}` | `password.reset` | `ResetPasswordController@create` |
+| POST | `/reset-password` | `password.update` | `ResetPasswordController@store` |
+| GET | `/settings` | `settings.index` | Blade `modules.settings` |
+| GET | `/settings/clients` | `clients.index` | `App\Livewire\ClientsManager` |
+| GET | `/settings/company` | `company.index` | `App\Livewire\CompanySettings` |
+| GET | `/settings/defaults` | `defaults.index` | `App\Livewire\DefaultsSettings` |
+| GET | `/settings/price-list` | `catalogue.index` | `App\Livewire\CatalogueSettings` |
+| GET | `/settings/price-list/template.xlsx` | `catalogue.template` | `ServiceItemTemplateController` |
+| GET | `/settings/registration-templates` | `registration-templates.index` | `App\Livewire\RegistrationTemplates` |
+| GET | `/settings/sponsor-packages` | `sponsor-packages.index` | `App\Livewire\SponsorPackagesSettings` |
+| GET | `/settings/statuses` | `workflows.index` | `App\Livewire\WorkflowSettings` |
+| GET | `/settings/transport` | `transport-settings.index` | `App\Livewire\TransportSettings` |
+| GET | `/settings/types` | `taxonomies.index` | `App\Livewire\TaxonomySettings` |
+| GET | `/sponsors` | `sponsors.index` | Blade `modules.sponsors` |
+| GET | `/suppliers` | `suppliers.index` | `App\Livewire\SuppliersManager` |
+| GET | `/tasks` | `tasks.index` | Blade `modules.tasks` |
+| GET | `/team` | `team.index` | `App\Livewire\TeamRoster` |
+| GET | `/venues` | `venues.index` | `App\Livewire\VenuesManager` |
+
+**Middleware notes:** Guest group wraps login/password. Auth wraps portfolio. `can:view,event` wraps all `/events/{event}/…` routes listed above except `events.create` / `events.index`.
 
 ---
 
-*End of factual report. No redesign content included by instruction.*
+## APPENDIX D — Eloquent models (complete class list)
+
+Location: `app/Models/` (60 model classes). Concerns: `BelongsToTenant`, `Auditable`, `PricedByUnit`.
+
+### D.1 Auth / tenancy
+
+`Tenant`, `Workspace`, `User`, `CompanyProfile`, `AuditLog`
+
+### D.2 CRM
+
+`Client`, `Contact`, `Deal`, `DealActivity`
+
+### D.3 Commercial documents
+
+`Proposal`, `ProposalLine`, `EventContract`, `EventContractPayment`, `ContractSignatory`, `Invoice`, `InvoiceLine`, `EventInvoiceItem`
+
+### D.4 Event core
+
+`Event`, `EventBrief`, `Project`, `Task`
+
+### D.5 Event hub domain
+
+`EventAgendaDay`, `EventAgendaSession`, `EventSpeaker`, `EventRoom`, `EventRoomBlock`, `EventAccommodation`, `EventTransport`, `EventTransportPassenger`, `EventCateringItem`, `EventBudgetItem`, `EventBudgetCategory`, `EventBudgetVersion`, `EventIncomeItem`, `EventSponsor`, `EventSponsorPackage`, `EventExhibitionHall`, `EventBooth`, `EventExhibitor`, `EventAttendee`, `RegistrationField`, `EventDocument`, `EventDocumentFolder`, `EventRisk`, `EventApproval`, `ApprovalStep`, `PlanTrack`, `PlanItem`, `PlanSubtask`
+
+### D.6 Catalogues / settings data
+
+`Supplier`, `Venue`, `Requirement`, `ServiceItem`, `TaxonomyTerm`, `VehicleType`, `TransportServiceType`, `TransportVehicle`, `TransportDriver`, `RegistrationTemplate`
+
+---
+
+## APPENDIX E — Livewire components (complete)
+
+### E.1 Portfolio / platform (`app/Livewire/`)
+
+| Class | Role |
+|---|---|
+| `AiAssistant` | Portfolio briefing |
+| `ArrivalsDesk` | Day-of arrivals |
+| `CatalogueSettings` | House price list |
+| `CheckInScan` | Public QR check-in |
+| `ClientRecord` | Single client |
+| `ClientsManager` | Client directory |
+| `CommandPalette` | ⌘K search |
+| `CompanySettings` | Company profile |
+| `ContractsRegister` | Cross-event contracts |
+| `CrmPipeline` | Deal board |
+| `Dashboard` | Home command center |
+| `DefaultsSettings` | Defaults |
+| `EventCreate` | Event Studio |
+| `EventsIndex` | Events book |
+| `ExhibitionFloorPlan` | Exhibition floor editor |
+| `FinanceOverview` | Portfolio finance |
+| `InvoiceEditor` | Single invoice |
+| `InvoicesLedger` | Invoice book |
+| `PaymentsLedger` | Installment book |
+| `PlanningBoard` | Cross-event plan board |
+| `ProposalEditor` | Single proposal |
+| `ProposalsDesk` | Proposals book |
+| `PublicRegistration` | Public registration |
+| `RegistrationTemplates` | Registration templates |
+| `ReportsOverview` | Cross-event reports |
+| `RequirementsCatalog` | Equipment catalogue |
+| `RoomLayoutBuilder` | Room layout editor |
+| `SponsorPackagesSettings` | Default sponsor packages |
+| `SuppliersManager` | Suppliers directory |
+| `TaxonomySettings` | Types & lists |
+| `TeamRoster` | Team & invites |
+| `TransportDispatch` | Dispatch Gantt |
+| `TransportLive` | Live ops board |
+| `TransportSettings` | Transport catalogues |
+| `VenuesManager` | Venues directory |
+| `WorkflowSettings` | Statuses & colours |
+
+### E.2 Event Hub (`app/Livewire/Hub/`)
+
+| Class | Hub tab / use |
+|---|---|
+| `AccommodationTab` | Stay |
+| `AgendaTab` | Agenda |
+| `ApprovalsTab` | Approvals |
+| `AttendeesTab` | Attendees |
+| `BriefTab` | Brief |
+| `BudgetTab` | Budget |
+| `CateringTab` | F&B |
+| `ContractTab` | Contract |
+| `ExhibitionTab` | Exhibition |
+| `ModuleDocuments` | Documents drawer (shared) |
+| `PlanStudio` | Planning |
+| `PricingTab` | Invoice items |
+| `RegistrationForm` | Registration field builder |
+| `RisksTab` | Risks |
+| `SettingsTab` | Event settings |
+| `SpeakersTab` | Speakers |
+| `SponsorsTab` | Sponsors |
+| `TasksTab` | Tasks |
+| `TransportationTab` | Transport |
+| `VenueTab` | Venue |
+
+### E.3 Concerns
+
+`BulkSelectable`, `RoutesCostsToBudget`
+
+---
+
+## APPENDIX F — PDF / export controllers (complete)
+
+Location: `app/Http/Controllers/`
+
+| Controller | Typical route name |
+|---|---|
+| `AgendaProgramPdfController` | `events.agenda.program.pdf` |
+| `MasterSchedulePdfController` | `events.agenda.master.pdf` |
+| `AgendaTimelinePdfController` | `events.agenda.timeline.pdf` |
+| `RunOfShowPdfController` | `events.run-of-show.pdf` |
+| `BudgetPdfController` | `events.budget.pdf` |
+| `EventBriefPdfController` | `events.brief.pdf` |
+| `EventContractPdfController` | `events.contract.pdf` |
+| `ContractDocumentPdfController` | `events.contract.doc.pdf` |
+| `PlanStudioPdfController` | `events.planning.pdf` |
+| `ExhibitionFloorPdfController` | `events.exhibition-floor.pdf` |
+| `SponsorshipController` (pdf) | `events.sponsorship.pdf` |
+| `RoomingListPdfController` | `events.rooming.pdf` |
+| `BadgeSheetPdfController` | `events.badges.pdf` |
+| `TransportManifestPdfController` | `events.transport.pdf` |
+| `DailyMovementSchedulePdfController` | `events.transport.daily-schedule.pdf` |
+| `DriverTripSheetPdfController` | `events.transport.trip-sheet.pdf` |
+| `VipTransferSheetPdfController` | `events.transport.vip-sheet.pdf` |
+| `TransportMasterPlanPdfController` | `events.transport.master-plan.pdf` |
+| `SupplierOrderPdfController` | `events.transport.supplier-order.pdf` |
+| `RoomLayoutPdfController` | `events.room-layout.pdf` |
+| `RoomEquipmentPdfController` | `events.room-equipment.pdf` |
+| `ProposalPdfController` | `proposals.pdf` |
+| `InvoicePdfController` | `invoices.pdf` |
+| `EquipmentPdfController` | `requirements.pdf` |
+
+### F.1 Excel / template exporters
+
+`AttendeeTemplateController`, `RoomingTemplateController`, `EventPricingTemplateController`, `TransportManifestTemplateController`, `TransportPlanTemplateController`, `ServiceItemTemplateController`
+
+### F.2 Shared PDF concern
+
+`App\Http\Controllers\Concerns\RendersChromePdf`
+
+---
+
+## APPENDIX G — Roles, gates, EventPolicy, team labels
+
+### G.1 Rank table
+
+| Rank | Slug | Label |
+|---|---|---|
+| 4 | `super_admin` | Super Admin |
+| 3 | `admin` | Admin |
+| 2 | `manager` | Manager |
+| 1 | `coordinator` | Coordinator |
+| 0 | `viewer` | Viewer |
+
+Source of truth for checks: `workspace_user.role` ?? `users.role` (`User::isAtLeast()`).
+
+### G.2 Gates (`AppServiceProvider`)
+
+| Gate | Minimum rank |
+|---|---|
+| `write` | coordinator |
+| `decide-approvals` | manager |
+| `manage-budget` | manager |
+| `manage-contract` | manager |
+| `manage-events` | manager |
+| `manage-team` | admin |
+
+### G.3 `EventPolicy`
+
+| Method | Rule |
+|---|---|
+| `view` / `update` | coordinator+ AND (manager+ OR on `event_team_members`) |
+| `create` | coordinator+ |
+| `archive` / `duplicate` / `delete` | manager+ |
+
+### G.4 Event team role slugs (`Event::TEAM_ROLES`)
+
+`project_manager`, `operations_lead`, `registration_lead`, `supplier_coordinator`, `finance_owner`, `design_owner`, `production_owner`, `client_rm`
+
+These are pivot labels; they are **not** separate Gate definitions.
+
+---
+
+## APPENDIX H — Stage / status machines (as coded)
+
+### H.1 Event stages (`Event::STAGES`)
+
+`draft`, `proposal`, `confirmed`, `planning`, `production`, `live`, `completed`, `closed`, `cancelled`, `on_hold`
+
+### H.2 Event transitions (`Event::TRANSITIONS`)
+
+| From | Allowed next |
+|---|---|
+| `draft` | proposal, cancelled |
+| `proposal` | confirmed, draft, cancelled |
+| `confirmed` | planning, on_hold, cancelled |
+| `planning` | production, on_hold, cancelled |
+| `production` | live, on_hold, cancelled |
+| `live` | completed, cancelled |
+| `completed` | closed |
+| `closed` | *(terminal)* |
+| `cancelled` | draft |
+| `on_hold` | confirmed, planning, production, cancelled |
+
+### H.3 Deal stages (`Deal::STAGES`)
+
+`enquiry`, `qualified`, `proposal`, `negotiation`, `won`, `lost`  
+Open lanes: `Deal::OPEN` = enquiry, qualified, proposal, negotiation.
+
+### H.4 Proposal statuses
+
+`draft`, `sent`, `accepted`, `declined` (+ derived `expired` in state meta)
+
+### H.5 Contract statuses
+
+`draft`, `sent`, `partially_signed`, `signed`, `void`  
+Types: `client`, `vendor`, `speaker`, `sponsorship`, `letter`, `acceptance`
+
+### H.6 Transport statuses
+
+`planned`, `ordered`, `confirmed`, `in_progress`, `completed`, `issue`, `cancelled`  
+Planning advance on list: planned → ordered → confirmed (`nextPlanningStatus()`). Live owns in_progress / completed / issue.
+
+### H.7 Invoice statuses
+
+`draft`, `sent`, `void` (+ derived paid/partial/overdue states via payments)
+
+---
+
+## APPENDIX I — BudgetSync sources (factual)
+
+`App\Services\BudgetSync`
+
+| Method | Source types written |
+|---|---|
+| `sync(Event)` | `room_block`, `accommodation`, `transport`, `speaker`, `room`, `catering`, `event_req` |
+| `syncProposal(Event, Proposal)` | `proposal` under category “Proposal Pricing” |
+
+Auto-watched models (observer via `AppServiceProvider`): `EventRoomBlock`, `EventAccommodation`, `EventTransport`, `EventSpeaker`, `EventRoom`, `EventCateringItem`.
+
+**Not auto-synced as module money lines:** agenda sessions, sponsors, exhibition booths, attendees.
+
+---
+
+## APPENDIX J — Commercial / win workflow (exact call chain)
+
+```
+CRM "Mark won"
+  → CrmPipeline::moveTo($id, 'won')
+  → DealPipeline::win($deal)
+  → Event created (stage confirmed), deal.event_id set
+  → redirect events.hub
+
+Proposals desk / editor "Accept"
+  → Proposal::accept()
+  → deal.value_cents = proposal total
+  → DealPipeline::win($deal)
+  → proposal.event_id = event.id
+  → BudgetSync::syncProposal($event, $proposal)
+
+CRM "Draft proposal"
+  → CrmPipeline::draftProposal / ProposalsDesk::draftFor
+  → Proposal::forDeal($deal)
+  → redirect proposals.edit
+
+Event Studio
+  → EventCreate::save → Event::create  (no Deal link)
+```
+
+---
+
+## APPENDIX K — Navigation registry detail (`NavPanel`)
+
+### K.1 Rail AREAS
+
+| Key | Label | Icon | Landing route |
+|---|---|---|---|
+| `workspace` | Command Center | `home` | `home` |
+| `events` | Events | `calendar` | `events.index` |
+| `tasks` | Tasks | `clipboard` | `tasks.index` |
+| `crm` | CRM | `identification` | `crm.index` |
+| `finance` | Finance | `currency` | `finance.index` |
+| `library` | Library | `archive` | `suppliers.index` |
+
+### K.2 Fixed PANEL sections
+
+Events: Dashboard, All events, New event  
+Planning: Planning board, Tasks  
+Business: Proposals, Contracts  
+Finance: Invoices, Payments  
+
+Rows whose route is not registered are dropped (`panel()` filter).
+
+### K.3 `config/modules.php` keys
+
+`command-center`, `events`, `projects`, `tasks`, `crm`, `finance`, `suppliers`, `venues`, `team`, `reports`, `ai-assistant`, `settings`  
+(Authoritative chrome is `NavPanel`, not this config.)
+
+---
+
+## APPENDIX L — Services of note (non-exhaustive but load-bearing)
+
+| Service | Path | Role |
+|---|---|---|
+| `DealPipeline` | `app/Services/DealPipeline.php` | Win/lose/move deals; create Event |
+| `BudgetSync` | `app/Services/BudgetSync.php` | Module → budget lines |
+| `EventHealthService` | `app/Services/EventHealthService.php` | Health score / AI attention |
+| `EventCommandHeader` | `app/Services/EventCommandHeader.php` | Hub header next/readiness |
+| `PortfolioAdvisor` | `app/Services/PortfolioAdvisor.php` | Dashboard/AI signals |
+| `PortfolioFinance` | `app/Services/PortfolioFinance.php` | Finance rollups |
+| `AgendaTimeline` | `app/Services/AgendaTimeline.php` | Timeline geometry |
+| `AgendaProgram` | `app/Services/AgendaProgram.php` | Programme board shaping |
+| `BriefGenerator` | `app/Services/BriefGenerator.php` | Generate from approved brief |
+| `Tenancy` | `app/Support/Tenancy.php` (or similar) | Tenant binding |
+
+---
+
+## APPENDIX M — Explicit “not found” checklist (repeat for handoff)
+
+| Item | Status |
+|---|---|
+| Messages module / `messages.index` | Not found |
+| Guests (CRM) / `guests.index` | Not found |
+| Assets inventory / `assets.index` | Not found |
+| Help & Support page | Not found |
+| `modules/stub.blade.php` | Not found (deleted) |
+| Standalone Calendar module | Not found |
+| Procurement / PO module | Not found |
+| Client Viewer portal | Not found |
+| Quotation / RFQ entity | Not found (Proposal is the quote) |
+| Warehouse equipment availability | Not found |
+| Multi-company switcher / billing UI | Not found |
+| `AuthServiceProvider` / `Gate::before` | Not found |
+| Per-nav-item role visibility | Not found |
+| Hard approval → contract send gate | Not found |
+
+---
+
+## APPENDIX N — Orphan / prototype / redirect notes
+
+| Item | Fact |
+|---|---|
+| `/operations-room` | Redirects to `/` |
+| `/concept/flow`, `/concept/nav` | Prototypes; not in primary nav |
+| `resources/views/modules/team.blade.php` | Orphan; `/team` uses `TeamRoster` |
+| Alert bell target | `route('home')#live-alerts` |
+
+---
+
+*End of factual report and appendices. No redesign content included by instruction.*
