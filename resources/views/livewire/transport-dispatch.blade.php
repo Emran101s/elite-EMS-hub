@@ -84,7 +84,12 @@
 
     @if ($board['lanes']->isEmpty() && $board['unassigned']->isEmpty())
         <x-empty icon="truck" title="Nothing scheduled on this day"
-                 hint="Movements with a departure time appear here as lanes you can dispatch." />
+                 hint="Movements with a departure time appear here as lanes you can reassign. Add a run on the List first, then come back to catch clashes.">
+            <x-slot:actions>
+                <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}" class="btn-gold btn-sm">← Open the List</a>
+                <a href="{{ route('events.transport.live', $event) }}" class="btn-ghost btn-sm">Go to Live</a>
+            </x-slot:actions>
+        </x-empty>
     @else
         <div class="card overflow-hidden p-0">
             <div class="overflow-x-auto">

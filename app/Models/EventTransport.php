@@ -72,6 +72,22 @@ class EventTransport extends Model
     }
 
     /**
+     * The next planning status, or null once Live owns the run.
+     *
+     * Planned → Ordered → Confirmed is the desk's job before show day.
+     * In progress / completed / issue belong to the Live board, where the
+     * person holding a phone advances them — the list must not compete.
+     */
+    public function nextPlanningStatus(): ?string
+    {
+        return match ($this->status) {
+            'planned' => 'ordered',
+            'ordered' => 'confirmed',
+            default => null,
+        };
+    }
+
+    /**
      * How the operation actually thinks about a movement — the same split the
      * flight list uses. "Other" is everything that isn't an airport run:
      * hotel↔venue shuttles, city transfers, a car at disposal.
