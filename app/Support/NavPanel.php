@@ -62,12 +62,13 @@ class NavPanel
      * Fixed rather than derived from the area: the reference shows the whole
      * platform at once, so the panel is the map and the rail is the pin on it.
      *
-     * Rows whose page is not built yet are still drawn, at the owner's explicit
-     * instruction. They render identically and simply do not go anywhere — a
-     * navigation that grows a new row every release teaches people to re-read
-     * it, and one that shows the shape of the product teaches them the product.
-     * A row without a route says "Coming soon" and takes no keyboard focus,
-     * which is the difference between a promise and a broken link.
+     * The map only draws what exists. Rows for unbuilt pages used to be drawn
+     * greyed out to teach the shape of the product; in practice new staff read
+     * them as broken software and clicked them anyway, so docs/18 called them
+     * in and the audit's first fix was to take them out. A route that is not
+     * registered drops its row, and a section left with no rows drops too —
+     * the shape of the nav follows the shape of the build, with nothing to
+     * hand-tidy the day a module lands.
      *
      * @var array<int,array{0:string,1:array<int,array{0:string,1:string,2:string}>}>
      */
@@ -80,10 +81,6 @@ class NavPanel
         ['Planning', [
             ['Planning board', 'planning.index', 'grid'],
             ['Tasks', 'tasks.index', 'clipboard'],
-        ]],
-        ['Communication', [
-            ['Messages', 'messages.index', 'chat'],
-            ['Guests', 'guests.index', 'users'],
         ]],
         ['Business', [
             ['Proposals', 'proposals.index', 'document'],
@@ -108,20 +105,21 @@ class NavPanel
      */
     public static function panel(): Collection
     {
-        return collect(self::PANEL)->map(fn (array $section) => [
-            'label' => $section[0],
-            'items' => collect($section[1])->map(function (array $item) {
-                $built = Route::has($item[1]);
-
-                return [
-                    'label' => $item[0],
-                    'href' => $built ? route($item[1]) : null,
-                    'icon' => $item[2],
-                    'count' => null,
-                    'active' => $built && request()->routeIs($item[1]),
-                ];
-            })->values(),
-        ]);
+        return collect(self::PANEL)
+            ->map(fn (array $section) => [
+                'label' => $section[0],
+                'items' => collect($section[1])
+                    ->filter(fn (array $item) => Route::has($item[1]))
+                    ->map(fn (array $item) => [
+                        'label' => $item[0],
+                        'href' => route($item[1]),
+                        'icon' => $item[2],
+                        'count' => null,
+                        'active' => request()->routeIs($item[1]),
+                    ])->values(),
+            ])
+            ->reject(fn (array $section) => $section['items']->isEmpty())
+            ->values();
     }
 
     /** Settings sits apart on the rail, as it does in most tools. */
@@ -223,7 +221,6 @@ class NavPanel
                 ]],
                 ['Catalogues', [
                     ['Equipment', 'requirements.index', 'archive', null],
-                    ['Assets', 'assets.index', 'grid', null],
                     ['Sponsorships', 'sponsors.index', 'star', null],
                 ]],
                 ['Grow', [
