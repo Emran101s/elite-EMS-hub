@@ -65,9 +65,9 @@ Same spine as [`docs/18`](18-phase1-platform-audit.md) §5. Every step must answ
 | Work item | Effort | Priority |
 |---|---|---|
 | Spine one-pager + per-role “my day” cards (CEO, PM, Logistics, Programme, Finance, Registration) | Ops | **P0** |
-| CRM → Draft proposal CTA; soft win gate; Event Studio hint “prefer CRM win for sales” | Dev | **P0** |
+| CRM → Draft proposal CTA; soft win gate | Dev | **Done** (#37) — Event Studio hint still open, **P1** |
 | Proposal accept → seed budget / pricing (stop retype) | Dev | **Done** (`b2212db`) — verify PricingTab |
-| Hub Overview: “Next steps” strip driven by stage + module readiness (brief, agenda, venue, transport, contract, registration) | Dev | **P0** |
+| Hub Overview: “Next steps” strip driven by stage + module readiness (brief, agenda, venue, transport, contract, registration) | Dev | **Done** (`005e4c4`) |
 | Soft gate / warn: send contract without approval; go live with empty agenda / no transport when those modules on | Dev | **P1** |
 | Approval ping (email or in-app) | Dev | **P1** |
 | Cross-links everywhere: Agenda↔Venue room, Transport↔Attendee, Budget↔Invoice, Brief→generate→Planning | Dev | **P1** |
@@ -100,10 +100,10 @@ Look and feel must match a premium event agency command center: **clean, executi
 #### B1 — Shell & navigation
 | Work item | Priority |
 |---|---|
-| Hide nav ghosts | **P0** |
+| Hide nav ghosts | **Done** (#36) |
 | Fix alert bell → Signals | **P1** |
 | Collapse panel default &lt; xl; clearer active states | **P1** |
-| Hub primary strip = daily ops (Overview, Tasks, Agenda, Venue, Transport, Budget) + More | **P0** |
+| Hub primary strip = daily ops (Overview, Tasks, Agenda, Venue, Transport, Budget) + More | **Done** (`ced8016`) |
 | ⌘K / command palette remains the power user path — document it | **P1** |
 
 #### B2 — Dashboard & Overview (executive command)
@@ -409,11 +409,11 @@ code, (3) is testable this week, (4) a coordinator would feel tomorrow morning.
 
 ## Priority order when starting fresh
 
-1. Hide nav ghosts  
+1. ~~Hide nav ghosts~~ **done** (#36)  
 2. ~~Invite / set-password + forgot-password~~ **done** — train + verify email  
-3. CRM Draft proposal + soft win gate (budget seed **done** — verify PricingTab)  
-4. Dashboard + Event Overview next-steps / module readiness  
-5. Hub primary strip for daily ops (Tasks, Agenda, Venue, Transport, Budget)  
+3. ~~CRM Draft proposal + soft win gate~~ **done** (#37); budget seed **done** — verify PricingTab  
+4. ~~Event Overview next-steps / module readiness~~ **done**; Dashboard role weighting + money signals still open  
+5. ~~Hub primary strip for daily ops~~ **done**  
 6. Agenda builder UX pass  
 7. Transport Live/Dispatch UX pass  
 8. Then remaining module UX passes + money clarity + show-day polish  
