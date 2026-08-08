@@ -68,6 +68,41 @@ class Deal extends Model
         return $this->hasMany(Proposal::class)->latest('id');
     }
 
+    /** The offer still on the table: one live document per deal, newest first. */
+    public function liveProposal(): ?Proposal
+    {
+        return $this->proposalIn(['draft', 'sent']);
+    }
+
+    /**
+     * The offer the client said yes to.
+     *
+     * This is the agreed figure behind a win. A deal marked won without one
+     * becomes an event nobody priced, which is what the board warns about
+     * before it lets the win through.
+     */
+    public function acceptedProposal(): ?Proposal
+    {
+        return $this->proposalIn(['accepted']);
+    }
+
+    /**
+     * Reads the loaded relation when there is one.
+     *
+     * The board draws every open deal, so a query per card is a query per
+     * card — the pipeline eager-loads proposals and this stays in memory.
+     *
+     * @param  array<int,string>  $statuses
+     */
+    private function proposalIn(array $statuses): ?Proposal
+    {
+        if ($this->relationLoaded('proposals')) {
+            return $this->proposals->first(fn (Proposal $p) => in_array($p->status, $statuses, true));
+        }
+
+        return $this->proposals()->whereIn('status', $statuses)->first();
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

@@ -6,13 +6,14 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\DealActivity;
+use App\Models\Proposal;
 use App\Models\User;
 use App\Services\DealPipeline;
 use App\Support\Taxonomy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * The pipeline — the half of the business that happens before an event exists.
@@ -154,6 +155,29 @@ class CrmPipeline extends Component
         $this->showForm = false;
     }
 
+    // ── the offer behind the deal ────────────────────────────────────────
+
+    /**
+     * Draft the offer from the board.
+     *
+     * The Proposals desk has had this door since offers existed, but the
+     * conversation that needs it happens here — so the deal that reached
+     * Proposal with nothing sent was only ever fixed by someone remembering
+     * to go and look at another screen. docs/18 §5.
+     */
+    public function draftProposal(int $id)
+    {
+        Gate::authorize('manage-contract');
+
+        $deal = Deal::with('proposals')->findOrFail($id);
+
+        // One live offer per deal: the existing draft opens rather than a
+        // second one appearing quietly beside it.
+        $proposal = $deal->liveProposal() ?? Proposal::forDeal($deal);
+
+        return $this->redirectRoute('proposals.edit', $proposal, navigate: true);
+    }
+
     // ── moving through the pipeline ──────────────────────────────────────
 
     public function moveTo(int $id, string $stage): void
@@ -236,7 +260,7 @@ class CrmPipeline extends Component
 
     public function render()
     {
-        $deals = Deal::with(['client', 'contact', 'owner', 'event'])
+        $deals = Deal::with(['client', 'contact', 'owner', 'event', 'proposals'])
             ->when($this->q !== '', fn ($query) => $query->where(function ($w) {
                 $w->where('title', 'like', "%{$this->q}%")
                     ->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%{$this->q}%"));
