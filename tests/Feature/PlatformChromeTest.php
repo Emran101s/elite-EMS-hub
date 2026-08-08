@@ -73,6 +73,39 @@ class PlatformChromeTest extends TestCase
     }
 
     /**
+     * The map draws no door that does not open.
+     *
+     * Messages, Guests, Assets and Help were drawn greyed out to show the
+     * shape of the product before it was all built. New staff read them as
+     * broken software and clicked them anyway, so docs/18 called them in.
+     * NavPanel now drops a row whose route is not registered, which is the
+     * part worth holding: the next unbuilt idea cannot re-enter the nav by
+     * being added to the registry a release early.
+     */
+    public function test_the_panel_draws_no_rows_that_go_nowhere(): void
+    {
+        [, $user] = $this->ctx();
+
+        $pages = collect(NavPanel::AREAS)->pluck('route')
+            ->push(NavPanel::SETTINGS['route'])
+            ->filter(fn (string $route) => Route::has($route))
+            ->map(fn (string $route) => $this->actingAs($user)->get(route($route))->assertOk()->getContent());
+
+        foreach ($pages as $html) {
+            $panel = (string) str($html)->after('aria-label="Sections"')->before('</nav>');
+
+            $this->assertStringNotContainsString('aria-disabled', $panel, 'a nav row is drawn dead');
+            $this->assertStringNotContainsString('Coming soon', $html);
+            $this->assertStringNotContainsString('Help &amp; Support', $html, 'the help row has no page behind it');
+
+            foreach (['Messages', 'Guests', 'Assets'] as $ghost) {
+                $this->assertStringNotContainsString(">{$ghost}<", $panel,
+                    $ghost.' is back in the nav without a page behind it');
+            }
+        }
+    }
+
+    /**
      * Every area is ON the rail, rather than five of them behind a menu.
      *
      * The menu they were behind spent months opening into a clipping box,

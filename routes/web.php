@@ -395,11 +395,4 @@ Route::middleware('auth')->group(function () {
     // The briefing: what needs a person today, and where to find it.
     Route::get('/ai-assistant', AiAssistant::class)->name('ai.index');
 
-    // Modules still awaiting their build phase render the generic stub.
-    foreach (['assets'] as $key) {
-        $module = config("modules.nav.{$key}");
-
-        Route::get($module['path'], fn () => view('modules.stub', ['module' => $module + ['key' => $key]]))
-            ->name($module['route']);
-    }
 });
