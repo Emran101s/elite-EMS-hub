@@ -30,7 +30,7 @@ class NavPanel
             'match' => ['crm.*', 'clients.*'],
         ],
         'events' => [
-            'label' => 'Events', 'icon' => 'calendar', 'route' => 'events.index',
+            'label' => 'Event Portfolio', 'icon' => 'calendar', 'route' => 'events.index',
             'match' => ['events.*'],
         ],
         'proposals' => [
@@ -42,11 +42,11 @@ class NavPanel
             'match' => ['contracts.*'],
         ],
         'planning' => [
-            'label' => 'Planning', 'icon' => 'clipboard', 'route' => 'planning.index',
+            'label' => 'Planning & Tasks', 'icon' => 'clipboard', 'route' => 'planning.index',
             'match' => ['planning.*', 'tasks.*'],
         ],
         'operations' => [
-            'label' => 'Operations', 'icon' => 'truck', 'route' => 'venues.index',
+            'label' => 'Operations Control', 'icon' => 'truck', 'route' => 'venues.index',
             'match' => ['venues.*'],
         ],
         'finance' => [
@@ -54,15 +54,15 @@ class NavPanel
             'match' => ['finance.*', 'invoices.*', 'payments.*'],
         ],
         'partners' => [
-            'label' => 'Partners', 'icon' => 'archive', 'route' => 'suppliers.index',
+            'label' => 'Suppliers & Venues', 'icon' => 'archive', 'route' => 'suppliers.index',
             'match' => ['suppliers.*', 'requirements.*', 'projects.*', 'sponsors.*'],
         ],
         'intelligence' => [
-            'label' => 'Intelligence', 'icon' => 'chart', 'route' => 'reports.index',
+            'label' => 'Reports & Intelligence', 'icon' => 'chart', 'route' => 'reports.index',
             'match' => ['reports.*', 'ai.*'],
         ],
         'team' => [
-            'label' => 'Team', 'icon' => 'users', 'route' => 'team.index',
+            'label' => 'Team & Access', 'icon' => 'users', 'route' => 'team.index',
             'match' => ['team.*'],
         ],
     ];
