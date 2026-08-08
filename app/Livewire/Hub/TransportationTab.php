@@ -30,7 +30,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
  */
 class TransportationTab extends Component
 {
-    use WithFileUploads, RoutesCostsToBudget;
+    use RoutesCostsToBudget, WithFileUploads;
 
     public Event $event;
 
@@ -1024,6 +1024,27 @@ class TransportationTab extends Component
         $this->event->transport()->whereKey($id)->delete();
     }
 
+    /**
+     * Advance one planning step without opening the edit form.
+     *
+     * The desk used to have to open every run to walk Planned → Ordered →
+     * Confirmed. Live still owns the show-day steps; this only moves what
+     * happens before anybody is at the airport.
+     */
+    public function advanceStatus(int $id): void
+    {
+        Gate::authorize('write');
+
+        $movement = $this->event->transport()->whereKey($id)->firstOrFail();
+        $next = $movement->nextPlanningStatus();
+
+        if ($next === null) {
+            return;
+        }
+
+        $movement->update(['status' => $next]);
+    }
+
     public function setDay(string $day): void
     {
         $this->filterDay = $this->filterDay === $day ? '' : $day;
@@ -1132,6 +1153,7 @@ class TransportationTab extends Component
             'namedTotal' => $all->sum(fn (EventTransport $m) => $m->manifest->count()),
             'fleet' => $this->fleet($all),
             'overbooked' => $all->filter(fn (EventTransport $m) => $m->isOverbooked())->count(),
+            'notReady' => $all->reject(fn (EventTransport $m) => $m->isSettled() || $m->isReady())->count(),
             'costTotal' => $all->sum('cost_cents'),
             // ── the guest pool ──
             'guests' => $this->guestPool(),

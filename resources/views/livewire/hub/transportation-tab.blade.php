@@ -16,7 +16,7 @@
     <x-stat-strip class="mb-4" :stats="[
         ['Movements', $total, 'truck', null, null, $shown < $total ? $shown.' shown' : null],
         ['Passengers', $paxTotal, 'users', null, null, $unassignedCount ? $unassignedCount.' still to place' : 'All placed'],
-        ['Seats booked', $seatsTotal, 'identification', $seatsTotal > 0 ? min(100, (int) round($paxTotal / max(1, $seatsTotal) * 100)) : null, $overbooked ? 'bg-risk' : 'bg-gold-400', $overbooked ? $overbooked.' over capacity' : null, $overbooked ? 'text-red-700' : 'text-navy-900'],
+        ['Not ready', $notReady, 'bell', null, null, 'Missing driver, vehicle or passengers', $notReady ? 'text-amber-700' : 'text-emerald-600'],
         ['Unassigned', $unassignedCount, 'flag', null, null, 'In the guest pool', $unassignedCount ? 'text-amber-700' : 'text-emerald-600'],
     ]" />
 
@@ -504,9 +504,8 @@
                                                                   title="{{ \App\Models\EventTransport::LEG_HINTS[$m->leg] ?? '' }}">{{ $m->legLabel() }}</span>
                                                         @endif
                                                         <p class="truncate text-sm font-semibold text-navy-900">{{ $m->serviceType?->name ?? $m->route }}</p>
-                                                        @if ($m->status !== 'planned')
-                                                            <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}">{{ $stLabel }}</span>
-                                                        @endif
+                                                        <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}"
+                                                              title="{{ \App\Models\EventTransport::STATUS_META[$m->status]['hint'] ?? '' }}">{{ $stLabel }}</span>
                                                         @if ($priority)
                                                             <span class="rounded-full bg-gold-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-gold-800"
                                                                   title="{{ $m->priorityReason() }}">★ Priority</span>
@@ -552,7 +551,7 @@
                                                 </div>
 
                                                 <span @class([
-                                                          'hidden shrink-0 rounded-full px-2.5 py-1 text-eyebrow font-bold lg:block',
+                                                          'hidden shrink-0 rounded-full px-2.5 py-1 text-eyebrow font-bold sm:block',
                                                           'bg-emerald-50 text-emerald-700' => $chip['ready'],
                                                           'bg-amber-50 text-amber-700' => ! $chip['ready'],
                                                       ])
@@ -586,6 +585,13 @@
                                                     <details class="relative" data-menu>
                                                         <summary class="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-lg text-[15px] leading-none text-navy-300 transition hover:bg-navy-50 hover:text-navy-700 [&::-webkit-details-marker]:hidden">⋮</summary>
                                                         <div class="absolute end-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl">
+                                                            @if ($next = $m->nextPlanningStatus())
+                                                                <button type="button" wire:click="advanceStatus({{ $m->id }})"
+                                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">
+                                                                    → Mark {{ \App\Models\EventTransport::STATUS_META[$next]['label'] }}
+                                                                    <span class="block text-eyebrow font-medium text-muted">{{ \App\Models\EventTransport::STATUS_META[$next]['hint'] }}</span>
+                                                                </button>
+                                                            @endif
                                                             <button type="button" wire:click="duplicate({{ $m->id }})"
                                                                     class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-navy-700 transition hover:bg-page">
                                                                 Repeat this run tomorrow

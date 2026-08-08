@@ -243,12 +243,13 @@
     @endforeach
 
     @if (collect($board)->every(fn ($b) => $b->isEmpty()))
-        <div class="mt-16 text-center">
-            <p class="text-lg font-bold text-navy-900">Nothing moving on this day.</p>
-            <p class="mt-1 text-sm text-muted">
-                Movements scheduled for {{ \Carbon\Carbon::parse($day)->format('D j M') }} will appear here.
-            </p>
-        </div>
+        <x-empty icon="truck" title="Nothing moving on this day"
+                 hint="Movements scheduled for {{ \Carbon\Carbon::parse($day)->format('D j M') }} appear here once they have a departure time. Plan them on the List, then come back when the day starts.">
+            <x-slot:actions>
+                <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}" class="btn-gold btn-sm">← Open the List</a>
+                <a href="{{ route('events.transport.dispatch', $event) }}" class="btn-ghost btn-sm">Check Dispatch</a>
+            </x-slot:actions>
+        </x-empty>
     @endif
 
     <p class="mt-10 text-center text-eyebrow text-navy-300">
