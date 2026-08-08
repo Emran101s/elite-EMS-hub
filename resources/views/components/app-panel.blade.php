@@ -107,24 +107,17 @@
 
             @foreach ($section['items'] as $item)
                 @php
-                    // One row, two fates. A built page is a link; a page still
-                    // to come is the same row with nowhere to go — drawn the
-                    // same on purpose, so the shape of the product is legible
-                    // before all of it exists.
-                    $built = filled($item['href']);
-                    $tag = $built ? 'a' : 'span';
-                    $creates = $built && str_contains($item['href'], '/create');
+                    // Every row goes somewhere: NavPanel drops the ones whose
+                    // page is not built, so nothing here has to be drawn dead.
+                    $creates = str_contains($item['href'], '/create');
                 @endphp
 
-                <{{ $tag }}
-                    @if ($built) href="{{ $item['href'] }}" @endif
+                <a href="{{ $item['href'] }}"
                     @if ($item['active']) aria-current="page" @endif
-                    @unless ($built) title="Coming soon" aria-disabled="true" @endunless
                     @class([
                         'group relative flex h-[42px] items-center gap-3 rounded-[16px] px-3 transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/60',
                         'shell-selected' => $item['active'],
-                        'hover:bg-white/[0.06]' => ! $item['active'] && $built,
-                        'cursor-default' => ! $built,
+                        'hover:bg-white/[0.06]' => ! $item['active'],
                     ])>
 
                     <x-icon :name="$item['icon']" @class([
@@ -147,14 +140,14 @@
                     @elseif ($item['count'])
                         <span class="shrink-0 text-[11px] font-bold tabular-nums text-white/35">{{ $item['count'] }}</span>
                     @endif
-                </{{ $tag }}>
+                </a>
             @endforeach
         @endforeach
     </nav>
 
     {{-- ══ THE COMMAND DOCK ══
-         Settings, help and the way out. Pinned, because the three things you
-         reach for without reading are the three that must never move. --}}
+         Settings and the way out. Pinned, because the things you reach for
+         without reading are the ones that must never move. --}}
     <div class="relative shrink-0 px-4 pb-4 pt-1">
         <div class="shell-glass relative overflow-hidden rounded-[20px] p-1.5">
             <span aria-hidden="true" class="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(216,184,79,0.16),transparent_70%)]"></span>
@@ -165,13 +158,6 @@
                 <span class="flex-1 text-[13.5px] font-medium text-white/80 transition group-hover:text-white">Settings</span>
                 <x-icon name="chevron" class="h-4 w-4 shrink-0 -rotate-90 text-white/30" />
             </a>
-
-            <span title="Coming soon" aria-disabled="true"
-                  class="group relative flex h-10 cursor-default items-center gap-3 rounded-[14px] px-3">
-                <x-icon name="question" class="h-[18px] w-[18px] shrink-0 text-white/50" />
-                <span class="flex-1 text-[13.5px] font-medium text-white/80">Help &amp; Support</span>
-                <x-icon name="chevron" class="h-4 w-4 shrink-0 -rotate-90 text-white/30" />
-            </span>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

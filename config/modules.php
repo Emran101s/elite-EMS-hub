@@ -1,8 +1,10 @@
 <?php
 
 /*
- * Platform module registry — drives the sidebar, route stubs, and module pages.
- * Order matches the Command Center blueprint (docs/command-center/blueprint.md).
+ * Platform module registry — the built modules, in blueprint order
+ * (docs/command-center/blueprint.md). App\Support\NavPanel draws the chrome;
+ * this list is what the reachability test measures it against, so a module
+ * only belongs here once it has a page of its own.
  */
 return [
 
@@ -87,15 +89,6 @@ return [
             'icon' => 'users',
             'phase' => 'Phase 1',
             'blurb' => 'Team members, roles and workload.',
-        ],
-        'assets' => [
-            'primary' => false,
-            'label' => 'Assets',
-            'path' => '/assets',
-            'route' => 'assets.index',
-            'icon' => 'archive',
-            'phase' => 'Phase 4',
-            'blurb' => 'Equipment and asset inventory, allocation and condition.',
         ],
         'reports' => [
             'primary' => false,
