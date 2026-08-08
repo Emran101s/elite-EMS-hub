@@ -46,6 +46,30 @@ class AgendaProgram
      */
     private const SLOT_TOLERANCE = 30;
 
+    /**
+     * The track vocabulary the programme actually understands.
+     *
+     * Any other name is allowed and draws as an ordinary parallel lane. These
+     * are the ones that change something — where a session sits, whether it
+     * runs all day, whether a delegate ever sees it — so they are the ones the
+     * session form offers, each with what choosing it does.
+     *
+     * @return array<string,string> track => what it does to the programme
+     */
+    public static function tracks(): array
+    {
+        return collect(array_keys(self::TRACK_META))
+            ->merge(self::AMBIENT)
+            ->unique()
+            ->mapWithKeys(fn (string $track) => [$track => match (true) {
+                in_array($track, self::CREW_ONLY, true) => 'Back of house — kept off the public programme',
+                in_array($track, self::AMBIENT, true) => 'Runs all day — shown in the throughout-the-day strip',
+                $track === 'Main Stage' => 'Promoted to the head of its slot',
+                default => 'A parallel lane beside the main stage',
+            }])
+            ->all();
+    }
+
     /** True when a day has nothing left to show for this audience. */
     public static function isEmpty(array $program): bool
     {

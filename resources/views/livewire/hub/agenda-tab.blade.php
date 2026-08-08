@@ -54,11 +54,13 @@
     @endif
 
     @if ($days->isEmpty())
-        <div class="card flex flex-col items-center px-8 py-16 text-center">
-            <h3 class="pf text-base font-bold text-navy-900">No agenda days yet</h3>
-            <p class="mt-1 max-w-md text-xs text-muted">Days are created from the event's date range — set the dates in Settings, or add one here.</p>
-            <button type="button" wire:click="addDay" class="btn-gold mt-4 h-9 px-4 text-xs">＋ Add Day</button>
-        </div>
+        <x-empty icon="calendar" title="No agenda days yet"
+                 hint="Days come from the event's date range — set the dates in Settings and they appear here, or start one now and the programme builds around it.">
+            <x-slot:actions>
+                <button type="button" wire:click="addDay" class="btn-gold btn-sm">＋ Add the first day</button>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="btn-ghost btn-sm">Set the event dates</a>
+            </x-slot:actions>
+        </x-empty>
     @else
         {{-- ══════════ THE BOARD ══════════
              The venue rail runs the full height on the left, because which
@@ -201,6 +203,38 @@
                         </a>
                     @endif
 
+                    {{-- What you can do to the day itself. Confirming, copying
+                         and dropping a day have all worked for months with no
+                         door on them — the day strip is a picker, and hanging
+                         three more buttons inside each card would make it a
+                         control panel you have to read. --}}
+                    @if ($day)
+                        <details class="relative" data-day-tools>
+                            <summary class="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 shadow-sm transition hover:border-navy-200">
+                                This day <span class="text-[9px] text-navy-300">▾</span>
+                            </summary>
+                            <div class="absolute right-0 z-30 mt-1 w-60 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg">
+                                <button type="button" wire:click="confirmDay"
+                                        class="block w-full px-3 py-2 text-left text-[11.5px] text-navy-700 transition hover:bg-page">
+                                    ✓ Confirm every session
+                                    <span class="block text-eyebrow text-muted">Signs off whatever is still draft</span>
+                                </button>
+                                <button type="button" wire:click="duplicateDay({{ $day->id }})"
+                                        class="block w-full px-3 py-2 text-left text-[11.5px] text-navy-700 transition hover:bg-page">
+                                    ⧉ Duplicate this day
+                                    <span class="block text-eyebrow text-muted">Same running order, one day later, back to draft</span>
+                                </button>
+                                <x-confirm title="Delete this day?"
+                                           body="Its {{ $daySessions }} {{ str('session')->plural($daySessions) }} go with it, speakers and all. The event's own dates are not touched."
+                                           confirm="Delete the day" tone="danger"
+                                           run="$wire.deleteDay({{ $day->id }})"
+                                           class="block w-full px-3 py-2 text-left text-[11.5px] text-risk transition hover:bg-red-50">
+                                    ✕ Delete this day
+                                </x-confirm>
+                            </div>
+                        </details>
+                    @endif
+
                     {{-- Everything that covers the whole event rather than this day. --}}
                     <details class="relative" data-all-days>
                         <summary class="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-xs font-semibold text-navy-700 shadow-sm transition hover:border-navy-200">
@@ -224,7 +258,24 @@
             {{-- ── THE TIMELINE ── --}}
             <div class="card min-w-0 overflow-hidden">
                 @if ($view === 'program')
-                    <div class="p-5"><x-agenda-program :days="$programDays" :legend="false" /></div>
+                    @php $programEmpty = collect($programDays)->every(fn ($d) => \App\Services\AgendaProgram::isEmpty($d['program'])); @endphp
+                    @if ($programEmpty)
+                        <x-empty icon="calendar" class="!border-0 !shadow-none"
+                                 :title="$daySessions ? 'Nothing on the public programme for this day' : 'Nothing scheduled for this day'"
+                                 :hint="$daySessions
+                                     ? 'Everything on this day sits on a back-of-house track, so a delegate would see an empty page. Switch to Internal to work on it.'
+                                     : 'Add a session and it appears here as a programme card, ready to print.'">
+                            <x-slot:actions>
+                                @if ($daySessions)
+                                    <button type="button" wire:click="setAudience('internal')" class="btn-gold btn-sm">Show the internal programme</button>
+                                @else
+                                    <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
+                                @endif
+                            </x-slot:actions>
+                        </x-empty>
+                    @else
+                        <div class="p-5"><x-agenda-program :days="$programDays" :legend="false" /></div>
+                    @endif
                 @elseif ($timeline)
                     {{-- filters --}}
                     <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-line px-4 py-2.5">
@@ -414,11 +465,15 @@
                         </div>
                     </div>
                 @else
-                    <div class="flex flex-col items-center px-8 py-16 text-center">
-                        <h3 class="pf text-base font-bold text-navy-900">Nothing scheduled for this day</h3>
-                        <p class="mt-1 max-w-md text-xs text-muted">Add a session and it'll plot on the timeline here.</p>
-                        <button type="button" wire:click="newSession" class="btn-gold mt-4 h-9 px-4 text-xs">＋ Add Session</button>
-                    </div>
+                    <x-empty icon="chart" class="!border-0 !shadow-none" title="Nothing scheduled for this day"
+                             hint="Sessions plot themselves against the clock as you add them, one lane per room. Copy yesterday's running order if this day repeats it.">
+                        <x-slot:actions>
+                            <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
+                            @if ($days->count() > 1)
+                                <button type="button" wire:click="$toggle('showImport')" class="btn-ghost btn-sm">Import from CSV</button>
+                            @endif
+                        </x-slot:actions>
+                    </x-empty>
                 @endif
             </div>
 
@@ -581,6 +636,20 @@
                                 <p class="mt-1 text-eyebrow text-muted">Pick one or type your own.</p>
                                 @error('type') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                             </div>
+                        </div>
+
+                        {{-- The track is not a label: it decides where the session
+                             sits on the programme and whether a delegate sees it
+                             at all. Free text, because every event invents one. --}}
+                        <div>
+                            <label class="field-label !mb-1.5" for="m-track">Programme track <span class="font-normal normal-case tracking-normal text-navy-300">optional</span></label>
+                            <input id="m-track" type="text" list="session-tracks" wire:model="track" class="field !py-2.5"
+                                   autocomplete="off" placeholder="Main Stage, Track A, Registration…">
+                            <datalist id="session-tracks">
+                                @foreach ($trackOptions as $name => $does)<option value="{{ $name }}">{{ $does }}</option>@endforeach
+                            </datalist>
+                            <p class="mt-1 text-eyebrow text-muted">Main Stage heads its slot; Registration, Setup, Media and Partnerships stay off the public programme.</p>
+                            @error('track') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
