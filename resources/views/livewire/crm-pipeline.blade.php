@@ -88,11 +88,28 @@
                                             $order = \App\Models\Deal::OPEN;
                                             $i = array_search($deal->stage, $order, true);
                                             $next = $order[$i + 1] ?? 'won';
+
+                                            // A win with no accepted offer opens an event nobody agreed
+                                            // a figure for. The gate is soft on purpose: enough deals
+                                            // close on a phone call that a hard block would only teach
+                                            // people to raise a proposal after the fact.
+                                            $unpriced = $next === 'won' && ! $deal->acceptedProposal();
+
+                                            $moveLabel = $next === 'won' ? '✓ Mark won' : '→ '.\App\Models\Deal::STAGES[$next][0];
+                                            $moveClass = 'flex-1 rounded-lg bg-navy-50 py-1.5 text-[11px] font-bold text-navy-700 transition hover:bg-navy-900 hover:text-white';
                                         @endphp
-                                        <button type="button" wire:click="moveTo({{ $deal->id }}, '{{ $next }}')"
-                                                class="flex-1 rounded-lg bg-navy-50 py-1.5 text-[11px] font-bold text-navy-700 transition hover:bg-navy-900 hover:text-white">
-                                            {{ $next === 'won' ? '✓ Mark won' : '→ '.\App\Models\Deal::STAGES[$next][0] }}
-                                        </button>
+                                        @if ($unpriced)
+                                            <x-confirm title="Win without an agreed figure?"
+                                                       body="No accepted proposal on this deal, so the event opens with an empty budget and nothing to invoice from. Draft the offer first if the client has not signed one off."
+                                                       confirm="Win anyway" cancel="Not yet" tone="warn"
+                                                       run="$wire.moveTo({{ $deal->id }}, 'won')"
+                                                       class="{{ $moveClass }}">{{ $moveLabel }}</x-confirm>
+                                        @else
+                                            <button type="button" wire:click="moveTo({{ $deal->id }}, '{{ $next }}')"
+                                                    class="{{ $moveClass }}">
+                                                {{ $moveLabel }}
+                                            </button>
+                                        @endif
                                         <button type="button" wire:click="moveTo({{ $deal->id }}, 'lost')" title="Mark lost"
                                                 class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</button>
                                     </div>
@@ -181,6 +198,39 @@
                         @if ($selected->notes)
                             <p class="rounded-lg bg-page/70 px-3 py-2 text-[11.5px] leading-relaxed text-navy-600">{{ $selected->notes }}</p>
                         @endif
+
+                        {{-- The offer, which is where the agreed figure comes from. --}}
+                        @php
+                            $offer = $selected->acceptedProposal() ?? $selected->liveProposal();
+                            $mayOffer = auth()->user()?->can('manage-contract') ?? false;
+                        @endphp
+                        <div class="rounded-lg border border-line bg-page/60 px-3 py-2.5">
+                            <div class="flex items-baseline justify-between gap-2">
+                                <span class="eyebrow">Offer</span>
+                                @if ($offer)
+                                    @php [$offerLabel, $offerHex] = \App\Models\Proposal::STATE_META[$offer->state()]; @endphp
+                                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style="background: {{ $offerHex }}">{{ $offerLabel }}</span>
+                                @endif
+                            </div>
+
+                            @if ($offer)
+                                <a href="{{ route('proposals.edit', $offer) }}" wire:navigate
+                                   class="mt-1.5 flex items-baseline justify-between gap-2 text-[12px] font-semibold text-gold-700 transition hover:text-gold-800">
+                                    <span class="truncate font-mono text-[11px]">{{ $offer->number }}</span>
+                                    <span class="shrink-0 tabular-nums">{{ $money($offer->totalCents(), $offer->currencyCode()) }} →</span>
+                                </a>
+                            @else
+                                <p class="mt-1 text-[11.5px] leading-relaxed text-muted">
+                                    Nothing sent yet. Winning now opens the event with an empty budget.
+                                </p>
+                                @if ($mayOffer)
+                                    <button type="button" wire:click="draftProposal({{ $selected->id }})"
+                                            class="btn-gold mt-2 flex h-8 w-full items-center justify-center !rounded-lg text-[11.5px]">
+                                        ＋ Draft proposal
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
 
                         @if ($selected->event)
                             <a href="{{ route('events.hub', $selected->event) }}" class="btn-gold flex h-9 w-full items-center justify-center !rounded-lg text-[12px]">Open the event →</a>
