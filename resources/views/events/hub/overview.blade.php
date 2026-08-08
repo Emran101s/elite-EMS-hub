@@ -209,47 +209,143 @@
 
     [$contractLabel, $contractStyle] = $docChip($contract?->status);
     [$briefLabel, $briefStyle] = $brief ? ['Ready', $docChip('signed')[1]] : $docChip(null);
+
+    // The workflow spine's own readiness read, module by module — "where am
+    // I, what's left" rather than a general risk/task feed. Reuses the same
+    // components EventHealthService already scored, so this never disagrees
+    // with the health tile above it: null (no data yet) is Not started, a
+    // full 100 is Ready, anything between is In progress. Transport gets its
+    // own override — a movement flagged 'issue' is not "in progress", it is
+    // the thing that needs a person right now.
+    $readiness = function (?int $score, bool $flagged = false): array {
+        if ($flagged) {
+            return ['Needs attention', 'color: #DC2626; background: #DC262615; box-shadow: inset 0 0 0 1px #DC262633'];
+        }
+        if ($score === null) {
+            return ['Not started', 'color: #94A3B8; background: #94A3B815; box-shadow: inset 0 0 0 1px #94A3B833'];
+        }
+        if ($score >= 100) {
+            return ['Ready', 'color: #22C55E; background: #22C55E15; box-shadow: inset 0 0 0 1px #22C55E33'];
+        }
+
+        return ['In progress', 'color: #F59E0B; background: #F59E0B15; box-shadow: inset 0 0 0 1px #F59E0B33'];
+    };
+
+    [$agendaLabel, $agendaStyle] = $readiness($health['components']['agenda']);
+    [$venueLabel, $venueStyle] = $readiness($health['components']['venue']);
+    [$transportLabel, $transportStyle] = $readiness(
+        $health['components']['transport'],
+        $event->transport->contains(fn ($m) => $m->status === 'issue'),
+    );
+    // Registration has no health component of its own (see EventHealthService
+    // weights) — the public form being open, or attendees already on the
+    // list, is what "started" means here.
+    $registeredCount = $event->attendees->count();
+    $registrationScore = $event->registration_open ? 100 : ($registeredCount > 0 ? 50 : null);
+    [$registrationLabel, $registrationStyle] = $readiness($registrationScore);
 @endphp
 <div class="mt-5 grid gap-3 sm:grid-cols-3">
-    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card px-4 py-3.5">
-        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('speakers') }}" aria-hidden="true"></span>
-        <div class="flex items-center gap-2">
-            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('speakers') }}; background: {{ $badge('speakers') }}15">
-                <x-icon name="sparkles" class="h-3.5 w-3.5" />
-            </span>
-            <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
-            <span class="ms-auto pf text-lg font-bold tabular-nums text-navy-900">{{ $speakerCount }}</span>
-        </div>
-        <p class="mt-1.5 text-[0.62rem] text-muted">{{ $speakersConfirmed }} confirmed · {{ max($speakerCount - $speakersConfirmed, 0) }} pending</p>
-    </a>
+    @if ($event->moduleEnabled('speakers'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('speakers') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('speakers') }}; background: {{ $badge('speakers') }}15">
+                    <x-icon name="sparkles" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Speakers</h3>
+                <span class="ms-auto pf text-lg font-bold tabular-nums text-navy-900">{{ $speakerCount }}</span>
+            </div>
+            <p class="mt-1.5 text-[0.62rem] text-muted">{{ $speakersConfirmed }} confirmed · {{ max($speakerCount - $speakersConfirmed, 0) }} pending</p>
+        </a>
+    @endif
 
-    <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card px-4 py-3.5">
-        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('brief') }}" aria-hidden="true"></span>
-        <div class="flex items-center gap-2">
-            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('brief') }}; background: {{ $badge('brief') }}15">
-                <x-icon name="clipboard" class="h-3.5 w-3.5" />
-            </span>
-            <h3 class="pf text-sm font-bold text-navy-900">Brief</h3>
-            <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
-        </div>
-    </a>
+    @if ($event->moduleEnabled('brief'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'brief']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('brief') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('brief') }}; background: {{ $badge('brief') }}15">
+                    <x-icon name="clipboard" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Brief</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $briefStyle }}">{{ $briefLabel }}</span>
+            </div>
+        </a>
+    @endif
 
-    <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card px-4 py-3.5">
-        <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('contract') }}" aria-hidden="true"></span>
-        <div class="flex items-center gap-2">
-            <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('contract') }}; background: {{ $badge('contract') }}15">
-                <x-icon name="identification" class="h-3.5 w-3.5" />
-            </span>
-            <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
-            <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
-        </div>
-        @if ($contract)
-            <p class="mt-1.5 truncate text-[0.62rem] text-muted">
-                {{ $contract->reference }}
-                · {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }}
-            </p>
-        @endif
-    </a>
+    @if ($event->moduleEnabled('agenda'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('agenda') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('agenda') }}; background: {{ $badge('agenda') }}15">
+                    <x-icon name="calendar" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Agenda</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $agendaStyle }}">{{ $agendaLabel }}</span>
+            </div>
+            <p class="mt-1.5 text-[0.62rem] text-muted">{{ $event->agendaSessions->count() }} {{ str('session')->plural($event->agendaSessions->count()) }}</p>
+        </a>
+    @endif
+
+    @if ($event->moduleEnabled('venue'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('venue') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('venue') }}; background: {{ $badge('venue') }}15">
+                    <x-icon name="building" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Venue</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $venueStyle }}">{{ $venueLabel }}</span>
+            </div>
+            <p class="mt-1.5 truncate text-[0.62rem] text-muted">{{ $event->venue?->name ?? 'No venue selected' }}</p>
+        </a>
+    @endif
+
+    @if ($event->moduleEnabled('transportation'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'transportation']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('transportation') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('transportation') }}; background: {{ $badge('transportation') }}15">
+                    <x-icon name="truck" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Transport</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $transportStyle }}">{{ $transportLabel }}</span>
+            </div>
+            <p class="mt-1.5 text-[0.62rem] text-muted">{{ $event->transport->count() }} {{ str('movement')->plural($event->transport->count()) }}</p>
+        </a>
+    @endif
+
+    @if ($event->moduleEnabled('contract'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'contract']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('contract') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('contract') }}; background: {{ $badge('contract') }}15">
+                    <x-icon name="identification" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Contract</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $contractStyle }}">{{ $contractLabel }}</span>
+            </div>
+            @if ($contract)
+                <p class="mt-1.5 truncate text-[0.62rem] text-muted">
+                    {{ $contract->reference }}
+                    · {{ $sym }}{{ $gap }}{{ number_format(($contract->data['financials']['estimated_total_cents'] ?? 0) / 100) }}
+                </p>
+            @endif
+        </a>
+    @endif
+
+    @if ($event->moduleEnabled('attendees'))
+        <a href="{{ route('events.hub', [$event, 'tab' => 'attendees']) }}" class="op-card px-4 py-3.5">
+            <span class="absolute inset-y-0 start-0 w-[3px]" style="background: {{ $badge('attendees') }}" aria-hidden="true"></span>
+            <div class="flex items-center gap-2">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style="color: {{ $badge('attendees') }}; background: {{ $badge('attendees') }}15">
+                    <x-icon name="users" class="h-3.5 w-3.5" />
+                </span>
+                <h3 class="pf text-sm font-bold text-navy-900">Registration</h3>
+                <span class="ms-auto inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold" style="{{ $registrationStyle }}">{{ $registrationLabel }}</span>
+            </div>
+            <p class="mt-1.5 text-[0.62rem] text-muted">{{ $registeredCount }} registered</p>
+        </a>
+    @endif
 </div>
 
 {{-- ══ Row 2: Tasks · Budget · Top Suppliers · Team Workload ══ --}}
