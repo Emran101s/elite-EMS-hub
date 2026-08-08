@@ -93,6 +93,15 @@ class PaymentsLedgerTest extends TestCase
         $p = EventContractPayment::orderBy('id')->firstOrFail();
         $p->update(['amount_cents' => 0, 'paid_cents' => 0, 'due_on' => now()->subWeek()]);
 
+        // Settle everything else falling in that month, so the only unsettled
+        // thing left in the group is the zero-value row above. The demo
+        // schedule is written relative to today, so which other installments
+        // land in this month is a function of the date the suite runs — the
+        // month this test needs has to be arranged rather than assumed.
+        EventContractPayment::whereKeyNot($p->id)->get()
+            ->filter(fn (EventContractPayment $row) => $row->due_on?->isSameMonth($p->due_on))
+            ->each(fn (EventContractPayment $row) => $row->update(['paid_cents' => $row->amount_cents]));
+
         $this->assertSame(0, $p->fresh()->outstandingCents());
         $this->assertSame('overdue', $p->fresh()->status());
 
