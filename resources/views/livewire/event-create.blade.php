@@ -142,6 +142,53 @@
                         </div>
                     </div>
 
+                    <div class="rounded-2xl border border-line bg-page/60 p-3.5">
+                        <p class="field-label !mb-2">How this event enters the book</p>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <label @class([
+                                'flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition',
+                                'border-gold-300 bg-gold-50/70' => $origin === 'commercial',
+                                'border-line bg-white hover:border-gold-200' => $origin !== 'commercial',
+                            ])>
+                                <input type="radio" wire:model.live="origin" value="commercial" class="mt-1">
+                                <span>
+                                    <span class="block text-[12.5px] font-bold text-navy-900">From sales / CRM</span>
+                                    <span class="mt-0.5 block text-[11px] text-muted">Link an open deal, or create a won deal for this client.</span>
+                                </span>
+                            </label>
+                            <label @class([
+                                'flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition',
+                                'border-gold-300 bg-gold-50/70' => $origin === 'internal',
+                                'border-line bg-white hover:border-gold-200' => $origin !== 'internal',
+                            ])>
+                                <input type="radio" wire:model.live="origin" value="internal" class="mt-1">
+                                <span>
+                                    <span class="block text-[12.5px] font-bold text-navy-900">Internal / direct</span>
+                                    <span class="mt-0.5 block text-[11px] text-muted">No deal — company, partner, or non-sales work.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        @if ($origin === 'commercial' && ! $newClientMode && $client_id)
+                            <div class="mt-3">
+                                <label class="field-label" for="s-deal">Deal (optional)</label>
+                                <select id="s-deal" wire:model.live="deal_id" class="input h-11">
+                                    <option value="">— Create a new won deal on launch —</option>
+                                    @foreach ($openDeals as $deal)
+                                        <option value="{{ $deal->id }}">{{ $deal->title }} · {{ \App\Support\Workflow::label('deal_stage', $deal->stage) }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-[11px] text-muted">
+                                    @if ($openDeals->isEmpty())
+                                        No open deals for this client — launch will open a won deal linked to the event.
+                                    @else
+                                        Pick an open deal to attach, or leave blank to create one.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+
                     <div>
                         <label class="field-label">Event type <span class="text-risk">*</span></label>
                         <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">

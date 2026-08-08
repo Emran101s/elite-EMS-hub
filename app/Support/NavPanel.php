@@ -2,140 +2,249 @@
 
 namespace App\Support;
 
-use App\Models\Deal;
 use App\Models\Event;
-use App\Models\Task;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
 /**
- * The two-tier navigation: which area you are in, and what is inside it.
+ * Company Command navigation — rail areas + panel map.
  *
- * The rail carries the areas; the panel carries the contents of the one you
- * are in. That split is the whole idea — a row of pills could only ever show
- * the top level, which is why five modules ended up behind a More menu that
- * turned out to be invisible.
- *
- * Areas are declared here rather than derived from config/modules.php because
- * they are not the same list: an area is a place you work, and Suppliers,
- * Venues and Equipment are three doors into one place.
+ * The rail pins which Company Command area you are in. The panel draws the
+ * full operating map (or Settings when you are configuring). Rows whose
+ * routes are not registered are dropped — no dead links.
  */
 class NavPanel
 {
     /**
-     * The rail, top to bottom.
-     *
-     *   match  route-name patterns that mean "you are in this area"
+     * Rail areas (Company Command modes). Settings stays in the dock.
      *
      * @var array<string,array{label:string,icon:string,route:string,match:array<int,string>}>
      */
     public const AREAS = [
         'workspace' => [
             'label' => 'Command Center', 'icon' => 'home', 'route' => 'home',
-            'match' => ['home', 'operations-room', 'concept.*'],  // the room redirects here
+            'match' => ['home', 'operations-room', 'concept.*'],
+        ],
+        'sales' => [
+            'label' => 'Sales & CRM', 'icon' => 'identification', 'route' => 'crm.index',
+            'match' => ['crm.*', 'clients.*'],
         ],
         'events' => [
             'label' => 'Events', 'icon' => 'calendar', 'route' => 'events.index',
             'match' => ['events.*'],
         ],
-        'tasks' => [
-            'label' => 'Tasks', 'icon' => 'clipboard', 'route' => 'tasks.index',
-            'match' => ['tasks.*'],
+        'proposals' => [
+            'label' => 'Proposals', 'icon' => 'document', 'route' => 'proposals.index',
+            'match' => ['proposals.*'],
         ],
-        'crm' => [
-            'label' => 'CRM', 'icon' => 'identification', 'route' => 'crm.index',
-            'match' => ['crm.*'],
+        'contracts' => [
+            'label' => 'Contracts', 'icon' => 'document', 'route' => 'contracts.index',
+            'match' => ['contracts.*'],
+        ],
+        'planning' => [
+            'label' => 'Planning', 'icon' => 'clipboard', 'route' => 'planning.index',
+            'match' => ['planning.*', 'tasks.*'],
+        ],
+        'operations' => [
+            'label' => 'Operations', 'icon' => 'truck', 'route' => 'venues.index',
+            'match' => ['venues.*'],
         ],
         'finance' => [
             'label' => 'Finance', 'icon' => 'currency', 'route' => 'finance.index',
-            'match' => ['finance.*'],
+            'match' => ['finance.*', 'invoices.*', 'payments.*'],
         ],
-        'library' => [
-            'label' => 'Library', 'icon' => 'archive', 'route' => 'suppliers.index',
-            'match' => ['suppliers.*', 'venues.*', 'requirements.*', 'projects.*', 'team.*', 'sponsors.*', 'ai.*', 'reports.*'],
+        'partners' => [
+            'label' => 'Partners', 'icon' => 'archive', 'route' => 'suppliers.index',
+            'match' => ['suppliers.*', 'requirements.*', 'projects.*', 'sponsors.*'],
+        ],
+        'intelligence' => [
+            'label' => 'Intelligence', 'icon' => 'chart', 'route' => 'reports.index',
+            'match' => ['reports.*', 'ai.*'],
+        ],
+        'team' => [
+            'label' => 'Team', 'icon' => 'users', 'route' => 'team.index',
+            'match' => ['team.*'],
         ],
     ];
 
     /**
-     * The panel, exactly as the Elite Orbit OS reference draws it.
+     * Company Command panel map — section label => rows.
      *
-     * Fixed rather than derived from the area: the reference shows the whole
-     * platform at once, so the panel is the map and the rail is the pin on it.
+     * Row shape: [label, route, icon, count?, query?]
+     * query is an optional array of query-string params for filtered deep links.
      *
-     * The map only draws what exists. Rows for unbuilt pages used to be drawn
-     * greyed out to teach the shape of the product; in practice new staff read
-     * them as broken software and clicked them anyway, so docs/18 called them
-     * in and the audit's first fix was to take them out. A route that is not
-     * registered drops its row, and a section left with no rows drops too —
-     * the shape of the nav follows the shape of the build, with nothing to
-     * hand-tidy the day a module lands.
-     *
-     * @var array<int,array{0:string,1:array<int,array{0:string,1:string,2:string}>}>
+     * @var array<int,array{0:string,1:array<int,array{0:string,1:string,2:string,3?:int|null,4?:array<string,string>}>}>
      */
     public const PANEL = [
-        ['Events', [
-            ['Dashboard', 'home', 'home'],
-            ['All events', 'events.index', 'calendar'],
-            ['New event', 'events.create', 'sparkles'],
+        ['Command Center', [
+            ['Executive Overview', 'home', 'home'],
+            ['Live Alerts', 'home', 'bell', null, ['_hash' => 'live-alerts']],
+            ['Upcoming Events', 'events.index', 'calendar'],
+            ['Financial Signals', 'finance.index', 'currency'],
+            ['My Priorities', 'tasks.index', 'clipboard'],
         ]],
-        ['Planning', [
-            ['Planning board', 'planning.index', 'grid'],
-            ['Tasks', 'tasks.index', 'clipboard'],
+        ['Sales & CRM', [
+            ['Deal Pipeline', 'crm.index', 'columns'],
+            ['Clients', 'clients.index', 'identification'],
+            ['New Deal', 'crm.index', 'sparkles'],
         ]],
-        ['Business', [
+        ['Event Portfolio', [
+            ['All Events', 'events.index', 'calendar'],
+            ['New Event', 'events.create', 'sparkles'],
+            ['Live Events', 'events.index', 'calendar', null, ['stage' => 'live']],
+            ['Completed Events', 'events.index', 'calendar', null, ['stage' => 'completed']],
+            ['Projects', 'projects.index', 'folder'],
+        ]],
+        ['Proposals', [
             ['Proposals', 'proposals.index', 'document'],
+            ['Draft Proposals', 'proposals.index', 'document', null, ['state' => 'draft']],
+            ['Sent Proposals', 'proposals.index', 'document', null, ['state' => 'sent']],
+            ['Accepted Proposals', 'proposals.index', 'document', null, ['state' => 'accepted']],
+            ['Declined Proposals', 'proposals.index', 'document', null, ['state' => 'declined']],
+        ]],
+        ['Contracts', [
             ['Contracts', 'contracts.index', 'document'],
+            ['Client Contracts', 'contracts.index', 'document', null, ['type' => 'client']],
+            ['Vendor Contracts', 'contracts.index', 'document', null, ['type' => 'vendor']],
+            ['Speaker Contracts', 'contracts.index', 'document', null, ['type' => 'speaker']],
+            ['Sponsorship Contracts', 'contracts.index', 'document', null, ['type' => 'sponsorship']],
+            ['Pending Signatures', 'contracts.index', 'bell', null, ['status' => 'sent']],
+            ['Payment Schedules', 'payments.index', 'card'],
+        ]],
+        ['Planning & Tasks', [
+            ['Planning Board', 'planning.index', 'grid'],
+            ['My Tasks', 'tasks.index', 'clipboard'],
+            ['Team Tasks', 'tasks.index', 'users'],
+        ]],
+        ['Operations Control', [
+            ['Venue & Layout Overview', 'venues.index', 'building'],
         ]],
         ['Finance', [
+            ['Financial Dashboard', 'finance.index', 'chart'],
             ['Invoices', 'invoices.index', 'currency'],
             ['Payments', 'payments.index', 'card'],
         ]],
+        ['Suppliers & Venues', [
+            ['Suppliers', 'suppliers.index', 'truck'],
+            ['Venues', 'venues.index', 'building'],
+            ['Equipment & Requirements', 'requirements.index', 'archive'],
+            ['Sponsorships', 'sponsors.index', 'star'],
+        ]],
+        ['Reports & Intelligence', [
+            ['Reports Overview', 'reports.index', 'chart'],
+            ['AI Assistant', 'ai.index', 'sparkles'],
+        ]],
+        ['Team & Access', [
+            ['Team Members', 'team.index', 'users'],
+        ]],
     ];
 
     /**
-     * Areas the fixed panel already covers.
+     * Settings panel — configuration only (no daily-work directories).
      *
-     * Everywhere else — the CRM, the library, Settings — still appends its own
-     * sections underneath, or Venues, Team and Reports would have no door left.
+     * @var array<int,array{0:string,1:array<int,array{0:string,1:string,2:string,3?:int|null,4?:array<string,string>}>}>
      */
-    public const PANEL_COVERS = ['workspace', 'events', 'tasks'];
+    public const SETTINGS_PANEL = [
+        ['Settings', [
+            ['Settings Hub', 'settings.index', 'cog'],
+            ['Company Profile', 'company.index', 'cog'],
+            ['Event Types', 'taxonomies.index', 'grid'],
+            ['Statuses & Colours', 'workflows.index', 'chart'],
+            ['Defaults', 'defaults.index', 'clipboard'],
+            ['Price List', 'catalogue.index', 'archive'],
+            ['Sponsor Packages', 'sponsor-packages.index', 'star'],
+            ['Transport Catalogues', 'transport-settings.index', 'truck'],
+            ['Registration Templates', 'registration-templates.index', 'clipboard'],
+        ]],
+    ];
+
+    /** @deprecated Kept for callers; the Company Command map always covers the rail. */
+    public const PANEL_COVERS = [
+        'workspace', 'sales', 'events', 'proposals', 'contracts',
+        'planning', 'operations', 'finance', 'partners', 'intelligence', 'team',
+    ];
+
+    /** Settings sits apart on the rail, in the panel dock. */
+    public const SETTINGS = [
+        'label' => 'Settings', 'icon' => 'cog', 'route' => 'settings.index',
+        'match' => [
+            'settings.*', 'company.*', 'taxonomies.*', 'workflows.*', 'defaults.*',
+            'transport-settings.*', 'sponsor-packages.*', 'catalogue.*',
+            'registration-templates.*',
+        ],
+    ];
 
     /**
      * @return Collection<int,array{label:string,items:Collection}>
      */
     public static function panel(): Collection
     {
-        return collect(self::PANEL)
+        $source = self::currentArea() === 'settings'
+            ? self::SETTINGS_PANEL
+            : self::PANEL;
+
+        return self::mapSections($source);
+    }
+
+    /**
+     * @param  array<int,array{0:string,1:array<int,mixed>}>  $sections
+     * @return Collection<int,array{label:string,items:Collection}>
+     */
+    private static function mapSections(array $sections): Collection
+    {
+        return collect($sections)
             ->map(fn (array $section) => [
                 'label' => $section[0],
                 'items' => collect($section[1])
                     ->filter(fn (array $item) => Route::has($item[1]))
-                    ->map(fn (array $item) => [
-                        'label' => $item[0],
-                        'href' => route($item[1]),
-                        'icon' => $item[2],
-                        'count' => null,
-                        'active' => request()->routeIs($item[1]),
-                    ])->values(),
+                    ->map(fn (array $item) => self::mapItem($item))
+                    ->values(),
             ])
             ->reject(fn (array $section) => $section['items']->isEmpty())
             ->values();
     }
 
-    /** Settings sits apart on the rail, as it does in most tools. */
-    public const SETTINGS = [
-        'label' => 'Settings', 'icon' => 'cog', 'route' => 'settings.index',
-        'match' => ['settings.*', 'company.*', 'taxonomies.*', 'workflows.*', 'defaults.*',
-            'clients.*', 'transport-settings.*', 'sponsor-packages.*'],
-    ];
+    /**
+     * @param  array{0:string,1:string,2:string,3?:int|null,4?:array<string,mixed>}  $item
+     * @return array{label:string,href:string,icon:string,count:int|null,active:bool}
+     */
+    private static function mapItem(array $item): array
+    {
+        $meta = $item[4] ?? [];
+        $hash = $meta['_hash'] ?? null;
+        $params = collect($meta)->except('_hash')->all();
+
+        $href = route($item[1], $params);
+        if (is_string($hash) && $hash !== '') {
+            $href .= '#'.$hash;
+        }
+
+        $active = request()->routeIs($item[1]);
+        if ($hash !== null) {
+            // Fragment targets cannot be resolved server-side.
+            $active = false;
+        } elseif ($active && $params !== []) {
+            $active = collect($params)->every(
+                fn ($value, $key) => (string) request()->query($key, '') === (string) $value
+            );
+        } elseif ($active && $params === []) {
+            // Bare route is active only when no list filter is set, so
+            // "All Events" and "Live Events" do not both light up.
+            $active = collect(['stage', 'state', 'status', 'type'])
+                ->every(fn ($key) => blank(request()->query($key)));
+        }
+
+        return [
+            'label' => $item[0],
+            'href' => $href,
+            'icon' => $item[2],
+            'count' => $item[3] ?? null,
+            'active' => $active,
+        ];
+    }
 
     /**
      * The one gold button in the tools bar.
-     *
-     * It is contextual because that is what the references draw: Create Event
-     * where you are looking at events, Ask AI where you are looking at one. A
-     * primary action that means the same thing everywhere means very little
-     * anywhere.
      *
      * @return array{label:string,icon:string,href:string}|null
      */
@@ -143,13 +252,15 @@ class NavPanel
     {
         $candidates = match (self::currentArea()) {
             'events' => [['＋ Create Event', 'sparkles', 'events.create']],
-            'crm' => [['＋ New Client', 'identification', 'clients.index']],
-            'library' => [['＋ Add Venue', 'building', 'venues.index']],
+            'sales' => [['＋ New Client', 'identification', 'clients.index']],
+            'proposals' => [['＋ Proposals', 'document', 'proposals.index']],
+            'contracts' => [['＋ Contracts', 'document', 'contracts.index']],
+            'partners', 'operations' => [['＋ Add Venue', 'building', 'venues.index']],
+            'finance' => [['＋ Invoices', 'currency', 'invoices.index']],
+            'team' => [['＋ Team', 'users', 'team.index']],
             default => [],
         };
 
-        // Ask AI is the fallback everywhere else, and the last resort if the
-        // area's own action points at a route that does not exist yet.
         $candidates[] = ['✦ Ask AI', 'sparkles', 'ai.index'];
 
         foreach ($candidates as [$label, $icon, $route]) {
@@ -179,104 +290,22 @@ class NavPanel
     }
 
     /**
-     * The panel's sections for an area.
+     * Area-focused sections (legacy helpers / deep focus). Prefer panel().
      *
-     * A section is [label, items]; an item is [label, route, icon, count?].
-     * Routes that do not exist are dropped rather than crashing the chrome —
-     * a module can be half-built without taking the navigation with it.
-     *
-     * @return Collection<int,array{label:string,items:array}>
+     * @return Collection<int,array{label:string,items:Collection}>
      */
     public static function sections(string $area): Collection
     {
-        return collect(match ($area) {
-            'events' => [
-                ['Events', [
-                    ['All events', 'events.index', 'calendar', null],
-                    ['New event', 'events.create', 'sparkles', null],
-                ]],
-            ],
-            'tasks' => [
-                ['Tasks', [
-                    ['Everything', 'tasks.index', 'clipboard', self::openTasks()],
-                ]],
-            ],
-            'crm' => [
-                ['Pipeline', [
-                    ['Deal board', 'crm.index', 'columns', Deal::whereIn('stage', Deal::OPEN)->count()],
-                    ['Clients', 'clients.index', 'identification', null],
-                ]],
-            ],
-            'finance' => [
-                ['Money', [
-                    ['Profit & loss', 'finance.index', 'chart', null],
-                ]],
-            ],
-            'library' => [
-                ['Directories', [
-                    ['Suppliers', 'suppliers.index', 'truck', null],
-                    ['Venues', 'venues.index', 'building', null],
-                    ['Projects', 'projects.index', 'folder', null],
-                    ['Team', 'team.index', 'users', null],
-                ]],
-                ['Catalogues', [
-                    ['Equipment', 'requirements.index', 'archive', null],
-                    ['Sponsorships', 'sponsors.index', 'star', null],
-                ]],
-                ['Grow', [
-                    ['Reports', 'reports.index', 'chart', null],
-                    ['AI Assistant', 'ai.index', 'sparkles', null],
-                ]],
-            ],
-            'settings' => [
-                ['Workspace', [
-                    ['Company Profile', 'company.index', 'cog', null],
-                    ['Types & Lists', 'taxonomies.index', 'grid', null],
-                    ['Statuses & Colours', 'workflows.index', 'chart', null],
-                    ['Defaults', 'defaults.index', 'clipboard', null],
-                    ['Team & Roles', 'team.index', 'users', null],
-                ]],
-                ['Directories', [
-                    ['Clients', 'clients.index', 'identification', null],
-                    ['Suppliers', 'suppliers.index', 'truck', null],
-                    ['Venues', 'venues.index', 'building', null],
-                ]],
-                ['Catalogues', [
-                    ['Equipment', 'requirements.index', 'archive', null],
-                    ['Sponsorship packages', 'sponsor-packages.index', 'star', null],
-                    ['Transport', 'transport-settings.index', 'truck', null],
-                ]],
-            ],
-            default => [
-                ['Workspace', [
-                    ['Dashboard', 'home', 'home', null],
-                    ['Events', 'events.index', 'calendar', self::liveEvents()],
-                    ['Tasks', 'tasks.index', 'clipboard', self::openTasks()],
-                ]],
-            ],
-        })
-            ->map(fn (array $section) => [
-                'label' => $section[0],
-                'items' => collect($section[1])
-                    ->filter(fn (array $item) => Route::has($item[1]))
-                    ->map(fn (array $item) => [
-                        'label' => $item[0],
-                        'href' => route($item[1]),
-                        'icon' => $item[2],
-                        'count' => $item[3],
-                        'active' => request()->routeIs($item[1]),
-                    ])->values(),
-            ])
-            ->reject(fn (array $section) => $section['items']->isEmpty())
-            ->values();
+        if ($area === 'settings') {
+            return self::mapSections(self::SETTINGS_PANEL);
+        }
+
+        // Company Command map already covers every rail area.
+        return collect();
     }
 
     /**
-     * The portfolio, as a tree of stages with the events inside them.
-     *
-     * Only where it is the thing you came for — a tree of events on the
-     * Finance screen is furniture. Empty stages are not drawn: a folder with
-     * nothing in it is a row you have to read to dismiss.
+     * The portfolio tree of stages with events inside them.
      */
     public static function tree(string $area): Collection
     {
@@ -301,13 +330,4 @@ class NavPanel
             ->values();
     }
 
-    private static function openTasks(): int
-    {
-        return Task::whereNotIn('status', ['done', 'cancelled'])->count();
-    }
-
-    private static function liveEvents(): int
-    {
-        return Event::whereNull('archived_at')->count();
-    }
 }

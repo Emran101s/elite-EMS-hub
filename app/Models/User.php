@@ -38,18 +38,24 @@ class User extends Authenticatable
      */
     public const AUDIT_FIELDS = ['role', 'email'];
 
-    /** Workspace roles — slug => label. */
+    /**
+     * Workspace roles — technical slug => business-facing label.
+     *
+     * Rank / gates still use the slug. Labels are for people, not for code.
+     */
     public const ROLES = [
-        'super_admin' => 'Super Admin',
-        'admin' => 'Admin',
-        'manager' => 'Manager',
-        'coordinator' => 'Coordinator',
+        'super_admin' => 'Owner / CEO',
+        'admin' => 'General Manager',
+        'manager' => 'Event Director',
+        'coordinator' => 'Team Member',
         'viewer' => 'Viewer',
     ];
 
     public function roleLabel(): string
     {
-        return self::ROLES[$this->role] ?? 'Member';
+        $effective = $this->activeWorkspace()?->pivot?->role ?? $this->role;
+
+        return self::ROLES[$effective] ?? 'Member';
     }
 
     /**

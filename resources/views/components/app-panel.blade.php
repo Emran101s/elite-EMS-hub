@@ -6,22 +6,16 @@
     $sections = NavPanel::panel();
     $user = auth()->user();
 
-    // Areas the fixed panel does not cover append their own sections, or the
-    // library, the CRM and Settings would lose their only door.
-    $extra = in_array($area, NavPanel::PANEL_COVERS, true)
-        ? collect()
-        : NavPanel::sections($area);
-
     // The pill counts what is genuinely running, not every record — a number
     // this prominent has to survive being checked.
     $activeEvents = NavPanel::tree('events')->sum(fn ($g) => $g['events']->count());
 @endphp
 
 {{--
-    THE EXPANDED PANEL — the map of the platform.
+    THE EXPANDED PANEL — Company Command map.
 
-    Fixed, not derived from the rail: the reference draws the whole product at
-    once, so the panel says what exists and the rail says where you are in it.
+    The panel draws the operating map; the rail pins which area you are in.
+    Settings swaps the map for configuration-only links.
 
     Dark, because it belongs to the rail beside it: together they are the one
     instrument in a product that is otherwise white. The work to the right stays
@@ -95,7 +89,7 @@
 
     {{-- ══ THE MAP ══ --}}
     <nav class="scrollbar-none relative min-h-0 flex-1 overflow-y-auto px-4 pb-4" aria-label="Sections">
-        @foreach ($sections->concat($extra) as $section)
+        @foreach ($sections as $section)
             {{-- Section rule: the label, a hairline running to the edge, and a
                  gold dot to stop it. Cheaper than a divider, and it says where
                  the group ends as well as where it starts. --}}
