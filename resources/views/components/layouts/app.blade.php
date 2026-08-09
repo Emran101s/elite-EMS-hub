@@ -29,8 +29,17 @@
 --}}
 <div class="flex h-screen overflow-hidden bg-shell-navy-3">
 
-    <x-app-rail />
-    <x-app-panel />
+    {{--
+        One toggle shared by the rail's hamburger and the panel's drawer.
+        `class="contents"` keeps this div invisible to the flex layout — the
+        rail and panel still sit directly in the flex row as if this wrapper
+        were not here. Below xl the panel was simply gone with no way back;
+        at xl+ this state is never read (the panel ignores it and stays put).
+    --}}
+    <div x-data="{ navOpen: false }" class="contents">
+        <x-app-rail />
+        <x-app-panel />
+    </div>
 
     {{--
         main is the scroll container, so it is also what every sticky header
