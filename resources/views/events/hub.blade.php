@@ -28,11 +28,9 @@
         $modules = \App\Models\Event::HUB_TABS;
         $attention = $header['attention'] ?? [];
 
-        // Daily doors — the ones a coordinator opens every day the show is
-        // running, per docs/19's workflow spine. Everything else, however
-        // important, is a few-times-a-project door rather than a daily one,
-        // and lives under More.
-        $primaryKeys = ['overview', 'tasks', 'agenda', 'venue', 'transportation', 'budget'];
+        // Event Command primary strip — lifecycle spine. Remaining modules
+        // live under More, grouped by business family (not random alpha).
+        $primaryKeys = ['overview', 'brief', 'planning', 'tasks', 'agenda', 'budget'];
 
         $enabled = collect($modules)->keys()->filter(fn ($key) => $event->moduleEnabled($key))->values();
 
@@ -43,16 +41,14 @@
 
         $overflowKeys = $enabled->reject(fn ($key) => $primary->contains($key))->values();
 
-        // Same family language as MODULE_COLORS — Plan blue, Programme teal,
-        // Logistics amber, Exhibition violet, Sell green, Grow grey/gold.
+        // Lifecycle families — Event Command → Programme → Operations →
+        // Commercial → Control. Tab keys unchanged; only grouping/order.
         $families = [
-            'Plan' => ['planning', 'pricing', 'approvals', 'brief', 'contract', 'risks'],
-            'Programme' => ['speakers'],
-            'Logistics' => ['suppliers', 'accommodation', 'catering'],
-            'Partners' => ['exhibition', 'sponsors'],
-            'Sell' => ['attendees'],
-            'Library' => ['files', 'reports'],
-            'System' => ['ai', 'settings'],
+            'Event Command' => ['contract'],
+            'Programme' => ['speakers', 'attendees'],
+            'Operations' => ['venue', 'transportation', 'accommodation', 'catering', 'suppliers', 'exhibition', 'sponsors'],
+            'Commercial' => ['pricing'],
+            'Control' => ['risks', 'approvals', 'files', 'reports', 'ai', 'settings'],
         ];
 
         $overflowByFamily = collect($families)->map(

@@ -122,7 +122,8 @@ class PlatformChromeTest extends TestCase
                 continue;
             }
 
-            $page->assertSee('title="'.$area['label'].'"', false);
+            // Blade escapes & in attributes (Sales & CRM → Sales &amp; CRM).
+            $page->assertSee('title="'.e($area['label']).'"', false);
         }
 
         // Settings is not an area, so it is not on the rail — it sits in the

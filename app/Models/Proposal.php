@@ -327,6 +327,12 @@ class Proposal extends Model
             // document they just watched get signed.
             app(BudgetSync::class)->syncProposal($event, $this->load('lines'));
 
+            // Acceptance should leave a draft client contract ready to review —
+            // not force a PM to rediscover the handoff from an empty Contract tab.
+            if (! $event->contracts()->where('type', 'client')->exists()) {
+                EventContract::createFor($event, 'client');
+            }
+
             return $event;
         });
     }

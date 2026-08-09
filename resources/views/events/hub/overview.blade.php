@@ -114,6 +114,23 @@
             </div>
         </dl>
 
+        @if (in_array($event->stage, ['live', 'completed'], true) && ! $event->archived_at)
+            <div class="mt-4 rounded-2xl border border-gold-200 bg-gold-50/70 px-3.5 py-3">
+                <p class="text-[12px] font-bold text-navy-900">Post-event closeout</p>
+                <p class="mt-0.5 text-[11px] text-muted">Final invoices, budget vs actual, report, then archive.</p>
+                <div class="mt-2.5 flex flex-wrap gap-2">
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}"
+                       class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-navy-800 ring-1 ring-line transition hover:border-gold-300">Budget</a>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'reports']) }}"
+                       class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-navy-800 ring-1 ring-line transition hover:border-gold-300">Reports</a>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'pricing']) }}"
+                       class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-navy-800 ring-1 ring-line transition hover:border-gold-300">Invoice items</a>
+                    <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}"
+                       class="rounded-full bg-navy-900 px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-navy-800">Archive in Settings</a>
+                </div>
+            </div>
+        @endif
+
         @if ($health['critical_risk'])
             <p class="mt-4 rounded-xl bg-risk/10 px-3.5 py-2 text-[0.68rem] font-medium text-red-700 ring-1 ring-risk/30">
                 Health capped at “At Risk”: {{ $health['critical_risk'] }}

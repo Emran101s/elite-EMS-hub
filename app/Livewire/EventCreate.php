@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Client;
 use App\Models\CompanyProfile;
+use App\Models\Deal;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
@@ -85,6 +86,17 @@ class EventCreate extends Component
     public string $new_client = '';
 
     public bool $newClientMode = false;
+
+    /**
+     * How this event enters the book.
+     *
+     * commercial — link or create a CRM deal (default)
+     * internal   — direct event with no deal (company / non-sales work)
+     */
+    public string $origin = 'commercial';
+
+    /** Optional open deal to attach when launching. */
+    public ?int $deal_id = null;
 
     public string $name = '';
 
@@ -339,12 +351,77 @@ class EventCreate extends Component
 
         $event->syncAgendaDays();
 
+        $this->attachCommercialDeal($event);
+
         // The draft has become an event; there is nothing left to restore.
         session()->forget(self::DRAFT);
 
         session()->flash('status', "Event “{$event->name}” created — {$event->dayCount()} agenda ".str('day')->plural($event->dayCount()).' ready in the Event Hub.');
 
         return $this->redirectRoute('events.hub', $event);
+    }
+
+    /**
+     * Keep Event Studio on the commercial spine when the launch is sales work.
+     *
+     * Internal launches skip the deal on purpose. Commercial launches either
+     * attach an open deal or open a won deal so CRM and the event stay linked.
+     */
+    private function attachCommercialDeal(Event $event): void
+    {
+        if ($this->origin !== 'commercial' || ! $event->client_id) {
+            return;
+        }
+
+        if ($this->deal_id) {
+            $deal = Deal::query()
+                ->whereKey($this->deal_id)
+                ->where('client_id', $event->client_id)
+                ->whereNull('event_id')
+                ->whereIn('stage', Deal::OPEN)
+                ->first();
+
+            if ($deal) {
+                $deal->update([
+                    'stage' => 'won',
+                    'probability' => 100,
+                    'event_id' => $event->id,
+                    'won_at' => now(),
+                    'lost_at' => null,
+                    'lost_reason' => null,
+                    'value_cents' => $deal->value_cents ?: $event->budget_cents,
+                    'expected_event_on' => $deal->expected_event_on ?: $event->starts_at,
+                ]);
+
+                return;
+            }
+        }
+
+        Deal::create([
+            'client_id' => $event->client_id,
+            'owner_id' => $event->project_manager_id ?: auth()->id(),
+            'title' => $event->name,
+            'stage' => 'won',
+            'type' => $event->type,
+            'probability' => 100,
+            'value_cents' => $event->budget_cents,
+            'currency' => $event->currency,
+            'expected_event_on' => $event->starts_at,
+            'event_id' => $event->id,
+            'won_at' => now(),
+        ]);
+    }
+
+    public function updatedClientId(): void
+    {
+        $this->deal_id = null;
+    }
+
+    public function updatedOrigin(string $value): void
+    {
+        if ($value !== 'commercial') {
+            $this->deal_id = null;
+        }
     }
 
     /**
@@ -475,9 +552,19 @@ class EventCreate extends Component
     {
         $company = CompanyProfile::current();
 
+        $openDeals = $this->client_id
+            ? Deal::query()
+                ->where('client_id', $this->client_id)
+                ->whereNull('event_id')
+                ->whereIn('stage', Deal::OPEN)
+                ->orderByDesc('updated_at')
+                ->get(['id', 'title', 'stage', 'value_cents', 'currency'])
+            : collect();
+
         return view('livewire.event-create', [
             'steps' => self::STEPS,
             'clients' => Client::orderBy('name')->get(),
+            'openDeals' => $openDeals,
             'venues' => Venue::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
             'templates' => self::TEMPLATES,

@@ -38,9 +38,9 @@
 
     {{-- the mark --}}
     <a href="{{ route('home') }}" title="{{ config('app.name') }}"
-       class="group relative mt-7 grid h-12 w-12 shrink-0 place-items-center rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/70">
+       class="group relative mt-4 grid h-10 w-10 shrink-0 place-items-center rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/70">
         <span aria-hidden="true" class="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(244,215,106,0.24),transparent_68%)]"></span>
-        <svg viewBox="0 0 24 24" class="relative h-7 w-7 text-shell-gold-lit drop-shadow-[0_0_10px_rgba(244,215,106,0.7)] transition duration-200 ease-out group-hover:scale-110"
+        <svg viewBox="0 0 24 24" class="relative h-6 w-6 text-shell-gold-lit drop-shadow-[0_0_10px_rgba(244,215,106,0.7)] transition duration-200 ease-out group-hover:scale-110"
              fill="currentColor" aria-hidden="true">
             <path d="M12 1.6l2.35 7.4 7.4 2.35-7.4 2.35-2.35 7.4-2.35-7.4L2.25 11.35l7.4-2.35z"/>
         </svg>
@@ -48,8 +48,8 @@
 
     <span aria-hidden="true" class="grow"></span>
 
-    {{-- the areas --}}
-    <div class="relative flex shrink-0 flex-col items-center gap-2.5">
+    {{-- Company Command areas — denser so the full operating map fits. --}}
+    <div class="relative flex shrink-0 flex-col items-center gap-1.5">
         @foreach (NavPanel::AREAS as $key => $area)
             @continue (! Route::has($area['route']))
             @php $active = $current === $key; @endphp
@@ -57,12 +57,12 @@
             <a href="{{ route($area['route']) }}" title="{{ $area['label'] }}"
                aria-label="{{ $area['label'] }}"
                @if ($active) aria-current="page" @endif
-               class="group relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/70">
+               class="group relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/70">
 
                 @if ($active)
                     {{-- the orbit --}}
-                    <span aria-hidden="true" class="shell-ring pointer-events-none absolute inset-[-6px] rounded-full"></span>
-                    <span aria-hidden="true" class="shell-ring shell-ring-2 pointer-events-none absolute inset-[-14px] rounded-full"></span>
+                    <span aria-hidden="true" class="shell-ring pointer-events-none absolute inset-[-5px] rounded-full"></span>
+                    <span aria-hidden="true" class="shell-ring shell-ring-2 pointer-events-none absolute inset-[-11px] rounded-full"></span>
                     <span aria-hidden="true" class="pointer-events-none absolute inset-[-2px] rounded-full bg-[radial-gradient(circle,rgba(244,215,106,0.26),transparent_68%)]"></span>
 
                     {{-- the node on the rail's edge, where the panel begins --}}
@@ -71,7 +71,7 @@
                 @endif
 
                 <x-icon :name="$area['icon']" @class([
-                    'relative h-[22px] w-[22px] transition duration-200 ease-out',
+                    'relative h-5 w-5 transition duration-200 ease-out',
                     'text-shell-gold-lit drop-shadow-[0_0_6px_rgba(244,215,106,0.5)]' => $active,
                     'text-white/45 group-hover:scale-[1.07] group-hover:text-white' => ! $active,
                 ]) />
@@ -85,19 +85,15 @@
         @endforeach
     </div>
 
-    <span aria-hidden="true" class="grow-[1.1]"></span>
+    <span aria-hidden="true" class="grow"></span>
 
     {{-- the brand marker --}}
-    <div class="relative flex shrink-0 flex-col items-center gap-2.5">
-        <svg viewBox="0 0 24 24" class="h-4 w-4 text-shell-gold/80" fill="currentColor" aria-hidden="true">
+    <div class="relative mb-3 flex shrink-0 flex-col items-center gap-1.5">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-shell-gold/80" fill="currentColor" aria-hidden="true">
             <path d="M12 1.6l2.35 7.4 7.4 2.35-7.4 2.35-2.35 7.4-2.35-7.4L2.25 11.35l7.4-2.35z"/>
         </svg>
-        <span aria-hidden="true" class="h-10 w-px bg-gradient-to-b from-shell-gold/35 to-transparent"></span>
-        <span class="text-center text-[9px] font-bold uppercase leading-[1.7] tracking-[0.28em] text-shell-label/65">
-            Elite<br>Orbit<br>OS
+        <span class="text-center text-[8px] font-bold uppercase leading-[1.55] tracking-[0.22em] text-shell-label/65">
+            Elite<br>Orbit
         </span>
-        <span aria-hidden="true" class="h-10 w-px bg-gradient-to-b from-transparent via-shell-gold/25 to-transparent"></span>
     </div>
-
-    <span aria-hidden="true" class="grow-[1.6]"></span>
 </nav>

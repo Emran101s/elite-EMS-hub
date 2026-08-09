@@ -67,6 +67,10 @@
                    class="flex h-9 items-center rounded-xl bg-emerald-50 px-3.5 text-[12px] font-bold text-emerald-700 transition hover:bg-emerald-100">
                     Open the event →
                 </a>
+                <a href="{{ route('events.hub', [$p->event, 'tab' => 'contract']) }}"
+                   class="flex h-9 items-center rounded-xl bg-navy-900 px-3.5 text-[12px] font-bold text-white transition hover:bg-navy-800">
+                    Review draft contract →
+                </a>
             @endif
         </div>
     </div>

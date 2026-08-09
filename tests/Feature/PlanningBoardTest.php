@@ -225,7 +225,7 @@ class PlanningBoardTest extends TestCase
     {
         $panel = collect(\App\Support\NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
-            ->firstWhere('label', 'Planning board');
+            ->firstWhere('label', 'Planning Board');
 
         $this->assertSame(route('planning.index'), $panel['href']);
     }
