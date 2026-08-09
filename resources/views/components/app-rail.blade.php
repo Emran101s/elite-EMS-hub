@@ -46,6 +46,20 @@
         </svg>
     </a>
 
+    {{-- Below xl the panel is off-canvas (see app-panel.blade.php) and this
+         is its only door — Settings and Sign out live in the panel's dock
+         with nothing else on the rail that reaches them. --}}
+    <button type="button" @click="navOpen = ! navOpen" :aria-expanded="navOpen"
+            aria-label="Toggle navigation"
+            class="group relative mt-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white/50 transition duration-200 ease-out hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shell-gold/70 xl:hidden">
+        <svg x-show="! navOpen" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+        <svg x-show="navOpen" x-cloak viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+    </button>
+
     <span aria-hidden="true" class="grow"></span>
 
     {{-- the areas --}}

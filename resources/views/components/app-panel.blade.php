@@ -31,8 +31,22 @@
     Gold appears in exactly four places — the section rules, the selected row,
     the connector from the rail, and the dock's underglow — so it still means
     "here" by the time you reach the bottom.
+
+    Below xl this WAS simply gone — hidden, with no way back and no other
+    door to Settings, Sign out, Planning, Proposals, Contracts, Invoices or
+    Payments. It is now a drawer there instead: fixed, off-canvas by default,
+    slid on-screen by app-rail's hamburger. At xl+ the xl: utilities below
+    win over whatever navOpen says (Tailwind emits responsive variants after
+    the base layer, so they take the tie-break at equal specificity) — the
+    panel is simply always there again, exactly as before.
 --}}
-<aside class="shell-panel relative hidden w-[288px] shrink-0 flex-col overflow-hidden xl:flex"
+<div @click="navOpen = false"
+     :class="navOpen ? 'opacity-100' : 'pointer-events-none opacity-0'"
+     class="fixed inset-0 z-30 bg-shell-navy-3/60 backdrop-blur-[1px] transition-opacity duration-300 xl:hidden"
+     aria-hidden="true"></div>
+
+<aside :class="navOpen ? 'translate-x-0' : '-translate-x-full'"
+       class="shell-panel fixed inset-y-0 left-[78px] z-40 flex w-[288px] shrink-0 flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out xl:static xl:inset-auto xl:z-auto xl:w-[288px] xl:translate-x-0 xl:shadow-none xl:flex"
        aria-label="Main navigation">
 
     {{-- the decorative field: arcs and dust, 4–12% so it reads as texture --}}
