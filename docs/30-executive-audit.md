@@ -35,7 +35,7 @@ That number is low not because the product is thin — 35,000 lines of applicati
 |---|---|
 | Application code | 35,251 LOC |
 | Views | 233 Blade files, 30,298 LOC |
-| Tests | 124 files, 23,147 LOC, **1,067 tests / 948 pass / 10 fail / 109 not executed** |
+| Tests | 124 files, 23,147 LOC, **1,067 tests / 10 fail** (see correction, §10) |
 | Models | 62 · **Migrations** 120 · **DB tables** 75 |
 | Livewire components | 58 · **Controllers** 43 (25 of them PDF generators) |
 | Named routes | 86 |
@@ -63,7 +63,7 @@ That number is low not because the product is thin — 35,000 lines of applicati
 - **No API.** No `routes/api.php`, no Sanctum, no integration surface at all.
 - **No async.** 0 jobs, 0 console commands, 1 scheduled entry. PDF generation via Browsershot runs synchronously in the request.
 - **No 2FA/SSO.**
-- **109 tests not executed** (~10% of the suite) against only 2 explicit skip statements — the reason is unexplained and nobody appears to have asked.
+- ~~109 tests not executed~~ — **retracted, see §10.**
 
 ### 1.4 Technical risks
 
@@ -228,7 +228,7 @@ The strategic error would be chasing Cvent on attendee features. The strategic w
 3. Pagination everywhere
 4. Move PDF generation to queued jobs
 5. Get the suite green and gate merges on it
-6. Explain and fix the 109 non-executed tests
+6. ~~Explain the 109 non-executed tests~~ — retracted, §10
 7. Extract business logic out of 900+ LOC Livewire components into services
 8. Add caching to portfolio aggregates
 9. Add `routes/api.php` + Sanctum
@@ -342,3 +342,19 @@ Both are good businesses. Pursuing both simultaneously — which is what the las
 ---
 
 *Audit based on direct inspection of code, schema, test suite and running application. No code was modified in producing this report.*
+
+---
+
+## 10. Correction (9 Aug 2026, same day)
+
+**Retracted: the claim that "109 tests are not executed."**
+
+That figure came from subtracting pass+fail from the total in a single run's JSON summary
+(1,067 − 948 − 10 = 109). A later full run reported **1,074 tests / 1,064 pass / 10 fail — zero
+unaccounted**. The gap was an artifact of how that first run reported, not tests being skipped. The
+codebase contains only **2** explicit skip statements, which was the clue I should have followed
+rather than publishing the subtraction.
+
+**No other figure in this audit is affected**, and the 10 real failures stand. Recording the
+correction here rather than quietly editing the number, because an audit that silently revises
+itself is not worth reading.

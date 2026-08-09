@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\CompanyProfile;
 use App\Models\Event;
+use App\Notifications\RegistrationConfirmed;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -176,6 +177,18 @@ class PublicRegistration extends Component
         RateLimiter::hit($key, 900);
 
         $this->reference = $attendee->reference();
+
+        // The confirmation is the attendee's only copy of their reference and
+        // check-in link. A mail failure must not lose them the registration
+        // that already succeeded — so it is caught, logged, and swallowed
+        // rather than thrown back at somebody who has done nothing wrong.
+        if ($attendee->notifiable()) {
+            try {
+                $attendee->notify(new RegistrationConfirmed($attendee));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     public function render()

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'tenant_id',
@@ -15,7 +16,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 ])]
 class EventAttendee extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, Notifiable;
+
+    /**
+     * Where a notification to this person goes.
+     *
+     * Nullable on purpose: the email field is not compulsory on every
+     * registration form, and a walk-up added at the desk may have no address
+     * at all. Callers must check notifiable() before sending — Laravel treats
+     * a null route as "nothing to do" silently, and silence is how a missing
+     * confirmation goes unnoticed for a month.
+     */
+    public function routeNotificationForMail(): ?string
+    {
+        return $this->email ?: null;
+    }
+
+    /** True when there is somewhere to send. */
+    public function notifiable(): bool
+    {
+        return filled($this->email);
+    }
 
     /** Registration lifecycle. */
     public const STATUSES = ['registered', 'confirmed', 'checked_in', 'cancelled'];

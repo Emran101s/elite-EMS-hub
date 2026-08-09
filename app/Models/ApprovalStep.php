@@ -71,6 +71,32 @@ class ApprovalStep extends Model
      * that seniority; a step naming neither is any manager, which the gate
      * already covers.
      */
+    /**
+     * Who should be told this step is waiting.
+     *
+     * A named approver is one email. An unnamed step is a queue, and the queue
+     * has to be told it exists — so everybody who could decide it gets the
+     * mail, minus the person who raised the request, who is barred from
+     * deciding their own and would only be reading noise.
+     *
+     * Mirrors decidableBy() rather than re-stating the rule: if eligibility
+     * changes, the recipient list must change with it or somebody waits on an
+     * email that was never sent.
+     *
+     * @return \Illuminate\Support\Collection<int,User>
+     */
+    public function recipients(?int $excludeUserId = null): \Illuminate\Support\Collection
+    {
+        $candidates = $this->approver_id
+            ? User::whereKey($this->approver_id)->get()
+            : User::all()->filter(fn (User $u) => $this->decidableBy($u));
+
+        return $candidates
+            ->when($excludeUserId, fn ($c) => $c->reject(fn (User $u) => $u->id === $excludeUserId))
+            ->filter(fn (User $u) => filled($u->email))
+            ->values();
+    }
+
     public function decidableBy(User $user): bool
     {
         if ($this->approver_id) {
