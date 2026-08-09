@@ -1,26 +1,6 @@
 @props(['event', 'header'])
 
-{{--
-    The event hub's header.
-
-    It used to be four stacked blocks — a 383px hero, a 112px meter strip, a
-    41px rail and a 66px live ribbon — 602px of chrome before a single figure of
-    the module you actually opened. On a 940px laptop that is the whole screen.
-
-    It is one card now, about 170px, and it says the same things in the same
-    order on every event:
-
-        who      crest, name, where and when
-        state    the live pill: what is waiting right now
-        figures  health, readiness, and how big
-        next     the one thing that needs a person, and the way to it
-
-    Every number comes from EventCommandHeader, counted off the event's own
-    records, so the header cannot disagree with the tab you click through to.
-    The skeleton never changes shape — an event with nothing waiting draws the
-    same card as one on fire, or the header reads as a bug rather than as a
-    quiet week.
---}}
+{{-- Soft Command Event Hub header — identity, health, readiness, next action. --}}
 
 @php
     $title = $header['title'];
@@ -29,196 +9,109 @@
     $readiness = $header['readiness'];
     $live = $header['live'];
 
-    $healthWord = $health['score'] === null ? 'Not scored'
-        : match ($health['group']) { 'risk' => 'Behind', 'warn' => 'At watch', default => 'Healthy' };
-
-    $readyWord = match (true) {
-        $readiness['pct'] >= 90 => 'Excellent',
-        $readiness['pct'] >= 70 => 'On track',
-        $readiness['pct'] >= 40 => 'Gaps remain',
-        default => 'Not ready',
+    $healthScore = $health['score'] ?? null;
+    $healthStatus = match ($health['group'] ?? null) {
+        'risk' => 'risk',
+        'warn' => 'warn',
+        default => $healthScore === null ? 'pending' : 'ok',
     };
 
-    // One tone vocabulary for both meters, so 59% means the same thing in
-    // either column rather than each picking its own palette.
-    $tone = fn (string $group) => match ($group) {
-        'risk' => ['text-red-700', 'bg-risk'],
-        'warn' => ['text-amber-700', 'bg-warn'],
-        default => ['text-emerald-700', 'bg-track'],
+    $readyPct = (int) ($readiness['pct'] ?? 0);
+    $readyStatus = match (true) {
+        $readyPct >= 70 => 'ok',
+        $readyPct >= 40 => 'warn',
+        default => 'risk',
     };
-
-    [$healthText, $healthBar] = $tone($health['score'] === null ? 'warn' : $health['group']);
-    [$readyText, $readyBar] = $tone(match (true) {
-        $readiness['pct'] >= 70 => 'ok', $readiness['pct'] >= 40 => 'warn', default => 'risk',
-    });
 
     $where = collect([$event->city, $event->country])->filter()->implode(', ');
     $when = $event->starts_at
         ? $event->starts_at->format('j M').' – '.($event->ends_at?->format('j M Y') ?? $event->starts_at->format('Y'))
         : null;
 
-    // Same ring the Agenda day-picker and Tasks control centre already draw —
-    // borrowing it here means the header speaks the hub's own visual language
-    // instead of inventing a third way to show a percentage.
-    $ring = 2 * M_PI * 15;
+    $type = str($event->type ?? 'Event')->replace('_', ' ')->title();
+    $stage = \App\Support\Workflow::label('event_stage', $event->stage);
+
+    $attention = collect($header['attention'] ?? []);
+    $openCount = (int) $attention->sum(fn ($a) => (int) ($a['count'] ?? 0));
+    $alarmCount = (int) $attention->filter(fn ($a) => ($a['tone'] ?? null) === 'alarm')->sum(fn ($a) => (int) ($a['count'] ?? 0));
+
+    $criticalHref = $critical
+        ? route('events.hub', [$event, 'tab' => $critical['tab'] ?? 'overview'])
+        : null;
 @endphp
 
-<div class="relative isolate overflow-hidden rounded-[20px] border border-line bg-white shadow-[0_14px_40px_-30px_rgba(11,31,58,0.5)]">
-
-    {{-- The one gold thread that runs through every command surface in this
-         app — the Deck's ticket edge, the Manifest's masthead — so the hub
-         header reads as the same object, not a screen that forgot the motif. --}}
-    <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-80" aria-hidden="true"></div>
-
-    {{-- The cover, as a wash rather than a band. A photograph that costs no
-         height still says which event this is the moment the page paints. --}}
-    @if ($event->coverUrl())
-        <div class="pointer-events-none absolute inset-y-0 end-0 -z-10 w-[46%]" aria-hidden="true">
-            <img src="{{ $event->coverUrl() }}" alt="" class="h-full w-full object-cover" style="object-position: 50% 40%">
-            <div class="absolute inset-0" style="background: linear-gradient(to right,
-                #fff 0%, rgba(255,255,255,0.94) 22%, rgba(255,255,255,0.72) 48%, rgba(255,255,255,0.45) 100%)"></div>
-        </div>
-    @endif
-
-    {{-- ══ who, and what is true right now ══ --}}
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-3 pt-3.5 lg:px-5">
-        <span class="relative grid h-11 w-11 shrink-0 place-items-center">
-            <span class="absolute -inset-1.5 -z-10 rounded-2xl bg-gold-400/35 blur-md core-glow" aria-hidden="true"></span>
-            <span class="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-navy-950 ring-1 ring-gold-400/50">
-                @if ($event->logoUrl())
-                    <img src="{{ $event->logoUrl() }}" alt="" class="h-full w-full object-cover">
-                @else
-                    <x-event-crest :event="$event" class="h-full w-full" />
-                @endif
-            </span>
+<div class="eo-domain-card eo-mission-card overflow-hidden !p-0">
+    <div class="flex flex-wrap items-start gap-4 px-5 py-4 lg:px-6">
+        <span class="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-eo-navy ring-1 ring-eo-teal/30">
+            @if ($event->logoUrl())
+                <img src="{{ $event->logoUrl() }}" alt="" class="h-full w-full object-cover">
+            @else
+                <x-event-crest :event="$event" class="h-full w-full" />
+            @endif
         </span>
 
         <div class="min-w-0 flex-1">
-            <h1 class="pf truncate text-[19px] font-black leading-tight text-navy-950 lg:text-[22px]">
-                {{ $title['lead'] }}@if ($title['tail'])<span class="font-bold text-navy-500"> · {{ $title['tail'] }}</span>@endif
-            </h1>
-
-            {{-- Where, when, in what building — divided by rules rather than run
-                 together, so three facts do not read as one sentence. --}}
-            <div class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12px] font-medium text-navy-600">
-                @foreach (array_filter([
-                    $where ? ['pin', $where] : null,
-                    $when ? ['calendar', $when] : null,
-                    $event->venue ? ['building', $event->venue->name] : null,
-                ]) as [$icon, $text])
-                    @if (! $loop->first)<span class="h-3 w-px bg-line" aria-hidden="true"></span>@endif
-                    <span class="flex min-w-0 items-center gap-1.5">
-                        <x-icon :name="$icon" class="h-3.5 w-3.5 shrink-0 text-navy-300" />
-                        <span class="truncate">{{ $text }}</span>
-                    </span>
-                @endforeach
+            <div class="mb-2 flex flex-wrap items-center gap-2">
+                <span class="eo-journey-chip">Event DNA · {{ $type }}</span>
+                <x-eo.status-pill tone="live">{{ $stage }}</x-eo.status-pill>
+                <span class="eo-dna-pill !normal-case !tracking-normal">{{ $readyPct }}% readiness</span>
+                @if (! empty($live['label']))
+                    <x-eo.status-pill :tone="str_contains($live['tone'] ?? '', 'risk') ? 'risk' : (str_contains($live['tone'] ?? '', 'warn') ? 'warn' : 'ok')">
+                        {{ $live['label'] }}
+                    </x-eo.status-pill>
+                @endif
             </div>
+
+            <h1 class="eo-title truncate text-[20px] lg:text-[24px]">
+                {{ $title['lead'] }}@if ($title['tail'])<span class="font-medium text-eo-muted"> · {{ $title['tail'] }}</span>@endif
+            </h1>
+            <p class="mt-1 text-[13px] text-eo-muted">
+                {{ collect([$where, $when, $event->client?->name, 'Delegate journey'])->filter()->implode(' · ') }}
+            </p>
         </div>
 
-        {{-- The live ribbon used to be a 66px bar of its own. It is this pill:
-             the same sentence, the same tone, none of the height. --}}
-        <span class="flex shrink-0 items-center gap-2 rounded-full bg-navy-950 px-3.5 py-1.5">
-            <span class="relative flex h-2 w-2 shrink-0">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full {{ $live['tone'] }} opacity-60"></span>
-                <span class="relative inline-flex h-2 w-2 rounded-full {{ $live['tone'] }}"></span>
-            </span>
-            <span class="text-[11.5px] font-bold text-white">{{ $live['label'] }}</span>
-        </span>
+        <div class="flex flex-wrap gap-2">
+            <x-eo.button variant="ghost" size="sm" href="{{ route('events.index') }}">Portfolio</x-eo.button>
+            @if ($criticalHref)
+                <x-eo.button size="sm" href="{{ $criticalHref }}">{{ $critical['cta'] ?? 'Next action' }}</x-eo.button>
+            @endif
+        </div>
     </div>
 
-    {{-- ══ the figures ══
-         Health and readiness carry a ring, not a bare number, for the same
-         reason the Agenda day-picker and Tasks control centre draw one: a
-         percentage with no scale beside it is a number you have to remember
-         the meaning of. The scale figures are counts and need none. ══ --}}
-    <div class="scrollbar-none flex items-stretch gap-x-5 gap-y-2 overflow-x-auto border-t border-line px-4 py-2.5 lg:px-5">
-        @foreach ([
-            ['Health', $health['score'] === null ? '—' : $health['score'].'%', $healthWord, $health['score'] ?? 0, $healthText, $healthBar],
-            ['Readiness', $readiness['pct'].'%', $readyWord, $readiness['pct'], $readyText, $readyBar],
-        ] as [$label, $value, $word, $pct, $text, $bar])
-            <div class="flex min-w-[132px] shrink-0 items-center gap-2.5">
-                <span class="relative grid h-9 w-9 shrink-0 place-items-center">
-                    <svg class="h-9 w-9 -rotate-90" viewBox="0 0 30 30" aria-hidden="true">
-                        <circle cx="15" cy="15" r="13" fill="none" stroke="var(--color-navy-50)" stroke-width="3.5" />
-                        <circle cx="15" cy="15" r="13" fill="none" stroke-width="3.5" stroke-linecap="round"
-                                class="{{ $text }} [stroke:currentColor]"
-                                stroke-dasharray="{{ $ring }}" stroke-dashoffset="{{ $ring - ($ring * min($pct, 100) / 100) }}" />
-                    </svg>
-                    <span class="pf absolute text-[9.5px] font-black text-navy-950">{{ $pct > 0 || $health['score'] !== null ? $pct : '—' }}</span>
-                </span>
-                <p class="min-w-0 leading-tight">
-                    <span class="block text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">{{ $label }}</span>
-                    <span class="mt-0.5 flex items-baseline gap-1.5">
-                        <span class="pf text-[15px] font-black leading-none text-navy-950">{{ $value }}</span>
-                        <span class="text-[11px] font-bold {{ $text }}">{{ $word }}</span>
-                    </span>
-                </p>
-            </div>
-        @endforeach
-
-        <span class="w-px shrink-0 self-stretch bg-line" aria-hidden="true"></span>
-
-        @foreach ($header['scale'] as $stat)
-            <div class="flex shrink-0 items-center gap-2">
-                <x-icon :name="$stat['icon']" class="h-4 w-4 shrink-0 text-navy-300" />
-                <span class="leading-tight">
-                    <span class="pf block text-[16px] font-black {{ $stat['tone'] ?? 'text-navy-950' }}">{{ $stat['value'] }}</span>
-                    <span class="block text-[10.5px] text-muted">{{ $stat['label'] }}</span>
-                </span>
-            </div>
-        @endforeach
+    <div class="grid gap-3 border-t border-eo-line bg-eo-workspace/70 px-5 py-4 sm:grid-cols-3 lg:px-6">
+        <x-eo.event-health-card
+            title="Event health"
+            :score="(int) ($healthScore ?? 0)"
+            :status="$healthStatus"
+            hint="Mission health index"
+            class="!shadow-none"
+        />
+        <x-eo.readiness-card
+            domain="Operational readiness"
+            title="Readiness gates"
+            :percent="$readyPct"
+            :status="$readyStatus"
+            :hint="($readiness['met'] ?? 0).' of '.($readiness['total'] ?? 0).' checkpoints'"
+            class="!shadow-none"
+        />
+        <x-eo.operations-card
+            title="Live desk"
+            subtitle="Attention across modules"
+            :open="$openCount"
+            :due="max(0, $openCount - $alarmCount)"
+            :blocked="$alarmCount"
+            class="!shadow-none"
+        />
     </div>
 
-    {{-- ══ the one thing that needs a person ══
-         Always drawn, always in the same place, whether or not there is
-         anything to report — "what needs me" should be a glance, not a tour of
-         seven tabs. ══ --}}
-    @php
-        $clear = ! $critical;
-        $level = $critical['level'] ?? 'Clear';
-        $accent = match ($level) {
-            'Critical' => 'bg-risk',
-            'High' => 'bg-warn',
-            'Medium' => 'bg-gold-400',
-            'Low' => 'bg-navy-300',
-            default => 'bg-emerald-400',
-        };
-    @endphp
-    <div class="relative flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line bg-page/60 px-4 py-2 ps-5 lg:px-5 lg:ps-6">
-        <span class="absolute inset-y-0 start-0 w-1 {{ $accent }}" aria-hidden="true"></span>
-
-        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-navy-950 text-gold-400">
-            <x-icon :name="$clear ? 'check' : 'flag'" class="h-3.5 w-3.5" />
-        </span>
-
-        <span class="shrink-0 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-400">Next</span>
-
-        <span class="min-w-0 flex-1 truncate text-[13px] font-bold text-navy-950">
-            {{ $critical['title'] ?? 'Nothing is waiting on you' }}
-            <span class="font-medium text-muted">— {{ $critical['where'] ?? 'Risks, approvals and tasks all clear' }}</span>
-        </span>
-
-        {{-- Due and Owner are drawn even when they are em-dashes. Hiding them
-             on a quiet event makes the strip a different shape from event to
-             event, which is the exact complaint this header was rebuilt to
-             answer: one skeleton, always, only the words change. --}}
-        <span class="flex shrink-0 items-center gap-2.5 text-[11.5px]">
-            <span class="text-muted">Due <span class="font-semibold text-navy-900">{{ $critical['due'] ?? '—' }}</span></span>
-            <span class="text-muted">Owner <span class="font-semibold text-navy-900">{{ $critical['owner'] ?? '—' }}</span></span>
-        </span>
-
-        <span title="Risk level" @class([
-            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold',
-            'bg-risk/10 text-red-700' => $level === 'Critical',
-            'bg-warn/15 text-amber-700' => $level === 'High',
-            'bg-gold-50 text-gold-800' => $level === 'Medium',
-            'bg-navy-50 text-navy-500' => $level === 'Low',
-            'bg-emerald-50 text-emerald-700' => $level === 'Clear',
-        ])>{{ $level }}</span>
-
-        <a href="{{ route('events.hub', [$event, 'tab' => $critical['tab'] ?? 'tasks']) }}"
-           class="shrink-0 rounded-lg bg-navy-950 px-3 py-1.5 text-[11.5px] font-bold text-white transition hover:bg-navy-800">
-            Open →
-        </a>
-    </div>
+    @if ($critical)
+        <div class="border-t border-eo-line px-5 py-3 lg:px-6">
+            <x-eo.alert-card
+                :tone="in_array($critical['level'] ?? '', ['Critical', 'High'], true) ? 'risk' : 'warn'"
+                :title="$critical['title']"
+            >
+                {{ $critical['where'] }} · {{ $critical['due'] }} · {{ $critical['owner'] }}
+            </x-eo.alert-card>
+        </div>
+    @endif
 </div>

@@ -1,198 +1,197 @@
 @php
     use App\Models\EventContract;
 
-    // Same status meta used by the single-document editor (contract-tab) — the
-    // register and the editor showed the same status in two different colours
-    // (brand gold vs semantic amber) before they shared this. A voided document
-    // gets struck through here, on top of the shared tone — a list-specific
-    // touch, not part of the colour itself.
     $statusMeta = EventContract::statusMeta();
     foreach ($statusMeta as $k => [$label, $class]) {
         $statusMeta[$k] = [$label, $k === 'void' ? "{$class} line-through" : $class];
     }
+    $sel = $selected;
+    $due = $sel ? $nextDue($sel) : null;
+    $signed = $sel ? $sel->signedCount() : 0;
+    $totalSig = $sel ? $sel->signatoryCount() : 0;
 @endphp
 
-<div class="space-y-4">
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
 
-    {{-- ══ the bar ══
-         No heading here: the layout already prints "Contracts" and its
-         subtitle above this, and a page that names itself twice reads as a
-         page that lost track of itself. --}}
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <div class="ms-auto flex flex-wrap items-center gap-2">
+    <x-eo.page-header
+        eyebrow="Commercial Command"
+        title="Contracts"
+        subtitle="Queue → Contract → Signature / Payment Panel. What is drafted, out for pen, and signed."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Agreements</span>
             <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
-                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Reference, event, counterparty…"
-                       class="input h-10 w-56 !rounded-2xl !py-0 !ps-9 text-xs xl:w-72">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Reference, event, party…"
+                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs xl:w-64">
             </div>
-
             <details class="relative" data-menu>
-                <summary class="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300 [&::-webkit-details-marker]:hidden">
-                    <x-icon name="list" class="h-3.5 w-3.5 text-navy-400" />
+                <summary class="eo-btn-ghost eo-btn-sm cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                     {{ $type === 'all' ? 'All types' : EventContract::TYPES[$type]['label'] }}
-                    @if ($type !== 'all')<span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span>@endif
                 </summary>
-                <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-white p-1.5 shadow-xl">
-                    <button type="button" wire:click="setType('all')"
-                            @class(['flex w-full items-center rounded-xl px-3 py-2 text-start text-[12px] font-semibold transition',
-                                'bg-navy-950 text-white' => $type === 'all', 'text-navy-600 hover:bg-page' => $type !== 'all'])>All types</button>
+                <div class="absolute end-0 z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-eo-line bg-white p-1.5 shadow-eo-float">
+                    <button type="button" wire:click="setType('all')" class="flex w-full rounded-xl px-3 py-2 text-start text-[12px] font-semibold hover:bg-eo-workspace">All types</button>
                     @foreach (EventContract::TYPES as $key => $meta)
-                        <button type="button" wire:click="setType('{{ $key }}')"
-                                @class(['flex w-full items-center rounded-xl px-3 py-2 text-start text-[12px] font-semibold transition',
-                                    'bg-navy-950 text-white' => $type === $key, 'text-navy-600 hover:bg-page' => $type !== $key])>{{ $meta['label'] }}</button>
+                        <button type="button" wire:click="setType('{{ $key }}')" class="flex w-full rounded-xl px-3 py-2 text-start text-[12px] font-semibold hover:bg-eo-workspace">{{ $meta['label'] }}</button>
                     @endforeach
                 </div>
             </details>
-        </div>
+        </x-slot:actions>
+    </x-eo.page-header>
+
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        @foreach ($figures as $f)
+            @php
+                $tone = match ($f['tone'] ?? '') {
+                    'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue', 'violet' => 'live', default => null,
+                };
+            @endphp
+            <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+        @endforeach
     </div>
 
-    <x-figure-strip :figures="$figures" dense />
-
-    {{-- ══ the switch and the status filter ══ --}}
     <div class="flex flex-wrap items-center gap-3">
-        <div class="inline-flex items-center gap-1 rounded-2xl border border-line bg-white/80 p-1 shadow-sm backdrop-blur">
-            @foreach (['register' => ['Register', 'list'], 'pipeline' => ['Pipeline', 'columns']] as $key => [$label, $icon])
+        <div class="inline-flex items-center gap-1 rounded-2xl border border-eo-line bg-white p-1 shadow-eo">
+            @foreach (['register' => 'Register', 'pipeline' => 'Pipeline'] as $key => $label)
                 <button type="button" wire:click="setView('{{ $key }}')"
-                        @class(['flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-bold transition',
-                            'bg-navy-950 text-white shadow-[0_8px_20px_-12px_rgba(11,31,58,0.9)]' => $view === $key,
-                            'text-navy-500 hover:bg-page hover:text-navy-900' => $view !== $key])>
-                    <x-icon :name="$icon" class="h-3.5 w-3.5 {{ $view === $key ? 'text-gold-400' : '' }}" />{{ $label }}
-                </button>
+                        @class([
+                            'rounded-xl px-3.5 py-2 text-[12px] font-bold transition',
+                            'bg-gradient-to-b from-eo-teal-lit to-eo-teal-deep text-white shadow-eo-teal' => $view === $key,
+                            'text-eo-muted hover:bg-eo-workspace' => $view !== $key,
+                        ])>{{ $label }}</button>
             @endforeach
         </div>
-
-        <p class="text-[11.5px] text-muted">{{ $docs->count() }} {{ str('document')->plural($docs->count()) }} in view</p>
-
-        <div class="ms-auto flex flex-wrap items-center gap-1">
+        <div class="flex flex-wrap items-center gap-1">
             @foreach (['all' => 'All'] + collect(EventContract::STATUSES)->mapWithKeys(fn ($s) => [$s => $statusMeta[$s][0]])->all() as $key => $label)
                 <button type="button" wire:click="setStatus('{{ $key }}')"
-                        @class(['rounded-full px-2.5 py-1 text-[11px] font-bold transition',
-                            'bg-navy-950 text-white' => $status === $key,
-                            'text-navy-500 hover:bg-white hover:text-navy-900' => $status !== $key])>{{ $label }}</button>
+                        @class(['eo-btn-ghost eo-btn-sm', '!bg-eo-navy !text-white' => $status === $key])>{{ $label }}</button>
             @endforeach
         </div>
+        <p class="ms-auto text-[12px] text-eo-muted">{{ $docs->count() }} in view</p>
     </div>
 
     @if ($docs->isEmpty())
-        <x-empty icon="document" title="No document matches"
-                 hint="Clear the filters, or open an event and draft one from its Contract tab." />
-
-    {{-- ══════════ REGISTER ══════════
-         A table, because across events the questions are comparative: which is
-         oldest, which is worth most, which is due first. The Deck inside an
-         event answers "what does this one look like"; that is a different
-         question and it already has a different answer. ══════════ --}}
-    @elseif ($view === 'register')
-        <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
-            <div class="overflow-x-auto">
-                <div class="min-w-[940px]">
-                    @php $cols = 'grid-cols-[132px_1fr_180px_110px_120px_112px_104px]'; @endphp
-
-                    <div class="grid {{ $cols }} gap-3 border-b border-line bg-navy-50/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
-                        @foreach ([['reference', 'Reference'], [null, 'Document'], ['event', 'Event'], [null, 'Status'], ['value', 'Value'], ['due', 'Next due'], [null, 'Signatures']] as [$key, $label])
-                            @if ($key)
-                                <button type="button" wire:click="sortBy('{{ $key }}')"
-                                        class="flex items-center gap-1 text-start transition hover:text-navy-700">
-                                    {{ $label }}
-                                    @if ($sort === $key)<span class="text-gold-600">▾</span>@endif
-                                </button>
-                            @else
-                                <span>{{ $label }}</span>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    @foreach ($docs as $doc)
-                        @php
-                            [$label, $chip] = $statusMeta[$doc->status] ?? ['—', 'bg-navy-50 text-navy-500'];
-                            $due = $nextDue($doc);
-                            $signed = $doc->signedCount();
-                            $total = $doc->signatoryCount();
-                        @endphp
-
-                        <a href="{{ route('events.hub', [$doc->event, 'tab' => 'contract', 'document' => $doc->id]) }}"
-                           wire:key="doc-{{ $doc->id }}"
-                           class="grid {{ $cols }} items-center gap-3 border-b border-line/60 px-4 py-2.5 transition last:border-0 hover:bg-navy-50/40">
-
-                            <span class="truncate font-mono text-[11px] font-semibold text-navy-500">{{ $doc->reference ?: '—' }}</span>
-
-                            <span class="min-w-0">
-                                <span class="block truncate text-[13px] font-bold text-navy-900">{{ $doc->displayTitle() }}</span>
-                                <span class="block truncate text-[11px] text-muted">{{ EventContract::TYPES[$doc->type]['label'] ?? $doc->type }}</span>
-                            </span>
-
-                            <span class="min-w-0">
-                                <span class="block truncate text-[12px] font-semibold text-navy-700">{{ $doc->event?->name ?? '—' }}</span>
-                                <span class="block truncate text-[10.5px] text-muted">{{ $doc->event?->client?->name ?? 'No client' }}</span>
-                            </span>
-
-                            <span><span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold {{ $chip }}">{{ $label }}</span></span>
-
-                            <span class="pf text-[13px] font-black tabular-nums text-navy-900">
-                                {{ $doc->valueCents() ? 'JD'.number_format($doc->valueCents() / 100) : '—' }}
-                            </span>
-
-                            <span @class(['text-[11.5px] font-semibold tabular-nums',
-                                'text-red-600' => $due?->isPast(), 'text-navy-600' => $due && ! $due->isPast(),
-                                'text-navy-300' => ! $due])>{{ $due?->format('j M Y') ?? '—' }}</span>
-
-                            {{-- Signatures as a meter, not a fraction: "1 / 3"
-                                 is a number you have to do arithmetic on. --}}
-                            <span class="flex items-center gap-2">
-                                @if ($total)
-                                    <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-navy-50">
-                                        <span class="block h-full rounded-full {{ $signed === $total ? 'bg-track' : 'bg-gold-400' }}"
-                                              style="width: {{ round($signed / $total * 100) }}%"></span>
-                                    </span>
-                                    <span class="shrink-0 text-[10.5px] font-bold tabular-nums text-navy-400">{{ $signed }}/{{ $total }}</span>
-                                @else
-                                    <span class="text-[10.5px] italic text-navy-300">None yet</span>
-                                @endif
-                            </span>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-    {{-- ══════════ PIPELINE ══════════ --}}
-    @else
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-{{ min(4, max(2, $lanes->count())) }}">
+        <x-eo.empty-state title="No document matches" hint="Clear filters, or draft from an event Contract tab." icon="document" />
+    @elseif ($view === 'pipeline')
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             @foreach ($lanes as $lane)
-                <div class="flex min-h-[140px] flex-col rounded-2xl border border-line bg-white p-3 shadow-sm">
-                    <div class="mb-2 flex items-center gap-2 px-1">
-                        <span @class(['h-2 w-2 rounded-full',
-                            'bg-navy-300' => $lane['key'] === 'draft', 'bg-gold-400' => $lane['key'] === 'sent',
-                            'bg-track' => $lane['key'] === 'signed', 'bg-navy-200' => $lane['key'] === 'void'])></span>
-                        <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-500">{{ $lane['label'] }}</span>
-                        <span class="ms-auto text-[11px] font-black tabular-nums text-navy-300">{{ $lane['docs']->count() }}</span>
-                    </div>
-
+                <x-eo.soft-card>
+                    <p class="eo-label mb-3">{{ $lane['label'] }} · {{ $lane['docs']->count() }}</p>
                     <div class="space-y-2">
                         @forelse ($lane['docs'] as $doc)
-                            @php $due = $nextDue($doc); @endphp
-                            <a href="{{ route('events.hub', [$doc->event, 'tab' => 'contract', 'document' => $doc->id]) }}"
-                               wire:key="lane-{{ $doc->id }}"
-                               class="block rounded-xl border border-line bg-page/40 p-2.5 transition hover:border-gold-300 hover:bg-white">
-                                <p class="truncate text-[12.5px] font-bold text-navy-900">{{ $doc->displayTitle() }}</p>
-                                <p class="mt-0.5 truncate text-[11px] text-muted">{{ $doc->event?->name }}</p>
-                                <div class="mt-1.5 flex items-center gap-2">
-                                    <span class="pf text-[12px] font-black tabular-nums text-navy-800">
-                                        {{ $doc->valueCents() ? 'JD'.number_format($doc->valueCents() / 100) : '—' }}
-                                    </span>
-                                    @if ($due)
-                                        <span class="ms-auto text-[10.5px] font-semibold {{ $due->isPast() ? 'text-red-600' : 'text-navy-400' }}">
-                                            {{ $due->format('j M') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </a>
+                            <button type="button" wire:click="select({{ $doc->id }})" class="w-full rounded-xl border border-eo-line bg-white px-3 py-2.5 text-start hover:border-eo-teal/30">
+                                <p class="truncate text-[12.5px] font-bold text-eo-text">{{ $doc->displayTitle() }}</p>
+                                <p class="truncate text-[11px] text-eo-muted">{{ $doc->event?->name }}</p>
+                            </button>
                         @empty
-                            <p class="px-1 py-3 text-[11.5px] italic text-navy-300">Nothing here.</p>
+                            <p class="text-[11px] text-eo-muted">Empty lane</p>
                         @endforelse
                     </div>
-                </div>
+                </x-eo.soft-card>
             @endforeach
+        </div>
+        @if ($sel)
+            <div class="grid gap-4 xl:grid-cols-12">
+                <div class="xl:col-span-8">
+                    <x-eo.detail-panel title="{{ $sel->displayTitle() }}" subtitle="{{ $sel->reference ?: 'No reference' }} · {{ $sel->event?->name }}">
+                        <x-eo.commercial-card
+                            title="Contract value"
+                            :value="$sel->valueCents() ? 'JD'.number_format($sel->valueCents() / 100) : '—'"
+                            :meta="$signed.'/'.$totalSig.' signatures · next due '.($due?->format('j M Y') ?? '—')"
+                        />
+                    </x-eo.detail-panel>
+                </div>
+                <div class="xl:col-span-4">
+                    <x-eo.action-panel title="Signature / Payment">
+                        <x-eo.button href="{{ route('events.hub', [$sel->event, 'tab' => 'contract', 'document' => $sel->id]) }}" class="w-full justify-center" size="sm">
+                            Open in Event Hub →
+                        </x-eo.button>
+                    </x-eo.action-panel>
+                </div>
+            </div>
+        @endif
+    @else
+        <div class="grid gap-4 xl:grid-cols-12">
+            <div class="xl:col-span-4">
+                <x-eo.queue-list title="Contract queue">
+                    @foreach ($docs as $doc)
+                        @php
+                            $active = $sel?->id === $doc->id;
+                            [$label] = $statusMeta[$doc->status] ?? ['—', ''];
+                        @endphp
+                        <button type="button" wire:click="select({{ $doc->id }})" wire:key="doc-{{ $doc->id }}" class="w-full text-start">
+                            @if ($active)
+                                <x-eo.selected-dark-card>
+                                    <p class="font-mono text-[11px] text-eo-teal-lit">{{ $doc->reference ?: '—' }}</p>
+                                    <p class="mt-1 truncate text-[14px] font-semibold text-white">{{ $doc->displayTitle() }}</p>
+                                    <p class="mt-1 truncate text-[12px] text-white/50">{{ $doc->event?->name }}</p>
+                                    <div class="mt-3 flex items-center justify-between gap-2">
+                                        <span class="text-[15px] font-bold tabular-nums text-white">{{ $doc->valueCents() ? 'JD'.number_format($doc->valueCents() / 100) : '—' }}</span>
+                                        <x-eo.status-pill tone="live">{{ $label }}</x-eo.status-pill>
+                                    </div>
+                                </x-eo.selected-dark-card>
+                            @else
+                                <div class="rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
+                                    <p class="font-mono text-[11px] text-eo-muted">{{ $doc->reference ?: '—' }}</p>
+                                    <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $doc->displayTitle() }}</p>
+                                    <div class="mt-2 flex items-center justify-between gap-2">
+                                        <span class="truncate text-[11px] text-eo-muted">{{ $doc->event?->name }}</span>
+                                        <span class="text-[12px] font-bold tabular-nums">{{ $doc->valueCents() ? number_format($doc->valueCents() / 100) : '—' }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </button>
+                    @endforeach
+                </x-eo.queue-list>
+            </div>
+
+            <div class="xl:col-span-5">
+                @if ($sel)
+                    <x-eo.detail-panel title="{{ $sel->displayTitle() }}" subtitle="{{ EventContract::TYPES[$sel->type]['label'] ?? $sel->type }} · {{ $sel->event?->client?->name ?? 'No client' }}">
+                        <x-slot:header>
+                            @php [$label] = $statusMeta[$sel->status] ?? ['—', '']; @endphp
+                            <x-eo.status-pill tone="{{ $sel->status === 'signed' ? 'ok' : ($sel->status === 'void' ? 'risk' : 'live') }}">{{ $label }}</x-eo.status-pill>
+                        </x-slot:header>
+
+                        <x-eo.commercial-card
+                            title="Agreement value"
+                            :subtitle="$sel->party?->name ?? 'Counterparty'"
+                            :value="$sel->valueCents() ? 'JD'.number_format($sel->valueCents() / 100) : '—'"
+                            :meta="'Next due '.($due?->format('j M Y') ?? '—')"
+                        />
+
+                        <div class="mt-4">
+                            <p class="eo-label mb-2">Signatures</p>
+                            @if ($totalSig)
+                                <div class="h-2 overflow-hidden rounded-full bg-eo-bg">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-eo-teal-deep to-eo-teal-lit" style="width: {{ round($signed / max($totalSig, 1) * 100) }}%"></div>
+                                </div>
+                                <p class="mt-1.5 text-[12px] font-semibold text-eo-muted">{{ $signed }} of {{ $totalSig }} signed</p>
+                            @else
+                                <p class="text-[12px] text-eo-muted">No signatories yet</p>
+                            @endif
+                        </div>
+                    </x-eo.detail-panel>
+                @endif
+            </div>
+
+            <div class="xl:col-span-3">
+                <x-eo.action-panel title="Signature / Payment">
+                    @if ($sel && $sel->event)
+                        <x-eo.button href="{{ route('events.hub', [$sel->event, 'tab' => 'contract', 'document' => $sel->id]) }}" class="w-full justify-center" size="sm">
+                            Open in Event Hub →
+                        </x-eo.button>
+                        <x-eo.button variant="ghost" href="{{ route('events.hub', [$sel->event, 'tab' => 'budget']) }}" class="w-full justify-center" size="sm">
+                            Commercial desk
+                        </x-eo.button>
+                        <x-eo.button variant="ghost" href="{{ route('payments.index', ['q' => $sel->reference ?: $sel->event->name]) }}" class="w-full justify-center" size="sm">
+                            Payment schedule
+                        </x-eo.button>
+                    @else
+                        <p class="text-[12px] text-eo-muted">Select a contract from the queue.</p>
+                    @endif
+                </x-eo.action-panel>
+            </div>
         </div>
     @endif
 </div>

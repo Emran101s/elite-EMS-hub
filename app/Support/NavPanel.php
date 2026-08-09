@@ -44,11 +44,11 @@ class NavPanel
         ],
         'crm' => [
             'label' => 'CRM', 'icon' => 'identification', 'route' => 'crm.index',
-            'match' => ['crm.*'],
+            'match' => ['crm.*', 'clients.*', 'proposals.*', 'contracts.*'],
         ],
         'finance' => [
             'label' => 'Finance', 'icon' => 'currency', 'route' => 'finance.index',
-            'match' => ['finance.*'],
+            'match' => ['finance.*', 'invoices.*', 'payments.*'],
         ],
         'library' => [
             'label' => 'Library', 'icon' => 'archive', 'route' => 'suppliers.index',
@@ -202,14 +202,18 @@ class NavPanel
                 ]],
             ],
             'crm' => [
-                ['Pipeline', [
+                ['Commercial Command', [
                     ['Deal board', 'crm.index', 'columns', Deal::whereIn('stage', Deal::OPEN)->count()],
                     ['Clients', 'clients.index', 'identification', null],
+                    ['Proposals', 'proposals.index', 'document', null],
+                    ['Contracts', 'contracts.index', 'document', null],
                 ]],
             ],
             'finance' => [
-                ['Money', [
+                ['Finance Command', [
                     ['Profit & loss', 'finance.index', 'chart', null],
+                    ['Invoices', 'invoices.index', 'currency', null],
+                    ['Payments', 'payments.index', 'card', null],
                 ]],
             ],
             'library' => [

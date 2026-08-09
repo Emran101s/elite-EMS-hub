@@ -7,25 +7,23 @@
     $money = fn ($c) => \App\Support\Money::forDocument($c, $cur);
 @endphp
 
-<div class="space-y-4">
+<div class="eo-event-atmosphere space-y-4 rounded-[24px]">
 
-    {{-- ══ the bar ══ --}}
+    {{-- Soft Command finance document chrome --}}
     <div class="flex flex-wrap items-center gap-3">
-        <a href="{{ route('invoices.index') }}" wire:navigate
-           class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-600 shadow-sm transition hover:text-navy-900">
-            ← Invoices
-        </a>
+        <x-eo.button variant="ghost" size="sm" href="{{ route('invoices.index') }}">← Invoices</x-eo.button>
 
         <div class="min-w-0">
-            <h1 class="pf truncate text-[20px] font-black leading-none text-navy-950">{{ $inv->number }}</h1>
-            <p class="mt-0.5 truncate text-[11.5px] text-muted">
+            <p class="eo-label">Finance Command · Invoice</p>
+            <h1 class="eo-title truncate text-[20px]">{{ $inv->number }}</h1>
+            <p class="mt-0.5 truncate text-[11.5px] text-eo-muted">
                 {{ $inv->bill_to ?: ($inv->client?->name ?: 'No client') }}
                 @if ($inv->event) · {{ $inv->event->name }} @endif
             </p>
         </div>
 
-        <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style="color: {{ $inv->stateHex() }}; background: {{ $inv->stateHex() }}1a">{{ $inv->stateLabel() }}</span>
+        <x-eo.status-pill tone="{{ $state === 'overdue' ? 'risk' : ($state === 'paid' ? 'ok' : 'live') }}">{{ $inv->stateLabel() }}</x-eo.status-pill>
+        <span class="eo-journey-chip">Collection workspace</span>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('invoices.pdf', $inv) }}"

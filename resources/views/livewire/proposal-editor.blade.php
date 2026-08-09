@@ -6,25 +6,23 @@
     $money = fn ($c) => \App\Support\Money::forDocument($c, $cur);
 @endphp
 
-<div class="space-y-4">
+<div class="eo-event-atmosphere space-y-4 rounded-[24px]">
 
-    {{-- ══ the bar ══ --}}
+    {{-- Soft Command commercial document chrome --}}
     <div class="flex flex-wrap items-center gap-3">
-        <a href="{{ route('proposals.index') }}" wire:navigate
-           class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-navy-600 shadow-sm transition hover:text-navy-900">
-            ← Proposals
-        </a>
+        <x-eo.button variant="ghost" size="sm" href="{{ route('proposals.index') }}">← Proposals</x-eo.button>
 
         <div class="min-w-0">
-            <h1 class="pf truncate text-[20px] font-black leading-none text-navy-950">{{ $p->number }}</h1>
-            <p class="mt-0.5 truncate text-[11.5px] text-muted">
+            <p class="eo-label">Commercial Command · Offer</p>
+            <h1 class="eo-title truncate text-[20px]">{{ $p->number }}</h1>
+            <p class="mt-0.5 truncate text-[11.5px] text-eo-muted">
                 {{ $p->client?->name ?: 'No client' }}
                 @if ($p->daysLeft() !== null) · {{ $p->daysLeft() < 0 ? abs($p->daysLeft()).'d ago' : $p->daysLeft().'d left' }} @endif
             </p>
         </div>
 
-        <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style="color: {{ $p->stateHex() }}; background: {{ $p->stateHex() }}1a">{{ $p->stateLabel() }}</span>
+        <x-eo.status-pill tone="live">{{ $p->stateLabel() }}</x-eo.status-pill>
+        <span class="eo-journey-chip">Document workspace</span>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             <a href="{{ route('proposals.pdf', $p) }}"

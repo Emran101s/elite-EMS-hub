@@ -13,6 +13,7 @@ use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -24,12 +25,14 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'CRM',
-    'subtitle' => 'Every opportunity, from first conversation to signed event.',
+    'hideTitleRow' => true,
 ])]
 class CrmPipeline extends Component
 {
+    #[Url(as: 'q')]
     public string $q = '';
 
+    #[Url(as: 'selected')]
     public ?int $selectedId = null;
 
     /** Deal form. */

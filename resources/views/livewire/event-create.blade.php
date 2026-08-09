@@ -17,64 +17,53 @@
         : 'Dates not set';
 @endphp
 
-<div class="space-y-4">
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
 
-    {{-- ══════════ THE STUDIO'S OWN HEADER ══════════ --}}
-    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-        <div class="min-w-0">
-            <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-gold-700">New mission</p>
-            <h1 class="pf mt-1 flex items-center gap-2 text-[28px] font-black leading-none text-navy-950">
-                Event Studio <x-icon name="sparkles" class="h-5 w-5 text-gold-500" />
-            </h1>
-            <p class="mt-1.5 text-[12.5px] text-muted">Define your event. The platform builds everything around it.</p>
-        </div>
+    <x-eo.page-header
+        eyebrow="New mission · Elite Orbit"
+        title="Event Studio"
+        subtitle="Configure conference, summit, exhibition, forum, or VIP DNA — then build the delegate journey around it."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Mission Builder</span>
+            <x-eo.button variant="ghost" size="sm" href="{{ route('events.index') }}">Start from existing</x-eo.button>
+            <x-eo.button variant="secondary" size="sm" href="{{ route('events.index') }}">← Portfolio</x-eo.button>
+        </x-slot:actions>
+    </x-eo.page-header>
 
-        <div class="ms-auto flex flex-wrap items-center gap-2">
-            <a href="{{ route('events.index') }}"
-               class="flex h-10 items-center gap-1.5 rounded-2xl border border-gold-200 bg-gold-50/50 px-3.5 text-[12px] font-semibold text-gold-800 shadow-sm transition hover:border-gold-300 hover:bg-gold-50"
-               title="Open an existing event’s Settings → Duplicate to start from it">
-                <x-icon name="share" class="h-3.5 w-3.5" /> Start from an existing event
-            </a>
-            <a href="{{ route('events.index') }}" class="flex h-10 items-center gap-1.5 rounded-2xl border border-line bg-white px-3.5 text-[12px] font-semibold text-navy-700 shadow-sm transition hover:border-gold-300">
-                ← Back to events
-            </a>
-        </div>
-    </div>
-
-    {{-- ══════════ THE FIVE ROOMS ══════════ --}}
-    <div class="card relative isolate overflow-hidden">
-        <span class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold-400/80 to-transparent" aria-hidden="true"></span>
+    {{-- Five rooms — Soft Command step rail --}}
+    <x-eo.soft-card class="overflow-hidden p-0" :padding="false">
         <div class="scrollbar-none flex items-stretch overflow-x-auto">
             @foreach ($steps as $n => [$label, $note])
                 @php $done = $n < $step; $on = $n === $step; @endphp
                 <button type="button" wire:click="goTo({{ $n }})" @disabled($n > $step && ! $done)
                         @class([
                             'group relative flex min-w-[168px] flex-1 items-center gap-2.5 px-4 py-3.5 text-left transition',
-                            'bg-gold-50/40 text-navy-950' => $on,
-                            'text-navy-500 hover:bg-page/60' => ! $on,
+                            'bg-eo-teal-soft/50 text-eo-text' => $on,
+                            'text-eo-muted hover:bg-eo-workspace' => ! $on,
                             'cursor-not-allowed opacity-45' => $n > $step,
                         ])>
                     <span @class([
                         'grid h-7 w-7 shrink-0 place-items-center rounded-xl text-[11px] font-black transition',
-                        'bg-gold-500 text-navy-950' => $on,
-                        'bg-emerald-500 text-white' => $done,
-                        'bg-navy-50 text-navy-400' => ! $on && ! $done,
+                        'bg-gradient-to-b from-eo-teal-lit to-eo-teal-deep text-white shadow-eo-teal' => $on,
+                        'bg-eo-ok text-white' => $done,
+                        'bg-eo-bg text-eo-muted' => ! $on && ! $done,
                     ])>{{ $done ? '✓' : $n }}</span>
 
                     <span class="min-w-0">
                         <span class="block truncate text-[12.5px] font-bold">{{ $label }}</span>
                         @if ($on)
-                            <span class="mt-0.5 block truncate text-[10.5px] text-muted">{{ $note }}</span>
+                            <span class="mt-0.5 block truncate text-[10.5px] text-eo-muted">{{ $note }}</span>
                         @endif
                     </span>
 
                     @if ($on)
-                        <span class="absolute inset-x-3 -bottom-px h-[2.5px] rounded-full bg-gold-500"></span>
+                        <span class="absolute inset-x-3 -bottom-px h-[2.5px] rounded-full bg-eo-teal"></span>
                     @endif
                 </button>
             @endforeach
         </div>
-    </div>
+    </x-eo.soft-card>
 
     {{-- ══════════ ZONE 1 · WORKSPACE ── ZONE 2 · LIVE PREVIEW ══════════ --}}
     <div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.86fr)]">

@@ -2,163 +2,150 @@
     use App\Models\EventContractPayment;
 
     $may = auth()->user()?->can('manage-contract') ?? false;
+    $sel = $selected;
+    $selState = $sel?->status();
+    $out = $sel ? $sel->outstandingCents() : 0;
+    $selInv = $sel?->invoice();
 @endphp
 
-<div class="space-y-4">
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
 
-    {{-- ══ the bar ══ --}}
-    <div class="flex flex-wrap items-center gap-3">
-        <div class="relative">
-            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
-            <input type="search" wire:model.live.debounce.300ms="q" placeholder="Installment, event, client, reference…"
-                   class="input h-10 w-60 !rounded-2xl !py-0 !ps-9 text-xs xl:w-80">
-        </div>
+    <x-eo.page-header
+        eyebrow="Finance Command"
+        title="Payments"
+        subtitle="Queue → Payment → Reconciliation Panel. Every installment in the book, in the order money is due."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Reconciliation</span>
+            <div class="relative">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Installment, event, client…"
+                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs xl:w-64">
+            </div>
+        </x-slot:actions>
+    </x-eo.page-header>
 
-        <p class="text-[11.5px] text-muted">{{ $rows->count() }} {{ str('installment')->plural($rows->count()) }} in view</p>
-
-        {{-- The status vocabulary is the model's, and so are the colours: an
-             installment's state is derived from money and dates, never stored,
-             so there is exactly one place it can be named. --}}
-        <div class="ms-auto flex flex-wrap items-center gap-1">
-            <button type="button" wire:click="setStatus('all')"
-                    @class(['rounded-full px-2.5 py-1 text-[11px] font-bold transition',
-                        'bg-navy-950 text-white' => $status === 'all',
-                        'text-navy-500 hover:bg-white hover:text-navy-900' => $status !== 'all'])>All</button>
-
-            @foreach (EventContractPayment::STATUS_META as $key => [$label, $hex])
-                <button type="button" wire:click="setStatus('{{ $key }}')"
-                        @class(['flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition',
-                            'bg-navy-950 text-white' => $status === $key,
-                            'text-navy-500 hover:bg-white hover:text-navy-900' => $status !== $key])>
-                    <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
-                </button>
-            @endforeach
-        </div>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        @foreach ($figures as $f)
+            @php
+                $tone = match ($f['tone'] ?? '') {
+                    'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue' => 'live', default => null,
+                };
+            @endphp
+            <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+        @endforeach
     </div>
 
-    <x-figure-strip :figures="$figures" dense />
+    <div class="flex flex-wrap items-center gap-1">
+        <button type="button" wire:click="setStatus('all')"
+                @class(['eo-btn-ghost eo-btn-sm', '!bg-eo-navy !text-white' => $status === 'all'])>All</button>
+        @foreach (EventContractPayment::STATUS_META as $key => [$label, $hex])
+            <button type="button" wire:click="setStatus('{{ $key }}')"
+                    @class(['eo-btn-ghost eo-btn-sm inline-flex items-center gap-1.5', '!bg-eo-navy !text-white' => $status === $key])>
+                <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
+            </button>
+        @endforeach
+        <p class="ms-auto text-[12px] text-eo-muted">{{ $rows->count() }} in queue</p>
+    </div>
 
     @if ($rows->isEmpty())
-        <x-empty icon="currency" title="No installment matches"
-                 hint="Clear the filters, or open an event's Contract tab to build a payment schedule." />
+        <x-eo.empty-state title="No installment matches" hint="Clear filters, or open an event Contract tab to build a schedule." icon="currency" />
     @else
-        <div class="space-y-3">
-            @foreach ($months as $month)
-                <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+        <div class="grid gap-4 xl:grid-cols-12">
+            <div class="xl:col-span-4">
+                <x-eo.queue-list title="Payment queue">
+                    @foreach ($rows as $p)
+                        @php
+                            $active = $sel?->id === $p->id;
+                            $state = $p->status();
+                            [$label, $hex] = EventContractPayment::STATUS_META[$state];
+                        @endphp
+                        <button type="button" wire:click="select({{ $p->id }})" wire:key="pay-{{ $p->id }}" class="w-full text-start">
+                            @if ($active)
+                                <x-eo.selected-dark-card>
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-eo-teal-lit">{{ $p->due_on?->format('j M Y') ?? 'No date' }}</p>
+                                    <p class="mt-1 truncate text-[14px] font-semibold text-white">{{ $p->label }}</p>
+                                    <p class="mt-1 truncate text-[12px] text-white/50">{{ $p->event?->name ?? '—' }}</p>
+                                    <div class="mt-3 flex items-center justify-between gap-2">
+                                        <span class="text-[15px] font-bold tabular-nums text-white">JD{{ number_format($p->amount_cents / 100) }}</span>
+                                        <x-eo.status-pill :tone="$state === 'overdue' ? 'risk' : ($state === 'paid' ? 'ok' : 'warn')">{{ $label }}</x-eo.status-pill>
+                                    </div>
+                                </x-eo.selected-dark-card>
+                            @else
+                                <div class="rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
+                                    <p class="text-[11px] font-semibold {{ $state === 'overdue' ? 'text-eo-risk' : 'text-eo-muted' }}">{{ $p->due_on?->format('j M Y') ?? 'No date' }}</p>
+                                    <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $p->label }}</p>
+                                    <div class="mt-2 flex items-center justify-between gap-2">
+                                        <span class="truncate text-[11px] text-eo-muted">{{ $p->event?->name ?? '—' }}</span>
+                                        <span class="text-[12px] font-bold tabular-nums">{{ number_format($p->outstandingCents() / 100) }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </button>
+                    @endforeach
+                </x-eo.queue-list>
+            </div>
 
-                    {{-- The month is the unit collection actually happens in,
-                         so it carries its own subtotal. --}}
-                    <div class="flex items-center gap-3 border-b border-line bg-navy-50/50 px-4 py-2">
-                        <span class="text-[12px] font-black uppercase tracking-[0.14em] text-navy-700">{{ $month['label'] }}</span>
-                        <span class="text-[11px] font-semibold text-navy-300">{{ $month['rows']->count() }}</span>
-                        @if ($month['settled'])
-                            <span class="ms-auto text-[11px] font-bold text-emerald-700">Settled</span>
-                        @else
-                            <span class="ms-auto pf text-[13px] font-black tabular-nums text-navy-900">
-                                JD{{ number_format($month['due'] / 100) }}
-                                <span class="text-eyebrow font-bold uppercase tracking-wide text-navy-400">still due</span>
-                            </span>
-                        @endif
-                    </div>
+            <div class="xl:col-span-5">
+                @if ($sel)
+                    <x-eo.detail-panel title="{{ $sel->label }}" subtitle="{{ $sel->event?->name ?? '—' }} · {{ $sel->event?->client?->name ?? 'No client' }}">
+                        <x-slot:header>
+                            <x-eo.status-pill :tone="$selState === 'overdue' ? 'risk' : ($selState === 'paid' ? 'ok' : 'warn')">
+                                {{ EventContractPayment::STATUS_META[$selState][0] }}
+                            </x-eo.status-pill>
+                        </x-slot:header>
 
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[900px]">
-                            @php $cols = 'grid-cols-[104px_1fr_190px_112px_112px_100px_150px]'; @endphp
+                        <x-eo.commercial-card
+                            title="Still due"
+                            :subtitle="$sel->contract?->reference ?: ($sel->contract?->displayTitle() ?? 'Contract')"
+                            :value="'JD'.number_format($out / 100)"
+                            :meta="'Received JD'.number_format($sel->paid_cents / 100).' of JD'.number_format($sel->amount_cents / 100)"
+                            :tone="$selState === 'overdue' ? 'warn' : ($selState === 'paid' ? 'ok' : 'premium')"
+                        />
 
-                            <div class="grid {{ $cols }} gap-3 border-b border-line/70 px-4 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-navy-400">
-                                <span>Due</span><span>Installment</span><span>Event</span>
-                                <span class="text-end">Amount</span><span class="text-end">Received</span>
-                                <span>Status</span><span class="text-end">Record</span>
-                            </div>
-
-                            @foreach ($month['rows'] as $p)
-                                @php
-                                    $state = $p->status();
-                                    [$label, $hex] = EventContractPayment::STATUS_META[$state];
-                                    $out = $p->outstandingCents();
-                                @endphp
-
-                                <div wire:key="pay-{{ $p->id }}"
-                                     class="grid {{ $cols }} items-center gap-3 border-b border-line/50 px-4 py-2 transition last:border-0 hover:bg-navy-50/30">
-
-                                    <span @class(['text-[11.5px] font-semibold tabular-nums',
-                                        'text-red-600' => $state === 'overdue',
-                                        'text-navy-600' => $state !== 'overdue' && $p->due_on,
-                                        'italic text-navy-300' => ! $p->due_on])>
-                                        {{ $p->due_on?->format('j M Y') ?? 'No date' }}
-                                    </span>
-
-                                    <span class="min-w-0">
-                                        <span class="block truncate text-[12.5px] font-bold text-navy-900">{{ $p->label }}</span>
-                                        <span class="block truncate text-[10.5px] text-muted">
-                                            {{ $p->contract?->reference ?: $p->contract?->displayTitle() }}
-                                            @if ($p->pct) · {{ rtrim(rtrim(number_format($p->pct, 1), '0'), '.') }}% @endif
-                                        </span>
-                                    </span>
-
-                                    <a href="{{ $p->event ? route('events.hub', [$p->event, 'tab' => 'contract']) : '#' }}"
-                                       class="min-w-0 transition hover:text-gold-700">
-                                        <span class="block truncate text-[12px] font-semibold text-navy-700">{{ $p->event?->name ?? '—' }}</span>
-                                        <span class="block truncate text-[10.5px] text-muted">{{ $p->event?->client?->name ?? 'No client' }}</span>
-                                    </a>
-
-                                    <span class="pf text-end text-[13px] font-black tabular-nums text-navy-900">
-                                        {{ number_format($p->amount_cents / 100) }}
-                                    </span>
-
-                                    <span @class(['text-end text-[12px] font-bold tabular-nums',
-                                        'text-emerald-700' => $p->paid_cents > 0, 'text-navy-300' => $p->paid_cents === 0])>
-                                        {{ number_format($p->paid_cents / 100) }}
-                                    </span>
-
-                                    <span>
-                                        <span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold"
-                                              style="color: {{ $hex }}; background: {{ $hex }}1a"
-                                              @if ($out > 0) title="JD{{ number_format($out / 100) }} outstanding" @endif>{{ $label }}</span>
-                                    </span>
-
-                                    {{-- Blank settles in full, which is what the
-                                         Contract tab does and what recording a
-                                         payment usually means. --}}
-                                    <span class="flex items-center justify-end gap-1.5">
-                                        @php $inv = $p->invoice(); @endphp
-
-                                        @if ($inv)
-                                            {{-- An invoice is asking for this one, so the
-                                                 invoice is where the money is recorded and
-                                                 this row only mirrors it. Offering a second
-                                                 Record button here is how a ledger comes to
-                                                 count one payment twice. --}}
-                                            <a href="{{ route('invoices.index', ['q' => $inv->number]) }}"
-                                               title="Recorded against {{ $inv->number }}"
-                                               class="flex items-center gap-1.5 rounded-lg bg-navy-50 px-2 py-1 font-mono text-[10px] font-bold text-navy-600 transition hover:bg-navy-100 hover:text-gold-700">
-                                                <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $inv->stateHex() }}"></span>
-                                                {{ $inv->number }}
-                                            </a>
-                                        @elseif (! $may)
-                                            <span class="text-[10.5px] italic text-navy-300">View only</span>
-                                        @elseif ($state === 'paid')
-                                            <button type="button" wire:click="clear({{ $p->id }})"
-                                                    class="rounded-lg px-2 py-1 text-[10.5px] font-bold text-navy-400 transition hover:bg-navy-50 hover:text-navy-700">
-                                                Undo
-                                            </button>
-                                        @else
-                                            <input type="text" inputmode="decimal"
-                                                   wire:model="amount.{{ $p->id }}"
-                                                   placeholder="{{ number_format($out / 100) }}"
-                                                   class="input h-7 w-[70px] !rounded-lg !px-2 !py-0 text-end text-[11px]">
-                                            <button type="button" wire:click="record({{ $p->id }}, $wire.amount[{{ $p->id }}])"
-                                                    class="rounded-lg bg-navy-950 px-2.5 py-1 text-[10.5px] font-bold text-white transition hover:bg-navy-800">
-                                                Record
-                                            </button>
-                                        @endif
-                                    </span>
+                        <div class="mt-4 space-y-2 text-[13px]">
+                            @foreach ([
+                                ['Due', $sel->due_on?->format('j M Y') ?? '—'],
+                                ['Share', $sel->pct ? rtrim(rtrim(number_format($sel->pct, 1), '0'), '.').'%' : '—'],
+                                ['Invoice', $selInv?->number ?? 'Not raised'],
+                            ] as [$k, $v])
+                                <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
+                                    <span class="text-eo-muted">{{ $k }}</span>
+                                    <span class="font-semibold text-eo-text">{{ $v }}</span>
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-                </div>
-            @endforeach
+                    </x-eo.detail-panel>
+                @endif
+            </div>
+
+            <div class="xl:col-span-3">
+                <x-eo.action-panel title="Reconciliation Panel">
+                    @if ($sel)
+                        @if ($sel->event)
+                            <x-eo.button href="{{ route('events.hub', [$sel->event, 'tab' => 'contract']) }}" class="w-full justify-center" size="sm">Open contract →</x-eo.button>
+                        @endif
+
+                        @if ($selInv)
+                            <x-eo.button variant="ghost" href="{{ route('invoices.index', ['q' => $selInv->number]) }}" class="w-full justify-center" size="sm">
+                                Via {{ $selInv->number }}
+                            </x-eo.button>
+                            <p class="text-[11px] text-eo-muted">Recorded on the invoice — not here — to avoid double counting.</p>
+                        @elseif ($may && $selState === 'paid')
+                            <button type="button" wire:click="clear({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center">Undo receipt</button>
+                        @elseif ($may)
+                            <label class="eo-label">Record receipt</label>
+                            <input type="text" inputmode="decimal" wire:model="amount.{{ $sel->id }}"
+                                   placeholder="{{ number_format($out / 100) }}" class="eo-input text-end text-xs">
+                            <x-eo.button wire:click="record({{ $sel->id }}, $wire.amount[{{ $sel->id }}])" class="w-full justify-center" size="sm">Reconcile</x-eo.button>
+                        @else
+                            <p class="text-[12px] text-eo-muted">View only.</p>
+                        @endif
+                    @else
+                        <p class="text-[12px] text-eo-muted">Select an installment from the queue.</p>
+                    @endif
+                </x-eo.action-panel>
+            </div>
         </div>
     @endif
 </div>

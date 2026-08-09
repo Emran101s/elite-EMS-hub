@@ -1,238 +1,164 @@
 @php
-    // The whole book is reported in the company's own currency; events run in
-    // whatever the client pays in and are converted before they meet.
     $money = fn (int $cents, ?string $cur = null) => \App\Support\Money::abbreviated($cents, $cur ?? $totals['currency']);
+    $t = $totals;
+    $collectedPct = $t['income'] > 0 ? (int) round($t['collected'] / $t['income'] * 100) : 0;
+    $billedPct = $t['charged'] > 0 ? (int) round($t['clientIncome'] / $t['charged'] * 100) : 0;
+    $sel = $selected;
+    $selEvent = $sel['event'] ?? null;
 @endphp
 
-<div>
-    {{-- ══════════ The book in one row ══════════ --}}
-    @php
-        $t = $totals;
-        $collectedPct = $t['income'] > 0 ? (int) round($t['collected'] / $t['income'] * 100) : 0;
-        $spentPct = $t['cost'] > 0 ? (int) round($t['paid'] / $t['cost'] * 100) : 0;
-        // Against the client's own income, not the whole book — sponsorship
-        // and exhibition money never came from a priced cost line.
-        $billedPct = $t['charged'] > 0 ? (int) round($t['clientIncome'] / $t['charged'] * 100) : 0;
-        $tiles = [
-            // What the work is priced at, line by line — not the same question
-            // as what has been billed, and the gap between them is an invoice.
-            ['Charged', $money($t['charged']), 'currency', 100, 'bg-navy-400',
-                $t['unbilled'] > 0 ? $money($t['unbilled']).' not yet billed' : $t['events'].' active '.str('event')->plural($t['events'])],
-            ['Billed to client', $money($t['clientIncome']), 'clipboard', min(100, $billedPct), 'bg-navy-500', $billedPct.'% of what is priced'],
-            ['Owed to you', $money($t['receivable']), 'bell', 100 - $collectedPct, $t['receivable'] ? 'bg-warn' : 'bg-navy-200', $money($t['collected']).' collected'],
-            ['Cost', $money($t['cost']), 'archive', 100, 'bg-gold-500', $money($t['payable']).' unpaid'],
-            ['Net', $money($t['net']), 'chart', max(0, (int) ($t['margin'] ?? 0)), $t['net'] >= 0 ? 'bg-track' : 'bg-risk',
-                $t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin on what is priced',
-                $t['net'] < 0 ? 'text-risk' : 'text-navy-900'],
-        ];
-    @endphp
-    <x-stat-strip :stats="$tiles" />
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
 
-    <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div class="min-w-0 space-y-4">
-            {{-- ══════════ P&L by event ══════════ --}}
-            <section class="card overflow-hidden">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+    <x-eo.page-header
+        eyebrow="Finance Command"
+        title="Profit & loss"
+        subtitle="The whole book — what missions earn, what they cost, and who owes whom."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Portfolio money</span>
+            <x-eo.button variant="ghost" size="sm" href="{{ route('invoices.index') }}">Invoices →</x-eo.button>
+            <x-eo.button size="sm" href="{{ route('payments.index') }}">Payments →</x-eo.button>
+        </x-slot:actions>
+    </x-eo.page-header>
+
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <x-eo.metric-pill label="Charged" :value="$money($t['charged'])" :hint="$t['unbilled'] > 0 ? $money($t['unbilled']).' not yet billed' : $t['events'].' active events'" />
+        <x-eo.metric-pill label="Billed to client" :value="$money($t['clientIncome'])" :hint="$billedPct.'% of what is priced'" tone="live" />
+        <x-eo.metric-pill label="Owed to you" :value="$money($t['receivable'])" :hint="$money($t['collected']).' collected'" :tone="$t['receivable'] ? 'warn' : 'ok'" />
+        <x-eo.metric-pill label="Cost" :value="$money($t['cost'])" :hint="$money($t['payable']).' unpaid'" />
+        <x-eo.metric-pill label="Net" :value="$money($t['net'])" :hint="$t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin'" :tone="$t['net'] < 0 ? 'risk' : 'ok'" />
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-12">
+        <div class="space-y-4 xl:col-span-8">
+            <x-eo.soft-card class="overflow-hidden !p-0">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-eo-line px-5 py-4">
                     <div>
-                        <p class="eyebrow">Profit &amp; loss</p>
-                        <p class="text-[11px] text-muted">
-                            Charged is what the budget is priced at, line by line; billed to client is what the client has been
-                            contracted for. Sponsorship and exhibition income sit outside both — they never came from a cost line —
-                            but they do count towards net.
-                            Cost counts what you have committed — the real figure where one exists, the estimate until then.
-                            @if ($totals['mixed'])
-                                Events run in other currencies are converted to {{ $totals['currency'] }}.
-                            @endif
-                        </p>
+                        <p class="eo-label">Event P&amp;L queue</p>
+                        <p class="mt-1 text-[12px] text-eo-muted">Select a mission for commercial control</p>
                     </div>
-                    <div class="flex items-center gap-0.5 rounded-xl border border-line bg-white p-0.5">
+                    <div class="flex items-center gap-0.5 rounded-xl border border-eo-line bg-white p-0.5">
                         @foreach (['net' => 'Net', 'margin' => 'Margin', 'charged' => 'Charged', 'income' => 'Billed', 'cost' => 'Cost'] as $key => $label)
                             <button type="button" wire:click="sortBy('{{ $key }}')"
                                     @class(['rounded-lg px-2.5 py-1 text-[11px] font-bold transition',
-                                            'bg-navy-900 text-white' => $sort === $key,
-                                            'text-navy-500 hover:text-navy-900' => $sort !== $key])>{{ $label }}</button>
+                                            'bg-eo-navy text-white' => $sort === $key,
+                                            'text-eo-muted hover:text-eo-text' => $sort !== $key])>{{ $label }}</button>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="scrollbar-none overflow-x-auto">
-                    <table class="w-full min-w-[720px] text-left">
-                        <thead>
-                            <tr class="border-b border-line bg-page/60 text-[9px] font-bold uppercase tracking-[0.14em] text-navy-300">
-                                <th class="px-4 py-2">Event</th>
-                                <th class="px-3 py-2 text-right">Charged</th>
-                                <th class="px-3 py-2 text-right">Billed to client</th>
-                                <th class="px-3 py-2 text-right">Cost</th>
-                                <th class="px-3 py-2 text-right">Net</th>
-                                <th class="px-3 py-2 text-right">Margin</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($rows as $row)
-                                @php $e = $row['event']; @endphp
-                                <tr class="border-b border-line/70 transition last:border-0 hover:bg-page/40">
-                                    <td class="px-4 py-2.5">
-                                        <a href="{{ route('events.hub', [$e, 'tab' => 'budget']) }}" class="block">
-                                            <span class="block truncate text-[12.5px] font-bold text-navy-900">{{ $e->name }}</span>
-                                            <span class="block truncate text-[10.5px] text-muted">{{ $e->client?->name ?? 'No client' }} · {{ $e->starts_at?->format('M Y') ?? 'no date' }}</span>
-                                        </a>
-                                    </td>
-                                    <td class="px-3 py-2.5 text-right text-[12px] tabular-nums text-navy-700">
-                                        {{ $money($row['charged']) }}
-                                        @if ($row['currency'] !== $totals['currency'])
-                                            <span class="block text-[10px] text-muted" title="Run in {{ $row['currency'] }}, converted">from {{ $row['currency'] }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2.5 text-right text-[12px] tabular-nums">
-                                        <span class="{{ $row['receivable'] > 0 ? 'text-warn' : 'text-track' }}">{{ $money($row['clientIncome']) }}</span>
-                                        @if ($row['unbilled'] > 0)
-                                            <span class="block text-[10px] text-muted">{{ $money($row['unbilled']) }} to bill</span>
-                                        @elseif ($row['receivable'] > 0)
-                                            <span class="block text-[10px] text-muted">{{ $money($row['receivable']) }} owed</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2.5 text-right text-[12px] tabular-nums text-navy-700">
-                                        {{ $money($row['cost']) }}
-                                        @if ($row['overrun'])
-                                            <span class="block text-[10px] font-bold text-risk">{{ $row['overrun'] }}% over estimate</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2.5 text-right text-[12.5px] font-bold tabular-nums {{ $row['net'] < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $money($row['net']) }}</td>
-                                    <td class="px-3 py-2.5 text-right">
-                                        @php $m = $row['pricedMargin'] ?? $row['margin']; @endphp
-                                        @if ($m === null)
-                                            <span class="text-[11px] text-navy-300">—</span>
-                                        @else
-                                            <span @class(['text-[12px] font-bold tabular-nums',
-                                                'text-track' => $m >= 25,
-                                                'text-warn' => $m >= 10 && $m < 25,
-                                                'text-risk' => $m < 10])>{{ $m }}%</span>
-                                            @if ($row['margin'] !== null && $row['margin'] !== $m)
-                                                <span class="block text-[10px] text-muted" title="Margin on what has actually been billed">{{ $row['margin'] }}% billed</span>
-                                            @endif
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="px-4 py-8 text-center text-[12px] text-muted">No active events to report on.</td></tr>
-                            @endforelse
-                        </tbody>
-                        @if ($rows->isNotEmpty())
-                            <tfoot>
-                                <tr class="border-t-2 border-line bg-page/60 text-[12px] font-bold">
-                                    <td class="px-4 py-2.5 text-navy-900">Portfolio</td>
-                                    <td class="px-3 py-2.5 text-right tabular-nums text-navy-900">{{ $money($t['income']) }}</td>
-                                    <td class="px-3 py-2.5 text-right tabular-nums text-navy-900">{{ $money($t['collected']) }}</td>
-                                    <td class="px-3 py-2.5 text-right tabular-nums text-navy-900">{{ $money($t['cost']) }}</td>
-                                    <td class="px-3 py-2.5 text-right tabular-nums {{ $t['net'] < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $money($t['net']) }}</td>
-                                    <td class="px-3 py-2.5 text-right tabular-nums text-navy-900">{{ $t['margin'] === null ? '—' : $t['margin'].'%' }}</td>
-                                </tr>
-                            </tfoot>
-                        @endif
-                    </table>
+                <div class="divide-y divide-eo-line">
+                    @forelse ($rows as $row)
+                        @php
+                            $e = $row['event'];
+                            $active = $selEvent?->id === $e->id;
+                            $m = $row['pricedMargin'] ?? $row['margin'];
+                        @endphp
+                        <button type="button" wire:click="select({{ $e->id }})" wire:key="fin-{{ $e->id }}"
+                                @class([
+                                    'flex w-full items-center gap-3 px-5 py-3 text-start transition',
+                                    'bg-eo-teal-soft/40' => $active,
+                                    'hover:bg-eo-workspace' => ! $active,
+                                ])>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-[13px] font-bold text-eo-text">{{ $e->name }}</span>
+                                <span class="block truncate text-[11px] text-eo-muted">{{ $e->client?->name ?? 'No client' }} · {{ $e->starts_at?->format('M Y') ?? 'no date' }}</span>
+                            </span>
+                            <span class="shrink-0 text-end">
+                                <span @class(['block text-[13px] font-bold tabular-nums', 'text-eo-risk' => $row['net'] < 0, 'text-eo-text' => $row['net'] >= 0])>{{ $money($row['net']) }}</span>
+                                <span class="block text-[10px] text-eo-muted">{{ $m === null ? '—' : $m.'% margin' }}</span>
+                            </span>
+                        </button>
+                    @empty
+                        <p class="px-5 py-8 text-center text-[12px] text-eo-muted">No active events to report on.</p>
+                    @endforelse
                 </div>
-            </section>
+            </x-eo.soft-card>
 
-            {{-- ══════════ Where the money goes ══════════ --}}
             @if ($categories->isNotEmpty())
-                <section class="card p-4">
-                    <p class="eyebrow mb-3">Where the money goes</p>
+                <x-eo.soft-card>
+                    <p class="eo-label mb-3">Where the money goes</p>
                     @php $top = (int) $categories->max('cost') ?: 1; @endphp
                     <div class="space-y-2">
                         @foreach ($categories->take(8) as $c)
                             <div>
                                 <div class="flex items-baseline justify-between gap-2 text-[11.5px]">
-                                    <span class="truncate text-navy-700">{{ $c['label'] }}</span>
-                                    <span class="shrink-0 font-bold tabular-nums text-navy-900">{{ $money($c['cost']) }}</span>
+                                    <span class="truncate text-eo-text">{{ $c['label'] }}</span>
+                                    <span class="shrink-0 font-bold tabular-nums">{{ $money($c['cost']) }}</span>
                                 </div>
-                                <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-navy-50">
-                                    <div class="h-full rounded-full bg-gold-500" style="width: {{ round($c['cost'] / $top * 100) }}%"></div>
+                                <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-eo-bg">
+                                    <div class="h-full rounded-full bg-eo-teal" style="width: {{ round($c['cost'] / $top * 100) }}%"></div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
-                </section>
-            @endif
-
-            {{-- ══════════ Which work earns ══════════ --}}
-            @if ($byType->count() > 1)
-                <section class="card overflow-hidden">
-                    <div class="border-b border-line px-4 py-3">
-                        <p class="eyebrow">Which work earns</p>
-                        <p class="text-[11px] text-muted">Net by event type — the answer to what is actually worth bidding for.</p>
-                    </div>
-                    <div class="divide-y divide-line">
-                        @foreach ($byType as $t2)
-                            <div class="flex items-center gap-3 px-4 py-2.5">
-                                <span class="min-w-0 flex-1">
-                                    <span class="block truncate text-[12.5px] font-semibold text-navy-900">{{ $t2['type'] }}</span>
-                                    <span class="block text-[10.5px] text-muted">{{ $t2['events'] }} {{ str('event')->plural($t2['events']) }} · {{ $money($t2['income']) }} income</span>
-                                </span>
-                                <span class="shrink-0 text-right">
-                                    <span class="block text-[12.5px] font-bold tabular-nums {{ $t2['net'] < 0 ? 'text-risk' : 'text-navy-900' }}">{{ $money($t2['net']) }}</span>
-                                    <span class="block text-[10px] text-muted">{{ $t2['margin'] === null ? '—' : $t2['margin'].'% margin' }}</span>
-                                </span>
-                            </div>
-                        @endforeach
-                    </div>
-                </section>
+                </x-eo.soft-card>
             @endif
         </div>
 
-        {{-- ══════════ Who owes whom ══════════ --}}
-        <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-4">
-            <section class="card overflow-hidden">
-                <div class="border-b border-line px-4 py-3">
-                    <p class="eyebrow">Contract instalments due</p>
-                    <p class="text-[11px] text-muted">
-                        {{-- Said plainly, because the two figures are not the same thing. --}}
-                        Contract payments only. The {{ $money($t['receivable']) }} owed to you also includes sponsor and exhibitor income.
-                    </p>
-                </div>
-                <div class="divide-y divide-line">
-                    @forelse ($receivables as $p)
-                        @php $overdue = $p->status() === 'overdue'; @endphp
-                        <a href="{{ route('events.hub', [$p->event, 'tab' => 'contract']) }}" class="flex items-center gap-3 px-4 py-2.5 transition hover:bg-page/50">
-                            <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $overdue ? 'bg-risk' : 'bg-warn' }}"></span>
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[12px] font-semibold text-navy-900">{{ $p->event?->name }}</span>
-                                <span class="block truncate text-[10.5px] text-muted">{{ \Illuminate\Support\Str::limit($p->label, 34) }}</span>
-                            </span>
-                            <span class="shrink-0 text-right">
-                                <span class="block text-[11.5px] font-bold tabular-nums text-navy-900">{{ $money($p->outstandingCents()) }}</span>
-                                <span class="block text-[10px] tabular-nums {{ $overdue ? 'font-bold text-risk' : 'text-muted' }}">{{ $p->due_on?->format('j M') ?? '—' }}</span>
-                            </span>
-                        </a>
-                    @empty
-                        <p class="px-4 py-5 text-center text-[11.5px] text-muted">Every contract instalment is settled.</p>
-                    @endforelse
-                </div>
-            </section>
+        <div class="space-y-4 xl:col-span-4">
+            @if ($selEvent)
+                <x-eo.detail-panel title="{{ $selEvent->name }}" subtitle="{{ $selEvent->client?->name ?? 'No client' }}">
+                    <x-eo.commercial-card
+                        title="Mission net"
+                        :value="$money($sel['net'])"
+                        :meta="'Charged '.$money($sel['charged']).' · Cost '.$money($sel['cost'])"
+                        :tone="$sel['net'] < 0 ? 'warn' : 'ok'"
+                    />
+                    <div class="mt-4 space-y-2 text-[13px]">
+                        @foreach ([
+                            ['Billed', $money($sel['clientIncome'])],
+                            ['Receivable', $money($sel['receivable'])],
+                            ['Unbilled', $money($sel['unbilled'] ?? 0)],
+                            ['Margin', ($sel['pricedMargin'] ?? $sel['margin']) === null ? '—' : ($sel['pricedMargin'] ?? $sel['margin']).'%'],
+                        ] as [$k, $v])
+                            <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
+                                <span class="text-eo-muted">{{ $k }}</span>
+                                <span class="font-semibold text-eo-text">{{ $v }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-eo.detail-panel>
 
-            <section class="card overflow-hidden">
-                <div class="border-b border-line px-4 py-3">
-                    <p class="eyebrow">You owe</p>
-                    <p class="text-[11px] text-muted">Budget lines with something still unpaid.</p>
+                <x-eo.action-panel title="Finance Control">
+                    <x-eo.button href="{{ route('events.hub', [$selEvent, 'tab' => 'budget']) }}" class="w-full justify-center" size="sm">Budget desk →</x-eo.button>
+                    <x-eo.button variant="ghost" href="{{ route('invoices.index', ['q' => $selEvent->name]) }}" class="w-full justify-center" size="sm">Invoices</x-eo.button>
+                    <x-eo.button variant="ghost" href="{{ route('payments.index', ['q' => $selEvent->name]) }}" class="w-full justify-center" size="sm">Payments</x-eo.button>
+                </x-eo.action-panel>
+            @else
+                <x-eo.detail-panel title="Finance Control" subtitle="Select a mission from the P&L queue">
+                    <p class="text-[13px] text-eo-muted">Pick an event to open commercial control for budget, invoices, and payments.</p>
+                </x-eo.detail-panel>
+            @endif
+
+            <x-eo.operations-card
+                title="Receivables desk"
+                subtitle="Contract instalments due"
+                :open="$receivables->count()"
+                :due="$receivables->filter(fn ($p) => $p->status() === 'overdue')->count()"
+                :blocked="0"
+            />
+
+            <x-eo.soft-card class="!p-0 overflow-hidden">
+                <div class="border-b border-eo-line px-4 py-3">
+                    <p class="eo-label">Due now</p>
                 </div>
-                <div class="divide-y divide-line">
-                    @forelse ($payables as $item)
-                        @php $late = $item->due_on && $item->due_on->isPast(); @endphp
-                        <a href="{{ route('events.hub', [$item->event, 'tab' => 'budget']) }}" class="flex items-center gap-3 px-4 py-2.5 transition hover:bg-page/50">
-                            <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $late ? 'bg-risk' : 'bg-navy-200' }}"></span>
+                <div class="divide-y divide-eo-line">
+                    @forelse ($receivables->take(6) as $p)
+                        @php $overdue = $p->status() === 'overdue'; @endphp
+                        <a href="{{ route('events.hub', [$p->event, 'tab' => 'contract']) }}" class="flex items-center gap-3 px-4 py-2.5 transition hover:bg-eo-workspace">
+                            <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $overdue ? 'bg-eo-risk' : 'bg-eo-warn' }}"></span>
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[12px] font-semibold text-navy-900">{{ $item->description ?: $item->categoryLabel() }}</span>
-                                <span class="block truncate text-[10.5px] text-muted">{{ $item->supplier?->name ?? $item->vendor ?? $item->event?->name }}</span>
+                                <span class="block truncate text-[12px] font-semibold text-eo-text">{{ $p->event?->name }}</span>
+                                <span class="block truncate text-[10.5px] text-eo-muted">{{ \Illuminate\Support\Str::limit($p->label, 34) }}</span>
                             </span>
-                            <span class="shrink-0 text-right">
-                                <span class="block text-[11.5px] font-bold tabular-nums text-navy-900">{{ $money($item->outstandingCents()) }}</span>
-                                <span class="block text-[10px] tabular-nums {{ $late ? 'font-bold text-risk' : 'text-muted' }}">{{ $item->due_on?->format('j M') ?? 'no date' }}</span>
-                            </span>
+                            <span class="shrink-0 text-end text-[11.5px] font-bold tabular-nums">{{ $money($p->outstandingCents()) }}</span>
                         </a>
                     @empty
-                        <p class="px-4 py-5 text-center text-[11.5px] text-muted">Nothing outstanding.</p>
+                        <p class="px-4 py-5 text-center text-[11.5px] text-eo-muted">Every instalment is settled.</p>
                     @endforelse
                 </div>
-            </section>
-        </aside>
+            </x-eo.soft-card>
+        </div>
     </div>
 </div>

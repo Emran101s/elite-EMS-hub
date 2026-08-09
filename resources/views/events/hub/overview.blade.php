@@ -43,20 +43,81 @@
     $badge = fn (?string $key = null) => \App\Models\Event::moduleColor($key);
 @endphp
 
+{{-- Soft Command Event Hub Overview --}}
+<div class="eo-event-atmosphere mb-5 space-y-5 rounded-[24px]">
+    <div class="eo-dna-strip">
+        <span class="eo-dna-pill">{{ str($event->type ?? 'Event')->replace('_', ' ')->title() }}</span>
+        <span class="eo-dna-pill">Programme</span>
+        <span class="eo-dna-pill">Operations</span>
+        <span class="eo-dna-pill">Commercial</span>
+        <span class="eo-dna-pill">Delegate journey</span>
+    </div>
+    <div class="grid gap-4 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+            <x-eo.mission-radar
+                variant="hero"
+                label="Mission Radar"
+                size="md"
+                story="This mission’s orbit — risks, live ops, and open work clustered for the desk."
+                :missions="[
+                    ['tone' => $openRisks->isEmpty() ? 'ok' : 'risk', 'x' => 34, 'y' => 40, 'label' => 'Risks', 'featured' => ! $openRisks->isEmpty()],
+                    ['tone' => 'live', 'x' => 62, 'y' => 36, 'label' => 'Live desk', 'featured' => true],
+                    ['tone' => $todo > 0 ? 'warn' : 'ok', 'x' => 48, 'y' => 62, 'label' => 'Open work'],
+                    ['tone' => $budgetUsedPct !== null && $budgetUsedPct > 85 ? 'warn' : 'ok', 'x' => 70, 'y' => 58, 'label' => 'Budget'],
+                ]"
+                :stats="[
+                    ['value' => $done.'/'.$taskTotal, 'label' => 'Tasks'],
+                    ['value' => $openRisks->count(), 'label' => 'Risks', 'tone' => $openRisks->isEmpty() ? 'ok' : 'risk'],
+                    ['value' => ($budgetUsedPct ?? '—').(is_null($budgetUsedPct) ? '' : '%'), 'label' => 'Budget'],
+                    ['value' => $speakersConfirmed.'/'.max($speakerCount, 1), 'label' => 'Speakers'],
+                ]"
+            />
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:col-span-7">
+            <x-eo.event-health-card
+                :title="$event->name"
+                :score="(int) ($health['score'] ?? 0)"
+                :status="($health['group'] ?? null) === 'risk' ? 'risk' : (($health['group'] ?? null) === 'warn' ? 'warn' : 'ok')"
+                :hint="'Risk '.$riskWord.' · '.$openRisks->count().' open'"
+            />
+            <x-eo.readiness-card
+                domain="Task readiness"
+                title="Delivery progress"
+                :percent="(int) round($done / $taskTotal * 100)"
+                :status="$done / $taskTotal >= 0.7 ? 'ok' : ($done / $taskTotal >= 0.4 ? 'warn' : 'risk')"
+                :hint="$done.' done · '.$doing.' doing · '.$todo.' open'"
+            />
+            <x-eo.operations-card
+                title="Programme desk"
+                subtitle="Agenda · speakers · logistics"
+                :open="$todo"
+                :due="$doing"
+                :blocked="$openRisks->count()"
+            />
+            <x-eo.commercial-card
+                title="Budget posture"
+                subtitle="Used vs approved"
+                :value="$budgetUsedPct !== null ? $budgetUsedPct.'%' : '—'"
+                :meta="$sym.$gap.number_format($actual / 100, 0).' actual of '.$sym.$gap.number_format($event->budget_cents / 100, 0)"
+            />
+        </div>
+    </div>
+</div>
+
 {{-- ══ Row 1: Event Overview · Agenda Overview · Live Alerts ══ --}}
 <div class="grid gap-5 xl:grid-cols-3">
 
-    <div class="card p-5">
+    <div class="eo-soft-card p-5">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="flex items-center gap-2.5 pf text-base font-bold text-navy-900">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge() }}; background: {{ $badge() }}15">
+            <h3 class="flex items-center gap-2.5 text-base font-bold text-eo-text">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-eo-teal-soft text-eo-teal">
                     <x-icon name="home" class="h-4 w-4" />
                 </span>
                 Event Overview
             </h3>
-            <span class="rounded-full bg-gold-50 px-2.5 py-1 text-[0.62rem] font-bold text-gold-700 ring-1 ring-gold-200">
+            <x-eo.status-pill tone="live">
                 {{ str($event->stage)->replace('_', ' ')->title() }}
-            </span>
+            </x-eo.status-pill>
         </div>
 
         {{-- Lifecycle timeline --}}

@@ -77,8 +77,55 @@
 
             return compact('label', 'note', 'active', 'hex', 'n', 'inMenu');
         };
+
+        // Event Journey — concept-board stages. Each stage lands on an existing
+        // hub tab (no route changes). The active stage follows the current tab.
+        $journey = [
+            ['key' => 'overview', 'label' => 'Overview', 'tabs' => ['overview']],
+            ['key' => 'brief', 'label' => 'Brief', 'tabs' => ['brief', 'contract']],
+            ['key' => 'planning', 'label' => 'Planning', 'tabs' => ['planning', 'tasks']],
+            ['key' => 'programme', 'label' => 'Programme', 'tabs' => ['agenda', 'speakers']],
+            ['key' => 'operations', 'label' => 'Operations', 'tabs' => ['venue', 'transportation', 'accommodation', 'catering', 'suppliers', 'exhibition', 'attendees']],
+            ['key' => 'commercial', 'label' => 'Commercial', 'tabs' => ['budget', 'pricing', 'sponsors']],
+            ['key' => 'control', 'label' => 'Control', 'tabs' => ['risks', 'approvals', 'reports', 'ai', 'files']],
+            ['key' => 'closeout', 'label' => 'Closeout', 'tabs' => ['settings']],
+        ];
+
+        $activeJourney = collect($journey)->first(fn ($step) => in_array($tab, $step['tabs'], true))
+            ?? $journey[0];
+        $activeJourneyIndex = collect($journey)->search(fn ($step) => $step['key'] === $activeJourney['key']);
     @endphp
-    <div class="sticky top-0 z-20 -mx-4 mt-3 border-b border-line bg-page/92 px-4 backdrop-blur lg:-mx-6 lg:px-6"
+
+    {{-- Event Journey strip — progression chrome before module doors --}}
+    <div class="mt-4">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
+            <p class="eo-label">Event Journey</p>
+            <span class="eo-journey-chip">{{ $activeJourney['label'] }} stage</span>
+        </div>
+        <nav class="eo-journey-strip" aria-label="Event journey">
+            @foreach ($journey as $i => $step)
+                @php
+                    $door = collect($step['tabs'])->first(fn ($key) => $enabled->contains($key)) ?? $step['tabs'][0];
+                    $isActive = $step['key'] === $activeJourney['key'];
+                    $isComplete = $i < $activeJourneyIndex;
+                @endphp
+                <a
+                    href="{{ route('events.hub', [$event, 'tab' => $door]) }}"
+                    @class([
+                        'eo-journey-step',
+                        'is-active' => $isActive,
+                        'is-complete' => $isComplete,
+                    ])
+                    @if ($isActive) aria-current="step" @endif
+                >
+                    <span class="eo-journey-step-index">0{{ $i + 1 }}</span>
+                    <span class="eo-journey-step-label">{{ $step['label'] }}</span>
+                </a>
+            @endforeach
+        </nav>
+    </div>
+
+    <div class="sticky top-0 z-20 -mx-1 mt-3 rounded-2xl border border-eo-line bg-eo-workspace/95 px-2 backdrop-blur sm:-mx-2 sm:px-3"
          x-data="{ more: false }"
          @keydown.escape.window="more = false">
         <nav class="flex items-center gap-1 py-1.5" aria-label="Event modules">
@@ -89,21 +136,20 @@
                        @if ($active) aria-current="page" @endif
                        title="{{ $note }}"
                        @class([
-                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[5px] text-[12px] font-bold transition',
-                           'text-white shadow-[0_6px_14px_-6px_rgba(11,31,58,0.55)]' => $active,
-                           'font-semibold text-navy-400 hover:bg-navy-50 hover:text-navy-900' => ! $active,
-                       ])
-                       style="{{ $active ? 'background:' . $hex . ';' : '' }}">
+                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[6px] text-[12px] font-bold transition',
+                           'bg-gradient-to-b from-eo-teal-lit to-eo-teal-deep text-white shadow-eo-teal' => $active,
+                           'font-semibold text-eo-muted hover:bg-white hover:text-eo-text' => ! $active,
+                       ])>
                         <span class="h-[5px] w-[5px] shrink-0 rounded-full transition"
-                              style="background: {{ $active ? 'rgba(255,255,255,.85)' : $hex }}; opacity: {{ $active ? 1 : 0.5 }}"
+                              style="background: {{ $active ? 'rgba(255,255,255,.85)' : $hex }}; opacity: {{ $active ? 1 : 0.55 }}"
                               aria-hidden="true"></span>
                         {{ $label }}
                         @if ($n)
                             <span title="{{ $n['why'] }}" @class([
                                 'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
                                 'bg-white/25 text-white' => $active,
-                                'bg-risk/12 text-red-700' => ! $active && $n['tone'] === 'alarm',
-                                'bg-gold-100 text-gold-800' => ! $active && $n['tone'] !== 'alarm',
+                                'bg-eo-risk-soft text-eo-risk' => ! $active && $n['tone'] === 'alarm',
+                                'bg-eo-warn-soft text-amber-800' => ! $active && $n['tone'] !== 'alarm',
                             ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
                         @endif
                     </a>
@@ -118,13 +164,13 @@
                             aria-haspopup="true"
                             aria-controls="hub-modules-more"
                             class="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-bold transition"
-                            :class="more ? 'bg-navy-900 text-white' : 'text-navy-500 hover:bg-navy-50 hover:text-navy-900'">
+                            :class="more ? 'bg-eo-navy text-white' : 'text-eo-muted hover:bg-white hover:text-eo-text'">
                         More
                         @if ($overflowAttention > 0)
                             <span @class([
                                 'grid h-[16px] min-w-[16px] place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
-                                'bg-risk/20 text-red-700' => $overflowAlarm,
-                                'bg-gold-100 text-gold-800' => ! $overflowAlarm,
+                                'bg-eo-risk-soft text-eo-risk' => $overflowAlarm,
+                                'bg-eo-warn-soft text-amber-800' => ! $overflowAlarm,
                             ])
                                   :class="more ? '!bg-white/25 !text-white' : ''">{{ $overflowAttention > 99 ? '99+' : $overflowAttention }}</span>
                         @endif

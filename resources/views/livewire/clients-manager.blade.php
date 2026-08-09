@@ -1,145 +1,185 @@
-<div>
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <a href="{{ route('settings.index') }}" class="text-xs font-semibold text-muted hover:text-navy-900">← Settings</a>
-            <h1 class="mt-1 text-lg font-bold text-navy-900">Clients</h1>
-            <p class="text-xs text-muted">The organizations you run events for — each event attaches to one.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search clients…" class="input h-10 w-52 text-sm">
-            <button type="button" wire:click="newItem" class="btn-gold h-10 px-4 text-xs">＋ Add client</button>
-        </div>
-    </div>
+@php $sel = $selected; @endphp
+
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
+
+    <x-eo.page-header
+        eyebrow="Commercial Command"
+        title="Clients"
+        subtitle="Queue → Client → Action Panel. Organizations you run summits, forums, and exhibitions for."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Accounts</span>
+            <div class="relative">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search clients…"
+                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs">
+            </div>
+            <x-eo.button size="sm" wire:click="newItem">＋ Add client</x-eo.button>
+        </x-slot:actions>
+    </x-eo.page-header>
 
     @if (session('status'))
-        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-xs font-semibold text-emerald-800">{{ session('status') }}</div>
+        <x-eo.alert-card tone="ok" title="{{ session('status') }}" />
     @endif
 
-    <div class="card overflow-x-auto">
-        <table class="w-full min-w-[640px]">
-            <thead>
-                <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
-                    <th class="px-5 py-2.5">Client</th>
-                    <th class="px-3 py-2.5">Primary contact</th>
-                    <th class="px-3 py-2.5 text-center">Events</th>
-                    <th class="px-3 py-2.5 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($clients as $c)
-                    <tr wire:key="c-{{ $c->id }}" wire:click="edit({{ $c->id }})" class="group cursor-pointer border-b border-line last:border-0 hover:bg-page/30">
-                        <td class="px-5 py-3">
-                            <div class="flex items-center gap-3">
-                                @if ($c->logo_path)
-                                    <img src="{{ asset($c->logo_path) }}" class="h-10 w-10 shrink-0 rounded-xl bg-white object-contain ring-1 ring-line" alt="{{ $c->name }}">
-                                @else
-                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-xs font-bold text-gold-400 ring-1 ring-line">{{ $c->initials() }}</span>
-                                @endif
-                                <div class="min-w-0">
-                                    <p class="truncate text-sm font-bold text-navy-900">{{ $c->name }}</p>
-                                    <p class="truncate text-micro text-muted">{{ $c->organization ?: '—' }}</p>
+    @if ($clients->isEmpty())
+        <x-eo.empty-state title="No clients yet" hint="Add the organizations you run events for." icon="identification">
+            <x-slot:actions>
+                <x-eo.button wire:click="newItem">＋ Add your first client</x-eo.button>
+            </x-slot:actions>
+        </x-eo.empty-state>
+    @else
+        <div class="grid gap-4 xl:grid-cols-12">
+            <div class="xl:col-span-4">
+                <x-eo.queue-list title="Client queue">
+                    <x-slot:header>
+                        <span class="text-[11px] font-bold text-eo-muted">{{ $clients->count() }}</span>
+                    </x-slot:header>
+                    @foreach ($clients as $c)
+                        @php $active = $sel?->id === $c->id; @endphp
+                        <button type="button" wire:click="select({{ $c->id }})" wire:key="c-{{ $c->id }}" class="w-full text-start">
+                            @if ($active)
+                                <x-eo.selected-dark-card>
+                                    <div class="flex items-center gap-3">
+                                        @if ($c->logo_path)
+                                            <img src="{{ asset($c->logo_path) }}" class="h-10 w-10 rounded-xl object-contain ring-1 ring-white/20" alt="">
+                                        @else
+                                            <span class="grid h-10 w-10 place-items-center rounded-xl bg-eo-teal/20 text-[11px] font-bold text-eo-teal-lit">{{ $c->initials() }}</span>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <p class="truncate text-[14px] font-semibold text-white">{{ $c->name }}</p>
+                                            <p class="truncate text-[12px] text-white/50">{{ $c->organization ?: '—' }}</p>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 text-[12px] text-white/60">{{ $c->events_count }} {{ str('event')->plural($c->events_count) }}</p>
+                                </x-eo.selected-dark-card>
+                            @else
+                                <div class="flex items-center gap-3 rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
+                                    @if ($c->logo_path)
+                                        <img src="{{ asset($c->logo_path) }}" class="h-9 w-9 rounded-xl object-contain ring-1 ring-eo-line" alt="">
+                                    @else
+                                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-eo-navy text-[10px] font-bold text-eo-gold">{{ $c->initials() }}</span>
+                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <p class="truncate text-[13px] font-bold text-eo-text">{{ $c->name }}</p>
+                                        <p class="truncate text-[11px] text-eo-muted">{{ $c->primaryContact?->name ?: 'No primary contact' }}</p>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-eo-muted">{{ $c->events_count }}</span>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="px-3 py-3">
-                            <p class="text-xs font-semibold text-navy-700">{{ $c->primaryContact?->name ?: '—' }}</p>
-                            <p class="text-micro text-muted">{{ $c->email ?: $c->phone ?: '' }}</p>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-eyebrow font-bold text-navy-600">{{ $c->events_count }}</span>
-                        </td>
-                        <td class="px-3 py-3">
-                            <div class="flex items-center justify-end gap-1">
-                                {{-- The record is where people, deals and history live;
-                                     this form only edits the organisation itself. --}}
-                                <a href="{{ route('crm.client', $c) }}" wire:click.stop
-                                   class="rounded-lg bg-navy-50 px-2 py-1 text-eyebrow font-bold text-navy-600 transition hover:bg-navy-900 hover:text-white">Record →</a>
-                                <span class="text-eyebrow font-semibold text-navy-400 opacity-0 transition group-hover:opacity-100">Edit ✎</span>
-                                <x-confirm title="Delete {{ $c->name }}?"
-                                           :body="$c->events_count ? $c->events_count.' event(s) will be unlinked.' : null"
-                                           confirm="Delete" run="$wire.delete({{ $c->id }})"
-                                           class="rounded-lg bg-risk/10 px-2 py-1 text-eyebrow font-bold text-red-700 opacity-0 transition hover:bg-risk/20 group-hover:opacity-100">✕</x-confirm>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="4" class="px-5 py-16 text-center">
-                        <p class="text-sm font-semibold text-navy-900">No clients yet</p>
-                        <button type="button" wire:click="newItem" class="btn-gold mt-4 h-10 px-5 text-xs">＋ Add your first client</button>
-                    </td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    <p class="mt-3 text-center text-eyebrow text-muted">{{ $clients->count() }} {{ str('client')->plural($clients->count()) }}</p>
+                            @endif
+                        </button>
+                    @endforeach
+                </x-eo.queue-list>
+            </div>
 
-    {{-- modal --}}
+            <div class="xl:col-span-5">
+                @if ($sel)
+                    <x-eo.detail-panel title="{{ $sel->name }}" subtitle="{{ $sel->organization ?: 'Client account' }}">
+                        <div class="mb-4 flex items-center gap-3">
+                            @if ($sel->logo_path)
+                                <img src="{{ asset($sel->logo_path) }}" class="h-14 w-14 rounded-2xl object-contain ring-1 ring-eo-line" alt="">
+                            @else
+                                <span class="grid h-14 w-14 place-items-center rounded-2xl bg-eo-navy text-sm font-bold text-eo-gold">{{ $sel->initials() }}</span>
+                            @endif
+                            <div>
+                                <x-eo.status-pill tone="live">{{ $sel->events_count }} events</x-eo.status-pill>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-[13px]">
+                            @foreach ([
+                                ['Primary contact', $sel->primaryContact?->name ?: '—'],
+                                ['Email', $sel->email ?: '—'],
+                                ['Phone', $sel->phone ?: '—'],
+                                ['Website', $sel->website ?: '—'],
+                            ] as [$k, $v])
+                                <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
+                                    <span class="text-eo-muted">{{ $k }}</span>
+                                    <span class="truncate font-semibold text-eo-text">{{ $v }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                        @if ($sel->notes)
+                            <p class="mt-4 rounded-xl bg-eo-workspace px-3 py-2 text-[12px] text-eo-muted">{{ $sel->notes }}</p>
+                        @endif
+                    </x-eo.detail-panel>
+                @endif
+            </div>
+
+            <div class="xl:col-span-3">
+                <x-eo.action-panel title="Account actions">
+                    @if ($sel)
+                        <x-eo.button href="{{ route('crm.client', $sel) }}" class="w-full justify-center" size="sm">Open record →</x-eo.button>
+                        <x-eo.button variant="ghost" wire:click="edit({{ $sel->id }})" class="w-full justify-center" size="sm">Edit organisation</x-eo.button>
+                        <x-confirm title="Delete {{ $sel->name }}?"
+                                   :body="$sel->events_count ? $sel->events_count.' event(s) will be unlinked.' : null"
+                                   confirm="Delete" run="$wire.delete({{ $sel->id }})"
+                                   class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Delete</x-confirm>
+                    @else
+                        <p class="text-[12px] text-eo-muted">Select a client from the queue.</p>
+                    @endif
+                </x-eo.action-panel>
+            </div>
+        </div>
+    @endif
+
     @if ($showForm)
         <x-modal :title="$editingId ? 'Edit client' : 'Add client'" max="lg" close="set('showForm', false)">
-
-                <form wire:submit="save" class="grid gap-4">
+            <form wire:submit="save" class="grid gap-4">
+                <div>
+                    <label class="eo-label mb-1">Logo (optional)</label>
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-eo-navy text-sm font-bold text-eo-gold ring-1 ring-eo-line">
+                            @if ($logo)
+                                <img src="{{ $logo->temporaryUrl() }}" class="h-full w-full object-contain" alt="preview">
+                            @elseif ($editingId && ($c = \App\Models\Client::find($editingId)) && $c->logo_path)
+                                <img src="{{ asset($c->logo_path) }}" class="h-full w-full object-contain" alt="current">
+                            @else
+                                {{ $name ? \Illuminate\Support\Str::of($name)->explode(' ')->filter()->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->take(2)->implode('') : '—' }}
+                            @endif
+                        </span>
+                        <div class="flex-1">
+                            <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                   class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white">
+                            <div wire:loading wire:target="logo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
+                            @error('logo')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="field-label !mb-1 !text-eyebrow">Logo (optional)</label>
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-navy-900 text-sm font-bold text-gold-400 ring-1 ring-line">
-                                @if ($logo)
-                                    <img src="{{ $logo->temporaryUrl() }}" class="h-full w-full object-contain" alt="preview">
-                                @elseif ($editingId && ($c = \App\Models\Client::find($editingId)) && $c->logo_path)
-                                    <img src="{{ asset($c->logo_path) }}" class="h-full w-full object-contain" alt="current">
-                                @else
-                                    {{ $name ? \Illuminate\Support\Str::of($name)->explode(' ')->filter()->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->take(2)->implode('') : '—' }}
-                                @endif
-                            </span>
-                            <div class="flex-1">
-                                <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                       class="block w-full text-xs text-navy-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-navy-800">
-                                <div wire:loading wire:target="logo" class="mt-1 text-eyebrow font-semibold text-gold-700">Uploading…</div>
-                                @error('logo')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
+                        <label class="eo-label mb-1">Client name</label>
+                        <input type="text" wire:model="name" class="eo-input" placeholder="e.g. Qatar Tech Authority">
+                        @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
                     </div>
-
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Client name</label>
-                            <input type="text" wire:model="name" class="input h-10 text-sm" placeholder="e.g. Qatar Tech Authority">
-                            @error('name')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-                        </div>
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Industry / sector</label>
-                            <input type="text" wire:model="organization" class="input h-10 text-sm" placeholder="e.g. Government">
-                        </div>
-                    </div>
-
-                    {{-- People live on the client record now, where a client can
-                         have several of them. This form is the organisation only. --}}
                     <div>
-                        <label class="field-label !mb-1 !text-eyebrow">Website</label>
-                        <input type="text" wire:model="website" class="input h-10 text-sm" placeholder="e.g. qta.gov.qa">
+                        <label class="eo-label mb-1">Industry / sector</label>
+                        <input type="text" wire:model="organization" class="eo-input" placeholder="e.g. Government">
                     </div>
-
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Email</label>
-                            <input type="email" wire:model="email" class="input h-10 text-sm" placeholder="name@client.com">
-                            @error('email')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
-                        </div>
-                        <div>
-                            <label class="field-label !mb-1 !text-eyebrow">Phone</label>
-                            <input type="text" wire:model="phone" class="input h-10 text-sm" placeholder="+974 …">
-                        </div>
-                    </div>
-
+                </div>
+                <div>
+                    <label class="eo-label mb-1">Website</label>
+                    <input type="text" wire:model="website" class="eo-input" placeholder="e.g. qta.gov.qa">
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="field-label !mb-1 !text-eyebrow">Notes (optional)</label>
-                        <textarea wire:model="notes" rows="2" class="input text-sm" placeholder="Relationship notes, billing details, etc."></textarea>
+                        <label class="eo-label mb-1">Email</label>
+                        <input type="email" wire:model="email" class="eo-input">
+                        @error('email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
                     </div>
-
-                    <div class="flex justify-end gap-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save,logo" class="btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Update' : 'Add client' }}</button>
+                    <div>
+                        <label class="eo-label mb-1">Phone</label>
+                        <input type="text" wire:model="phone" class="eo-input">
                     </div>
-                </form>
+                </div>
+                <div>
+                    <label class="eo-label mb-1">Notes</label>
+                    <textarea wire:model="notes" rows="2" class="eo-input"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
+                    <x-eo.button type="submit" size="sm">{{ $editingId ? 'Update' : 'Add client' }}</x-eo.button>
+                </div>
+            </form>
         </x-modal>
     @endif
 </div>

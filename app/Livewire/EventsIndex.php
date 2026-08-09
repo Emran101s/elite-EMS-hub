@@ -69,6 +69,12 @@ class EventsIndex extends Component
 
     public ?string $stage = null;
 
+    /**
+     * Operational Smart View queues from the context sidebar.
+     * at_risk | awaiting_approval | payment | this_week | high_value
+     */
+    public ?string $queue = null;
+
     /** Exact-type filter from ?type= (deep links keep working). */
     public ?string $exactType = null;
 
@@ -77,6 +83,16 @@ class EventsIndex extends Component
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
+        $this->queue = request('queue') ?: null;
+        $this->starred = request()->boolean('starred');
+        $reqTab = (string) request('tab', 'all');
+        if (array_key_exists($reqTab, self::TYPE_TABS)) {
+            $this->tab = $reqTab;
+        }
+        $reqSort = (string) request('sort', 'date');
+        if (in_array($reqSort, ['date', 'health', 'budget'], true)) {
+            $this->sort = $reqSort;
+        }
         // Every retired view name lands on the nearest survivor rather than a
         // blank page: the deck replaced the grid and the cards, the path
         // replaced the calendar and the timeline.
@@ -341,6 +357,28 @@ class EventsIndex extends Component
             ->get();
 
         $health = $all->mapWithKeys(fn (Event $event) => [$event->id => $pulse->breakdown($event)]);
+
+        // Smart View queues (context sidebar) — filter the book without new routes.
+        if ($this->queue === 'at_risk') {
+            $all = $all->filter(fn (Event $e) => in_array($health[$e->id]['status'] ?? '', ['at_risk', 'behind'], true))->values();
+        } elseif ($this->queue === 'awaiting_approval') {
+            $ids = EventApproval::where('status', 'pending')->pluck('event_id');
+            $all = $all->whereIn('id', $ids)->values();
+        } elseif ($this->queue === 'payment') {
+            // Status is derived — outstanding = paid less than due.
+            $ids = EventContractPayment::query()
+                ->whereColumn('paid_cents', '<', 'amount_cents')
+                ->pluck('event_id');
+            $all = $all->whereIn('id', $ids)->values();
+        } elseif ($this->queue === 'this_week') {
+            $all = $all->filter(fn (Event $e) => $e->starts_at && $e->starts_at->between(now()->startOfWeek(), now()->endOfWeek()))->values();
+        } elseif ($this->queue === 'high_value') {
+            $all = $all->filter(fn (Event $e) => (int) ($e->budget_cents ?? 0) >= 10_000_000)->values();
+        }
+
+        if ($this->queue) {
+            $health = $all->mapWithKeys(fn (Event $event) => [$event->id => $health[$event->id] ?? $pulse->breakdown($event)]);
+        }
 
         // The Deck is a line you walk along, so it is ALWAYS chronological:
         // left is earlier, right is later, and stepping right moves forward in

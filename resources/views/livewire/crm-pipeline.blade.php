@@ -1,39 +1,40 @@
 @php
     $money = fn (int $cents, string $cur = 'JOD') => \App\Support\Money::abbreviated($cents, $cur);
+    $f = $forecast;
 @endphp
 
-<div>
-    {{-- ══════════ Forecast ══════════ --}}
-    @php
-        $f = $forecast;
-        $tiles = [
-            ['Open deals', $f['count'], 'folder', null, null, 'still in play'],
-            ['Pipeline value', $money($f['value']), 'currency', null, null, 'if every one lands'],
-            ['Weighted', $money($f['weighted']), 'chart', $f['value'] ? (int) round($f['weighted'] / max($f['value'], 1) * 100) : 0, 'bg-track', 'by chance of winning'],
-            ['Won this month', $f['wonThisMonth'], 'star', null, null, 'closed and became events'],
-            ['Going stale', $f['stale'], 'bell', null, null, $f['stale'] ? 'nobody has touched them' : 'everything is moving',
-                $f['stale'] ? 'text-risk' : 'text-navy-900'],
-        ];
-    @endphp
-    <x-stat-strip :stats="$tiles" />
+<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
 
-    {{-- ══════════ Toolbar ══════════ --}}
-    <div class="mt-4 flex flex-wrap items-center gap-2.5">
-        <div class="relative">
-            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
-            <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search deals or clients…"
-                   class="input h-9 w-52 !rounded-xl !py-0 !ps-9 text-xs">
-        </div>
-        <a href="{{ route('clients.index') }}" class="btn-ghost btn-sm">Clients &amp; contacts →</a>
-        <button type="button" wire:click="newDeal" class="btn-gold btn-sm ml-auto">＋ New deal</button>
+    <x-eo.page-header
+        eyebrow="Commercial Command"
+        title="CRM Pipeline"
+        subtitle="Queue → Deal → Action Panel. Every opportunity from first conversation to signed event."
+    >
+        <x-slot:actions>
+            <span class="eo-journey-chip">Deal desk</span>
+            <div class="relative">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search deals or clients…"
+                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs">
+            </div>
+            <x-eo.button variant="ghost" size="sm" href="{{ route('clients.index') }}">Clients →</x-eo.button>
+            <x-eo.button size="sm" wire:click="newDeal">＋ New deal</x-eo.button>
+        </x-slot:actions>
+    </x-eo.page-header>
+
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <x-eo.metric-pill label="Open deals" :value="$f['count']" hint="still in play" tone="live" />
+        <x-eo.metric-pill label="Pipeline value" :value="$money($f['value'])" hint="if every one lands" />
+        <x-eo.metric-pill label="Weighted" :value="$money($f['weighted'])" hint="by chance of winning" tone="ok" />
+        <x-eo.metric-pill label="Won this month" :value="$f['wonThisMonth']" hint="became events" tone="ok" />
+        <x-eo.metric-pill label="Going stale" :value="$f['stale']" :hint="$f['stale'] ? 'nobody has touched them' : 'everything is moving'" :tone="$f['stale'] ? 'risk' : 'ok'" />
     </div>
 
-    <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_330px]">
+    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div class="min-w-0">
-            {{-- ══════════ THE PIPELINE ══════════ --}}
             <div class="mb-3 flex flex-wrap items-baseline gap-2">
-                <h2 class="pf text-h1 font-bold text-navy-900">Pipeline</h2>
-                <span class="text-xs text-muted">click a deal to inspect · drag it to another lane, or use the stage button</span>
+                <p class="eo-label">Deal queue · pipeline</p>
+                <span class="text-[12px] text-eo-muted">select to inspect · drag lanes or use stage actions</span>
             </div>
 
             <div class="scrollbar-none -mx-1 overflow-x-auto px-1">
@@ -51,8 +52,8 @@
                                 <div wire:key="deal-{{ $deal->id }}" data-deal="{{ $deal->id }}"
                                      @class([
                                          'mb-3 rounded-2xl border bg-white p-3.5 transition',
-                                         'border-gold-400 ring-1 ring-gold-300' => $selected?->id === $deal->id,
-                                         'border-line hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-[0_16px_32px_-22px_rgba(11,31,58,0.55)]' => $selected?->id !== $deal->id,
+                                         'border-eo-teal ring-1 ring-eo-teal/40 shadow-eo-teal' => $selected?->id === $deal->id,
+                                         'border-eo-line hover:-translate-y-0.5 hover:border-eo-teal/30 hover:shadow-eo' => $selected?->id !== $deal->id,
                                      ])>
                                     <button type="button" wire:click="select({{ $deal->id }})" class="block w-full text-left">
                                         <span class="flex items-start gap-2">
@@ -151,28 +152,31 @@
             @endif
         </div>
 
-        {{-- ══════════ INSPECTOR ══════════ --}}
+        {{-- Action Panel — Soft Command deal inspector --}}
         <aside class="flex flex-col gap-4 self-start xl:sticky xl:top-4">
             @if ($selected)
-                <div class="card overflow-hidden">
-                    <div class="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
-                        <div class="min-w-0">
-                            <p class="eyebrow">Deal</p>
-                            <p class="pf mt-1 truncate text-[17px] font-bold text-navy-900">{{ $selected->title }}</p>
-                        </div>
-                        <button type="button" wire:click="editDeal({{ $selected->id }})" class="btn-ghost btn-xs shrink-0">Edit</button>
-                    </div>
+                <x-eo.detail-panel title="{{ $selected->title }}" subtitle="Deal · {{ $selected->stageLabel() }}">
+                    <x-slot:header>
+                        <button type="button" wire:click="editDeal({{ $selected->id }})" class="eo-btn-ghost eo-btn-sm shrink-0">Edit</button>
+                    </x-slot:header>
+                    <div class="space-y-3.5">
 
-                    <div class="space-y-3.5 p-4">
                         <div>
                             <div class="flex items-baseline justify-between gap-2 text-[11px]">
-                                <span class="text-navy-600">{{ $selected->stageLabel() }}</span>
+                                <span class="text-eo-muted">{{ $selected->stageLabel() }}</span>
                                 <span class="font-bold tabular-nums" style="color: {{ $selected->stageHex() }}">{{ $selected->probability }}%</span>
                             </div>
-                            <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-navy-50">
+                            <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-eo-bg">
                                 <div class="h-full rounded-full" style="width: {{ $selected->probability }}%; background: {{ $selected->stageHex() }}"></div>
                             </div>
                         </div>
+
+                        <x-eo.commercial-card
+                            title="Deal value"
+                            :subtitle="$selected->client?->name ?? 'No client'"
+                            :value="$money($selected->value_cents, $selected->currency)"
+                            :meta="'Weighted '.$money($selected->weightedCents(), $selected->currency)"
+                        />
 
                         @foreach ([
                             ['Value', $money($selected->value_cents, $selected->currency)],
@@ -223,26 +227,28 @@
                                 <p class="mt-1 text-[11.5px] leading-relaxed text-muted">
                                     Nothing sent yet. Winning now opens the event with an empty budget.
                                 </p>
-                                @if ($mayOffer)
-                                    <button type="button" wire:click="draftProposal({{ $selected->id }})"
-                                            class="btn-gold mt-2 flex h-8 w-full items-center justify-center !rounded-lg text-[11.5px]">
-                                        ＋ Draft proposal
-                                    </button>
-                                @endif
                             @endif
                         </div>
-
-                        @if ($selected->event)
-                            <a href="{{ route('events.hub', $selected->event) }}" class="btn-gold flex h-9 w-full items-center justify-center !rounded-lg text-[12px]">Open the event →</a>
-                        @endif
                     </div>
-                </div>
+                </x-eo.detail-panel>
+
+                <x-eo.action-panel title="Deal actions">
+                    @if ($mayOffer && ! $offer)
+                        <x-eo.button wire:click="draftProposal({{ $selected->id }})" class="w-full justify-center" size="sm">＋ Draft proposal</x-eo.button>
+                    @elseif ($offer)
+                        <x-eo.button href="{{ route('proposals.edit', $offer) }}" class="w-full justify-center" size="sm">Open offer</x-eo.button>
+                    @endif
+                    @if ($selected->event)
+                        <x-eo.button href="{{ route('events.hub', $selected->event) }}" class="w-full justify-center" size="sm">Open the event →</x-eo.button>
+                    @endif
+                    <button type="button" wire:click="$toggle('showActivity')" class="eo-btn-ghost eo-btn-sm w-full justify-center">＋ Log activity</button>
+                </x-eo.action-panel>
 
                 {{-- activity --}}
-                <div class="card overflow-hidden">
-                    <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-                        <p class="eyebrow">Activity</p>
-                        <button type="button" wire:click="$toggle('showActivity')" class="btn-ghost btn-xs">＋ Log</button>
+                <div class="eo-soft-card overflow-hidden !p-0">
+                    <div class="flex items-center justify-between gap-3 border-b border-eo-line px-4 py-3">
+                        <p class="eo-label">Activity</p>
+                        <button type="button" wire:click="$toggle('showActivity')" class="eo-btn-ghost eo-btn-sm">＋ Log</button>
                     </div>
 
                     @if ($showActivity)
@@ -290,10 +296,9 @@
                     </div>
                 </div>
             @else
-                <div class="card p-5 text-center">
-                    <p class="eyebrow">Inspector</p>
-                    <p class="mt-3 text-[12.5px] leading-relaxed text-muted">Pick a deal from the pipeline. It opens here — nothing expands, nothing moves.</p>
-                </div>
+                <x-eo.detail-panel title="Action Panel" subtitle="Select a deal from the queue">
+                    <p class="text-[13px] text-eo-muted">Pick a deal from the pipeline. Detail and next actions open here — nothing expands in place.</p>
+                </x-eo.detail-panel>
             @endif
 
             {{-- follow-ups due, whatever is selected --}}
