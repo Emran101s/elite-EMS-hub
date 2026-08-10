@@ -298,19 +298,32 @@ class Invoice extends Model
 
     /* ── making one ── */
 
-    /** "EBH-INV-2026-014" — sequential within the year it is raised. */
+    /**
+     * "EBH-INV-2026-014" — sequential within the year it is raised.
+     *
+     * withTrashed(), on both queries: a deleted draft's row is gone from every
+     * screen, but its number stays reserved. Without this, deleting a draft
+     * frees a number the unique index still holds — the very next raise
+     * recomputes that same "free" number, collides on the index, and (since
+     * the computation is deterministic) fails the same way on every retry
+     * createNumbered() makes, five times, then throws. Reserving on the
+     * trashed rows too is also the correct invariant on its own terms: an
+     * auditor asking where EBH-INV-2026-001 went should find the deleted
+     * draft it was, never a second, unrelated invoice quietly wearing its
+     * number.
+     */
     public static function nextNumber(?\DateTimeInterface $on = null): string
     {
         $year = ($on ? Carbon::instance($on) : now())->format('Y');
 
-        $seq = static::where('number', 'like', 'EBH-INV-'.$year.'-%')->count() + 1;
+        $seq = static::withTrashed()->where('number', 'like', 'EBH-INV-'.$year.'-%')->count() + 1;
 
         // A gap can only come from a deleted invoice; walk past it rather than
         // colliding on the unique index.
         do {
             $number = 'EBH-INV-'.$year.'-'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
             $seq++;
-        } while (static::where('number', $number)->exists());
+        } while (static::withTrashed()->where('number', $number)->exists());
 
         return $number;
     }

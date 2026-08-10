@@ -393,6 +393,36 @@ class InvoiceTest extends TestCase
     }
 
     /**
+     * A deleted draft's row is gone from every screen, but its number is not
+     * gone from the unique index — nextNumber() has to know that, or the very
+     * next raise recomputes the same "free" number, collides, and — because
+     * that computation is deterministic — fails the same way on every retry
+     * createNumbered() makes and surfaces as a raw 500. This is the sequence
+     * that produced exactly that 500 in the running app: raise, delete the
+     * draft, raise again.
+     */
+    public function test_raising_again_after_a_deleted_draft_does_not_collide(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $first = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $firstInvoice = Invoice::latest('id')->firstOrFail();
+        $firstNumber = $firstInvoice->number;
+
+        $first->call('destroyDraft', $firstInvoice->id);
+        $this->assertSoftDeleted('invoices', ['id' => $firstInvoice->id]);
+
+        // The installment is ready again — raising it must succeed, not throw.
+        $second = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $second->assertOk();
+
+        $secondInvoice = Invoice::latest('id')->firstOrFail();
+        $this->assertNotSame($firstNumber, $secondInvoice->number,
+            'a deleted draft\'s number must stay retired, never reissued to a different invoice');
+    }
+
+    /**
      * Two places that take the same payment is how a ledger counts it twice, so
      * the Payments page stops recording once an invoice owns the installment.
      */
