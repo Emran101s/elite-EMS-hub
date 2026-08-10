@@ -24,10 +24,20 @@
             ->unique()->map(fn (string $label) => ['label' => $label])->values()->all();
 @endphp
 
-{{-- Soft Command App Shell (Phase 2 approved) — live product chrome. --}}
-<div class="eo-app-shell">
+{{-- Soft Command App Shell (Phase 2 approved) — live product chrome.
+
+     `nav` drives the context sidebar below 1280px, where it is a slide-over
+     rather than a column. One state on the shell because the trigger lives in
+     the top bar and the panel is its sibling — and one INSTANCE of the sidebar,
+     not a second copy for small screens: it runs a dozen counts to build the
+     smart views, and rendering it twice would run them twice on every page. --}}
+<div class="eo-app-shell" x-data="{ nav: false }" @keydown.escape.window="nav = false">
     <x-eo.mini-rail />
     <x-eo.context-sidebar />
+
+    {{-- Only reachable while the drawer is open; above 1280px it never shows. --}}
+    <button type="button" class="eo-nav-scrim" x-cloak x-show="nav" x-transition.opacity
+            @click="nav = false" tabindex="-1" aria-hidden="true"></button>
 
     <section class="eo-workspace-shell">
         <x-eo.top-command-bar :crumbs="$crumbs" :title="$title" />

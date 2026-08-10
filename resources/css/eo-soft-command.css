@@ -946,8 +946,7 @@
     }
 
     .eo-context-sidebar {
-        display: none;
-        width: 268px;
+        /* display + width are set by the drawer/desktop rules further down. */
         flex-shrink: 0;
         flex-direction: column;
         background:
@@ -957,8 +956,90 @@
         box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.04);
     }
 
+    /* ── Below 1280px the panel is a drawer, not a column ──────────────────
+       It used to be display:none with nothing in its place, which took the
+       smart views and the only links to Clients, Proposals, Contracts,
+       Invoices, Payments, Suppliers, Venues, Team and Reports off the product
+       entirely for anyone on a tablet — the arrivals desk and the check-in
+       team among them. Same element, same markup, same single render: it
+       simply slides instead of sitting. */
+    .eo-context-sidebar {
+        display: flex;
+        position: fixed;
+        z-index: 60;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: min(86vw, 300px);
+        transform: translateX(-102%);
+        transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 24px 0 60px -24px rgba(0, 0, 0, 0.75);
+    }
+
+    .eo-context-sidebar.is-open { transform: translateX(0); }
+
+    /* Named areas, drawer-only — the rail's tooltips need a hover a tablet
+       does not have. */
+    .eo-context-domains {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.9rem 0.75rem;
+    }
+
+    .eo-nav-close {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.06);
+        transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .eo-nav-close:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+
+    .eo-nav-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        border: 0;
+        background: rgba(11, 19, 34, 0.6);
+        backdrop-filter: blur(2px);
+    }
+
+    .eo-nav-trigger {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        border: 1px solid var(--color-eo-line, rgba(230, 233, 238, 0.9));
+        background: #fff;
+        color: var(--color-eo-muted);
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .eo-nav-trigger:hover {
+        color: var(--color-eo-text);
+        border-color: var(--color-eo-teal);
+    }
+
+    /* ── 1280px and up: exactly as before ────────────────────────────────── */
     @media (min-width: 1280px) {
-        .eo-context-sidebar { display: flex; }
+        .eo-context-sidebar {
+            position: static;
+            width: 268px;
+            transform: none;
+            transition: none;
+            box-shadow: none;
+        }
+
+        .eo-context-domains,
+        .eo-nav-close,
+        .eo-nav-trigger,
+        .eo-nav-scrim { display: none !important; }
     }
 
     .eo-context-link {

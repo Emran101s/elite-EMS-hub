@@ -129,10 +129,19 @@
 @endphp
 
 {{-- Soft Command ContextSidebar — Smart Views · queues · domain intelligence. --}}
-<aside {{ $attributes->class(['eo-context-sidebar']) }} aria-label="Context">
+<aside id="eo-context-panel" {{ $attributes->class(['eo-context-sidebar']) }} aria-label="Context"
+       x-bind:class="{ 'is-open': nav }">
     <div class="border-b border-white/8 px-5 py-5">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-eo-gold-soft/90">Elite Orbit</p>
-        <p class="mt-1 text-[17px] font-semibold tracking-tight text-white">{{ NavPanel::areaLabel($area) }}</p>
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-eo-gold-soft/90">Elite Orbit</p>
+                <p class="mt-1 text-[17px] font-semibold tracking-tight text-white">{{ NavPanel::areaLabel($area) }}</p>
+            </div>
+            {{-- Drawer-only: a way back out that is not the scrim. --}}
+            <button type="button" class="eo-nav-close" @click="nav = false" aria-label="Close navigation">
+                <x-icon name="chevron" class="h-4 w-4 rotate-90" />
+            </button>
+        </div>
         <p class="mt-1 text-[12px] text-white/45">
             @if ($showCommercialViews && $onFinance)
                 Finance Command · Collection · Reconciliation
@@ -144,7 +153,27 @@
         </p>
     </div>
 
-    <div class="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+    {{-- Drawer-only. The rail carries the domains at every width, but it
+         identifies them by hover tooltip — and there is no hover on a tablet,
+         so on touch they are six unlabelled glyphs. These are the same six
+         areas, named. Hidden above 1280px, where the rail's tooltips work. --}}
+    <div class="eo-context-domains">
+        <p class="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Areas</p>
+        <div class="grid grid-cols-2 gap-1">
+            @foreach (NavPanel::AREAS as $key => $domain)
+                @continue (! \Illuminate\Support\Facades\Route::has($domain['route']))
+                <a href="{{ route($domain['route']) }}"
+                   @class(['eo-context-link', 'is-active' => $area === $key])>
+                    <x-icon :name="$domain['icon']" class="h-4 w-4 shrink-0" />
+                    <span class="truncate">{{ $domain['label'] }}</span>
+                </a>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Any destination closes the drawer: on a phone the panel covers the
+         thing you just asked for. --}}
+    <div class="flex-1 space-y-5 overflow-y-auto px-3 py-4" @click="nav = false">
         @if ($showSmartViews)
             <div>
                 <p class="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Smart Views</p>

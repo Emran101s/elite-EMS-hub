@@ -14,6 +14,14 @@
 {{-- Soft Command TopCommandBar — crumbs, command palette, teal primary action. --}}
 <header {{ $attributes->class(['eo-top-command']) }}>
     <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+        {{-- Below 1280px the context panel is a drawer, and this is its only
+             door. Hidden above that width, where the panel is always on screen. --}}
+        <button type="button" class="eo-nav-trigger" @click="nav = true"
+                :aria-expanded="nav ? 'true' : 'false'" aria-controls="eo-context-panel"
+                aria-label="Open navigation">
+            <x-icon name="grid" class="h-[18px] w-[18px]" />
+        </button>
+
         <span class="eo-radar-mark shrink-0" aria-hidden="true"></span>
 
         <div class="min-w-0">
