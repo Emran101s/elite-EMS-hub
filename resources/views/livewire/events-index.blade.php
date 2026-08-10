@@ -192,7 +192,7 @@
             @if ($riskiest && $riskRank($riskiest) > 1)
                 <x-eo.event-health-card
                     :title="$riskiest['name']"
-                    :score="(int) ($riskiest['health'] ?? $riskiest['progress'] ?? 40)"
+                    :score="(int) ($riskiest['healthScore'] ?? $riskiest['progress'] ?? 0)"
                     status="risk"
                     :hint="($riskiest['risk'] ?? 'High').' risk on the sweep'"
                 />

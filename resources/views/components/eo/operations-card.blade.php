@@ -15,7 +15,7 @@
                 <p class="mt-1 text-[12px] text-eo-muted">{{ $subtitle }}</p>
             @endif
         </div>
-        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal-ink">
             <x-icon name="clipboard" class="h-5 w-5" />
         </span>
     </div>

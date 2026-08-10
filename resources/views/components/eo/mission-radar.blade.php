@@ -31,11 +31,26 @@
         default => 'max-w-[260px]',
     };
 
-    $nodes = $missions ?? collect($blips)->map(fn ($b) => [
+    /**
+     * Keep every blip inside the dish.
+     *
+     * Callers compute coordinates from real data — an orbit angle, a days-out
+     * radius — and nothing upstream knows how wide the label beside the dot
+     * will be. The field is a circle with overflow:hidden, so a node at 4%
+     * took its label off the edge and printed "…er LLC Expo". Clamped here,
+     * once, rather than in each of the three callers: a radar that crops the
+     * name of the event it is warning you about is worse than no radar.
+     */
+    $clamp = fn ($v, $lo = 12, $hi = 88) => max($lo, min($hi, (float) $v));
+
+    $nodes = collect($missions ?? $blips)->map(fn ($b) => [
         'tone' => $b['tone'] ?? 'live',
-        'x' => $b['x'] ?? 50,
-        'y' => $b['y'] ?? 50,
-        'label' => $b['label'] ?? null,
+        'x' => $clamp($b['x'] ?? 50),
+        'y' => $clamp($b['y'] ?? 50),
+        // Labels lean toward the middle: on the right half the text sits to
+        // the LEFT of its dot, so it always grows inward, never off the rim.
+        'flip' => $clamp($b['x'] ?? 50) > 55,
+        'label' => isset($b['label']) ? \Illuminate\Support\Str::limit($b['label'], 22) : null,
         'href' => $b['href'] ?? null,
         'featured' => $b['featured'] ?? false,
         'readiness' => $b['readiness'] ?? null,
@@ -73,7 +88,7 @@
                 @endphp
                 <{{ $tag }}
                     @if ($href) href="{{ $href }}" @endif
-                    @class(['eo-radar-node', 'is-featured' => $featured])
+                    @class(['eo-radar-node', 'is-featured' => $featured, 'is-flipped' => ! empty($node['flip'])])
                     style="left: {{ $node['x'] }}%; top: {{ $node['y'] }}%; color: {{ $toneColor($tone) }}"
                     @if (! empty($node['label'])) title="{{ $node['label'] }}{{ isset($node['readiness']) ? ' · '.$node['readiness'].'% ready' : '' }}" @endif
                 >

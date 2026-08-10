@@ -540,16 +540,24 @@
         background: rgba(30, 172, 172, 0.16);
     }
 
+    /* A zero-size anchor, not a row.
+       The node used to be a flex row (dot + label) centred with
+       translate(-50%,-50%), which centres the WHOLE row — so a wide label on
+       a node near the rim dragged its own dot off-centre and got cropped by
+       the field's overflow:hidden. Now the node is the point itself; the dot
+       is centred on it and the label is positioned beside it, so label width
+       can never move the dot or push past the edge. */
     .eo-radar-node {
         position: absolute;
         z-index: 2;
-        display: flex;
-        transform: translate(-50%, -50%);
-        align-items: center;
-        gap: 0.35rem;
+        width: 0;
+        height: 0;
     }
 
     .eo-radar-node-dot {
+        position: absolute;
+        top: -5px;
+        left: -5px;
         width: 10px;
         height: 10px;
         border-radius: 9999px;
@@ -557,7 +565,11 @@
     }
 
     .eo-radar-node-label {
-        max-width: 110px;
+        position: absolute;
+        top: 50%;
+        left: 11px;
+        transform: translateY(-50%);
+        max-width: 104px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -570,6 +582,13 @@
         backdrop-filter: blur(6px);
         opacity: 0;
         transition: opacity 0.15s ease;
+    }
+
+    /* Right half of the dish: the label grows inward instead of off the rim. */
+    .eo-radar-node.is-flipped .eo-radar-node-label {
+        left: auto;
+        right: 11px;
+        text-align: right;
     }
 
     .eo-radar-node:hover .eo-radar-node-label,

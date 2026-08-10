@@ -157,9 +157,17 @@ class EventMission
             },
             'riskCount' => $openRisks->count(),
 
+            // `health` is a LABEL, not a number — see healthScore below it for
+            // the figure. Naming them apart because a view that casts this one
+            // to an int gets 0 ("At risk" → 0) and silently prints a healthy
+            // event as a zero, which is exactly what the portfolio's risk card
+            // was doing.
             'health' => $h['score'] === null ? 'Not scored'
                 : match ($h['group']) { 'risk' => 'At risk', 'warn' => 'Medium', default => 'Excellent' },
             'healthGroup' => $h['group'],
+
+            /** The raw index, 0–100, or null when the stage is not scored yet. */
+            'healthScore' => $h['score'],
 
             'timeline' => match (true) {
                 $live => 'Day '.((int) round($start->diffInDays($today)) + 1).' of the run',

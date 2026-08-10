@@ -13,7 +13,7 @@
         'warn' => 'from-eo-warn to-amber-400',
         'risk' => 'from-eo-risk to-red-400',
         'live' => 'from-eo-teal-deep to-eo-teal-lit',
-        default => 'from-eo-muted to-slate-400',
+        default => 'from-eo-muted to-eo-muted',
     };
 @endphp
 
