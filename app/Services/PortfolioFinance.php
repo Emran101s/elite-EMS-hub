@@ -156,7 +156,39 @@ class PortfolioFinance
             'margin' => $income > 0 ? (int) round(($income - $cost) / $income * 100) : null,
             'pricedMargin' => $charged > 0 ? (int) round(($charged - $cost) / $charged * 100) : null,
             'events' => $rows->count(),
+            'overdueReceivable' => $this->overdueReceivableCents(),
+            'overdueCount' => $this->overdueReceivableCount(),
         ];
+    }
+
+    /**
+     * Contract instalments money is owed against, past their due date and
+     * still short — the same rows receivables() lists, without its display
+     * cap. A partly-paid instalment counts here too: some of it landing does
+     * not make the rest on time, and EventContractPayment::status() would
+     * otherwise call that "partial" and drop it from "overdue" silently.
+     */
+    private function overdueReceivablesQuery()
+    {
+        return EventContractPayment::query()
+            ->with('event')
+            ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
+            ->whereNotNull('due_on')
+            ->where('due_on', '<', now()->toDateString())
+            ->whereColumn('paid_cents', '<', 'amount_cents');
+    }
+
+    /** Overdue money owed to you, converted into the book's base currency. */
+    public function overdueReceivableCents(): int
+    {
+        return (int) $this->overdueReceivablesQuery()->get()
+            ->sum(fn (EventContractPayment $p) => $this->toBase($p->outstandingCents(), $p->event?->currency));
+    }
+
+    /** How many instalments that is — portfolio-wide, not the "Due now" panel's take(). */
+    public function overdueReceivableCount(): int
+    {
+        return $this->overdueReceivablesQuery()->count();
     }
 
     /**

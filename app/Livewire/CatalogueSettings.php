@@ -31,7 +31,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Price list',
-    'subtitle' => 'What the company sells, what one of each costs, and how it is counted.',
+    'hideTitleRow' => true,
 ])]
 class CatalogueSettings extends Component
 {

@@ -24,10 +24,12 @@ class ClientsManagerTest extends TestCase
         return User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
     }
 
-    public function test_clients_page_renders_from_settings(): void
+    public function test_clients_page_renders_from_commercial(): void
     {
+        // Clients lives in Commercial only now — Settings dropped its
+        // duplicate link as part of the Phase H navigation cleanup.
         $user = $this->boot();
-        $this->actingAs($user)->get(route('settings.index'))->assertOk()->assertSee('Clients');
+        $this->actingAs($user)->get(route('crm.index'))->assertOk()->assertSee('Clients');
         $this->actingAs($user)->get(route('clients.index'))->assertOk()->assertSee('Clients');
     }
 

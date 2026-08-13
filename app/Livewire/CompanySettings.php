@@ -9,7 +9,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Company Profile'])]
+#[Layout('components.layouts.app', ['title' => 'Company Profile', 'hideTitleRow' => true])]
 class CompanySettings extends Component
 {
     use WithFileUploads;

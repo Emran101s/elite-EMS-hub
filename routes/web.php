@@ -82,6 +82,7 @@ use App\Models\EventSponsor;
 use App\Models\Project;
 use App\Models\RegistrationTemplate;
 use App\Models\Requirement;
+use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\TaxonomyTerm;
@@ -330,6 +331,7 @@ Route::middleware('auth')->group(function () {
             'sponsor-packages.index' => count(CompanyProfile::current()->sponsorPackages()),
             'transport-settings.index' => TransportVehicle::count() + TransportDriver::count(),
             'registration-templates.index' => RegistrationTemplate::count(),
+            'catalogue.index' => ServiceItem::count(),
         ],
     ]))->name('settings.index');
     Route::get('/settings/clients', ClientsManager::class)->name('clients.index');

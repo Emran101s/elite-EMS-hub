@@ -101,7 +101,7 @@ return [
         ],
         'ai-assistant' => [
             'primary' => false,
-            'label' => 'AI Assistant',
+            'label' => 'Command Briefing',
             'path' => '/ai-assistant',
             'route' => 'ai.index',
             'icon' => 'sparkles',

@@ -13,7 +13,7 @@ use Livewire\Component;
  * from here, so a hotel is entered once and reused. Flat: rooms/halls inside an
  * event are managed per-event in the Venue & Rooms hub tab, not here.
  */
-#[Layout('components.layouts.app', ['title' => 'Venues & Locations'])]
+#[Layout('components.layouts.app', ['title' => 'Venues & Locations', 'hideTitleRow' => true])]
 class VenuesManager extends Component
 {
     public bool $showForm = false;

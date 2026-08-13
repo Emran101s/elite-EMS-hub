@@ -14,7 +14,7 @@ use Livewire\Component;
  * Transport modules pick a supplier from here, so a caterer or AV house is
  * entered once and reused — not retyped as a free-text "vendor" on every line.
  */
-#[Layout('components.layouts.app', ['title' => 'Suppliers'])]
+#[Layout('components.layouts.app', ['title' => 'Suppliers', 'hideTitleRow' => true])]
 class SuppliersManager extends Component
 {
     use BulkSelectable;

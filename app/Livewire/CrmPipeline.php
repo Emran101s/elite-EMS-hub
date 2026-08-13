@@ -24,7 +24,7 @@ use Livewire\Component;
  * board and appears on that one.
  */
 #[Layout('components.layouts.app', [
-    'title' => 'CRM',
+    'title' => 'Commercial',
     'hideTitleRow' => true,
 ])]
 class CrmPipeline extends Component

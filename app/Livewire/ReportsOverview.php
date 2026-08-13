@@ -29,7 +29,7 @@ use Livewire\Component;
  *   Programme     how much stage there is, and who is on it
  *   People        who registered, and who actually came
  */
-#[Layout('components.layouts.app', ['title' => 'Reports', 'subtitle' => 'The whole book, read across — delivery, money, programme and people.'])]
+#[Layout('components.layouts.app', ['title' => 'Reports', 'hideTitleRow' => true])]
 class ReportsOverview extends Component
 {
     /** all · live · upcoming · delivered — which slice of the book to read. */

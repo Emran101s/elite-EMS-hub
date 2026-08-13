@@ -21,10 +21,14 @@
         </x-slot:actions>
     </x-eo.page-header>
 
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <x-eo.metric-pill label="Charged" :value="$money($t['charged'])" :hint="$t['unbilled'] > 0 ? $money($t['unbilled']).' not yet billed' : $t['events'].' active events'" />
         <x-eo.metric-pill label="Billed to client" :value="$money($t['clientIncome'])" :hint="$billedPct.'% of what is priced'" tone="live" />
         <x-eo.metric-pill label="Owed to you" :value="$money($t['receivable'])" :hint="$money($t['collected']).' collected'" :tone="$t['receivable'] ? 'warn' : 'ok'" />
+        {{-- Distinct from "Owed to you": this is only the slice of it that is
+             past its due date — including an instalment part-paid but still
+             late, which "owed" alone would not tell you to chase. --}}
+        <x-eo.metric-pill label="Overdue" :value="$money($t['overdueReceivable'])" :hint="$t['overdueCount'].' '.str('instalment')->plural($t['overdueCount']).' past due'" :tone="$t['overdueReceivable'] ? 'risk' : 'ok'" />
         <x-eo.metric-pill label="Cost" :value="$money($t['cost'])" :hint="$money($t['payable']).' unpaid'" />
         <x-eo.metric-pill label="Net" :value="$money($t['net'])" :hint="$t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin'" :tone="$t['net'] < 0 ? 'risk' : 'ok'" />
     </div>
@@ -135,7 +139,7 @@
                 title="Receivables desk"
                 subtitle="Contract instalments due"
                 :open="$receivables->count()"
-                :due="$receivables->filter(fn ($p) => $p->status() === 'overdue')->count()"
+                :due="$t['overdueCount']"
                 :blocked="0"
             />
 
@@ -145,7 +149,10 @@
                 </div>
                 <div class="divide-y divide-eo-line">
                     @forelse ($receivables->take(6) as $p)
-                        @php $overdue = $p->status() === 'overdue'; @endphp
+                        {{-- Same "past due and still short" test as the Overdue KPI —
+                             not status(), which calls a part-paid late instalment
+                             merely "partial" and would light the wrong dot here. --}}
+                        @php $overdue = $p->due_on?->isPast() && $p->outstandingCents() > 0; @endphp
                         <a href="{{ route('events.hub', [$p->event, 'tab' => 'contract']) }}" class="flex items-center gap-3 px-4 py-2.5 transition hover:bg-eo-workspace">
                             <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $overdue ? 'bg-eo-risk' : 'bg-eo-warn' }}"></span>
                             <span class="min-w-0 flex-1">

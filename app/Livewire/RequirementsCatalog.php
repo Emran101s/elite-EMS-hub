@@ -10,7 +10,7 @@ use Livewire\WithFileUploads;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Equipment Catalog'])]
+#[Layout('components.layouts.app', ['title' => 'Equipment Catalog', 'hideTitleRow' => true])]
 class RequirementsCatalog extends Component
 {
     use WithFileUploads;

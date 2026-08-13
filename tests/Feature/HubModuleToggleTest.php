@@ -94,10 +94,10 @@ class HubModuleToggleTest extends TestCase
 
     public function test_every_event_type_offers_attendees_from_the_start(): void
     {
-        // Every event has people attending — no template should omit it.
-        foreach (EventCreate::TEMPLATES as $key => [$label, $type, $icon, $modules]) {
+        // Every event has people attending — no category should omit it.
+        foreach (EventCreate::CATEGORIES as $key => [$label, $type, $icon, $modules]) {
             $this->assertContains('attendees', $modules,
-                "the {$label} template must pre-enable attendees");
+                "the {$label} category must pre-enable attendees");
         }
     }
 

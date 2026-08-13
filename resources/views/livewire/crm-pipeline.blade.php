@@ -43,8 +43,8 @@
                         <div>
                             <div class="mb-2.5 flex items-center gap-2">
                                 <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {{ $lane['hex'] }}"></span>
-                                <b class="text-xs font-bold text-navy-900">{{ $lane['label'] }}</b>
-                                <span class="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-white px-1.5 text-[10.5px] font-bold text-navy-600 ring-1 ring-line">{{ $lane['deals']->count() }}</span>
+                                <b class="text-xs font-bold text-eo-text">{{ $lane['label'] }}</b>
+                                <span class="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-white px-1.5 text-[10.5px] font-bold text-eo-muted ring-1 ring-eo-line">{{ $lane['deals']->count() }}</span>
                             </div>
 
                             <div data-lane="{{ $lane['key'] }}" class="min-h-[60px]">
@@ -58,23 +58,23 @@
                                     <button type="button" wire:click="select({{ $deal->id }})" class="block w-full text-left">
                                         <span class="flex items-start gap-2">
                                             <span class="min-w-0 flex-1">
-                                                <span class="block truncate text-[13px] font-bold leading-tight text-navy-900">{{ $deal->title }}</span>
-                                                <span class="mt-1 block truncate text-[10.5px] text-muted">{{ $deal->client?->name }}</span>
+                                                <span class="block truncate text-[13px] font-bold leading-tight text-eo-text">{{ $deal->title }}</span>
+                                                <span class="mt-1 block truncate text-[10.5px] text-eo-muted">{{ $deal->client?->name }}</span>
                                             </span>
                                             @if ($deal->isStale())
-                                                <span class="shrink-0 rounded-md bg-risk/10 px-1.5 py-0.5 text-[9px] font-bold text-risk" title="Past its expected close date">STALE</span>
+                                                <x-eo.status-pill tone="risk" class="shrink-0 !text-[9px]" title="Past its expected close date">STALE</x-eo.status-pill>
                                             @endif
                                         </span>
 
                                         <span class="mt-2.5 flex items-baseline justify-between gap-2">
-                                            <span class="pf text-[15px] font-bold text-navy-900">{{ $money($deal->value_cents, $deal->currency) }}</span>
-                                            <span class="text-[10.5px] font-bold tabular-nums text-navy-400">{{ $deal->probability }}%</span>
+                                            <span class="text-[15px] font-bold text-eo-text">{{ $money($deal->value_cents, $deal->currency) }}</span>
+                                            <span class="text-[10.5px] font-bold tabular-nums text-eo-muted">{{ $deal->probability }}%</span>
                                         </span>
-                                        <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-navy-50">
+                                        <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-eo-bg">
                                             <span class="block h-full rounded-full" style="width: {{ $deal->probability }}%; background: {{ $deal->stageHex() }}"></span>
                                         </span>
 
-                                        <span class="mt-2.5 flex items-center gap-2 border-t border-line pt-2 text-[10.5px] text-muted">
+                                        <span class="mt-2.5 flex items-center gap-2 border-t border-eo-line pt-2 text-[10.5px] text-eo-muted">
                                             @if ($deal->owner)
                                                 <x-user-avatar :user="$deal->owner" size="h-5 w-5" />
                                             @endif
@@ -84,7 +84,7 @@
                                     </button>
 
                                     {{-- move it on --}}
-                                    <div class="mt-2.5 flex items-center gap-1 border-t border-line pt-2.5">
+                                    <div class="mt-2.5 flex items-center gap-1 border-t border-eo-line pt-2.5">
                                         @php
                                             $order = \App\Models\Deal::OPEN;
                                             $i = array_search($deal->stage, $order, true);
@@ -97,7 +97,7 @@
                                             $unpriced = $next === 'won' && ! $deal->acceptedProposal();
 
                                             $moveLabel = $next === 'won' ? '✓ Mark won' : '→ '.\App\Models\Deal::STAGES[$next][0];
-                                            $moveClass = 'flex-1 rounded-lg bg-navy-50 py-1.5 text-[11px] font-bold text-navy-700 transition hover:bg-navy-900 hover:text-white';
+                                            $moveClass = 'flex-1 rounded-lg bg-eo-bg py-1.5 text-[11px] font-bold text-eo-text transition hover:bg-eo-navy hover:text-white';
                                         @endphp
                                         @if ($unpriced)
                                             <x-confirm title="Win without an agreed figure?"
@@ -112,11 +112,11 @@
                                             </button>
                                         @endif
                                         <button type="button" wire:click="moveTo({{ $deal->id }}, 'lost')" title="Mark lost"
-                                                class="grid h-7 w-7 place-items-center rounded-lg text-navy-300 transition hover:bg-risk/10 hover:text-risk">✕</button>
+                                                class="grid h-7 w-7 place-items-center rounded-lg text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk">✕</button>
                                     </div>
                                 </div>
                             @empty
-                                <p class="rounded-2xl border border-dashed border-line px-3 py-6 text-center text-[11px] text-muted">Drop a deal here.</p>
+                                <p class="rounded-2xl border border-dashed border-eo-line px-3 py-6 text-center text-[11px] text-eo-muted">Drop a deal here.</p>
                             @endforelse
                             </div>
                         </div>
@@ -127,23 +127,23 @@
             {{-- ══════════ Closed ══════════ --}}
             @if ($closed->isNotEmpty())
                 <div class="mt-5">
-                    <p class="eyebrow mb-2">Recently closed</p>
-                    <div class="card divide-y divide-line">
+                    <p class="eo-label mb-2">Recently closed</p>
+                    <div class="eo-soft-card divide-y divide-eo-line">
                         @foreach ($closed as $deal)
                             <div class="flex items-center gap-3 px-4 py-2.5">
                                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $deal->stageHex() }}"></span>
                                 <span class="min-w-0 flex-1">
-                                    <span class="block truncate text-[12.5px] font-semibold text-navy-900">{{ $deal->title }}</span>
-                                    <span class="block truncate text-[10.5px] text-muted">
+                                    <span class="block truncate text-[12.5px] font-semibold text-eo-text">{{ $deal->title }}</span>
+                                    <span class="block truncate text-[10.5px] text-eo-muted">
                                         {{ $deal->client?->name }}
                                         @if ($deal->stage === 'lost' && $deal->lost_reason) · {{ $deal->lost_reason }} @endif
                                     </span>
                                 </span>
-                                <span class="shrink-0 text-[11px] font-bold tabular-nums text-navy-600">{{ $money($deal->value_cents, $deal->currency) }}</span>
+                                <span class="shrink-0 text-[11px] font-bold tabular-nums text-eo-text">{{ $money($deal->value_cents, $deal->currency) }}</span>
                                 @if ($deal->event)
-                                    <a href="{{ route('events.hub', $deal->event) }}" class="btn-ghost btn-xs shrink-0">Open event →</a>
+                                    <a href="{{ route('events.hub', $deal->event) }}" class="eo-btn-ghost eo-btn-sm !px-2.5 !py-1 !text-[11px] shrink-0">Open event →</a>
                                 @else
-                                    <button type="button" wire:click="reopen({{ $deal->id }})" class="btn-ghost btn-xs shrink-0">Reopen</button>
+                                    <button type="button" wire:click="reopen({{ $deal->id }})" class="eo-btn-ghost eo-btn-sm !px-2.5 !py-1 !text-[11px] shrink-0">Reopen</button>
                                 @endif
                             </div>
                         @endforeach
@@ -189,18 +189,18 @@
                             ['Source', $selected->source ?? '—'],
                         ] as $row)
                             @php [$k, $v] = $row; $href = $row[2] ?? null; @endphp
-                            <div class="flex justify-between gap-3 border-b border-line/70 pb-2 text-[12px] last:border-0">
-                                <span class="text-muted">{{ $k }}</span>
+                            <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2 text-[12px] last:border-0">
+                                <span class="text-eo-muted">{{ $k }}</span>
                                 @if ($href)
-                                    <a href="{{ $href }}" class="truncate font-semibold text-gold-700 transition hover:text-gold-800">{{ $v }} →</a>
+                                    <a href="{{ $href }}" class="truncate font-semibold text-eo-teal-ink transition hover:text-eo-teal-deep">{{ $v }} →</a>
                                 @else
-                                    <span class="truncate font-semibold text-navy-900">{{ $v }}</span>
+                                    <span class="truncate font-semibold text-eo-text">{{ $v }}</span>
                                 @endif
                             </div>
                         @endforeach
 
                         @if ($selected->notes)
-                            <p class="rounded-lg bg-page/70 px-3 py-2 text-[11.5px] leading-relaxed text-navy-600">{{ $selected->notes }}</p>
+                            <p class="rounded-lg bg-eo-workspace px-3 py-2 text-[11.5px] leading-relaxed text-eo-muted">{{ $selected->notes }}</p>
                         @endif
 
                         {{-- The offer, which is where the agreed figure comes from. --}}
@@ -208,9 +208,9 @@
                             $offer = $selected->acceptedProposal() ?? $selected->liveProposal();
                             $mayOffer = auth()->user()?->can('manage-contract') ?? false;
                         @endphp
-                        <div class="rounded-lg border border-line bg-page/60 px-3 py-2.5">
+                        <div class="rounded-lg border border-eo-line bg-eo-workspace px-3 py-2.5">
                             <div class="flex items-baseline justify-between gap-2">
-                                <span class="eyebrow">Offer</span>
+                                <span class="eo-label">Offer</span>
                                 @if ($offer)
                                     @php [$offerLabel, $offerHex] = \App\Models\Proposal::STATE_META[$offer->state()]; @endphp
                                     <span class="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style="background: {{ $offerHex }}">{{ $offerLabel }}</span>
@@ -219,12 +219,12 @@
 
                             @if ($offer)
                                 <a href="{{ route('proposals.edit', $offer) }}" wire:navigate
-                                   class="mt-1.5 flex items-baseline justify-between gap-2 text-[12px] font-semibold text-gold-700 transition hover:text-gold-800">
+                                   class="mt-1.5 flex items-baseline justify-between gap-2 text-[12px] font-semibold text-eo-teal-ink transition hover:text-eo-teal-deep">
                                     <span class="truncate font-mono text-[11px]">{{ $offer->number }}</span>
                                     <span class="shrink-0 tabular-nums">{{ $money($offer->totalCents(), $offer->currencyCode()) }} →</span>
                                 </a>
                             @else
-                                <p class="mt-1 text-[11.5px] leading-relaxed text-muted">
+                                <p class="mt-1 text-[11.5px] leading-relaxed text-eo-muted">
                                     Nothing sent yet. Winning now opens the event with an empty budget.
                                 </p>
                             @endif
@@ -252,46 +252,46 @@
                     </div>
 
                     @if ($showActivity)
-                        <div class="space-y-2 border-b border-line bg-page/50 p-4">
+                        <div class="space-y-2 border-b border-eo-line bg-eo-workspace p-4">
                             <div class="flex gap-1">
                                 @foreach (\App\Support\Taxonomy::options('activity_type') as $tv => $tl)
                                     <button type="button" wire:click="$set('a_type', '{{ $tv }}')"
                                             @class(['flex-1 rounded-lg border py-1.5 text-[10.5px] font-bold transition',
-                                                    'border-navy-900 bg-navy-900 text-white' => $a_type === $tv,
-                                                    'border-line bg-white text-navy-500 hover:border-navy-200' => $a_type !== $tv])>{{ $tl }}</button>
+                                                    'border-eo-navy bg-eo-navy text-white' => $a_type === $tv,
+                                                    'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30' => $a_type !== $tv])>{{ $tl }}</button>
                                 @endforeach
                             </div>
-                            <input type="text" wire:model="a_subject" placeholder="What happened?" class="input h-9 text-xs">
-                            @error('a_subject')<p class="text-[10.5px] text-risk">{{ $message }}</p>@enderror
-                            <textarea wire:model="a_body" rows="2" placeholder="Detail (optional)" class="input text-xs"></textarea>
+                            <input type="text" wire:model="a_subject" placeholder="What happened?" class="eo-input h-9 text-xs">
+                            @error('a_subject')<p class="text-[10.5px] text-eo-risk">{{ $message }}</p>@enderror
+                            <textarea wire:model="a_body" rows="2" placeholder="Detail (optional)" class="eo-textarea text-xs"></textarea>
                             <label class="block">
-                                <span class="eyebrow">Follow up on</span>
-                                <input type="date" wire:model="a_follow_up_on" class="input mt-1 h-9 text-xs">
+                                <span class="eo-label">Follow up on</span>
+                                <input type="date" wire:model="a_follow_up_on" class="eo-input mt-1 h-9 text-xs">
                             </label>
-                            <button type="button" wire:click="logActivity" class="btn-gold h-9 w-full !rounded-lg text-[12px]">Save</button>
+                            <x-eo.button size="sm" wire:click="logActivity" class="h-9 w-full justify-center">Save</x-eo.button>
                         </div>
                     @endif
 
-                    <div class="divide-y divide-line">
+                    <div class="divide-y divide-eo-line">
                         @forelse ($activities as $a)
                             <div class="px-4 py-2.5">
                                 <div class="flex items-baseline gap-2">
-                                    <span class="chip">{{ $a->typeLabel() }}</span>
-                                    <span class="min-w-0 flex-1 truncate text-[12px] font-semibold text-navy-900">{{ $a->subject }}</span>
-                                    <span class="shrink-0 text-[10px] tabular-nums text-navy-300">{{ $a->happened_at->diffForHumans(short: true) }}</span>
+                                    <x-eo.status-pill tone="pending">{{ $a->typeLabel() }}</x-eo.status-pill>
+                                    <span class="min-w-0 flex-1 truncate text-[12px] font-semibold text-eo-text">{{ $a->subject }}</span>
+                                    <span class="shrink-0 text-[10px] tabular-nums text-eo-muted">{{ $a->happened_at->diffForHumans(short: true) }}</span>
                                 </div>
                                 @if ($a->body)
-                                    <p class="mt-1 text-[11px] leading-relaxed text-muted">{{ $a->body }}</p>
+                                    <p class="mt-1 text-[11px] leading-relaxed text-eo-muted">{{ $a->body }}</p>
                                 @endif
                                 @if ($a->follow_up_on && ! $a->follow_up_done)
                                     <button type="button" wire:click="completeFollowUp({{ $a->id }})"
-                                            class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-gold-50 px-2 py-1 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200 transition hover:bg-gold-100">
+                                            class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-eo-warn-soft px-2 py-1 text-[10px] font-bold text-eo-warn ring-1 ring-eo-warn/20 transition hover:bg-eo-warn-soft/60">
                                         ↻ Follow up {{ $a->follow_up_on->format('j M') }} · mark done
                                     </button>
                                 @endif
                             </div>
                         @empty
-                            <p class="px-4 py-5 text-center text-[11.5px] text-muted">Nothing logged yet.</p>
+                            <p class="px-4 py-5 text-center text-[11.5px] text-eo-muted">Nothing logged yet.</p>
                         @endforelse
                     </div>
                 </div>
@@ -303,18 +303,18 @@
 
             {{-- follow-ups due, whatever is selected --}}
             @if ($dueFollowUps->isNotEmpty())
-                <div class="card p-4">
-                    <p class="eyebrow mb-2">Follow-ups due</p>
+                <div class="eo-soft-card p-4">
+                    <p class="eo-label mb-2">Follow-ups due</p>
                     <div class="space-y-1.5">
                         @foreach ($dueFollowUps as $a)
                             <button type="button" wire:click="select({{ $a->deal_id }})"
-                                    class="flex w-full items-center gap-2 rounded-lg bg-page/70 px-2.5 py-1.5 text-left transition hover:bg-gold-50">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-risk"></span>
+                                    class="flex w-full items-center gap-2 rounded-lg bg-eo-workspace px-2.5 py-1.5 text-left transition hover:bg-eo-teal-soft/40">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-risk"></span>
                                 <span class="min-w-0 flex-1">
-                                    <span class="block truncate text-[11.5px] font-semibold text-navy-900">{{ $a->subject }}</span>
-                                    <span class="block truncate text-[10px] text-muted">{{ $a->deal?->title ?? $a->client?->name }}</span>
+                                    <span class="block truncate text-[11.5px] font-semibold text-eo-text">{{ $a->subject }}</span>
+                                    <span class="block truncate text-[10px] text-eo-muted">{{ $a->deal?->title ?? $a->client?->name }}</span>
                                 </span>
-                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-risk">{{ $a->follow_up_on->format('j M') }}</span>
+                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-eo-risk">{{ $a->follow_up_on->format('j M') }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -351,74 +351,74 @@
     @if ($showForm)
         <x-modal :title="$editingId ? 'Edit deal' : 'New deal'" close="$set('showForm', false)" max="2xl">
             <div class="grid gap-4 sm:grid-cols-2">
-                <label class="block sm:col-span-2">
-                    <span class="field-label">What is it?</span>
-                    <input type="text" wire:model="title" placeholder="e.g. Regional Summit 2027" class="input">
-                    @error('title')<p class="mt-1 text-[11px] text-risk">{{ $message }}</p>@enderror
-                </label>
+                <div class="sm:col-span-2">
+                    <label class="eo-label mb-1">What is it?</label>
+                    <input type="text" wire:model="title" placeholder="e.g. Regional Summit 2027" class="eo-input">
+                    @error('title')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Client</span>
-                    <select wire:model.live="client_id" class="input">
+                <div>
+                    <label class="eo-label mb-1">Client</label>
+                    <select wire:model.live="client_id" class="eo-select">
                         @foreach ($clients as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
                     </select>
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Contact</span>
-                    <select wire:model="contact_id" class="input">
+                <div>
+                    <label class="eo-label mb-1">Contact</label>
+                    <select wire:model="contact_id" class="eo-select">
                         <option value="">— none —</option>
                         @foreach ($contacts as $c)<option value="{{ $c->id }}">{{ $c->name }}{{ $c->title ? ' · '.$c->title : '' }}</option>@endforeach
                     </select>
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Stage</span>
-                    <select wire:model="stage" class="input">
+                <div>
+                    <label class="eo-label mb-1">Stage</label>
+                    <select wire:model="stage" class="eo-select">
                         @foreach (\App\Models\Deal::STAGES as $sv => [$sl, $sp, $sh])<option value="{{ $sv }}">{{ $sl }}</option>@endforeach
                     </select>
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Value</span>
-                    <input type="number" step="0.01" min="0" wire:model="value" placeholder="0.00" class="input">
-                </label>
+                <div>
+                    <label class="eo-label mb-1">Value</label>
+                    <input type="number" step="0.01" min="0" wire:model="value" placeholder="0.00" class="eo-input">
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Owner</span>
-                    <select wire:model="owner_id" class="input">
+                <div>
+                    <label class="eo-label mb-1">Owner</label>
+                    <select wire:model="owner_id" class="eo-select">
                         <option value="">— unassigned —</option>
                         @foreach ($users as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
                     </select>
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Source</span>
-                    <select wire:model="source" class="input">
+                <div>
+                    <label class="eo-label mb-1">Source</label>
+                    <select wire:model="source" class="eo-select">
                         <option value="">—</option>
                         @foreach (\App\Support\Taxonomy::options('deal_source') as $sv => $sl)<option value="{{ $sv }}">{{ $sl }}</option>@endforeach
                     </select>
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Decision expected</span>
-                    <input type="date" wire:model="expected_close_on" class="input">
-                </label>
+                <div>
+                    <label class="eo-label mb-1">Decision expected</label>
+                    <input type="date" wire:model="expected_close_on" class="eo-input">
+                </div>
 
-                <label class="block">
-                    <span class="field-label">Event would run</span>
-                    <input type="date" wire:model="expected_event_on" class="input">
-                </label>
+                <div>
+                    <label class="eo-label mb-1">Event would run</label>
+                    <input type="date" wire:model="expected_event_on" class="eo-input">
+                </div>
 
-                <label class="block sm:col-span-2">
-                    <span class="field-label">Notes</span>
-                    <textarea wire:model="notes" rows="3" class="input" placeholder="What do we know?"></textarea>
-                </label>
+                <div class="sm:col-span-2">
+                    <label class="eo-label mb-1">Notes</label>
+                    <textarea wire:model="notes" rows="3" class="eo-textarea" placeholder="What do we know?"></textarea>
+                </div>
             </div>
 
             <x-slot:footer>
-                <button type="button" wire:click="$set('showForm', false)" class="btn-ghost btn-sm">Cancel</button>
-                <button type="button" wire:click="saveDeal" class="btn-gold btn-sm">{{ $editingId ? 'Save deal' : 'Create deal' }}</button>
+                <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
+                <x-eo.button size="sm" wire:click="saveDeal">{{ $editingId ? 'Save deal' : 'Create deal' }}</x-eo.button>
             </x-slot:footer>
         </x-modal>
     @endif
@@ -427,13 +427,13 @@
     @if ($losingId)
         <x-modal title="Mark this deal lost" subtitle="A pipeline without loss reasons teaches you nothing."
                  close="$set('losingId', null)" max="md">
-            <label class="block">
-                <span class="field-label">What happened?</span>
-                <input type="text" wire:model="lostReason" placeholder="e.g. Budget cut · went to a competitor · postponed" class="input">
-            </label>
+            <div>
+                <label class="eo-label mb-1">What happened?</label>
+                <input type="text" wire:model="lostReason" placeholder="e.g. Budget cut · went to a competitor · postponed" class="eo-input">
+            </div>
             <x-slot:footer>
-                <button type="button" wire:click="$set('losingId', null)" class="btn-ghost btn-sm">Cancel</button>
-                <button type="button" wire:click="confirmLost" class="btn-danger btn-sm">Mark lost</button>
+                <button type="button" wire:click="$set('losingId', null)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
+                <button type="button" wire:click="confirmLost" class="eo-btn-danger eo-btn-sm">Mark lost</button>
             </x-slot:footer>
         </x-modal>
     @endif

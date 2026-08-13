@@ -36,23 +36,42 @@ class NavPanel
         ],
         'events' => [
             'label' => 'Events', 'icon' => 'calendar', 'route' => 'events.index',
-            'match' => ['events.*'],
+            // projects.* lived under the old Library area; Projects is an
+            // Events core link (added in the Sidebar Diet), so this is where
+            // "you are on the Projects page" should now resolve to.
+            'match' => ['events.*', 'projects.*'],
         ],
         'tasks' => [
             'label' => 'Tasks', 'icon' => 'clipboard', 'route' => 'tasks.index',
             'match' => ['tasks.*'],
         ],
+        // Key stays 'crm' — only the label changes. Renaming the key would
+        // touch every route-independent place that keys off it (primaryAction,
+        // sections, the drift-prone stuff); the route names (crm.index,
+        // clients.index…) are the actual product surface and are untouched.
         'crm' => [
-            'label' => 'CRM', 'icon' => 'identification', 'route' => 'crm.index',
-            'match' => ['crm.*', 'clients.*', 'proposals.*', 'contracts.*'],
+            'label' => 'Commercial', 'icon' => 'identification', 'route' => 'crm.index',
+            'match' => ['crm.*', 'clients.*', 'proposals.*', 'contracts.*', 'sponsors.*'],
         ],
         'finance' => [
             'label' => 'Finance', 'icon' => 'currency', 'route' => 'finance.index',
             'match' => ['finance.*', 'invoices.*', 'payments.*'],
         ],
-        'library' => [
-            'label' => 'Library', 'icon' => 'archive', 'route' => 'suppliers.index',
-            'match' => ['suppliers.*', 'venues.*', 'requirements.*', 'projects.*', 'team.*', 'sponsors.*', 'ai.*', 'reports.*'],
+        // Library, dissolved: its eight links were three different jobs
+        // wearing one label. Suppliers/Venues/Equipment run events (Operations),
+        // Reports/AI make sense of them (Intelligence), Team was never really
+        // a "directory" at all.
+        'operations' => [
+            'label' => 'Operations', 'icon' => 'truck', 'route' => 'suppliers.index',
+            'match' => ['suppliers.*', 'venues.*', 'requirements.*'],
+        ],
+        'intelligence' => [
+            'label' => 'Intelligence', 'icon' => 'sparkles', 'route' => 'reports.index',
+            'match' => ['reports.*', 'ai.*'],
+        ],
+        'team' => [
+            'label' => 'Team', 'icon' => 'users', 'route' => 'team.index',
+            'match' => ['team.*'],
         ],
     ];
 
@@ -93,12 +112,14 @@ class NavPanel
     ];
 
     /**
-     * Areas the fixed panel already covers.
+     * Areas the fixed panel covers instead of their own sections().
      *
-     * Everywhere else — the CRM, the library, Settings — still appends its own
-     * sections underneath, or Venues, Team and Reports would have no door left.
+     * Empty: every area gets its own core-link list from sections() now.
+     * Workspace, Events and Tasks used to share this fixed panel wholesale,
+     * which is how three different sidebars ended up showing the same nine
+     * links regardless of which area you were actually in.
      */
-    public const PANEL_COVERS = ['workspace', 'events', 'tasks'];
+    public const PANEL_COVERS = [];
 
     /**
      * @return Collection<int,array{label:string,items:Collection}>
@@ -122,11 +143,20 @@ class NavPanel
             ->values();
     }
 
-    /** Settings sits apart on the rail, as it does in most tools. */
+    /**
+     * Settings sits apart on the rail, as it does in most tools.
+     *
+     * 'clients.*' does not belong here: Clients lives in Commercial's own
+     * match list too, and AREAS is checked first in currentArea(), so a
+     * shared pattern always resolved to Commercial — Settings could never
+     * highlight while looking at a route it no longer even links to.
+     * 'catalogue.*' and 'registration-templates.*' are added because those
+     * two routes are only reachable from Settings and matched nowhere else.
+     */
     public const SETTINGS = [
         'label' => 'Settings', 'icon' => 'cog', 'route' => 'settings.index',
         'match' => ['settings.*', 'company.*', 'taxonomies.*', 'workflows.*', 'defaults.*',
-            'clients.*', 'transport-settings.*', 'sponsor-packages.*'],
+            'transport-settings.*', 'sponsor-packages.*', 'catalogue.*', 'registration-templates.*'],
     ];
 
     /**
@@ -144,7 +174,7 @@ class NavPanel
         $candidates = match (self::currentArea()) {
             'events' => [['＋ Create Event', 'sparkles', 'events.create']],
             'crm' => [['＋ New Client', 'identification', 'clients.index']],
-            'library' => [['＋ Add Venue', 'building', 'venues.index']],
+            'operations' => [['＋ Add Venue', 'building', 'venues.index']],
             default => [],
         };
 
@@ -190,10 +220,23 @@ class NavPanel
     public static function sections(string $area): Collection
     {
         return collect(match ($area) {
+            // The dashboard's own anchors, not new pages — Command Center is
+            // one screen, so its core links are the things on it worth
+            // jumping straight to. Pre-built items (not [label, route, icon,
+            // count] tuples) because a fragment isn't a route.
+            'workspace' => [
+                ['Command Center', [
+                    ['label' => 'Dashboard', 'href' => route('home'), 'icon' => 'home', 'count' => null, 'active' => request()->routeIs('home')],
+                    ['label' => 'Mission Radar', 'href' => route('home').'#mission-radar', 'icon' => 'chart', 'count' => null, 'active' => false],
+                    ['label' => 'Live Alerts', 'href' => route('home').'#live-alerts', 'icon' => 'bell', 'count' => null, 'active' => false],
+                ]],
+            ],
             'events' => [
                 ['Events', [
-                    ['All events', 'events.index', 'calendar', null],
-                    ['New event', 'events.create', 'sparkles', null],
+                    ['label' => 'Event Portfolio', 'href' => route('events.index'), 'icon' => 'calendar', 'count' => null, 'active' => request()->routeIs('events.index') && ! request()->boolean('archived')],
+                    ['Event Studio', 'events.create', 'sparkles', null],
+                    ['Projects', 'projects.index', 'folder', null],
+                    ['label' => 'Archived Events', 'href' => route('events.index', ['archived' => 1]), 'icon' => 'archive', 'count' => null, 'active' => request()->routeIs('events.index') && request()->boolean('archived')],
                 ]],
             ],
             'tasks' => [
@@ -207,6 +250,11 @@ class NavPanel
                     ['Clients', 'clients.index', 'identification', null],
                     ['Proposals', 'proposals.index', 'document', null],
                     ['Contracts', 'contracts.index', 'document', null],
+                    // Sponsorships stays inside Commercial rather than
+                    // becoming its own rail domain — it's a commercial deal
+                    // like any other, just one that funds a booth instead of
+                    // buying one.
+                    ['Sponsorships', 'sponsors.index', 'star', null],
                 ]],
             ],
             'finance' => [
@@ -216,39 +264,42 @@ class NavPanel
                     ['Payments', 'payments.index', 'card', null],
                 ]],
             ],
-            'library' => [
-                ['Directories', [
+            'operations' => [
+                ['Operations', [
                     ['Suppliers', 'suppliers.index', 'truck', null],
                     ['Venues', 'venues.index', 'building', null],
-                    ['Projects', 'projects.index', 'folder', null],
-                    ['Team', 'team.index', 'users', null],
-                ]],
-                ['Catalogues', [
                     ['Equipment', 'requirements.index', 'archive', null],
-                    ['Sponsorships', 'sponsors.index', 'star', null],
-                ]],
-                ['Grow', [
-                    ['Reports', 'reports.index', 'chart', null],
-                    ['AI Assistant', 'ai.index', 'sparkles', null],
                 ]],
             ],
+            'intelligence' => [
+                ['Intelligence', [
+                    ['Reports', 'reports.index', 'chart', null],
+                    ['Command Briefing', 'ai.index', 'sparkles', null],
+                ]],
+            ],
+            'team' => [
+                ['Team', [
+                    ['Team roster', 'team.index', 'users', null],
+                ]],
+            ],
+            // Two groups, not three: configuration you set once, and the
+            // priced/reusable things an event starts from. Clients,
+            // Suppliers, Venues, Equipment and Team & Roles used to be
+            // listed here too — they are daily-work destinations that
+            // already have a home in their own domain, so this panel no
+            // longer carries a second door to any of them.
             'settings' => [
-                ['Workspace', [
+                ['Workspace Configuration', [
                     ['Company Profile', 'company.index', 'cog', null],
                     ['Types & Lists', 'taxonomies.index', 'grid', null],
                     ['Statuses & Colours', 'workflows.index', 'chart', null],
                     ['Defaults', 'defaults.index', 'clipboard', null],
-                    ['Team & Roles', 'team.index', 'users', null],
                 ]],
-                ['Directories', [
-                    ['Clients', 'clients.index', 'identification', null],
-                    ['Suppliers', 'suppliers.index', 'truck', null],
-                    ['Venues', 'venues.index', 'building', null],
-                ]],
-                ['Catalogues', [
-                    ['Equipment', 'requirements.index', 'archive', null],
+                ['Catalogues & Templates', [
                     ['Sponsorship packages', 'sponsor-packages.index', 'star', null],
                     ['Transport', 'transport-settings.index', 'truck', null],
+                    ['Price list', 'catalogue.index', 'currency', null],
+                    ['Registration templates', 'registration-templates.index', 'document', null],
                 ]],
             ],
             default => [
@@ -262,8 +313,11 @@ class NavPanel
             ->map(fn (array $section) => [
                 'label' => $section[0],
                 'items' => collect($section[1])
-                    ->filter(fn (array $item) => Route::has($item[1]))
-                    ->map(fn (array $item) => [
+                    // A pre-built item (Command Center's anchors, the archive
+                    // link) carries its own href already — a fragment or a
+                    // query string was never a route name to look up.
+                    ->filter(fn (array $item) => isset($item['href']) || Route::has($item[1]))
+                    ->map(fn (array $item) => isset($item['href']) ? $item : [
                         'label' => $item[0],
                         'href' => route($item[1]),
                         'icon' => $item[2],

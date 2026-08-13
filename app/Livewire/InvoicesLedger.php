@@ -230,7 +230,15 @@ class InvoicesLedger extends Component
         // you are reading, not what you are owed.
         $all = Invoice::with('lines')->get();
         $outstanding = $all->filter->isOutstanding();
-        $overdue = $all->filter(fn (Invoice $i) => $i->state() === 'overdue');
+        // Not state() === 'overdue': that bucket exists for the filter chips
+        // above and calls a part-paid invoice "partial" before it ever checks
+        // the due date, so a late invoice with something already in would
+        // silently drop out of this figure. This KPI asks the real question
+        // instead — passed its due date, and still owed something — so a
+        // part-paid late invoice still counts as overdue here.
+        $overdue = $all->filter(fn (Invoice $i) => ! in_array($i->status, ['draft', 'void'], true)
+            && $i->due_on?->isPast()
+            && $i->outstandingCents() > 0);
 
         $selected = $rows->firstWhere('id', $this->selectedId) ?? $rows->first();
 

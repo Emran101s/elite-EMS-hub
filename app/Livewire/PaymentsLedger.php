@@ -155,7 +155,12 @@ class PaymentsLedger extends Component
         $all = EventContractPayment::query()
             ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))->get();
 
-        $overdue = $all->filter(fn ($p) => $p->status() === 'overdue');
+        // Not status() === 'overdue': that calls a part-paid instalment
+        // "partial" before it ever checks the due date, so one that is late
+        // AND has something already in would silently drop out of this
+        // figure. This asks the real question — passed its due date, and
+        // still short — so a part-paid late instalment still counts here.
+        $overdue = $all->filter(fn ($p) => $p->due_on?->isPast() && $p->outstandingCents() > 0);
         $thisMonth = $all->filter(fn ($p) => $p->due_on?->isSameMonth(now()) && $p->status() !== 'paid');
 
         $selected = $rows->firstWhere('id', $this->selectedId) ?? $rows->first();

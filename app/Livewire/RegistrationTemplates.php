@@ -17,7 +17,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Registration templates',
-    'subtitle' => 'Question sets you build once. An event starts from a copy and owns it after.',
+    'hideTitleRow' => true,
 ])]
 class RegistrationTemplates extends Component
 {

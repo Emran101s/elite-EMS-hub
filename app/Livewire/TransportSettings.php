@@ -17,7 +17,7 @@ use Livewire\Component;
  * Both lists ship with presets, but only the few you actually use start active.
  * Switching one on is what makes it offerable when adding a movement to an event.
  */
-#[Layout('components.layouts.app', ['title' => 'Transport Catalogue'])]
+#[Layout('components.layouts.app', ['title' => 'Transport Catalogue', 'hideTitleRow' => true])]
 class TransportSettings extends Component
 {
     public string $newVehicle = '';

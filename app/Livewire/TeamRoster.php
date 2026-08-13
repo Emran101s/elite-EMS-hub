@@ -13,7 +13,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app', ['title' => 'Team & Roles'])]
+#[Layout('components.layouts.app', ['title' => 'Team & Roles', 'hideTitleRow' => true])]
 class TeamRoster extends Component
 {
     use WithFileUploads;
