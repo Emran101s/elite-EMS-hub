@@ -34,8 +34,12 @@ class EventOverviewReadinessTest extends TestCase
         $html = $this->actingAs($this->actor())
             ->get(route('events.hub', $event))->assertOk()->getContent();
 
-        // brief, contract, agenda, venue, transport, registration — all untouched.
-        $this->assertSame(6, substr_count($html, 'Not started'));
+        // brief, contract, agenda, venue, transport, registration — all
+        // untouched (6) — plus the Orbit Journey's own 7 non-active stage
+        // cards, which on a blank event carry no meters/attention signal and
+        // so read "Not started" too (Phase E.2; see
+        // docs/32-event-hub-orbit-journey-architecture.md §4).
+        $this->assertSame(6 + 7, substr_count($html, 'Not started'));
     }
 
     public function test_a_full_agenda_reads_ready(): void
@@ -75,8 +79,10 @@ class EventOverviewReadinessTest extends TestCase
             ->get(route('events.hub', $event))->assertOk()->getContent();
 
         $this->assertStringContainsString('Registration', $html);
-        // brief, contract, agenda, venue, transport are still untouched — only registration moved.
-        $this->assertSame(5, substr_count($html, 'Not started'));
+        // brief, contract, agenda, venue, transport are still untouched —
+        // only registration moved (5) — plus the Orbit Journey's own 7
+        // non-active stage cards (unaffected by registration_open).
+        $this->assertSame(5 + 7, substr_count($html, 'Not started'));
     }
 
     /** A disabled module's door must not appear at all — it would only bounce back to Overview. */

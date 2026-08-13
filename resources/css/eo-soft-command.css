@@ -619,56 +619,403 @@
         color: rgba(255, 255, 255, 0.45);
     }
 
-    /* Event Journey strip (Hub) */
-    .eo-journey-strip {
-        display: flex;
-        gap: 0.35rem;
-        overflow-x: auto;
-        padding: 0.35rem;
-        border-radius: 18px;
-        background: rgba(16, 26, 41, 0.04);
-        box-shadow: inset 0 0 0 1px rgba(16, 26, 41, 0.06);
-    }
-
-    .eo-journey-step {
+    /* ═══ Orbit Journey (Hub) — Phase E.2. Replaces the old flat
+       .eo-journey-strip / .eo-journey-step pair entirely: the Event is the
+       centre object, stages orbit it as readable cards on a progress ring,
+       and the active stage's own doors attach as satellites rather than
+       living in a separate sticky nav row. See
+       docs/32-event-hub-orbit-journey-architecture.md. ═══ */
+    .eo-orbit-hero {
         position: relative;
-        display: flex;
-        min-width: 7.5rem;
-        flex: 1;
-        flex-direction: column;
-        gap: 0.15rem;
-        border-radius: 14px;
-        padding: 0.65rem 0.75rem;
-        color: var(--color-eo-muted);
-        transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        border-radius: 22px;
+        padding: 1.25rem 1.125rem 0.25rem;
+        background:
+            radial-gradient(60% 50% at 50% 34%, rgba(30, 172, 172, 0.07) 0%, transparent 70%),
+            linear-gradient(180deg, #ffffff 0%, var(--color-eo-workspace) 100%);
+        border: 1px solid var(--color-eo-line);
     }
 
-    .eo-journey-step:hover {
+    .eo-orbit-chip {
+        font-size: 9.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
         background: #fff;
-        color: var(--color-eo-text);
+        border: 1px solid var(--color-eo-line);
+        color: var(--color-eo-muted);
     }
 
-    .eo-journey-step.is-active {
-        background: linear-gradient(165deg, rgba(43, 196, 196, 0.18), rgba(30, 172, 172, 0.1));
-        color: var(--color-eo-teal-ink);
-        box-shadow: inset 0 0 0 1px rgba(30, 172, 172, 0.35), var(--shadow-eo-teal);
+    .eo-orbit-ring-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 420px;
+        aspect-ratio: 1 / 1;
+        margin: 1.5rem auto 0.75rem;
     }
 
-    .eo-journey-step.is-complete {
-        color: var(--color-eo-text);
+    @media (min-width: 1024px) {
+        .eo-orbit-ring-wrap {
+            max-width: 600px;
+        }
     }
 
-    .eo-journey-step-index {
+    .eo-orbit-track {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        -webkit-mask: radial-gradient(circle farthest-side at 50% 50%, transparent 0 61%, #000 63% 79%, transparent 81% 100%);
+        mask: radial-gradient(circle farthest-side at 50% 50%, transparent 0 61%, #000 63% 79%, transparent 81% 100%);
+    }
+
+    /* the mission — dominant, ~65% of the visual weight */
+    .eo-orbit-core {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(88vw, 348px);
+        background: #fff;
+        border-radius: 22px;
+        border: 1px solid var(--color-eo-line);
+        box-shadow: 0 30px 60px -24px rgba(16, 24, 39, 0.24), 0 0 0 1px rgba(30, 172, 172, 0.06);
+        padding: 1.375rem 1.5rem 1.125rem;
+        z-index: 6;
+    }
+
+    .eo-orbit-core-eyebrow {
         font-size: 10px;
         font-weight: 800;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        opacity: 0.7;
+        color: var(--color-eo-teal-deep);
+        margin-bottom: 0.375rem;
     }
 
-    .eo-journey-step-label {
-        font-size: 13px;
+    .eo-orbit-core-name {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+        line-height: 1.22;
+        margin-bottom: 0.75rem;
+    }
+
+    .eo-orbit-core-name .tail {
+        font-weight: 500;
+        color: var(--color-eo-muted);
+    }
+
+    .eo-orbit-core-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem 0.5rem;
+        margin-bottom: 0.875rem;
+    }
+
+    .eo-orbit-core-field span {
+        display: block;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-eo-muted);
+        margin-bottom: 0.125rem;
+    }
+
+    .eo-orbit-core-field b {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+        line-height: 1.15;
+    }
+
+    .eo-orbit-core-field b.tone-teal {
+        color: var(--color-eo-teal-deep);
+    }
+
+    .eo-orbit-core-field b.small {
+        font-size: 12.5px;
+    }
+
+    .eo-orbit-core-divider {
+        height: 1px;
+        background: var(--color-eo-line);
+        margin: 0 0 0.875rem;
+    }
+
+    .eo-orbit-core-next {
+        background: var(--color-eo-teal-soft);
+        border-radius: 12px;
+        padding: 0.5625rem 0.75rem;
+        margin-bottom: 0.875rem;
+    }
+
+    .eo-orbit-core-next span {
+        display: block;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-eo-teal-deep);
+        margin-bottom: 0.125rem;
+    }
+
+    .eo-orbit-core-next b {
+        font-size: 12.5px;
+        color: var(--color-eo-text);
         font-weight: 700;
+    }
+
+    .eo-orbit-core-cta {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.6875rem;
+        border-radius: 12px;
+        background: linear-gradient(165deg, var(--color-eo-teal-lit) 0%, var(--color-eo-teal) 48%, var(--color-eo-teal-deep) 100%);
+        color: #fff;
+        font-size: 12.5px;
+        font-weight: 800;
+        box-shadow: var(--shadow-eo-teal);
+    }
+
+    /* orbit stage cards — readable, not isolated dots */
+    .eo-orbit-stage-card {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        width: 96px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--color-eo-line);
+        border-top: 3px solid var(--st-color, var(--color-eo-teal));
+        box-shadow: 0 10px 22px -14px rgba(16, 24, 39, 0.28);
+        padding: 0.5rem 0.5625rem 0.4375rem;
+        text-align: center;
+        z-index: 5;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .eo-orbit-stage-card:hover {
+        transform: translate(-50%, -50%) translateY(-2px);
+        box-shadow: 0 14px 26px -14px rgba(16, 24, 39, 0.36);
+    }
+
+    .eo-orbit-stage-idx {
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--color-eo-muted);
+        display: block;
+        margin-bottom: 0.0625rem;
+    }
+
+    .eo-orbit-stage-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+        line-height: 1.15;
+        margin-bottom: 0.25rem;
+    }
+
+    .eo-orbit-stage-meta {
+        font-size: 8.5px;
+        font-weight: 700;
+    }
+
+    .eo-orbit-stage-card.is-complete .eo-orbit-stage-meta { color: var(--color-eo-teal-deep); }
+    .eo-orbit-stage-card.is-watch .eo-orbit-stage-meta { color: #92620c; }
+    .eo-orbit-stage-card.is-blocked .eo-orbit-stage-meta { color: #b91c1c; }
+    .eo-orbit-stage-card.is-pending .eo-orbit-stage-meta { color: var(--color-eo-muted); }
+    .eo-orbit-stage-card.is-future { opacity: 0.68; }
+    .eo-orbit-stage-card.is-future .eo-orbit-stage-meta { color: #a7adb6; }
+
+    /* the active stage — expands beyond a card */
+    .eo-orbit-active {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        width: 112px;
+        background: linear-gradient(165deg, rgba(43, 196, 196, 0.14), rgba(43, 196, 196, 0.03));
+        border-radius: 14px;
+        border: 1.5px solid var(--color-eo-teal-lit);
+        box-shadow: 0 0 0 5px rgba(43, 196, 196, 0.1), 0 14px 30px -16px rgba(30, 172, 172, 0.5);
+        padding: 0.5625rem 0.625rem 0.5rem;
+        text-align: center;
+        z-index: 7;
+    }
+
+    .eo-orbit-active-eyebrow {
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--color-eo-teal-deep);
+        text-transform: uppercase;
+    }
+
+    .eo-orbit-active-label {
+        font-size: 12.5px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+        margin: 0.125rem 0 0.25rem;
+    }
+
+    .eo-orbit-active-stats {
+        display: flex;
+        justify-content: center;
+        gap: 0.625rem;
+    }
+
+    .eo-orbit-active-stats div b {
+        display: block;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--color-eo-teal-deep);
+        line-height: 1;
+    }
+
+    .eo-orbit-active-stats div span {
+        font-size: 7px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--color-eo-muted);
+    }
+
+    /* satellites — mini modules attached below the ring, not a chip strip */
+    .eo-orbit-satellites {
+        position: relative;
+        margin-top: 1.75rem;
+        padding-top: 0.875rem;
+    }
+
+    .eo-orbit-satellites::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: -0.75rem;
+        width: 2px;
+        height: 0.75rem;
+        background: repeating-linear-gradient(to bottom, var(--color-eo-teal) 0 4px, transparent 4px 8px);
+        transform: translateX(-50%);
+    }
+
+    .eo-orbit-satellites-label {
+        display: block;
+        text-align: center;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--color-eo-teal-deep);
+        margin-bottom: 0.5rem;
+    }
+
+    .eo-orbit-sat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        max-width: 380px;
+        margin: 0 auto;
+    }
+
+    @media (min-width: 640px) {
+        .eo-orbit-sat-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            max-width: 620px;
+        }
+    }
+
+    .eo-orbit-sat {
+        display: block;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--color-eo-line);
+        border-left: 3px solid var(--sat-color, var(--color-eo-teal));
+        padding: 0.5rem 0.5625rem;
+        box-shadow: 0 8px 18px -12px rgba(16, 24, 39, 0.25);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .eo-orbit-sat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -12px rgba(16, 24, 39, 0.32);
+    }
+
+    .eo-orbit-sat-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 0.3125rem;
+        background: color-mix(in srgb, var(--sat-color, var(--color-eo-teal)) 14%, white);
+        color: var(--sat-color, var(--color-eo-teal));
+    }
+
+    .eo-orbit-sat b {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+        line-height: 1.2;
+    }
+
+    .eo-orbit-sat-note {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 9px;
+        color: var(--color-eo-muted);
+        margin-top: 0.125rem;
+    }
+
+    .eo-orbit-sat-badge {
+        background: var(--color-eo-risk);
+        color: #fff;
+        font-size: 8px;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 0 0.3125rem;
+        line-height: 13px;
+    }
+
+    /* mobile linear rail — the ring degrades to a strip below 640px rather
+       than compress into illegibility */
+    .eo-orbit-rail {
+        background: #fff;
+        border: 1px solid var(--color-eo-line);
+        border-radius: 14px;
+        padding: 0.75rem;
+        margin-top: 0.625rem;
+    }
+
+    .eo-orbit-rail-track {
+        display: flex;
+        align-items: center;
+    }
+
+    .eo-orbit-rail-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1875rem;
+        flex-shrink: 0;
+    }
+
+    .eo-orbit-rail-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .eo-orbit-rail-line {
+        flex: 1;
+        height: 2px;
+        background: var(--color-eo-line);
+        margin: 0 -0.0625rem 0.8125rem;
+    }
+
+    .eo-orbit-rail-line.is-done {
+        background: var(--color-eo-teal-deep);
     }
 
     /* Stronger mission card personality */

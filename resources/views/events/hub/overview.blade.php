@@ -43,66 +43,13 @@
     $badge = fn (?string $key = null) => \App\Models\Event::moduleColor($key);
 @endphp
 
-{{-- Soft Command Event Hub Overview --}}
-<div class="eo-event-atmosphere mb-5 space-y-5 rounded-[24px]">
-    <div class="eo-dna-strip">
-        <span class="eo-dna-pill">{{ str($event->type ?? 'Event')->replace('_', ' ')->title() }}</span>
-        <span class="eo-dna-pill">Programme</span>
-        <span class="eo-dna-pill">Operations</span>
-        <span class="eo-dna-pill">Commercial</span>
-        <span class="eo-dna-pill">Delegate journey</span>
-    </div>
-    <div class="grid gap-4 lg:grid-cols-12">
-        <div class="lg:col-span-5">
-            <x-eo.mission-radar
-                variant="hero"
-                label="Mission Radar"
-                size="md"
-                story="This mission’s orbit — risks, live ops, and open work clustered for the desk."
-                :missions="[
-                    ['tone' => $openRisks->isEmpty() ? 'ok' : 'risk', 'x' => 34, 'y' => 40, 'label' => 'Risks', 'featured' => ! $openRisks->isEmpty()],
-                    ['tone' => 'live', 'x' => 62, 'y' => 36, 'label' => 'Live desk', 'featured' => true],
-                    ['tone' => $todo > 0 ? 'warn' : 'ok', 'x' => 48, 'y' => 62, 'label' => 'Open work'],
-                    ['tone' => $budgetUsedPct !== null && $budgetUsedPct > 85 ? 'warn' : 'ok', 'x' => 70, 'y' => 58, 'label' => 'Budget'],
-                ]"
-                :stats="[
-                    ['value' => $done.'/'.$taskTotal, 'label' => 'Tasks'],
-                    ['value' => $openRisks->count(), 'label' => 'Risks', 'tone' => $openRisks->isEmpty() ? 'ok' : 'risk'],
-                    ['value' => ($budgetUsedPct ?? '—').(is_null($budgetUsedPct) ? '' : '%'), 'label' => 'Budget'],
-                    ['value' => $speakersConfirmed.'/'.max($speakerCount, 1), 'label' => 'Speakers'],
-                ]"
-            />
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2 lg:col-span-7">
-            <x-eo.event-health-card
-                :title="$event->name"
-                :score="(int) ($health['score'] ?? 0)"
-                :status="($health['group'] ?? null) === 'risk' ? 'risk' : (($health['group'] ?? null) === 'warn' ? 'warn' : 'ok')"
-                :hint="'Risk '.$riskWord.' · '.$openRisks->count().' open'"
-            />
-            <x-eo.readiness-card
-                domain="Task readiness"
-                title="Delivery progress"
-                :percent="(int) round($done / $taskTotal * 100)"
-                :status="$done / $taskTotal >= 0.7 ? 'ok' : ($done / $taskTotal >= 0.4 ? 'warn' : 'risk')"
-                :hint="$done.' done · '.$doing.' doing · '.$todo.' open'"
-            />
-            <x-eo.operations-card
-                title="Programme desk"
-                subtitle="Agenda · speakers · logistics"
-                :open="$todo"
-                :due="$doing"
-                :blocked="$openRisks->count()"
-            />
-            <x-eo.commercial-card
-                title="Budget posture"
-                subtitle="Used vs approved"
-                :value="$budgetUsedPct !== null ? $budgetUsedPct.'%' : '—'"
-                :meta="$sym.$gap.number_format($actual / 100, 0).' actual of '.$sym.$gap.number_format($event->budget_cents / 100, 0)"
-            />
-        </div>
-    </div>
-</div>
+{{-- Soft Command Event Hub Overview —
+     Phase E removed the top block that used to live here: a second Mission
+     Radar and a second event-health/readiness/operations/commercial grid,
+     both repeating figures the Event Hub header's own hub card already
+     shows (same health score, same readiness %). The wrapper that carried
+     that block is gone with it — Row 1 below was always a sibling, not its
+     child. Nothing in Row 1 is said anywhere else on the page. --}}
 
 {{-- ══ Row 1: Event Overview · Agenda Overview · Live Alerts ══ --}}
 <div class="grid gap-5 xl:grid-cols-3">

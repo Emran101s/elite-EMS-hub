@@ -4,24 +4,11 @@
 
 @php
     $title = $header['title'];
-    $health = $header['health'];
     $critical = $header['critical'];
     $readiness = $header['readiness'];
     $live = $header['live'];
 
-    $healthScore = $health['score'] ?? null;
-    $healthStatus = match ($health['group'] ?? null) {
-        'risk' => 'risk',
-        'warn' => 'warn',
-        default => $healthScore === null ? 'pending' : 'ok',
-    };
-
     $readyPct = (int) ($readiness['pct'] ?? 0);
-    $readyStatus = match (true) {
-        $readyPct >= 70 => 'ok',
-        $readyPct >= 40 => 'warn',
-        default => 'risk',
-    };
 
     $where = collect([$event->city, $event->country])->filter()->implode(', ');
     $when = $event->starts_at
@@ -30,10 +17,6 @@
 
     $type = str($event->type ?? 'Event')->replace('_', ' ')->title();
     $stage = \App\Support\Workflow::label('event_stage', $event->stage);
-
-    $attention = collect($header['attention'] ?? []);
-    $openCount = (int) $attention->sum(fn ($a) => (int) ($a['count'] ?? 0));
-    $alarmCount = (int) $attention->filter(fn ($a) => ($a['tone'] ?? null) === 'alarm')->sum(fn ($a) => (int) ($a['count'] ?? 0));
 
     $criticalHref = $critical
         ? route('events.hub', [$event, 'tab' => $critical['tab'] ?? 'overview'])
@@ -78,40 +61,10 @@
         </div>
     </div>
 
-    <div class="grid gap-3 border-t border-eo-line bg-eo-workspace/70 px-5 py-4 sm:grid-cols-3 lg:px-6">
-        <x-eo.event-health-card
-            title="Event health"
-            :score="(int) ($healthScore ?? 0)"
-            :status="$healthStatus"
-            hint="Mission health index"
-            class="!shadow-none"
-        />
-        <x-eo.readiness-card
-            domain="Operational readiness"
-            title="Readiness gates"
-            :percent="$readyPct"
-            :status="$readyStatus"
-            :hint="($readiness['met'] ?? 0).' of '.($readiness['total'] ?? 0).' checkpoints'"
-            class="!shadow-none"
-        />
-        <x-eo.operations-card
-            title="Live desk"
-            subtitle="Attention across modules"
-            :open="$openCount"
-            :due="max(0, $openCount - $alarmCount)"
-            :blocked="$alarmCount"
-            class="!shadow-none"
-        />
+    {{-- Phase E: the 3-card grid (health / readiness / live desk) and the
+         alert-card banner below it are now one card — same figures, same
+         data (EventCommandHeader::for()), no longer told three times. --}}
+    <div class="border-t border-eo-line bg-eo-workspace/70 px-5 py-4 lg:px-6">
+        <x-eo.mission-card variant="hub" :event="$event" :header="$header" class="!shadow-none" />
     </div>
-
-    @if ($critical)
-        <div class="border-t border-eo-line px-5 py-3 lg:px-6">
-            <x-eo.alert-card
-                :tone="in_array($critical['level'] ?? '', ['Critical', 'High'], true) ? 'risk' : 'warn'"
-                :title="$critical['title']"
-            >
-                {{ $critical['where'] }} · {{ $critical['due'] }} · {{ $critical['owner'] }}
-            </x-eo.alert-card>
-        </div>
-    @endif
 </div>

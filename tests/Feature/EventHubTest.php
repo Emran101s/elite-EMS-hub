@@ -156,13 +156,15 @@ class EventHubTest extends TestCase
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
         Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Royal Office')
             ->set('name', 'Royal Gala 2027')
             ->set('starts_at', '2027-05-20')
             ->set('ends_at', '2027-05-22')
             // The preview reacts as you type — 3 days, and the crest for a gala.
             ->assertViewHas('previewDays', 3)
-            ->call('chooseTemplate', 'gala')
+            ->call('chooseCategory', 'gala')
             ->assertViewHas('previewType', 'gala_dinner')
             ->call('toggleModule', 'agenda') // gala doesn't include agenda by default — turn it on
             ->call('save')
@@ -182,7 +184,7 @@ class EventHubTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->call('save')
-            ->assertHasErrors(['name', 'starts_at', 'client_id']);
+            ->assertHasErrors(['name', 'starts_at', 'category', 'originKind', 'originSource']);
     }
 
     public function test_disabled_module_tab_falls_back_to_overview(): void
@@ -351,22 +353,28 @@ class EventHubTest extends TestCase
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
 
-        // And it reaches the tab row.
-        $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('1 overdue')
+        // And it reaches the tab row — Phase E made that row contextual to
+        // the active Journey stage, so "1 overdue" (Tasks, in Planning) and
+        // "1 pending" (Approvals, in Control) each only show up on their own
+        // stage now, not from Overview.
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))->assertOk()
+            ->assertSee('1 overdue');
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))->assertOk()
             ->assertSee('1 pending');
     }
 
     /**
-     * The way to the next module survives the scroll.
+     * Satellites are scoped to the active stage.
      *
-     * There used to be a separate 41px rail pinned above the tabs, because the
-     * tabs themselves cost 136px and pinning those would have eaten a seventh
-     * of every screenful. The nav is 70px now, so it is the thing that sticks
-     * and the rail is gone — one pinned element instead of two, and it is the
-     * one you actually use.
+     * Phase E made the old secondary nav row contextual to the active
+     * Journey stage; Phase E.2 replaced that row with satellites attached to
+     * the Orbit's active stage, but kept the same contract — "Tasks" (and
+     * its own overdue count) only appears while Planning is the active
+     * stage, not from every tab. This checks Budget (Commercial) has no
+     * reason to carry Planning's detail, and that Tasks' own stage
+     * (Planning) does.
      */
-    public function test_the_module_nav_survives_the_scroll(): void
+    public function test_satellites_are_scoped_to_the_active_stage(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
@@ -374,18 +382,22 @@ class EventHubTest extends TestCase
         $event->tasks()->delete();
         $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
 
-        $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
-            ->assertOk()->getContent();
+        // Note: "1 overdue" alone isn't a safe assertDontSee target — the
+        // pre-existing, unmoved Priority Area also reports overdue tasks
+        // ("1 overdue task", Event Escalations) on every stage, event-wide.
+        // The scoped check is that Planning's satellite section itself does
+        // not render while Commercial is active.
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
+            ->assertOk()
+            ->assertSee('Commercial · satellites')
+            ->assertDontSee('Planning · satellites');
 
-        $nav = (string) str($html)->after('aria-label="Event modules"')->before('</nav>');
-        $box = (string) str($html)->before('aria-label="Event modules"')->afterLast('<div ');
-
-        $this->assertStringContainsString('sticky top-0', $box, 'the nav must survive the scroll');
-        $this->assertStringContainsString('Tasks', $nav);
-
-        // Its counts come from the same place as the header's, so the two can
-        // never disagree about what is waiting.
-        $this->assertStringContainsString('1 overdue', $nav);
+        // Tasks lives in the Planning stage — its satellite, and its own
+        // overdue count, travels with the active stage.
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))
+            ->assertOk()
+            ->assertSee('Planning · satellites')
+            ->assertSee('1 overdue');
     }
 
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */
