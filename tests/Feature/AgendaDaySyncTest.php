@@ -76,6 +76,9 @@ class AgendaDaySyncTest extends TestCase
         $user = User::factory()->create();
 
         Livewire::actingAs($user)->test(EventCreate::class)
+            ->call('chooseCategory', 'conference')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'deal')
             ->set('new_client', 'Range Co')
             ->set('name', 'Four Day Congress')
             ->set('starts_at', '2027-04-01')
