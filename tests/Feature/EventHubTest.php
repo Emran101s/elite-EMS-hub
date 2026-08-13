@@ -6,7 +6,9 @@ use App\Http\Controllers\EventHubController;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Models\Event;
+use App\Models\EventContract;
 use App\Models\User;
+use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -204,9 +206,9 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
-        $event->load(\App\Services\EventCommandHeader::RELATIONS);
+        $event->load(EventCommandHeader::RELATIONS);
 
-        $header = app(\App\Services\EventCommandHeader::class)->for($event);
+        $header = app(EventCommandHeader::class)->for($event);
 
         // Every figure is counted, so it has to agree with the records.
         $this->assertSame($event->speakers->count(), (int) collect($header['scale'])->firstWhere('label', 'Speakers')['value']);
@@ -238,7 +240,7 @@ class EventHubTest extends TestCase
     public function test_the_critical_card_sees_lesser_risks_and_undated_tasks(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         // Clear the decks, then leave exactly one undated open task.
@@ -252,7 +254,7 @@ class EventHubTest extends TestCase
             'due_on' => null,
         ]);
 
-        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $critical = $service->critical($event->fresh()->load(EventCommandHeader::RELATIONS));
         $this->assertSame('Sign off the floor plan', $critical['title']);
         $this->assertSame('No date set', $critical['due']);
 
@@ -266,7 +268,7 @@ class EventHubTest extends TestCase
             'impact' => 3,
         ]);
 
-        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $critical = $service->critical($event->fresh()->load(EventCommandHeader::RELATIONS));
         $this->assertSame('Venue contract unsigned', $critical['title']);
         $this->assertSame('risks', $critical['tab']);
     }
@@ -309,7 +311,7 @@ class EventHubTest extends TestCase
     public function test_the_tabs_say_where_the_work_is(): void
     {
         $user = $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         $event->tasks()->delete();
@@ -323,14 +325,14 @@ class EventHubTest extends TestCase
         $event->rooms()->each(fn ($r) => $r->update(['cost_cents' => 1_000_00]));
 
         // A quiet event puts nothing on any tab.
-        $this->assertSame([], $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS)));
+        $this->assertSame([], $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS)));
 
         // One overdue task, one open one that is not yet due: only the first counts.
         $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
         $event->tasks()->create(['title' => 'Soon', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->addWeek()]);
         $event->approvals()->create(['title' => 'Agenda', 'type' => 'agenda', 'status' => 'pending']);
 
-        $a = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $a = $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS));
 
         $this->assertSame(1, $a['tasks']['count']);
         $this->assertSame('1 overdue', $a['tasks']['why']);
@@ -349,7 +351,7 @@ class EventHubTest extends TestCase
             'check_in' => now()->addMonth(), 'check_out' => now()->addMonth()->addDays(3), 'status' => 'held',
         ]);
 
-        $b = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $b = $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS));
 
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
@@ -405,13 +407,13 @@ class EventHubTest extends TestCase
     public function test_only_issued_documents_count_against_the_contract_tab(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        $contract = \App\Models\EventContract::forEvent($event);
+        $contract = EventContract::forEvent($event);
         $contract->update(['status' => 'draft']);
 
-        $load = fn () => $event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS);
+        $load = fn () => $event->fresh()->load(EventCommandHeader::RELATIONS);
         $this->assertArrayNotHasKey('contract', $service->attention($load()));
 
         $contract->update(['status' => 'sent']);
@@ -421,7 +423,7 @@ class EventHubTest extends TestCase
     public function test_a_name_with_an_edition_splits_and_a_plain_name_does_not(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
 
         $split = $service->title(new Event(['name' => 'The First World Public Summit . Arab World']));
         $this->assertSame('The First World Public Summit', $split['lead']);

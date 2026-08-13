@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
-use App\Models\User;
 use App\Services\CommandCenterService;
 use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;

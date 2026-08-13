@@ -6,6 +6,7 @@ use App\Livewire\ContractsRegister;
 use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\User;
+use App\Support\NavPanel;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -225,7 +226,7 @@ class ContractsRegisterTest extends TestCase
     {
         $user = $this->actor();
 
-        $panel = collect(\App\Support\NavPanel::panel())
+        $panel = collect(NavPanel::panel())
             ->flatMap(fn ($s) => $s['items'])
             ->firstWhere('label', 'Contracts');
 
