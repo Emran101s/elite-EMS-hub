@@ -11,7 +11,14 @@
     // EventHealthService and the Priority Area already read per event —
     // summed across every event, not invented for this header.
     $openSupplierIssues = Event::query()
-        ->withCount(['suppliers as issues_count' => fn ($q) => $q->wherePivot('status', 'issue')])
+        // Qualified pivot column, not wherePivot(). Inside withCount() the
+        // closure is handed a plain Builder, not the BelongsToMany, so
+        // wherePivot('status', 'issue') falls through to Laravel's dynamic
+        // where{Attribute} handler and compiles to `where "pivot" = 'status'`.
+        // SQLite reads an unknown double-quoted identifier as a string literal,
+        // so that silently evaluates false and the count always read 0;
+        // Postgres correctly errors with 42703 and the page 500s.
+        ->withCount(['suppliers as issues_count' => fn ($q) => $q->where('event_supplier.status', 'issue')])
         ->get()
         ->sum('issues_count');
 
