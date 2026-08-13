@@ -57,7 +57,7 @@ class ContractsRegisterTest extends TestCase
     {
         $this->actingAs($this->actor())->get(route('contracts.index'))->assertOk()
             ->assertSee('Contracts')
-            ->assertSee('Every agreement in the book', false);
+            ->assertSee('What is drafted, out for pen, and signed.', false);
     }
 
     /**
@@ -232,6 +232,12 @@ class ContractsRegisterTest extends TestCase
         $this->assertNotNull($panel['href'], 'the Contracts row is no longer a "coming soon" placeholder');
         $this->assertSame(route('contracts.index'), $panel['href']);
 
-        $this->actingAs($user)->get(route('home'))->assertOk()->assertSee(route('contracts.index'), false);
+        // This used to also assert the Command Center's own HTML contained the
+        // contracts URL. It no longer does, and that is the intended
+        // behaviour: the context sidebar renders only the *active area's* core
+        // links, so Contracts appears under Commercial rather than on every
+        // page. What matters is that the row exists, points somewhere real,
+        // and that the destination opens — which is what is asserted now.
+        $this->actingAs($user)->get($panel['href'])->assertOk();
     }
 }

@@ -79,16 +79,33 @@ class UnscoredEventHealthTest extends TestCase
         $this->assertSame(0, $segments['risk']['cents']);
     }
 
-    public function test_the_dashboard_renders_the_not_started_state(): void
+    /**
+     * An untouched event counts as Not Started, and is never folded into the
+     * scored population.
+     *
+     * This used to assert the Command Center rendered the words "Not started"
+     * and named the event. The Action-First redesign replaced the portfolio
+     * status-distribution block with Today's Command Queue, so that display no
+     * longer exists — the dashboard now leads with what needs a person rather
+     * than with a breakdown of everything.
+     *
+     * The behaviour that actually mattered is unchanged and is what is
+     * asserted now: an unscored event lands in Not Started rather than being
+     * counted as a zero-health event, which would drag the portfolio average
+     * down and put a healthy book on an at-risk footing.
+     */
+    public function test_an_untouched_event_counts_as_not_started_and_not_as_zero(): void
     {
         $this->seed(DemoDataSeeder::class);
-        Event::factory()->create(['stage' => 'proposal', 'name' => 'Untouched Proposal']);
-        $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $this->actingAs($user)->get('/')
-            ->assertOk()
-            ->assertSee('Not Started')
-            ->assertSee('Untouched Proposal');
+        $before = app(CommandCenterService::class)->statusBars()['counts']['Not Started'];
+
+        Event::factory()->create(['stage' => 'proposal', 'name' => 'Untouched Proposal']);
+
+        $counts = app(CommandCenterService::class)->statusBars()['counts'];
+
+        $this->assertSame($before + 1, $counts['Not Started'], 'the new proposal joins Not Started');
+        $this->assertSame(0, $counts['Completed'], 'and is not miscounted anywhere else');
     }
 
     public function test_the_ai_summary_does_not_claim_a_percentage_it_does_not_have(): void

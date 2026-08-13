@@ -34,7 +34,7 @@ class PaymentsLedgerTest extends TestCase
     {
         $this->actingAs($this->actor())->get(route('payments.index'))->assertOk()
             ->assertSee('Payments')
-            ->assertSee('in the order the money is due', false);
+            ->assertSee('in the order money is due', false);
     }
 
     public function test_it_lists_installments_from_every_event(): void

@@ -112,23 +112,19 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The portfolio has three views and no more: the Deck to browse it,
-        // the List to work it, the Flight Path to plan it.
+        // Phase C.1 restructured the portfolio: five views, named in the UI as
+        // Mission Board, Radar, Timeline, Table and Calendar. The Deck is
+        // retired and "Flight Path" is now called Timeline.
         $this->actingAs($user)->get('/events')->assertOk()
-            ->assertSee('Projects &amp; Events', false)
-            ->assertSee('Deck View')->assertSee('List View')->assertSee('Flight Path')
-            ->assertSee('Active mission')
-            ->assertSee('ICFT 2026')
-            ->assertSee('Next milestone')
-            ->assertSee('AI insight');
+            ->assertSee('Event Portfolio')
+            ->assertSee('Mission Board')->assertSee('Radar')
+            ->assertSee('Timeline')->assertSee('Table')->assertSee('Calendar')
+            ->assertSee('ICFT 2026');
 
         $this->actingAs($user)->get('/events?view=list')->assertOk()
-            ->assertSee('Operational management')
-            ->assertSee('Quick actions')
             ->assertSee('ICFT 2026');
 
         $this->actingAs($user)->get('/events?view=path')->assertOk()
-            ->assertSee('Strategic event timeline')
             ->assertSee('ICFT 2026');
 
         // Filters narrow the board. Asserted through the component's paginator,
@@ -146,8 +142,8 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // Anything else falls back to the Deck rather than erroring.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Active mission');
+        // Anything else falls back to Mission Board rather than erroring.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Mission Board');
     }
 
     public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void
@@ -290,12 +286,17 @@ class EventHubTest extends TestCase
         $event->approvals()->delete();
         $event->tasks()->delete();
 
+        // Phase E folded the header's three-card grid into one hub mission
+        // card, so "Risk level" and "Nothing is waiting on you" are gone as
+        // labels. The contract this test protects is unchanged: with nothing
+        // outstanding the header keeps its shape rather than collapsing, and
+        // says so plainly instead of inventing an errand.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next')
-            ->assertSee('Nothing is waiting on you')
-            ->assertSee('Due')
+            ->assertSee('Next action')
+            ->assertSee('Nothing pressing')
             ->assertSee('Owner')
-            ->assertSee('Risk level')
+            ->assertSee('Health')
+            ->assertSee('Readiness')
             ->assertSee('Clear');
     }
 
