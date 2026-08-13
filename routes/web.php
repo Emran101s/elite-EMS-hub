@@ -136,12 +136,24 @@ Route::middleware('auth')->group(function () {
     // hub's own button, lands on the dashboard instead of a 404.
     Route::redirect('/operations-room', '/')->name('operations-room');
 
-    // Design prototype. Real records, a proposed visual language; nothing in
-    // the platform depends on it, so it can be kept or deleted whole.
-    Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
-    Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
-    Route::get('/design/soft-command', SoftCommandGalleryController::class)->name('design.soft-command');
-    Route::get('/design/soft-command-shell', SoftCommandShellController::class)->name('design.soft-command-shell');
+    // Design prototypes and component galleries — local development only.
+    //
+    // These render real records behind a proposed visual language. Nothing in
+    // the platform depends on them, and they are genuinely useful while the
+    // remaining modules are converted onto eo-*, so they are kept rather than
+    // deleted. But they are scaffolding: on a shared or pilot host they are
+    // surface area a colleague can reach and be confused by, and one of them
+    // prints live event data in an unreviewed layout.
+    //
+    // Gated on `local` rather than `! production` deliberately — a pilot host
+    // running APP_ENV=staging must not get them either. Tests run as
+    // `testing`, and none of them exercise these routes.
+    if (app()->environment('local')) {
+        Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
+        Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
+        Route::get('/design/soft-command', SoftCommandGalleryController::class)->name('design.soft-command');
+        Route::get('/design/soft-command-shell', SoftCommandShellController::class)->name('design.soft-command-shell');
+    }
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 
