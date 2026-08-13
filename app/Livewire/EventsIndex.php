@@ -5,9 +5,7 @@ namespace App\Livewire;
 use App\Models\Event;
 use App\Models\EventApproval;
 use App\Models\EventContractPayment;
-use App\Models\Task;
 use App\Services\EventHealthService;
-use App\Services\EventJourney;
 use App\Services\EventMission;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -21,13 +19,26 @@ class EventsIndex extends Component
 {
     use WithPagination;
 
-    /** Filter tabs → event type groups. */
+    /**
+     * Filter tabs → event type groups.
+     *
+     * Split finer in Phase C: Summit, Corporate and Awards used to ride
+     * inside Conference/Exhibition/Gala respectively, which was fine while
+     * the only Type chip in the room was "Filters ▾" but reads as a bug once
+     * they're named chips of their own. vip/outdoor stay registered — not
+     * shown as Type chips any more (VIP moved to Smart Views), but a
+     * ?tab=vip or ?tab=outdoor link from before Phase C still has to resolve
+     * to something real rather than silently reset to "all".
+     */
     public const TYPE_TABS = [
         'all' => null,
-        'conference' => ['conference', 'summit', 'hybrid_event', 'online_event'],
+        'conference' => ['conference', 'hybrid_event', 'online_event'],
+        'summit' => ['summit'],
+        'exhibition' => ['exhibition', 'career_fair'],
         'workshop' => ['workshop', 'training_program'],
-        'exhibition' => ['exhibition', 'career_fair', 'product_launch'],
-        'gala' => ['gala_dinner', 'awards_ceremony'],
+        'gala' => ['gala_dinner'],
+        'corporate' => ['product_launch'],
+        'awards' => ['awards_ceremony'],
         'vip' => ['vip_reception', 'embassy_event', 'private_dinner'],
         'outdoor' => ['outdoor_event', 'public_event'],
     ];
@@ -46,19 +57,25 @@ class EventsIndex extends Component
     }
 
     /**
-     * The portfolio has three views and no more:
+     * The portfolio's five views, one workspace shell. Each shares the same
+     * payload (EventMission), the same status vocabulary and the same
+     * selected-event detail panel, so what changes between them is the
+     * arrangement, never the facts.
      *
-     *   deck   premium portfolio browsing — one mission at a time
-     *   list   operational management — every mission, dense and scannable
-     *   path   strategic timeline — where each mission sits in the year
+     *   board      Mission Board — the default. Grouped by what needs you first.
+     *   radar      Mission Radar as the page's hero, not a strip above one.
+     *   path       Timeline — where each mission sits across the year.
+     *   list       Table — every mission, dense and scannable.
+     *   calendar   Month/week view. Not built yet — selectable, and the
+     *              workspace says so honestly rather than pretending.
      *
-     * They are three ways of looking at one thing, so they share a payload
-     * (EventMission), a status vocabulary and a detail panel. What changes
-     * between them is the arrangement, never the facts.
+     * The spatial Deck (one-at-a-time, drag-to-step) is retired as a live
+     * view — see mount()'s ?view= mapping, which now resolves every old
+     * ?view=deck link straight to Mission Board instead of rendering it.
      */
-    public const VIEWS = ['deck', 'list', 'path'];
+    public const VIEWS = ['board', 'radar', 'path', 'list', 'calendar'];
 
-    public string $view = 'deck';
+    public string $view = 'board';
 
     /** The mission in the centre of the deck / open in the detail panel. */
     public ?int $activeId = null;
@@ -78,12 +95,16 @@ class EventsIndex extends Component
     /** Exact-type filter from ?type= (deep links keep working). */
     public ?string $exactType = null;
 
+    /** The Archived Events core link — same portfolio, the other pile. */
+    public bool $archived = false;
+
     public function mount(): void
     {
         $this->q = (string) request('q', '');
         $this->stage = request('stage') ?: null;
         $this->exactType = request('type') ?: null;
         $this->queue = request('queue') ?: null;
+        $this->archived = request()->boolean('archived');
         $this->starred = request()->boolean('starred');
         $reqTab = (string) request('tab', 'all');
         if (array_key_exists($reqTab, self::TYPE_TABS)) {
@@ -93,13 +114,17 @@ class EventsIndex extends Component
         if (in_array($reqSort, ['date', 'health', 'budget'], true)) {
             $this->sort = $reqSort;
         }
-        // Every retired view name lands on the nearest survivor rather than a
-        // blank page: the deck replaced the grid and the cards, the path
-        // replaced the calendar and the timeline.
+        // Every retired or renamed view name lands on the real view it means
+        // now, rather than a blank page or a silent reset to Mission Board —
+        // deck included: the spatial deck is retired, so a bookmarked
+        // ?view=deck now opens Mission Board instead of rendering it.
         $this->view = match (request('view')) {
-            'list' => 'list',
-            'path', 'calendar', 'timeline', 'flight-path' => 'path',
-            default => 'deck',
+            'deck', 'board', 'mission-board' => 'board',
+            'path', 'flight-path', 'timeline' => 'path',
+            'list', 'table' => 'list',
+            'radar' => 'radar',
+            'calendar' => 'calendar',
+            default => 'board',
         };
         $this->activeId = request()->integer('selected') ?: request()->integer('active') ?: null;
     }
@@ -272,50 +297,10 @@ class EventsIndex extends Component
         };
     }
 
-    /**
-     * The second line under a figure.
-     *
-     * Where a record carries a date we can compare two windows and say which
-     * way it is going. Where it does not, the slot says something true rather
-     * than a trend that was never measured.
-     */
-    private function trend(string $model, string $column = 'created_at'): ?array
-    {
-        $now = Carbon::today();
-        $recent = $model::whereBetween($column, [$now->copy()->subDays(30), $now->copy()->endOfDay()])->count();
-        $prior = $model::whereBetween($column, [$now->copy()->subDays(60), $now->copy()->subDays(30)])->count();
-
-        if ($prior === 0) {
-            return $recent > 0 ? ['up' => true, 'label' => '+'.$recent.' in 30d'] : null;
-        }
-
-        $delta = (int) round(($recent - $prior) / $prior * 100);
-
-        return ['up' => $delta >= 0, 'label' => ($delta >= 0 ? '↑ ' : '↓ ').abs($delta).'%'];
-    }
-
-    /** Put a mission in the centre of the deck / open it in the detail panel. */
+    /** Select a mission — the one the detail panel shows, in every view. */
     public function activate(int $eventId): void
     {
         $this->activeId = $eventId;
-    }
-
-    /**
-     * Step the deck. The order is the order on screen, so "next" means the card
-     * to the right of the one you are looking at, not the next database row.
-     */
-    public function step(int $direction): void
-    {
-        $ids = $this->orderedIds();
-
-        if ($ids->isEmpty()) {
-            return;
-        }
-
-        $at = $ids->search($this->activeId);
-        $at = $at === false ? 0 : $at + $direction;
-
-        $this->activeId = $ids[max(0, min($ids->count() - 1, $at))];
     }
 
     public function setView(string $view): void
@@ -325,16 +310,10 @@ class EventsIndex extends Component
         }
     }
 
-    /** The missions in screen order, which is the order the deck steps through. */
-    private function orderedIds(): Collection
-    {
-        return $this->baseQuery()->orderBy('starts_at')->pluck('id');
-    }
-
     private function baseQuery()
     {
         return Event::query()
-            ->whereNull('archived_at')
+            ->when($this->archived, fn ($query) => $query->whereNotNull('archived_at'), fn ($query) => $query->whereNull('archived_at'))
             ->when($this->q, fn ($query, $q) => $query->where(fn ($w) => $w
                 ->where('name', 'like', "%{$q}%")
                 ->orWhere('city', 'like', "%{$q}%")
@@ -380,34 +359,25 @@ class EventsIndex extends Component
             $health = $all->mapWithKeys(fn (Event $event) => [$event->id => $health[$event->id] ?? $pulse->breakdown($event)]);
         }
 
-        // The Deck is a line you walk along, so it is ALWAYS chronological:
-        // left is earlier, right is later, and stepping right moves forward in
-        // time. Sorting it by health or budget would make "next" meaningless.
-        // The List keeps the sort control; the Deck ignores it by design.
-        $sorted = $this->view === 'deck'
-            ? $all->sortBy(fn (Event $e) => $e->starts_at?->timestamp ?? PHP_INT_MAX)->values()
-            : (match ($this->sort) {
-                'health' => $all->sortByDesc(fn (Event $e) => $health[$e->id]['score'] ?? -1),
-                'budget' => $all->sortByDesc(fn (Event $e) => (int) $e->budgetItems->sum('actual_cents')),
-                default => $all->sortBy('starts_at'),
-            })->values();
+        $sorted = (match ($this->sort) {
+            'health' => $all->sortByDesc(fn (Event $e) => $health[$e->id]['score'] ?? -1),
+            'budget' => $all->sortByDesc(fn (Event $e) => (int) $e->budgetItems->sum('actual_cents')),
+            default => $all->sortBy('starts_at'),
+        })->values();
 
-        // One description per event, shared by all three views. A card and the
+        // One description per event, shared by every view. A card and the
         // row beneath it cannot disagree if neither of them did the counting.
         $deck = $missions->all($sorted);
 
-        // Where the deck opens. You picked one, or — since the deck runs left
-        // to right in date order — it opens on the middle of the run, with as
-        // much of the book behind you as ahead of you.
-        $active = $deck->firstWhere('id', $this->activeId)
-            ?? $deck->get(intdiv(max(0, $deck->count() - 1), 2))
-            ?? $deck->first();
+        $board = $this->view === 'board' ? $this->boardGroups($deck) : null;
 
-        $at = $active ? $deck->search(fn (array $m) => $m['id'] === $active['id']) : null;
+        // The selected mission, read by the one detail panel every view
+        // shares. Nothing is selected by default — an empty panel that says
+        // so is more honest than guessing which mission you meant.
+        $active = $this->activeId ? $deck->firstWhere('id', $this->activeId) : null;
 
         // The List paginates because it is the operational view and a hundred
-        // rows is a scroll; the deck and the path show the whole book, which is
-        // the point of both.
+        // rows is a scroll; the board, radar and path show the whole book.
         $rows = new LengthAwarePaginator(
             $deck->forPage($this->getPage(), $this->perPage)->values(),
             $deck->count(),
@@ -415,15 +385,21 @@ class EventsIndex extends Component
             $this->getPage(),
         );
 
+        // Portfolio health: the average of every mission that has actually
+        // been scored. An event still in draft with nothing to score yet
+        // does not count as either healthy or at risk — it just doesn't
+        // count, the same way it's excluded from every other health read
+        // in the platform.
+        $scored = $health->filter(fn ($h) => $h['score'] !== null);
+        $portfolioHealth = $scored->isNotEmpty() ? (int) round($scored->avg('score')) : null;
+
         return view('livewire.events-index', [
             'deck' => $deck,
+            'board' => $board,
             'rows' => $rows,
             // Kept under its old name for anything that reads the paginator.
             'events' => $rows,
             'active' => $active,
-            'activeAt' => $at,
-            'past' => $at === null ? collect() : $deck->slice(max(0, $at - 2), min(2, $at))->values(),
-            'future' => $at === null ? collect() : $deck->slice($at + 1, 2)->values(),
 
             // Flight Path: lanes down, months across, cards placed by date.
             'lanes' => $this->view === 'path' ? $this->lanes($deck) : null,
@@ -432,25 +408,76 @@ class EventsIndex extends Component
             'favoriteIds' => auth()->user()->favoriteEvents()->pluck('events.id')->all(),
             'statuses' => EventMission::STATUSES,
 
+            // The header's four figures — portfolio health, then the three
+            // counts that say what's actually happening right now. Kept to
+            // exactly these so the header reads at a glance rather than
+            // repeating what the filter bar and the board already show.
             'figures' => [
-                ['label' => 'In the book', 'note' => 'Not archived', 'icon' => 'calendar', 'tone' => 'navy',
-                    'value' => Event::whereNull('archived_at')->count(), 'trend' => null],
-                ['label' => 'In progress', 'note' => 'Running now', 'icon' => 'sparkles', 'tone' => 'blue',
-                    'value' => $deck->where('status', 'progress')->count(),
-                    'trend' => $this->trend(Event::class)],
-                ['label' => 'Open tasks', 'note' => 'Across all events', 'icon' => 'clipboard', 'tone' => 'green',
-                    'value' => Task::whereNotIn('status', ['done', 'approved', 'cancelled'])->count(),
-                    'trend' => $this->trend(Task::class)],
-                ['label' => 'At risk', 'note' => 'Needs attention', 'icon' => 'bell', 'tone' => 'red',
-                    'value' => $this->atRiskCount($health),
-                    'trend' => ($behind = $health->filter(fn ($h) => $h['status'] === 'behind')->count())
-                        ? ['up' => false, 'label' => $behind.' behind'] : null],
-                ['label' => 'Pending approvals', 'note' => 'Awaiting your review', 'icon' => 'identification', 'tone' => 'gold',
-                    'value' => EventApproval::where('status', 'pending')->count(),
-                    'trend' => ($oldest = EventApproval::where('status', 'pending')->min('created_at'))
-                        ? ['up' => false, 'label' => 'oldest '.(int) Carbon::parse($oldest)->diffInDays(now()).'d'] : null],
+                ['label' => 'Portfolio health', 'note' => $scored->isNotEmpty() ? $scored->count().' scored '.str('mission')->plural($scored->count()) : 'Nothing scored yet',
+                    'value' => $portfolioHealth !== null ? $portfolioHealth.'%' : '—', 'href' => null],
+                ['label' => 'Active', 'note' => 'Running now',
+                    'value' => $deck->where('status', 'progress')->count(), 'href' => null],
+                ['label' => 'At risk', 'note' => 'Needs attention',
+                    'value' => $this->atRiskCount($health), 'href' => route('events.index', ['queue' => 'at_risk', 'sort' => 'health'])],
+                ['label' => 'Upcoming', 'note' => 'Not live yet',
+                    'value' => $deck->where('status', 'upcoming')->count(), 'href' => null],
             ],
         ]);
+    }
+
+    /**
+     * Mission Board's four groups. Existing facts only — every signal here
+     * (health, pending approvals, outstanding payments, next-action urgency)
+     * is already computed elsewhere; this just sorts one mission into one
+     * bucket by what's true about it right now.
+     *
+     * Priority order matters: an event can be both "live" and "at risk," and
+     * it belongs in Needs Attention when that happens — the board is a
+     * worklist, and a live-but-burning mission is not a status update, it's
+     * the thing to open first.
+     *
+     * @return array<string,array{label:string,missions:Collection}>
+     */
+    private function boardGroups(Collection $deck): array
+    {
+        $awaitingApprovalIds = EventApproval::where('status', 'pending')->pluck('event_id')->all();
+        $paymentDueIds = EventContractPayment::query()
+            ->whereColumn('paid_cents', '<', 'amount_cents')
+            ->pluck('event_id')->all();
+
+        $groups = ['needs_attention' => collect(), 'live' => collect(), 'upcoming' => collect(), 'recent' => collect()];
+
+        foreach ($deck as $m) {
+            $needsAttention = ! ($m['past'] ?? false) && (
+                ($m['healthGroup'] ?? null) === 'risk'
+                || in_array($m['id'], $awaitingApprovalIds, true)
+                || in_array($m['id'], $paymentDueIds, true)
+                || ($m['milestone']['tone'] ?? null) === 'risk'
+            );
+
+            $key = match (true) {
+                $needsAttention => 'needs_attention',
+                ($m['live'] ?? false) || ($m['status'] ?? null) === 'progress' => 'live',
+                // Recently completed: closed out, and inside the window —
+                // an event that wrapped up six months ago is portfolio
+                // history, not something the board is still tracking.
+                ($m['past'] ?? false) && $m['event']->ends_at
+                    && $m['event']->ends_at->gte(now()->subDays(30)) => 'recent',
+                $m['past'] ?? false => null, // older closeouts: not on the board at all
+                default => 'upcoming',
+            };
+
+            if ($key) {
+                $groups[$key]->push($m);
+            }
+        }
+
+        return [
+            'needs_attention' => ['label' => 'Needs Attention', 'missions' => $groups['needs_attention']],
+            'live' => ['label' => 'Live / Active', 'missions' => $groups['live']],
+            'upcoming' => ['label' => 'Upcoming', 'missions' => $groups['upcoming']],
+            'recent' => ['label' => 'Recently Completed', 'missions' => $groups['recent']],
+        ];
     }
 
     /**

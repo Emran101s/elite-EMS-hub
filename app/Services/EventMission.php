@@ -194,17 +194,27 @@ class EventMission
             ->sortBy('due_on')->first();
 
         if (! $next) {
-            return ['title' => 'Nothing scheduled', 'due' => '—', 'overdue' => false, 'tab' => 'tasks'];
+            return ['title' => 'Nothing scheduled', 'due' => '—', 'overdue' => false, 'tone' => null, 'tab' => 'tasks'];
         }
 
-        $overdue = $next->due_on->isPast();
+        // isToday() has to be checked before isPast() — due_on is a date
+        // cast (midnight), so a task due today is already "past" any time
+        // after 00:00 and would otherwise be miscounted as overdue.
+        $today = $next->due_on->isToday();
+        $overdue = ! $today && $next->due_on->isPast();
 
         return [
             'title' => $next->title,
             'due' => $overdue
                 ? (int) $next->due_on->diffInDays(Carbon::today()).'d overdue'
-                : 'Due '.$next->due_on->format('j M Y'),
+                : ($today ? 'Due today' : 'Due '.$next->due_on->format('j M Y')),
             'overdue' => $overdue,
+            // Real, not mock: Overdue/Due today are computed from the same
+            // due_on this method already reads. Blocked is deliberately
+            // absent — no reliable "this task is blocked" signal exists on
+            // Task yet, so mission-card's urgency pill simply won't show it
+            // until one does.
+            'tone' => $overdue ? 'risk' : ($today ? 'warn' : 'ok'),
             'owner' => $next->assignee,
             'tab' => 'tasks',
         ];
