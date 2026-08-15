@@ -331,6 +331,29 @@ class EventsIndex extends Component
         $pulse = app(EventHealthService::class);
         $missions = app(EventMission::class);
 
+        // Board, Radar and Path show the whole filtered book by design — they
+        // cannot page, so they still need every matching event's full
+        // mission data and always have. List is the one view with page
+        // controls, and it's the one place the audit's "cosmetic
+        // pagination" finding is real: every matching event was
+        // mission-mapped through EventMission::for() — the expensive part,
+        // narrative strings and per-event tallies across 16 relations —
+        // even though only $perPage of them are ever shown.
+        //
+        // The eager-load itself is NOT split by view: EventMission::RELATIONS
+        // and EventHealthService::RELATIONS name several of the same
+        // relations differently (tasks vs tasks.assignee, risks vs
+        // risks.owner, transport.manifest vs transport), so loading them in
+        // two separate passes was measured to cost MORE queries than one
+        // merged pass — not a small-dataset artifact, either: Laravel's
+        // eager-loading is one query per relation regardless of row count,
+        // so a split pays a fixed ~11-query tax at any scale it never earns
+        // back in query count. What genuinely scales with row count instead
+        // — and is what "maps every row into a mission" in the audit
+        // actually costs — is running for() on every matching event. That
+        // part is scoped to the current page below.
+        $paginating = $this->view === 'list';
+
         $all = $this->baseQuery()
             ->with(array_merge(EventMission::RELATIONS, EventHealthService::RELATIONS))
             ->get();
@@ -365,25 +388,68 @@ class EventsIndex extends Component
             default => $all->sortBy('starts_at'),
         })->values();
 
-        // One description per event, shared by every view. A card and the
-        // row beneath it cannot disagree if neither of them did the counting.
-        $deck = $missions->all($sorted);
+        if ($paginating) {
+            // Real pagination of the expensive part: every matching event's
+            // relations are already loaded above (one merged query, same as
+            // any other view), but EventMission::for() — narrative strings,
+            // per-event tallies, lane matching — now runs only for the
+            // events on this page, not the whole matching book.
+            $pageEvents = $sorted->forPage($this->getPage(), $this->perPage)->values();
+            $deck = $missions->all($pageEvents);
 
-        $board = $this->view === 'board' ? $this->boardGroups($deck) : null;
+            $rows = new LengthAwarePaginator($deck, $sorted->count(), $this->perPage, $this->getPage());
 
-        // The selected mission, read by the one detail panel every view
-        // shares. Nothing is selected by default — an empty panel that says
-        // so is more honest than guessing which mission you meant.
-        $active = $this->activeId ? $deck->firstWhere('id', $this->activeId) : null;
+            // Cheap, relation-free status per event (see EventMission::statusFor)
+            // for the header's whole-book Active/Upcoming counts below — the
+            // one thing on this page that still has to know about every
+            // matching event, not just the current page of them.
+            $statuses = $sorted->mapWithKeys(fn (Event $e) => [$e->id => EventMission::statusFor($e)]);
+            $activeCount = $statuses->filter(fn ($s) => $s === 'progress')->count();
+            $upcomingCount = $statuses->filter(fn ($s) => $s === 'upcoming')->count();
 
-        // The List paginates because it is the operational view and a hundred
-        // rows is a scroll; the board, radar and path show the whole book.
-        $rows = new LengthAwarePaginator(
-            $deck->forPage($this->getPage(), $this->perPage)->values(),
-            $deck->count(),
-            $this->perPage,
-            $this->getPage(),
-        );
+            $board = null;
+            $lanes = null;
+            $months = null;
+
+            // The selected mission may not be on the current page — a deep
+            // link (?selected=X&page=2) still has to resolve. The event and
+            // its relations are already loaded in $sorted regardless, so
+            // this costs one extra for() call, not another query.
+            $active = null;
+            if ($this->activeId) {
+                $active = $deck->firstWhere('id', $this->activeId);
+                if (! $active) {
+                    $activeEvent = $sorted->firstWhere('id', $this->activeId);
+                    $active = $activeEvent ? $missions->for($activeEvent) : null;
+                }
+            }
+        } else {
+            // One description per event, shared by every view. A card and
+            // the row beneath it cannot disagree if neither of them did
+            // the counting.
+            $deck = $missions->all($sorted);
+
+            $board = $this->view === 'board' ? $this->boardGroups($deck) : null;
+            $lanes = $this->view === 'path' ? $this->lanes($deck) : null;
+            $months = $this->view === 'path' ? $this->months($sorted) : null;
+
+            $active = $this->activeId ? $deck->firstWhere('id', $this->activeId) : null;
+
+            // Board, Radar and Path show the whole book (see the note on
+            // $paginating above), so $rows here is a full-page-1 view of
+            // the same $deck every other output already reflects — nothing
+            // reads its page controls outside the List branch, but it is
+            // still built the same way in case anything comes to.
+            $rows = new LengthAwarePaginator(
+                $deck->forPage($this->getPage(), $this->perPage)->values(),
+                $deck->count(),
+                $this->perPage,
+                $this->getPage(),
+            );
+
+            $activeCount = $deck->where('status', 'progress')->count();
+            $upcomingCount = $deck->where('status', 'upcoming')->count();
+        }
 
         // Portfolio health: the average of every mission that has actually
         // been scored. An event still in draft with nothing to score yet
@@ -402,8 +468,8 @@ class EventsIndex extends Component
             'active' => $active,
 
             // Flight Path: lanes down, months across, cards placed by date.
-            'lanes' => $this->view === 'path' ? $this->lanes($deck) : null,
-            'months' => $this->view === 'path' ? $this->months($sorted) : null,
+            'lanes' => $lanes,
+            'months' => $months,
 
             'favoriteIds' => auth()->user()->favoriteEvents()->pluck('events.id')->all(),
             'statuses' => EventMission::STATUSES,
@@ -416,11 +482,11 @@ class EventsIndex extends Component
                 ['label' => 'Portfolio health', 'note' => $scored->isNotEmpty() ? $scored->count().' scored '.str('mission')->plural($scored->count()) : 'Nothing scored yet',
                     'value' => $portfolioHealth !== null ? $portfolioHealth.'%' : '—', 'href' => null],
                 ['label' => 'Active', 'note' => 'Running now',
-                    'value' => $deck->where('status', 'progress')->count(), 'href' => null],
+                    'value' => $activeCount, 'href' => null],
                 ['label' => 'At risk', 'note' => 'Needs attention',
                     'value' => $this->atRiskCount($health), 'href' => route('events.index', ['queue' => 'at_risk', 'sort' => 'health'])],
                 ['label' => 'Upcoming', 'note' => 'Not live yet',
-                    'value' => $deck->where('status', 'upcoming')->count(), 'href' => null],
+                    'value' => $upcomingCount, 'href' => null],
             ],
         ]);
     }
@@ -546,5 +612,4 @@ class EventsIndex extends Component
                 : null,
         ];
     }
-
 }

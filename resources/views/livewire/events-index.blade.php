@@ -177,7 +177,11 @@
 
         <p class="flex items-center gap-1.5 text-[11.5px] font-semibold text-eo-muted">
             <span class="h-1.5 w-1.5 rounded-full bg-eo-teal"></span>
-            {{ $deck->count() }} {{ str('mission')->plural($deck->count()) }} in view
+            {{-- Every matching mission, not just what $deck holds on this
+                 page — List's $deck is now just the current page (see
+                 EventsIndex::render()), so the whole-book total has to come
+                 from the paginator, which always knows it regardless of view. --}}
+            {{ $rows->total() }} {{ str('mission')->plural($rows->total()) }} in view
         </p>
 
         <div class="ms-auto flex flex-wrap items-center gap-x-3.5 gap-y-1">
@@ -194,7 +198,11 @@
          One grid for every view: workspace on the left, the one detail
          panel sticky on the right. Nothing renders detail at the bottom.
          ══════════════════════════════════════════════════════════════ --}}
-    @if ($deck->isEmpty())
+    {{-- Same reasoning as the count above it: $deck can be legitimately
+         empty on List's page N while real matches exist on page 1 — the
+         "nothing matches at all" check has to ask the paginator's total,
+         not the current page's own row count. --}}
+    @if ($rows->total() === 0)
         <x-eo.empty-state icon="calendar" title="No mission matches" hint="Clear the filters, or create the first event of this kind.">
             <x-slot:actions>
                 <x-eo.button href="{{ route('events.create') }}" size="sm">＋ Create Event</x-eo.button>

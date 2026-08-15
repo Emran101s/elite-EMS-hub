@@ -64,6 +64,32 @@ class EventMission
         return $events->map(fn (Event $event) => $this->for($event))->values();
     }
 
+    /**
+     * The vocabulary-of-five status alone — stage, starts_at and ends_at
+     * only, no relation touched. Split out of for() so a caller that needs
+     * every event's status for a portfolio-wide count (Event Portfolio's
+     * header figures, its board/radar/path groupings) never has to build a
+     * full mission — with its 15 relations — just to read one word off it.
+     * for() calls this too, so the rule lives in exactly one place either way.
+     */
+    public static function statusFor(Event $event): string
+    {
+        $today = Carbon::today();
+        $start = $event->starts_at?->copy()->startOfDay();
+        $end = ($event->ends_at ?? $event->starts_at)?->copy()->endOfDay();
+
+        $live = $start && $end && $start->lte($today) && $end->gte($today);
+        $done = $end && $end->lt($today);
+
+        return match (true) {
+            $event->stage === 'draft' => 'draft',
+            in_array($event->stage, ['completed', 'closed'], true), $done => 'completed',
+            $live, $event->stage === 'live' => 'progress',
+            in_array($event->stage, ['proposal', 'planning'], true) => 'planning',
+            default => 'upcoming',
+        };
+    }
+
     public function for(Event $event): array
     {
         $today = Carbon::today();
@@ -75,13 +101,7 @@ class EventMission
         $live = $start && $end && $start->lte($today) && $end->gte($today);
         $done = $end && $end->lt($today);
 
-        $status = match (true) {
-            $event->stage === 'draft' => 'draft',
-            in_array($event->stage, ['completed', 'closed'], true), $done => 'completed',
-            $live, $event->stage === 'live' => 'progress',
-            in_array($event->stage, ['proposal', 'planning'], true) => 'planning',
-            default => 'upcoming',
-        };
+        $status = self::statusFor($event);
 
         [$statusLabel, $statusTone, $statusHex] = self::STATUSES[$status];
 
@@ -163,7 +183,9 @@ class EventMission
             // event as a zero, which is exactly what the portfolio's risk card
             // was doing.
             'health' => $h['score'] === null ? 'Not scored'
-                : match ($h['group']) { 'risk' => 'At risk', 'warn' => 'Medium', default => 'Excellent' },
+                : match ($h['group']) {
+                    'risk' => 'At risk', 'warn' => 'Medium', default => 'Excellent'
+                },
             'healthGroup' => $h['group'],
 
             /** The raw index, 0–100, or null when the stage is not scored yet. */
