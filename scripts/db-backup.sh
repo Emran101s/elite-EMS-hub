@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Backup the application database into storage/backups/.
 #
-# Supports sqlite (default here), mysql, and pgsql — driven by .env.
+# Supports sqlite (default here), mysql, and pgsql — driven by .env, or by
+# ENV_FILE if set (e.g. ENV_FILE=.env.pilot to back up a pilot target
+# without touching local dev's own .env).
 # Uses sqlite3's online .backup when available so a live write cannot
 # corrupt the snapshot; falls back to cp for hosts without sqlite3.
 #
@@ -9,22 +11,25 @@
 #   ./scripts/db-backup.sh
 #   KEEP=14 ./scripts/db-backup.sh          # retain N newest (default 14)
 #   OUT=/tmp/manual.sqlite ./scripts/db-backup.sh
+#   ENV_FILE=.env.pilot ./scripts/db-backup.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [[ -f .env ]]; then
+ENV_FILE="${ENV_FILE:-.env}"
+
+if [[ -f "$ENV_FILE" ]]; then
   # shellcheck disable=SC1091
   set -a
   # Only pull the DB_* keys — never eval the whole file.
   while IFS= read -r line; do
     case "$line" in
-      DB_CONNECTION=*|DB_DATABASE=*|DB_HOST=*|DB_PORT=*|DB_USERNAME=*|DB_PASSWORD=*)
+      DB_CONNECTION=*|DB_DATABASE=*|DB_HOST=*|DB_PORT=*|DB_USERNAME=*|DB_PASSWORD=*|DB_SSLMODE=*)
         export "$line"
         ;;
     esac
-  done < <(grep -E '^(DB_CONNECTION|DB_DATABASE|DB_HOST|DB_PORT|DB_USERNAME|DB_PASSWORD)=' .env | sed 's/\r$//')
+  done < <(grep -E '^(DB_CONNECTION|DB_DATABASE|DB_HOST|DB_PORT|DB_USERNAME|DB_PASSWORD|DB_SSLMODE)=' "$ENV_FILE" | sed 's/\r$//')
   set +a
 fi
 
@@ -71,10 +76,11 @@ case "$CONNECTION" in
     HOST="${DB_HOST:-127.0.0.1}"
     PORT="${DB_PORT:-5432}"
     export PGPASSWORD="${DB_PASSWORD:-}"
+    export PGSSLMODE="${DB_SSLMODE:-prefer}"
     pg_dump -h "$HOST" -p "$PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" \
       --no-owner --format=plain \
       | gzip -c > "$OUT"
-    unset PGPASSWORD
+    unset PGPASSWORD PGSSLMODE
     ;;
   *)
     echo "error: unsupported DB_CONNECTION=${CONNECTION}" >&2

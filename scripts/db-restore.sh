@@ -49,14 +49,16 @@ if [[ ! -f "$BACKUP" ]]; then
   exit 1
 fi
 
-if [[ -f .env ]]; then
+ENV_FILE="${ENV_FILE:-.env}"
+
+if [[ -f "$ENV_FILE" ]]; then
   while IFS= read -r line; do
     case "$line" in
-      DB_CONNECTION=*|DB_DATABASE=*|DB_HOST=*|DB_PORT=*|DB_USERNAME=*|DB_PASSWORD=*)
+      DB_CONNECTION=*|DB_DATABASE=*|DB_HOST=*|DB_PORT=*|DB_USERNAME=*|DB_PASSWORD=*|DB_SSLMODE=*)
         export "$line"
         ;;
     esac
-  done < <(grep -E '^(DB_CONNECTION|DB_DATABASE|DB_HOST|DB_PORT|DB_USERNAME|DB_PASSWORD)=' .env | sed 's/\r$//')
+  done < <(grep -E '^(DB_CONNECTION|DB_DATABASE|DB_HOST|DB_PORT|DB_USERNAME|DB_PASSWORD|DB_SSLMODE)=' "$ENV_FILE" | sed 's/\r$//')
 fi
 
 CONNECTION="${DB_CONNECTION:-sqlite}"
@@ -142,12 +144,13 @@ case "$CONNECTION" in
     HOST="${DB_HOST:-127.0.0.1}"
     PORT="${DB_PORT:-5432}"
     export PGPASSWORD="${DB_PASSWORD:-}"
+    export PGSSLMODE="${DB_SSLMODE:-prefer}"
     if [[ "$BACKUP" == *.gz ]]; then
       gunzip -c "$BACKUP" | psql -h "$HOST" -p "$PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -v ON_ERROR_STOP=1
     else
       psql -h "$HOST" -p "$PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -v ON_ERROR_STOP=1 -f "$BACKUP"
     fi
-    unset PGPASSWORD
+    unset PGPASSWORD PGSSLMODE
     echo "restored ok into postgres://${HOST}/${DB_DATABASE}"
     ;;
   *)
