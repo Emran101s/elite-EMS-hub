@@ -13,6 +13,7 @@ use App\Services\EventHealthService;
 use App\Services\EventMission;
 use App\Services\PortfolioAdvisor;
 use App\Services\PortfolioFinance;
+use App\Support\Workflow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
@@ -69,17 +70,28 @@ class Dashboard extends Component
         // EventMission so the card gets Days Out / Budget / Owner / Next
         // Action instead of the hand-mapped subset it had before. Only 4
         // events, so relations EventMission needs beyond what's already
-        // loaded above lazy-load on demand rather than widening the whole
-        // $events eager-load for a subset the rest of the dashboard doesn't need.
-        $nearestMissions = app(EventMission::class)->all(
-            $events->filter(fn (Event $e) => $e->starts_at)->sortBy('starts_at')->take(4)->values()
-        );
+        // loaded above are batch-loaded on just this subset — one query per
+        // relation for all 4, not one per relation per event (was: up to 4x
+        // each for brief, teamMembers, speakers, suppliers, transport, rooms,
+        // approvals.requester, confirmed via query-log measurement).
+        $nearest = $events->filter(fn (Event $e) => $e->starts_at)->sortBy('starts_at')->take(4)->values();
+        $nearest->load(array_diff(EventMission::RELATIONS, array_merge(
+            EventHealthService::RELATIONS, PortfolioAdvisor::RELATIONS, ['client', 'venue', 'agendaDays', 'attendees'],
+        )));
+        $nearestMissions = app(EventMission::class)->all($nearest);
 
         // One pass over each table for the whole seven-day window, instead of
         // dayAt()'s old one-query-per-table-per-day (8 days × ~4 queries).
         $window = $this->loadWindow($today, $today->copy()->addDays(6), $ids);
 
         $queue = $this->commandQueue($events, $ids, $today);
+        // Computed once and threaded through — was called separately here
+        // and again inside kpis(), each run re-querying PortfolioFinance's
+        // full events() join (budgetItems, incomeItems, sponsors, exhibitors,
+        // client, invoices, contract.payments, contracts.payments) from a
+        // fresh, unmemoized instance, since app() doesn't return the same
+        // object twice.
+        $money = app(PortfolioFinance::class)->totals();
 
         return view('livewire.dashboard', [
             'now' => $today,
@@ -99,7 +111,7 @@ class Dashboard extends Component
             // Today's Command Queue — the same records the KPI strip counts,
             // grouped for the left column rather than summed for a tile.
             'queue' => $queue,
-            'kpis' => $this->kpis($events, $health, $queue),
+            'kpis' => $this->kpis($events, $health, $queue, $money),
             // Money to collect, for Executive Intelligence — the same
             // ranking (overdue first) Finance's own receivables desk uses.
             'receivables' => app(PortfolioFinance::class)->receivables(4),
@@ -120,15 +132,15 @@ class Dashboard extends Component
 
             // The lifecycle, from the same locked state set the rest of the
             // platform reads — not a second list that can drift from it.
-            'stages' => collect(\App\Support\Workflow::SETS['event_stage']['states'])
+            'stages' => collect(Workflow::SETS['event_stage']['states'])
                 ->map(fn ($_, string $key) => [
                     'key' => $key,
-                    'label' => \App\Support\Workflow::label('event_stage', $key),
-                    'hex' => \App\Support\Workflow::color('event_stage', $key) ?: '#94A3B8',
+                    'label' => Workflow::label('event_stage', $key),
+                    'hex' => Workflow::color('event_stage', $key) ?: '#94A3B8',
                     'count' => $events->where('stage', $key)->count(),
                 ])
                 ->values()->all(),
-            'money' => app(PortfolioFinance::class)->totals(),
+            'money' => $money,
         ]);
     }
 
@@ -208,15 +220,16 @@ class Dashboard extends Component
      * count, and the health engine's at_risk/behind count) — renamed for
      * Phase D's executive framing, not recomputed. The other four are read
      * off records the rest of the platform already counts the same way:
-     * PortfolioFinance for money, EventApproval for approvals, the same
-     * outstanding-payment predicate Finance and the old Smart Views chip
-     * both use, and $queue's own tallies for tasks.
+     * PortfolioFinance for money (computed once in render() and passed in —
+     * app() doesn't memoize across calls, so a second app(PortfolioFinance::class)
+     * here used to re-run its full events() join from scratch), EventApproval
+     * for approvals, the same outstanding-payment predicate Finance and the
+     * old Smart Views chip both use, and $queue's own tallies for tasks.
      */
-    private function kpis(Collection $events, EventHealthService $health, array $queue): array
+    private function kpis(Collection $events, EventHealthService $health, array $queue, array $money): array
     {
         $atRisk = $events->filter(fn (Event $e) => in_array($health->breakdown($e)['status'], ['at_risk', 'behind'], true))->count();
-        $money = app(PortfolioFinance::class)->totals();
-        $moneySym = \App\Models\Event::CURRENCIES[$money['currency'] ?? 'JOD'][0] ?? '';
+        $moneySym = Event::CURRENCIES[$money['currency'] ?? 'JOD'][0] ?? '';
 
         return [
             ['label' => 'Active Events', 'note' => 'Not archived', 'value' => $events->count(),
