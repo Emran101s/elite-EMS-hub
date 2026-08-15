@@ -29,6 +29,29 @@ class PortfolioFinance
     public function __construct(private readonly CurrencyService $fx) {}
 
     /**
+     * Reuse a collection the caller already loaded, instead of events()
+     * running its own query for it.
+     *
+     * Opt-in only — nothing about the default path changes. A caller that
+     * already has events loaded for its own purposes (Command Center, at
+     * least) can widen that eager-load once, by the handful of relations
+     * this service specifically needs (see events()'s own with([...]) for
+     * the list), and hand the result in here rather than paying for a
+     * second full portfolio query moments later.
+     *
+     * The caller is trusted to have loaded what statement() reads — this
+     * does not verify or lazy-load anything, on purpose: a service that
+     * silently patched gaps would hide exactly the N+1 this method exists
+     * to remove.
+     */
+    public function useEvents(Collection $events): static
+    {
+        $this->eventsMemo = $events;
+
+        return $this;
+    }
+
+    /**
      * The currency the whole book is reported in — the company's own.
      *
      * Events are run in whatever currency the client pays in, so a portfolio

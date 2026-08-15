@@ -91,7 +91,16 @@ class Dashboard extends Component
         // client, invoices, contract.payments, contracts.payments) from a
         // fresh, unmemoized instance, since app() doesn't return the same
         // object twice.
-        $money = app(PortfolioFinance::class)->totals();
+        //
+        // Phase 3.2: that query is now avoided entirely rather than just
+        // de-duplicated. $events already carries budgetItems, client and
+        // invoices (via invoices.lines.payment); batch-loading the five
+        // relations PortfolioFinance still needs — one query per relation
+        // for the whole portfolio, not per event — lets useEvents() hand
+        // the service this collection instead of it re-querying every event
+        // from scratch.
+        $events->load(['incomeItems', 'sponsors', 'exhibitors', 'contract.payments', 'contracts.payments']);
+        $money = app(PortfolioFinance::class)->useEvents($events)->totals();
 
         return view('livewire.dashboard', [
             'now' => $today,
