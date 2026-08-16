@@ -313,8 +313,27 @@ class ApprovalsTab extends Component
         return view('livewire.hub.approvals-tab', [
             'pending' => $this->event->approvals()->with(['requester', 'steps.approver'])->where('status', 'pending')->latest()->get(),
             'decided' => $this->event->approvals()->with(['requester', 'decider', 'steps.approver', 'steps.decider'])->whereNot('status', 'pending')->latest('decided_at')->get(),
-            'managers' => User::query()->get()->filter(fn (User $u) => $u->isAtLeast('manager'))->values(),
+            'managers' => $this->managers(),
             'threshold' => CompanyProfile::approvalThresholdCents(),
         ]);
+    }
+
+    /**
+     * Everyone eligible to be named on a step — manager rank or above.
+     *
+     * Same rule as User::isAtLeast('manager'), but isAtLeast() resolves
+     * activeWorkspace() per instance with no cross-row memoization, so
+     * filtering the whole roster through it fired one workspaces query per
+     * user. This reads the one rule it's built on — the pivot role on the
+     * tenant's one workspace, falling back to users.role — off a single
+     * eager load instead.
+     */
+    private function managers()
+    {
+        return User::with('workspaces')->get()->filter(function (User $u) {
+            $effective = $u->workspaces->first()?->pivot?->role ?? $u->role;
+
+            return (User::ROLE_RANK[$effective] ?? 0) >= User::ROLE_RANK['manager'];
+        })->values();
     }
 }
