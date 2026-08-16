@@ -120,10 +120,16 @@ class BudgetTab extends Component
 
     public function mount(): void
     {
-        $this->event->ensureBudgetCategories();
+        // sync() already calls ensureBudgetCategories() itself — a second
+        // call here just paid for a repeat exists() check.
         app(BudgetSync::class)->sync($this->event);
+        // sync() can create/update/delete budget items and categories, so the
+        // controller's base eager-load is stale the moment it returns — one
+        // fresh load here, read by render() too, instead of both this method
+        // and render() each re-querying items and categories on their own.
+        $this->event->load(['budgetItems', 'budgetCategories']);
         // Categories start collapsed — a clean "builder" overview; click to expand.
-        $this->collapsed = $this->event->budgetCategories()->pluck('name')->map(fn ($n) => 'cat:'.$n)->all();
+        $this->collapsed = $this->event->budgetCategories->pluck('name')->map(fn ($n) => 'cat:'.$n)->all();
         $this->budgetCap = $this->event->budget_cents ? (string) ($this->event->budget_cents / 100) : '';
         $this->feePct = rtrim(rtrim(number_format($this->event->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT, 2), '0'), '.');
         $this->clientTarget = $this->event->client_target_cents ? (string) ($this->event->client_target_cents / 100) : '';
@@ -719,8 +725,11 @@ class BudgetTab extends Component
 
     public function render()
     {
-        $items = $this->event->budgetItems()->with('room')->orderBy('id')->get();
-        $cats = $this->event->budgetCategories()->get();
+        // Both already loaded fresh (post-sync) in mount() — nothing here
+        // reads item->room, so the with('room') this used to carry was
+        // eager-loading a relation the view never touches.
+        $items = $this->event->budgetItems->sortBy('id')->values();
+        $cats = $this->event->budgetCategories;
         $known = $cats->pluck('name');
 
         // One section per category, in the user's order — empty categories included.
