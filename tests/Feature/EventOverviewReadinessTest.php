@@ -39,10 +39,13 @@ class EventOverviewReadinessTest extends TestCase
         // redesign's readiness word now shows on the active stage too, not
         // just the other seven, matching the reference's "Overview 67% On
         // Track" — the current stage names its own state instead of being
-        // the one card that doesn't), which on a blank event carry no
+        // the one card that doesn't) — plus the Universal Module Inspector's
+        // own status pill (Phase E.3; Overview falls back to Agenda's
+        // metrics there, which on a blank event has no meters() coverage
+        // either) — 6 + 8 + 1, which on a blank event carry no
         // meters/attention signal and so read "Not started" too (Phase E.2;
         // see docs/32-event-hub-orbit-journey-architecture.md §4).
-        $this->assertSame(6 + 8, substr_count($html, 'Not started'));
+        $this->assertSame(6 + 8 + 1, substr_count($html, 'Not started'));
     }
 
     public function test_a_full_agenda_reads_ready(): void
@@ -84,9 +87,10 @@ class EventOverviewReadinessTest extends TestCase
         $this->assertStringContainsString('Registration', $html);
         // brief, contract, agenda, venue, transport are still untouched —
         // only registration moved (5) — plus the Orbit Journey's own 8
-        // stage cards (unaffected by registration_open; see the 6+8 note in
-        // test_untouched_modules_read_not_started for why it's 8, not 7).
-        $this->assertSame(5 + 8, substr_count($html, 'Not started'));
+        // stage cards, plus the Inspector's own status pill (unaffected by
+        // registration_open either way; see the 6+8+1 note in
+        // test_untouched_modules_read_not_started for what each term is).
+        $this->assertSame(5 + 8 + 1, substr_count($html, 'Not started'));
     }
 
     /** A disabled module's door must not appear at all — it would only bounce back to Overview. */

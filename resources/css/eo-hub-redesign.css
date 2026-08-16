@@ -17,33 +17,21 @@
 }
 
 @layer components {
-    /* ── Page grid ─────────────────────────────────────────────────── */
+    /* ── Page grid ─────────────────────────────────────────────────────
+       Desktop (≥1280px): stack | dock | workspace | inspector, side by side.
+       Tablet (900–1279px): stack becomes a collapsible strip above the row,
+       dock stays a side rail, inspector drops below the workspace.
+       Mobile (<900px): everything stacks — header, stack carousel, dock
+       carousel, workspace, inspector (collapsible). ─────────────────── */
     .hubx-grid {
         display: grid;
-        grid-template-columns: minmax(0, 240px) 84px minmax(0, 1fr);
-        gap: 1rem;
+        grid-template-columns: minmax(0, 232px) 80px minmax(0, 1fr);
+        gap: 0.85rem;
         align-items: start;
     }
 
     .hubx-grid.has-panel {
-        grid-template-columns: minmax(0, 240px) 84px minmax(0, 1fr) minmax(0, 300px);
-    }
-
-    @media (max-width: 1279px) {
-        .hubx-grid,
-        .hubx-grid.has-panel {
-            grid-template-columns: 64px minmax(0, 1fr);
-        }
-        .hubx-col-stack { display: none; }
-    }
-
-    @media (max-width: 899px) {
-        .hubx-grid,
-        .hubx-grid.has-panel {
-            grid-template-columns: minmax(0, 1fr);
-        }
-        .hubx-col-rail { display: none; }
-        .hubx-col-panel { display: none; }
+        grid-template-columns: minmax(0, 232px) 80px minmax(0, 1fr) minmax(0, 280px);
     }
 
     /* ── Command Stack (left, dark glass) ─────────────────────────── */
@@ -316,6 +304,26 @@
         color: var(--color-eo-line);
     }
 
+    .hubx-header-icon-row {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-right: 0.15rem;
+    }
+
+    .hubx-header-icon {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 0.65rem;
+        color: var(--color-eo-muted);
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--color-eo-line);
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .hubx-header-icon:hover { color: var(--color-eo-teal-ink); border-color: var(--color-eo-teal); }
+
     .hubx-pill {
         display: inline-flex;
         align-items: center;
@@ -328,16 +336,20 @@
         text-transform: uppercase;
     }
 
-    /* ── Central Orbit (redesigned) ───────────────────────────────── */
+    /* ── Stage Radar (Central Orbit, lightened) ───────────────────────
+       "Support the cockpit, not dominate the page": everything below
+       overrides the (much larger) shared .eo-orbit-* sizing — the data
+       and structure are unchanged, only the footprint shrinks so the
+       radar reads as one glass panel among several, not the whole page. */
     .hubx-orbit-card {
         position: relative;
         border-radius: 1.5rem;
-        padding: 1.25rem;
+        padding: 0.9rem 1rem 0.5rem;
         background:
             radial-gradient(120% 70% at 50% -10%, rgba(30, 172, 172, 0.10) 0%, transparent 55%),
             rgba(255, 255, 255, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow-eo-float);
+        box-shadow: var(--shadow-eo);
         backdrop-filter: blur(14px);
     }
 
@@ -346,6 +358,43 @@
         font-weight: 800;
         letter-spacing: 0.02em;
     }
+
+    .hubx-orbit-card .eo-orbit-ring-wrap {
+        max-width: 300px;
+        margin: 0.75rem auto 0.4rem;
+    }
+
+    @media (min-width: 1024px) {
+        .hubx-orbit-card .eo-orbit-ring-wrap { max-width: 320px; }
+    }
+
+    .hubx-orbit-card .eo-orbit-core {
+        width: min(62vw, 208px);
+        padding: 0.75rem 0.85rem 0.65rem;
+        border-radius: 16px;
+    }
+
+    .hubx-orbit-card .eo-orbit-core-eyebrow { font-size: 8px; margin-bottom: 0.2rem; }
+    .hubx-orbit-card .eo-orbit-core-name { font-size: 12.5px; margin-bottom: 0.45rem; line-height: 1.15; }
+    .hubx-orbit-card .eo-orbit-core-grid { gap: 0.4rem 0.3rem; margin-bottom: 0.5rem; }
+    .hubx-orbit-card .eo-orbit-core-field span { font-size: 7px; margin-bottom: 0; }
+    .hubx-orbit-card .eo-orbit-core-field b { font-size: 10.5px; }
+    .hubx-orbit-card .eo-orbit-core-field b.small { font-size: 9px; }
+    .hubx-orbit-card .eo-orbit-core-divider { margin-bottom: 0.5rem; }
+    .hubx-orbit-card .eo-orbit-core-next { padding: 0.4rem 0.55rem; margin-bottom: 0.5rem; }
+    .hubx-orbit-card .eo-orbit-core-next span { font-size: 7px; }
+    .hubx-orbit-card .eo-orbit-core-next b { font-size: 9.5px; }
+    .hubx-orbit-card .eo-orbit-core-cta { padding: 0.4rem; font-size: 9.5px; border-radius: 9px; }
+
+    .hubx-orbit-card .eo-orbit-stage-card { width: 62px; padding: 0.35rem 0.4rem; border-radius: 10px; }
+    .hubx-orbit-card .eo-orbit-stage-idx { font-size: 6px; }
+    .hubx-orbit-card .eo-orbit-stage-label { font-size: 9.5px; }
+    .hubx-orbit-card .eo-orbit-stage-meta { font-size: 8px; }
+    .hubx-orbit-card .eo-orbit-active { width: 130px; padding: 0.5rem 0.6rem; }
+    .hubx-orbit-card .eo-orbit-active-eyebrow { font-size: 7px; }
+    .hubx-orbit-card .eo-orbit-active-label { font-size: 11px; }
+    .hubx-orbit-card .eo-orbit-active-stats b { font-size: 12px; }
+    .hubx-orbit-card .eo-orbit-active-stats span { font-size: 7px; }
 
     /* ── Event Cortex recommendation card ─────────────────────────── */
     .hubx-cortex {
@@ -522,5 +571,67 @@
         margin-top: 0.15rem;
         font-size: 10.5px;
         font-weight: 700;
+    }
+
+    /* ── Responsive overrides ──────────────────────────────────────────
+       Placed last on purpose: every rule above (.hubx-stack, .hubx-rail,
+       etc.) is a plain class selector, so without deliberate source-order
+       control here, whichever definition appears LAST in the file wins at
+       every viewport, media query or not — these have to come after the
+       base rules to actually override them at narrower widths.
+       Desktop (≥1280px): stack | dock | workspace | inspector, side by side.
+       Tablet (900–1279px): stack becomes a horizontal strip above the row,
+       dock stays a side rail, inspector drops below the workspace.
+       Mobile (<900px): stack and dock both become horizontal carousels. */
+    @media (max-width: 1279px) {
+        .hubx-grid,
+        .hubx-grid.has-panel {
+            grid-template-columns: 64px minmax(0, 1fr);
+            grid-template-areas: "rail stack" "rail main";
+        }
+        .hubx-col-stack { grid-area: stack; }
+        .hubx-col-rail { grid-area: rail; }
+        .hubx-grid > div:nth-child(3) { grid-area: main; }
+        .hubx-col-panel { grid-column: 1 / -1; margin-top: 0.85rem; }
+
+        /* The stack column: a horizontal strip instead of a fixed dark
+           column, so tablet width isn't spent on a 232px sidebar. */
+        .hubx-col-stack .hubx-stack {
+            position: static;
+            flex-direction: row;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .hubx-col-stack .hubx-stack-head { display: none; }
+        .hubx-col-stack .hubx-stack-card,
+        .hubx-col-stack .hubx-stack-empty {
+            flex-shrink: 0;
+            width: 240px;
+            scroll-snap-align: start;
+        }
+        .hubx-col-stack .hubx-stack-viewall { flex-shrink: 0; width: 140px; display: flex; align-items: center; justify-content: center; }
+    }
+
+    @media (max-width: 899px) {
+        .hubx-grid,
+        .hubx-grid.has-panel {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas: "stack" "rail" "main";
+        }
+        .hubx-col-rail { grid-area: rail; }
+
+        /* Module Dock becomes a horizontal strip too, once there's no
+           room left for a side rail next to the main workspace. */
+        .hubx-rail {
+            position: static;
+            flex-direction: row;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+        .hubx-rail-item { flex-shrink: 0; width: 64px; }
+        .hubx-rail-more { flex-direction: row; width: auto; }
+        .hubx-rail-more > div { flex-direction: row; }
     }
 }

@@ -83,16 +83,20 @@
     @endphp
 
     @php
-        $showPanel = in_array($tab, ['overview', 'agenda'], true);
+        // Every module the Universal Inspector has a real data case for
+        // (see hubx-inspector.blade.php's match()) plus Overview, which
+        // falls back to the Agenda case — the rest render without a panel
+        // rather than showing an inspector with nothing in it.
+        $showPanel = in_array($tab, ['overview', 'agenda', 'budget', 'transportation', 'approvals'], true);
     @endphp
 
     {{-- ══ Mission Control grid (redesign) ══
          Left: Command Stack (EventCommandHeader::attention(), real signals
-         only). Then the vertical Module Rail (meters() + attention()).
-         Then the centre — Orbit, Cortex (Overview only), the tab's own
-         existing content unchanged, and the KPI strip (Overview only).
-         Right: the Agenda detail panel, shown on Overview and Agenda. ══ --}}
-    <div class="hubx-grid {{ $showPanel ? 'has-panel' : '' }} mt-4">
+         only). Then the vertical Module Dock (meters() + attention()).
+         Then the centre — Stage Radar, Cortex (Overview only), the tab's
+         own existing content unchanged, and the KPI strip (Overview only).
+         Right: the Universal Module Inspector, per-module data. ══ --}}
+    <div class="hubx-grid {{ $showPanel ? 'has-panel' : '' }} mt-3">
         <div class="hubx-col-stack">
             <x-eo.hubx-command-stack :event="$event" :header="$header" />
         </div>
@@ -105,25 +109,25 @@
             <x-eo.orbit-journey :event="$event" :header="$header" :journey="$journey" :active-key="$activeJourney['key']" />
 
             @if ($tab === 'overview')
-                <div class="mt-4">
+                <div class="mt-3">
                     <x-eo.hubx-cortex :event="$event" :header="$header" :ai="$ai" />
                 </div>
             @endif
 
-            <div class="mt-4">
-                @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
-            </div>
-
             @if ($tab === 'overview')
-                <div class="mt-4">
+                <div class="mt-3">
                     <x-eo.hubx-kpi-strip :event="$event" :header="$header" :health="$health" />
                 </div>
             @endif
+
+            <div class="mt-3">
+                @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
+            </div>
         </div>
 
         @if ($showPanel)
             <div class="hubx-col-panel">
-                <x-eo.hubx-detail-panel :event="$event" :header="$header" />
+                <x-eo.hubx-inspector :event="$event" :header="$header" :tab="$tab" />
             </div>
         @endif
     </div>

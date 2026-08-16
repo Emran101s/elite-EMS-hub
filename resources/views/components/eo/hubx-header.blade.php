@@ -44,6 +44,11 @@
     </div>
 
     <div class="flex shrink-0 items-center gap-2">
+        <span class="hubx-header-icon-row">
+            <span class="hubx-header-icon" title="Star"><x-icon name="star" class="h-3.5 w-3.5" /></span>
+            <span class="hubx-header-icon" title="Expand"><x-icon name="grid" class="h-3.5 w-3.5" /></span>
+            <span class="hubx-header-icon" title="More"><x-icon name="dots" class="h-3.5 w-3.5" /></span>
+        </span>
         <x-eo.button variant="ghost" size="sm" href="{{ route('events.index') }}">Portfolio</x-eo.button>
         <x-eo.button size="sm" href="{{ route('events.hub', [$event, 'tab' => $header['critical']['tab'] ?? 'overview']) }}">
             {{ $header['critical']['cta'] ?? 'Open Event' }}
