@@ -181,8 +181,11 @@ class BudgetSync
             $keep[] = 'event_req:0';
         }
 
-        // Remove linked lines whose source is gone or dropped to zero.
-        foreach ($event->budgetItems()->whereNotNull('source_type')->get() as $line) {
+        // Remove linked lines whose source is gone or dropped to zero. Reads
+        // $linked, not a fresh fetch: anything upsert() created this run is
+        // already in $keep (added right after creation), so it never needs
+        // to be in this pass's cleanup consideration in the first place.
+        foreach ($linked as $line) {
             if (! in_array($line->source_type.':'.$line->source_id, $keep, true)) {
                 $line->delete();
             }

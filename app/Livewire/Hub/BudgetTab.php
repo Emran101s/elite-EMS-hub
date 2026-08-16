@@ -138,7 +138,9 @@ class BudgetTab extends Component
         // Start in Build while planning; switch to Track once real costs are
         // recorded. A mode asked for in the URL wins — it was chosen on purpose.
         if (! in_array(request('mode'), ['build', 'track', 'price'], true)) {
-            $this->view = $this->event->budgetItems()->whereNotNull('actual_cents')->exists() ? 'track' : 'build';
+            // budgetItems is already loaded fresh (above) — no need for its
+            // own exists() query.
+            $this->view = $this->event->budgetItems->contains(fn ($i) => $i->actual_cents !== null) ? 'track' : 'build';
         }
         if (request('action') === 'add') {
             $this->newLine();
