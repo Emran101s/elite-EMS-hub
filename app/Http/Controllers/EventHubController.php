@@ -37,7 +37,7 @@ class EventHubController extends Controller
             'client', 'venue', 'projectManager',
             'rooms', 'cateringItems', 'agendaDays.sessions.room', 'agendaSessions.day',
             'tasks.assignee', 'budgetItems', 'suppliers', 'roomBlocks',
-            'attendees', 'transport.manifest',
+            'attendees', 'transport.manifest', 'transferGuests',
             'sponsors', 'risks.owner', 'approvals.requester',
             'teamMembers', 'speakers', 'brief', 'contract',
         ]);
