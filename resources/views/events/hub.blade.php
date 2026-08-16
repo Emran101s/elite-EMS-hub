@@ -120,6 +120,16 @@
                 </div>
             @endif
 
+            {{-- Universal Module Header — same modules the Inspector has
+                 real data for, shown once inside the module's own content
+                 rather than on Overview (which is the whole dashboard, not
+                 a single module). --}}
+            @if ($showPanel && $tab !== 'overview')
+                <div class="mt-3">
+                    <x-eo.hubx-module-header :event="$event" :header="$header" :tab="$tab" />
+                </div>
+            @endif
+
             <div class="mt-3">
                 @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
             </div>
