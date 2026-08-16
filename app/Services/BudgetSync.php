@@ -30,6 +30,10 @@ class BudgetSync
             return 0;
         }
 
+        // load(), not loadMissing(): sync()'s whole job is to reconcile
+        // against the modules' CURRENT state, which may have changed since
+        // $event was first loaded — loadMissing() would silently serve a
+        // stale cached relation instead of re-checking the source.
         $event->load(['roomBlocks', 'accommodations', 'transport', 'speakers', 'rooms', 'cateringItems']);
         $event->ensureBudgetCategories();
 
@@ -42,9 +46,25 @@ class BudgetSync
         $venues = $event->moduleBudgetCategory('venue');
         $catering = $event->moduleBudgetCategory('catering');
 
+        // One existence check for the whole batch instead of budgetCategory()'s
+        // own firstOrCreate per name — on every sync after the first, all five
+        // already exist, so this turns 5 lookups into 1.
+        $categoryNames = $event->budgetCategories()->pluck('name')->all();
+        $ensureCategory = function (string $name) use ($event, &$categoryNames) {
+            if (! in_array($name, $categoryNames, true)) {
+                $event->budgetCategory($name);
+                $categoryNames[] = $name;
+            }
+        };
+
         foreach ([$stay, $transport, $speakers, $venues, $catering] as $name) {
-            $event->budgetCategory($name);
+            $ensureCategory($name);
         }
+
+        // Existing linked lines, fetched once — upsert() below reads this
+        // instead of a fresh SELECT per module record it considers.
+        $linked = $event->budgetItems()->whereNotNull('source_type')->get()
+            ->keyBy(fn ($i) => $i->source_type.':'.$i->source_id);
 
         $keep = [];
         $touched = 0;
@@ -57,7 +77,7 @@ class BudgetSync
                 continue;
             }
 
-            $touched += $this->upsert($event, 'room_block', $b->id, [
+            $touched += $this->upsert($event, $linked, 'room_block', $b->id, [
                 'category' => $stay,
                 'description' => $b->budgetLine(),
                 'estimated_cents' => $b->totalCents(),
@@ -74,7 +94,7 @@ class BudgetSync
             if ($a->block_id !== null || $a->cost_cents <= 0) {
                 continue;   // inside a block: already counted above
             }
-            $touched += $this->upsert($event, 'accommodation', $a->id, [
+            $touched += $this->upsert($event, $linked, 'accommodation', $a->id, [
                 'category' => $stay,
                 'description' => trim('Accommodation · '.$a->hotel.($a->guest ? ' — '.$a->guest : '')),
                 'estimated_cents' => $a->cost_cents,
@@ -88,7 +108,7 @@ class BudgetSync
             if ($t->cost_cents <= 0) {
                 continue;
             }
-            $touched += $this->upsert($event, 'transport', $t->id, [
+            $touched += $this->upsert($event, $linked, 'transport', $t->id, [
                 'category' => $transport,
                 'description' => 'Transport · '.$t->route,
                 'estimated_cents' => $t->cost_cents,
@@ -102,7 +122,7 @@ class BudgetSync
             if ($s->fee_cents <= 0) {
                 continue;
             }
-            $touched += $this->upsert($event, 'speaker', $s->id, [
+            $touched += $this->upsert($event, $linked, 'speaker', $s->id, [
                 'category' => $speakers,
                 'description' => 'Speaker fee · '.$s->name,
                 'estimated_cents' => $s->fee_cents,
@@ -117,7 +137,7 @@ class BudgetSync
             if ($total <= 0) {
                 continue;
             }
-            $touched += $this->upsert($event, 'room', $r->id, [
+            $touched += $this->upsert($event, $linked, 'room', $r->id, [
                 'category' => $venues,
                 'room_id' => $r->id,
                 'description' => $r->name,
@@ -133,7 +153,7 @@ class BudgetSync
             if ($c->status === 'cancelled' || $c->totalCents() <= 0) {
                 continue;
             }
-            $touched += $this->upsert($event, 'catering', $c->id, [
+            $touched += $this->upsert($event, $linked, 'catering', $c->id, [
                 'category' => $catering,
                 'supplier_id' => $c->supplier_id,
                 'description' => $c->title.' · '.$c->typeLabel()
@@ -150,9 +170,9 @@ class BudgetSync
         $eventReqTotal = $event->eventRequirementsTotalCents();
         if ($eventReqTotal > 0) {
             $reqCat = $event->moduleBudgetCategory('requirements');
-            $event->budgetCategory($reqCat);
+            $ensureCategory($reqCat);
             $n = count($event->event_requirements ?? []);
-            $touched += $this->upsert($event, 'event_req', 0, [
+            $touched += $this->upsert($event, $linked, 'event_req', 0, [
                 'category' => $reqCat,
                 'description' => 'Event requirements ('.$n.' '.Str::plural('item', $n).')',
                 'estimated_cents' => $eventReqTotal,
@@ -191,6 +211,9 @@ class BudgetSync
         $event->ensureBudgetCategories();
         $category = $event->budgetCategory('Proposal Pricing')->name;
 
+        $linked = $event->budgetItems()->whereNotNull('source_type')->get()
+            ->keyBy(fn ($i) => $i->source_type.':'.$i->source_id);
+
         $touched = 0;
 
         foreach ($proposal->lines as $line) {
@@ -198,7 +221,7 @@ class BudgetSync
                 continue;
             }
 
-            $touched += $this->upsert($event, 'proposal', $line->id, [
+            $touched += $this->upsert($event, $linked, 'proposal', $line->id, [
                 'category' => $category,
                 'description' => trim($line->description.($line->detail ? ' — '.$line->detail : '')),
                 'quantity' => max(1, (int) round($line->qty)),
@@ -257,10 +280,16 @@ class BudgetSync
         return $out;
     }
 
-    /** Create or refresh a linked line, preserving actual/paid/status. */
-    private function upsert(Event $event, string $type, int $id, array $fields): int
+    /**
+     * Create or refresh a linked line, preserving actual/paid/status.
+     *
+     * $linked is every existing linked line for this event, fetched once by
+     * the caller and keyed by "type:id" — reading it here instead of
+     * querying per module record is the whole point of passing it in.
+     */
+    private function upsert(Event $event, \Illuminate\Support\Collection $linked, string $type, int $id, array $fields): int
     {
-        $line = $event->budgetItems()->where('source_type', $type)->where('source_id', $id)->first();
+        $line = $linked->get($type.':'.$id);
 
         if ($line) {
             $line->update($fields + ['unit_cents' => null]);
