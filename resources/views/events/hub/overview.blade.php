@@ -143,7 +143,7 @@
                 <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style="color: {{ $badge('agenda') }}; background: {{ $badge('agenda') }}15">
                     <x-icon name="calendar" class="h-4 w-4" />
                 </span>
-                Agenda Overview
+                Upcoming Sessions
             </h3>
             @if ($firstDay)
                 <a href="{{ route('events.hub', [$event, 'tab' => 'agenda']) }}"

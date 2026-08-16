@@ -1,0 +1,526 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Event Hub — Premium Mission Control redesign.
+
+   Scoped entirely to new `.hubx-*` classes so nothing here can leak
+   into Command Center, Event Portfolio, or any other page that reuses
+   the shared `.eo-*` design system. The outer dark-atmosphere / light
+   rounded-workspace shell already exists globally (.eo-app-shell /
+   .eo-workspace-shell) and is untouched — this file only styles what
+   sits inside the Event Hub's own content slot.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@theme {
+    /* Two accents the existing eo-* palette doesn't carry, needed for the
+       Approvals/Programme signal colours this redesign uses. */
+    --color-hubx-violet: #7c6bd9;
+    --color-hubx-blue: #3b6fd4;
+}
+
+@layer components {
+    /* ── Page grid ─────────────────────────────────────────────────── */
+    .hubx-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 240px) 84px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .hubx-grid.has-panel {
+        grid-template-columns: minmax(0, 240px) 84px minmax(0, 1fr) minmax(0, 300px);
+    }
+
+    @media (max-width: 1279px) {
+        .hubx-grid,
+        .hubx-grid.has-panel {
+            grid-template-columns: 64px minmax(0, 1fr);
+        }
+        .hubx-col-stack { display: none; }
+    }
+
+    @media (max-width: 899px) {
+        .hubx-grid,
+        .hubx-grid.has-panel {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .hubx-col-rail { display: none; }
+        .hubx-col-panel { display: none; }
+    }
+
+    /* ── Command Stack (left, dark glass) ─────────────────────────── */
+    .hubx-stack {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        border-radius: 1.5rem;
+        padding: 1rem;
+        background:
+            radial-gradient(120% 60% at 20% 0%, rgba(30, 172, 172, 0.14) 0%, transparent 55%),
+            linear-gradient(165deg, #0d1726 0%, #0b1322 55%, #070d16 100%);
+        box-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .hubx-stack-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.15rem 0.15rem 0.4rem;
+    }
+
+    .hubx-stack-title {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .hubx-stack-card {
+        display: block;
+        border-radius: 1.1rem;
+        padding: 0.75rem 0.85rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 3px solid var(--sc-color, var(--color-eo-teal));
+        transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .hubx-stack-card:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .hubx-stack-card-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hubx-stack-icon {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--sc-color, var(--color-eo-teal)) 22%, transparent);
+        color: var(--sc-color, var(--color-eo-teal));
+    }
+
+    .hubx-stack-card-title {
+        font-size: 12.5px;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.25;
+    }
+
+    .hubx-stack-card-sub {
+        margin-top: 0.3rem;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.4;
+    }
+
+    .hubx-stack-avatars {
+        display: flex;
+        margin-top: 0.5rem;
+    }
+
+    .hubx-stack-avatar {
+        width: 20px;
+        height: 20px;
+        border-radius: 9999px;
+        margin-left: -6px;
+        box-shadow: 0 0 0 2px #0b1322;
+        object-fit: cover;
+    }
+    .hubx-stack-avatar:first-child { margin-left: 0; }
+
+    .hubx-stack-cta {
+        margin-top: 0.55rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 0.65rem;
+        padding: 0.35rem 0.6rem;
+        font-size: 10.5px;
+        font-weight: 800;
+        color: #0b1322;
+        background: var(--sc-color, var(--color-eo-teal));
+    }
+
+    .hubx-stack-empty {
+        border-radius: 1.1rem;
+        padding: 1rem 0.85rem;
+        text-align: center;
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+    }
+
+    .hubx-stack-viewall {
+        display: block;
+        text-align: center;
+        margin-top: 0.15rem;
+        padding: 0.5rem;
+        border-radius: 0.85rem;
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.04);
+        transition: color 0.15s ease, background 0.15s ease;
+    }
+    .hubx-stack-viewall:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+
+    /* ── Vertical Module Rail ──────────────────────────────────────── */
+    .hubx-rail {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.55rem;
+        border-radius: 1.5rem;
+        padding: 0.85rem 0.4rem;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(10px);
+    }
+
+    .hubx-rail-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        width: 100%;
+        padding: 0.35rem 0;
+        border-radius: 1rem;
+        transition: background 0.15s ease;
+    }
+    .hubx-rail-item:hover { background: rgba(255, 255, 255, 0.6); }
+
+    .hubx-rail-ring {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 9999px;
+        background: conic-gradient(var(--ri-color, var(--color-eo-teal)) calc(var(--ri-pct, 0) * 1%), rgba(16, 24, 39, 0.08) 0);
+    }
+
+    .hubx-rail-item.is-active .hubx-rail-ring {
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ri-color, var(--color-eo-teal));
+    }
+
+    .hubx-rail-ring-inner {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 9999px;
+        background: #fff;
+        color: var(--ri-color, var(--color-eo-muted));
+    }
+
+    .hubx-rail-badge {
+        position: absolute;
+        top: -2px;
+        right: 2px;
+        display: grid;
+        place-items: center;
+        min-width: 15px;
+        height: 15px;
+        padding: 0 3px;
+        border-radius: 9999px;
+        background: var(--color-eo-risk);
+        color: #fff;
+        font-size: 8.5px;
+        font-weight: 800;
+        box-shadow: 0 0 0 2px #fff;
+    }
+
+    .hubx-rail-label {
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--color-eo-muted);
+        text-align: center;
+        line-height: 1.1;
+    }
+    .hubx-rail-item.is-active .hubx-rail-label { color: var(--color-eo-text); }
+
+    .hubx-rail-pct {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--ri-color, var(--color-eo-muted));
+    }
+
+    .hubx-rail-more {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    .hubx-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 639px) {
+        .hubx-header { flex-direction: column; }
+        .hubx-header-name { font-size: 19px; white-space: normal; overflow: visible; text-overflow: clip; }
+    }
+
+    .hubx-header-name {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-eo);
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--color-eo-text);
+        line-height: 1.2;
+    }
+
+    .hubx-header-meta {
+        margin-top: 0.3rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 12.5px;
+        color: var(--color-eo-muted);
+    }
+
+    .hubx-header-dot::before {
+        content: '•';
+        margin-right: 0.5rem;
+        color: var(--color-eo-line);
+    }
+
+    .hubx-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 9999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    /* ── Central Orbit (redesigned) ───────────────────────────────── */
+    .hubx-orbit-card {
+        position: relative;
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        background:
+            radial-gradient(120% 70% at 50% -10%, rgba(30, 172, 172, 0.10) 0%, transparent 55%),
+            rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo-float);
+        backdrop-filter: blur(14px);
+    }
+
+    .hubx-orbit-stage-word {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+    }
+
+    /* ── Event Cortex recommendation card ─────────────────────────── */
+    .hubx-cortex {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.5rem;
+        padding: 1.1rem 1.25rem;
+        background:
+            radial-gradient(90% 140% at 100% 0%, rgba(124, 107, 217, 0.12) 0%, transparent 55%),
+            radial-gradient(90% 140% at 0% 100%, rgba(30, 172, 172, 0.1) 0%, transparent 55%),
+            rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(14px);
+    }
+
+    .hubx-cortex-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 9999px;
+        padding: 0.25rem 0.6rem;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-hubx-violet);
+        background: color-mix(in srgb, var(--color-hubx-violet) 12%, transparent);
+    }
+
+    .hubx-cortex-headline {
+        margin-top: 0.5rem;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-eo-text);
+        line-height: 1.35;
+    }
+
+    .hubx-cortex-actions {
+        margin-top: 0.9rem;
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .hubx-cortex-action {
+        display: block;
+        border-radius: 1rem;
+        padding: 0.7rem 0.85rem;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--color-eo-line);
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .hubx-cortex-action:hover { transform: translateY(-1px); border-color: var(--color-hubx-violet); }
+
+    .hubx-cortex-action-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-cortex-action-note {
+        margin-top: 0.15rem;
+        font-size: 10.5px;
+        color: var(--color-eo-muted);
+    }
+
+    /* ── Right Detail Panel ────────────────────────────────────────── */
+    .hubx-panel {
+        position: sticky;
+        top: 0;
+        border-radius: 1.5rem;
+        padding: 1.1rem;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo-float);
+        backdrop-filter: blur(14px);
+    }
+
+    .hubx-panel-head {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .hubx-panel-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--color-eo-teal) 16%, transparent);
+        color: var(--color-eo-teal-ink);
+    }
+
+    .hubx-panel-ring-wrap {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 120px;
+        height: 120px;
+        margin: 1rem auto 0.5rem;
+        border-radius: 9999px;
+        background: conic-gradient(var(--color-eo-teal-lit) calc(var(--pr-pct, 0) * 1%), var(--color-eo-line) 0);
+    }
+
+    .hubx-panel-ring-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 96px;
+        height: 96px;
+        border-radius: 9999px;
+        background: #fff;
+    }
+
+    .hubx-panel-metric-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.1rem;
+        border-bottom: 1px solid var(--color-eo-line);
+    }
+    .hubx-panel-metric-row:last-child { border-bottom: 0; }
+
+    .hubx-panel-next {
+        margin-top: 0.85rem;
+        border-radius: 1.1rem;
+        padding: 0.85rem;
+        background: linear-gradient(165deg, var(--color-eo-navy) 0%, var(--color-eo-navy-deep) 100%);
+        color: #fff;
+    }
+
+    .hubx-panel-activity-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.55rem;
+        padding: 0.5rem 0.05rem;
+    }
+
+    /* ── Bottom KPI strip ──────────────────────────────────────────── */
+    .hubx-kpi-strip {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 640px) {
+        .hubx-kpi-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1024px) {
+        .hubx-kpi-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+
+    .hubx-kpi-card {
+        border-radius: 1.25rem;
+        padding: 0.9rem 1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(10px);
+    }
+
+    .hubx-kpi-value {
+        margin-top: 0.35rem;
+        font-family: var(--font-eo);
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-kpi-sub {
+        margin-top: 0.15rem;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+}

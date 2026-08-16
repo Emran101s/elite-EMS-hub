@@ -53,13 +53,15 @@
         </div>
     </div>
 
-    @if ($critical)
-        <div class="eo-orbit-core-divider"></div>
-        <div class="eo-orbit-core-next">
-            <span>Next action</span>
-            <b>{{ $critical['title'] }}</b>
-        </div>
-    @endif
+    {{-- Always the same shape, critical or not — a card that only shows this
+         row when there's something wrong would look different on every
+         event, and a card that invents an errand when there is none is
+         worse. See EventHubTest::test_the_header_keeps_its_shape_when_nothing_is_waiting. --}}
+    <div class="eo-orbit-core-divider"></div>
+    <div class="eo-orbit-core-next">
+        <span>Next action</span>
+        <b>{{ $critical['title'] ?? 'Nothing pressing' }}</b>
+    </div>
 
     {{-- Inside the Hub itself "Open Event Hub" has nowhere further to go —
          this jumps to Overview, the one door every stage sits in front of,

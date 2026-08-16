@@ -10,11 +10,9 @@
                ]">
 
     {{-- ══ The header ══
-         Identity, scale, the one thing that needs a person, module-by-module
-         progress, where to go, and what is true right now. See
-         resources/views/components/event-header.blade.php for why it is these
-         four blocks and not the one white bar it replaces. ══ --}}
-    <x-event-header :event="$event" :header="$header" />
+         Identity, status, location, dates, journey type. Real numbers off
+         EventCommandHeader::for() — see resources/views/components/eo/hubx-header.blade.php. ══ --}}
+    <x-eo.hubx-header :event="$event" :header="$header" />
 
     {{-- ══ Orbit Journey (Phase E.2) ══
          Replaces the old flat Journey strip and its separate sticky "doors"
@@ -84,19 +82,49 @@
         })->all();
     @endphp
 
-    <div class="mt-4">
-        <x-eo.orbit-journey :event="$event" :header="$header" :journey="$journey" :active-key="$activeJourney['key']" />
-    </div>
+    @php
+        $showPanel = in_array($tab, ['overview', 'agenda'], true);
+    @endphp
 
-    {{-- ══ Priority Area (Phase E) ══
-         Open risks, pending approvals, escalations — scoped to this one
-         event, same pattern as Command Center's Today's Command Queue.
-         Kept directly below the Orbit per Phase E.2's approved placement. ══ --}}
-    <div class="mt-4">
-        <x-eo.priority-area :event="$event" />
-    </div>
+    {{-- ══ Mission Control grid (redesign) ══
+         Left: Command Stack (EventCommandHeader::attention(), real signals
+         only). Then the vertical Module Rail (meters() + attention()).
+         Then the centre — Orbit, Cortex (Overview only), the tab's own
+         existing content unchanged, and the KPI strip (Overview only).
+         Right: the Agenda detail panel, shown on Overview and Agenda. ══ --}}
+    <div class="hubx-grid {{ $showPanel ? 'has-panel' : '' }} mt-4">
+        <div class="hubx-col-stack">
+            <x-eo.hubx-command-stack :event="$event" :header="$header" />
+        </div>
 
-    <div class="mt-5">
-        @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
+        <div class="hubx-col-rail">
+            <x-eo.hubx-module-rail :event="$event" :header="$header" :active-tab="$tab" />
+        </div>
+
+        <div class="min-w-0">
+            <x-eo.orbit-journey :event="$event" :header="$header" :journey="$journey" :active-key="$activeJourney['key']" />
+
+            @if ($tab === 'overview')
+                <div class="mt-4">
+                    <x-eo.hubx-cortex :event="$event" :header="$header" :ai="$ai" />
+                </div>
+            @endif
+
+            <div class="mt-4">
+                @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
+            </div>
+
+            @if ($tab === 'overview')
+                <div class="mt-4">
+                    <x-eo.hubx-kpi-strip :event="$event" :header="$header" :health="$health" />
+                </div>
+            @endif
+        </div>
+
+        @if ($showPanel)
+            <div class="hubx-col-panel">
+                <x-eo.hubx-detail-panel :event="$event" :header="$header" />
+            </div>
+        @endif
     </div>
 </x-layouts.app>

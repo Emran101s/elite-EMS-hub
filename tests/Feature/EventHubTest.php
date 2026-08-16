@@ -293,13 +293,18 @@ class EventHubTest extends TestCase
         // labels. The contract this test protects is unchanged: with nothing
         // outstanding the header keeps its shape rather than collapsing, and
         // says so plainly instead of inventing an errand.
+        //
+        // "Clear" dropped from this test: it asserted Priority Area's own
+        // empty-state pill, a component the redesign retired in favour of
+        // the Command Stack (which reads a broader six-signal set —
+        // budget/contract/speakers included — so it isn't guaranteed empty
+        // just because this scenario clears risks/approvals/tasks).
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
             ->assertSee('Next action')
             ->assertSee('Nothing pressing')
             ->assertSee('Owner')
             ->assertSee('Health')
-            ->assertSee('Readiness')
-            ->assertSee('Clear');
+            ->assertSee('Readiness');
     }
 
     /**
@@ -367,40 +372,31 @@ class EventHubTest extends TestCase
     }
 
     /**
-     * Satellites are scoped to the active stage.
+     * The vertical Module Rail marks the active tab.
      *
-     * Phase E made the old secondary nav row contextual to the active
-     * Journey stage; Phase E.2 replaced that row with satellites attached to
-     * the Orbit's active stage, but kept the same contract — "Tasks" (and
-     * its own overdue count) only appears while Planning is the active
-     * stage, not from every tab. This checks Budget (Commercial) has no
-     * reason to carry Planning's detail, and that Tasks' own stage
-     * (Planning) does.
+     * The redesign replaced the old per-stage satellite row (contextual to
+     * the active Journey stage, hidden for every other stage) with a
+     * persistent rail showing every primary module at once — the explicit
+     * point being to stop the old "flat tab feeling" of only ever seeing
+     * one stage's doors. The rail's own contract is narrower but real: the
+     * item for the current tab carries is-active, and no other item does.
      */
-    public function test_satellites_are_scoped_to_the_active_stage(): void
+    public function test_module_rail_marks_the_active_tab(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        $event->tasks()->delete();
-        $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
+        $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
+            ->assertOk()->getContent();
 
-        // Note: "1 overdue" alone isn't a safe assertDontSee target — the
-        // pre-existing, unmoved Priority Area also reports overdue tasks
-        // ("1 overdue task", Event Escalations) on every stage, event-wide.
-        // The scoped check is that Planning's satellite section itself does
-        // not render while Commercial is active.
-        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
-            ->assertOk()
-            ->assertSee('Commercial · satellites')
-            ->assertDontSee('Planning · satellites');
+        $this->assertMatchesRegularExpression('/hubx-rail-item is-active"\s+title="Budget"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/hubx-rail-item is-active"\s+title="Approvals"/', $html);
 
-        // Tasks lives in the Planning stage — its satellite, and its own
-        // overdue count, travels with the active stage.
-        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))
-            ->assertOk()
-            ->assertSee('Planning · satellites')
-            ->assertSee('1 overdue');
+        $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
+            ->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/hubx-rail-item is-active"\s+title="Approvals"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/hubx-rail-item is-active"\s+title="Budget"/', $html);
     }
 
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */

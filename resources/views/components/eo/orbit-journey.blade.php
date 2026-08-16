@@ -81,9 +81,20 @@
     $stageDoor = fn (array $s) => collect($s['tabs'])->first(fn ($k) => $event->moduleEnabled($k)) ?? $s['tabs'][0];
 
     $completeCount = collect($journey)->where('state', 'complete')->count();
+
+    // Readiness word, derived from the same pct meters()/attention() already
+    // computed — not a new number, just a word for the one that exists.
+    $readyWord = fn (?int $pct) => match (true) {
+        // Lowercase, matching the module doors' own "Not started" wording
+        // (EventOverviewReadinessTest locks this string in) — one word for
+        // one state, not two different capitalisations of it.
+        $pct === null || $pct === 0 => 'Not started',
+        $pct >= 60 => 'On Track',
+        default => 'At Risk',
+    };
 @endphp
 
-<div class="eo-orbit-hero">
+<div class="eo-orbit-hero hubx-orbit-card">
     <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
         <p class="eo-label">Orbit Journey</p>
         <span class="eo-orbit-chip">{{ $completeCount }} / {{ count($journey) }} complete · {{ $active['label'] }} active</span>
@@ -110,6 +121,7 @@
                                 <div><b>{{ $stage['issues'] }}</b><span>Issues</span></div>
                             @endif
                         </div>
+                        <p class="hubx-orbit-stage-word" style="color: {{ $stateColor($stage['state']) }}">{{ $readyWord($stage['pct']) }}</p>
                     </div>
                 @else
                     <a href="{{ route('events.hub', [$event, 'tab' => $stageDoor($stage)]) }}" wire:navigate
@@ -117,7 +129,12 @@
                        style="left: {{ $p['x'] }}%; top: {{ $p['y'] }}%; --st-color: {{ $stateColor($stage['state']) }}">
                         <span class="eo-orbit-stage-idx">{{ sprintf('%02d', $i + 1) }} · {{ strtoupper($stage['label']) }}</span>
                         <p class="eo-orbit-stage-label">{{ $stage['label'] }}</p>
-                        <p class="eo-orbit-stage-meta">{{ $stateMeta($stage) }}</p>
+                        <p class="eo-orbit-stage-meta">
+                            @if ($stage['pct'] !== null)
+                                {{ $stage['pct'] }}%
+                            @endif
+                            <span class="hubx-orbit-stage-word" style="color: {{ $stateColor($stage['state']) }}">{{ $readyWord($stage['pct']) }}</span>
+                        </p>
                     </a>
                 @endif
             @endforeach
@@ -125,23 +142,11 @@
             <x-eo.event-core :event="$event" :header="$header" />
         </div>
 
-        <div class="eo-orbit-satellites" aria-label="{{ $active['label'] }} — satellites">
-            <span class="eo-orbit-satellites-label">{{ $active['label'] }} · satellites</span>
-            <div class="eo-orbit-sat-grid">
-                @foreach ($satellites as $sat)
-                    <a href="{{ $sat['href'] }}" wire:navigate class="eo-orbit-sat" style="--sat-color: {{ $sat['hex'] }}">
-                        <span class="eo-orbit-sat-icon"><x-icon :name="$sat['icon']" class="h-3 w-3" /></span>
-                        <b>{{ $sat['label'] }}</b>
-                        @if ($sat['n'])
-                            <span class="eo-orbit-sat-note">
-                                {{ $sat['n']['why'] }}
-                                <span class="eo-orbit-sat-badge">{{ $sat['n']['count'] }}</span>
-                            </span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-        </div>
+        {{-- Desktop's satellite row was dropped here — the vertical Module
+             Rail (redesign) now carries this exact navigation, with the
+             same readiness/issue data, so showing both was the same list
+             twice. Mobile keeps its own satellites below: the rail hides
+             under 900px and satellites are its only replacement there. --}}
     </div>
 
     {{-- Mobile: the ring degrades to a linear rail — same six states, same
