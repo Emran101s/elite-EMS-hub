@@ -7,24 +7,45 @@
         $pct = $stats['total'] ? (int) round($stats['done'] / $stats['total'] * 100) : 0;
         $daysLeft = $event->starts_at ? (int) now()->startOfDay()->diffInDays($event->starts_at->startOfDay(), false) : null;
     @endphp
-    <x-module-head eyebrow="Countdown to Event Day"
-                   :lead="$daysLeft !== null ? max($daysLeft, 0) : '—'"
-                   :lead-note="($daysLeft !== null && $daysLeft < 0 ? 'days ago' : 'days to go').' · '.($event->starts_at?->format('l, j F Y') ?? 'No date set')"
-                   :ring="$pct"
-                   :ring-label="$pct.'%'"
-                   :figures="[
-                       ['Done', $stats['done'].' / '.$stats['total'], 'text-white'],
-                       [$stats['overdue'] > 0 ? 'Overdue' : 'Awaiting sign-off',
-                        $stats['overdue'] > 0 ? $stats['overdue'] : $stats['needApproval'],
-                        $stats['overdue'] > 0 ? 'text-red-300' : ($stats['needApproval'] > 0 ? 'text-amber-300' : 'text-emerald-300')],
-                   ]">
-        <x-slot:actions>
-            <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="btn-ghost btn-sm">
-                <x-icon name="chart" class="h-3.5 w-3.5" /> Export PDF
-            </a>
-            <button type="button" wire:click="addItem" class="btn-gold btn-sm">＋ Add task</button>
-        </x-slot:actions>
-    </x-module-head>
+    {{-- The old "Countdown to Event Day" headline strip (ring + lead figures,
+         in a dark x-module-head) is retired as this page's PRIMARY header —
+         the Event Hub's new Universal Module Header now carries that role
+         above this component. The countdown itself is real information the
+         header doesn't show, so it stays, just visually subordinate: a
+         planning pulse beneath the header, not a second competing one. Its
+         own "＋ Add task" action is dropped as redundant — every view below
+         (Board/List/Gallery) already has its own add-item entry point.
+         Export PDF stays, since nothing else on this page offers it. --}}
+    <div class="hubx-countdown-panel">
+        <div class="hubx-countdown-lead">
+            <span class="hubx-countdown-days">{{ $daysLeft !== null ? max($daysLeft, 0) : '—' }}</span>
+            <div class="hubx-countdown-meta">
+                <span class="hubx-countdown-label">Countdown to Event Day</span>
+                <span class="hubx-countdown-note">{{ $daysLeft !== null && $daysLeft < 0 ? 'days ago' : 'days to go' }} · {{ $event->starts_at?->format('l, j F Y') ?? 'No date set' }}</span>
+            </div>
+        </div>
+
+        <div class="hubx-countdown-stats">
+            <div class="hubx-countdown-stat">
+                <span class="hubx-countdown-stat-value">{{ $pct }}%</span>
+                <span class="hubx-countdown-stat-label">Plan progress</span>
+            </div>
+            <div class="hubx-countdown-stat">
+                <span class="hubx-countdown-stat-value">{{ $stats['done'] }} / {{ $stats['total'] }}</span>
+                <span class="hubx-countdown-stat-label">Done</span>
+            </div>
+            <div class="hubx-countdown-stat">
+                <span class="hubx-countdown-stat-value" style="color: {{ $stats['overdue'] > 0 ? 'var(--color-eo-risk)' : 'var(--color-eo-text)' }}">
+                    {{ $stats['overdue'] > 0 ? $stats['overdue'] : $stats['needApproval'] }}
+                </span>
+                <span class="hubx-countdown-stat-label">{{ $stats['overdue'] > 0 ? 'Overdue' : 'Awaiting sign-off' }}</span>
+            </div>
+        </div>
+
+        <a href="{{ route('events.planning.pdf', $event) }}" target="_blank" class="hubx-countdown-export">
+            <x-icon name="chart" class="h-3.5 w-3.5" /> Export PDF
+        </a>
+    </div>
 
     {{-- ══════════ OWNER FILTER ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-1.5">

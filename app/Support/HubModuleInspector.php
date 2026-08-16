@@ -11,6 +11,7 @@ use App\Models\EventBudgetItem;
 use App\Models\EventBudgetVersion;
 use App\Models\EventRoomBlock;
 use App\Models\EventTransport;
+use App\Models\PlanItem;
 
 /**
  * One per-module view-model, read by both the Universal Module Header
@@ -32,6 +33,7 @@ class HubModuleInspector
         'approvals' => 'Decisions, sign-offs and pending confirmations.',
         'files' => 'Documents, templates, uploads and event references.',
         'accommodation' => 'Room blocks, rooming lists and hotel readiness.',
+        'planning' => 'Milestones, task gates and overall plan progress toward event day.',
     ];
 
     /** Modules whose Livewire component honours ?action=add on mount. */
@@ -49,6 +51,15 @@ class HubModuleInspector
         $metersByKey = collect($header['meters'] ?? [])->keyBy('key');
         $meterAlias = ['transportation' => 'logistics', 'venue' => 'logistics', 'suppliers' => 'logistics'];
         $pct = $metersByKey->get($meterAlias[$inspectTab] ?? $inspectTab)['pct'] ?? null;
+
+        // Planning has no EventCommandHeader meter of its own — its
+        // completion percentage (done ÷ total plan items) is real, already
+        // shown on its own page's countdown panel, just not a number
+        // meters() computes centrally like it does for budget/agenda.
+        if ($pct === null && $inspectTab === 'planning') {
+            $planItems = $event->planItems;
+            $pct = $planItems->isNotEmpty() ? (int) round($planItems->where('status', 'done')->count() / $planItems->count() * 100) : null;
+        }
 
         $statusWord = match (true) {
             $pct === null || $pct === 0 => 'Not started',
@@ -128,6 +139,21 @@ class HubModuleInspector
                 })(),
                 [['label' => 'Accommodation', 'tab' => 'accommodation', 'icon' => 'home'], ['label' => 'Attendees', 'tab' => 'attendees', 'icon' => 'users']],
                 [EventRoomBlock::class],
+            ],
+            'planning' => [
+                (function () use ($event) {
+                    $items = $event->planItems;
+                    $overdue = $items->filter(fn (PlanItem $i) => $i->isOverdue())->count();
+
+                    return [
+                        ['icon' => 'clipboard', 'value' => $items->count(), 'label' => 'Plan items'],
+                        ['icon' => 'bell', 'value' => $overdue, 'label' => 'Overdue'],
+                        ['icon' => 'clock', 'value' => $items->where('status', 'needs_approval')->count(), 'label' => 'Awaiting approval'],
+                        ['icon' => 'chart', 'value' => $items->where('status', 'done')->count().'/'.$items->count(), 'label' => 'Done'],
+                    ];
+                })(),
+                [['label' => 'Planning', 'tab' => 'planning', 'icon' => 'list']],
+                [PlanItem::class],
             ],
             default => [null, [['label' => $label, 'tab' => $inspectTab, 'icon' => $icon]], []],
         };

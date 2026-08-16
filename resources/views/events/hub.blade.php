@@ -87,7 +87,7 @@
         // (see hubx-inspector.blade.php's match()) plus Overview, which
         // falls back to the Agenda case — the rest render without a panel
         // rather than showing an inspector with nothing in it.
-        $showPanel = in_array($tab, ['overview', 'agenda', 'budget', 'transportation', 'approvals', 'accommodation'], true);
+        $showPanel = in_array($tab, ['overview', 'agenda', 'budget', 'transportation', 'approvals', 'accommodation', 'planning'], true);
     @endphp
 
     {{-- ══ Mission Control grid (redesign) ══
