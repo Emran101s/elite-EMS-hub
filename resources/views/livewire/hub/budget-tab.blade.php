@@ -27,61 +27,50 @@
 @endphp
 
 <div>
-    {{-- ══ Budget headline strip ══ --}}
-    @php
-        // Price mode is asking a different question, so the strip answers that
-        // one instead of repeating the budget's.
-        $sellSummary = $price ? $event->sellSummary() : null;
-        $figures = $price
-            ? [
-                ['Cost to us', $fmt($sellSummary['cost']), 'text-white'],
-                ['Charged to client', $fmt($sellSummary['sell']), 'text-white'],
-                ['Gross margin', ($sellSummary['margin'] >= 0 ? '' : '−').$fmt(abs($sellSummary['margin'])), $sellSummary['margin'] < 0 ? 'text-red-300' : 'text-emerald-300'],
-            ]
-            : [
-                ['Total budget', $fmt($cap), 'text-white'],
-                ['Forecast', $fmt($grandForecast), $grandForecast > $cap && $cap > 0 ? 'text-red-300' : 'text-white'],
-                ['Paid', $paidTotal ? $fmt($paidTotal) : '—', $paidTotal ? 'text-emerald-300' : 'text-white/30'],
-                [$remaining < 0 ? 'Over budget' : 'Remaining', $fmt(abs($remaining)), $remaining < 0 ? 'text-red-300' : 'text-gold-300'],
-            ];
-    @endphp
+    {{-- The old Budget headline strip (ring + total/forecast/paid/remaining
+         figures, in a dark x-module-head) is retired here — the Event Hub's
+         new Universal Module Header shows the equivalent forecast/committed/
+         cap numbers above this component now, so showing both was two
+         headers for one module. $usedPct/$paidPct/$remaining (computed
+         above) stay: the Budget Summary card further down this page still
+         reads them for its own spend bar.
 
-    <x-module-head :ring="$price ? max(0, (int) ($sellSummary['marginPct'] ?? 0)) : min(100, $usedPct)"
-                   :ring-label="$price ? (($sellSummary['marginPct'] ?? null) === null ? '—' : $sellSummary['marginPct'].'%') : $usedPct.'%'"
-                   :eyebrow="$price ? 'Margin' : 'Budget used'"
-                   :figures="$figures"
-                   class="mb-4">
-        @if ($price)
-            <x-slot:meter>
-                {{-- How much of this is a decision and how much is the default. --}}
-                <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-300/80">How it was priced</p>
-                <p class="mt-1.5 text-xs font-semibold text-white/80">
-                    {{ $sellSummary['priced'] }} of {{ $sellSummary['lines'] }} {{ str('line')->plural($sellSummary['lines']) }} priced by hand
-                </p>
-                <p class="mt-0.5 text-eyebrow text-white/45">
-                    The rest charge cost plus the {{ rtrim(rtrim(number_format($sellSummary['fee'], 2), '0'), '.') }}% management fee.
-                    @if ($sellSummary['absorbed'] > 0)
-                        {{ $fmt($sellSummary['absorbed']) }} absorbed.
-                    @endif
-                </p>
-            </x-slot:meter>
-        @else
-            <x-slot:meter>
-                <div class="mb-1.5 flex items-baseline justify-between">
-                    <span class="text-eyebrow font-bold uppercase tracking-[0.16em] text-gold-300/80">Spend</span>
-                    <span class="text-xs font-bold {{ $usedPct >= 100 ? 'text-red-300' : 'text-white' }}">{{ $usedPct }}%</span>
-                </div>
-                <div class="flex h-2 overflow-hidden rounded-full bg-white/15">
-                    <div class="bg-emerald-400" style="width: {{ $paidPct }}%"></div>
-                    <div class="bg-gold-400" style="width: {{ max(0, min(100, $usedPct) - $paidPct) }}%"></div>
-                </div>
-                <p class="mt-1.5 flex items-center gap-3 text-eyebrow text-white/40">
-                    <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Paid</span>
-                    <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-gold-400"></span> Committed</span>
-                </p>
-            </x-slot:meter>
-        @endif
-    </x-module-head>
+         Price mode is the one exception the Universal Module Header can't
+         cover — it's a sell-side question ("what is this charged at")
+         the header's forecast/committed/cap figures don't answer, and
+         nothing else on this page shows it. Kept, in the new glass style
+         instead of the old dark strip, only while Price mode is active. --}}
+    @if ($price)
+        @php $sellSummary = $event->sellSummary(); @endphp
+        <div class="hubx-price-banner">
+            <div class="hubx-price-banner-stat">
+                <span class="hubx-price-banner-label">Cost to us</span>
+                <span class="hubx-price-banner-value">{{ $fmt($sellSummary['cost']) }}</span>
+            </div>
+            <div class="hubx-price-banner-stat">
+                <span class="hubx-price-banner-label">Charged to client</span>
+                <span class="hubx-price-banner-value">{{ $fmt($sellSummary['sell']) }}</span>
+            </div>
+            <div class="hubx-price-banner-stat">
+                <span class="hubx-price-banner-label">Gross margin</span>
+                <span class="hubx-price-banner-value" style="color: {{ $sellSummary['margin'] < 0 ? 'var(--color-eo-risk)' : 'var(--color-eo-ok)' }}">
+                    {{ $sellSummary['margin'] >= 0 ? '' : '−' }}{{ $fmt(abs($sellSummary['margin'])) }}
+                </span>
+            </div>
+            <div class="hubx-price-banner-stat">
+                <span class="hubx-price-banner-label">Margin</span>
+                <span class="hubx-price-banner-value">{{ $sellSummary['marginPct'] ?? '—' }}{{ $sellSummary['marginPct'] !== null ? '%' : '' }}</span>
+            </div>
+            <p class="hubx-price-banner-note">
+                <strong>How it was priced:</strong>
+                {{ $sellSummary['priced'] }} of {{ $sellSummary['lines'] }} {{ str('line')->plural($sellSummary['lines']) }} priced by hand.
+                The rest charge cost plus the {{ rtrim(rtrim(number_format($sellSummary['fee'], 2), '0'), '.') }}% management fee.
+                @if ($sellSummary['absorbed'] > 0)
+                    {{ $fmt($sellSummary['absorbed']) }} absorbed.
+                @endif
+            </p>
+        </div>
+    @endif
 
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         {{-- ══════════ MAIN · ledger ══════════ --}}

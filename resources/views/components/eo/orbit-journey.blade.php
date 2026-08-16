@@ -55,27 +55,6 @@
         'y' => round(50 - 44 * cos(deg2rad($i * 45)), 2),
     ];
 
-    // The active stage's own enabled doors — same route, same enable check,
-    // same attention signal the old sticky nav row read; only the
-    // presentation (attached satellites, not a separate strip) changed.
-    $modules = \App\Models\Event::HUB_TABS;
-    $attention = $header['attention'] ?? [];
-    $satellites = collect($active['tabs'])
-        ->filter(fn (string $key) => $event->moduleEnabled($key))
-        ->map(function (string $key) use ($modules, $event, $attention) {
-            [$label] = $modules[$key] ?? [ucfirst($key)];
-
-            return [
-                'key' => $key,
-                'label' => $label,
-                'href' => route('events.hub', [$event, 'tab' => $key]),
-                'hex' => \App\Models\Event::moduleColor($key),
-                'icon' => $modules[$key][2] ?? 'archive',
-                'n' => $attention[$key] ?? null,
-            ];
-        })
-        ->values();
-
     // A non-active stage's door: its first enabled tab, falling back to the
     // stage's own first tab so the card is never a dead link.
     $stageDoor = fn (array $s) => collect($s['tabs'])->first(fn ($k) => $event->moduleEnabled($k)) ?? $s['tabs'][0];
@@ -184,20 +163,10 @@
                 </span>
             </div>
 
-            <div class="eo-orbit-sat-grid" aria-label="{{ $active['label'] }} — satellites">
-                @foreach ($satellites as $sat)
-                    <a href="{{ $sat['href'] }}" wire:navigate class="eo-orbit-sat" style="--sat-color: {{ $sat['hex'] }}">
-                        <span class="eo-orbit-sat-icon"><x-icon :name="$sat['icon']" class="h-3 w-3" /></span>
-                        <b>{{ $sat['label'] }}</b>
-                        @if ($sat['n'])
-                            <span class="eo-orbit-sat-note">
-                                {{ $sat['n']['why'] }}
-                                <span class="eo-orbit-sat-badge">{{ $sat['n']['count'] }}</span>
-                            </span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
+            {{-- Mobile's own satellite row was dropped here too — the
+                 Module Dock (redesign) is horizontally scrollable below
+                 900px, so it's already the on-screen navigation here; this
+                 grid was the same list a second time. --}}
         </div>
     </div>
 </div>

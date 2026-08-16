@@ -1,44 +1,14 @@
 <div>
     @php
-        $allSessions = $days->flatMap->sessions;
-        $toMin = fn ($t) => (int) substr((string) $t, 0, 2) * 60 + (int) substr((string) $t, 3, 2);
-        $totalSessions = $allSessions->count();
-        $settled = $allSessions->filter(fn ($s) => $s->isSettled())->count();
-        $flaggedCount = $allSessions->where('flagged', true)->count();
-        $agendaHours = round($allSessions->sum(fn ($s) => max($toMin($s->ends_at) - $toMin($s->starts_at), 0)) / 60, 1);
-        $speakerTotal = $allSessions->flatMap(fn ($s) => $s->speakers->pluck('id'))->unique()->count();
-        $roomTotal = $allSessions->pluck('room.name')->filter()->unique()->count();
-        $confPct = $totalSessions ? (int) round($settled / $totalSessions * 100) : 0;
-        $unconfirmed = $totalSessions - $settled;
+        // The old Agenda Command Header (ring + sessions/confirmed/venues/
+        // days figures, built from $allSessions/$confPct/$unconfirmed/etc.)
+        // is retired — the Event Hub's new Universal Module Header
+        // (eo/hubx-module-header.blade.php) shows the equivalent numbers
+        // above this component now, so showing both was two headers for one
+        // module. $daySessions is the only one of that set anything else in
+        // this file still reads.
         $daySessions = $day?->sessions->count() ?? 0;
     @endphp
-
-    {{-- ══════════ COMMAND HEADER ══════════
-         The ring is how much of the whole agenda is confirmed; the four
-         figures are the ones you would ask for out loud — how many sessions,
-         how many of them are settled, how many rooms are in play, how many
-         days. Each carries the second line that says which way it is going. --}}
-    <x-module-head eyebrow="Agenda Command Center"
-                   :ring="$confPct"
-                   lead-note="Agenda complete"
-                   :figures="[
-                       ['Total sessions', $totalSessions, 'text-white', $daySessions.' on this day'],
-                       ['Confirmed', $settled, 'text-white', $unconfirmed ? $unconfirmed.' still open' : 'all confirmed'],
-                       ['Active venues', $roomTotal, 'text-white', $agendaHours.' hrs programmed'],
-                       ['Event days', $days->count(), 'text-white', $speakerTotal.' '.str('speaker')->plural($speakerTotal).' billed'],
-                   ]">
-        <x-slot:actions>
-            {{-- The two numbers that mean someone has work to do. --}}
-            <div class="flex h-[52px] min-w-[5.4rem] flex-col justify-center rounded-xl bg-black/20 px-2.5 text-center ring-1 ring-white/10">
-                <span class="text-lg font-black leading-none" style="color: {{ $unconfirmed > 0 ? 'var(--color-warning-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $unconfirmed }}</span>
-                <span class="mt-0.5 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Unconfirmed</span>
-            </div>
-            <div class="flex h-[52px] min-w-[5.4rem] flex-col justify-center rounded-xl bg-black/20 px-2.5 text-center ring-1 ring-white/10">
-                <span class="text-lg font-black leading-none" style="color: {{ $flaggedCount > 0 ? 'var(--color-danger-on-dark)' : 'rgba(255,255,255,.4)' }}">{{ $flaggedCount }}</span>
-                <span class="mt-0.5 text-eyebrow font-bold uppercase leading-tight tracking-wider text-white/50">Flagged</span>
-            </div>
-        </x-slot:actions>
-    </x-module-head>
 
     {{-- Import panel --}}
     @if ($showImport)

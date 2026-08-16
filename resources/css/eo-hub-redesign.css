@@ -524,6 +524,53 @@
         margin-left: auto;
     }
 
+    /* ── Budget Price-mode banner ─────────────────────────────────────
+       The one figure set the Universal Module Header can't cover (a
+       sell-side question its forecast/committed/cap figures don't
+       answer) — kept, but in the new glass language instead of the
+       old dark strip, and only while Budget's own Price mode is active. */
+    .hubx-price-banner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+        border-radius: 1.1rem;
+        padding: 0.8rem 1.1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(10px);
+    }
+
+    .hubx-price-banner-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .hubx-price-banner-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-eo-muted);
+    }
+
+    .hubx-price-banner-value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-price-banner-note {
+        flex-basis: 100%;
+        font-size: 11px;
+        color: var(--color-eo-muted);
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--color-eo-line);
+    }
+
     /* ── Right Detail Panel ────────────────────────────────────────── */
     .hubx-panel {
         position: sticky;
