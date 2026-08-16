@@ -9,6 +9,7 @@ use App\Models\EventAgendaSession;
 use App\Models\EventApproval;
 use App\Models\EventBudgetItem;
 use App\Models\EventBudgetVersion;
+use App\Models\EventRoomBlock;
 use App\Models\EventTransport;
 
 /**
@@ -30,6 +31,7 @@ class HubModuleInspector
         'transportation' => 'Movements, vehicles, drivers and VIP transfer readiness.',
         'approvals' => 'Decisions, sign-offs and pending confirmations.',
         'files' => 'Documents, templates, uploads and event references.',
+        'accommodation' => 'Room blocks, rooming lists and hotel readiness.',
     ];
 
     /** Modules whose Livewire component honours ?action=add on mount. */
@@ -110,6 +112,22 @@ class HubModuleInspector
                 })(),
                 [['label' => 'Approvals', 'tab' => 'approvals', 'icon' => 'identification'], ['label' => 'Contract', 'tab' => 'contract', 'icon' => 'archive']],
                 [EventApproval::class],
+            ],
+            'accommodation' => [
+                (function () use ($event) {
+                    $blocks = $event->roomBlocks;
+                    $roomsHeld = $blocks->sum('rooms_count');
+                    $roomsNamed = $blocks->sum(fn (EventRoomBlock $b) => $b->filled());
+
+                    return [
+                        ['icon' => 'home', 'value' => $blocks->count(), 'label' => 'Blocks'],
+                        ['icon' => 'clipboard', 'value' => $roomsNamed.'/'.$roomsHeld, 'label' => 'Rooms named'],
+                        ['icon' => 'bell', 'value' => max(0, $roomsHeld - $roomsNamed), 'label' => 'Still to name'],
+                        ['icon' => 'chart', 'value' => $blocks->sum(fn (EventRoomBlock $b) => $b->roomNights()), 'label' => 'Room-nights'],
+                    ];
+                })(),
+                [['label' => 'Accommodation', 'tab' => 'accommodation', 'icon' => 'home'], ['label' => 'Attendees', 'tab' => 'attendees', 'icon' => 'users']],
+                [EventRoomBlock::class],
             ],
             default => [null, [['label' => $label, 'tab' => $inspectTab, 'icon' => $icon]], []],
         };

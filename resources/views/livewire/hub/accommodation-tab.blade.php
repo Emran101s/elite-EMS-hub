@@ -1,29 +1,19 @@
 @php
     $blockStatuses = \App\Models\EventRoomBlock::STATUSES;
     $moduleHex = \App\Models\Event::moduleColor('accommodation');
-    $pct = $roomsHeld > 0 ? (int) round($roomsNamed / $roomsHeld * 100) : 0;
-    $stillToName = max(0, $roomsHeld - $roomsNamed);
 @endphp
 <div>
     <datalist id="room-categories">
         @foreach (\App\Support\Taxonomy::values('room_category') as $c)<option value="{{ $c }}"></option>@endforeach
     </datalist>
 
-    @if ($blocks->isNotEmpty())
-        <x-module-head eyebrow="Rooming list"
-                       :ring="$pct"
-                       :ring-label="$pct.'%'"
-                       :figures="[
-                           ['Named', $roomsNamed.' / '.$roomsHeld, 'text-white', $stillToName ? $stillToName.' still to name' : 'Fully named'],
-                           ['Blocks', $blocks->count(), 'text-white', null],
-                           ['Room-nights', $roomNightsTotal, 'text-white', null],
-                       ]"
-                       class="mb-4">
-            <x-slot:actions>
-                <button type="button" wire:click="newBlock" class="btn-gold h-9 px-3.5 text-xs">＋ New block</button>
-            </x-slot:actions>
-        </x-module-head>
-    @endif
+    {{-- The old Rooming list headline strip (ring + named/blocks/room-nights
+         figures, in a dark x-module-head) is retired here — the Event Hub's
+         new Universal Module Header shows the equivalent Blocks/Rooms named/
+         Still to name/Room-nights numbers above this component now, so
+         showing both was two headers for one module. Its own "＋ New block"
+         action stays reachable from the control rail's own button further
+         down this page. --}}
 
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-3">
