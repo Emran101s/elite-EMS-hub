@@ -42,7 +42,7 @@
     <section class="eo-workspace-shell">
         <x-eo.top-command-bar :crumbs="$crumbs" :title="$title" />
 
-        <div class="eo-workspace-body">
+        <main class="eo-workspace-body">
             @unless ($hideTitleRow)
                 <x-eo.page-header :title="$title ?? config('app.name')" :subtitle="$subtitle" />
             @endunless
@@ -56,7 +56,7 @@
             @endif
 
             <div class="pb-6">{{ $slot }}</div>
-        </div>
+        </main>
     </section>
 </div>
 

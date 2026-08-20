@@ -8,7 +8,7 @@
     Livewire action — keeps "Saving…" language consistent without re-handing
     wire:loading.remove / wire:loading on every screen.
 
-    <button wire:click="save" class="btn-navy">
+    <button wire:click="save" class="eo-btn-navy">
         <x-busy target="save" busy="Saving…">Save</x-busy>
     </button>
 --}}

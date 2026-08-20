@@ -22,34 +22,34 @@
     ][min(6, max(2, count($stats)))];
 @endphp
 
-<div {{ $attributes->merge(['class' => 'card overflow-hidden']) }}>
-    <div class="grid grid-cols-2 divide-x divide-line sm:grid-cols-3 {{ $columns }}">
+<div {{ $attributes->merge(['class' => 'eo-soft-card overflow-hidden']) }}>
+    <div class="grid grid-cols-2 divide-x divide-eo-line sm:grid-cols-3 {{ $columns }}">
         @foreach ($stats as $stat)
             @php
                 [$label, $value, $icon, $pct, $tone] = array_pad(array_slice($stat, 0, 5), 5, null);
                 $hint = $stat[5] ?? null;
-                $valueClass = $stat[6] ?? 'text-navy-900';
+                $valueClass = $stat[6] ?? 'text-eo-text';
             @endphp
-            <div class="min-w-0 px-3.5 py-2.5 transition hover:bg-page/50">
+            <div class="min-w-0 px-3.5 py-2.5 transition hover:bg-eo-workspace/50">
                 <div class="flex items-center gap-1.5">
                     @if ($icon)
-                        <x-icon :name="$icon" class="h-3 w-3 shrink-0 text-navy-300" />
+                        <x-icon :name="$icon" class="h-3 w-3 shrink-0 text-eo-muted" />
                     @endif
                     <p class="eyebrow truncate">{{ $label }}</p>
                 </div>
 
-                <p class="pf mt-1 truncate text-[22px] font-bold leading-none {{ $valueClass }}">{{ $value }}</p>
+                <p class="mt-1 truncate text-[22px] font-bold leading-none {{ $valueClass }}">{{ $value }}</p>
 
                 @if ($pct !== null)
                     {{-- One thin line rather than fourteen segments: it says the
                          same thing and leaves the number room to breathe. --}}
-                    <div class="mt-2 h-[3px] overflow-hidden rounded-full bg-navy-50">
-                        <div class="h-full rounded-full {{ $tone ?: 'bg-navy-300' }}" style="width: {{ max(0, min(100, (int) $pct)) }}%"></div>
+                    <div class="mt-2 h-[3px] overflow-hidden rounded-full bg-eo-bg">
+                        <div class="h-full rounded-full {{ $tone ?: 'bg-eo-line' }}" style="width: {{ max(0, min(100, (int) $pct)) }}%"></div>
                     </div>
                 @endif
 
                 @if ($hint)
-                    <p class="mt-1.5 truncate text-[10.5px] text-muted">{{ $hint }}</p>
+                    <p class="mt-1.5 truncate text-[10.5px] text-eo-muted">{{ $hint }}</p>
                 @endif
             </div>
         @endforeach

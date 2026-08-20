@@ -19,7 +19,7 @@
 >
     <div class="mb-4 flex items-start justify-between gap-3">
         @if ($icon)
-            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal">
+            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal-ink">
                 <x-icon :name="$icon" class="h-5 w-5" />
             </span>
         @else

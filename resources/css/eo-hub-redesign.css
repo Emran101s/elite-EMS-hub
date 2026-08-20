@@ -14,282 +14,131 @@
        Approvals/Programme signal colours this redesign uses. */
     --color-hubx-violet: #7c6bd9;
     --color-hubx-blue: #3b6fd4;
+
+    /* A layering vocabulary beyond flat white — white / pearl / glass /
+       graphite, each surface tier picked deliberately rather than every
+       card defaulting to the same rgba(255,255,255,.75) glass. Pearl is
+       a warm, gold-adjacent off-white for the one card that outranks the
+       rest of the workspace (Event Pulse); the graphite family is the
+       Header/Command Stack's own dark surface, distinct from — and one
+       shade warmer than — the app's own navy-deep atmosphere behind it. */
+    --color-hubx-pearl: #f7f2e6;
+    --color-hubx-pearl-deep: #efe6d0;
+    --color-hubx-graphite: #1a1f2b;
+    --color-hubx-graphite-deep: #0e121a;
+    --color-hubx-graphite-mid: #242b3a;
 }
 
 @layer components {
     /* ── Page grid ─────────────────────────────────────────────────────
-       Desktop (≥1280px): stack | dock | workspace | inspector, side by side.
-       Tablet (900–1279px): stack becomes a collapsible strip above the row,
-       dock stays a side rail, inspector drops below the workspace.
-       Mobile (<900px): everything stacks — header, stack carousel, dock
-       carousel, workspace, inspector (collapsible). ─────────────────── */
+       Desktop (≥1280px): workspace | inspector, side by side. The Command
+       Stack is gone outright (not collapsed, not a drawer) — its job was
+       already covered by the Header's own attention pill, Event Pulse,
+       the Universal Module Header, and the Inspector's Next Action. The
+       Module Navigation Bar and Event Pulse Strip sit above this grid as
+       their own full-width rows, not as grid columns — see hub.blade.php.
+       Tablet/mobile (<1280px): inspector drops below the workspace, full
+       width; below 1280px there was never a second column to begin
+       with once the stack left, so there's nothing further to collapse. */
     .hubx-grid {
         display: grid;
-        grid-template-columns: minmax(0, 232px) 80px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 0.85rem;
         align-items: start;
     }
 
     .hubx-grid.has-panel {
-        grid-template-columns: minmax(0, 232px) 80px minmax(0, 1fr) minmax(0, 280px);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
     }
 
-    /* ── Command Stack (left, dark glass) ─────────────────────────── */
-    .hubx-stack {
-        position: sticky;
-        top: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
-        border-radius: 1.5rem;
-        padding: 1rem;
-        background:
-            radial-gradient(120% 60% at 20% 0%, rgba(30, 172, 172, 0.14) 0%, transparent 55%),
-            linear-gradient(165deg, #0d1726 0%, #0b1322 55%, #070d16 100%);
-        box-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .hubx-stack-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.15rem 0.15rem 0.4rem;
-    }
-
-    .hubx-stack-title {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.85);
-    }
-
-    .hubx-stack-card {
-        display: block;
-        border-radius: 1.1rem;
-        padding: 0.75rem 0.85rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-left: 3px solid var(--sc-color, var(--color-eo-teal));
-        transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .hubx-stack-card:hover {
-        transform: translateY(-1px);
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.18);
-    }
-
-    .hubx-stack-card-head {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .hubx-stack-icon {
-        display: grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
-        border-radius: 10px;
-        background: color-mix(in srgb, var(--sc-color, var(--color-eo-teal)) 22%, transparent);
-        color: var(--sc-color, var(--color-eo-teal));
-    }
-
-    .hubx-stack-card-title {
-        font-size: 12.5px;
-        font-weight: 800;
-        color: #fff;
-        line-height: 1.25;
-    }
-
-    .hubx-stack-card-sub {
-        margin-top: 0.3rem;
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.55);
-        line-height: 1.4;
-    }
-
-    .hubx-stack-avatars {
-        display: flex;
-        margin-top: 0.5rem;
-    }
-
-    .hubx-stack-avatar {
-        width: 20px;
-        height: 20px;
-        border-radius: 9999px;
-        margin-left: -6px;
-        box-shadow: 0 0 0 2px #0b1322;
-        object-fit: cover;
-    }
-    .hubx-stack-avatar:first-child { margin-left: 0; }
-
-    .hubx-stack-cta {
-        margin-top: 0.55rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        border-radius: 0.65rem;
-        padding: 0.35rem 0.6rem;
-        font-size: 10.5px;
-        font-weight: 800;
-        color: #0b1322;
-        background: var(--sc-color, var(--color-eo-teal));
-    }
-
-    .hubx-stack-empty {
-        border-radius: 1.1rem;
-        padding: 1rem 0.85rem;
-        text-align: center;
-        font-size: 11.5px;
-        color: rgba(255, 255, 255, 0.45);
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px dashed rgba(255, 255, 255, 0.12);
-    }
-
-    .hubx-stack-viewall {
-        display: block;
-        text-align: center;
-        margin-top: 0.15rem;
-        padding: 0.5rem;
-        border-radius: 0.85rem;
-        font-size: 11px;
-        font-weight: 700;
-        color: rgba(255, 255, 255, 0.6);
-        background: rgba(255, 255, 255, 0.04);
-        transition: color 0.15s ease, background 0.15s ease;
-    }
-    .hubx-stack-viewall:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-
-    /* ── Vertical Module Rail ──────────────────────────────────────── */
-    .hubx-rail {
-        position: sticky;
-        top: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.55rem;
-        border-radius: 1.5rem;
-        padding: 0.85rem 0.4rem;
-        background: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: var(--shadow-eo);
-        backdrop-filter: blur(10px);
-    }
-
-    .hubx-rail-item {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.2rem;
-        width: 100%;
-        padding: 0.35rem 0;
-        border-radius: 1rem;
-        transition: background 0.15s ease;
-    }
-    .hubx-rail-item:hover { background: rgba(255, 255, 255, 0.6); }
-
-    .hubx-rail-ring {
-        position: relative;
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 9999px;
-        background: conic-gradient(var(--ri-color, var(--color-eo-teal)) calc(var(--ri-pct, 0) * 1%), rgba(16, 24, 39, 0.08) 0);
-    }
-
-    .hubx-rail-item.is-active .hubx-rail-ring {
-        box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ri-color, var(--color-eo-teal));
-    }
-
-    .hubx-rail-ring-inner {
-        display: grid;
-        place-items: center;
-        width: 34px;
-        height: 34px;
-        border-radius: 9999px;
-        background: #fff;
-        color: var(--ri-color, var(--color-eo-muted));
-    }
-
-    .hubx-rail-badge {
-        position: absolute;
-        top: -2px;
-        right: 2px;
-        display: grid;
-        place-items: center;
-        min-width: 15px;
-        height: 15px;
-        padding: 0 3px;
-        border-radius: 9999px;
-        background: var(--color-eo-risk);
-        color: #fff;
-        font-size: 8.5px;
-        font-weight: 800;
-        box-shadow: 0 0 0 2px #fff;
-    }
-
-    .hubx-rail-label {
-        font-size: 9px;
-        font-weight: 700;
-        color: var(--color-eo-muted);
-        text-align: center;
-        line-height: 1.1;
-    }
-    .hubx-rail-item.is-active .hubx-rail-label { color: var(--color-eo-text); }
-
-    .hubx-rail-pct {
-        font-size: 9px;
-        font-weight: 800;
-        color: var(--ri-color, var(--color-eo-muted));
-    }
-
-    .hubx-rail-more {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.35rem;
-        width: 100%;
-    }
-
-    /* ── Header ────────────────────────────────────────────────────── */
+    /* ── Header — the flagship identity surface ───────────────────────
+       E.4 luxury pass: the earlier all-graphite card read as a cockpit,
+       not an identity surface — Elite EMS's own ratio is 80% light / 20%
+       dark, so the card itself goes back to the shell's light glass
+       (matching Module Header/Inspector/Pulse), and the "20% dark" the
+       brief asks for is spent deliberately, in one place, as the
+       graphite avatar chip beside the name — not smeared across the
+       whole card. Gold stays the one accent this card is allowed that
+       nothing else in the shell gets (the hairline top edge and the
+       primary CTA), same locally-scoped exception as before; everything
+       else here now reads off the shared eo-* tokens like its siblings. */
     .hubx-header {
+        position: relative;
         display: flex;
         flex-wrap: wrap;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
+        gap: 1rem;
+        padding: 1.65rem 1.9rem;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo-float);
+        backdrop-filter: blur(14px);
+    }
+
+    /* The one hairline of gold on the page's most important edge —
+       "gold accent," spent once, at full strength, rather than smeared
+       thin across several elements. */
+    .hubx-header::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--color-eo-gold) 18%, var(--color-eo-gold-soft) 50%, var(--color-eo-gold) 82%, transparent 100%);
+        opacity: 0.75;
+    }
+
+    /* The one deliberate dark note on the card — an identity mark, the
+       same idiom the Universal Module Header uses for its own icon chip,
+       scaled up and in the header's own graphite rather than a module
+       accent colour, since this chip stands for the event itself. */
+    .hubx-header-avatar {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        margin-top: 0.05rem;
+        border-radius: 1rem;
+        background: linear-gradient(165deg, var(--color-hubx-graphite-mid) 0%, var(--color-hubx-graphite-deep) 100%);
+        color: var(--color-eo-gold-soft);
+        box-shadow: 0 12px 22px -12px rgba(14, 18, 26, 0.5);
     }
 
     @media (max-width: 639px) {
-        .hubx-header { flex-direction: column; }
+        .hubx-header { flex-direction: column; padding: 1.25rem; }
+        .hubx-header-avatar { width: 40px; height: 40px; border-radius: 0.85rem; }
         .hubx-header-name { font-size: 19px; white-space: normal; overflow: visible; text-overflow: clip; }
+        /* Five items (3 icon buttons + Portfolio + the primary CTA) don't
+           fit one line under ~375px — wrap rather than overflow the card,
+           and let it fill the card's width instead of hugging the right
+           edge the way the two-column desktop layout does. */
+        .hubx-header > .flex.shrink-0 {
+            width: 100%;
+            flex-wrap: wrap;
+        }
     }
 
     .hubx-header-name {
         display: block;
+        position: relative;
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         font-family: var(--font-eo);
-        font-size: 24px;
+        font-size: 27px;
         font-weight: 800;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.015em;
         color: var(--color-eo-text);
         line-height: 1.2;
     }
+    .hubx-header-name .font-medium { color: var(--color-eo-muted) !important; }
 
     .hubx-header-meta {
-        margin-top: 0.3rem;
+        margin-top: 0.4rem;
+        position: relative;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -301,165 +150,173 @@
     .hubx-header-dot::before {
         content: '•';
         margin-right: 0.5rem;
-        color: var(--color-eo-line);
+        opacity: 0.4;
     }
 
     .hubx-header-icon-row {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 0.3rem;
         margin-right: 0.15rem;
     }
 
+    /* Same 36px as .eo-btn-sm beside it — the icon row and the Portfolio /
+       primary-action buttons used to sit at two different heights (30px vs
+       36px) in the same row, which read as slightly misaligned rather than
+       one considered action group. */
     .hubx-header-icon {
         display: grid;
         place-items: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 0.65rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 0.75rem;
         color: var(--color-eo-muted);
         background: rgba(255, 255, 255, 0.6);
         border: 1px solid var(--color-eo-line);
-        transition: color 0.15s ease, border-color 0.15s ease;
+        font: inherit;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
-    .hubx-header-icon:hover { color: var(--color-eo-teal-ink); border-color: var(--color-eo-teal); }
+    .hubx-header-icon:hover {
+        color: var(--color-eo-teal-ink);
+        border-color: var(--color-eo-teal);
+        background: var(--color-eo-teal-soft);
+    }
+
+    /* The primary CTA — the one place gold fills a button rather than
+       just accenting an edge, because this is the one action the header
+       exists to point at. Everywhere else in the shell, gold stays an
+       accent and teal stays the CTA colour — this override is scoped to
+       .hubx-header alone. Portfolio uses the shared .eo-btn-ghost as-is
+       now that the card itself is light — the dark-glass re-skin it
+       needed against the old graphite card would be a stray dark chip
+       against this one. */
+    .hubx-header .eo-btn-primary {
+        position: relative;
+        background: linear-gradient(165deg, var(--color-eo-gold-soft) 0%, var(--color-eo-gold) 100%);
+        color: var(--color-hubx-graphite-deep);
+        box-shadow: 0 10px 20px -12px rgba(214, 174, 52, 0.5);
+    }
+    .hubx-header .eo-btn-primary:hover { filter: brightness(1.05); }
+
+    /* ── Module Navigation Bar ─────────────────────────────────────────
+       Horizontal pill strip, Event Command Header architecture — replaces
+       the old vertical Compact Module Rail. Light glass bar, matching
+       every other panel in this shell; the active tab is the one filled
+       pill (bg-eo-navy), same "is-active = solid navy" convention already
+       used by the Budget mode switcher and Agenda's view switcher. ── */
+    .hubx-modnav {
+        position: relative;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        border-radius: 1.1rem;
+        padding: 0.35rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(10px);
+    }
+
+    .hubx-modnav-scroll {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .hubx-modnav-scroll::-webkit-scrollbar { display: none; }
+
+    /* The only hint, on a touch screen with no visible scrollbar, that the
+       tab strip keeps going past the edge — a soft fade, not an icon or
+       arrow, so it reads as "more of this" rather than another control. */
+    .hubx-modnav-scroll.is-overflowing {
+        mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    }
+
+    .hubx-modnav-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+        padding: 0.5rem 0.8rem;
+        border-radius: 0.8rem;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--color-eo-muted);
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .hubx-modnav-item:hover { background: var(--color-eo-workspace); color: var(--color-eo-text); }
+    .hubx-modnav-item.is-active {
+        background: var(--color-eo-navy);
+        color: #fff;
+    }
+    .hubx-modnav-item.is-active :where(svg) { opacity: 0.9; }
+
+    /* Badge hierarchy: alarm (red) is the only tone that should visually
+       interrupt — a "wait" signal (something pending, not yet late) reads
+       in the same quieter amber the rest of the shell already uses for
+       "needs a look" rather than "needs a look now". Everything on this
+       bar stays quiet except the one thing that's actually urgent. */
+    .hubx-modnav-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background: var(--color-eo-risk);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .hubx-modnav-badge.is-wait { background: var(--color-eo-warn); }
+    .hubx-modnav-item.is-active .hubx-modnav-badge { background: rgba(255, 255, 255, 0.25); }
+
+    .hubx-modnav-flyout {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.4rem);
+        z-index: 30;
+        min-width: 190px;
+        padding: 0.35rem;
+        border-radius: 1rem;
+        background: #fff;
+        border: 1px solid var(--color-eo-line);
+        box-shadow: var(--shadow-eo-float);
+        display: grid;
+        gap: 0.15rem;
+    }
+
+    .hubx-modnav-flyout-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.65rem;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-eo-text);
+    }
+    .hubx-modnav-flyout-item:hover { background: var(--color-eo-workspace); }
+    .hubx-modnav-flyout-item.is-active { background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink); }
 
     .hubx-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        border-radius: 9999px;
+        border-radius: 999px;
         padding: 0.3rem 0.7rem;
         font-size: 10.5px;
         font-weight: 800;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-    }
-
-    /* ── Stage Radar (Central Orbit, lightened) ───────────────────────
-       "Support the cockpit, not dominate the page": everything below
-       overrides the (much larger) shared .eo-orbit-* sizing — the data
-       and structure are unchanged, only the footprint shrinks so the
-       radar reads as one glass panel among several, not the whole page. */
-    .hubx-orbit-card {
-        position: relative;
-        border-radius: 1.5rem;
-        padding: 0.9rem 1rem 0.5rem;
-        background:
-            radial-gradient(120% 70% at 50% -10%, rgba(30, 172, 172, 0.10) 0%, transparent 55%),
-            rgba(255, 255, 255, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow-eo);
-        backdrop-filter: blur(14px);
-    }
-
-    .hubx-orbit-stage-word {
-        font-size: 9.5px;
-        font-weight: 800;
-        letter-spacing: 0.02em;
-    }
-
-    .hubx-orbit-card .eo-orbit-ring-wrap {
-        max-width: 300px;
-        margin: 0.75rem auto 0.4rem;
-    }
-
-    @media (min-width: 1024px) {
-        .hubx-orbit-card .eo-orbit-ring-wrap { max-width: 320px; }
-    }
-
-    .hubx-orbit-card .eo-orbit-core {
-        width: min(62vw, 208px);
-        padding: 0.75rem 0.85rem 0.65rem;
-        border-radius: 16px;
-    }
-
-    .hubx-orbit-card .eo-orbit-core-eyebrow { font-size: 8px; margin-bottom: 0.2rem; }
-    .hubx-orbit-card .eo-orbit-core-name { font-size: 12.5px; margin-bottom: 0.45rem; line-height: 1.15; }
-    .hubx-orbit-card .eo-orbit-core-grid { gap: 0.4rem 0.3rem; margin-bottom: 0.5rem; }
-    .hubx-orbit-card .eo-orbit-core-field span { font-size: 7px; margin-bottom: 0; }
-    .hubx-orbit-card .eo-orbit-core-field b { font-size: 10.5px; }
-    .hubx-orbit-card .eo-orbit-core-field b.small { font-size: 9px; }
-    .hubx-orbit-card .eo-orbit-core-divider { margin-bottom: 0.5rem; }
-    .hubx-orbit-card .eo-orbit-core-next { padding: 0.4rem 0.55rem; margin-bottom: 0.5rem; }
-    .hubx-orbit-card .eo-orbit-core-next span { font-size: 7px; }
-    .hubx-orbit-card .eo-orbit-core-next b { font-size: 9.5px; }
-    .hubx-orbit-card .eo-orbit-core-cta { padding: 0.4rem; font-size: 9.5px; border-radius: 9px; }
-
-    .hubx-orbit-card .eo-orbit-stage-card { width: 62px; padding: 0.35rem 0.4rem; border-radius: 10px; }
-    .hubx-orbit-card .eo-orbit-stage-idx { font-size: 6px; }
-    .hubx-orbit-card .eo-orbit-stage-label { font-size: 9.5px; }
-    .hubx-orbit-card .eo-orbit-stage-meta { font-size: 8px; }
-    .hubx-orbit-card .eo-orbit-active { width: 130px; padding: 0.5rem 0.6rem; }
-    .hubx-orbit-card .eo-orbit-active-eyebrow { font-size: 7px; }
-    .hubx-orbit-card .eo-orbit-active-label { font-size: 11px; }
-    .hubx-orbit-card .eo-orbit-active-stats b { font-size: 12px; }
-    .hubx-orbit-card .eo-orbit-active-stats span { font-size: 7px; }
-
-    /* ── Event Cortex recommendation card ─────────────────────────── */
-    .hubx-cortex {
-        position: relative;
-        overflow: hidden;
-        border-radius: 1.5rem;
-        padding: 1.1rem 1.25rem;
-        background:
-            radial-gradient(90% 140% at 100% 0%, rgba(124, 107, 217, 0.12) 0%, transparent 55%),
-            radial-gradient(90% 140% at 0% 100%, rgba(30, 172, 172, 0.1) 0%, transparent 55%),
-            rgba(255, 255, 255, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow-eo);
-        backdrop-filter: blur(14px);
-    }
-
-    .hubx-cortex-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        border-radius: 9999px;
-        padding: 0.25rem 0.6rem;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--color-hubx-violet);
-        background: color-mix(in srgb, var(--color-hubx-violet) 12%, transparent);
-    }
-
-    .hubx-cortex-headline {
-        margin-top: 0.5rem;
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--color-eo-text);
-        line-height: 1.35;
-    }
-
-    .hubx-cortex-actions {
-        margin-top: 0.9rem;
-        display: grid;
-        gap: 0.6rem;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    .hubx-cortex-action {
-        display: block;
-        border-radius: 1rem;
-        padding: 0.7rem 0.85rem;
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px solid var(--color-eo-line);
-        transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-    .hubx-cortex-action:hover { transform: translateY(-1px); border-color: var(--color-hubx-violet); }
-
-    .hubx-cortex-action-title {
-        font-size: 12px;
-        font-weight: 800;
-        color: var(--color-eo-text);
-    }
-
-    .hubx-cortex-action-note {
-        margin-top: 0.15rem;
-        font-size: 10.5px;
-        color: var(--color-eo-muted);
     }
 
     /* ── Universal Module Header ──────────────────────────────────── */
@@ -485,7 +342,7 @@
         width: 38px;
         height: 38px;
         flex-shrink: 0;
-        border-radius: 12px;
+        border-radius: 0.75rem;
     }
 
     .hubx-module-header-row {
@@ -507,6 +364,7 @@
         font-size: 15px;
         font-weight: 800;
         color: var(--color-eo-text);
+        font-variant-numeric: tabular-nums;
     }
 
     .hubx-module-header-stat-label {
@@ -561,6 +419,7 @@
         font-size: 15px;
         font-weight: 800;
         color: var(--color-eo-text);
+        font-variant-numeric: tabular-nums;
     }
 
     .hubx-price-banner-note {
@@ -569,6 +428,315 @@
         color: var(--color-eo-muted);
         padding-top: 0.5rem;
         border-top: 1px solid var(--color-eo-line);
+    }
+
+    /* ── Event Utilities drawer (Team Workload + Recent Activity) ────── */
+    .hubx-utilities-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(11, 19, 34, 0.35);
+    }
+
+    .hubx-utilities-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 50;
+        width: min(400px, 92vw);
+        overflow-y: auto;
+        padding: 1.1rem;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: -24px 0 60px -24px rgba(11, 19, 34, 0.45);
+        backdrop-filter: blur(8px);
+    }
+
+    .hubx-utilities-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+    }
+
+    .hubx-utilities-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-utilities-close {
+        border-radius: 0.6rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--color-eo-muted);
+        background: var(--color-eo-workspace);
+        transition: color 0.15s ease;
+    }
+    .hubx-utilities-close:hover { color: var(--color-eo-text); }
+
+    .hubx-utilities-tabs {
+        display: flex;
+        gap: 0.3rem;
+        padding: 0.25rem;
+        border-radius: 0.8rem;
+        background: var(--color-eo-workspace);
+        margin-bottom: 1rem;
+    }
+
+    .hubx-utilities-tab {
+        flex: 1;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.55rem;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-eo-muted);
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .hubx-utilities-tab.is-active { background: #fff; color: var(--color-eo-text); box-shadow: var(--shadow-eo); }
+
+    .hubx-utilities-body { display: flex; flex-direction: column; }
+
+    .hubx-utilities-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.6rem 0.1rem;
+        border-bottom: 1px solid var(--color-eo-line);
+    }
+    .hubx-utilities-row:last-child { border-bottom: none; }
+
+    .hubx-utilities-row-system {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--color-eo-workspace);
+        color: var(--color-eo-muted);
+        flex-shrink: 0;
+    }
+
+    .hubx-utilities-row-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-eo-text);
+        line-height: 1.4;
+    }
+
+    .hubx-utilities-row-sub {
+        font-size: 10.5px;
+        color: var(--color-eo-muted);
+        margin-top: 0.1rem;
+    }
+
+    .hubx-utilities-row-when {
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-utilities-bar {
+        margin-top: 0.35rem;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--color-eo-workspace);
+        overflow: hidden;
+    }
+    .hubx-utilities-bar-fill { height: 100%; border-radius: 999px; }
+
+    .hubx-utilities-empty {
+        font-size: 12px;
+        color: var(--color-eo-muted);
+        padding: 0.6rem 0.1rem;
+    }
+
+    /* ── Mission Feed (Overview's one workspace element) ─────────────── */
+    .hubx-feed {
+        border-radius: 1.25rem;
+        padding: 0.9rem 1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(12px);
+    }
+
+    .hubx-feed-empty {
+        font-size: 12px;
+        color: var(--color-eo-muted);
+        padding: 0.4rem 0;
+    }
+
+    /* Mission Timeline — nodes on a single connecting line, evolved once
+       already from a flat list. This pass pushes it further toward an
+       operational feed rather than a quiet chronology: the line itself
+       now carries a soft gradient instead of reading as a form-field
+       hairline, each node gets a coloured signal ring keyed to its own
+       tier (the same tone already computed for the icon, just spent
+       twice), and an overdue/action-required row gets its time read out
+       as a small alert badge instead of the same grey text as everything
+       else. Same rows, same data — only the form changes. */
+    .hubx-timeline {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hubx-timeline-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.4rem 0.1rem;
+        border-radius: 0.6rem;
+        transition: background 0.12s ease;
+    }
+    .hubx-timeline-row:hover { background: var(--color-eo-workspace); }
+
+    .hubx-timeline-track {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        width: 26px;
+        flex-shrink: 0;
+        align-self: stretch;
+    }
+    .hubx-timeline-track::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        background: linear-gradient(180deg, var(--color-eo-risk) 0%, var(--color-eo-line) 22%, var(--color-eo-line) 78%, var(--color-eo-teal-soft) 100%);
+        opacity: 0.55;
+        transform: translateX(-50%);
+    }
+    .hubx-timeline-row:first-child .hubx-timeline-track::before { top: 50%; }
+    .hubx-timeline-row:last-child .hubx-timeline-track::before { bottom: 50%; }
+
+    .hubx-timeline-node {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        margin-top: 0.3rem;
+        border-radius: 999px;
+        /* Signal ring: white breathing room, then the row's own tone at
+           full strength — a "lit indicator" rather than a plain outline. */
+        box-shadow: 0 0 0 3px #fff, 0 0 0 4.5px color-mix(in srgb, var(--tl-color, var(--color-eo-muted)) 45%, transparent);
+    }
+
+    .hubx-timeline-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-eo-line);
+    }
+    .hubx-timeline-row:last-child .hubx-timeline-body { border-bottom: none; }
+
+    .hubx-timeline-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--color-eo-text);
+    }
+
+    .hubx-timeline-when {
+        flex-shrink: 0;
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--color-eo-muted);
+    }
+
+    /* Tier 1 = action required — the one row worth a small alert badge
+       instead of quiet grey text, so "34d overdue" reads as a live signal
+       rather than a footnote. */
+    .hubx-timeline-when.is-urgent {
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        color: var(--color-eo-risk-ink);
+        background: var(--color-eo-risk-soft);
+        font-weight: 700;
+    }
+
+    /* ── More Doors row (Overview's only other element) ──────────────
+       Modules the compact rail doesn't surface directly — a slim chip
+       row, not the old 7-card grid. Deliberately thin: icon, name, one
+       status line, nothing more. ── */
+    .hubx-doors-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hubx-doors-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-eo-muted);
+        margin-right: 0.1rem;
+    }
+
+    .hubx-doors-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.65rem 0.4rem 0.4rem;
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        transition: transform 0.15s ease;
+    }
+    .hubx-doors-chip:hover { transform: translateY(-1px); }
+
+    .hubx-doors-chip-ic {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 0.6rem;
+        flex-shrink: 0;
+    }
+
+    .hubx-doors-chip-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.05rem;
+        min-width: 0;
+    }
+
+    .hubx-doors-chip-name {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--color-eo-text);
+        white-space: nowrap;
+    }
+
+    .hubx-doors-chip-sub {
+        font-size: 9.5px;
+        color: var(--color-eo-muted);
+        white-space: nowrap;
+    }
+
+    .hubx-doors-chip-pill {
+        display: inline-block;
+        padding: 0.05rem 0.4rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 9px;
     }
 
     /* ── Countdown to Event Day (Plan Studio's supporting panel — a pulse
@@ -672,8 +840,8 @@
         position: sticky;
         top: 0;
         border-radius: 1.5rem;
-        padding: 1.1rem;
-        background: rgba(255, 255, 255, 0.85);
+        padding: 1.3rem 1.2rem;
+        background: rgba(255, 255, 255, 0.86);
         border: 1px solid rgba(255, 255, 255, 0.9);
         box-shadow: var(--shadow-eo-float);
         backdrop-filter: blur(14px);
@@ -682,7 +850,7 @@
     .hubx-panel-head {
         display: flex;
         align-items: center;
-        gap: 0.55rem;
+        gap: 0.65rem;
     }
 
     .hubx-panel-icon {
@@ -690,153 +858,420 @@
         place-items: center;
         width: 34px;
         height: 34px;
-        border-radius: 12px;
+        border-radius: 0.75rem;
         background: color-mix(in srgb, var(--color-eo-teal) 16%, transparent);
         color: var(--color-eo-teal-ink);
     }
 
-    .hubx-panel-ring-wrap {
-        position: relative;
-        display: grid;
-        place-items: center;
-        width: 120px;
-        height: 120px;
-        margin: 1rem auto 0.5rem;
-        border-radius: 9999px;
-        background: conic-gradient(var(--color-eo-teal-lit) calc(var(--pr-pct, 0) * 1%), var(--color-eo-line) 0);
-    }
-
-    .hubx-panel-ring-inner {
+    /* Everything below the head — real, but a clear step down from the
+       identity+status zone above it. Readiness/metrics live in the
+       Universal Module Header now, not here; this starts straight from
+       ownership. */
+    .hubx-panel-detail {
+        margin-top: 1.1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-eo-line);
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 96px;
-        height: 96px;
-        border-radius: 9999px;
-        background: #fff;
+        gap: 1rem;
     }
 
-    .hubx-panel-metric-row {
+    .hubx-panel-owner {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0.5rem 0.1rem;
-        border-bottom: 1px solid var(--color-eo-line);
+        gap: 0.5rem;
     }
-    .hubx-panel-metric-row:last-child { border-bottom: 0; }
 
-    .hubx-panel-next {
-        margin-top: 0.85rem;
+    /* Action — the Inspector's one CTA distinct from the Header's own
+       identity/readiness/next-action zone: a real, module-specific
+       ?action=add link, never an invented one (see supportsAdd). */
+    .hubx-panel-action {
+        display: block;
         border-radius: 1.1rem;
         padding: 0.85rem;
         background: linear-gradient(165deg, var(--color-eo-navy) 0%, var(--color-eo-navy-deep) 100%);
         color: #fff;
+        transition: opacity 0.15s ease;
+    }
+    .hubx-panel-action:hover { opacity: 0.9; }
+
+    /* Readiness Gates (Event Inspector only) — one row per gate, a dot
+       rather than a repeated percentage, since the percentage itself
+       already lives in Event Pulse above. */
+    .hubx-panel-gate-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.1rem;
+    }
+
+    .hubx-panel-gate-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+    /* Needs Attention (Event Inspector only) — the same signals the
+       Module Nav Bar's badges carry, spelled out with a reason and a way
+       in; a link, not a static row. */
+    .hubx-panel-attention-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.1rem;
+        border-radius: 0.55rem;
+        transition: background 0.12s ease;
+    }
+    .hubx-panel-attention-row:hover { background: var(--color-eo-workspace); }
+
+    /* Recent Activity / Related Modules — the least-often-needed tier, so
+       it sits at reduced opacity rather than fighting the sections above
+       it for attention. */
+    .hubx-panel-tertiary {
+        opacity: 0.85;
+        padding-top: 0.7rem;
+        border-top: 1px dashed var(--color-eo-line);
     }
 
     .hubx-panel-activity-row {
         display: flex;
         align-items: flex-start;
-        gap: 0.55rem;
-        padding: 0.5rem 0.05rem;
+        gap: 0.5rem;
+        padding: 0.4rem 0.05rem;
     }
 
-    /* ── Bottom KPI strip ──────────────────────────────────────────── */
-    .hubx-kpi-strip {
+    /* Empty state (module Inspector only) — one intentional message
+       instead of a bare "No recent activity" line and a lot of unused
+       space, for a module with neither progress nor a paper trail yet. */
+    .hubx-panel-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.3rem;
+        padding: 0.9rem 0.5rem;
+    }
+
+    .hubx-panel-empty-icon {
         display: grid;
-        gap: 0.85rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        margin-bottom: 0.2rem;
     }
 
-    @media (min-width: 640px) {
-        .hubx-kpi-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hubx-panel-empty-cta {
+        margin-top: 0.4rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--color-eo-teal-ink);
+        transition: opacity 0.15s ease;
     }
-    @media (min-width: 1024px) {
-        .hubx-kpi-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .hubx-panel-empty-cta:hover { opacity: 0.8; }
+
+    /* Inspector footer CTA — "Open [module] →", colour set inline per
+       module via style="". Module Inspectors only — Overview has no
+       single module to open. */
+    .hubx-panel-viewall {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border-radius: 0.85rem;
+        padding: 0.6rem 0.75rem;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        transition: opacity 0.15s ease;
+    }
+    .hubx-panel-viewall:hover { opacity: 0.82; }
+
+    /* ── Event Pulse (Health + Readiness, unified) ────────────────────
+       Was two cards living in the same 5-up grid as Days Out/Budget/
+       Risk — same weight class as figures that matter far less. Pulled
+       into one band; the gap between primary and secondary is now a
+       material difference, not just a size difference — Pulse sits on
+       its own warm pearl surface (the one card besides the Header/Stack
+       that isn't plain white glass), secondary tiles go flatter and
+       smaller so the step down reads immediately, not just on close
+       inspection. Same data throughout. ── */
+    .hubx-pulse-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+
+    .hubx-pulse {
+        position: relative;
+        flex: 1.4 1 200px;
+        border-radius: 1.25rem;
+        padding: 0.85rem 1.1rem;
+        background: linear-gradient(160deg, #fffefb 0%, var(--color-hubx-pearl) 100%);
+        border: 1px solid rgba(214, 174, 52, 0.22);
+        box-shadow: var(--shadow-eo-float), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .hubx-pulse-label {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8a7345;
+        margin-bottom: 0.5rem;
+    }
+
+    .hubx-pulse-row {
+        display: flex;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .hubx-pulse-stat { flex: 1; min-width: 0; }
+
+    .hubx-pulse-divider {
+        width: 1px;
+        background: rgba(214, 174, 52, 0.25);
+    }
+
+    .hubx-pulse-value {
+        margin-top: 0.3rem;
+        font-family: var(--font-eo);
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.01em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Secondary strip (Days Out / Budget / Risk) ───────────────────
+       Clearly a step down from Event Pulse now — plain white (the
+       flattest tier in the shell), no lift, smaller figures, quieter
+       label. Reads as reference detail, not a second headline. ── */
+    .hubx-kpi-strip {
+        flex: 1 1 180px;
+        display: grid;
+        gap: 0.4rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .hubx-kpi-card {
-        border-radius: 1.25rem;
-        padding: 0.9rem 1rem;
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow-eo);
-        backdrop-filter: blur(10px);
+        border-radius: 0.85rem;
+        padding: 0.5rem 0.55rem;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--color-eo-line);
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .hubx-kpi-value {
-        margin-top: 0.35rem;
+        margin-top: 0.25rem;
         font-family: var(--font-eo);
-        font-size: 22px;
-        font-weight: 800;
+        font-size: 14.5px;
+        font-weight: 700;
         color: var(--color-eo-text);
+        font-variant-numeric: tabular-nums;
     }
 
     .hubx-kpi-sub {
         margin-top: 0.15rem;
-        font-size: 10.5px;
-        font-weight: 700;
+        font-size: 8.5px;
+        font-weight: 600;
+        opacity: 0.75;
     }
 
+    .hubx-kpi-card .eo-label { opacity: 0.65; font-size: 8.5px; }
+
+    /* ── Module Workspace Interior ─────────────────────────────────────
+       V6 module-interior modernization: the shared pattern for a module
+       body that benefits from a selected-item companion panel — main
+       list/board on the shell's usual light glass, one deliberate dark
+       note beside it (graphite, the same family as the Header's avatar
+       chip) rather than a second navy field competing with the page.
+       Risks adopts this first; later modules reuse the same classes
+       rather than each inventing their own panel. Selection is local to
+       each module's own Livewire component — nothing here talks to the
+       Universal Inspector, which stays the shell's own concern. */
+    .hubx-ws {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+        gap: 0.85rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1023px) {
+        .hubx-ws { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .hubx-ws-main {
+        border-radius: 1.25rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+    }
+
+    .hubx-ws-row {
+        display: grid;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.12s ease;
+        border-bottom: 1px solid var(--color-eo-line);
+    }
+    .hubx-ws-row:last-child { border-bottom: 0; }
+    .hubx-ws-row:hover { background: var(--color-eo-workspace); }
+    .hubx-ws-row.is-selected {
+        background: var(--color-eo-teal-soft);
+        box-shadow: inset 3px 0 0 0 var(--color-eo-teal);
+    }
+
+    .hubx-ws-severity-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+    .hubx-ws-severity-dot.is-critical { background: var(--color-eo-risk); }
+    .hubx-ws-severity-dot.is-warning { background: var(--color-eo-warn); }
+    .hubx-ws-severity-dot.is-quiet { background: var(--color-eo-line); }
+
+    .hubx-ws-side {
+        position: sticky;
+        top: 0;
+        border-radius: 1.25rem;
+        padding: 1.1rem;
+        background: linear-gradient(165deg, var(--color-hubx-graphite-mid) 0%, var(--color-hubx-graphite-deep) 100%);
+        color: rgba(255, 255, 255, 0.92);
+        box-shadow: var(--shadow-eo-float);
+    }
+
+    .hubx-ws-side-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .hubx-ws-side-close {
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.5);
+        transition: color 0.15s ease, background 0.15s ease;
+    }
+    .hubx-ws-side-close:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+
+    .hubx-ws-side-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.4rem;
+        padding: 1.7rem 0.5rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .hubx-ws-side-empty-icon {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .hubx-ws-side-label {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .hubx-ws-side-title {
+        margin-top: 0.3rem;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.3;
+        color: #fff;
+    }
+
+    .hubx-ws-side-note {
+        margin-top: 0.35rem;
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .hubx-ws-side-meta {
+        margin-top: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .hubx-ws-side-stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 0.55rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
+    }
+    .hubx-ws-side-stat:last-child { border-bottom: 0; padding-bottom: 0; }
+    .hubx-ws-side-stat-label { color: rgba(255, 255, 255, 0.5); }
+    .hubx-ws-side-stat-value { font-weight: 700; color: #fff; }
+
+    .hubx-ws-side-actions {
+        margin-top: 1.1rem;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+
+    .hubx-ws-side-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        border-radius: 0.7rem;
+        padding: 0.55rem;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.85);
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .hubx-ws-side-action:hover { background: rgba(255, 255, 255, 0.14); }
+    .hubx-ws-side-action.is-teal { background: color-mix(in srgb, var(--color-eo-teal) 30%, transparent); border-color: color-mix(in srgb, var(--color-eo-teal) 50%, transparent); }
+    .hubx-ws-side-action.is-risk { background: color-mix(in srgb, var(--color-eo-risk) 28%, transparent); border-color: color-mix(in srgb, var(--color-eo-risk) 45%, transparent); }
+
     /* ── Responsive overrides ──────────────────────────────────────────
-       Placed last on purpose: every rule above (.hubx-stack, .hubx-rail,
-       etc.) is a plain class selector, so without deliberate source-order
-       control here, whichever definition appears LAST in the file wins at
-       every viewport, media query or not — these have to come after the
-       base rules to actually override them at narrower widths.
-       Desktop (≥1280px): stack | dock | workspace | inspector, side by side.
-       Tablet (900–1279px): stack becomes a horizontal strip above the row,
-       dock stays a side rail, inspector drops below the workspace.
-       Mobile (<900px): stack and dock both become horizontal carousels. */
+       Placed last on purpose: every rule above (.hubx-grid, etc.) is a
+       plain class selector, so without deliberate source-order control
+       here, whichever definition appears LAST in the file wins at every
+       viewport, media query or not — these have to come after the base
+       rules to actually override them at narrower widths.
+       Desktop (≥1280px): workspace | inspector, side by side.
+       Tablet/mobile (<1280px): inspector drops below the workspace, full
+       width. The Module Navigation Bar is unaffected — it's a full-width
+       row above this grid, already horizontally scrollable at any width. */
     @media (max-width: 1279px) {
         .hubx-grid,
         .hubx-grid.has-panel {
-            grid-template-columns: 64px minmax(0, 1fr);
-            grid-template-areas: "rail stack" "rail main";
-        }
-        .hubx-col-stack { grid-area: stack; }
-        .hubx-col-rail { grid-area: rail; }
-        .hubx-grid > div:nth-child(3) { grid-area: main; }
-        .hubx-col-panel { grid-column: 1 / -1; margin-top: 0.85rem; }
-
-        /* The stack column: a horizontal strip instead of a fixed dark
-           column, so tablet width isn't spent on a 232px sidebar. */
-        .hubx-col-stack .hubx-stack {
-            position: static;
-            flex-direction: row;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-        }
-        .hubx-col-stack .hubx-stack-head { display: none; }
-        .hubx-col-stack .hubx-stack-card,
-        .hubx-col-stack .hubx-stack-empty {
-            flex-shrink: 0;
-            width: 240px;
-            scroll-snap-align: start;
-        }
-        .hubx-col-stack .hubx-stack-viewall { flex-shrink: 0; width: 140px; display: flex; align-items: center; justify-content: center; }
-    }
-
-    @media (max-width: 899px) {
-        .hubx-grid,
-        .hubx-grid.has-panel {
             grid-template-columns: minmax(0, 1fr);
-            grid-template-areas: "stack" "rail" "main";
         }
-        .hubx-col-rail { grid-area: rail; }
-
-        /* Module Dock becomes a horizontal strip too, once there's no
-           room left for a side rail next to the main workspace. */
-        .hubx-rail {
-            position: static;
-            flex-direction: row;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-        }
-        .hubx-rail-item { flex-shrink: 0; width: 64px; }
-        .hubx-rail-more { flex-direction: row; width: auto; }
-        .hubx-rail-more > div { flex-direction: row; }
+        .hubx-col-panel { grid-column: 1 / -1; margin-top: 0.85rem; }
     }
 }

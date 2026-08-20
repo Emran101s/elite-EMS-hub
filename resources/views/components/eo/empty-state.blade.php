@@ -7,7 +7,7 @@
 {{-- Soft Command empty state — soft card, calm CTA pairing. --}}
 <div {{ $attributes->class(['eo-soft-card flex flex-col items-center px-6 py-14 text-center']) }}>
     @if ($icon)
-        <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal">
+        <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal-ink">
             <x-icon :name="$icon" class="h-5 w-5" />
         </span>
     @else

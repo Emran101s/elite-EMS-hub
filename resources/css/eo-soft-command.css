@@ -7,16 +7,29 @@
 @theme {
     --font-eo: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
-    --color-eo-navy-deep: #0b1322;
-    --color-eo-navy: #101a29;
-    --color-eo-navy-mid: #162033;
+    /* V7: these three tokens carry the platform's one "strong dark" anchor —
+       graphite/near-black, not navy-blue. Renamed later if a cleanup pass
+       ever chases the naming mismatch; for now the value shift alone moves
+       every consumer (buttons, selected rows, active pills, shell rail) off
+       navy without touching call sites one by one. */
+    --color-eo-navy-deep: #14161a;
+    --color-eo-navy: #1b1e24;
+    --color-eo-navy-mid: #262a31;
     --color-eo-teal: #1eacac;
     --color-eo-teal-lit: #2bc4c4;
     --color-eo-teal-deep: #158f8f;
     --color-eo-teal-ink: #0f6e6e;
     --color-eo-teal-soft: #d9f5f5;
+    /* AA-safe stand-in for --color-eo-teal on white text/focus rings — the
+       base teal only reaches 2.8:1 against white, which fails WCAG AA. Used
+       by .eo-btn-primary and the shared focus-visible ring, nowhere else. */
+    --color-eo-teal-btn: #167d7d;
     --color-eo-gold: #d6ae34;
     --color-eo-gold-soft: #f4d76b;
+    /* AA-safe text colour for gold on light surfaces (cards, pills) — the
+       base gold is 2.1:1 against white and only meant for fills/on-dark
+       text, never for gold-on-light text. */
+    --color-eo-gold-ink: #886d1b;
     --color-eo-bg: #e6e9ee;
     --color-eo-workspace: #f8f9fa;
     --color-eo-card: #ffffff;
@@ -25,10 +38,19 @@
     --color-eo-line: #e6e9ee;
     --color-eo-risk: #f45b5b;
     --color-eo-risk-soft: #fee2e2;
+    /* AA-safe text colour for risk-on-risk-soft — the base risk red is only
+       2.65:1 against its own soft tint. */
+    --color-eo-risk-ink: #d00e0e;
     --color-eo-warn: #f5a94e;
     --color-eo-warn-soft: #fef3c7;
+    /* AA-safe text colour for warn on light surfaces — the base warn amber
+       is only 1.97:1 against white, the worst of any status token. */
+    --color-eo-warn-ink: #9c5909;
     --color-eo-ok: #2cc36b;
     --color-eo-ok-soft: #dcfce7;
+    /* AA-safe text colour for ok-on-ok-soft — the base ok green is only
+       2.1:1 against its own soft tint. */
+    --color-eo-ok-ink: #1d7f46;
 
     --radius-eo: 1.5rem;
     --radius-eo-lg: 1rem;
@@ -127,7 +149,10 @@
     .eo-btn-ghost:focus-visible,
     .eo-btn-danger:focus-visible,
     .eo-btn-navy:focus-visible {
-        box-shadow: 0 0 0 3px rgba(30, 172, 172, 0.35);
+        /* Solid, not translucent — the old rgba(...,0.35) ring topped out at
+           2.8:1 against white even at full alpha, below the 3:1 WCAG floor
+           for a non-text UI indicator. */
+        box-shadow: 0 0 0 3px var(--color-eo-teal-ink);
     }
 
     .eo-btn:disabled,
@@ -141,7 +166,10 @@
     }
 
     .eo-btn-primary {
-        background: linear-gradient(165deg, var(--color-eo-teal-lit) 0%, var(--color-eo-teal) 48%, var(--color-eo-teal-deep) 100%);
+        /* --color-eo-teal-btn/-teal-ink, not the brand -teal/-teal-lit/-teal-deep
+           trio — those only reach 2.1–3.9:1 against white button text and
+           fail WCAG AA. */
+        background: linear-gradient(165deg, var(--color-eo-teal-btn) 0%, var(--color-eo-teal-ink) 100%);
         color: #fff;
         box-shadow: var(--shadow-eo-teal);
     }
@@ -177,7 +205,7 @@
 
     .eo-btn-danger {
         background: var(--color-eo-risk-soft);
-        color: var(--color-eo-risk);
+        color: var(--color-eo-risk-ink);
     }
 
     .eo-btn-danger:hover { background: rgba(244, 91, 91, 0.2); }
@@ -248,6 +276,26 @@
         min-height: 110px;
         resize: vertical;
     }
+
+    /* Compact +/- stepper button (dimension/quantity controls). Migrated
+       from the legacy .seg-step in app.css — Exhibition Floor Plan is its
+       only consumer. */
+    .eo-stepper {
+        display: flex;
+        height: 2rem;
+        width: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        border: 1px solid var(--color-eo-line);
+        background: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-eo-text);
+        transition: border-color 0.15s ease;
+    }
+
+    .eo-stepper:hover { border-color: var(--color-eo-teal); }
 
     /* Soft card surface */
     .eo-soft-card {
@@ -332,12 +380,12 @@
         font-weight: 700;
     }
 
-    .eo-pill-ok { background: var(--color-eo-ok-soft); color: var(--color-eo-ok); }
+    .eo-pill-ok { background: var(--color-eo-ok-soft); color: var(--color-eo-ok-ink); }
     .eo-pill-warn { background: var(--color-eo-warn-soft); color: #92400e; }
-    .eo-pill-risk { background: var(--color-eo-risk-soft); color: var(--color-eo-risk); }
+    .eo-pill-risk { background: var(--color-eo-risk-soft); color: var(--color-eo-risk-ink); }
     .eo-pill-pending { background: var(--color-eo-bg); color: var(--color-eo-muted); }
     .eo-pill-live { background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink); }
-    .eo-pill-premium { background: #fbf7ea; color: #937423; }
+    .eo-pill-premium { background: #fbf7ea; color: var(--color-eo-gold-ink); }
 
     /* Gallery / demo workspace chrome */
     .eo-gallery-shell {
@@ -1290,6 +1338,17 @@
         background: var(--color-eo-teal-lit);
         box-shadow: 0 0 10px rgba(30, 172, 172, 0.7);
         transform: translateY(-50%);
+    }
+
+    /* Below 640px the rail costs 72px + margins off a screen that has ~350px
+       to give — nearly a fifth of it, before the workspace shell's own
+       margin and padding. The same six areas (Home included) are already
+       one tap away in the drawer, fully labelled — the rail's tooltips
+       never worked on touch anyway. Hiding it here is pure width recovery,
+       not a navigation loss: .eo-workspace-shell is flex:1 and reclaims the
+       space on its own. */
+    @media (max-width: 639px) {
+        .eo-mini-rail { display: none; }
     }
 
     .eo-context-sidebar {

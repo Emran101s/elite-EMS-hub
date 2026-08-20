@@ -11,14 +11,14 @@
 --}}
 <div {{ $attributes->merge(['class' => 'min-w-0']) }}>
     @if ($label)
-        <label @if ($for) for="{{ $for }}" @endif class="field-label !mb-1 !text-eyebrow">{{ $label }}</label>
+        <label @if ($for) for="{{ $for }}" @endif class="eo-label !mb-1 !text-eyebrow">{{ $label }}</label>
     @endif
 
     {{ $slot }}
 
     @if ($error)
-        <p class="mt-1 text-micro font-semibold text-danger-ink">{{ $error }}</p>
+        <p class="mt-1 text-micro font-semibold text-eo-risk-ink">{{ $error }}</p>
     @elseif ($hint)
-        <p class="mt-1 text-micro text-muted">{{ $hint }}</p>
+        <p class="mt-1 text-micro text-eo-muted">{{ $hint }}</p>
     @endif
 </div>

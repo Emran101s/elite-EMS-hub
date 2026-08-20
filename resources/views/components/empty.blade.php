@@ -8,22 +8,26 @@
     One empty state. Replaces 39 ad-hoc centred blocks. The `actions` slot keeps
     the "nothing here yet — here's how to start" pairing consistent, which is the
     part that was most often missing.
+
+    V7: shares its markup with <x-eo.empty-state> exactly, so the two names
+    render identically — every existing <x-empty> call site updates for free
+    without touching the 23 files that use it.
 --}}
-<div {{ $attributes->merge(['class' => 'card flex flex-col items-center px-6 py-14 text-center']) }}>
+<div {{ $attributes->class(['eo-soft-card flex flex-col items-center px-6 py-14 text-center']) }}>
     @if ($icon)
-        <span class="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-navy-50 text-navy-500">
+        <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal-ink">
             <x-icon :name="$icon" class="h-5 w-5" />
         </span>
     @endif
 
-    <p class="text-sm font-semibold text-navy-900">{{ $title }}</p>
+    <p class="text-[15px] font-semibold text-eo-text">{{ $title }}</p>
 
     @if ($hint)
-        <p class="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted">{{ $hint }}</p>
+        <p class="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-eo-muted">{{ $hint }}</p>
     @endif
 
     @isset($actions)
-        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
             {{ $actions }}
         </div>
     @endisset

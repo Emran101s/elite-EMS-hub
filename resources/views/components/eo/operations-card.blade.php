@@ -27,11 +27,11 @@
         </div>
         <div class="rounded-2xl bg-eo-workspace px-3 py-2.5">
             <p class="eo-label">Due</p>
-            <p class="mt-1 text-[18px] font-bold tabular-nums text-eo-warn">{{ $due ?? '—' }}</p>
+            <p class="mt-1 text-[18px] font-bold tabular-nums text-eo-warn-ink">{{ $due ?? '—' }}</p>
         </div>
         <div class="rounded-2xl bg-eo-workspace px-3 py-2.5">
             <p class="eo-label">Blocked</p>
-            <p class="mt-1 text-[18px] font-bold tabular-nums text-eo-risk">{{ $blocked ?? '—' }}</p>
+            <p class="mt-1 text-[18px] font-bold tabular-nums text-eo-risk-ink">{{ $blocked ?? '—' }}</p>
         </div>
     </div>
 

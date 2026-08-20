@@ -1,21 +1,24 @@
 @props(['status'])
 
 @php
+    // V7: same status→tone mapping, now rendered through the eo-pill-*
+    // vocabulary instead of one-off Tailwind color utilities, so this and
+    // <x-eo.status-pill>-style badges share one tone language.
     $tone = match ($status) {
         'on_track', 'completed', 'done', 'active', 'approved', 'paid', 'delivered',
-        'final', 'live', 'mitigated', 'confirmed', 'contracted' => 'bg-track/10 text-emerald-700 ring-track/30',
+        'final', 'live', 'mitigated', 'confirmed', 'contracted' => 'eo-pill-ok',
 
         'in_progress', 'doing', 'todo', 'review', 'planning', 'pending', 'on_hold', 'production', 'partial',
         'quoted', 'monitoring', 'waiting_speaker', 'needs_review', 'proposal',
-        'requested', 'in_production' => 'bg-warn/10 text-amber-700 ring-warn/30',
+        'requested', 'in_production' => 'eo-pill-warn',
 
         'at_risk', 'behind', 'urgent', 'rejected', 'escalated', 'issue',
-        'cancelled', 'blocked', 'needs_revision' => 'bg-risk/10 text-red-700 ring-risk/30',
+        'cancelled', 'blocked', 'needs_revision' => 'eo-pill-risk',
 
-        default => 'bg-navy-50 text-navy-600 ring-navy-200', // draft, closed, …
+        default => 'eo-pill-pending', // draft, closed, …
     };
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 {$tone}"]) }}>
+<span {{ $attributes->merge(['class' => $tone]) }}>
     {{ str($status)->replace('_', ' ')->title() }}
 </span>

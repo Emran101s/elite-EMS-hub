@@ -17,12 +17,12 @@
     board with work to do, not as an error state.
 --}}
 <span {{ $attributes->merge(['class' => 'inline-flex min-w-0 items-baseline gap-1.5']) }}>
-    <span @class(['min-w-0 truncate', 'italic font-medium text-navy-300' => $name === '', 'line-through text-navy-400' => $muted])>
+    <span @class(['min-w-0 truncate', 'italic font-medium text-eo-muted' => $name === '', 'line-through text-eo-muted' => $muted])>
         {{ $name !== '' ? $name : $fallback }}
     </span>
 
     @if ($missing !== [])
-        <span class="mt-px inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-warn"
+        <span class="mt-px inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn"
               title="Still needs {{ \Illuminate\Support\Arr::join($missing, ', ', ' and ') }}"
               aria-label="Incomplete — still needs {{ \Illuminate\Support\Arr::join($missing, ', ', ' and ') }}"></span>
     @endif

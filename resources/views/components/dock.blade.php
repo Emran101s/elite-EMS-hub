@@ -48,7 +48,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-x-0 scale-100"
          x-transition:leave-end="opacity-0 translate-x-16 scale-[0.98]"
-         class="pointer-events-auto fixed right-[104px] top-1/2 z-30 flex max-h-[88vh] max-w-[92vw] -translate-y-1/2 flex-col overflow-hidden rounded-l-2xl border border-r-0 border-line bg-white shadow-overlay"
+         class="pointer-events-auto fixed right-[104px] top-1/2 z-30 flex max-h-[88vh] max-w-[92vw] -translate-y-1/2 flex-col overflow-hidden rounded-l-2xl border border-r-0 border-eo-line bg-white shadow-eo-float"
          style="width: {{ $width }}">
 
         @unless ($bare)
@@ -64,9 +64,9 @@
                     <x-icon :name="$icon" class="h-4 w-4 text-white" />
                 </span>
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-xs font-bold text-navy-900">{{ $title ?? $label }}</p>
+                    <p class="truncate text-xs font-bold text-eo-text">{{ $title ?? $label }}</p>
                     @if ($subtitle)
-                        <p class="truncate text-eyebrow text-muted">{{ $subtitle }}</p>
+                        <p class="truncate text-eyebrow text-eo-muted">{{ $subtitle }}</p>
                     @endif
                 </div>
             </div>
@@ -77,7 +77,7 @@
         </div>
 
         <button type="button" @click="$store.dock.close()"
-                class="shrink-0 border-t border-line py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-navy-400 transition hover:bg-page/60 hover:text-navy-900">
+                class="shrink-0 border-t border-eo-line py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted transition hover:bg-eo-workspace/60 hover:text-eo-text">
             Close ›
         </button>
     </div>

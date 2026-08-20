@@ -5,9 +5,9 @@
 @php
     $tones = [
         'ok' => 'bg-track/10 text-emerald-700 ring-track/30',
-        'warn' => 'bg-warn/10 text-amber-800 ring-warn/30',
-        'risk' => 'bg-risk/10 text-red-700 ring-risk/30',
-        'info' => 'bg-navy-50 text-navy-700 ring-line',
+        'warn' => 'bg-eo-warn-soft text-eo-warn-ink ring-eo-warn/30',
+        'risk' => 'bg-eo-risk-soft text-eo-risk-ink ring-eo-risk/30',
+        'info' => 'bg-eo-bg text-eo-text ring-eo-line',
     ];
 @endphp
 

@@ -7,10 +7,10 @@
 
 @php
     $valueClass = match ($tone) {
-        'ok' => 'text-eo-ok',
-        'warn' => 'text-eo-warn',
+        'ok' => 'text-eo-ok-ink',
+        'warn' => 'text-eo-warn-ink',
         'risk' => 'text-eo-risk',
-        'live' => 'text-eo-teal',
+        'live' => 'text-eo-teal-ink',
         default => 'text-eo-text',
     };
 @endphp
