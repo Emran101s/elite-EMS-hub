@@ -83,15 +83,19 @@ class AuditLogTest extends TestCase
         $this->assertArrayHasKey('exhibitor_id', $log->changes);
     }
 
-    public function test_recent_activity_shows_on_the_overview(): void
+    public function test_recent_activity_is_reachable_from_the_event_utilities_drawer(): void
     {
+        // Mission Control pass: Recent Activity moved off the permanently-
+        // visible Overview dashboard into the Event Utilities drawer (still
+        // server-rendered, just x-cloak'd until the header's ⋯ icon opens
+        // it) — see resources/views/components/eo/hubx-utilities-drawer.blade.php.
         [$event, $user] = $this->ctx();
         $this->actingAs($user);
         $event->update(['stage' => 'production']);
 
         $this->actingAs($user)->get(route('events.hub', $event))
             ->assertOk()
-            ->assertSee('Recent activity')
-            ->assertSee('Audit');
+            ->assertSee('Event Utilities')
+            ->assertSee('Recent Activity');
     }
 }

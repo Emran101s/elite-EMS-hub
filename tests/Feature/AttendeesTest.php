@@ -29,8 +29,13 @@ class AttendeesTest extends TestCase
     {
         [$event, $user] = $this->ctx();
         $event->update(['enabled_modules' => ['attendees']]);
+        // The tab's own stat strip (Registered/Checked in/VIPs/Ticket revenue)
+        // was removed as a duplicate of the Universal Module Header, which
+        // shows the same four figures under its own labels — "Registered"
+        // still applies, "Revenue" is that header's label for the same
+        // number "Ticket revenue" used to carry.
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'attendees']))
-            ->assertOk()->assertSee('Registered')->assertSee('Ticket revenue');
+            ->assertOk()->assertSee('Registered')->assertSee('Revenue');
     }
 
     public function test_add_attendee_and_check_in(): void
