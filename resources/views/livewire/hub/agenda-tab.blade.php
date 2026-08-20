@@ -14,9 +14,9 @@
     @if ($showImport)
         <form wire:submit="import" class="eo-domain-card mb-4 flex flex-wrap items-end gap-3 !p-4">
             <div class="flex-1">
-                <label class="eo-field-label !mb-1" for="import-file">CSV file — columns: title, type, start, end, room, speaker, moderator (separate several names with ; )</label>
+                <label class="eo-eo-label !mb-1" for="import-file">CSV file — columns: title, type, start, end, room, speaker, moderator (separate several names with ; )</label>
                 <input id="import-file" type="file" wire:model="importFile" accept=".csv,text/csv" class="eo-input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
-                @error('importFile') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                @error('importFile') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
             </div>
             <button type="button" wire:click="$set('showImport', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
             <x-eo.button type="submit" size="sm" class="!h-10 !px-5" wire:loading.attr="disabled" wire:target="import,importFile">Import</x-eo.button>
@@ -89,7 +89,7 @@
                         @forelse ($venues as $v)
                             @php
                                 [$dot, $chip, $note] = match ($v['state']) {
-                                    'conflict' => ['bg-eo-risk', 'bg-eo-risk-soft text-eo-risk', $v['conflicts'].' '.str('conflict')->plural($v['conflicts'])],
+                                    'conflict' => ['bg-eo-risk', 'bg-eo-risk-soft text-eo-risk-ink', $v['conflicts'].' '.str('conflict')->plural($v['conflicts'])],
                                     'warning' => ['bg-eo-warn', 'bg-eo-warn-soft text-amber-800', $v['over'].' warning'],
                                     default => ['bg-eo-ok', 'bg-eo-ok-soft text-emerald-800', 'No issues'],
                                 };
@@ -223,7 +223,7 @@
                              shows; nothing recomputed for this header. --}}
                         <div class="grid grid-cols-3 divide-x divide-eo-line border-b border-eo-line text-center">
                             <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $roomWorkload['sessions'] }}</p><p class="text-[10px] text-eo-muted">{{ str('Session')->plural($roomWorkload['sessions']) }} today</p></div>
-                            <div class="px-3 py-3"><p class="text-[18px] font-black {{ $roomWorkload['conflicts'] ? 'text-eo-risk' : 'text-eo-text' }}">{{ $roomWorkload['conflicts'] }}</p><p class="text-[10px] text-eo-muted">{{ str('Conflict')->plural($roomWorkload['conflicts']) }}</p></div>
+                            <div class="px-3 py-3"><p class="text-[18px] font-black {{ $roomWorkload['conflicts'] ? 'text-eo-risk-ink' : 'text-eo-text' }}">{{ $roomWorkload['conflicts'] }}</p><p class="text-[10px] text-eo-muted">{{ str('Conflict')->plural($roomWorkload['conflicts']) }}</p></div>
                             <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $roomWorkload['room']->capacity ? number_format($roomWorkload['room']->capacity) : '—' }}</p><p class="text-[10px] text-eo-muted">Capacity</p></div>
                         </div>
                     @endif
@@ -398,8 +398,8 @@
                     <div class="grid grid-cols-4 divide-x divide-eo-line border-b border-eo-line text-center">
                         <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $spkTotal }}</p><p class="text-[10px] text-eo-muted">{{ str('Speaker')->plural($spkTotal) }}</p></div>
                         <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $spkAssigned }}</p><p class="text-[10px] text-eo-muted">Assigned</p></div>
-                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $spkNeedsAction ? 'text-eo-warn' : 'text-eo-text' }}">{{ $spkNeedsAction }}</p><p class="text-[10px] text-eo-muted">Need action</p></div>
-                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $unassignedSessions->isNotEmpty() ? 'text-eo-risk' : 'text-eo-text' }}">{{ $unassignedSessions->count() }}</p><p class="text-[10px] text-eo-muted">Unassigned {{ str('session')->plural($unassignedSessions->count()) }}</p></div>
+                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $spkNeedsAction ? 'text-eo-warn-ink' : 'text-eo-text' }}">{{ $spkNeedsAction }}</p><p class="text-[10px] text-eo-muted">Need action</p></div>
+                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $unassignedSessions->isNotEmpty() ? 'text-eo-risk-ink' : 'text-eo-text' }}">{{ $unassignedSessions->count() }}</p><p class="text-[10px] text-eo-muted">Unassigned {{ str('session')->plural($unassignedSessions->count()) }}</p></div>
                     </div>
 
                     <div class="flex items-center justify-between border-b border-eo-line px-4 py-2.5">
@@ -412,7 +412,7 @@
                          than only discoverable by scrolling every speaker. --}}
                     @if ($unassignedSessions->isNotEmpty())
                         <div class="border-b border-eo-line bg-eo-risk-soft/40 px-4 py-3">
-                            <p class="mb-1.5 text-[11px] font-bold text-eo-risk">⚠ {{ $unassignedSessions->count() }} {{ str('session')->plural($unassignedSessions->count()) }} with no speaker billed</p>
+                            <p class="mb-1.5 text-[11px] font-bold text-eo-risk-ink">⚠ {{ $unassignedSessions->count() }} {{ str('session')->plural($unassignedSessions->count()) }} with no speaker billed</p>
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach ($unassignedSessions as $u)
                                     <button type="button" wire:click="selectSession({{ $u->id }})"
@@ -554,12 +554,12 @@
                     <div class="mt-3 border-t border-eo-line pt-3">
                         <p class="eo-label mb-1.5">Dependencies</p>
                         @if (empty($dependencies))
-                            <p class="flex items-center gap-1.5 text-[11.5px] text-eo-ok"><span>✓</span> Nothing outstanding</p>
+                            <p class="flex items-center gap-1.5 text-[11.5px] text-eo-ok-ink"><span>✓</span> Nothing outstanding</p>
                         @else
                             <ul class="space-y-1.5">
                                 @foreach ($dependencies as $dep)
                                     <li class="flex items-start gap-1.5 text-[11px]">
-                                        <span class="mt-0.5 shrink-0 {{ $dep['tone'] === 'risk' ? 'text-eo-risk' : 'text-eo-warn' }}">⚠</span>
+                                        <span class="mt-0.5 shrink-0 {{ $dep['tone'] === 'risk' ? 'text-eo-risk' : 'text-eo-warn-ink' }}">⚠</span>
                                         <span class="text-eo-text">{{ $dep['label'] }}</span>
                                     </li>
                                 @endforeach
@@ -570,7 +570,7 @@
                     {{-- Move room — a select, not a modal: the room half of
                          what dragging the block onto a lane already does. --}}
                     <div class="mt-3 border-t border-eo-line pt-3">
-                        <label class="eo-field-label !mb-1" for="insp-room">Move room</label>
+                        <label class="eo-eo-label !mb-1" for="insp-room">Move room</label>
                         <select id="insp-room" class="eo-select h-9 text-[12px]"
                                 onchange="window.__agendaWire.assignRoom({{ $ss->id }}, this.value || null)">
                             <option value="">— Unassigned —</option>
@@ -592,7 +592,7 @@
                     </div>
                 @else
                     {{-- Nothing selected — the day's insights, exactly as before. --}}
-                    <p class="eo-label">Live insights</p>
+                    <p class="eo-label">Day insights</p>
 
                     <div class="mt-2">
                         <p class="eo-font text-[13px] font-bold text-eo-text">Today overview</p>
@@ -644,8 +644,8 @@
                                 [$ring, $ink] = $alert['count'] === 0
                                     ? ['ring-eo-line', 'text-eo-muted']
                                     : match ($alert['tone']) {
-                                        'risk' => ['ring-eo-risk/30 bg-eo-risk-soft/40', 'text-eo-risk'],
-                                        'warn' => ['ring-eo-warn/30 bg-eo-warn-soft/40', 'text-eo-warn'],
+                                        'risk' => ['ring-eo-risk/30 bg-eo-risk-soft/40', 'text-eo-risk-ink'],
+                                        'warn' => ['ring-eo-warn/30 bg-eo-warn-soft/40', 'text-eo-warn-ink'],
                                         default => ['ring-eo-line', 'text-eo-text'],
                                     };
                             @endphp
@@ -771,7 +771,7 @@
                                        body="Its {{ $daySessions }} {{ str('session')->plural($daySessions) }} go with it, speakers and all. The event's own dates are not touched."
                                        confirm="Delete the day" tone="danger"
                                        run="$wire.deleteDay({{ $day->id }})"
-                                       class="block w-full px-3 py-2 text-left text-[11.5px] text-eo-risk transition hover:bg-eo-risk-soft">
+                                       class="block w-full px-3 py-2 text-left text-[11.5px] text-eo-risk-ink transition hover:bg-eo-risk-soft">
                                 ✕ Delete this day
                             </x-confirm>
                         </div>
@@ -797,7 +797,7 @@
                 </div>
 
                 @if ($clashSummary->isEmpty())
-                    <p class="flex items-center gap-2 px-4 py-6 text-[12px] text-eo-ok">✓ Nothing needs attention right now.</p>
+                    <p class="flex items-center gap-2 px-4 py-6 text-[12px] text-eo-ok-ink">✓ Nothing needs attention right now.</p>
                 @else
                     <div class="scrollbar-none max-h-[360px] divide-y divide-eo-line overflow-y-auto">
                         @foreach ($clashSummary as $row)
@@ -866,19 +866,19 @@
                     <div class="space-y-4 px-6 py-5">
                         <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
                             <div>
-                                <label class="eo-field-label !mb-1.5" for="m-title">Title <span class="text-eo-risk">*</span></label>
+                                <label class="eo-eo-label !mb-1.5" for="m-title">Title <span class="text-eo-risk-ink">*</span></label>
                                 <input id="m-title" type="text" wire:model="title" class="eo-input !py-2.5" placeholder="Opening Keynote">
-                                @error('title') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                                @error('title') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                             </div>
                             <div class="sm:w-44">
-                                <label class="eo-field-label !mb-1.5" for="m-type">Type</label>
+                                <label class="eo-eo-label !mb-1.5" for="m-type">Type</label>
                                 <input id="m-type" type="text" list="session-types" wire:model="type" class="eo-input !py-2.5"
                                        autocomplete="off" placeholder="Keynote, Setup, Rehearsal…">
                                 <datalist id="session-types">
                                     @foreach ($typeOptions as $t)<option value="{{ $t }}"></option>@endforeach
                                 </datalist>
                                 <p class="mt-1 text-[10.5px] text-eo-muted">Pick one or type your own.</p>
-                                @error('type') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                                @error('type') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
@@ -886,18 +886,18 @@
                              sits on the programme and whether a delegate sees it
                              at all. Free text, because every event invents one. --}}
                         <div>
-                            <label class="eo-field-label !mb-1.5" for="m-track">Programme track <span class="font-normal normal-case tracking-normal text-eo-muted">optional</span></label>
+                            <label class="eo-eo-label !mb-1.5" for="m-track">Programme track <span class="font-normal normal-case tracking-normal text-eo-muted">optional</span></label>
                             <input id="m-track" type="text" list="session-tracks" wire:model="track" class="eo-input !py-2.5"
                                    autocomplete="off" placeholder="Main Stage, Track A, Registration…">
                             <datalist id="session-tracks">
                                 @foreach ($trackOptions as $name => $does)<option value="{{ $name }}">{{ $does }}</option>@endforeach
                             </datalist>
                             <p class="mt-1 text-[10.5px] text-eo-muted">Main Stage heads its slot; Registration, Setup, Media and Partnerships stay off the public programme.</p>
-                            @error('track') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('track') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="eo-field-label !mb-1.5">Format</label>
+                            <label class="eo-eo-label !mb-1.5">Format</label>
                             <div class="grid grid-cols-3 gap-2.5">
                                 @foreach (\App\Support\Taxonomy::options('session_format') as $val => $lbl)
                                     <button type="button" wire:click="$set('format', '{{ $val }}')"
@@ -911,33 +911,33 @@
                         </div>
 
                         <div>
-                            <label class="eo-field-label !mb-1.5" for="m-status">Status</label>
+                            <label class="eo-eo-label !mb-1.5" for="m-status">Status</label>
                             <select id="m-status" wire:model="status" class="eo-select !py-2.5">
                                 @foreach (\App\Models\EventAgendaSession::STATUS_META as $val => [$lbl, $settled])
                                     <option value="{{ $val }}">{{ $lbl }}{{ $settled ? '' : ' — not for distribution' }}</option>
                                 @endforeach
                             </select>
-                            @error('status') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('status') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="eo-field-label !mb-1.5" for="m-cap">Seat capacity <span class="font-normal normal-case tracking-normal text-eo-muted">optional — limits attendee sign-ups</span></label>
+                            <label class="eo-eo-label !mb-1.5" for="m-cap">Seat capacity <span class="font-normal normal-case tracking-normal text-eo-muted">optional — limits attendee sign-ups</span></label>
                             <input id="m-cap" type="number" min="0" wire:model="capacity" class="eo-input !py-2.5" placeholder="Leave blank for unlimited">
                         </div>
 
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div>
-                                <label class="eo-field-label !mb-1.5" for="m-day">Day <span class="text-eo-risk">*</span></label>
+                                <label class="eo-eo-label !mb-1.5" for="m-day">Day <span class="text-eo-risk-ink">*</span></label>
                                 <select id="m-day" wire:model="agenda_day_id" class="eo-select !py-2.5">
                                     @foreach ($days as $d)<option value="{{ $d->id }}">Day {{ $loop->iteration }} — {{ $d->date?->format('D j M') }}</option>@endforeach
                                 </select>
                             </div>
                             <div>
-                                <label class="eo-field-label !mb-1.5" for="m-start">Start <span class="text-eo-risk">*</span></label>
+                                <label class="eo-eo-label !mb-1.5" for="m-start">Start <span class="text-eo-risk-ink">*</span></label>
                                 <input id="m-start" type="time" wire:model="starts_at" class="eo-input !py-2.5">
                             </div>
                             <div>
-                                <label class="eo-field-label !mb-1.5" for="m-end">End <span class="text-eo-risk">*</span></label>
+                                <label class="eo-eo-label !mb-1.5" for="m-end">End <span class="text-eo-risk-ink">*</span></label>
                                 <input id="m-end" type="time" wire:model="ends_at" class="eo-input !py-2.5">
                             </div>
                         </div>
@@ -945,7 +945,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="sm:col-span-2">
                                 <div class="mb-1.5 flex items-center justify-between">
-                                    <label class="eo-field-label !mb-0">Speaker line-up</label>
+                                    <label class="eo-eo-label !mb-0">Speaker line-up</label>
                                     <span class="text-[10.5px] text-eo-muted">Pick from the roster or type a new name — new people are added to Speakers automatically</span>
                                 </div>
 
@@ -981,7 +981,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="eo-field-label !mb-1.5" for="m-room">Venue / Room</label>
+                                <label class="eo-eo-label !mb-1.5" for="m-room">Venue / Room</label>
                                 <select id="m-room" wire:model="room_id" class="eo-select mb-2 !py-2.5">
                                     <option value="">— Select a venue —</option>
                                     @foreach ($rooms as $room)<option value="{{ $room->id }}">{{ $room->name }}</option>@endforeach
@@ -991,7 +991,7 @@
                         </div>
 
                         <div>
-                            <label class="eo-field-label !mb-1.5" for="m-desc">Description / Notes</label>
+                            <label class="eo-eo-label !mb-1.5" for="m-desc">Description / Notes</label>
                             <textarea id="m-desc" wire:model="description" rows="2" class="eo-textarea !py-2.5" placeholder="Optional details…"></textarea>
                         </div>
                     </div>
@@ -1006,7 +1006,7 @@
                             <x-confirm title="Delete this session?"
                                        confirm="Delete"
                                        run="$wire.deleteSession({{ $editingId }})"
-                                       class="rounded-2xl px-4 py-2.5 text-sm font-bold text-eo-risk transition hover:bg-eo-risk-soft">Delete</x-confirm>
+                                       class="rounded-2xl px-4 py-2.5 text-sm font-bold text-eo-risk-ink transition hover:bg-eo-risk-soft">Delete</x-confirm>
                         @endif
                         <span class="mr-auto"></span>
                         <button type="button" wire:click="closeForm" class="rounded-2xl bg-eo-bg px-6 py-2.5 text-sm font-bold text-eo-text transition hover:bg-eo-line">Cancel</button>

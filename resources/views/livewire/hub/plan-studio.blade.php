@@ -50,13 +50,13 @@
     {{-- ══════════ OWNER FILTER ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-1.5">
         <span class="eyebrow mr-1">Owner</span>
-        <button type="button" wire:click="filterByOwner" @class(['h-8 rounded-lg px-3 text-micro font-bold transition', 'bg-navy-900 text-white' => ! $filterOwner, 'bg-white text-navy-500 ring-1 ring-line hover:text-navy-800' => $filterOwner])>Everyone</button>
+        <button type="button" wire:click="filterByOwner" @class(['h-8 rounded-lg px-3 text-micro font-bold transition', 'bg-eo-navy text-white' => ! $filterOwner, 'bg-white text-eo-muted ring-1 ring-eo-line hover:text-eo-text' => $filterOwner])>Everyone</button>
         @foreach ($owners as $owner)
             <button type="button" wire:click="filterByOwner({{ $owner['id'] }})"
-                    @class(['flex h-8 items-center gap-1.5 rounded-lg pl-1 pr-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $filterOwner === $owner['id'], 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterOwner !== $owner['id']])>
+                    @class(['flex h-8 items-center gap-1.5 rounded-lg pl-1 pr-2.5 text-micro font-bold transition', 'bg-eo-navy text-white' => $filterOwner === $owner['id'], 'bg-white text-eo-text ring-1 ring-eo-line hover:text-eo-text' => $filterOwner !== $owner['id']])>
                 <x-user-avatar :user="$owner['user']" size="h-6 w-6" />
                 {{ str($owner['user']->name)->before(' ') }}
-                <span @class(['text-navy-300' => $filterOwner !== $owner['id'], 'text-white/50' => $filterOwner === $owner['id']])>{{ $owner['count'] }}</span>
+                <span @class(['text-eo-muted' => $filterOwner !== $owner['id'], 'text-white/50' => $filterOwner === $owner['id']])>{{ $owner['count'] }}</span>
             </button>
         @endforeach
     </div>
@@ -64,41 +64,41 @@
     {{-- ══════════ LEGEND ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
         @foreach (\App\Models\PlanItem::STATUSES as $sv => [$slabel, $shex])
-            <span class="flex items-center gap-1.5 text-micro font-semibold text-navy-500">
+            <span class="flex items-center gap-1.5 text-micro font-semibold text-eo-muted">
                 <span class="h-2.5 w-2.5 rounded-full" style="background: {{ $shex }}"></span>{{ $slabel }}
-                <span class="text-navy-300">{{ $gateCounts[$sv] ?? 0 }}</span>
+                <span class="text-eo-muted">{{ $gateCounts[$sv] ?? 0 }}</span>
             </span>
         @endforeach
-        <span class="ml-auto text-micro text-navy-300">Click a task to edit · ▸ expand for subtasks</span>
+        <span class="ml-auto text-micro text-eo-muted">Click a task to edit · ▸ expand for subtasks</span>
     </div>
 
     {{-- ══════════ TOOLBAR: view switcher + filters + add ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-2.5">
-        <div class="flex rounded-xl border border-line bg-white p-0.5 shadow-sm">
+        <div class="flex rounded-xl border border-eo-line bg-white p-0.5 shadow-sm">
             @foreach ($views as $vk => [$vlabel, $vicon])
-                <button type="button" wire:click="setView('{{ $vk }}')" @class(['flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $view === $vk, 'text-navy-400 hover:text-navy-700' => $view !== $vk])>
+                <button type="button" wire:click="setView('{{ $vk }}')" @class(['flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-micro font-bold transition', 'bg-eo-navy text-white' => $view === $vk, 'text-eo-muted hover:text-eo-text' => $view !== $vk])>
                     <x-icon :name="$vicon" class="h-3.5 w-3.5" /> {{ $vlabel }}
                 </button>
             @endforeach
         </div>
 
         <div class="relative">
-            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search items…" class="input h-9 w-44 pl-8 text-xs">
-            <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-navy-300" />
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search items…" class="eo-input h-9 w-44 pl-8 text-xs">
+            <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
         </div>
 
         {{-- track filter --}}
         <div class="flex flex-wrap items-center gap-1">
-            <button type="button" wire:click="filterByTrack" @class(['h-8 rounded-lg px-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => ! $filterTrack, 'bg-white text-navy-500 ring-1 ring-line hover:text-navy-800' => $filterTrack])>All tracks</button>
+            <button type="button" wire:click="filterByTrack" @class(['h-8 rounded-lg px-2.5 text-micro font-bold transition', 'bg-eo-navy text-white' => ! $filterTrack, 'bg-white text-eo-muted ring-1 ring-eo-line hover:text-eo-text' => $filterTrack])>All tracks</button>
             @foreach ($tracks as $t)
-                <button type="button" wire:click="filterByTrack({{ $t->id }})" @class(['flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterTrack === $t->id, 'bg-white text-navy-600 ring-1 ring-line hover:text-navy-900' => $filterTrack !== $t->id]) @style(['background: '.$t->color => $filterTrack === $t->id])>
+                <button type="button" wire:click="filterByTrack({{ $t->id }})" @class(['flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterTrack === $t->id, 'bg-white text-eo-text ring-1 ring-eo-line hover:text-eo-text' => $filterTrack !== $t->id]) @style(['background: '.$t->color => $filterTrack === $t->id])>
                     <span class="h-2 w-2 rounded-full" style="background: {{ $filterTrack === $t->id ? '#ffffff' : $t->color }}"></span>{{ \Illuminate\Support\Str::limit($t->name, 16) }}
                 </button>
             @endforeach
         </div>
 
         <div class="ml-auto flex items-center gap-2">
-            <button type="button" wire:click="$set('showTracks', true)" class="flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-micro font-bold text-navy-600 shadow-sm transition hover:text-navy-900" title="Manage tracks and goals">
+            <button type="button" wire:click="$set('showTracks', true)" class="flex h-9 items-center gap-1.5 rounded-xl border border-eo-line bg-white px-3 text-micro font-bold text-eo-text shadow-sm transition hover:text-eo-text" title="Manage tracks and goals">
                 <x-icon name="columns" class="h-3.5 w-3.5" /> Tracks
             </button>
         </div>

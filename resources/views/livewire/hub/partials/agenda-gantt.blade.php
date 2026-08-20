@@ -34,10 +34,10 @@
          hiding in a tooltip nobody hovers. --}}
     @if ($conflicts)
         <div data-conflict-banner class="border-b border-eo-risk/25 bg-eo-risk-soft px-4 py-2 transition">
-            <p class="text-[11px] font-bold text-eo-risk">
+            <p class="text-[11px] font-bold text-eo-risk-ink">
                 ⚠ {{ count($conflicts) }} scheduling {{ str('conflict')->plural(count($conflicts)) }} on this day
             </p>
-            <ul class="mt-0.5 space-y-0.5 ps-4 text-[10.5px] text-eo-risk">
+            <ul class="mt-0.5 space-y-0.5 ps-4 text-[10.5px] text-eo-risk-ink">
                 @foreach (collect($conflicts)->flatten()->unique()->take(6) as $reason)
                     <li>· {{ $reason }}</li>
                 @endforeach
@@ -207,7 +207,7 @@
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-eo-line px-4 py-2.5">
         @foreach ([
             ['text-eo-risk', 'Speaker conflict'],
-            ['text-eo-warn', 'Room capacity risk'],
+            ['text-eo-warn-ink', 'Room capacity risk'],
             ['text-eo-muted', 'Overlapping session'],
             ['text-eo-muted', 'Missing presentation'],
         ] as [$tone, $label])
