@@ -112,16 +112,6 @@ class NavPanel
     ];
 
     /**
-     * Areas the fixed panel covers instead of their own sections().
-     *
-     * Empty: every area gets its own core-link list from sections() now.
-     * Workspace, Events and Tasks used to share this fixed panel wholesale,
-     * which is how three different sidebars ended up showing the same nine
-     * links regardless of which area you were actually in.
-     */
-    public const PANEL_COVERS = [];
-
-    /**
      * @return Collection<int,array{label:string,items:Collection}>
      */
     public static function panel(): Collection
@@ -336,29 +326,6 @@ class NavPanel
      * Finance screen is furniture. Empty stages are not drawn: a folder with
      * nothing in it is a row you have to read to dismiss.
      */
-    public static function tree(string $area): Collection
-    {
-        if (! in_array($area, ['workspace', 'events'], true)) {
-            return collect();
-        }
-
-        $events = Event::whereNull('archived_at')
-            ->withCount(['tasks as open_tasks' => fn ($q) => $q->whereNotIn('status', ['done', 'cancelled'])])
-            ->with('client')
-            ->orderByDesc('starts_at')
-            ->get();
-
-        return collect(Workflow::SETS['event_stage']['states'])
-            ->map(fn ($_, string $stage) => [
-                'key' => $stage,
-                'label' => Workflow::label('event_stage', $stage),
-                'color' => Workflow::color('event_stage', $stage),
-                'events' => $events->where('stage', $stage)->values(),
-            ])
-            ->filter(fn (array $group) => $group['events']->isNotEmpty())
-            ->values();
-    }
-
     private static function openTasks(): int
     {
         return Task::whereNotIn('status', ['done', 'cancelled'])->count();

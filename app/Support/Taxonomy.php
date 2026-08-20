@@ -360,11 +360,6 @@ class Taxonomy
             ->all();
     }
 
-    public static function color(string $taxonomy, ?string $key): ?string
-    {
-        return $key ? self::terms($taxonomy, withInactive: true)->firstWhere('key', $key)?->color : null;
-    }
-
     /** Fill any list that has no terms yet from its constant. Idempotent. */
     public static function seed(): int
     {
