@@ -14,20 +14,20 @@
     <x-empty icon="chart" title="Full report suite is next"
              hint="Event summary, supplier, task, risk, attendance, sponsor and post-event packs — branded with this event’s logo and theme — will land here. Until then, export what each module already produces.">
         <x-slot:actions>
-            <a href="{{ route('events.budget.pdf', $event) }}" target="_blank" class="btn-gold btn-sm">Budget PDF</a>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate class="btn-ghost btn-sm">Open Budget →</a>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'accommodation']) }}" wire:navigate class="btn-ghost btn-sm">Stay / rooming →</a>
+            <x-eo.button size="sm" href="{{ route('events.budget.pdf', $event) }}" target="_blank">Budget PDF</x-eo.button>
+            <x-eo.button variant="ghost" size="sm" href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate>Open Budget →</x-eo.button>
+            <x-eo.button variant="ghost" size="sm" href="{{ route('events.hub', [$event, 'tab' => 'accommodation']) }}" wire:navigate>Stay / rooming →</x-eo.button>
         </x-slot:actions>
     </x-empty>
 
-    <div class="card divide-y divide-line overflow-hidden">
+    <div class="eo-soft-card divide-y divide-eo-line overflow-hidden">
         <div class="flex items-center gap-3 px-4 py-3">
             <span class="flex h-8 w-8 items-center justify-center rounded-lg text-white" style="background: {{ $moduleHex }}">
                 <x-icon name="chart" class="h-4 w-4" />
             </span>
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-navy-900">Available now</p>
-                <p class="text-eyebrow text-muted">Exports from modules that already ship a document</p>
+                <p class="text-sm font-bold text-eo-text">Available now</p>
+                <p class="text-eyebrow text-eo-muted">Exports from modules that already ship a document</p>
             </div>
         </div>
         @foreach ([
@@ -36,13 +36,13 @@
             ['Rooming list', 'Named guests by hotel block — from Stay', route('events.hub', [$event, 'tab' => 'accommodation']), 'accommodation'],
         ] as [$label, $hint, $href, $mod])
             <a href="{{ $href }}" @if (str_ends_with($href, '.pdf') || str_contains($href, '/pdf')) target="_blank" @else wire:navigate @endif
-               class="flex items-center gap-3 px-4 py-3 transition hover:bg-page/50">
+               class="flex items-center gap-3 px-4 py-3 transition hover:bg-eo-workspace/50">
                 <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ \App\Models\Event::moduleColor($mod) }}"></span>
                 <span class="min-w-0 flex-1">
-                    <span class="block text-sm font-semibold text-navy-900">{{ $label }}</span>
-                    <span class="block text-eyebrow text-muted">{{ $hint }}</span>
+                    <span class="block text-sm font-semibold text-eo-text">{{ $label }}</span>
+                    <span class="block text-eyebrow text-eo-muted">{{ $hint }}</span>
                 </span>
-                <span class="text-eyebrow font-bold text-navy-400">Open →</span>
+                <span class="text-eyebrow font-bold text-eo-muted">Open →</span>
             </a>
         @endforeach
     </div>

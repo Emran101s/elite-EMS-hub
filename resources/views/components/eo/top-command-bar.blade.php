@@ -43,7 +43,6 @@
             @else
                 <p class="eo-label">Mission control</p>
             @endif
-            <p class="mt-0.5 hidden text-[12px] text-eo-muted sm:block">Delegate journeys · readiness · live ops</p>
         </div>
     </div>
 

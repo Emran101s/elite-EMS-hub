@@ -19,35 +19,43 @@
 @endphp
 
 <div class="hubx-header">
-    <div class="min-w-0 flex-1">
-        <div class="mb-2 flex flex-wrap items-center gap-2 max-w-full">
-            <span class="hubx-pill" style="background: {{ $stageTone['bg'] }}; color: {{ $stageTone['text'] }};">{{ $stage }}</span>
-            <span class="hubx-pill" style="background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink);">{{ $type }} · Delegate Journey</span>
-            @if (! empty($live['label']))
-                <span class="hubx-pill" style="background: {{ $live['tone'] === 'bg-risk' ? 'var(--color-eo-risk-soft)' : ($live['tone'] === 'bg-warn' ? 'var(--color-eo-warn-soft)' : 'var(--color-eo-ok-soft)') }}; color: {{ $live['tone'] === 'bg-risk' ? '#b91c1c' : ($live['tone'] === 'bg-warn' ? '#92400e' : '#15803d') }};">
-                    {{ $live['label'] }}
-                </span>
-            @endif
+    <div class="flex min-w-0 flex-1 items-start gap-3.5">
+        <span class="hubx-header-avatar shrink-0" aria-hidden="true">
+            <x-icon name="calendar" class="h-5 w-5" />
+        </span>
+
+        <div class="min-w-0 flex-1">
+            <div class="mb-2 flex flex-wrap items-center gap-2 max-w-full">
+                <span class="hubx-pill" style="background: {{ $stageTone['bg'] }}; color: {{ $stageTone['text'] }};">{{ $stage }}</span>
+                <span class="hubx-pill" style="background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink);">{{ $type }}</span>
+                @if (! empty($live['label']))
+                    <span class="hubx-pill" style="background: {{ $live['tone'] === 'bg-risk' ? 'var(--color-eo-risk-soft)' : ($live['tone'] === 'bg-warn' ? 'var(--color-eo-warn-soft)' : 'var(--color-eo-ok-soft)') }}; color: {{ $live['tone'] === 'bg-risk' ? '#b91c1c' : ($live['tone'] === 'bg-warn' ? '#92400e' : '#15803d') }};">
+                        {{ $live['label'] }}
+                    </span>
+                @endif
+            </div>
+
+            <h1 class="hubx-header-name">
+                {{ $title['lead'] }}@if ($title['tail'])<span class="font-medium text-eo-muted"> · {{ $title['tail'] }}</span>@endif
+            </h1>
+
+            <p class="hubx-header-meta">
+                <span>{{ $where ?: 'Venue TBC' }}</span>
+                <span class="hubx-header-dot">{{ $when }}</span>
+                @if ($event->client)
+                    <span class="hubx-header-dot">{{ $event->client->name }}</span>
+                @endif
+            </p>
         </div>
-
-        <h1 class="hubx-header-name">
-            {{ $title['lead'] }}@if ($title['tail'])<span class="font-medium text-eo-muted"> · {{ $title['tail'] }}</span>@endif
-        </h1>
-
-        <p class="hubx-header-meta">
-            <span>{{ $where ?: 'Venue TBC' }}</span>
-            <span class="hubx-header-dot">{{ $when }}</span>
-            @if ($event->client)
-                <span class="hubx-header-dot">{{ $event->client->name }}</span>
-            @endif
-        </p>
     </div>
 
     <div class="flex shrink-0 items-center gap-2">
         <span class="hubx-header-icon-row">
             <span class="hubx-header-icon" title="Star"><x-icon name="star" class="h-3.5 w-3.5" /></span>
             <span class="hubx-header-icon" title="Expand"><x-icon name="grid" class="h-3.5 w-3.5" /></span>
-            <span class="hubx-header-icon" title="More"><x-icon name="dots" class="h-3.5 w-3.5" /></span>
+            <button type="button" class="hubx-header-icon" title="Event Utilities" @click="utilitiesOpen = true">
+                <x-icon name="dots" class="h-3.5 w-3.5" />
+            </button>
         </span>
         <x-eo.button variant="ghost" size="sm" href="{{ route('events.index') }}">Portfolio</x-eo.button>
         <x-eo.button size="sm" href="{{ route('events.hub', [$event, 'tab' => $header['critical']['tab'] ?? 'overview']) }}">

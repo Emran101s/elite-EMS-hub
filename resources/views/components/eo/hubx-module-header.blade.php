@@ -38,15 +38,14 @@
             @endif
         </div>
 
+        {{-- The module's own Add action lives in the Inspector now (its
+             "Action" card) — Header's job is identity/readiness/metrics/
+             owner/next-action, not initiating work, so it no longer
+             duplicates that CTA here. --}}
         <div class="flex shrink-0 items-center gap-2">
             <x-eo.button size="sm" href="{{ route('events.hub', [$event, 'tab' => $m['tab']]) }}">
                 Open {{ $m['label'] }}
             </x-eo.button>
-            @if ($m['supportsAdd'])
-                <x-eo.button variant="ghost" size="sm" href="{{ route('events.hub', [$event, 'tab' => $m['tab'], 'action' => 'add']) }}">
-                    Add
-                </x-eo.button>
-            @endif
         </div>
     </div>
 
