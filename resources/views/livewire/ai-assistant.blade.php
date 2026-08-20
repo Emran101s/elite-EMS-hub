@@ -99,7 +99,7 @@
                     @if ($focusSummary['attention'])
                         <ul class="mt-3 space-y-1.5 border-t border-eo-line pt-3">
                             @foreach ($focusSummary['attention'] as $line)
-                                <li class="flex gap-2 text-[11.5px] text-eo-text"><span class="text-eo-gold">·</span>{{ $line }}</li>
+                                <li class="flex gap-2 text-[11.5px] text-eo-text"><span class="text-eo-gold-ink">·</span>{{ $line }}</li>
                             @endforeach
                         </ul>
                     @endif

@@ -86,16 +86,16 @@
                 <div class="space-y-4">
                     <div>
                         <div class="mb-1.5 flex items-baseline justify-between">
-                            <label class="eo-field-label !mb-0" for="s-name">Event name <span class="text-eo-risk">*</span></label>
+                            <label class="eo-field-label !mb-0" for="s-name">Event name <span class="text-eo-risk-ink">*</span></label>
                             <span class="text-[10.5px] tabular-nums text-eo-muted">{{ mb_strlen($name) }}/120</span>
                         </div>
                         <input id="s-name" type="text" wire:model.live.debounce.250ms="name" maxlength="120"
                                class="eo-input h-12 !text-[17px] font-bold text-eo-text" placeholder="Arab Investment Summit 2027">
-                        @error('name') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                        @error('name') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="eo-field-label">Category <span class="text-eo-risk">*</span></label>
+                        <label class="eo-field-label">Category <span class="text-eo-risk-ink">*</span></label>
                         <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                             @foreach ($categories as $key => [$label, $type, $icon, $mods])
                                 @php $on = $category === $key; @endphp
@@ -125,7 +125,7 @@
                                 </button>
                             @endforeach
                         </div>
-                        @error('category') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                        @error('category') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -143,7 +143,7 @@
                         </div>
 
                         <div>
-                            <label class="eo-field-label">Internal or commercial <span class="text-eo-risk">*</span></label>
+                            <label class="eo-field-label">Internal or commercial <span class="text-eo-risk-ink">*</span></label>
                             <div class="grid h-11 grid-cols-2 gap-2">
                                 <button type="button" wire:click="$set('originKind', 'commercial')"
                                         @class([
@@ -158,7 +158,7 @@
                                             'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30' => $originKind !== 'internal',
                                         ])>Internal</button>
                             </div>
-                            @error('originKind') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('originKind') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
@@ -169,7 +169,7 @@
                         </div>
                         <textarea id="s-desc" wire:model.live.debounce.400ms="description" rows="3" maxlength="600"
                                   class="eo-textarea text-sm" placeholder="A premier gathering of investors, leaders and innovators shaping the future of global investment."></textarea>
-                        @error('description') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                        @error('description') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
@@ -182,7 +182,7 @@
                     </p>
 
                     <div>
-                        <label class="eo-field-label">{{ $originKind === 'internal' ? 'Internal origin' : 'Commercial origin' }} <span class="text-eo-risk">*</span></label>
+                        <label class="eo-field-label">{{ $originKind === 'internal' ? 'Internal origin' : 'Commercial origin' }} <span class="text-eo-risk-ink">*</span></label>
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                             @foreach ($originOptions as $key => $label)
                                 @php $on = $originSource === $key; @endphp
@@ -196,16 +196,16 @@
                                         <span class="absolute inset-y-0 start-0 w-[3px] bg-eo-teal" aria-hidden="true"></span>
                                     @endif
                                     <span class="min-w-0 flex-1 text-[12.5px] font-bold text-eo-text">{{ $label }}</span>
-                                    <span @class(['text-[13px] font-black', 'text-eo-teal' => $on, 'text-eo-line' => ! $on])>{{ $on ? '✓' : '' }}</span>
+                                    <span @class(['text-[13px] font-black', 'text-eo-teal-ink' => $on, 'text-eo-line' => ! $on])>{{ $on ? '✓' : '' }}</span>
                                 </button>
                             @endforeach
                         </div>
-                        @error('originSource') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                        @error('originSource') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                     </div>
 
                     @if ($originKind === 'commercial')
                         <div>
-                            <label class="eo-field-label" for="s-client">Client <span class="text-eo-risk">*</span></label>
+                            <label class="eo-field-label" for="s-client">Client <span class="text-eo-risk-ink">*</span></label>
                             @if ($newClientMode)
                                 <input id="s-client" type="text" wire:model.live.debounce.300ms="new_client" class="eo-input h-11" placeholder="New client name">
                             @else
@@ -217,7 +217,7 @@
                             <button type="button" wire:click="toggleNewClient" class="mt-1 text-[11px] font-semibold text-eo-teal-ink hover:underline">
                                 {{ $newClientMode ? '← Pick an existing client' : '＋ Add a new client' }}
                             </button>
-                            @error('client_id') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('client_id') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                     @else
                         <p class="flex items-center gap-2 rounded-xl bg-eo-teal-soft/40 px-3.5 py-2.5 text-[11.5px] text-eo-teal-ink ring-1 ring-eo-teal/20">
@@ -232,20 +232,20 @@
                 <div class="space-y-4">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
-                            <label class="eo-field-label" for="s-start">Starts <span class="text-eo-risk">*</span></label>
+                            <label class="eo-field-label" for="s-start">Starts <span class="text-eo-risk-ink">*</span></label>
                             <input id="s-start" type="date" wire:model.live="starts_at" class="eo-input h-11">
-                            @error('starts_at') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('starts_at') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="eo-field-label" for="s-end">Ends</label>
                             <input id="s-end" type="date" wire:model.live="ends_at" class="eo-input h-11">
-                            @error('ends_at') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('ends_at') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
                     @if ($previewDays > 0)
                         <p class="flex items-center gap-2 rounded-xl bg-eo-gold-soft/30 px-3.5 py-2.5 text-[11.5px] text-eo-text ring-1 ring-eo-gold/20">
-                            <x-icon name="calendar" class="h-4 w-4 shrink-0 text-eo-gold" />
+                            <x-icon name="calendar" class="h-4 w-4 shrink-0 text-eo-gold-ink" />
                             {{ $previewDays }} agenda {{ str('day')->plural($previewDays) }} will be scaffolded the moment this launches.
                         </p>
                     @endif
@@ -300,12 +300,12 @@
                         <div>
                             <label class="eo-field-label" for="s-pax">Expected participants</label>
                             <input id="s-pax" type="number" min="0" wire:model.live.debounce.300ms="expected_participants" class="eo-input h-11" placeholder="1200">
-                            @error('expected_participants') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('expected_participants') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="eo-field-label" for="s-budget">Budget</label>
                             <input id="s-budget" type="number" step="0.01" min="0" wire:model.live.debounce.300ms="budget" class="eo-input h-11" placeholder="480000">
-                            @error('budget') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('budget') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="eo-field-label" for="s-cur">Currency</label>
@@ -330,13 +330,13 @@
                             <label class="eo-field-label" for="s-cover">Cover image</label>
                             <input id="s-cover" type="file" wire:model="cover" accept="image/*"
                                    class="eo-input h-11 !py-0 text-xs file:mr-3 file:h-full file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:text-xs file:font-semibold file:text-white">
-                            @error('cover') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('cover') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="eo-field-label" for="s-logo">Client logo</label>
                             <input id="s-logo" type="file" wire:model="logo" accept="image/*"
                                    class="eo-input h-11 !py-0 text-xs file:mr-3 file:h-full file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:text-xs file:font-semibold file:text-white">
-                            @error('logo') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                            @error('logo') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
@@ -417,7 +417,7 @@
                         @foreach ($readiness['sections'] as $key => $s)
                             <div class="rounded-xl border border-eo-line bg-eo-workspace px-3 py-2.5 text-center">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-eo-muted">{{ $s['label'] }}</p>
-                                <p @class(['mt-1 text-[13px] font-black', 'text-eo-ok' => $s['complete'], 'text-eo-muted' => ! $s['complete']])>
+                                <p @class(['mt-1 text-[13px] font-black', 'text-eo-ok-ink' => $s['complete'], 'text-eo-muted' => ! $s['complete']])>
                                     {{ $s['complete'] ? 'Ready' : $s['done'].'/'.$s['total'] }}
                                 </p>
                             </div>
@@ -594,7 +594,7 @@
                             <div class="mt-1 flex flex-wrap items-baseline gap-x-3">
                                 <span class="eo-font text-[13.5px] font-bold text-eo-text">{{ $milestone['title'] }}</span>
                                 <span class="flex items-center gap-1.5 text-[11.5px] text-eo-muted"><x-icon name="calendar" class="h-3.5 w-3.5 text-eo-muted" />{{ $milestone['due'] }}</span>
-                                <span class="ms-auto text-[11.5px] font-bold {{ $milestone['late'] ? 'text-eo-risk' : 'text-eo-gold' }}">{{ $milestone['note'] }}</span>
+                                <span class="ms-auto text-[11.5px] font-bold {{ $milestone['late'] ? 'text-eo-risk-ink' : 'text-eo-gold-ink' }}">{{ $milestone['note'] }}</span>
                             </div>
                         @else
                             <p class="mt-1 text-[12px] text-eo-line">Set a start date and the first milestone lands here.</p>
@@ -644,11 +644,11 @@
     {{-- ══════════ THE LAUNCH BAR ══════════ --}}
     <div class="eo-domain-card flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3.5">
         <div class="flex items-center gap-2.5">
-            <span class="grid h-9 w-9 place-items-center rounded-full bg-eo-ok-soft text-eo-ok">
+            <span class="grid h-9 w-9 place-items-center rounded-full bg-eo-ok-soft text-eo-ok-ink">
                 <x-icon name="clipboard" class="h-4 w-4" />
             </span>
             <span class="leading-tight">
-                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-eo-ok">Draft saved</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-eo-ok-ink">Draft saved</span>
                 <span class="block text-[10.5px] text-eo-muted">{{ $savedAgo ?? 'Nothing typed yet' }}</span>
             </span>
         </div>

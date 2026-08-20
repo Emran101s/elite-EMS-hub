@@ -20,7 +20,7 @@
     </x-eo.team-header>
 
     @if (session('status'))
-        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok">{{ session('status') }}</div>
+        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok-ink">{{ session('status') }}</div>
     @endif
 
     {{-- user cards --}}
@@ -43,7 +43,7 @@
 
                 {{-- light footer --}}
                 <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
-                    <x-icon name="users" class="h-3 w-3 shrink-0 text-eo-gold" />
+                    <x-icon name="users" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
                     <span class="truncate text-[11px] font-semibold text-eo-muted">{{ $m->roleLabel() }}</span>
                     <div class="ml-auto flex items-center gap-1">
                         <button type="button" wire:click="edit({{ $m->id }})" class="rounded-lg bg-eo-bg px-1.5 py-1 text-[10px] font-bold text-eo-muted opacity-0 transition hover:bg-eo-line group-hover:opacity-100" title="Edit">✎</button>
@@ -83,7 +83,7 @@
                                 <input type="file" wire:model="photo" accept="image/png,image/jpeg,image/webp"
                                        class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-eo-navy-deep">
                                 <div wire:loading wire:target="photo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
-                                @error('photo')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                                @error('photo')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                                 <p class="mt-1 text-[11px] text-eo-muted">Leave blank to keep initials.</p>
                             </div>
                         </div>
@@ -92,14 +92,14 @@
                     <div>
                         <label class="eo-label mb-1">Full name</label>
                         <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. Layla Haddad">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label class="eo-label mb-1">Email</label>
                             <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="name@company.com">
-                            @error('email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                            @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="eo-label mb-1">Role</label>

@@ -62,7 +62,7 @@
                        class="eo-input h-9 w-20 text-center text-sm" title="Max passengers">
                 <button type="button" wire:click="addVehicle" class="eo-btn-navy eo-btn-sm">＋ Add</button>
             </div>
-            @error('newVehicle')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('newVehicle')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         {{-- ══ services ══ --}}
@@ -101,7 +101,7 @@
                        placeholder="New service type…" class="eo-input h-9 flex-1 text-sm">
                 <button type="button" wire:click="addService" class="eo-btn-navy eo-btn-sm">＋ Add</button>
             </div>
-            @error('newService')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('newService')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         {{-- ══ drivers ══ --}}
@@ -231,7 +231,7 @@
                 </select>
                 <button type="button" wire:click="addFleetVehicle" class="eo-btn-navy eo-btn-sm">＋ Add</button>
             </div>
-            @error('newPlate')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('newPlate')<p class="border-t border-eo-line bg-eo-workspace px-5 pb-3 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
     </div>
 </div>

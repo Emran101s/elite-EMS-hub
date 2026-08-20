@@ -12,7 +12,7 @@
     </div>
 
     @if (session('status'))
-        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok">{{ session('status') }}</div>
+        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok-ink">{{ session('status') }}</div>
     @endif
 
     <form wire:submit="save" class="grid gap-4">

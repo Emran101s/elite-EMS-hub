@@ -107,7 +107,7 @@
 
             @if ($hasActiveFilters)
                 <a href="{{ route('events.index') }}" wire:navigate
-                   class="text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk">Clear filters</a>
+                   class="text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk-ink">Clear filters</a>
             @endif
         </div>
 
@@ -126,8 +126,8 @@
                             <span @class([
                                 'rounded-full px-1.5 text-[10px] font-bold',
                                 'bg-white/20' => $item['active'],
-                                'bg-eo-risk/15 text-eo-risk' => ! $item['active'] && $item['tone'] === 'risk',
-                                'bg-eo-warn/15 text-eo-warn' => ! $item['active'] && $item['tone'] === 'warn',
+                                'bg-eo-risk/15 text-eo-risk-ink' => ! $item['active'] && $item['tone'] === 'risk',
+                                'bg-eo-warn/15 text-eo-warn-ink' => ! $item['active'] && $item['tone'] === 'warn',
                                 'bg-eo-workspace text-eo-muted' => ! $item['active'] && ! in_array($item['tone'], ['risk', 'warn'], true),
                             ])>{{ $item['count'] }}</span>
                         @endif
@@ -435,7 +435,7 @@
                                     {{ count($selectedIds) }} {{ str('event')->plural(count($selectedIds)) }} selected
                                 </p>
                                 <button type="button" wire:click="selectAllMatching"
-                                        class="text-[11.5px] font-semibold text-eo-risk underline-offset-2 hover:underline">Select everything matching these filters</button>
+                                        class="text-[11.5px] font-semibold text-eo-risk-ink underline-offset-2 hover:underline">Select everything matching these filters</button>
                                 <button type="button" wire:click="clearSelection"
                                         class="text-[11.5px] font-semibold text-eo-muted hover:text-eo-text">Clear</button>
 
@@ -527,7 +527,7 @@
 
                                                 <span class="min-w-0">
                                                     <span class="block truncate text-[11px] font-semibold text-eo-text">{{ $m['milestone']['title'] }}</span>
-                                                    <span class="block truncate text-[10px] {{ $m['milestone']['overdue'] ? 'text-eo-risk' : 'text-eo-muted' }}">{{ $m['milestone']['due'] }}</span>
+                                                    <span class="block truncate text-[10px] {{ $m['milestone']['overdue'] ? 'text-eo-risk-ink' : 'text-eo-muted' }}">{{ $m['milestone']['due'] }}</span>
                                                 </span>
 
                                                 <details class="relative justify-self-end" data-menu>
@@ -537,14 +537,14 @@
                                                         <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-text transition hover:bg-eo-workspace">{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }}</button>
                                                         <button type="button" wire:click="duplicate({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-text transition hover:bg-eo-workspace">Duplicate</button>
                                                         <x-confirm title="Archive “{{ $m['name'] }}”?" body="It leaves every board and list." confirm="Archive" tone="warn" run="$wire.archive({{ $m['id'] }})"
-                                                                   class="block w-full border-t border-eo-line px-3 py-2 text-start text-[11.5px] font-semibold text-eo-risk transition hover:bg-eo-risk-soft">Archive</x-confirm>
+                                                                   class="block w-full border-t border-eo-line px-3 py-2 text-start text-[11.5px] font-semibold text-eo-risk-ink transition hover:bg-eo-risk-soft">Archive</x-confirm>
                                                         @can('manage-events')
                                                             <x-confirm
                                                                     title="Delete “{{ $m['name'] }}” permanently?"
                                                                     :body="'Its tasks, budget, documents, contracts and bookings go with it. Invoices and proposals are kept, unattached.'.PHP_EOL.PHP_EOL.'This cannot be undone.'"
                                                                     confirm="Delete permanently"
                                                                     run="$wire.deleteEvent({{ $m['id'] }})"
-                                                                    class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-risk transition hover:bg-eo-risk-soft">Delete permanently</x-confirm>
+                                                                    class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-risk-ink transition hover:bg-eo-risk-soft">Delete permanently</x-confirm>
                                                         @endcan
                                                     </div>
                                                 </details>

@@ -4,7 +4,7 @@
     $state = $inv->state();
     $out = $inv->outstandingCents();
     $cur = $inv->currencyCode();
-    $money = fn ($c) => \App\Support\Money::forDocument($c, $cur);
+    $money = fn ($c) => \App\Support\Money::forDocument($c, $cur, 3);
 @endphp
 
 <div class="eo-event-atmosphere space-y-4 rounded-[24px]">
@@ -35,7 +35,7 @@
                 <x-confirm title="Delete this draft?"
                            body="Its number will not be reused."
                            confirm="Delete" run="$wire.destroyDraft"
-                           class="eo-btn-ghost eo-btn-sm text-eo-risk">
+                           class="eo-btn-ghost eo-btn-sm text-eo-risk-ink">
                     Delete
                 </x-confirm>
             @elseif ($may && $state !== 'void')
@@ -52,7 +52,7 @@
     <div class="grid gap-4 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
 
         {{-- ══════════ THE FORM ══════════ --}}
-        <div class="space-y-3">
+        <div class="min-w-0 space-y-3">
 
             {{-- ── who and when ── --}}
             <div class="eo-soft-card p-4">
@@ -66,7 +66,7 @@
                                class="eo-input h-9 w-full text-xs">
                     </label>
 
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <label class="block">
                             <span class="eo-label mb-1 block">Event</span>
                             <select wire:model="event_id" wire:change="saveDetails" @disabled(! $may) class="eo-select h-9 w-full text-xs">
@@ -88,7 +88,7 @@
                         </label>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <label class="block">
                             <span class="eo-label mb-1 block">Issued</span>
                             <input type="date" wire:model="issued_on" wire:change="saveDetails" @disabled(! $may) class="eo-input h-9 w-full text-xs">
@@ -99,7 +99,7 @@
                         </label>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <label class="block">
                             <span class="eo-label mb-1 block">Currency</span>
                             <input type="text" maxlength="3" wire:model.blur="currency" wire:change="saveDetails" @disabled(! $may)
@@ -124,11 +124,11 @@
                         </span>
                         <input type="number" step="0.5" min="0" max="100" wire:model.blur="fee_pct" wire:change="saveDetails" @disabled(! $may)
                                class="eo-input h-9 w-full text-xs">
-                        @error('fee_pct') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                        @error('fee_pct') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                     </label>
                 </div>
 
-                @error('currency') <p class="mt-2 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                @error('currency') <p class="mt-2 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
             </div>
 
             {{-- ── the lines ── --}}
@@ -160,11 +160,11 @@
                                             <span class="block truncate text-[12px] font-bold text-eo-text">{{ $picked->name }}</span>
                                             <span class="block truncate text-[10.5px] text-eo-muted">
                                                 {{ $picked->currency }}
-                                                {{ number_format(($picked instanceof \App\Models\EventInvoiceItem ? $picked->sell_cents : $picked->unit_price_cents) / 100, 2) }}
+                                                {{ number_format(($picked instanceof \App\Models\EventInvoiceItem ? $picked->sell_cents : $picked->unit_price_cents) / 100, 3) }}
                                                 {{ mb_strtolower($picked->unitLabel()) }}
                                                 @if ($picked->code) · {{ $picked->code }} @endif
                                                 @if ($picked instanceof \App\Models\EventInvoiceItem && $picked->marginPct() !== null)
-                                                    · <span class="{{ $picked->isUnderwater() ? 'font-bold text-eo-risk' : 'text-eo-ok' }}">{{ $picked->marginPct() }}% margin</span>
+                                                    · <span class="{{ $picked->isUnderwater() ? 'font-bold text-eo-risk-ink' : 'text-eo-ok-ink' }}">{{ $picked->marginPct() }}% margin</span>
                                                 @endif
                                             </span>
                                         </span>
@@ -221,7 +221,7 @@
                                                         </span>
                                                     </span>
                                                     <span class="shrink-0 text-[11.5px] font-black tabular-nums text-eo-text">
-                                                        {{ number_format(($it instanceof \App\Models\EventInvoiceItem ? $it->sell_cents : $it->unit_price_cents) / 100, 2) }}
+                                                        {{ number_format(($it instanceof \App\Models\EventInvoiceItem ? $it->sell_cents : $it->unit_price_cents) / 100, 3) }}
                                                     </span>
                                                 </button>
                                             @empty
@@ -241,10 +241,10 @@
 
                             <input type="text" wire:model="description" placeholder="What the client is being charged for"
                                    class="eo-input h-9 w-full text-xs">
-                            @error('description') <p class="text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                            @error('description') <p class="text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
 
-                            <div class="flex gap-2">
-                                <label class="w-[84px]">
+                            <div class="flex flex-wrap gap-2">
+                                <label class="w-20 sm:w-[84px]">
                                     <span class="eo-label mb-1 block">Qty</span>
                                     {{-- Read-only while an item is picked: the quantity is the
                                          factors multiplied, and two places to change it is one
@@ -252,19 +252,19 @@
                                     <input type="number" step="0.01" min="0" wire:model="qty" @readonly((bool) $picked)
                                            class="eo-input h-9 w-full text-end text-xs {{ $picked ? 'bg-eo-bg text-eo-muted' : '' }}">
                                 </label>
-                                <label class="flex-1">
+                                <label class="min-w-[130px] flex-1">
                                     <span class="eo-label mb-1 block">Unit price</span>
                                     <input type="number" step="0.01" wire:model="unit" placeholder="0.00" class="eo-input h-9 w-full text-end text-xs">
                                 </label>
-                                <label class="w-[110px]">
+                                <label class="w-24 sm:w-[110px]">
                                     <span class="eo-label mb-1 block">Amount</span>
                                     <span class="flex h-9 items-center justify-end rounded-xl bg-white px-2.5 text-[13px] font-black tabular-nums text-eo-text ring-1 ring-eo-line">
-                                        {{ number_format((float) ($qty ?: 0) * (float) ($unit ?: 0), 2) }}
+                                        {{ number_format((float) ($qty ?: 0) * (float) ($unit ?: 0), 3) }}
                                     </span>
                                 </label>
                             </div>
-                            @error('qty') <p class="text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
-                            @error('unit') <p class="text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                            @error('qty') <p class="text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
+                            @error('unit') <p class="text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
 
                             <div class="flex gap-2 pt-0.5">
                                 <x-eo.button variant="navy" size="sm" wire:click="saveLine" class="!px-3 !py-1.5 !text-[11.5px]">
@@ -276,7 +276,7 @@
                                 </button>
                                 @if ($editingLine)
                                     <button type="button" wire:click="deleteLine({{ $editingLine }})"
-                                            class="ms-auto rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk">
+                                            class="ms-auto rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk-ink">
                                         Remove
                                     </button>
                                 @endif
@@ -302,7 +302,7 @@
                                 class="min-w-0 flex-1 text-start">
                             <span class="block truncate text-[12.5px] font-semibold text-eo-text">{{ $line->description }}</span>
                             <span class="block truncate text-[10.5px] text-eo-muted">
-                                {{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }} × {{ number_format($line->unit_cents / 100, 2) }}
+                                {{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }} × {{ number_format($line->unit_cents / 100, 3) }}
                                 @if ($line->payment_id)
                                     · <span class="text-eo-muted">from the schedule</span>
                                 @endif
@@ -310,7 +310,7 @@
                         </button>
 
                         <span class="shrink-0 text-[13px] font-black tabular-nums text-eo-text">
-                            {{ number_format($line->amountCents() / 100, 2) }}
+                            {{ number_format($line->amountCents() / 100, 3) }}
                         </span>
                     </div>
                 @empty
@@ -336,9 +336,9 @@
                         <span class="text-[15px] font-black text-eo-text">{{ $money($inv->totalCents()) }}</span></div>
                     @if ($inv->paid_cents > 0)
                         <div class="flex justify-between"><span class="text-eo-muted">Received</span>
-                            <span class="font-bold text-eo-ok">− {{ $money($inv->paid_cents) }}</span></div>
+                            <span class="font-bold text-eo-ok-ink">− {{ $money($inv->paid_cents) }}</span></div>
                         <div class="flex justify-between"><span class="text-eo-muted">Balance due</span>
-                            <span class="font-bold {{ $out > 0 ? 'text-eo-risk' : 'text-eo-ok' }}">{{ $money($out) }}</span></div>
+                            <span class="font-bold {{ $out > 0 ? 'text-eo-risk-ink' : 'text-eo-ok-ink' }}">{{ $money($out) }}</span></div>
                     @endif
                 </div>
             </div>
@@ -349,7 +349,7 @@
                     <p class="eo-label mb-2">Money received</p>
                     <div class="flex gap-2">
                         <input type="text" inputmode="decimal" wire:model="amount"
-                               placeholder="{{ number_format($out / 100, 2) }} — blank settles in full"
+                               placeholder="{{ number_format($out / 100, 3) }} — blank settles in full"
                                class="eo-input h-9 flex-1 text-xs">
                         <x-eo.button size="sm" wire:click="record">Record</x-eo.button>
                         @if ($inv->paid_cents > 0)
@@ -391,7 +391,7 @@
              Scaled down to fit the column and pinned while the form scrolls.
              The paper itself keeps its own print-document visual language —
              only the chrome around it is eo-*. ══ --}}
-        <div class="xl:sticky xl:top-4 xl:self-start">
+        <div class="min-w-0 xl:sticky xl:top-4 xl:self-start">
             <p class="eo-label mb-2">What the client receives</p>
             <div class="overflow-hidden rounded-2xl border border-eo-line bg-white shadow-[0_18px_50px_-30px_rgba(11,31,58,0.6)]">
                 <div class="origin-top" style="width: 794px; transform: scale(var(--paper-scale, 1));"

@@ -74,8 +74,8 @@
                         <input type="text" wire:model.blur="labels.{{ $row['key'] }}"
                                value="{{ $labels[$row['key']] ?? $row['label'] }}" maxlength="40"
                                class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-[12.5px] font-bold text-eo-text transition hover:border-eo-line focus:border-eo-teal/40 focus:bg-white focus:outline-none">
-                        @error('labels.'.$row['key'])<p class="px-2 text-[10.5px] text-eo-risk">{{ $message }}</p>@enderror
-                        @error('colors.'.$row['key'])<p class="px-2 text-[10.5px] text-eo-risk">{{ $message }}</p>@enderror
+                        @error('labels.'.$row['key'])<p class="px-2 text-[10.5px] text-eo-risk-ink">{{ $message }}</p>@enderror
+                        @error('colors.'.$row['key'])<p class="px-2 text-[10.5px] text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
 
                     {{-- The key is what every record and every line of code holds,

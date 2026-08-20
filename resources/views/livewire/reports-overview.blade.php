@@ -73,10 +73,10 @@
                                 ])>{{ $row['score'] === null ? 'Not scored' : $row['score'].'%' }}</span>
                             </td>
                             <td class="px-3 py-2.5 text-right text-[12px] tabular-nums text-eo-text">{{ $row['tasksTotal'] ? $row['tasksDone'].' / '.$row['tasksTotal'] : '—' }}</td>
-                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['overdue'] ? 'text-eo-risk' : 'text-eo-muted' }}">{{ $row['overdue'] ?: '—' }}</td>
-                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['risks'] ? 'text-eo-risk' : 'text-eo-muted' }}">{{ $row['risks'] ?: '—' }}</td>
-                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['approvals'] ? 'text-eo-warn' : 'text-eo-muted' }}">{{ $row['approvals'] ?: '—' }}</td>
-                            <td class="px-4 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['margin'] === null ? 'text-eo-muted' : ($row['margin'] < 0 ? 'text-eo-risk' : 'text-eo-text') }}">{{ $row['margin'] === null ? '—' : $row['margin'].'%' }}</td>
+                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['overdue'] ? 'text-eo-risk-ink' : 'text-eo-muted' }}">{{ $row['overdue'] ?: '—' }}</td>
+                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['risks'] ? 'text-eo-risk-ink' : 'text-eo-muted' }}">{{ $row['risks'] ?: '—' }}</td>
+                            <td class="px-3 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['approvals'] ? 'text-eo-warn-ink' : 'text-eo-muted' }}">{{ $row['approvals'] ?: '—' }}</td>
+                            <td class="px-4 py-2.5 text-right text-[12px] font-bold tabular-nums {{ $row['margin'] === null ? 'text-eo-muted' : ($row['margin'] < 0 ? 'text-eo-risk-ink' : 'text-eo-text') }}">{{ $row['margin'] === null ? '—' : $row['margin'].'%' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -123,7 +123,7 @@
                         <a href="{{ route('events.hub', [$row['event'], 'tab' => 'budget']) }}" class="min-w-0 flex-1 truncate text-[12px] font-semibold text-eo-text transition hover:text-eo-teal-ink">{{ $row['event']->name }}</a>
                         <span class="shrink-0 text-[11.5px] tabular-nums text-eo-muted">{{ \App\Livewire\EventsIndex::shortMoney($row['cost'], $totals['currency']) }} cost</span>
                         <span class="shrink-0 text-[11.5px] font-bold tabular-nums text-eo-text">{{ \App\Livewire\EventsIndex::shortMoney($row['charged'], $totals['currency']) }}</span>
-                        <span class="w-12 shrink-0 text-right text-[11.5px] font-bold tabular-nums {{ ($row['pricedMargin'] ?? 0) < 0 ? 'text-eo-risk' : 'text-eo-ok' }}">{{ $row['pricedMargin'] === null ? '—' : $row['pricedMargin'].'%' }}</span>
+                        <span class="w-12 shrink-0 text-right text-[11.5px] font-bold tabular-nums {{ ($row['pricedMargin'] ?? 0) < 0 ? 'text-eo-risk-ink' : 'text-eo-ok-ink' }}">{{ $row['pricedMargin'] === null ? '—' : $row['pricedMargin'].'%' }}</span>
                     </div>
                 @endforeach
             </div>
@@ -221,9 +221,9 @@
             <div class="grid grid-cols-2 divide-x divide-y divide-eo-line sm:grid-cols-4 sm:divide-y-0">
                 @foreach ([
                     ['Tasks', $work['total'], 'On the board', 'text-eo-text'],
-                    ['Done', $work['done'], $work['total'] ? round($work['done'] / $work['total'] * 100).'% closed' : '—', 'text-eo-ok'],
+                    ['Done', $work['done'], $work['total'] ? round($work['done'] / $work['total'] * 100).'% closed' : '—', 'text-eo-ok-ink'],
                     ['Overdue', $work['overdue'], 'Past their date', $work['overdue'] ? 'text-eo-risk' : 'text-eo-muted'],
-                    ['Unassigned', $work['unassigned'], 'Nobody owns them', $work['unassigned'] ? 'text-eo-warn' : 'text-eo-muted'],
+                    ['Unassigned', $work['unassigned'], 'Nobody owns them', $work['unassigned'] ? 'text-eo-warn-ink' : 'text-eo-muted'],
                 ] as [$label, $value, $note, $ink])
                     <div class="px-3.5 py-3">
                         <p class="eo-label">{{ $label }}</p>

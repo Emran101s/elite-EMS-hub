@@ -15,7 +15,7 @@
                 <label class="eo-label mb-1" for="eq-import">Excel (.xlsx) or CSV — columns: <span class="font-semibold text-eo-text">name</span>, price, notes</label>
                 <input id="eq-import" type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv" class="eo-input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
                 <p class="mt-1 text-[11px] text-eo-muted">First row is treated as headers. No headers? We'll use column order: name, price, notes.</p>
-                @error('importFile') <p class="mt-1 text-xs text-eo-risk">{{ $message }}</p> @enderror
+                @error('importFile') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
             </div>
             <button type="button" wire:click="$set('showImport', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
             <x-eo.button type="submit" size="sm" wire:loading.attr="disabled" wire:target="import,importFile">Import</x-eo.button>
@@ -68,12 +68,12 @@
                     <div>
                         <label class="eo-label mb-1">Equipment name</label>
                         <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. AV & sound system">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="eo-label mb-1">Unit price</label>
                         <input type="number" step="0.01" min="0" wire:model="price" class="eo-input h-10 text-sm" placeholder="0">
-                        @error('price')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('price')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="eo-label mb-1">Notes (optional)</label>

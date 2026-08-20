@@ -113,7 +113,7 @@
                         <x-confirm title="Delete {{ $sel->name }}?"
                                    :body="$sel->events_count ? $sel->events_count.' event(s) will be unlinked.' : null"
                                    confirm="Delete" run="$wire.delete({{ $sel->id }})"
-                                   class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Delete</x-confirm>
+                                   class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete</x-confirm>
                     @else
                         <p class="text-[12px] text-eo-muted">Select a client from the queue.</p>
                     @endif
@@ -141,7 +141,7 @@
                             <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
                                    class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white">
                             <div wire:loading wire:target="logo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
-                            @error('logo')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                            @error('logo')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                     <div>
                         <label class="eo-label mb-1">Client name</label>
                         <input type="text" wire:model="name" class="eo-input" placeholder="e.g. Qatar Tech Authority">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="eo-label mb-1">Industry / sector</label>
@@ -164,7 +164,7 @@
                     <div>
                         <label class="eo-label mb-1">Email</label>
                         <input type="email" wire:model="email" class="eo-input">
-                        @error('email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="eo-label mb-1">Phone</label>

@@ -232,7 +232,7 @@
                 @forelse ($receivables as $r)
                     <a href="{{ route('events.hub', [$r->event, 'tab' => 'contract']) }}" class="flex items-center justify-between gap-2 border-b border-eo-line py-2 text-[12px] last:border-b-0">
                         <span class="min-w-0 truncate font-semibold text-eo-text">{{ $r->event->name }}</span>
-                        <span @class(['shrink-0 font-bold tabular-nums', 'text-eo-risk' => $r->status() === 'overdue', 'text-eo-text' => $r->status() !== 'overdue'])>
+                        <span @class(['shrink-0 font-bold tabular-nums', 'text-eo-risk-ink' => $r->status() === 'overdue', 'text-eo-text' => $r->status() !== 'overdue'])>
                             {{ $money($r->outstandingCents(), $r->event->currency ?? 'JOD') }}
                         </span>
                     </a>

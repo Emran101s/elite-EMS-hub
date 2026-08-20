@@ -75,7 +75,7 @@
                             @endif
                         </div>
                         <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
-                            <x-icon name="truck" class="h-3 w-3 shrink-0 text-eo-gold" />
+                            <x-icon name="truck" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
                             <span class="truncate text-[11px] font-semibold text-eo-muted">Working on {{ $supplier->events_count }} {{ str('event')->plural($supplier->events_count) }}</span>
                         </div>
                     </div>
@@ -95,7 +95,7 @@
                 <div class="sm:col-span-2">
                     <label class="eo-label mb-1">Supplier name</label>
                     <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="Petra Catering Co.">
-                    @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -106,12 +106,12 @@
                             <option value="{{ $c }}">{{ str($c)->replace('_', ' & ')->title() }}</option>
                         @endforeach
                     </select>
-                    @error('category')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('category')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label mb-1">Rating</label>
                     <input type="number" min="0" max="5" step="0.1" wire:model="rating" class="eo-input h-10 text-sm" placeholder="4.5">
-                    @error('rating')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('rating')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -133,7 +133,7 @@
                 <div>
                     <label class="eo-label mb-1">Email</label>
                     <input type="text" wire:model="email" class="eo-input h-10 text-sm" placeholder="events@petracatering.com">
-                    @error('email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="flex justify-end gap-2 sm:col-span-2">

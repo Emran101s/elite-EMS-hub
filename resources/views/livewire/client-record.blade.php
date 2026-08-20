@@ -84,7 +84,7 @@
                             <div class="flex shrink-0 items-center gap-1">
                                 @unless ($contact->is_primary)
                                     <button type="button" wire:click="makePrimary({{ $contact->id }})" title="Make primary"
-                                            class="grid h-7 w-7 place-items-center rounded-lg text-eo-muted transition hover:bg-eo-gold-soft/30 hover:text-eo-gold">★</button>
+                                            class="grid h-7 w-7 place-items-center rounded-lg text-eo-muted transition hover:bg-eo-gold-soft/30 hover:text-eo-gold-ink">★</button>
                                 @endunless
                                 <button type="button" wire:click="editContact({{ $contact->id }})" class="eo-btn-ghost eo-btn-sm !px-2.5 !py-1 !text-[11px]">Edit</button>
                                 <x-confirm title="Remove {{ $contact->name }} from this client?"
@@ -185,7 +185,7 @@
                             @endforeach
                         </div>
                         <input type="text" wire:model="a_subject" placeholder="What happened?" class="eo-input h-9 text-xs">
-                        @error('a_subject')<p class="text-[10.5px] text-eo-risk">{{ $message }}</p>@enderror
+                        @error('a_subject')<p class="text-[10.5px] text-eo-risk-ink">{{ $message }}</p>@enderror
                         <textarea wire:model="a_body" rows="2" placeholder="Detail (optional)" class="eo-textarea text-xs"></textarea>
                         <select wire:model="a_contact_id" class="eo-select h-9 text-xs">
                             <option value="">— who did you speak to? —</option>
@@ -213,7 +213,7 @@
                             </p>
                             @if ($a->follow_up_on && ! $a->follow_up_done)
                                 <button type="button" wire:click="completeFollowUp({{ $a->id }})"
-                                        class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-eo-warn-soft px-2 py-1 text-[10px] font-bold text-eo-warn ring-1 ring-eo-warn/20 transition hover:bg-eo-warn-soft/60">
+                                        class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-eo-warn-soft px-2 py-1 text-[10px] font-bold text-eo-warn-ink ring-1 ring-eo-warn/20 transition hover:bg-eo-warn-soft/60">
                                     ↻ Follow up {{ $a->follow_up_on->format('j M') }} · mark done
                                 </button>
                             @endif
@@ -234,7 +234,7 @@
                 <div>
                     <label class="eo-label mb-1">Name</label>
                     <input type="text" wire:model="c_name" placeholder="e.g. Layla Haddad" class="eo-input">
-                    @error('c_name')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
+                    @error('c_name')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label mb-1">Title</label>
@@ -243,7 +243,7 @@
                 <div>
                     <label class="eo-label mb-1">Email</label>
                     <input type="email" wire:model="c_email" placeholder="name@client.com" class="eo-input">
-                    @error('c_email')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
+                    @error('c_email')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label mb-1">Phone</label>

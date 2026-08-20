@@ -262,7 +262,7 @@
                                 @endforeach
                             </div>
                             <input type="text" wire:model="a_subject" placeholder="What happened?" class="eo-input h-9 text-xs">
-                            @error('a_subject')<p class="text-[10.5px] text-eo-risk">{{ $message }}</p>@enderror
+                            @error('a_subject')<p class="text-[10.5px] text-eo-risk-ink">{{ $message }}</p>@enderror
                             <textarea wire:model="a_body" rows="2" placeholder="Detail (optional)" class="eo-textarea text-xs"></textarea>
                             <label class="block">
                                 <span class="eo-label">Follow up on</span>
@@ -285,7 +285,7 @@
                                 @endif
                                 @if ($a->follow_up_on && ! $a->follow_up_done)
                                     <button type="button" wire:click="completeFollowUp({{ $a->id }})"
-                                            class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-eo-warn-soft px-2 py-1 text-[10px] font-bold text-eo-warn ring-1 ring-eo-warn/20 transition hover:bg-eo-warn-soft/60">
+                                            class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-eo-warn-soft px-2 py-1 text-[10px] font-bold text-eo-warn-ink ring-1 ring-eo-warn/20 transition hover:bg-eo-warn-soft/60">
                                         ↻ Follow up {{ $a->follow_up_on->format('j M') }} · mark done
                                     </button>
                                 @endif
@@ -314,7 +314,7 @@
                                     <span class="block truncate text-[11.5px] font-semibold text-eo-text">{{ $a->subject }}</span>
                                     <span class="block truncate text-[10px] text-eo-muted">{{ $a->deal?->title ?? $a->client?->name }}</span>
                                 </span>
-                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-eo-risk">{{ $a->follow_up_on->format('j M') }}</span>
+                                <span class="shrink-0 text-[10px] font-bold tabular-nums text-eo-risk-ink">{{ $a->follow_up_on->format('j M') }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -354,7 +354,7 @@
                 <div class="sm:col-span-2">
                     <label class="eo-label mb-1">What is it?</label>
                     <input type="text" wire:model="title" placeholder="e.g. Regional Summit 2027" class="eo-input">
-                    @error('title')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
+                    @error('title')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>

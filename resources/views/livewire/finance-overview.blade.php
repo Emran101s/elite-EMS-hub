@@ -69,7 +69,7 @@
                                 <span class="block truncate text-[11px] text-eo-muted">{{ $e->client?->name ?? 'No client' }} · {{ $e->starts_at?->format('M Y') ?? 'no date' }}</span>
                             </span>
                             <span class="shrink-0 text-end">
-                                <span @class(['block text-[13px] font-bold tabular-nums', 'text-eo-risk' => $row['net'] < 0, 'text-eo-text' => $row['net'] >= 0])>{{ $money($row['net']) }}</span>
+                                <span @class(['block text-[13px] font-bold tabular-nums', 'text-eo-risk-ink' => $row['net'] < 0, 'text-eo-text' => $row['net'] >= 0])>{{ $money($row['net']) }}</span>
                                 <span class="block text-[10px] text-eo-muted">{{ $m === null ? '—' : $m.'% margin' }}</span>
                             </span>
                         </button>

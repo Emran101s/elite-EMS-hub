@@ -73,7 +73,7 @@
                                 </x-eo.selected-dark-card>
                             @else
                                 <div class="rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
-                                    <p class="text-[11px] font-semibold {{ $state === 'overdue' ? 'text-eo-risk' : 'text-eo-muted' }}">{{ $p->due_on?->format('j M Y') ?? 'No date' }}</p>
+                                    <p class="text-[11px] font-semibold {{ $state === 'overdue' ? 'text-eo-risk-ink' : 'text-eo-muted' }}">{{ $p->due_on?->format('j M Y') ?? 'No date' }}</p>
                                     <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $p->label }}</p>
                                     <div class="mt-2 flex items-center justify-between gap-2">
                                         <span class="truncate text-[11px] text-eo-muted">{{ $p->event?->name ?? '—' }}</span>

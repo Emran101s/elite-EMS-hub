@@ -119,9 +119,9 @@
                 Import
             </x-eo.button>
 
-            @error('importFile') <p class="w-full text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+            @error('importFile') <p class="w-full text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
             @if ($importMsg)
-                <p class="w-full text-[11.5px] font-semibold text-eo-ok">{{ $importMsg }}</p>
+                <p class="w-full text-[11.5px] font-semibold text-eo-ok-ink">{{ $importMsg }}</p>
             @endif
         </div>
     @endif
@@ -135,13 +135,13 @@
                 <label class="block xl:col-span-2">
                     <span class="eo-label mb-1 block">Item</span>
                     <input type="text" wire:model="name" placeholder="Double room, 5★" class="eo-input h-9 w-full text-xs">
-                    @error('name') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('name') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
                     <span class="eo-label mb-1 block">Code</span>
                     <input type="text" wire:model="code" placeholder="ACC-DBL" class="eo-input h-9 w-full text-xs">
-                    @error('code') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('code') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
@@ -160,7 +160,7 @@
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
                     </select>
-                    @error('itemSection') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('itemSection') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
@@ -177,7 +177,7 @@
                         Price per {{ ServiceItem::UNITS[$unit][1] ?? 'item' }}
                     </span>
                     <input type="number" step="0.01" min="0" wire:model="price" placeholder="0.00" class="eo-input h-9 w-full text-end text-xs">
-                    @error('price') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('price') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block">
@@ -189,7 +189,7 @@
                     <span class="eo-label mb-1 block">Tax %</span>
                     <input type="number" step="0.5" min="0" max="100" wire:model="tax" placeholder="From the document"
                            class="eo-input h-9 w-full text-xs">
-                    @error('tax') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('tax') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
 
                 <label class="block sm:col-span-2 xl:col-span-4">
@@ -224,7 +224,7 @@
                     <x-confirm title="Delete this item?"
                                body="Retiring it instead keeps it on the invoices that used it."
                                confirm="Delete" run="$wire.destroy({{ $editingId }})"
-                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk">
+                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk-ink">
                         Delete
                     </x-confirm>
                 @endif
@@ -290,7 +290,7 @@
                                     <span class="text-end">
                                         @if ($may)
                                             <button type="button" wire:click="toggleActive({{ $item->id }})"
-                                                    class="rounded-lg px-2 py-1 text-[10.5px] font-bold transition {{ $item->active ? 'text-eo-muted hover:bg-eo-bg hover:text-eo-text' : 'text-eo-ok hover:bg-eo-ok-soft' }}">
+                                                    class="rounded-lg px-2 py-1 text-[10.5px] font-bold transition {{ $item->active ? 'text-eo-muted hover:bg-eo-bg hover:text-eo-text' : 'text-eo-ok-ink hover:bg-eo-ok-soft' }}">
                                                 {{ $item->active ? 'Retire' : 'Restore' }}
                                             </button>
                                         @endif

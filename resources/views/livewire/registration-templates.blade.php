@@ -7,8 +7,8 @@
     {{-- ══ the bar ══ --}}
     <div class="flex flex-wrap items-end gap-3">
         <div class="min-w-0 flex-1">
-            <p class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-eo-gold">
-                <span class="grid h-7 w-7 place-items-center rounded-lg bg-eo-gold-soft/30 text-eo-gold"><x-icon name="clipboard" class="h-3.5 w-3.5" /></span>
+            <p class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-eo-gold-ink">
+                <span class="grid h-7 w-7 place-items-center rounded-lg bg-eo-gold-soft/30 text-eo-gold-ink"><x-icon name="clipboard" class="h-3.5 w-3.5" /></span>
                 Registration templates
             </p>
             <p class="mt-1.5 text-[12.5px] text-eo-muted">
@@ -31,7 +31,7 @@
                 <label class="block">
                     <span class="eo-label mb-1 block">Name</span>
                     <input type="text" wire:model="name" placeholder="Conference & Summit" class="eo-input h-9 w-full text-xs">
-                    @error('name') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                    @error('name') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                 </label>
                 <label class="block">
                     <span class="eo-label mb-1 block">What it is for</span>
@@ -53,7 +53,7 @@
                             <span class="eo-label mb-1 block">Question</span>
                             <input type="text" wire:model="fields.{{ $i }}.label" class="eo-input h-9 w-full text-xs"
                                    placeholder="Which workshop track will you attend?">
-                            @error('fields.'.$i.'.label') <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                            @error('fields.'.$i.'.label') <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                         </label>
 
                         <label class="block">
@@ -111,7 +111,7 @@
                         </span>
 
                         <button type="button" wire:click="removeQuestion({{ $i }})"
-                                class="text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk">Remove</button>
+                                class="text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk-ink">Remove</button>
                     </div>
                 </div>
             @empty
@@ -130,7 +130,7 @@
                     <x-confirm title="Delete this template?"
                                body="Events already started from it keep the form they have — a template is copied, not linked."
                                confirm="Delete" run="$wire.destroy({{ $editingId }})"
-                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk">Delete</x-confirm>
+                               class="ms-auto rounded-xl px-3 py-2 text-[12px] font-bold text-eo-muted transition hover:bg-eo-risk/10 hover:text-eo-risk-ink">Delete</x-confirm>
                 @endif
             </div>
         </div>
@@ -147,7 +147,7 @@
             <div wire:key="tpl-{{ $t->id }}" class="eo-soft-card relative flex flex-col overflow-hidden p-4 transition hover:-translate-y-0.5">
                 <span class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-eo-gold/70 to-transparent" aria-hidden="true"></span>
                 <div class="flex items-start gap-3">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-eo-gold-soft/30 text-eo-gold">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-eo-gold-soft/30 text-eo-gold-ink">
                         <x-icon name="clipboard" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">

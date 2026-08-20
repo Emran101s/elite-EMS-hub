@@ -55,7 +55,7 @@
     @if ($ready->isNotEmpty())
         <x-eo.soft-card>
             <button type="button" wire:click="toggleReady" class="flex w-full items-center gap-3 text-start">
-                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-teal-soft text-eo-teal">
+                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-teal-soft text-eo-teal-ink">
                     <x-icon name="sparkles" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0 flex-1">
@@ -109,7 +109,7 @@
                                     <p class="font-mono text-[11px] text-eo-muted">{{ $inv->number }}</p>
                                     <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $inv->bill_to ?: ($inv->client?->name ?: 'No client') }}</p>
                                     <div class="mt-2 flex items-center justify-between gap-2">
-                                        <span class="text-[11px] {{ $s === 'overdue' ? 'font-bold text-eo-risk' : 'text-eo-muted' }}">{{ $inv->due_on?->format('j M') ?? '—' }}</span>
+                                        <span class="text-[11px] {{ $s === 'overdue' ? 'font-bold text-eo-risk-ink' : 'text-eo-muted' }}">{{ $inv->due_on?->format('j M') ?? '—' }}</span>
                                         <span class="text-[12px] font-bold tabular-nums">{{ number_format($inv->totalCents() / 100) }}</span>
                                     </div>
                                 </div>
@@ -158,7 +158,7 @@
 
                         @if ($selState === 'draft')
                             <x-eo.button wire:click="markSent({{ $sel->id }})" class="w-full justify-center" size="sm">Mark sent</x-eo.button>
-                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Delete draft</button>
+                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete draft</button>
                         @elseif ($selState === 'paid')
                             <button type="button" wire:click="clearPaid({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center">Undo payment</button>
                         @elseif ($selState !== 'void')
@@ -166,7 +166,7 @@
                             <input type="text" inputmode="decimal" wire:model="amount.{{ $sel->id }}"
                                    placeholder="{{ number_format($out / 100) }}" class="eo-input text-end text-xs">
                             <x-eo.button wire:click="record({{ $sel->id }}, $wire.amount[{{ $sel->id }}])" class="w-full justify-center" size="sm">Record payment</x-eo.button>
-                            <button type="button" wire:click="void({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Void</button>
+                            <button type="button" wire:click="void({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Void</button>
                         @endif
                     @elseif ($sel)
                         <p class="text-[12px] text-eo-muted">View only.</p>

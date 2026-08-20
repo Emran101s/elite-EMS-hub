@@ -80,7 +80,7 @@
 
                         {{-- light footer: capacity + events --}}
                         <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
-                            <x-icon name="building" class="h-3 w-3 shrink-0 text-eo-gold" />
+                            <x-icon name="building" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
                             <span class="text-[11px] font-semibold text-eo-muted">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
                             <span class="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wide text-eo-muted">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
                         </div>
@@ -99,7 +99,7 @@
                 <div class="sm:col-span-2">
                     <label class="eo-label mb-1">Venue name</label>
                     <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="Fairmont Amman">
-                    @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -112,7 +112,7 @@
                 <div>
                     <label class="eo-label mb-1">Capacity</label>
                     <input type="number" min="0" wire:model="capacity" class="eo-input h-10 text-sm" placeholder="500">
-                    @error('capacity')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('capacity')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="sm:col-span-2">
@@ -143,7 +143,7 @@
                 <div class="sm:col-span-2">
                     <label class="eo-label mb-1">Email</label>
                     <input type="text" wire:model="contact_email" class="eo-input h-10 text-sm" placeholder="events@fairmont.com">
-                    @error('contact_email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('contact_email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="sm:col-span-2">

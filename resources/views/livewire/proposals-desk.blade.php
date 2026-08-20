@@ -54,7 +54,7 @@
     @if ($ready->isNotEmpty())
         <x-eo.soft-card class="!bg-eo-warn-soft/40">
             <button type="button" wire:click="toggleReady" class="flex w-full items-center gap-3 text-start">
-                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-warn/20 text-eo-warn">
+                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-warn/20 text-eo-warn-ink">
                     <x-icon name="document" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0 flex-1">
@@ -166,14 +166,14 @@
 
                         @if ($selState === 'draft')
                             <x-eo.button wire:click="send({{ $sel->id }})" class="w-full justify-center" size="sm">Send offer</x-eo.button>
-                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Delete draft</button>
+                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete draft</button>
                         @elseif ($selState === 'expired')
                             <x-eo.button wire:click="extend({{ $sel->id }})" class="w-full justify-center" size="sm">Extend 30 days</x-eo.button>
                             <button type="button" wire:click="decline({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center">Close as lost</button>
                         @elseif ($selState === 'sent')
                             <x-eo.button wire:click="accept({{ $sel->id }})" class="w-full justify-center" size="sm">Mark accepted</x-eo.button>
                             <input type="text" wire:model="reason.{{ $sel->id }}" placeholder="Decline reason…" class="eo-input text-xs">
-                            <button type="button" wire:click="decline({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk">Mark lost</button>
+                            <button type="button" wire:click="decline({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Mark lost</button>
                         @elseif ($selState === 'accepted' && $sel->event)
                             <x-eo.button href="{{ route('events.hub', $sel->event) }}" class="w-full justify-center" size="sm">Open event →</x-eo.button>
                         @endif

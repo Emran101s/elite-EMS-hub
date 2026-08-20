@@ -7,14 +7,14 @@
         'platinum' => 'bg-eo-navy text-white',
         'gold' => 'bg-eo-gold text-eo-navy',
         'silver' => 'bg-eo-bg text-eo-text',
-        'bronze' => 'bg-eo-warn-soft text-eo-warn',
+        'bronze' => 'bg-eo-warn-soft text-eo-warn-ink',
         'strategic' => 'bg-eo-teal-soft text-eo-teal-ink',
         'supporting' => 'bg-eo-workspace text-eo-muted',
     ];
     $paymentTone = [
         'pending' => 'bg-eo-bg text-eo-muted',
-        'partial' => 'bg-eo-warn-soft text-eo-warn',
-        'paid' => 'bg-eo-ok-soft text-eo-ok',
+        'partial' => 'bg-eo-warn-soft text-eo-warn-ink',
+        'paid' => 'bg-eo-ok-soft text-eo-ok-ink',
     ];
     $stMeta = \App\Models\EventSponsor::paymentStatusMeta();
 @endphp

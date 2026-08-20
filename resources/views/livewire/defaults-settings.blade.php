@@ -6,7 +6,7 @@
     </div>
 
     @if (session('status'))
-        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok">{{ session('status') }}</div>
+        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok-ink">{{ session('status') }}</div>
     @endif
 
     <form wire:submit="save" class="grid gap-5">
@@ -40,7 +40,7 @@
                 <input type="text" wire:model="newCategory" wire:keydown.enter.prevent="addCategory" placeholder="New category name…" class="eo-input h-9 flex-1 text-sm">
                 <button type="button" wire:click="addCategory" class="eo-btn-ghost eo-btn-sm">＋ Add</button>
             </div>
-            @error('newCategory')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('newCategory')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         {{-- default ticket types --}}
@@ -59,7 +59,7 @@
                 <input type="text" wire:model="newTicket" wire:keydown.enter.prevent="addTicket" placeholder="New ticket type…" class="eo-input h-9 w-56 text-sm">
                 <button type="button" wire:click="addTicket" class="eo-btn-ghost eo-btn-sm">＋ Add</button>
             </div>
-            @error('newTicket')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('newTicket')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         {{-- default management fee --}}
@@ -70,7 +70,7 @@
                 <input type="number" step="0.5" min="0" max="100" wire:model="fee" class="eo-input h-10 w-28 text-sm">
                 <span class="text-sm font-semibold text-eo-muted">%</span>
             </div>
-            @error('fee')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('fee')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         {{-- approval conditional-routing threshold --}}
@@ -81,7 +81,7 @@
                 <span class="text-sm font-semibold text-eo-muted">{{ \App\Models\CompanyProfile::currency() }}</span>
                 <input type="number" step="0.01" min="0" wire:model="approvalThreshold" class="eo-input h-10 w-40 text-sm" placeholder="No threshold">
             </div>
-            @error('approvalThreshold')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+            @error('approvalThreshold')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex justify-end">

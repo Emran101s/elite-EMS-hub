@@ -95,8 +95,8 @@
                 <label class="block">
                     <span class="eo-label">Label</span>
                     <input type="text" wire:model="label" placeholder="e.g. Board Retreat" class="eo-input">
-                    @error('label')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
-                    @error('key')<p class="mt-1 text-[11px] text-eo-risk">{{ $message }}</p>@enderror
+                    @error('label')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('key')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
                 </label>
 
                 <label class="block">

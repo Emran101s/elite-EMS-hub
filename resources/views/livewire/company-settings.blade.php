@@ -22,12 +22,12 @@
                 <div class="flex-1">
                     <label class="eo-label mb-1">Company name</label>
                     <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="Elite Business Hub">
-                    @error('name')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                     <div class="mt-2">
                         <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
                                class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-eo-navy-deep">
                         <div wire:loading wire:target="logo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
-                        @error('logo')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                        @error('logo')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                         <p class="mt-1 text-[11px] text-eo-muted">Logo — PNG, JPG, WebP or SVG.</p>
                     </div>
                 </div>
@@ -43,14 +43,14 @@
                     <select wire:model="default_currency" class="eo-select h-10 text-sm">
                         @foreach ($currencies as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
                     </select>
-                    @error('default_currency')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('default_currency')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">
                     <label class="eo-label mb-1">Default timezone</label>
                     <select wire:model="default_timezone" class="eo-select h-10 text-sm">
                         @foreach ($timezones as $tz)<option value="{{ $tz }}">{{ $tz }}</option>@endforeach
                     </select>
-                    @error('default_timezone')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('default_timezone')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label mb-1">Country</label>
@@ -70,7 +70,7 @@
                 <div>
                     <label class="eo-label mb-1">Email</label>
                     <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="hello@company.com">
-                    @error('email')<p class="mt-1 text-xs text-eo-risk">{{ $message }}</p>@enderror
+                    @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label mb-1">Phone</label>
@@ -110,13 +110,13 @@
                                 <input type="text" wire:model="bank_accounts.{{ $i }}.{{ $field }}"
                                        @class(['eo-input h-9 w-full text-xs', 'font-mono' => in_array($field, ['account_no', 'iban', 'swift'], true)])
                                        placeholder="{{ ['label' => 'USD Account', 'account_name' => 'The name on the account', 'bank_name' => 'Bank Al Etihad — Jordan', 'account_no' => '0390…', 'iban' => 'JO00 UBSI …', 'swift' => 'UBSIJOAX', 'currency' => 'USD — United States Dollar'][$field] ?? '' }}">
-                                @error('bank_accounts.'.$i.'.'.$field) <p class="mt-1 text-[11px] font-semibold text-eo-risk">{{ $message }}</p> @enderror
+                                @error('bank_accounts.'.$i.'.'.$field) <p class="mt-1 text-[11px] font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
                             </label>
                         @endforeach
                     </div>
 
                     <button type="button" wire:click="removeBankAccount({{ $i }})"
-                            class="mt-2.5 text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk">Remove this account</button>
+                            class="mt-2.5 text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk-ink">Remove this account</button>
                 </div>
             @empty
                 <p class="py-6 text-center text-[12px] italic text-eo-muted">
