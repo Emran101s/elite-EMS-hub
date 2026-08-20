@@ -189,7 +189,10 @@ class EventTransport extends Model
             'is_vip' => 'boolean',
             'capacity' => 'integer',
             'passengers' => 'integer',
-            'cost_cents' => 'integer',
+            // decimal:1, not integer — the underlying column is decimal(15,1)
+            // now (tenths of a cent), so a cost of 127.116 keeps its third
+            // decimal instead of being rounded away on read.
+            'cost_cents' => 'decimal:1',
         ];
     }
 

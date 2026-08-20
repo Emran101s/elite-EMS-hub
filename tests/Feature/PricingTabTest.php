@@ -52,7 +52,7 @@ class PricingTabTest extends TestCase
             ->call('save');
 
         $item->refresh();
-        $this->assertSame(550000, $item->sell_cents);
+        $this->assertEquals(550000, $item->sell_cents);
         $this->assertSame(1, $event->invoiceItems()->count(), 'editing must update in place, not create a second row');
     }
 }

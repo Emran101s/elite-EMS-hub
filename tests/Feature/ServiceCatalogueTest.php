@@ -180,8 +180,8 @@ class ServiceCatalogueTest extends TestCase
         $line = $invoice->fresh()->load('lines')->lines->firstOrFail();
 
         $this->assertSame(36.0, $line->qty, '12 rooms × 3 nights');
-        $this->assertSame(95_00, $line->unit_cents, 'at the price the list says');
-        $this->assertSame(3420_00, $line->amountCents());
+        $this->assertEquals(95_00, $line->unit_cents, 'at the price the list says');
+        $this->assertEquals(3420_00, $line->amountCents());
         $this->assertSame('Double room, 5★ — 12 rooms × 3 nights', $line->description,
             'the line says how it was arrived at');
     }
@@ -201,7 +201,7 @@ class ServiceCatalogueTest extends TestCase
 
         $line = $invoice->fresh()->load('lines')->lines->firstOrFail();
         $this->assertSame('Something we do not sell twice', $line->description);
-        $this->assertSame(400_00, $line->unit_cents);
+        $this->assertEquals(400_00, $line->unit_cents);
     }
 
     public function test_a_retired_item_is_not_offered_on_an_invoice(): void

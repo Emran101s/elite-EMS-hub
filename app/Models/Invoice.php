@@ -134,7 +134,7 @@ class Invoice extends Model
 
     /* ── money ── */
 
-    public function subtotalCents(): int
+    public function subtotalCents(): float
     {
         return $this->lines->sum(fn (InvoiceLine $l) => $l->amountCents());
     }
@@ -152,7 +152,7 @@ class Invoice extends Model
     }
 
     /** What is being charged before tax: the work plus the fee on it. */
-    public function netCents(): int
+    public function netCents(): float
     {
         return $this->subtotalCents() + $this->feeCents();
     }
@@ -168,12 +168,12 @@ class Invoice extends Model
         return (int) round($this->netCents() * $this->tax_pct / 100);
     }
 
-    public function totalCents(): int
+    public function totalCents(): float
     {
         return $this->netCents() + $this->taxCents();
     }
 
-    public function outstandingCents(): int
+    public function outstandingCents(): float
     {
         return max(0, $this->totalCents() - $this->paid_cents);
     }

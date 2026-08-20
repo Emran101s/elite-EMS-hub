@@ -52,7 +52,7 @@ class InvoiceTest extends TestCase
         $this->assertSame($p->contract_id, $invoice->contract_id);
         $this->assertSame('draft', $invoice->status);
         $this->assertCount(1, $invoice->lines);
-        $this->assertSame($p->amount_cents, $invoice->subtotalCents());
+        $this->assertEquals($p->amount_cents, $invoice->subtotalCents());
         $this->assertSame($p->due_on?->toDateString(), $invoice->due_on?->toDateString(),
             'the promise the contract made is the date it is due');
     }
@@ -71,7 +71,7 @@ class InvoiceTest extends TestCase
         $invoice->lines->first()->update(['unit_cents' => 12345, 'description' => 'Amended']);
 
         $this->assertSame($was, $p->fresh()->amount_cents, 'the installment is untouched');
-        $this->assertSame(12345, $invoice->fresh()->load('lines')->subtotalCents());
+        $this->assertEquals(12345, $invoice->fresh()->load('lines')->subtotalCents());
         $this->assertSame($p->id, $invoice->lines->first()->payment_id, 'provenance survives the edit');
     }
 
@@ -89,9 +89,9 @@ class InvoiceTest extends TestCase
         $invoice->load('lines');
 
         // 3 × 33.33 = 99.99, 1.5 × 1.00 = 1.50 → 101.49
-        $this->assertSame(10149, $invoice->subtotalCents());
+        $this->assertEquals(10149, $invoice->subtotalCents());
         $this->assertSame((int) round(10149 * 0.16), $invoice->taxCents());
-        $this->assertSame(10149 + (int) round(10149 * 0.16), $invoice->totalCents());
+        $this->assertEquals(10149 + (int) round(10149 * 0.16), $invoice->totalCents());
     }
 
     /**
@@ -202,7 +202,7 @@ class InvoiceTest extends TestCase
         $c->call('record', $invoice->id);
 
         $invoice = $invoice->fresh()->load('lines');
-        $this->assertSame($invoice->totalCents(), $invoice->paid_cents);
+        $this->assertEquals($invoice->totalCents(), $invoice->paid_cents);
         $this->assertSame('paid', $invoice->state());
         $this->assertSame('sent', $invoice->status,
             'money against a draft means it was sent and nobody said so');
@@ -217,8 +217,8 @@ class InvoiceTest extends TestCase
         $invoice = Invoice::with('lines')->latest('id')->firstOrFail();
 
         $c->call('record', $invoice->id, 9_999_999);
-        $this->assertSame($invoice->fresh()->load('lines')->totalCents(), $invoice->fresh()->paid_cents);
-        $this->assertSame(0, $invoice->fresh()->load('lines')->outstandingCents());
+        $this->assertEquals($invoice->fresh()->load('lines')->totalCents(), $invoice->fresh()->paid_cents);
+        $this->assertEquals(0, $invoice->fresh()->load('lines')->outstandingCents());
     }
 
     /**
@@ -329,7 +329,7 @@ class InvoiceTest extends TestCase
         $c->call('record', $invoice->id, $invoice->totalCents() / 100 / 2);   // half
 
         $p->refresh();
-        $this->assertSame((int) round($invoice->totalCents() / 2), $p->paid_cents);
+        $this->assertEquals((int) round($invoice->totalCents() / 2), $p->paid_cents);
         $this->assertSame('partial', $p->status());
     }
 

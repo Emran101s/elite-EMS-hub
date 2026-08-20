@@ -33,8 +33,11 @@ class EventInvoiceItem extends Model
     protected function casts(): array
     {
         return [
-            'cost_cents' => 'integer',
-            'sell_cents' => 'integer',
+            // decimal:1, not integer — the underlying columns are
+            // decimal(15,1) now (tenths of a cent), so a price of 127.116
+            // keeps its third decimal instead of being rounded away on read.
+            'cost_cents' => 'decimal:1',
+            'sell_cents' => 'decimal:1',
             'tax_pct' => 'float',
             'active' => 'boolean',
         ];
@@ -59,7 +62,7 @@ class EventInvoiceItem extends Model
     /* ── what it earns ── */
 
     /** Per unit. Negative means it is being sold below what it costs. */
-    public function marginCents(): int
+    public function marginCents(): float
     {
         return $this->sell_cents - $this->cost_cents;
     }

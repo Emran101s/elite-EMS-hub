@@ -42,7 +42,10 @@ class InvoiceLine extends Model
     {
         return [
             'qty' => 'float',
-            'unit_cents' => 'integer',
+            // decimal:1, not integer — unit_cents is decimal(15,1) now
+            // (tenths of a cent), so a unit price of 127.116 keeps its
+            // third decimal instead of being rounded away on read.
+            'unit_cents' => 'decimal:1',
         ];
     }
 
@@ -57,9 +60,15 @@ class InvoiceLine extends Model
         return $this->belongsTo(EventContractPayment::class, 'payment_id');
     }
 
-    /** Rounded once, here, so a total is never the sum of unrounded halves. */
-    public function amountCents(): int
+    /**
+     * Rounded once, here, so a total is never the sum of unrounded halves.
+     *
+     * Rounded to a tenth of a cent, not a whole one — unit_cents itself
+     * carries that same tenth now, and rounding it away here would just
+     * reintroduce the truncation at one remove.
+     */
+    public function amountCents(): float
     {
-        return (int) round($this->qty * $this->unit_cents);
+        return round($this->qty * (float) $this->unit_cents, 1);
     }
 }

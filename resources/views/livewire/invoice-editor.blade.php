@@ -254,7 +254,7 @@
                                 </label>
                                 <label class="min-w-[130px] flex-1">
                                     <span class="eo-label mb-1 block">Unit price</span>
-                                    <input type="number" step="0.01" wire:model="unit" placeholder="0.00" class="eo-input h-9 w-full text-end text-xs">
+                                    <input type="number" step="0.001" wire:model="unit" placeholder="0.00" class="eo-input h-9 w-full text-end text-xs">
                                 </label>
                                 <label class="w-24 sm:w-[110px]">
                                     <span class="eo-label mb-1 block">Amount</span>

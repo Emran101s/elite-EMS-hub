@@ -13,7 +13,9 @@
 --}}
 
 @php
-    $fmt = fn ($cents) => number_format($cents / 100, 2);
+    // A third decimal on a signed document is exactly what "rounds nothing"
+    // means — matches the editor's own live preview (invoice-editor.blade.php).
+    $fmt = fn ($cents) => number_format($cents / 100, 3);
     $sub = $invoice->subtotalCents();
     $fee = $invoice->feeCents();
     $tax = $invoice->taxCents();
