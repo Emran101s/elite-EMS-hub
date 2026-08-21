@@ -1,11 +1,11 @@
-@props(['mission', 'variant' => 'hero', 'href' => null])
+@props(['mission', 'variant' => 'hero', 'href' => null, 'selectAction' => null, 'selected' => false])
 
 @php
     $m = $mission;
     $name = $m['name'] ?? 'Untitled mission';
     $client = $m['client'] ?? null;
     $daysOut = $m['daysOut'] ?? null;
-    $dateLabel = $m['dates'] ?? null;
+    $dateLabel = $m['shortDates'] ?? $m['dates'] ?? null;
     $where = $m['where'] ?? null;
     $type = $m['type'] ?? null;
     $stage = $m['statusLabel'] ?? null;
@@ -14,7 +14,12 @@
     $healthGroup = $m['healthGroup'] ?? null; // risk | warn | ok | live | null
     $budgetLabel = $m['budgetLabel'] ?? null;
     $budgetOf = $m['budgetOf'] ?? null;
+    $budgetPct = $m['budgetPct'] ?? null;
     $milestone = $m['milestone'] ?? null;
+
+    $ownerRaw = $milestone['owner'] ?? null;
+    $ownerName = is_object($ownerRaw) ? ($ownerRaw->name ?? null) : $ownerRaw;
+    $ownerInitials = $ownerName ? collect(explode(' ', trim($ownerName)))->map(fn ($w) => mb_substr($w, 0, 1))->take(2)->implode('') : null;
 
     $resolvedHref = $href ?? (($m['event'] ?? null) && \Illuminate\Support\Facades\Route::has('events.hub')
         ? route('events.hub', $m['event'])
@@ -51,9 +56,93 @@
     };
 
     $tag = $resolvedHref ? 'a' : 'div';
+    $clickable = (bool) $selectAction && isset($m['id']);
+    $cardTag = $clickable ? 'div' : $tag;
 @endphp
 
-@if ($variant === 'compact')
+@if ($variant === 'board')
+    {{-- board — Mission Board's grid item. With a selectAction, clicking
+         selects the card (the shared detail panel updates in place)
+         instead of navigating away — only the "Open Event" link leaves
+         the page, so scanning the board never costs you the board. --}}
+    <{{ $cardTag }}
+        @if ($clickable) wire:click="{{ $selectAction }}({{ $m['id'] }})" role="button" tabindex="0" @endif
+        @if (! $clickable && $resolvedHref) href="{{ $resolvedHref }}" @endif
+        @class([
+            'block rounded-lg border border-line bg-white p-3.5 transition',
+            'cursor-pointer' => $clickable,
+            'hover:-translate-y-0.5 hover:shadow-float' => (bool) $resolvedHref || $clickable,
+            'shadow-float ring-2 ring-gold-400/60' => $selected,
+        ])
+    >
+        <div class="mb-3 flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+                <h3 class="truncate text-[14.5px] font-bold text-ink">{{ $name }}</h3>
+                @if ($client)<p class="mt-0.5 truncate text-[11px] text-muted">{{ $client }}</p>@endif
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-1">
+                @if ($stage)<span class="rounded-full px-2 py-0.5 text-[9.5px] font-bold bg-info-soft text-info-ink">{{ $stage }}</span>@endif
+                @if ($daysOutLabel)<span class="text-[10px] font-bold tabular-nums text-muted">{{ $daysOutLabel }}</span>@endif
+            </div>
+        </div>
+
+        <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+            <span class="flex items-center gap-1"><x-icon name="calendar" class="h-3 w-3 shrink-0" />{{ $dateLabel ?? 'Date TBC' }}</span>
+            <span class="flex min-w-0 items-center gap-1 truncate"><x-icon name="pin" class="h-3 w-3 shrink-0" />{{ $where ?? 'Venue TBC' }}</span>
+        </div>
+
+        <div class="mb-3 grid grid-cols-2 gap-2">
+            <div class="rounded-md bg-page px-2.5 py-2">
+                <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Health</p>
+                <p class="mt-0.5 flex items-center gap-1.5">
+                    <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ $toneInk($healthTone) }}"></span>
+                    <b class="text-[13px] tabular-nums text-ink">{{ $healthScore ?? '—' }}</b>
+                </p>
+            </div>
+            <div class="rounded-md bg-page px-2.5 py-2">
+                <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Readiness</p>
+                <p class="mt-0.5 text-[13px] font-bold tabular-nums text-ink">{{ $ready !== null ? $ready.'%' : '—' }}</p>
+            </div>
+        </div>
+
+        @if ($budgetLabel)
+            <div class="mb-3">
+                <div class="flex items-baseline justify-between gap-2 text-[11px]">
+                    <span class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Budget</span>
+                    <span class="truncate text-ink"><b class="font-bold">{{ $budgetLabel }}</b> <span class="text-muted">{{ $budgetOf }}</span></span>
+                </div>
+                @if (! is_null($budgetPct))
+                    <div class="mt-1 h-1 overflow-hidden rounded-full bg-page">
+                        <div class="h-full rounded-full bg-gold-500" style="width: {{ $budgetPct }}%"></div>
+                    </div>
+                @endif
+            </div>
+        @endif
+
+        @if ($ownerName)
+            <div class="mb-3 flex items-center gap-2">
+                <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-navy-900 text-[8.5px] font-bold text-white">{{ $ownerInitials }}</span>
+                <span class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Owner</span>
+                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold text-ink">{{ $ownerName }}</span>
+            </div>
+        @endif
+
+        @if ($milestone)
+            <div class="flex items-center gap-2 rounded-md bg-page px-2.5 py-2">
+                <span class="min-w-0 flex-1 truncate text-[11px] text-ink">{{ $milestone['title'] }}</span>
+                @if ($urgencyLabel)<span class="shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold {{ $toneSoftClass($urgencyTone) }}">{{ $urgencyLabel }}</span>@endif
+            </div>
+        @endif
+
+        @if ($resolvedHref)
+            <a href="{{ $resolvedHref }}" wire:navigate @if ($clickable) onclick="event.stopPropagation()" @endif
+               class="mt-3 flex items-center gap-1 border-t border-line pt-2.5 text-[11px] font-bold text-gold-700 transition hover:text-gold-800">
+                Open Event <x-icon name="chevron" class="h-3 w-3 -rotate-90" />
+            </a>
+        @endif
+    </{{ $cardTag }}>
+
+@elseif ($variant === 'compact')
     <{{ $tag }} @if ($resolvedHref) href="{{ $resolvedHref }}" @endif
         class="flex items-center gap-3 rounded-lg border border-line bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-float"
     >
