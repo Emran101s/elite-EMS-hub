@@ -38,3 +38,6 @@ storage/backups/
 /public/_preview.html
 # _render.php output — scratch pages for visual checking, never source
 /public/*.html
+
+# PHPStan's own result cache — regenerable, machine/run-specific.
+storage/framework/phpstan/

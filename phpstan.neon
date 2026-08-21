@@ -1,0 +1,18 @@
+## Larastan (vendor/larastan/larastan/extension.neon) is installed but currently
+## causes `phpstan analyse` to exit silently with no output in this environment —
+## see the "Larastan Diagnosis" section of the audit-stack report for what was
+## ruled out (bootstrap.php, cache, DB/migration scan, minimal config, opcache).
+## Re-enable by uncommenting the include below once resolved, then confirm
+## `vendor/bin/phpstan analyse` prints real output before relying on it.
+#includes:
+#    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # Start conservative on a mature codebase — raise level over time
+    # (see phpstan.dev/user-guide/rule-levels). Level 9 is the ceiling.
+    level: 5
+
+    tmpDir: storage/framework/phpstan

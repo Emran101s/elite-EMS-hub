@@ -27,6 +27,9 @@ class TenantColumnCoverageTest extends TestCase
         'migrations', 'cache', 'cache_locks', 'sessions', 'jobs', 'job_batches',
         'failed_jobs', 'password_reset_tokens',
         'tenants', 'workspaces', 'workspace_user', 'company_profiles',
+        // Laravel Telescope (dev-only package): request/query/exception logs
+        // for the app's own debugging, not customer data.
+        'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring',
     ];
 
     /** @return list<string> */
@@ -56,7 +59,7 @@ class TenantColumnCoverageTest extends TestCase
         // An exemption list is only safe while it is small and every entry is
         // deliberate. If a future table is added to it to make this suite pass,
         // this test makes that visible in the diff.
-        $this->assertCount(12, self::EXEMPT,
+        $this->assertCount(15, self::EXEMPT,
             'The exempt list changed. Every entry must be framework plumbing or '.
             'part of the tenancy spine — never a table that holds customer data.');
     }
