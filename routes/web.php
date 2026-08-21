@@ -39,6 +39,7 @@ use App\Http\Controllers\TransportManifestPdfController;
 use App\Http\Controllers\TransportManifestTemplateController;
 use App\Http\Controllers\TransportMasterPlanPdfController;
 use App\Http\Controllers\TransportPlanTemplateController;
+use App\Http\Controllers\VenueDocumentController;
 use App\Http\Controllers\VenueStudioController;
 use App\Http\Controllers\VipTransferSheetPdfController;
 use App\Livewire\AiAssistant;
@@ -316,6 +317,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/venues/{venue}', [VenueStudioController::class, 'show'])
         ->whereNumber('venue')->name('venues.show');
+
+    Route::get('/venues/{venue}/documents/{document}/download', [VenueDocumentController::class, 'download'])
+        ->whereNumber('venue')->whereNumber('document')->name('venues.documents.download');
+    Route::get('/venues/{venue}/documents/{document}/view', [VenueDocumentController::class, 'view'])
+        ->whereNumber('venue')->whereNumber('document')->name('venues.documents.view');
 
     Route::get('/requirements', RequirementsCatalog::class)->name('requirements.index');
     Route::get('/requirements/pdf', EquipmentPdfController::class)->name('requirements.pdf');

@@ -20,6 +20,7 @@ class VenueStudioController extends Controller
 
         $venue->load([
             'spaces.bookings.event',
+            'documents',
             'events' => fn ($q) => $q->active()->whereNotNull('starts_at')->orderBy('starts_at'),
         ]);
 
