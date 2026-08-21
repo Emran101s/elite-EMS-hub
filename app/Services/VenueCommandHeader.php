@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Venue;
+use App\Models\VenueDocument;
 use Illuminate\Support\Collection;
 
 /**
@@ -28,7 +29,26 @@ class VenueCommandHeader
             'upcoming' => $this->upcoming($venue),
             'conflicts' => $this->conflicts->forVenue($venue),
             'readiness' => $this->readiness($venue),
+            'contract' => $this->contractStatus($venue),
         ];
+    }
+
+    /**
+     * The venue's own most recent contract-category document, if one has
+     * been filed — real data once it exists, never a synthetic status. Reads
+     * the already-eager-loaded $venue->documents collection, no extra query.
+     */
+    public function contractStatus(Venue $venue): ?array
+    {
+        $doc = $venue->documents->where('category', 'contract')->sortByDesc('created_at')->first();
+
+        if (! $doc) {
+            return null;
+        }
+
+        [$label, $class] = VenueDocument::contractStatusMeta()[$doc->status] ?? [ucfirst((string) $doc->status), 'bg-navy-50 text-navy-500'];
+
+        return ['status' => $doc->status, 'label' => $label, 'class' => $class, 'document' => $doc];
     }
 
     /** The figures you would say out loud. */
@@ -61,7 +81,7 @@ class VenueCommandHeader
         $score -= min(60, $conflictCount * 30);
 
         if ($spaces->isNotEmpty()) {
-            $undocumented = $spaces->filter(fn ($s) => empty($s->capacity_by_setup))->count();
+            $undocumented = $spaces->reject->isFullyDocumented()->count();
             $score -= (int) round($undocumented / $spaces->count() * 25);
         } else {
             $score -= 25;
@@ -101,9 +121,9 @@ class VenueCommandHeader
         ];
 
         if ($spaces->isNotEmpty()) {
-            $undocumented = $spaces->filter(fn ($s) => empty($s->capacity_by_setup))->count();
+            $undocumented = $spaces->reject->isFullyDocumented()->count();
             $gates[] = ['label' => 'Capacity documented', 'met' => $undocumented === 0,
-                'note' => $undocumented === 0 ? 'Every space has setup capacities' : $undocumented.' space(s) missing capacity data'];
+                'note' => $undocumented === 0 ? 'Every space has setup capacities and dimensions' : $undocumented.' space(s) missing capacity or dimension data'];
         }
 
         $hasContact = (bool) ($venue->contact_name || $venue->contact_phone || $venue->contact_email);
