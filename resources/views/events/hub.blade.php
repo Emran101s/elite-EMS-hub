@@ -19,17 +19,17 @@
          the rendered DOM, even though they're separate Blade components)
          agree on open/closed state. ══ --}}
     <div x-data="{ utilitiesOpen: false }">
-        <x-eo.hubx-header :event="$event" :header="$header" />
-        <x-eo.hubx-utilities-drawer :event="$event" :workload="$workload" />
+        <x-hub.header :event="$event" :header="$header" />
+        <x-hub.utilities-drawer :event="$event" :workload="$workload" />
     </div>
 
     {{-- ══ Module Navigation Bar ══
          Replaces the old Stage Radar / Orbit Journey entirely — no radar,
          no orbit, no lifecycle diagram. A flat door per enabled module,
          same meters()/attention() numbers as everywhere else on this page.
-         Full-width row, not a grid column — see hubx-module-nav.blade.php. ══ --}}
+         Full-width row, not a grid column — see hub/module-nav.blade.php. ══ --}}
     <div class="mt-3">
-        <x-eo.hubx-module-nav :event="$event" :header="$header" :active-tab="$tab" />
+        <x-hub.module-nav :event="$event" :header="$header" :active-tab="$tab" />
     </div>
 
     {{-- ══ Event Pulse Strip ══
@@ -37,7 +37,7 @@
          Shown on every tab now, not just Overview, so the event's vitals
          stay visible no matter which module is open. ══ --}}
     <div class="mt-2">
-        <x-eo.hubx-kpi-strip :event="$event" :header="$header" :health="$health" />
+        <x-hub.kpi-strip :event="$event" :header="$header" :health="$health" />
     </div>
 
     @php
@@ -63,7 +63,7 @@
          tab's own existing content, unchanged — Mission Timeline IS the
          Overview workspace now, not a card floating in a bigger layout.
          Right: the Universal Module Inspector, per-module data. ══ --}}
-    <div class="hubx-grid {{ $showPanel ? 'has-panel' : '' }} mt-2">
+    <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-2">
         <div class="min-w-0">
             {{-- Universal Module Header — same modules the Inspector has
                  real data for, shown once inside the module's own content
@@ -71,7 +71,7 @@
                  a single module). --}}
             @if ($showPanel && $tab !== 'overview')
                 <div class="mb-2">
-                    <x-eo.hubx-module-header :event="$event" :header="$header" :tab="$tab" />
+                    <x-hub.module-header :event="$event" :header="$header" :tab="$tab" />
                 </div>
             @endif
 
@@ -79,8 +79,8 @@
         </div>
 
         @if ($showPanel)
-            <div class="hubx-col-panel">
-                <x-eo.hubx-inspector :event="$event" :header="$header" :tab="$tab" />
+            <div class="ehx-col-panel">
+                <x-hub.inspector :event="$event" :header="$header" :tab="$tab" />
             </div>
         @endif
     </div>

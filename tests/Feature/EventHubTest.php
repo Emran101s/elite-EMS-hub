@@ -376,14 +376,14 @@ class EventHubTest extends TestCase
         $tasksHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))
             ->assertOk()->getContent();
         $this->assertMatchesRegularExpression(
-            '/hubx-module-header-stat-value">1<\/span>\s*<span class="hubx-module-header-stat-label">Overdue</',
+            '/ehx-module-header-stat-value">1<\/span>\s*<span class="ehx-module-header-stat-label">Overdue</',
             $tasksHtml,
         );
 
         $approvalsHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
             ->assertOk()->getContent();
         $this->assertMatchesRegularExpression(
-            '/hubx-module-header-stat-value">1<\/span>\s*<span class="hubx-module-header-stat-label">Pending</',
+            '/ehx-module-header-stat-value">1<\/span>\s*<span class="ehx-module-header-stat-label">Pending</',
             $approvalsHtml,
         );
     }
@@ -393,7 +393,7 @@ class EventHubTest extends TestCase
      *
      * Event Command Header pass: the vertical Compact Module Rail (and the
      * Stage Radar / Orbit Journey it sat beside) is gone outright, replaced
-     * by a horizontal pill-tab strip — see hubx-module-nav.blade.php. Its
+     * by a horizontal pill-tab strip — see hub/module-nav.blade.php. Its
      * contract is the same as the rail's before it: the item for the
      * current tab carries is-active, and no other item does.
      */
@@ -406,7 +406,7 @@ class EventHubTest extends TestCase
         // element (stopping at its own closing tag) rather than searching
         // the rest of the page, where every other module's own label text
         // also legitimately appears.
-        $activeItem = fn (string $html) => preg_match('/hubx-modnav-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
+        $activeItem = fn (string $html) => preg_match('/ehx-modnav-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
 
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
             ->assertOk()->getContent();
