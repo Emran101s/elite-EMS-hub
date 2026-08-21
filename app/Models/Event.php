@@ -331,13 +331,13 @@ class Event extends Model
     }
 
     /** Format a cents amount in this event's currency, e.g. "$1,250" or "JD 1,250". */
-    public function money(?int $cents): string
+    public function money(int|float|null $cents): string
     {
         return self::moneyIn($cents, $this->currency ?? 'USD');
     }
 
     /** Format a cents amount in any supported currency code. See App\Support\Money. */
-    public static function moneyIn(?int $cents, string $currency): string
+    public static function moneyIn(int|float|null $cents, string $currency): string
     {
         return Money::forScreen($cents, $currency);
     }

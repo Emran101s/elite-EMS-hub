@@ -275,7 +275,10 @@ class InvoiceEditor extends Component
         $fields = [
             'description' => trim($this->description),
             'qty' => (float) $this->qty,
-            'unit_cents' => (int) round((float) ($this->unit ?: 0) * 100),
+            // Rounded to a tenth of a cent, not a whole one — unit_cents is
+            // decimal(15,1) now, so a typed 127.116 keeps its third decimal
+            // instead of being rounded to 127.12 on save.
+            'unit_cents' => round((float) ($this->unit ?: 0) * 100, 1),
         ];
 
         if ($this->editingLine) {
