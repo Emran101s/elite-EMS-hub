@@ -24,6 +24,14 @@ class Venue extends Model
     public const TYPES = ['Hotel', 'Conference Centre', 'Ballroom', 'Exhibition Hall',
         'Auditorium', 'Outdoor', 'Restaurant', 'Embassy', 'Other'];
 
+    /** Venue Studio's own tabs — key => [label, purpose, icon], same shape as Event::HUB_TABS. */
+    public const STUDIO_TABS = [
+        'overview' => ['Overview', 'Digital twin & health', 'home'],
+        'spaces' => ['Space Explorer', 'Halls & rooms inventory', 'building'],
+        'capacity' => ['Capacity Intelligence', 'Utilization & bottlenecks', 'chart'],
+        'exhibition' => ['Exhibition History', 'Halls & booths across past events', 'grid'],
+    ];
+
     protected function casts(): array
     {
         return [
@@ -40,6 +48,12 @@ class Venue extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
+    }
+
+    /** This venue's own permanent halls/rooms — reusable across every event booked here. */
+    public function spaces(): HasMany
+    {
+        return $this->hasMany(VenueSpace::class)->orderBy('position');
     }
 
     /**
