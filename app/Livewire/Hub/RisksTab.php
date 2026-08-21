@@ -29,9 +29,17 @@ class RisksTab extends Component
 
     public string $due_on = '';
 
+    public ?int $selectedRiskId = null;
+
     public function mount(): void
     {
         $this->showForm = request('action') === 'add';
+    }
+
+    /** Toggle: clicking the already-selected row clears the panel rather than re-selecting it. */
+    public function selectRisk(int $riskId): void
+    {
+        $this->selectedRiskId = $this->selectedRiskId === $riskId ? null : $riskId;
     }
 
     public function save()
