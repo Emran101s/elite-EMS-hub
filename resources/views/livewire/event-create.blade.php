@@ -253,10 +253,7 @@
                     <div class="grid gap-4 sm:grid-cols-3">
                         <div>
                             <label class="eo-field-label" for="s-venue">Venue</label>
-                            <select id="s-venue" wire:model.live="venue_id" class="eo-select h-11">
-                                <option value="">— To be confirmed —</option>
-                                @foreach ($venues as $v)<option value="{{ $v->id }}">{{ $v->name }}</option>@endforeach
-                            </select>
+                            <x-eo.venue-select id="s-venue" wire:model.live="venue_id" :venues="$venues" class="h-11" empty-label="— To be confirmed —" />
                         </div>
                         <div>
                             <label class="eo-field-label" for="s-city">City</label>

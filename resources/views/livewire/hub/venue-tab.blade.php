@@ -57,6 +57,17 @@
                     </div>
                 </div>
 
+                @if ($venueSpaces->isNotEmpty())
+                    <div class="mt-2.5">
+                        <label class="eo-label !mb-1 !text-eyebrow" for="room-venue-space">Venue's own space</label>
+                        <select id="room-venue-space" wire:model="room_venue_space_id" class="eo-input h-10 text-sm">
+                            <option value="">— Not linked —</option>
+                            @foreach ($venueSpaces as $space)<option value="{{ $space->id }}">{{ $space->name }}</option>@endforeach
+                        </select>
+                        <p class="mt-1 text-eyebrow text-eo-muted">Optional — links this booking back to {{ $event->venue->name }}'s own space in Venue Studio. This room's own layout and price stay independent either way.</p>
+                    </div>
+                @endif
+
                 {{-- How long it is held. Left blank, the agenda answers. --}}
                 @php
                     $editing = $editingRoomId ? $event->rooms()->find($editingRoomId) : null;

@@ -82,7 +82,8 @@
                         <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
                             <x-icon name="building" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
                             <span class="text-[11px] font-semibold text-eo-muted">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
-                            <span class="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wide text-eo-muted">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
+                            <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-eo-muted">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
+                            <a href="{{ route('venues.show', $venue) }}" wire:navigate class="ml-auto shrink-0 text-[10.5px] font-bold text-eo-teal-ink hover:underline">Open Studio →</a>
                         </div>
                     </div>
                 @endforeach

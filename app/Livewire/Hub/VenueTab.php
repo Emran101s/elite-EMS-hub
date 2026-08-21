@@ -42,6 +42,9 @@ class VenueTab extends Component
 
     public string $room_setup_days = '';
 
+    /** Optional — which of the venue's own permanent spaces this booking is. */
+    public string $room_venue_space_id = '';
+
     // Event-wide requirements (not tied to a venue). Per-venue requirements now
     // live inside each venue's detail (RoomLayoutBuilder → Requirements tab).
     public string $evReqName = '';
@@ -50,7 +53,7 @@ class VenueTab extends Component
 
     public function newRoom(): void
     {
-        $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost', 'room_days', 'room_setup_days']);
+        $this->reset(['editingRoomId', 'room_name', 'room_capacity', 'room_cost', 'room_days', 'room_setup_days', 'room_venue_space_id']);
         $this->room_type = 'Breakout';
         $this->showRoomForm = true;
     }
@@ -66,6 +69,7 @@ class VenueTab extends Component
         $this->room_cost = $room->cost_cents ? (string) ($room->cost_cents / 100) : '';
         $this->room_days = $room->days !== null ? (string) $room->days : '';
         $this->room_setup_days = $room->setup_days ? (string) $room->setup_days : '';
+        $this->room_venue_space_id = (string) ($room->venue_space_id ?? '');
         $this->showRoomForm = true;
     }
 
@@ -79,6 +83,7 @@ class VenueTab extends Component
             'room_cost' => ['nullable', 'numeric', 'min:0'],
             'room_days' => ['nullable', 'integer', 'min:1', 'max:365'],
             'room_setup_days' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'room_venue_space_id' => ['nullable', 'integer', 'exists:venue_spaces,id'],
         ]);
 
         $data = [
@@ -90,6 +95,10 @@ class VenueTab extends Component
             // right when the programme moves. A number is somebody overruling it.
             'days' => $this->room_days !== '' ? (int) $this->room_days : null,
             'setup_days' => $this->room_setup_days !== '' ? (int) $this->room_setup_days : 0,
+            // Optional — "this booking is the venue's own Main Hall." Never
+            // syncs this room's own layout/price from the space; it's a
+            // pointer, not a template.
+            'venue_space_id' => $this->room_venue_space_id !== '' ? (int) $this->room_venue_space_id : null,
         ];
 
         if ($this->editingRoomId) {
@@ -162,6 +171,7 @@ class VenueTab extends Component
         return view('livewire.hub.venue-tab', [
             'rooms' => $this->event->rooms()->withCount('sessions')->orderBy('name')->get(),
             'catalog' => Requirement::orderBy('name')->get(),
+            'venueSpaces' => $this->event->venue?->spaces ?? collect(),
         ]);
     }
 }
