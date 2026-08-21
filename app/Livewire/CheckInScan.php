@@ -21,7 +21,7 @@ use Livewire\Component;
  * code — and that the only thing it can do is mark somebody present. It
  * cannot read the list, edit anyone, or say who else is coming.
  */
-#[Layout('components.layouts.guest', ['width' => 'max-w-md'])]
+#[Layout('components.layouts.guest-eo', ['width' => 'max-w-md'])]
 class CheckInScan extends Component
 {
     public Event $event;

@@ -21,7 +21,7 @@ use Livewire\Component;
  * event's own name and dates, and a full or closed registration says so
  * plainly rather than showing a form that will not work.
  */
-#[Layout('components.layouts.guest', ['width' => 'max-w-xl'])]
+#[Layout('components.layouts.guest-eo', ['width' => 'max-w-xl'])]
 class PublicRegistration extends Component
 {
     public Event $event;
