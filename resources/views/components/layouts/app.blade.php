@@ -16,7 +16,7 @@
     {{-- Instrument Sans (app.css's --font-sans token, the shell's chrome
          face) is self-hosted via vite.config.js's fonts plugin, not linked
          here — @vite(app.css) below already pulls in its @font-face rules. --}}
-    @vite(['resources/css/app.css', 'resources/css/shell.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/css/shell.css', 'resources/css/command-center.css', 'resources/js/app.js'])
     <x-clarity />
 </head>
 <body class="font-sans bg-page text-ink antialiased">

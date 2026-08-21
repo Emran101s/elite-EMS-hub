@@ -1,0 +1,105 @@
+/* Command Center — Phase 2 content layer.
+   Everything expressible as a Tailwind utility (cards, buttons, chips, type)
+   is written that way directly in the cc/* components, reading app.css's
+   existing brand + semantic tokens. What's here is only what a utility class
+   can't express: the radar's decorative field and the readiness ring's
+   per-instance conic-gradient. */
+@layer components {
+    .ccx-radar-field {
+        position: relative;
+        aspect-ratio: 1;
+        width: 100%;
+        max-width: 220px;
+        margin-inline: auto;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 50% 42%, var(--color-navy-800) 0%, var(--color-navy-900) 60%, var(--color-navy-950) 100%);
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold-500) 22%, transparent);
+    }
+
+    .ccx-radar-ring {
+        position: absolute;
+        inset: 8%;
+        border-radius: 9999px;
+        border: 1px solid color-mix(in srgb, white 10%, transparent);
+    }
+    .ccx-radar-ring-2 { inset: 26%; }
+    .ccx-radar-ring-3 { inset: 44%; }
+
+    .ccx-radar-cross {
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(to right, transparent 49.5%, color-mix(in srgb, white 8%, transparent) 49.5%, color-mix(in srgb, white 8%, transparent) 50.5%, transparent 50.5%),
+            linear-gradient(to bottom, transparent 49.5%, color-mix(in srgb, white 8%, transparent) 49.5%, color-mix(in srgb, white 8%, transparent) 50.5%, transparent 50.5%);
+    }
+
+    .ccx-radar-sweep {
+        position: absolute;
+        inset: 0;
+        background: conic-gradient(from 0deg, color-mix(in srgb, var(--color-gold-400) 55%, transparent), transparent 30%);
+        animation: ccx-spin 9s linear infinite;
+        mix-blend-mode: screen;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .ccx-radar-sweep { animation: none; }
+    }
+
+    .ccx-radar-core {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 6px;
+        height: 6px;
+        transform: translate(-50%, -50%);
+        border-radius: 9999px;
+        background: var(--color-gold-400);
+        box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-gold-400) 60%, transparent);
+    }
+
+    @keyframes ccx-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .ccx-radar-node {
+        position: absolute;
+        transform: translate(-50%, -50%);
+    }
+    .ccx-radar-node-dot {
+        display: block;
+        width: 7px;
+        height: 7px;
+        border-radius: 9999px;
+        box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent);
+    }
+    .ccx-radar-node.is-featured .ccx-radar-node-dot {
+        width: 9px;
+        height: 9px;
+    }
+
+    /* Readiness ring — --ccx-ring is the tone colour, --ccx-ring-pct the
+       fill, both set inline per-instance since they're data-driven. */
+    .ccx-ring {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        background: conic-gradient(var(--ccx-ring, var(--color-gold-500)) var(--ccx-ring-pct, 0%), var(--color-line) 0);
+    }
+    .ccx-ring::after {
+        content: '';
+        position: absolute;
+        inset: 3px;
+        border-radius: 9999px;
+        background: white;
+    }
+    .ccx-ring-value {
+        position: relative;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+}
