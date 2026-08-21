@@ -7,43 +7,43 @@
     @if (! request()->routeIs('login'))
         {{-- The header trigger — looks like the old search box, but works. --}}
         <button type="button" @click="open = true; $nextTick(() => $refs.q.focus())"
-                class="eo-input relative hidden h-10 w-44 cursor-text items-center !rounded-full pl-10 pr-3 text-left text-[12.5px] text-eo-muted lg:flex xl:w-56">
-            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-eo-muted"><x-icon name="search" class="h-4 w-4" /></span>
+                class="relative hidden h-10 w-44 cursor-text items-center rounded-full border border-line bg-page pl-10 pr-3 text-left text-[12.5px] text-muted transition hover:border-navy-300 lg:flex xl:w-56">
+            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"><x-icon name="search" class="h-4 w-4" /></span>
             Search events, tasks, suppliers…
-            <span class="ml-auto rounded-md border border-eo-line bg-eo-bg px-1.5 py-0.5 font-sans text-eyebrow font-bold text-eo-muted">⌘K</span>
+            <span class="ml-auto rounded-md border border-line bg-white px-1.5 py-0.5 font-sans text-eyebrow font-bold text-muted">⌘K</span>
         </button>
     @endif
 
     {{-- Palette --}}
     <div x-show="open" x-cloak style="display:none" class="fixed inset-0 z-[90]">
-        <div x-transition.opacity @click="open = false" class="absolute inset-0 bg-eo-navy-deep/50 backdrop-blur-sm"></div>
+        <div x-transition.opacity @click="open = false" class="absolute inset-0 bg-navy-950/50 backdrop-blur-sm"></div>
 
         <div x-show="open" @click.outside="open = false"
              x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2 scale-98" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-             class="eo-soft-card absolute left-1/2 top-[14vh] w-full max-w-xl -translate-x-1/2 overflow-hidden">
+             class="absolute left-1/2 top-[14vh] w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_20px_50px_-20px_rgba(11,31,58,0.5)]">
 
-            <div class="relative border-b border-eo-line bg-white">
-                <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-eo-muted"><x-icon name="search" class="h-4 w-4" /></span>
+            <div class="relative border-b border-line bg-white">
+                <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"><x-icon name="search" class="h-4 w-4" /></span>
                 <input x-ref="q" type="text" wire:model.live.debounce.250ms="q"
                        placeholder="Search events, tasks, speakers, suppliers, venues, people…"
-                       class="h-13 w-full border-0 bg-transparent py-4 pl-11 pr-4 text-sm text-eo-text outline-none placeholder:text-eo-muted">
+                       class="h-13 w-full border-0 bg-transparent py-4 pl-11 pr-4 text-sm text-navy-900 outline-none placeholder:text-muted">
             </div>
 
             <div class="max-h-[52vh] overflow-y-auto p-2">
                 @forelse ($groups as $group => $rows)
-                    <p class="px-3 pb-1 pt-2.5 text-eyebrow font-bold uppercase tracking-[0.18em] text-eo-muted">{{ $group }}</p>
+                    <p class="px-3 pb-1 pt-2.5 text-eyebrow font-bold uppercase tracking-[0.18em] text-muted">{{ $group }}</p>
                     @foreach ($rows as $row)
                         <a href="{{ $row['href'] }}" @click="open = false"
-                           class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition hover:bg-eo-workspace">
+                           class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition hover:bg-page">
                             <span class="min-w-0">
-                                <span class="block truncate text-xs font-semibold text-eo-text">{{ $row['label'] }}</span>
-                                @if ($row['sub'])<span class="block truncate text-eyebrow text-eo-muted">{{ $row['sub'] }}</span>@endif
+                                <span class="block truncate text-xs font-semibold text-navy-900">{{ $row['label'] }}</span>
+                                @if ($row['sub'])<span class="block truncate text-eyebrow text-muted">{{ $row['sub'] }}</span>@endif
                             </span>
-                            <span class="shrink-0 text-eyebrow font-bold text-eo-muted">↵</span>
+                            <span class="shrink-0 text-eyebrow font-bold text-muted">↵</span>
                         </a>
                     @endforeach
                 @empty
-                    <p class="px-3 py-8 text-center text-xs text-eo-muted">
+                    <p class="px-3 py-8 text-center text-xs text-muted">
                         {{ mb_strlen(trim($q)) < 2 ? 'Type at least two characters…' : 'Nothing matches “'.$q.'”.' }}
                     </p>
                 @endforelse
