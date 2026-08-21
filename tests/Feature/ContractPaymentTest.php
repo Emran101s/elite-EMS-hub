@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\CommandCenterService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -21,10 +22,27 @@ class ContractPaymentTest extends TestCase
     {
         $this->seed(DemoDataSeeder::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        // ensurePayments() schedules three installments as fixed offsets
+        // from the event's own starts_at (60/30/7 days out) — not from
+        // "now". Left alone, real calendar time eventually walks past one
+        // of those fixed dates and it reads overdue on its own, for every
+        // test in this file, regardless of which installment a test is
+        // actually exercising. Freezing "now" safely before all three
+        // offsets makes the schedule deterministic no matter when the
+        // suite runs; tearDown() below un-freezes it.
+        $this->travelTo($event->starts_at->copy()->subDays(90)->startOfDay());
+
         $contract = EventContract::forEvent($event);
         $contract->ensurePayments();
 
         return [$event, $contract, User::where('email', 'emran.itan@elitebhub.com')->firstOrFail()];
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     /**
