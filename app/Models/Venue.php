@@ -30,6 +30,7 @@ class Venue extends Model
         'spaces' => ['Space Explorer', 'Halls & rooms inventory', 'building'],
         'capacity' => ['Capacity Intelligence', 'Utilization & bottlenecks', 'chart'],
         'exhibition' => ['Exhibition History', 'Halls & booths across past events', 'grid'],
+        'documents' => ['Documents', 'Contracts, floor plans & specs', 'document'],
     ];
 
     protected function casts(): array
@@ -54,6 +55,12 @@ class Venue extends Model
     public function spaces(): HasMany
     {
         return $this->hasMany(VenueSpace::class)->orderBy('position');
+    }
+
+    /** Contracts, floor plans, technical specs, insurance, permits — this venue's own files. */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(VenueDocument::class);
     }
 
     /**

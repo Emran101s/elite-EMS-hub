@@ -65,4 +65,10 @@ class VenueSpace extends Model
     {
         return $this->capacity_by_setup[$setup] ?? null;
     }
+
+    /** Has every fact Capacity Intelligence and the floor-area calc actually need. */
+    public function isFullyDocumented(): bool
+    {
+        return ! empty($this->capacity_by_setup) && $this->width_m !== null && $this->length_m !== null;
+    }
 }
