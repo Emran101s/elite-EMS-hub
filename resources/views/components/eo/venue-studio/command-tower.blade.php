@@ -4,7 +4,7 @@
     $healthColor = match ($header['health']['status']) {
         'track' => 'var(--color-eo-ok)', 'warn' => 'var(--color-eo-warn)', default => 'var(--color-eo-risk)',
     };
-    $undocumented = $venue->spaces->filter(fn ($s) => empty($s->capacity_by_setup));
+    $undocumented = $venue->spaces->reject->isFullyDocumented();
 @endphp
 
 {{-- Permanent right column, never a modal — same rule as the Event Hub's
@@ -60,7 +60,7 @@
                     <a href="{{ route('venues.show', [$venue, 'tab' => 'spaces']) }}" wire:navigate class="hubx-panel-attention-row">
                         <x-icon name="chart" class="h-3.5 w-3.5 text-eo-muted" />
                         <span class="text-[11.5px] font-semibold text-eo-text">{{ $space->name }}</span>
-                        <span class="ml-auto shrink-0 text-[10.5px] text-eo-muted">No capacity data</span>
+                        <span class="ml-auto shrink-0 text-[10.5px] text-eo-muted">Documentation incomplete</span>
                     </a>
                 @endforeach
             </div>

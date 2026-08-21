@@ -20,6 +20,9 @@
                 <span class="hubx-pill" style="background: color-mix(in srgb, {{ $healthColor }} 16%, transparent); color: {{ $healthColor }}">
                     Health {{ $header['health']['score'] }}
                 </span>
+                @if ($header['contract'])
+                    <span class="hubx-pill {{ $header['contract']['class'] }}">Contract {{ $header['contract']['label'] }}</span>
+                @endif
             </div>
 
             <h1 class="hubx-header-name">{{ $venue->name }}</h1>
