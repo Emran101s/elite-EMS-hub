@@ -1,0 +1,34 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Global shell — Phase 1 (nav, header, workspace frame, right-panel slot).
+
+   Navy/gold, reusing app.css's own brand @theme tokens directly — no new
+   color tokens defined here. Prefixed .shellx- (not .shell-) so nothing
+   collides with app.css's own dead .shell-* block, deleted in this same
+   pass. Most of the visual language lives as plain Tailwind utilities
+   directly in the shell/*.blade.php files (matching how concept/nav.blade.php
+   proved the look out with zero custom CSS) — this file only holds the
+   handful of shapes reused across more than one row/item.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer components {
+    /* The rail's own gradient — one recipe, not repeated as an arbitrary
+       Tailwind value in three places. */
+    .shellx-rail {
+        background: linear-gradient(180deg, var(--color-navy-800) 0%, var(--color-navy-900) 45%, var(--color-navy-950) 100%);
+    }
+
+    /* A section-panel row that is "selected" lifts off the panel via shadow
+       + ring rather than a color fill — concept/nav.blade.php's own trick,
+       named here since every row in the panel can be in this state. */
+    .shellx-row-active {
+        background: var(--color-page);
+        box-shadow: 0 1px 2px rgba(11, 31, 58, 0.06), inset 0 0 0 1px #fff, 0 0 0 1px var(--color-line);
+    }
+
+    /* Drawer mechanics below the 1280px (xl) breakpoint — the one thing
+       that genuinely needs a transition definition rather than a Tailwind
+       utility toggle. */
+    .shellx-drawer {
+        transition: transform 220ms ease;
+    }
+}
