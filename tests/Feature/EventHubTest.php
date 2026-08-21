@@ -198,8 +198,11 @@ class EventHubTest extends TestCase
             ->assertOk()->assertSee('Budget');
 
         // Requesting a disabled tab silently shows Overview (no agenda tab link).
+        // Mission Control pass: "Event Overview" (the old dashboard card) is
+        // gone; Mission Timeline (née Mission Feed — same data, evolved
+        // presentation) is Overview's own real element now.
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'agenda']))
-            ->assertOk()->assertSee('Event Overview');
+            ->assertOk()->assertSee('Mission Timeline');
     }
 
     public function test_the_header_reports_scale_readiness_and_what_needs_a_person(): void
@@ -224,8 +227,12 @@ class EventHubTest extends TestCase
 
         // The header is one card now, so these read shorter than the four
         // blocks they replace — same four things, a third of the height.
+        // Command Stack is gone (its job — what needs a person — is now
+        // covered by the header's own attention pill, Event Pulse, the
+        // Universal Module Header, and the Inspector's Next Action); Health
+        // and Readiness are Event Pulse's own unconditional labels, shown
+        // on every tab, so they remain the right always-present assertion.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next')
             ->assertSee('Readiness')
             ->assertSee('Health');
     }
@@ -291,18 +298,19 @@ class EventHubTest extends TestCase
         // Phase E folded the header's three-card grid into one hub mission
         // card, so "Risk level" and "Nothing is waiting on you" are gone as
         // labels. The contract this test protects is unchanged: with nothing
-        // outstanding the header keeps its shape rather than collapsing, and
-        // says so plainly instead of inventing an errand.
+        // outstanding the header keeps its shape rather than collapsing.
         //
-        // "Clear" dropped from this test: it asserted Priority Area's own
-        // empty-state pill, a component the redesign retired in favour of
-        // the Command Stack (which reads a broader six-signal set —
-        // budget/contract/speakers included — so it isn't guaranteed empty
-        // just because this scenario clears risks/approvals/tasks).
+        // "Clear"/"Next action"/"Nothing pressing"/"Owner" dropped from this
+        // test: they asserted Event Core's and Priority Area's own
+        // always-rendered rows, both retired by the Event Command Header
+        // pass (Event Core sat inside the removed Stage Radar; Priority
+        // Area was retired in favour of the Command Stack, which has since
+        // been removed outright — its job now lives in the header's
+        // attention pill, Event Pulse, the Universal Module Header, and the
+        // Inspector). What "keeps its shape" now is the always-shown Event
+        // Pulse Strip — Health and Readiness render on every tab regardless
+        // of whether risks/approvals/tasks are empty.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next action')
-            ->assertSee('Nothing pressing')
-            ->assertSee('Owner')
             ->assertSee('Health')
             ->assertSee('Readiness');
     }
@@ -361,42 +369,56 @@ class EventHubTest extends TestCase
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
 
-        // And it reaches the tab row — Phase E made that row contextual to
-        // the active Journey stage, so "1 overdue" (Tasks, in Planning) and
-        // "1 pending" (Approvals, in Control) each only show up on their own
-        // stage now, not from Overview.
-        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))->assertOk()
-            ->assertSee('1 overdue');
-        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))->assertOk()
-            ->assertSee('1 pending');
+        // And it reaches the module's own tab — the Universal Module Header
+        // (Command Stack's replacement for "what needs a person, per
+        // module") shows each module's own Overdue/Pending stat only when
+        // that module's tab is open, not from Overview.
+        $tasksHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))
+            ->assertOk()->getContent();
+        $this->assertMatchesRegularExpression(
+            '/hubx-module-header-stat-value">1<\/span>\s*<span class="hubx-module-header-stat-label">Overdue</',
+            $tasksHtml,
+        );
+
+        $approvalsHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
+            ->assertOk()->getContent();
+        $this->assertMatchesRegularExpression(
+            '/hubx-module-header-stat-value">1<\/span>\s*<span class="hubx-module-header-stat-label">Pending</',
+            $approvalsHtml,
+        );
     }
 
     /**
-     * The vertical Module Rail marks the active tab.
+     * The Module Navigation Bar marks the active tab.
      *
-     * The redesign replaced the old per-stage satellite row (contextual to
-     * the active Journey stage, hidden for every other stage) with a
-     * persistent rail showing every primary module at once — the explicit
-     * point being to stop the old "flat tab feeling" of only ever seeing
-     * one stage's doors. The rail's own contract is narrower but real: the
-     * item for the current tab carries is-active, and no other item does.
+     * Event Command Header pass: the vertical Compact Module Rail (and the
+     * Stage Radar / Orbit Journey it sat beside) is gone outright, replaced
+     * by a horizontal pill-tab strip — see hubx-module-nav.blade.php. Its
+     * contract is the same as the rail's before it: the item for the
+     * current tab carries is-active, and no other item does.
      */
-    public function test_module_rail_marks_the_active_tab(): void
+    public function test_module_nav_marks_the_active_tab(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
+        // The active item is a single <a>...</a> — capture just that one
+        // element (stopping at its own closing tag) rather than searching
+        // the rest of the page, where every other module's own label text
+        // also legitimately appears.
+        $activeItem = fn (string $html) => preg_match('/hubx-modnav-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
+
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
             ->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('/hubx-rail-item is-active"\s+title="Budget"/', $html);
-        $this->assertDoesNotMatchRegularExpression('/hubx-rail-item is-active"\s+title="Approvals"/', $html);
+        $this->assertStringContainsString('>Budget<', $activeItem($html));
+        $this->assertStringNotContainsString('>Approvals<', $activeItem($html));
 
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
             ->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('/hubx-rail-item is-active"\s+title="Approvals"/', $html);
-        $this->assertDoesNotMatchRegularExpression('/hubx-rail-item is-active"\s+title="Budget"/', $html);
+        $this->assertStringContainsString('>Approvals<', $activeItem($html));
+        $this->assertStringNotContainsString('>Budget<', $activeItem($html));
     }
 
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */
