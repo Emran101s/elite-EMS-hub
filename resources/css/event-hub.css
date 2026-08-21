@@ -1,0 +1,397 @@
+/* Event Hub chrome — Phase 3 of the shell redesign.
+   Scoped to new `.ehx-*` classes, not `.hubx-*` — Venue Studio's own
+   header/kpi-strip/module-nav/command-tower components write literal
+   `hubx-*` class strings too and ride the same rules in
+   eo-hub-redesign.css, confirmed by direct inspection. Reusing that
+   prefix here would silently restyle Venue Studio as a side effect.
+   This file is deliberately structured the same way that file's chrome
+   section is (glass cards, one deliberate dark accent, gold hairline)
+   — same visual language, navy/gold tokens instead of graphite/teal. */
+@layer components {
+    /* ── Page grid — workspace | inspector ───────────────────────────── */
+    .ehx-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.85rem;
+        align-items: start;
+    }
+    .ehx-grid.has-panel {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+    }
+    @media (max-width: 1279px) {
+        .ehx-grid,
+        .ehx-grid.has-panel { grid-template-columns: minmax(0, 1fr); }
+        .ehx-col-panel { grid-column: 1 / -1; margin-top: 0.85rem; }
+    }
+
+    /* ── Identity header ──────────────────────────────────────────────── */
+    .ehx-header {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.65rem 1.9rem;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-float);
+        backdrop-filter: blur(14px);
+    }
+    .ehx-header::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--color-gold-500) 18%, var(--color-gold-300) 50%, var(--color-gold-500) 82%, transparent 100%);
+        opacity: 0.8;
+    }
+    .ehx-header-avatar {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        margin-top: 0.05rem;
+        border-radius: 1rem;
+        background: linear-gradient(165deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
+        color: var(--color-gold-300);
+        box-shadow: 0 12px 22px -12px rgba(6, 20, 38, 0.5);
+    }
+    @media (max-width: 639px) {
+        .ehx-header { flex-direction: column; padding: 1.25rem; }
+        .ehx-header-avatar { width: 40px; height: 40px; border-radius: 0.85rem; }
+        .ehx-header-name { font-size: 19px; white-space: normal; overflow: visible; text-overflow: clip; }
+        .ehx-header > .flex.shrink-0 { width: 100%; flex-wrap: wrap; }
+    }
+    .ehx-header-name {
+        display: block;
+        position: relative;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-serif);
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--color-ink);
+        line-height: 1.2;
+    }
+    .ehx-header-name .font-medium { color: var(--color-muted) !important; }
+    .ehx-header-meta {
+        margin-top: 0.4rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 12.5px;
+        color: var(--color-muted);
+    }
+    .ehx-header-dot::before { content: '•'; margin-right: 0.5rem; opacity: 0.4; }
+    .ehx-header-icon-row { display: flex; align-items: center; gap: 0.3rem; margin-right: 0.15rem; }
+    .ehx-header-icon {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 0.75rem;
+        color: var(--color-muted);
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--color-line);
+        font: inherit;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .ehx-header-icon:hover { color: var(--color-gold-700); border-color: var(--color-gold-400); background: var(--color-gold-50); }
+
+    .ehx-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        border-radius: 9999px;
+        padding: 0.5rem 0.9rem;
+        font-size: 12px;
+        font-weight: 700;
+        transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .ehx-btn:hover { transform: translateY(-1px); }
+    .ehx-btn-ghost { background: rgba(255, 255, 255, 0.7); border: 1px solid var(--color-line); color: var(--color-ink); }
+    .ehx-btn-primary {
+        background: linear-gradient(165deg, var(--color-gold-400) 0%, var(--color-gold-500) 100%);
+        color: var(--color-navy-950);
+        box-shadow: 0 10px 20px -12px rgba(212, 175, 55, 0.55);
+    }
+    .ehx-btn-primary:hover { filter: brightness(1.05); }
+
+    /* ── Module Navigation Bar ────────────────────────────────────────── */
+    .ehx-modnav {
+        position: relative;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        border-radius: 1.1rem;
+        padding: 0.35rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-raise);
+        backdrop-filter: blur(10px);
+    }
+    .ehx-modnav-scroll {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .ehx-modnav-scroll::-webkit-scrollbar { display: none; }
+    .ehx-modnav-scroll.is-overflowing {
+        mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    }
+    .ehx-modnav-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+        padding: 0.5rem 0.8rem;
+        border-radius: 0.8rem;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--color-muted);
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .ehx-modnav-item:hover { background: var(--color-page); color: var(--color-ink); }
+    .ehx-modnav-item.is-active { background: var(--color-navy-900); color: #fff; }
+    .ehx-modnav-item.is-active :where(svg) { opacity: 0.9; }
+    .ehx-modnav-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background: var(--color-danger);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .ehx-modnav-badge.is-wait { background: var(--color-warning); }
+    .ehx-modnav-item.is-active .ehx-modnav-badge { background: rgba(255, 255, 255, 0.25); }
+    .ehx-modnav-flyout {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.4rem);
+        z-index: 30;
+        min-width: 190px;
+        padding: 0.35rem;
+        border-radius: 1rem;
+        background: #fff;
+        border: 1px solid var(--color-line);
+        box-shadow: var(--shadow-float);
+        display: grid;
+        gap: 0.15rem;
+    }
+    .ehx-modnav-flyout-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.65rem;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-ink);
+    }
+    .ehx-modnav-flyout-item:hover { background: var(--color-page); }
+    .ehx-modnav-flyout-item.is-active { background: var(--color-gold-50); color: var(--color-gold-700); }
+
+    .ehx-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    /* ── Universal Module Header ──────────────────────────────────────── */
+    .ehx-module-header {
+        border-radius: 1.25rem;
+        padding: 0.9rem 1.1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-raise);
+        backdrop-filter: blur(12px);
+    }
+    .ehx-module-header-top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.7rem; }
+    .ehx-module-header-icon { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border-radius: 0.75rem; }
+    .ehx-module-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.1rem;
+        margin-top: 0.85rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-line);
+    }
+    .ehx-module-header-stat { display: flex; flex-direction: column; gap: 0.15rem; }
+    .ehx-module-header-stat-value { font-size: 15px; font-weight: 800; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+    .ehx-module-header-stat-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+    .ehx-module-header-next { display: flex; flex-direction: column; gap: 0.15rem; margin-left: auto; }
+
+    /* ── Event Utilities drawer ───────────────────────────────────────── */
+    .ehx-utilities-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(6, 20, 38, 0.4); }
+    .ehx-utilities-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 50;
+        width: min(400px, 92vw);
+        overflow-y: auto;
+        padding: 1.1rem;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: -24px 0 60px -24px rgba(6, 20, 38, 0.5);
+        backdrop-filter: blur(8px);
+    }
+    .ehx-utilities-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+    .ehx-utilities-title { font-size: 14px; font-weight: 800; color: var(--color-ink); }
+    .ehx-utilities-close {
+        border-radius: 0.6rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--color-muted);
+        background: var(--color-page);
+        transition: color 0.15s ease;
+    }
+    .ehx-utilities-close:hover { color: var(--color-ink); }
+    .ehx-utilities-tabs { display: flex; gap: 0.3rem; padding: 0.25rem; border-radius: 0.8rem; background: var(--color-page); margin-bottom: 1rem; }
+    .ehx-utilities-tab {
+        flex: 1;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.55rem;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-muted);
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .ehx-utilities-tab.is-active { background: #fff; color: var(--color-ink); box-shadow: var(--shadow-raise); }
+    .ehx-utilities-body { display: flex; flex-direction: column; }
+    .ehx-utilities-row { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.1rem; border-bottom: 1px solid var(--color-line); }
+    .ehx-utilities-row:last-child { border-bottom: none; }
+    .ehx-utilities-row-system { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background: var(--color-page); color: var(--color-muted); flex-shrink: 0; }
+    .ehx-utilities-row-title { font-size: 12px; font-weight: 600; color: var(--color-ink); line-height: 1.4; }
+    .ehx-utilities-row-sub { font-size: 10.5px; color: var(--color-muted); margin-top: 0.1rem; }
+    .ehx-utilities-row-when { flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--color-ink); }
+    .ehx-utilities-bar { margin-top: 0.35rem; height: 4px; border-radius: 999px; background: var(--color-page); overflow: hidden; }
+    .ehx-utilities-bar-fill { height: 100%; border-radius: 999px; }
+    .ehx-utilities-empty { font-size: 12px; color: var(--color-muted); padding: 0.6rem 0.1rem; }
+
+    /* ── Universal Inspector ──────────────────────────────────────────── */
+    .ehx-panel {
+        position: sticky;
+        top: 0;
+        border-radius: var(--radius-lg);
+        padding: 1.3rem 1.2rem;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-float);
+        backdrop-filter: blur(14px);
+    }
+    .ehx-panel-head { display: flex; align-items: center; gap: 0.65rem; }
+    .ehx-panel-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 0.75rem;
+        background: var(--color-gold-50);
+        color: var(--color-gold-700);
+    }
+    .ehx-panel-detail {
+        margin-top: 1.1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-line);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .ehx-panel-owner { display: flex; align-items: center; gap: 0.5rem; }
+    .ehx-panel-action {
+        display: block;
+        border-radius: 1.1rem;
+        padding: 0.85rem;
+        background: linear-gradient(165deg, var(--color-navy-900) 0%, var(--color-navy-950) 100%);
+        color: #fff;
+        transition: opacity 0.15s ease;
+    }
+    .ehx-panel-action:hover { opacity: 0.9; }
+    .ehx-panel-gate-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.1rem; }
+    .ehx-panel-gate-dot { width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0; }
+    .ehx-panel-attention-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.1rem;
+        border-radius: 0.55rem;
+        transition: background 0.12s ease;
+    }
+    .ehx-panel-attention-row:hover { background: var(--color-page); }
+    .ehx-panel-tertiary { opacity: 0.85; padding-top: 0.7rem; border-top: 1px dashed var(--color-line); }
+    .ehx-panel-activity-row { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem 0.05rem; }
+    .ehx-panel-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.3rem; padding: 0.9rem 0.5rem; }
+    .ehx-panel-empty-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 999px; margin-bottom: 0.2rem; }
+    .ehx-panel-empty-cta { margin-top: 0.4rem; font-size: 10.5px; font-weight: 700; color: var(--color-gold-700); transition: opacity 0.15s ease; }
+    .ehx-panel-empty-cta:hover { opacity: 0.8; }
+    .ehx-panel-viewall {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border-radius: 0.85rem;
+        padding: 0.6rem 0.75rem;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        transition: opacity 0.15s ease;
+    }
+    .ehx-panel-viewall:hover { opacity: 0.82; }
+
+    /* ── Event Pulse (Health + Readiness) + secondary strip ───────────── */
+    .ehx-pulse-wrap { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.6rem; }
+    .ehx-pulse {
+        position: relative;
+        flex: 1.4 1 200px;
+        border-radius: 1.25rem;
+        padding: 0.85rem 1.1rem;
+        background: linear-gradient(160deg, #fffefb 0%, var(--color-gold-50) 100%);
+        border: 1px solid color-mix(in srgb, var(--color-gold-500) 22%, transparent);
+        box-shadow: var(--shadow-float), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    }
+    .ehx-pulse-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-gold-700); margin-bottom: 0.5rem; }
+    .ehx-pulse-row { display: flex; align-items: stretch; gap: 1.5rem; }
+    .ehx-pulse-stat { flex: 1; min-width: 0; }
+    .ehx-pulse-divider { width: 1px; background: color-mix(in srgb, var(--color-gold-500) 25%, transparent); }
+    .ehx-pulse-value { margin-top: 0.3rem; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+
+    .ehx-kpi-strip { flex: 1 1 180px; display: grid; gap: 0.4rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ehx-kpi-card {
+        border-radius: 0.85rem;
+        padding: 0.5rem 0.55rem;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--color-line);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .ehx-kpi-value { margin-top: 0.25rem; font-size: 14.5px; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+    .ehx-kpi-sub { margin-top: 0.15rem; font-size: 8.5px; font-weight: 600; opacity: 0.75; }
+}
