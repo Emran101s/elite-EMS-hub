@@ -41,16 +41,16 @@
     {{-- ══════════════════════════════════════════════════════════════
          1 · EVENT PORTFOLIO HEADER
          ══════════════════════════════════════════════════════════════ --}}
-    <x-eo.page-header
+    <x-cc.header
         :eyebrow="$archived ? 'Archived Events · Event Portfolio Command' : 'Event Portfolio Command'"
         :title="$archived ? 'Archived missions' : 'Event Portfolio'"
         :subtitle="$archived ? 'Closed out and off the live board — still here if you need them.' : 'Manage every event mission across planning, commercial, and delivery.'"
     >
         <x-slot:actions>
-            <x-eo.button variant="ghost" size="sm" href="{{ route('events.create') }}">Open Event Studio</x-eo.button>
-            <x-eo.button size="sm" href="{{ route('events.create') }}">＋ Create Event</x-eo.button>
+            <a href="{{ route('events.create') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Open Event Studio</a>
+            <a href="{{ route('events.create') }}" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ Create Event</a>
         </x-slot:actions>
-    </x-eo.page-header>
+    </x-cc.header>
 
     {{-- Portfolio pulse — exactly four figures, so the header reads at a
          glance rather than repeating what the filter bar and board already
@@ -66,11 +66,11 @@
                 };
             @endphp
             @if ($f['href'] ?? null)
-                <a href="{{ $f['href'] }}" wire:navigate class="block transition hover:-translate-y-0.5">
-                    <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+                <a href="{{ $f['href'] }}" wire:navigate class="block">
+                    <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
                 </a>
             @else
-                <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+                <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
             @endif
         @endforeach
     </div>
@@ -81,117 +81,18 @@
          sort and clear along its own top edge. Never floating chips on the
          bare page background.
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="eo-soft-card space-y-4 p-4 sm:p-5">
-        <div class="flex flex-wrap items-center gap-3">
-            <p class="eo-label">Portfolio Command Filter</p>
-
-            <div class="relative ms-auto">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
-                <input type="search" wire:model.live.debounce.300ms="q" placeholder="Search missions…"
-                       class="eo-input h-9 w-44 !py-0 !ps-9 text-xs sm:w-52">
-            </div>
-
-            <div class="inline-flex items-center gap-0.5 rounded-xl border border-eo-line bg-white p-0.5">
-                @foreach (['date' => 'Date', 'health' => 'Health', 'budget' => 'Budget'] as $key => $label)
-                    <button type="button" wire:click="$set('sort', '{{ $key }}')"
-                            @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition',
-                                    'bg-eo-navy text-white' => $sort === $key,
-                                    'text-eo-muted hover:text-eo-text' => $sort !== $key])>{{ $label }}</button>
-                @endforeach
-            </div>
-
-            <button type="button" wire:click="toggleStarred"
-                    @class(['eo-btn-ghost eo-btn-sm inline-flex items-center gap-1.5', '!text-eo-teal-ink' => $starred])>
-                <x-icon name="star" class="h-3.5 w-3.5 {{ $starred ? 'fill-current' : '' }}" /> Starred
-            </button>
-
-            @if ($hasActiveFilters)
-                <a href="{{ route('events.index') }}" wire:navigate
-                   class="text-[11.5px] font-semibold text-eo-muted transition hover:text-eo-risk-ink">Clear filters</a>
-            @endif
-        </div>
-
-        <div>
-            <p class="eo-label mb-2">Smart views</p>
-            <div class="flex flex-wrap gap-1.5">
-                @foreach ($smartViews as $item)
-                    <a href="{{ $item['href'] }}" wire:navigate
-                       @class([
-                           'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold transition',
-                           'border-eo-navy bg-eo-navy text-white' => $item['active'],
-                           'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30 hover:text-eo-text' => ! $item['active'],
-                       ])>
-                        {{ $item['label'] }}
-                        @if ($item['count'])
-                            <span @class([
-                                'rounded-full px-1.5 text-[10px] font-bold',
-                                'bg-white/20' => $item['active'],
-                                'bg-eo-risk/15 text-eo-risk-ink' => ! $item['active'] && $item['tone'] === 'risk',
-                                'bg-eo-warn/15 text-eo-warn-ink' => ! $item['active'] && $item['tone'] === 'warn',
-                                'bg-eo-workspace text-eo-muted' => ! $item['active'] && ! in_array($item['tone'], ['risk', 'warn'], true),
-                            ])>{{ $item['count'] }}</span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="border-t border-eo-line pt-4">
-            <p class="eo-label mb-2">Event type</p>
-            <div class="flex flex-wrap gap-1.5">
-                @foreach ($typeTabs as $key => $label)
-                    <button type="button" wire:click="setTab('{{ $key }}')"
-                            @class([
-                                'rounded-full border px-3 py-1.5 text-[11.5px] font-semibold transition',
-                                'border-eo-navy bg-eo-navy text-white' => $tab === $key,
-                                'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30 hover:text-eo-text' => $tab !== $key,
-                            ])>{{ $label }}</button>
-                @endforeach
-            </div>
-        </div>
-    </div>
+    <x-events.filter-bar :smart-views="$smartViews" :type-tabs="$typeTabs" :tab="$tab" :sort="$sort" :starred="$starred" :has-active-filters="$hasActiveFilters" />
 
     {{-- ══════════════════════════════════════════════════════════════
          3 · VIEW SWITCHER — fixed position, same row, every view. Radar's
          own visualisation lives inside the workspace below, never above
          this row, so nothing here ever shifts when Radar is selected.
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="flex flex-wrap items-center gap-3">
-        <div class="inline-flex items-center gap-1 rounded-2xl border border-eo-line bg-white p-1 shadow-eo">
-            @foreach ($views as $key => [$label, $icon])
-                <button type="button" wire:click="setView('{{ $key }}')"
-                        @class([
-                            'relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-bold transition',
-                            'bg-gradient-to-b from-eo-teal-lit to-eo-teal-deep text-white shadow-eo-teal' => $view === $key,
-                            'text-eo-muted hover:bg-eo-workspace hover:text-eo-text' => $view !== $key,
-                        ])>
-                    <x-icon :name="$icon" class="h-3.5 w-3.5" />{{ $label }}
-                    @if ($key === 'calendar')
-                        <span @class(['rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                            'bg-white/20 text-white' => $view === $key,
-                            'bg-eo-bg text-eo-muted' => $view !== $key])>Soon</span>
-                    @endif
-                </button>
-            @endforeach
-        </div>
-
-        <p class="flex items-center gap-1.5 text-[11.5px] font-semibold text-eo-muted">
-            <span class="h-1.5 w-1.5 rounded-full bg-eo-teal"></span>
-            {{-- Every matching mission, not just what $deck holds on this
-                 page — List's $deck is now just the current page (see
-                 EventsIndex::render()), so the whole-book total has to come
-                 from the paginator, which always knows it regardless of view. --}}
-            {{ $rows->total() }} {{ str('mission')->plural($rows->total()) }} in view
-        </p>
-
-        <div class="ms-auto flex flex-wrap items-center gap-x-3.5 gap-y-1">
-            @foreach ($statuses as $key => [$label, $tone, $hex])
-                <span class="flex items-center gap-1.5 text-[10.5px] font-semibold text-eo-muted">
-                    <span class="h-2 w-2 rounded-full ring-2 ring-white" style="background: {{ $hex }}; box-shadow: 0 0 0 1px {{ $hex }}33"></span>{{ $label }}
-                </span>
-            @endforeach
-        </div>
-    </div>
+    {{-- Every matching mission, not just what $deck holds on this page —
+         List's $deck is now just the current page (see
+         EventsIndex::render()), so the whole-book total has to come from
+         the paginator, which always knows it regardless of view. --}}
+    <x-events.view-switcher :views="$views" :view="$view" :total="$rows->total()" :statuses="$statuses" />
 
     {{-- ══════════════════════════════════════════════════════════════
          4 · MAIN WORKSPACE + 5 · SELECTED EVENT DETAIL PANEL
@@ -219,10 +120,10 @@
                             @continue ($group['missions']->isEmpty())
                             <div>
                                 <div class="mb-1 flex items-center gap-2">
-                                    <h2 class="text-[14px] font-bold text-eo-text">{{ $group['label'] }}</h2>
-                                    <span class="rounded-full bg-eo-workspace px-2 py-0.5 text-[11px] font-bold tabular-nums text-eo-muted">{{ $group['missions']->count() }}</span>
+                                    <h2 class="text-[14px] font-bold text-ink">{{ $group['label'] }}</h2>
+                                    <span class="rounded-full bg-page px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $group['missions']->count() }}</span>
                                 </div>
-                                <p class="mb-3 text-[11.5px] text-eo-muted">
+                                <p class="mb-3 text-[11.5px] text-muted">
                                     {{ match ($group['label']) {
                                         'Needs Attention' => 'At risk, blocked, or waiting on a decision — open these first.',
                                         'Live / Active' => 'Running now, day by day.',
@@ -232,7 +133,7 @@
                                 </p>
                                 <div class="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
                                     @foreach ($group['missions'] as $m)
-                                        <x-eo.mission-card :mission="$m" variant="board" selectAction="activate"
+                                        <x-cc.mission-card :mission="$m" variant="board" selectAction="activate"
                                             :selected="$active && $active['id'] === $m['id']"
                                             wire:key="board-{{ $m['id'] }}" />
                                     @endforeach
