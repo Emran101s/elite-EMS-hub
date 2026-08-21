@@ -217,7 +217,6 @@ class NavPanel
             'workspace' => [
                 ['Command Center', [
                     ['label' => 'Dashboard', 'href' => route('home'), 'icon' => 'home', 'count' => null, 'active' => request()->routeIs('home')],
-                    ['label' => 'Mission Radar', 'href' => route('home').'#mission-radar', 'icon' => 'chart', 'count' => null, 'active' => false],
                     ['label' => 'Live Alerts', 'href' => route('home').'#live-alerts', 'icon' => 'bell', 'count' => null, 'active' => false],
                 ]],
             ],

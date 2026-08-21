@@ -1,6 +1,6 @@
 {{-- ══════════════════════════════════════════════════════════════
-     SELECTED EVENT DETAIL PANEL — the one panel Mission Board, Radar,
-     Timeline, Table and Calendar all share. Desktop: sticky right column.
+     SELECTED EVENT DETAIL PANEL — the one panel Mission Board, Timeline,
+     Table and Calendar all share. Desktop: sticky right column.
      Narrower than xl: stacks below the workspace, same content, same
      order — never at the bottom of a scroll you have to hunt for, always
      the next thing after the view you were reading.
@@ -71,7 +71,7 @@
                 @endforeach
             </div>
             <p class="mt-4 text-[12.5px] leading-relaxed text-muted">
-                Pick a mission from the board, radar, timeline or table — its detail opens here, in this same panel, whichever view you're reading.
+                Pick a mission from the board, timeline or table — its detail opens here, in this same panel, whichever view you're reading.
             </p>
         </x-cc.briefing-panel>
     @endif

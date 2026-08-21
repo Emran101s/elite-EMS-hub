@@ -1,36 +1,18 @@
 @php
-    use App\Models\Event;
-    use App\Models\EventApproval;
-    use App\Models\EventContractPayment;
-
     // Event Type — one click each, no dropdown to open first.
     $typeTabs = ['all' => 'All Types', 'conference' => 'Conference', 'summit' => 'Summit',
         'exhibition' => 'Exhibition', 'workshop' => 'Workshop', 'gala' => 'Gala',
         'corporate' => 'Corporate', 'awards' => 'Awards'];
 
-    // Mission Board · Radar · Timeline · Table · Calendar — exactly these
-    // five, in this order, every time. Calendar is real and selectable; it
-    // just doesn't have a calendar to show yet, and says so rather than
-    // faking one.
+    // Mission Board · Timeline · Table · Calendar — exactly these four, in
+    // this order, every time. Calendar is real and selectable; it just
+    // doesn't have a calendar to show yet, and says so rather than faking
+    // one.
     $views = [
         'board' => ['Mission Board', 'grid'],
-        'radar' => ['Radar', 'chart'],
         'path' => ['Timeline', 'calendar'],
         'list' => ['Table', 'list'],
         'calendar' => ['Calendar', 'clock'],
-    ];
-
-    // Smart Views — the same queue/stage query params EventsIndex reads in
-    // mount(), just presented as one command bar instead of a sidebar.
-    $smartViews = [
-        ['label' => 'All', 'href' => route('events.index'), 'count' => null, 'active' => ! $queue && ! $stage && $tab === 'all' && ! $starred, 'tone' => null],
-        ['label' => 'Live', 'href' => route('events.index', ['stage' => 'live']), 'count' => Event::whereNull('archived_at')->where('stage', 'live')->count(), 'active' => $stage === 'live', 'tone' => null],
-        ['label' => 'At Risk', 'href' => route('events.index', ['queue' => 'at_risk', 'sort' => 'health']), 'count' => null, 'active' => $queue === 'at_risk', 'tone' => 'risk'],
-        ['label' => 'Awaiting Approval', 'href' => route('events.index', ['queue' => 'awaiting_approval']), 'count' => EventApproval::where('status', 'pending')->count(), 'active' => $queue === 'awaiting_approval', 'tone' => 'warn'],
-        ['label' => 'Payment Required', 'href' => route('events.index', ['queue' => 'payment']), 'count' => EventContractPayment::query()->whereColumn('paid_cents', '<', 'amount_cents')->count() ?: null, 'active' => $queue === 'payment', 'tone' => 'warn'],
-        ['label' => 'This Week', 'href' => route('events.index', ['queue' => 'this_week']), 'count' => Event::whereNull('archived_at')->whereBetween('starts_at', [now()->startOfWeek(), now()->endOfWeek()])->count(), 'active' => $queue === 'this_week', 'tone' => null],
-        ['label' => 'VIP', 'href' => route('events.index', ['tab' => 'vip']), 'count' => Event::whereNull('archived_at')->whereIn('type', ['vip_reception', 'embassy_event', 'private_dinner'])->count() ?: null, 'active' => $tab === 'vip', 'tone' => null],
-        ['label' => 'High Value', 'href' => route('events.index', ['queue' => 'high_value', 'sort' => 'budget']), 'count' => Event::whereNull('archived_at')->where('budget_cents', '>=', 10000000)->count() ?: null, 'active' => $queue === 'high_value', 'tone' => null],
     ];
 
     $hasActiveFilters = $q !== '' || $tab !== 'all' || $queue || $stage || $starred;
@@ -77,16 +59,12 @@
 
     {{-- ══════════════════════════════════════════════════════════════
          2 · PORTFOLIO COMMAND FILTER BAR
-         One panel, two rows — Smart Views, then Event Type — plus search,
-         sort and clear along its own top edge. Never floating chips on the
-         bare page background.
+         Search, sort and clear along its own top edge, Event Type below.
          ══════════════════════════════════════════════════════════════ --}}
-    <x-events.filter-bar :smart-views="$smartViews" :type-tabs="$typeTabs" :tab="$tab" :sort="$sort" :starred="$starred" :has-active-filters="$hasActiveFilters" />
+    <x-events.filter-bar :type-tabs="$typeTabs" :tab="$tab" :sort="$sort" :starred="$starred" :has-active-filters="$hasActiveFilters" />
 
     {{-- ══════════════════════════════════════════════════════════════
-         3 · VIEW SWITCHER — fixed position, same row, every view. Radar's
-         own visualisation lives inside the workspace below, never above
-         this row, so nothing here ever shifts when Radar is selected.
+         3 · VIEW SWITCHER — fixed position, same row, every view.
          ══════════════════════════════════════════════════════════════ --}}
     {{-- Every matching mission, not just what $deck holds on this page —
          List's $deck is now just the current page (see
@@ -141,90 +119,6 @@
                             </div>
                         @endforeach
                     </div>
-
-                {{-- ── RADAR ── --}}
-                @elseif ($view === 'radar')
-                    @php
-                        $radarMaxDays = 120;
-                        $radarPool = $deck->reject(fn ($m) => $m['past'] ?? false)
-                            ->sortBy(fn ($m) => $m['daysOut'] ?? 999)->take(14)->values();
-                        $radarN = max($radarPool->count(), 1);
-                        $radarNodes = $radarPool->map(function ($m, $i) use ($radarN, $radarMaxDays) {
-                            $angle = -90 + (360 / $radarN) * $i;
-                            $rad = deg2rad($angle);
-                            $live = $m['live'] ?? false;
-                            $days = $m['daysOut'];
-                            $urgency = $live ? 0 : ($days === null ? 1 : max(0, min(1, $days / $radarMaxDays)));
-                            $r = $live ? 8 : 16 + $urgency * 32;
-
-                            return [
-                                'm' => $m,
-                                'left' => round(50 + $r * cos($rad), 2),
-                                'top' => round(50 + $r * sin($rad), 2),
-                                'alert' => $live ? false : (($m['healthGroup'] ?? null) === 'risk' || ($m['risk'] ?? null) === 'Critical'),
-                            ];
-                        });
-                        $riskRank = fn ($m) => match ($m['risk'] ?? 'Low') { 'Critical' => 4, 'High' => 3, 'Medium' => 2, default => 1 };
-                        $riskiest = $radarPool->sortByDesc($riskRank)->first();
-                        $onTrack = $radarPool->filter(fn ($m) => ($m['healthGroup'] ?? null) === 'track')->count();
-
-                        $heroMissions = $radarNodes->map(function ($node, $i) {
-                            $m = $node['m'];
-
-                            return [
-                                'tone' => ($node['alert'] ?? false) ? 'risk' : (($m['live'] ?? false) ? 'live' : ((($m['healthGroup'] ?? null) === 'warn') ? 'warn' : 'ok')),
-                                'x' => $node['left'], 'y' => $node['top'],
-                                'label' => str($m['name'] ?? 'Mission')->limit(20),
-                                'href' => isset($m['event']) ? route('events.hub', $m['event']) : null,
-                                'featured' => $i === 0 || ($node['alert'] ?? false),
-                                'readiness' => $m['progress'] ?? null,
-                            ];
-                        })->all();
-
-                        $heroStats = [
-                            ['value' => $radarPool->count(), 'label' => 'On sweep'],
-                            ['value' => $radarPool->where('live', true)->count(), 'label' => 'Live', 'tone' => 'live'],
-                            ['value' => $radarPool->filter(fn ($m) => ($m['healthGroup'] ?? null) === 'risk' || ($m['risk'] ?? null) === 'Critical')->count(), 'label' => 'At risk', 'tone' => 'risk'],
-                            ['value' => $onTrack, 'label' => 'On track', 'tone' => 'ok'],
-                        ];
-                    @endphp
-                    <x-eo.mission-radar
-                        variant="hero"
-                        label="Mission Radar"
-                        story="Event orbit for the book — closer nodes land sooner; colour carries health; clusters share the same window. Open a node to view that mission, or pick it below to inspect it here first."
-                        :missions="$heroMissions ?: null"
-                        :stats="$heroStats"
-                    />
-
-                    {{-- Node clicks navigate straight to the event — the radar
-                         component is shared with Command Center and isn't
-                         wired for selection, so rather than fake it, these
-                         rows give a real, working way to inspect a mission in
-                         the panel first without leaving the page. --}}
-                    @if ($radarPool->isNotEmpty())
-                        <div class="mt-4 eo-soft-card !p-0 overflow-hidden">
-                            <div class="border-b border-eo-line px-4 py-3">
-                                <p class="eo-label">Inspect from the sweep</p>
-                            </div>
-                            <div class="divide-y divide-eo-line">
-                                @foreach ($radarPool->take(6) as $m)
-                                    <button type="button" wire:click="activate({{ $m['id'] }})" wire:key="radar-pick-{{ $m['id'] }}"
-                                            @class(['flex w-full items-center gap-3 px-4 py-2.5 text-left transition',
-                                                    'bg-eo-teal-soft/40' => $active && $active['id'] === $m['id'],
-                                                    'hover:bg-eo-workspace' => ! $active || $active['id'] !== $m['id']])>
-                                        <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $m['statusHex'] }}"></span>
-                                        <span class="min-w-0 flex-1">
-                                            <span class="block truncate text-[12px] font-semibold text-eo-text">{{ $m['name'] }}</span>
-                                            <span class="block truncate text-[10.5px] text-eo-muted">{{ $m['client'] ?: 'No client' }} · {{ $m['timeline'] }}</span>
-                                        </span>
-                                        @if ($m['id'] === ($riskiest['id'] ?? null) && $riskRank($riskiest) > 1)
-                                            <x-eo.status-pill tone="risk" class="!text-[9.5px] shrink-0">{{ $m['risk'] }}</x-eo.status-pill>
-                                        @endif
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
 
                 {{-- ── TIMELINE ── --}}
                 @elseif ($view === 'path')
@@ -467,7 +361,7 @@
                 {{-- ── CALENDAR — real, selectable, honestly unbuilt ── --}}
                 @else
                     <x-eo.empty-state icon="calendar" title="Calendar is coming soon"
-                        hint="Month and week views are next for the portfolio. Mission Board, Radar, Timeline and Table already cover the same missions, sorted and grouped a different way each time." />
+                        hint="Month and week views are next for the portfolio. Mission Board, Timeline and Table already cover the same missions, sorted and grouped a different way each time." />
                 @endif
             </div>
 

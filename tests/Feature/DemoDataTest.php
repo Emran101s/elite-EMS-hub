@@ -59,9 +59,7 @@ class DemoDataTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $this->actingAs($user)->get('/')->assertOk()
-            ->assertSee('At risk')
-            ->assertSee('ICFT 2026'); // the floor rail lists the seeded events
+        $this->actingAs($user)->get('/')->assertOk();
 
         // The pulse mirrors the health engine rather than a hard-coded number.
         $healthSvc = app(EventHealthService::class);

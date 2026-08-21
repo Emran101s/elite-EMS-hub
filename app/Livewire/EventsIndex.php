@@ -57,23 +57,23 @@ class EventsIndex extends Component
     }
 
     /**
-     * The portfolio's five views, one workspace shell. Each shares the same
+     * The portfolio's four views, one workspace shell. Each shares the same
      * payload (EventMission), the same status vocabulary and the same
      * selected-event detail panel, so what changes between them is the
      * arrangement, never the facts.
      *
      *   board      Mission Board — the default. Grouped by what needs you first.
-     *   radar      Mission Radar as the page's hero, not a strip above one.
      *   path       Timeline — where each mission sits across the year.
      *   list       Table — every mission, dense and scannable.
      *   calendar   Month/week view. Not built yet — selectable, and the
      *              workspace says so honestly rather than pretending.
      *
-     * The spatial Deck (one-at-a-time, drag-to-step) is retired as a live
-     * view — see mount()'s ?view= mapping, which now resolves every old
-     * ?view=deck link straight to Mission Board instead of rendering it.
+     * The spatial Deck (one-at-a-time, drag-to-step) and Mission Radar are
+     * both retired as live views — see mount()'s ?view= mapping, which
+     * resolves every old ?view=deck or ?view=radar link straight to
+     * Mission Board instead of rendering them.
      */
-    public const VIEWS = ['board', 'radar', 'path', 'list', 'calendar'];
+    public const VIEWS = ['board', 'path', 'list', 'calendar'];
 
     public string $view = 'board';
 
@@ -116,13 +116,13 @@ class EventsIndex extends Component
         }
         // Every retired or renamed view name lands on the real view it means
         // now, rather than a blank page or a silent reset to Mission Board —
-        // deck included: the spatial deck is retired, so a bookmarked
-        // ?view=deck now opens Mission Board instead of rendering it.
+        // deck and radar included: both are retired, so a bookmarked
+        // ?view=deck or ?view=radar now opens Mission Board instead of
+        // rendering them.
         $this->view = match (request('view')) {
-            'deck', 'board', 'mission-board' => 'board',
+            'deck', 'board', 'mission-board', 'radar' => 'board',
             'path', 'flight-path', 'timeline' => 'path',
             'list', 'table' => 'list',
-            'radar' => 'radar',
             'calendar' => 'calendar',
             default => 'board',
         };
@@ -331,7 +331,7 @@ class EventsIndex extends Component
         $pulse = app(EventHealthService::class);
         $missions = app(EventMission::class);
 
-        // Board, Radar and Path show the whole filtered book by design — they
+        // Board and Path show the whole filtered book by design — they
         // cannot page, so they still need every matching event's full
         // mission data and always have. List is the one view with page
         // controls, and it's the one place the audit's "cosmetic
@@ -435,7 +435,7 @@ class EventsIndex extends Component
 
             $active = $this->activeId ? $deck->firstWhere('id', $this->activeId) : null;
 
-            // Board, Radar and Path show the whole book (see the note on
+            // Board and Path show the whole book (see the note on
             // $paginating above), so $rows here is a full-page-1 view of
             // the same $deck every other output already reflects — nothing
             // reads its page controls outside the List branch, but it is

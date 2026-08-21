@@ -3,46 +3,6 @@
     $hour = (int) $now->copy()->setTimeFrom(now())->format('H');
     $greeting = match (true) { $hour < 12 => 'Good morning', $hour < 18 => 'Good afternoon', default => 'Good evening' };
 
-    // Mission Radar's numbers — kept, computed once, but no longer the
-    // page's hero by default (Phase D). Compact insight strip below;
-    // full radar only when a producer actually asks for it.
-    $radarPool = $events
-        ->filter(fn ($e) => $e->starts_at)
-        ->sortBy('starts_at')
-        ->take(10)
-        ->values();
-    $radarN = max($radarPool->count(), 1);
-    $radarMissions = $radarPool->map(function ($e, $i) use ($radarN) {
-        $tone = match (true) {
-            $e->stage === 'live' => 'live',
-            in_array($e->stage, ['production', 'planning'], true) => 'warn',
-            default => 'ok',
-        };
-        $angle = -90 + (360 / $radarN) * $i;
-        $rad = deg2rad($angle);
-        $days = now()->startOfDay()->diffInDays($e->starts_at->copy()->startOfDay(), false);
-        $urgency = $e->stage === 'live' ? 0 : max(0, min(1, max(0, $days) / 120));
-        $r = $e->stage === 'live' ? 12 : 22 + $urgency * 28;
-
-        return [
-            'tone' => $tone,
-            'x' => round(50 + $r * cos($rad), 2),
-            'y' => round(50 + $r * sin($rad), 2),
-            'label' => str($e->name)->limit(22),
-            'href' => route('events.hub', $e),
-            'featured' => $i === 0,
-            'readiness' => (int) ($e->progress ?? 0),
-        ];
-    })->all();
-
-    $atRiskCount = collect($kpis)->firstWhere('label', 'Operational Risks')['value'] ?? 0;
-    $radarStats = [
-        ['value' => $events->count(), 'label' => 'Missions'],
-        ['value' => $events->where('stage', 'live')->count(), 'label' => 'Live', 'tone' => 'live'],
-        ['value' => $atRiskCount, 'label' => 'At risk', 'tone' => 'risk'],
-        ['value' => $signalCount, 'label' => 'Signals', 'tone' => $signalCount ? 'warn' : 'ok'],
-    ];
-
     $kpiTone = fn (string $tone) => match ($tone) {
         'red' => 'risk', 'amber' => 'warn', 'green' => 'ok', 'blue' => 'live', default => null,
     };
@@ -55,7 +15,7 @@
     @if ($events->isEmpty())
         <x-eo.empty-state
             title="Nothing on the book yet"
-            hint="Once you add a summit, forum, or exhibition, Mission Radar and readiness signals surface here."
+            hint="Once you add a summit, forum, or exhibition, readiness signals surface here."
             icon="sparkles"
         >
             <x-slot:actions>
@@ -87,15 +47,6 @@
             </a>
         @endforeach
     </div>
-
-    {{-- Mission Radar — a compact strip by default, the full field only
-         behind this toggle. --}}
-    <x-cc.radar
-        label="Mission Radar"
-        story="Distance ≈ days out · colour ≈ health · cluster = missions sharing the same orbit window."
-        :missions="$radarMissions"
-        :stats="$radarStats"
-    />
 
     {{-- ══════════ 3 · MAIN GRID ══════════ --}}
     <div class="grid gap-4 xl:grid-cols-12">

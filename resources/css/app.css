@@ -421,23 +421,6 @@
 }
 .bulkbar-in { animation: bulkbar-in 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
 
-/* Events · Mission Radar — a faster sweep than the Ops Hub orbit, and a
-   pulse whose colour follows the mission's own risk hex via --pulse-color,
-   so one keyframe serves every severity instead of one per colour. */
-@keyframes radar-spin {
-    to { transform: rotate(360deg); }
-}
-@keyframes radar-ping {
-    0% { box-shadow: 0 0 0 0 var(--pulse-color, rgba(239, 68, 68, .6)); }
-    70% { box-shadow: 0 0 0 9px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-.radar-spin { animation: radar-spin 9s linear infinite; }
-.radar-ping { animation: radar-ping 2.1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-@media (prefers-reduced-motion: reduce) {
-    .radar-spin, .radar-ping { animation: none; }
-}
-
 /* Operations Hub — slow orbital rotation + core glow pulse */
 @keyframes orbit-spin {
     to { transform: rotate(360deg); }

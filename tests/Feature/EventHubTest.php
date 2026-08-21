@@ -114,12 +114,12 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // Phase C.1 restructured the portfolio: five views, named in the UI as
-        // Mission Board, Radar, Timeline, Table and Calendar. The Deck is
-        // retired and "Flight Path" is now called Timeline.
+        // Phase C.1 restructured the portfolio: four views, named in the UI as
+        // Mission Board, Timeline, Table and Calendar. The Deck and Mission
+        // Radar are both retired, and "Flight Path" is now called Timeline.
         $this->actingAs($user)->get('/events')->assertOk()
             ->assertSee('Event Portfolio')
-            ->assertSee('Mission Board')->assertSee('Radar')
+            ->assertSee('Mission Board')
             ->assertSee('Timeline')->assertSee('Table')->assertSee('Calendar')
             ->assertSee('ICFT 2026');
 
@@ -130,7 +130,8 @@ class EventHubTest extends TestCase
             ->assertSee('ICFT 2026');
 
         // Filters narrow the board. Asserted through the component's paginator,
-        // since the Event Radar always lists every event in the page HTML.
+        // since Board and Timeline always list every matching event in the
+        // page HTML.
         $names = function (array $sets) use ($user) {
             $c = Livewire::actingAs($user)->test(EventsIndex::class);
             foreach ($sets as $k => $v) {

@@ -1,4 +1,4 @@
-@props(['smartViews', 'typeTabs', 'tab', 'sort', 'starred', 'hasActiveFilters'])
+@props(['typeTabs', 'tab', 'sort', 'starred', 'hasActiveFilters'])
 
 <div class="space-y-4 rounded-lg border border-line bg-white p-4 sm:p-5">
     <div class="flex flex-wrap items-center gap-3">
@@ -31,31 +31,6 @@
     </div>
 
     <div>
-        <p class="mb-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Smart views</p>
-        <div class="flex flex-wrap gap-1.5">
-            @foreach ($smartViews as $item)
-                <a href="{{ $item['href'] }}" wire:navigate
-                   @class([
-                       'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold transition',
-                       'border-navy-900 bg-navy-900 text-white' => $item['active'],
-                       'border-line bg-white text-muted hover:border-gold-300 hover:text-ink' => ! $item['active'],
-                   ])>
-                    {{ $item['label'] }}
-                    @if ($item['count'])
-                        <span @class([
-                            'rounded-full px-1.5 text-[10px] font-bold',
-                            'bg-white/20' => $item['active'],
-                            'bg-danger-soft text-danger-ink' => ! $item['active'] && $item['tone'] === 'risk',
-                            'bg-warning-soft text-warning-ink' => ! $item['active'] && $item['tone'] === 'warn',
-                            'bg-page text-muted' => ! $item['active'] && ! in_array($item['tone'], ['risk', 'warn'], true),
-                        ])>{{ $item['count'] }}</span>
-                    @endif
-                </a>
-            @endforeach
-        </div>
-    </div>
-
-    <div class="border-t border-line pt-4">
         <p class="mb-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Event type</p>
         <div class="flex flex-wrap gap-1.5">
             @foreach ($typeTabs as $key => $label)
