@@ -1,0 +1,15 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:8912",
+        "http://localhost:8912/events"
+      ],
+      "numberOfRuns": 1
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "storage/audits/lighthouse"
+    }
+  }
+}
