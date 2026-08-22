@@ -5,81 +5,86 @@
     $states = ['draft', 'sent', 'expired', 'accepted', 'declined'];
     $sel = $selected;
     $selState = $sel?->state();
+
+    $toneMap = fn ($t) => match ($t) {
+        'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue', 'violet' => 'live', default => null,
+    };
 @endphp
 
-<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
+<div class="space-y-5">
 
-    <x-eo.page-header
-        eyebrow="Commercial Command"
-        title="Proposals"
-        subtitle="Queue → Offer → Commercial Control. What is out, what is expiring, and what came back a yes."
-    >
+    <x-cc.header eyebrow="Commercial Command" title="Proposals" subtitle="Queue → Offer → Commercial Control. What is out, what is expiring, and what came back a yes.">
         <x-slot:actions>
-            <span class="eo-journey-chip">Commercial</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-gold-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Commercial
+            </span>
             <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                 <input type="search" wire:model.live.debounce.300ms="q" placeholder="Number, title, client…"
-                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs xl:w-64">
+                       class="h-10 w-52 rounded-full border border-line bg-white pl-9 pr-3 text-[12.5px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none xl:w-64">
             </div>
             @if ($may)
-                <x-eo.button size="sm" wire:click="create">＋ New proposal</x-eo.button>
+                <button type="button" wire:click="create" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ New proposal</button>
             @endif
         </x-slot:actions>
-    </x-eo.page-header>
+    </x-cc.header>
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         @foreach ($figures as $f)
-            @php
-                $tone = match ($f['tone'] ?? '') {
-                    'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue', 'violet' => 'live', default => null,
-                };
-            @endphp
-            <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+            <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$toneMap($f['tone'] ?? '')" />
         @endforeach
     </div>
 
-    <div class="flex flex-wrap items-center gap-1">
+    <div class="flex flex-wrap items-center gap-1.5">
         <button type="button" wire:click="setState('all')"
-                @class(['eo-btn-ghost eo-btn-sm', '!bg-eo-navy !text-white' => $state === 'all'])>All</button>
+                @class([
+                    'rounded-full px-3 py-1.5 text-[12px] font-bold transition',
+                    'bg-navy-900 text-white' => $state === 'all',
+                    'bg-white text-muted ring-1 ring-line hover:text-ink' => $state !== 'all',
+                ])>All</button>
         @foreach ($states as $key)
             @php [$label, $hex] = Proposal::STATE_META[$key]; @endphp
             <button type="button" wire:click="setState('{{ $key }}')"
-                    @class(['eo-btn-ghost eo-btn-sm inline-flex items-center gap-1.5', '!bg-eo-navy !text-white' => $state === $key])>
+                    @class([
+                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition',
+                        'bg-navy-900 text-white' => $state === $key,
+                        'bg-white text-muted ring-1 ring-line hover:text-ink' => $state !== $key,
+                    ])>
                 <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
             </button>
         @endforeach
-        <p class="ms-auto text-[12px] text-eo-muted">{{ $rows->count() }} {{ str('offer')->plural($rows->count()) }} in queue</p>
+        <p class="ms-auto text-[12px] text-muted">{{ $rows->count() }} {{ str('offer')->plural($rows->count()) }} in queue</p>
     </div>
 
     @if ($ready->isNotEmpty())
-        <x-eo.soft-card class="!bg-eo-warn-soft/40">
+        <div class="rounded-lg border border-line bg-warning-soft/40 p-4">
             <button type="button" wire:click="toggleReady" class="flex w-full items-center gap-3 text-start">
-                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-warn/20 text-eo-warn-ink">
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-warning-soft text-warning-ink">
                     <x-icon name="document" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0 flex-1">
-                    <span class="block text-[13px] font-bold text-eo-text">{{ $ready->count() }} {{ str('deal')->plural($ready->count()) }} waiting for an offer</span>
-                    <span class="block text-[11px] text-eo-muted">At proposal or negotiation — nothing sent</span>
+                    <span class="block text-[13px] font-bold text-ink">{{ $ready->count() }} {{ str('deal')->plural($ready->count()) }} waiting for an offer</span>
+                    <span class="block text-[11px] text-muted">At proposal or negotiation — nothing sent</span>
                 </span>
-                <x-icon name="chevron" class="h-4 w-4 text-eo-muted transition {{ $showReady ? 'rotate-180' : '' }}" />
+                <x-icon name="chevron" class="h-4 w-4 text-muted transition {{ $showReady ? 'rotate-180' : '' }}" />
             </button>
             @if ($showReady)
-                <div class="mt-3 space-y-2 border-t border-eo-line pt-3">
+                <div class="mt-3 space-y-2 border-t border-line pt-3">
                     @foreach ($ready as $deal)
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[12.5px] font-bold text-eo-text">{{ $deal->title }}</span>
-                                <span class="block truncate text-[11px] text-eo-muted">{{ $deal->client?->name ?? 'No client' }}</span>
+                                <span class="block truncate text-[12.5px] font-bold text-ink">{{ $deal->title }}</span>
+                                <span class="block truncate text-[11px] text-muted">{{ $deal->client?->name ?? 'No client' }}</span>
                             </span>
-                            <span class="text-[13px] font-bold tabular-nums">JD{{ number_format($deal->value_cents / 100) }}</span>
+                            <span class="text-[13px] font-bold tabular-nums text-ink">JD{{ number_format($deal->value_cents / 100) }}</span>
                             @if ($may)
-                                <x-eo.button size="sm" wire:click="draftFor({{ $deal->id }})">Draft offer</x-eo.button>
+                                <button type="button" wire:click="draftFor({{ $deal->id }})" class="rounded-full bg-gold-500 px-3 py-1.5 text-[11.5px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Draft offer</button>
                             @endif
                         </div>
                     @endforeach
                 </div>
             @endif
-        </x-eo.soft-card>
+        </div>
     @endif
 
     @if ($rows->isEmpty())
@@ -92,47 +97,34 @@
         <div class="grid gap-4 xl:grid-cols-12">
             {{-- Master: Queue --}}
             <div class="xl:col-span-4">
-                <x-eo.queue-list title="Offer queue">
+                <x-billing.queue title="Offer queue">
                     @foreach ($rows as $p)
                         @php $active = $sel?->id === $p->id; @endphp
-                        <button type="button" wire:click="select({{ $p->id }})" wire:key="prop-{{ $p->id }}"
-                                class="w-full text-start">
-                            @if ($active)
-                                <x-eo.selected-dark-card>
-                                    <p class="font-mono text-[11px] text-eo-teal-lit">{{ $p->number }}</p>
-                                    <p class="mt-1 truncate text-[14px] font-semibold text-white">{{ $p->title }}</p>
-                                    <p class="mt-1 truncate text-[12px] text-white/50">{{ $p->client?->name ?? '—' }}</p>
-                                    <div class="mt-3 flex items-center justify-between gap-2">
-                                        <span class="text-[15px] font-bold tabular-nums text-white">JD{{ number_format($p->totalCents() / 100) }}</span>
-                                        <x-eo.status-pill tone="live">{{ $p->stateLabel() }}</x-eo.status-pill>
-                                    </div>
-                                </x-eo.selected-dark-card>
-                            @else
-                                <div class="rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
-                                    <p class="font-mono text-[11px] text-eo-muted">{{ $p->number }}</p>
-                                    <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $p->title }}</p>
-                                    <div class="mt-2 flex items-center justify-between gap-2">
-                                        <span class="truncate text-[11px] text-eo-muted">{{ $p->client?->name ?? '—' }}</span>
-                                        <span class="text-[12px] font-bold tabular-nums">{{ number_format($p->totalCents() / 100) }}</span>
-                                    </div>
-                                </div>
-                            @endif
+                        <button type="button" wire:click="select({{ $p->id }})" wire:key="prop-{{ $p->id }}" class="w-full text-start">
+                            <x-billing.queue-row
+                                :active="$active"
+                                :eyebrow="$p->number"
+                                :title="$p->title"
+                                :subtitle="$p->client?->name ?? '—'"
+                                :amount="($active ? 'JD' : '').number_format($p->totalCents() / 100)"
+                                :badge-label="$active ? $p->stateLabel() : null"
+                                badge-tone="live"
+                            />
                         </button>
                     @endforeach
-                </x-eo.queue-list>
+                </x-billing.queue>
             </div>
 
             {{-- Detail --}}
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-eo.detail-panel title="{{ $sel->title }}" subtitle="{{ $sel->number }} · {{ $sel->client?->name ?? 'No client' }}">
+                    <x-cc.briefing-panel title="{{ $sel->title }}" subtitle="{{ $sel->number }} · {{ $sel->client?->name ?? 'No client' }}">
                         <x-slot:header>
-                            <x-eo.status-pill tone="{{ in_array($selState, ['expired', 'declined'], true) ? 'risk' : ($selState === 'accepted' ? 'ok' : 'live') }}">
-                                {{ $sel->stateLabel() }}
-                            </x-eo.status-pill>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold {{ in_array($selState, ['expired', 'declined'], true) ? 'bg-danger-soft text-danger-ink' : ($selState === 'accepted' ? 'bg-success-soft text-success-ink' : 'bg-info-soft text-info-ink') }}">{{ $sel->stateLabel() }}</span>
                         </x-slot:header>
 
-                        <x-eo.commercial-card
+                        <x-billing.stat-card
+                            eyebrow="Commercial"
                             title="Offer total"
                             :subtitle="$sel->lines->count().' '.str('line')->plural($sel->lines->count())"
                             :value="'JD'.number_format($sel->totalCents() / 100)"
@@ -147,43 +139,43 @@
                                 ['Issued', $sel->issued_on?->format('j M Y') ?? '—'],
                                 ['Days left', $sel->daysLeft() !== null ? ($sel->daysLeft() < 0 ? abs($sel->daysLeft()).'d overdue' : $sel->daysLeft().'d') : '—'],
                             ] as [$k, $v])
-                                <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
-                                    <span class="text-eo-muted">{{ $k }}</span>
-                                    <span class="font-semibold text-eo-text">{{ $v }}</span>
+                                <div class="flex justify-between gap-3 border-b border-line/70 pb-2">
+                                    <span class="text-muted">{{ $k }}</span>
+                                    <span class="font-semibold text-ink">{{ $v }}</span>
                                 </div>
                             @endforeach
                         </div>
-                    </x-eo.detail-panel>
+                    </x-cc.briefing-panel>
                 @endif
             </div>
 
             {{-- Action: Commercial Control Panel --}}
             <div class="xl:col-span-3">
-                <x-eo.action-panel title="Commercial Control">
+                <x-billing.action-panel title="Commercial Control">
                     @if ($sel && $may)
-                        <x-eo.button href="{{ route('proposals.edit', $sel) }}" class="w-full justify-center" size="sm">Open editor</x-eo.button>
-                        <x-eo.button variant="ghost" href="{{ route('proposals.pdf', $sel) }}" class="w-full justify-center" size="sm">Download PDF</x-eo.button>
+                        <a href="{{ route('proposals.edit', $sel) }}" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open editor</a>
+                        <a href="{{ route('proposals.pdf', $sel) }}" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Download PDF</a>
 
                         @if ($selState === 'draft')
-                            <x-eo.button wire:click="send({{ $sel->id }})" class="w-full justify-center" size="sm">Send offer</x-eo.button>
-                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete draft</button>
+                            <button type="button" wire:click="send({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Send offer</button>
+                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-danger-ink transition hover:border-navy-300">Delete draft</button>
                         @elseif ($selState === 'expired')
-                            <x-eo.button wire:click="extend({{ $sel->id }})" class="w-full justify-center" size="sm">Extend 30 days</x-eo.button>
-                            <button type="button" wire:click="decline({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center">Close as lost</button>
+                            <button type="button" wire:click="extend({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Extend 30 days</button>
+                            <button type="button" wire:click="decline({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Close as lost</button>
                         @elseif ($selState === 'sent')
-                            <x-eo.button wire:click="accept({{ $sel->id }})" class="w-full justify-center" size="sm">Mark accepted</x-eo.button>
-                            <input type="text" wire:model="reason.{{ $sel->id }}" placeholder="Decline reason…" class="eo-input text-xs">
-                            <button type="button" wire:click="decline({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Mark lost</button>
+                            <button type="button" wire:click="accept({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Mark accepted</button>
+                            <input type="text" wire:model="reason.{{ $sel->id }}" placeholder="Decline reason…" class="h-9 rounded-lg border border-line bg-white px-3 text-[12.5px] text-ink focus:border-navy-300 focus:outline-none">
+                            <button type="button" wire:click="decline({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-danger-ink transition hover:border-navy-300">Mark lost</button>
                         @elseif ($selState === 'accepted' && $sel->event)
-                            <x-eo.button href="{{ route('events.hub', $sel->event) }}" class="w-full justify-center" size="sm">Open event →</x-eo.button>
+                            <a href="{{ route('events.hub', $sel->event) }}" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open event →</a>
                         @endif
                     @elseif ($sel)
-                        <p class="text-[12px] text-eo-muted">View only — you can open the document, not change its state.</p>
-                        <x-eo.button variant="ghost" href="{{ route('proposals.edit', $sel) }}" class="w-full justify-center" size="sm">Open offer</x-eo.button>
+                        <p class="text-[12px] text-muted">View only — you can open the document, not change its state.</p>
+                        <a href="{{ route('proposals.edit', $sel) }}" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Open offer</a>
                     @else
-                        <p class="text-[12px] text-eo-muted">Select an offer from the queue.</p>
+                        <p class="text-[12px] text-muted">Select an offer from the queue.</p>
                     @endif
-                </x-eo.action-panel>
+                </x-billing.action-panel>
             </div>
         </div>
     @endif

@@ -1,25 +1,23 @@
 @php $sel = $selected; @endphp
 
-<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
+<div class="space-y-5">
 
-    <x-eo.page-header
-        eyebrow="Commercial Command"
-        title="Clients"
-        subtitle="Queue → Client → Action Panel. Organizations you run summits, forums, and exhibitions for."
-    >
+    <x-cc.header eyebrow="Commercial Command" title="Clients" subtitle="Queue → Client → Action Panel. Organizations you run summits, forums, and exhibitions for.">
         <x-slot:actions>
-            <span class="eo-journey-chip">Accounts</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-gold-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Accounts
+            </span>
             <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                 <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search clients…"
-                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs">
+                       class="h-10 w-52 rounded-full border border-line bg-white pl-9 pr-3 text-[12.5px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
             </div>
-            <x-eo.button size="sm" wire:click="newItem">＋ Add client</x-eo.button>
+            <button type="button" wire:click="newItem" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ Add client</button>
         </x-slot:actions>
-    </x-eo.page-header>
+    </x-cc.header>
 
     @if (session('status'))
-        <x-eo.alert-card tone="ok" title="{{ session('status') }}" />
+        <div class="flex items-center gap-2 rounded-lg border border-success-soft bg-success-soft px-4 py-2.5 text-[12.5px] font-semibold text-success-ink">{{ session('status') }}</div>
     @endif
 
     @if ($clients->isEmpty())
@@ -31,20 +29,17 @@
     @else
         <div class="grid gap-4 xl:grid-cols-12">
             <div class="xl:col-span-4">
-                <x-eo.queue-list title="Client queue">
-                    <x-slot:header>
-                        <span class="text-[11px] font-bold text-eo-muted">{{ $clients->count() }}</span>
-                    </x-slot:header>
+                <x-billing.queue title="Client queue">
                     @foreach ($clients as $c)
                         @php $active = $sel?->id === $c->id; @endphp
                         <button type="button" wire:click="select({{ $c->id }})" wire:key="c-{{ $c->id }}" class="w-full text-start">
                             @if ($active)
-                                <x-eo.selected-dark-card>
+                                <div class="rounded-lg bg-navy-900 p-4">
                                     <div class="flex items-center gap-3">
                                         @if ($c->logo_path)
-                                            <img src="{{ asset($c->logo_path) }}" class="h-10 w-10 rounded-xl object-contain ring-1 ring-white/20" alt="">
+                                            <img src="{{ asset($c->logo_path) }}" class="h-10 w-10 rounded-lg object-contain ring-1 ring-white/20" alt="">
                                         @else
-                                            <span class="grid h-10 w-10 place-items-center rounded-xl bg-eo-teal/20 text-[11px] font-bold text-eo-teal-lit">{{ $c->initials() }}</span>
+                                            <span class="grid h-10 w-10 place-items-center rounded-lg bg-white/10 text-[11px] font-bold text-gold-400">{{ $c->initials() }}</span>
                                         @endif
                                         <div class="min-w-0">
                                             <p class="truncate text-[14px] font-semibold text-white">{{ $c->name }}</p>
@@ -52,38 +47,36 @@
                                         </div>
                                     </div>
                                     <p class="mt-3 text-[12px] text-white/60">{{ $c->events_count }} {{ str('event')->plural($c->events_count) }}</p>
-                                </x-eo.selected-dark-card>
+                                </div>
                             @else
-                                <div class="flex items-center gap-3 rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo">
+                                <div class="flex items-center gap-3 rounded-lg border border-line bg-white px-4 py-3 transition hover:border-navy-300 hover:shadow-float">
                                     @if ($c->logo_path)
-                                        <img src="{{ asset($c->logo_path) }}" class="h-9 w-9 rounded-xl object-contain ring-1 ring-eo-line" alt="">
+                                        <img src="{{ asset($c->logo_path) }}" class="h-9 w-9 rounded-lg object-contain ring-1 ring-line" alt="">
                                     @else
-                                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-eo-navy text-[10px] font-bold text-eo-gold">{{ $c->initials() }}</span>
+                                        <span class="grid h-9 w-9 place-items-center rounded-lg bg-navy-900 text-[10px] font-bold text-gold-400">{{ $c->initials() }}</span>
                                     @endif
                                     <div class="min-w-0 flex-1">
-                                        <p class="truncate text-[13px] font-bold text-eo-text">{{ $c->name }}</p>
-                                        <p class="truncate text-[11px] text-eo-muted">{{ $c->primaryContact?->name ?: 'No primary contact' }}</p>
+                                        <p class="truncate text-[13px] font-bold text-ink">{{ $c->name }}</p>
+                                        <p class="truncate text-[11px] text-muted">{{ $c->primaryContact?->name ?: 'No primary contact' }}</p>
                                     </div>
-                                    <span class="text-[11px] font-bold text-eo-muted">{{ $c->events_count }}</span>
+                                    <span class="text-[11px] font-bold text-muted">{{ $c->events_count }}</span>
                                 </div>
                             @endif
                         </button>
                     @endforeach
-                </x-eo.queue-list>
+                </x-billing.queue>
             </div>
 
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-eo.detail-panel title="{{ $sel->name }}" subtitle="{{ $sel->organization ?: 'Client account' }}">
+                    <x-cc.briefing-panel title="{{ $sel->name }}" subtitle="{{ $sel->organization ?: 'Client account' }}">
                         <div class="mb-4 flex items-center gap-3">
                             @if ($sel->logo_path)
-                                <img src="{{ asset($sel->logo_path) }}" class="h-14 w-14 rounded-2xl object-contain ring-1 ring-eo-line" alt="">
+                                <img src="{{ asset($sel->logo_path) }}" class="h-14 w-14 rounded-lg object-contain ring-1 ring-line" alt="">
                             @else
-                                <span class="grid h-14 w-14 place-items-center rounded-2xl bg-eo-navy text-sm font-bold text-eo-gold">{{ $sel->initials() }}</span>
+                                <span class="grid h-14 w-14 place-items-center rounded-lg bg-navy-900 text-sm font-bold text-gold-400">{{ $sel->initials() }}</span>
                             @endif
-                            <div>
-                                <x-eo.status-pill tone="live">{{ $sel->events_count }} events</x-eo.status-pill>
-                            </div>
+                            <span class="inline-flex items-center rounded-full bg-info-soft px-2.5 py-1 text-[11px] font-bold text-info-ink">{{ $sel->events_count }} events</span>
                         </div>
                         <div class="space-y-2 text-[13px]">
                             @foreach ([
@@ -92,32 +85,32 @@
                                 ['Phone', $sel->phone ?: '—'],
                                 ['Website', $sel->website ?: '—'],
                             ] as [$k, $v])
-                                <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
-                                    <span class="text-eo-muted">{{ $k }}</span>
-                                    <span class="truncate font-semibold text-eo-text">{{ $v }}</span>
+                                <div class="flex justify-between gap-3 border-b border-line/70 pb-2">
+                                    <span class="text-muted">{{ $k }}</span>
+                                    <span class="truncate font-semibold text-ink">{{ $v }}</span>
                                 </div>
                             @endforeach
                         </div>
                         @if ($sel->notes)
-                            <p class="mt-4 rounded-xl bg-eo-workspace px-3 py-2 text-[12px] text-eo-muted">{{ $sel->notes }}</p>
+                            <p class="mt-4 rounded-lg bg-page px-3 py-2 text-[12px] text-muted">{{ $sel->notes }}</p>
                         @endif
-                    </x-eo.detail-panel>
+                    </x-cc.briefing-panel>
                 @endif
             </div>
 
             <div class="xl:col-span-3">
-                <x-eo.action-panel title="Account actions">
+                <x-billing.action-panel title="Account actions">
                     @if ($sel)
-                        <x-eo.button href="{{ route('crm.client', $sel) }}" class="w-full justify-center" size="sm">Open record →</x-eo.button>
-                        <x-eo.button variant="ghost" wire:click="edit({{ $sel->id }})" class="w-full justify-center" size="sm">Edit organisation</x-eo.button>
+                        <a href="{{ route('crm.client', $sel) }}" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open record →</a>
+                        <button type="button" wire:click="edit({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Edit organisation</button>
                         <x-confirm title="Delete {{ $sel->name }}?"
                                    :body="$sel->events_count ? $sel->events_count.' event(s) will be unlinked.' : null"
                                    confirm="Delete" run="$wire.delete({{ $sel->id }})"
-                                   class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete</x-confirm>
+                                   class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-danger-ink transition hover:border-navy-300">Delete</x-confirm>
                     @else
-                        <p class="text-[12px] text-eo-muted">Select a client from the queue.</p>
+                        <p class="text-[12px] text-muted">Select a client from the queue.</p>
                     @endif
-                </x-eo.action-panel>
+                </x-billing.action-panel>
             </div>
         </div>
     @endif
