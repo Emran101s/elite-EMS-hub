@@ -6,81 +6,86 @@
     $sel = $selected;
     $selState = $sel?->state();
     $out = $sel ? $sel->outstandingCents() : 0;
+
+    $toneMap = fn ($t) => match ($t) {
+        'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue', 'violet' => 'live', default => null,
+    };
 @endphp
 
-<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
+<div class="space-y-5">
 
-    <x-eo.page-header
-        eyebrow="Finance Command"
-        title="Invoices"
-        subtitle="Queue → Invoice → Collection Panel. What has been billed, what is owed, and what is still to raise."
-    >
+    <x-cc.header eyebrow="Finance Command" title="Invoices" subtitle="Queue → Invoice → Collection Panel. What has been billed, what is owed, and what is still to raise.">
         <x-slot:actions>
-            <span class="eo-journey-chip">Collection</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-gold-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Collection
+            </span>
             <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                 <input type="search" wire:model.live.debounce.300ms="q" placeholder="Number, client, event…"
-                       class="eo-input h-10 w-52 !py-0 !ps-9 text-xs xl:w-64">
+                       class="h-10 w-52 rounded-full border border-line bg-white pl-9 pr-3 text-[12.5px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none xl:w-64">
             </div>
             @if ($may)
-                <x-eo.button size="sm" wire:click="create">＋ New invoice</x-eo.button>
+                <button type="button" wire:click="create" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ New invoice</button>
             @endif
         </x-slot:actions>
-    </x-eo.page-header>
+    </x-cc.header>
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         @foreach ($figures as $f)
-            @php
-                $tone = match ($f['tone'] ?? '') {
-                    'green' => 'ok', 'red' => 'risk', 'gold', 'amber' => 'warn', 'blue', 'violet' => 'live', default => null,
-                };
-            @endphp
-            <x-eo.metric-pill :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+            <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$toneMap($f['tone'] ?? '')" />
         @endforeach
     </div>
 
-    <div class="flex flex-wrap items-center gap-1">
+    <div class="flex flex-wrap items-center gap-1.5">
         <button type="button" wire:click="setState('all')"
-                @class(['eo-btn-ghost eo-btn-sm', '!bg-eo-navy !text-white' => $state === 'all'])>All</button>
+                @class([
+                    'rounded-full px-3 py-1.5 text-[12px] font-bold transition',
+                    'bg-navy-900 text-white' => $state === 'all',
+                    'bg-white text-muted ring-1 ring-line hover:text-ink' => $state !== 'all',
+                ])>All</button>
         @foreach ($states as $key)
             @php [$label, $hex] = Invoice::STATE_META[$key]; @endphp
             <button type="button" wire:click="setState('{{ $key }}')"
-                    @class(['eo-btn-ghost eo-btn-sm inline-flex items-center gap-1.5', '!bg-eo-navy !text-white' => $state === $key])>
+                    @class([
+                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition',
+                        'bg-navy-900 text-white' => $state === $key,
+                        'bg-white text-muted ring-1 ring-line hover:text-ink' => $state !== $key,
+                    ])>
                 <span class="h-1.5 w-1.5 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
             </button>
         @endforeach
-        <p class="ms-auto text-[12px] text-eo-muted">{{ $rows->count() }} in queue</p>
+        <p class="ms-auto text-[12px] text-muted">{{ $rows->count() }} in queue</p>
     </div>
 
     @if ($ready->isNotEmpty())
-        <x-eo.soft-card>
+        <div class="rounded-lg border border-line bg-white p-4">
             <button type="button" wire:click="toggleReady" class="flex w-full items-center gap-3 text-start">
-                <span class="grid h-8 w-8 place-items-center rounded-xl bg-eo-teal-soft text-eo-teal-ink">
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-gold-50 text-gold-700">
                     <x-icon name="sparkles" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0 flex-1">
-                    <span class="block text-[13px] font-bold text-eo-text">{{ $ready->count() }} ready to invoice</span>
-                    <span class="block text-[11px] text-eo-muted">Agreed installments — never billed</span>
+                    <span class="block text-[13px] font-bold text-ink">{{ $ready->count() }} ready to invoice</span>
+                    <span class="block text-[11px] text-muted">Agreed installments — never billed</span>
                 </span>
-                <x-icon name="chevron" class="h-4 w-4 text-eo-muted transition {{ $showReady ? 'rotate-180' : '' }}" />
+                <x-icon name="chevron" class="h-4 w-4 text-muted transition {{ $showReady ? 'rotate-180' : '' }}" />
             </button>
             @if ($showReady)
-                <div class="mt-3 space-y-2 border-t border-eo-line pt-3">
+                <div class="mt-3 space-y-2 border-t border-line pt-3">
                     @foreach ($ready as $p)
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[12.5px] font-bold text-eo-text">{{ $p->label }}</span>
-                                <span class="block truncate text-[11px] text-eo-muted">{{ $p->event?->name }}</span>
+                                <span class="block truncate text-[12.5px] font-bold text-ink">{{ $p->label }}</span>
+                                <span class="block truncate text-[11px] text-muted">{{ $p->event?->name }}</span>
                             </span>
-                            <span class="text-[13px] font-bold tabular-nums">JD{{ number_format($p->amount_cents / 100) }}</span>
+                            <span class="text-[13px] font-bold tabular-nums text-ink">JD{{ number_format($p->amount_cents / 100) }}</span>
                             @if ($may)
-                                <x-eo.button size="sm" wire:click="raise({{ $p->id }})">Raise</x-eo.button>
+                                <button type="button" wire:click="raise({{ $p->id }})" class="rounded-full bg-gold-500 px-3 py-1.5 text-[11.5px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Raise</button>
                             @endif
                         </div>
                     @endforeach
                 </div>
             @endif
-        </x-eo.soft-card>
+        </div>
     @endif
 
     @if ($rows->isEmpty())
@@ -88,45 +93,35 @@
     @else
         <div class="grid gap-4 xl:grid-cols-12">
             <div class="xl:col-span-4">
-                <x-eo.queue-list title="Invoice queue">
+                <x-billing.queue title="Invoice queue">
                     @foreach ($rows as $inv)
                         @php $active = $sel?->id === $inv->id; $s = $inv->state(); @endphp
                         <button type="button" wire:click="select({{ $inv->id }})" wire:key="inv-{{ $inv->id }}" class="w-full text-start">
-                            @if ($active)
-                                <x-eo.selected-dark-card>
-                                    <p class="font-mono text-[11px] text-eo-teal-lit">{{ $inv->number }}</p>
-                                    <p class="mt-1 truncate text-[14px] font-semibold text-white">
-                                        {{ $inv->bill_to ?: ($inv->client?->name ?: 'No client') }}
-                                    </p>
-                                    <p class="mt-1 truncate text-[12px] text-white/50">{{ $inv->event?->name ?? 'No event' }}</p>
-                                    <div class="mt-3 flex items-center justify-between gap-2">
-                                        <span class="text-[15px] font-bold tabular-nums text-white">JD{{ number_format($inv->totalCents() / 100) }}</span>
-                                        <x-eo.status-pill :tone="$s === 'overdue' ? 'risk' : ($s === 'paid' ? 'ok' : 'live')">{{ $inv->stateLabel() }}</x-eo.status-pill>
-                                    </div>
-                                </x-eo.selected-dark-card>
-                            @else
-                                <div class="rounded-2xl border border-eo-line bg-white px-4 py-3 transition hover:border-eo-teal/30 hover:shadow-eo {{ $s === 'void' ? 'opacity-55' : '' }}">
-                                    <p class="font-mono text-[11px] text-eo-muted">{{ $inv->number }}</p>
-                                    <p class="mt-0.5 truncate text-[13px] font-bold text-eo-text">{{ $inv->bill_to ?: ($inv->client?->name ?: 'No client') }}</p>
-                                    <div class="mt-2 flex items-center justify-between gap-2">
-                                        <span class="text-[11px] {{ $s === 'overdue' ? 'font-bold text-eo-risk-ink' : 'text-eo-muted' }}">{{ $inv->due_on?->format('j M') ?? '—' }}</span>
-                                        <span class="text-[12px] font-bold tabular-nums">{{ number_format($inv->totalCents() / 100) }}</span>
-                                    </div>
-                                </div>
-                            @endif
+                            <x-billing.queue-row
+                                :active="$active"
+                                :eyebrow="$inv->number"
+                                :title="$inv->bill_to ?: ($inv->client?->name ?: 'No client')"
+                                :subtitle="$active ? ($inv->event?->name ?? 'No event') : ($inv->due_on?->format('j M') ?? '—')"
+                                :subtitle-danger="! $active && $s === 'overdue'"
+                                :amount="($active ? 'JD' : '').number_format($inv->totalCents() / 100)"
+                                :badge-label="$active ? $inv->stateLabel() : null"
+                                :badge-tone="$s === 'overdue' ? 'risk' : ($s === 'paid' ? 'ok' : 'live')"
+                                :dimmed="$s === 'void'"
+                            />
                         </button>
                     @endforeach
-                </x-eo.queue-list>
+                </x-billing.queue>
             </div>
 
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-eo.detail-panel title="{{ $sel->number }}" subtitle="{{ $sel->bill_to ?: ($sel->client?->name ?: 'No client') }} · {{ $sel->event?->name ?? 'No event' }}">
+                    <x-cc.briefing-panel title="{{ $sel->number }}" subtitle="{{ $sel->bill_to ?: ($sel->client?->name ?: 'No client') }} · {{ $sel->event?->name ?? 'No event' }}">
                         <x-slot:header>
-                            <x-eo.status-pill :tone="$selState === 'overdue' ? 'risk' : ($selState === 'paid' ? 'ok' : 'live')">{{ $sel->stateLabel() }}</x-eo.status-pill>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold {{ $selState === 'overdue' ? 'bg-danger-soft text-danger-ink' : ($selState === 'paid' ? 'bg-success-soft text-success-ink' : 'bg-info-soft text-info-ink') }}">{{ $sel->stateLabel() }}</span>
                         </x-slot:header>
 
-                        <x-eo.commercial-card
+                        <x-billing.stat-card
+                            eyebrow="Collection"
                             title="Collection posture"
                             subtitle="Outstanding vs billed"
                             :value="'JD'.number_format($out / 100)"
@@ -140,41 +135,41 @@
                                 ['Due', $sel->due_on?->format('j M Y') ?? '—'],
                                 ['Tax', $sel->tax_pct ? rtrim(rtrim(number_format($sel->tax_pct, 1), '0'), '.').'%' : '—'],
                             ] as [$k, $v])
-                                <div class="flex justify-between gap-3 border-b border-eo-line/70 pb-2">
-                                    <span class="text-eo-muted">{{ $k }}</span>
-                                    <span class="font-semibold text-eo-text">{{ $v }}</span>
+                                <div class="flex justify-between gap-3 border-b border-line/70 pb-2">
+                                    <span class="text-muted">{{ $k }}</span>
+                                    <span class="font-semibold text-ink">{{ $v }}</span>
                                 </div>
                             @endforeach
                         </div>
-                    </x-eo.detail-panel>
+                    </x-cc.briefing-panel>
                 @endif
             </div>
 
             <div class="xl:col-span-3">
-                <x-eo.action-panel title="Collection Panel">
+                <x-billing.action-panel title="Collection Panel">
                     @if ($sel && $may)
-                        <x-eo.button href="{{ route('invoices.edit', $sel) }}" class="w-full justify-center" size="sm">Open editor</x-eo.button>
-                        <x-eo.button variant="ghost" href="{{ route('invoices.pdf', $sel) }}" class="w-full justify-center" size="sm">Download PDF</x-eo.button>
+                        <a href="{{ route('invoices.edit', $sel) }}" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open editor</a>
+                        <a href="{{ route('invoices.pdf', $sel) }}" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Download PDF</a>
 
                         @if ($selState === 'draft')
-                            <x-eo.button wire:click="markSent({{ $sel->id }})" class="w-full justify-center" size="sm">Mark sent</x-eo.button>
-                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Delete draft</button>
+                            <button type="button" wire:click="markSent({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Mark sent</button>
+                            <button type="button" wire:click="destroyDraft({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-danger-ink transition hover:border-navy-300">Delete draft</button>
                         @elseif ($selState === 'paid')
-                            <button type="button" wire:click="clearPaid({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center">Undo payment</button>
+                            <button type="button" wire:click="clearPaid({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Undo payment</button>
                         @elseif ($selState !== 'void')
-                            <label class="eo-label">Record receipt</label>
+                            <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Record receipt</label>
                             <input type="text" inputmode="decimal" wire:model="amount.{{ $sel->id }}"
-                                   placeholder="{{ number_format($out / 100) }}" class="eo-input text-end text-xs">
-                            <x-eo.button wire:click="record({{ $sel->id }}, $wire.amount[{{ $sel->id }}])" class="w-full justify-center" size="sm">Record payment</x-eo.button>
-                            <button type="button" wire:click="void({{ $sel->id }})" class="eo-btn-ghost eo-btn-sm w-full justify-center text-eo-risk-ink">Void</button>
+                                   placeholder="{{ number_format($out / 100) }}" class="h-9 rounded-lg border border-line bg-white px-3 text-end text-[12.5px] text-ink focus:border-navy-300 focus:outline-none">
+                            <button type="button" wire:click="record({{ $sel->id }}, $wire.amount[{{ $sel->id }}])" class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Record payment</button>
+                            <button type="button" wire:click="void({{ $sel->id }})" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-danger-ink transition hover:border-navy-300">Void</button>
                         @endif
                     @elseif ($sel)
-                        <p class="text-[12px] text-eo-muted">View only.</p>
-                        <x-eo.button variant="ghost" href="{{ route('invoices.edit', $sel) }}" class="w-full justify-center" size="sm">Open invoice</x-eo.button>
+                        <p class="text-[12px] text-muted">View only.</p>
+                        <a href="{{ route('invoices.edit', $sel) }}" class="flex w-full items-center justify-center rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:border-navy-300">Open invoice</a>
                     @else
-                        <p class="text-[12px] text-eo-muted">Select an invoice from the queue.</p>
+                        <p class="text-[12px] text-muted">Select an invoice from the queue.</p>
                     @endif
-                </x-eo.action-panel>
+                </x-billing.action-panel>
             </div>
         </div>
     @endif
