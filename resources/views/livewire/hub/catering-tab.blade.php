@@ -1,8 +1,8 @@
 @php
     $statusMeta = [
-        'planned' => ['Planned', 'bg-eo-bg text-eo-muted'],
-        'confirmed' => ['Confirmed', 'bg-emerald-100 text-emerald-700'],
-        'cancelled' => ['Cancelled', 'bg-eo-bg text-eo-muted'],
+        'planned' => ['Planned', 'bg-page text-muted'],
+        'confirmed' => ['Confirmed', 'bg-success-soft text-success-ink'],
+        'cancelled' => ['Cancelled', 'bg-page text-muted'],
     ];
     $typeIcon = [
         'coffee_break' => 'cup', 'breakfast' => 'cup', 'lunch' => 'users',
@@ -24,56 +24,56 @@
         <x-empty icon="cup" title="No food & beverage yet"
                  hint="Coffee breaks, lunches, a gala dinner at an outside restaurant — each occasion is its own line, with its own date, venue and rate.">
             <x-slot:actions>
-                <x-eo.button wire:click="newItem" class="h-10 px-5 text-xs">＋ Add the first occasion</x-eo.button>
+                <button type="button" wire:click="newItem" class="h-10 rounded-full bg-gold-500 px-5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add the first occasion</button>
             </x-slot:actions>
         </x-empty>
     @else
         <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
             <x-bulk-bar :count="$this->selectedCount()" noun="occasion" />
-            <x-eo.button wire:click="newItem" class="ms-auto h-8 px-3 text-xs">＋ Add Occasion</x-eo.button>
+            <button type="button" wire:click="newItem" class="ms-auto h-8 rounded-full bg-gold-500 px-3 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Occasion</button>
         </div>
         <div class="space-y-4">
             @foreach ($byDate as $dateKey => $dayItems)
                 <div wire:key="day-{{ $dateKey }}">
-                    <p class="mb-1.5 flex items-baseline gap-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">
+                    <p class="mb-1.5 flex items-baseline gap-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">
                         {{ $dateLabel($dateKey) }}
-                        <span class="font-normal normal-case text-eo-muted">· {{ $dayItems->count() }} {{ \Illuminate\Support\Str::plural('occasion', $dayItems->count()) }}</span>
+                        <span class="font-normal normal-case text-muted">· {{ $dayItems->count() }} {{ \Illuminate\Support\Str::plural('occasion', $dayItems->count()) }}</span>
                     </p>
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($dayItems as $c)
                             @php [$stLabel, $stClass] = $statusMeta[$c->status] ?? $statusMeta['planned']; @endphp
-                            <div wire:key="cat-{{ $c->id }}" class="group/ct op-card {{ $this->isSelected($c->id) ? '!border-eo-navy ring-2 ring-navy-900' : '' }}">
+                            <div wire:key="cat-{{ $c->id }}" class="group/ct flex flex-col overflow-hidden rounded-lg border border-line bg-white {{ $this->isSelected($c->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
                                 <div class="flex flex-1 flex-col p-3.5">
                                     <div class="flex items-start justify-between gap-2.5">
                                         <div class="flex min-w-0 items-center gap-2.5">
-                                            <button type="button" wire:click="toggleSelect({{ $c->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($c->id) ? 'border-eo-navy bg-eo-navy text-white' : 'border-eo-line text-transparent hover:border-eo-line' }}" title="Select">✓</button>
-                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style="color: {{ $moduleHex }}; background: {{ $moduleHex }}15">
+                                            <button type="button" wire:click="toggleSelect({{ $c->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($c->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-line text-transparent hover:border-muted' }}" title="Select">✓</button>
+                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style="color: {{ $moduleHex }}; background: {{ $moduleHex }}15">
                                                 <x-icon :name="$typeIcon[$c->type] ?? 'cup'" class="h-4 w-4" />
                                             </span>
                                             <div class="min-w-0">
-                                                <p class="truncate text-sm font-bold text-eo-text">{{ $c->title }}</p>
-                                                <p class="truncate text-micro text-eo-muted">{{ $c->typeLabel() }} · {{ $c->venueLabel() }}</p>
+                                                <p class="truncate text-sm font-bold text-ink">{{ $c->title }}</p>
+                                                <p class="truncate text-[10.5px] text-muted">{{ $c->typeLabel() }} · {{ $c->venueLabel() }}</p>
                                             </div>
                                         </div>
-                                        <span class="pill shrink-0 {{ $stClass }}">{{ $stLabel }}</span>
+                                        <span class="shrink-0 rounded-full px-2 py-0.5 text-eyebrow font-bold {{ $stClass }}">{{ $stLabel }}</span>
                                     </div>
-                                    <div class="mt-2.5 flex items-center gap-2 text-eyebrow text-eo-muted">
+                                    <div class="mt-2.5 flex items-center gap-2 text-eyebrow text-muted">
                                         @if ($c->headcount)<span>{{ number_format($c->headcount) }} covers</span>@endif
                                         @if ($c->supplier)<span class="truncate">· {{ $c->supplier->name }}</span>@endif
                                     </div>
                                 </div>
-                                <div class="op-card-foot">
-                                    <span class="truncate text-eyebrow font-semibold text-eo-text">
+                                <div class="mt-auto flex items-center gap-2 border-t border-line bg-page px-3.5 py-2">
+                                    <span class="truncate text-eyebrow font-semibold text-ink">
                                         {{ $event->money($c->totalCents()) }}
                                         @if ($c->per_person && $c->headcount)<span class="opacity-70">· {{ $event->money($c->cost_cents) }}/pp</span>@endif
                                     </span>
                                     <div class="ms-auto flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover/ct:opacity-100">
                                         @if ($c->status !== 'confirmed')
-                                            <button type="button" wire:click="setStatus({{ $c->id }}, 'confirmed')" class="rounded-md bg-emerald-50 px-2 py-0.5 text-eyebrow font-bold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100">✓ Confirm</button>
+                                            <button type="button" wire:click="setStatus({{ $c->id }}, 'confirmed')" class="rounded-md bg-success-soft px-2 py-0.5 text-eyebrow font-bold text-success-ink hover:bg-success-soft/70">✓ Confirm</button>
                                         @endif
-                                        <button type="button" wire:click="edit({{ $c->id }})" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-eo-muted ring-1 ring-eo-line hover:ring-eo-teal">✎</button>
+                                        <button type="button" wire:click="edit({{ $c->id }})" class="rounded-md bg-white px-1.5 py-0.5 text-eyebrow font-bold text-muted ring-1 ring-line hover:ring-navy-300">✎</button>
                                         <x-confirm title="Remove {{ $c->title }}?" confirm="Remove" run="$wire.delete({{ $c->id }})"
-                                                   class="rounded-md bg-eo-risk/10 px-1.5 py-0.5 text-eyebrow font-bold text-red-700 hover:bg-eo-risk/20">✕</x-confirm>
+                                                   class="rounded-md bg-danger-soft px-1.5 py-0.5 text-eyebrow font-bold text-danger-ink hover:bg-danger-soft/70">✕</x-confirm>
                                     </div>
                                 </div>
                             </div>
@@ -91,13 +91,13 @@
                     <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
                         <x-icon name="cup" class="h-3.5 w-3.5" />
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-eo-text">F&amp;B Control</span>
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">F&amp;B Control</span>
                 </div>
-                <div class="border-b border-eo-line p-3">
+                <div class="border-b border-line p-3">
                     <x-budget-routing :routing="$this->budgetRouting()" />
                 </div>
                 <div class="p-3">
-                    <x-eo.button wire:click="newItem" class="h-9 w-full text-xs">＋ Add Occasion</x-eo.button>
+                    <button type="button" wire:click="newItem" class="h-9 w-full rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Occasion</button>
                 </div>
             </div>
         </div>
