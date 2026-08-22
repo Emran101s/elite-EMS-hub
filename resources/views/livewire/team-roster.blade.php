@@ -1,66 +1,65 @@
 <div>
     @php
-        // Five roles, five distinct eo-pill tones — no off-palette blue for
-        // "manager": teal (eo-pill-live) is the closest informational tone
-        // the eo palette actually has.
+        // Five roles, five distinct semantic tones.
         $roleTone = [
-            'super_admin' => 'eo-pill-premium',
-            'admin' => 'eo-pill bg-eo-navy text-white',
-            'manager' => 'eo-pill-live',
-            'coordinator' => 'eo-pill-ok',
-            'viewer' => 'eo-pill-pending',
+            'super_admin' => 'bg-gold-50 text-gold-700',
+            'admin' => 'bg-navy-900 text-white',
+            'manager' => 'bg-info-soft text-info-ink',
+            'coordinator' => 'bg-success-soft text-success-ink',
+            'viewer' => 'bg-page text-muted',
         ];
     @endphp
 
-    <x-eo.team-header title="Team & Roles" subtitle="Everyone in your workspace — their role and profile photo.">
+    <x-cc.header eyebrow="Team Command" title="Team & Roles" subtitle="Everyone in your workspace — their role and profile photo.">
         <x-slot:actions>
-            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search team…" class="eo-input h-10 w-52 text-sm">
-            <x-eo.button size="sm" wire:click="newItem" class="h-10">＋ Add member</x-eo.button>
+            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search team…"
+                   class="h-10 w-52 rounded-full border border-line bg-white px-3.5 text-[12.5px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+            <button type="button" wire:click="newItem" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ Add member</button>
         </x-slot:actions>
-    </x-eo.team-header>
+    </x-cc.header>
 
     @if (session('status'))
-        <div class="mb-4 rounded-xl border border-eo-ok/30 bg-eo-ok-soft px-4 py-2 text-xs font-semibold text-eo-ok-ink">{{ session('status') }}</div>
+        <div class="mb-4 mt-4 rounded-lg border border-success-soft bg-success-soft px-4 py-2.5 text-[12.5px] font-semibold text-success-ink">{{ session('status') }}</div>
     @endif
 
     {{-- user cards --}}
-    <div class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
         @forelse ($members as $m)
-            <div wire:key="m-{{ $m->id }}" class="group eo-soft-card flex flex-col overflow-hidden transition hover:-translate-y-0.5">
-                <button type="button" wire:click="edit({{ $m->id }})" class="flex flex-1 flex-col p-5 text-left">
+            <div wire:key="m-{{ $m->id }}" class="group flex flex-col overflow-hidden rounded-lg border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-float">
+                <button type="button" wire:click="edit({{ $m->id }})" class="flex flex-1 flex-col p-4 text-left">
                     <div class="flex items-start gap-3">
                         <x-user-avatar :user="$m" size="h-12 w-12" text="text-sm" />
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-bold text-eo-text">{{ $m->name }}@if ($m->id === auth()->id())<span class="ml-1 text-[10px] font-semibold text-eo-muted">(you)</span>@endif</p>
-                            <p class="truncate text-micro text-eo-muted">{{ $m->title ?: '—' }}</p>
+                            <p class="truncate text-[13.5px] font-bold text-ink">{{ $m->name }}@if ($m->id === auth()->id())<span class="ml-1 text-[10px] font-semibold text-muted">(you)</span>@endif</p>
+                            <p class="truncate text-[11px] text-muted">{{ $m->title ?: '—' }}</p>
                         </div>
-                        <span class="{{ $roleTone[$m->role] ?? 'eo-pill-pending' }} shrink-0">{{ $m->roleLabel() }}</span>
+                        <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {{ $roleTone[$m->role] ?? 'bg-page text-muted' }}">{{ $m->roleLabel() }}</span>
                     </div>
                     @if ($m->email)
-                        <p class="mt-3 flex items-center gap-1.5 truncate text-micro text-eo-muted"><x-icon name="identification" class="h-3 w-3 shrink-0 text-eo-muted" />{{ $m->email }}</p>
+                        <p class="mt-3 flex items-center gap-1.5 truncate text-[11px] text-muted"><x-icon name="identification" class="h-3 w-3 shrink-0 text-muted" />{{ $m->email }}</p>
                     @endif
                 </button>
 
                 {{-- light footer --}}
-                <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
-                    <x-icon name="users" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
-                    <span class="truncate text-[11px] font-semibold text-eo-muted">{{ $m->roleLabel() }}</span>
+                <div class="mt-auto flex items-center gap-2 border-t border-line bg-page px-3.5 py-2">
+                    <x-icon name="users" class="h-3 w-3 shrink-0 text-gold-600" />
+                    <span class="truncate text-[11px] font-semibold text-muted">{{ $m->roleLabel() }}</span>
                     <div class="ml-auto flex items-center gap-1">
-                        <button type="button" wire:click="edit({{ $m->id }})" class="rounded-lg bg-eo-bg px-1.5 py-1 text-[10px] font-bold text-eo-muted opacity-0 transition hover:bg-eo-line group-hover:opacity-100" title="Edit">✎</button>
+                        <button type="button" wire:click="edit({{ $m->id }})" class="rounded-md bg-page px-1.5 py-1 text-[10px] font-bold text-muted opacity-0 transition hover:bg-line group-hover:opacity-100" title="Edit">✎</button>
                         @unless ($m->id === auth()->id())
-                            <x-confirm title="Remove {{ $m->name }} from the team?" confirm="Remove" run="$wire.delete({{ $m->id }})" class="rounded-lg bg-eo-risk/10 px-1.5 py-1 text-[10px] font-bold text-eo-risk opacity-0 transition hover:bg-eo-risk/20 group-hover:opacity-100">✕</x-confirm>
+                            <x-confirm title="Remove {{ $m->name }} from the team?" confirm="Remove" run="$wire.delete({{ $m->id }})" class="rounded-md bg-danger-soft px-1.5 py-1 text-[10px] font-bold text-danger-ink opacity-0 transition hover:bg-danger-soft/70 group-hover:opacity-100">✕</x-confirm>
                         @endunless
                     </div>
                 </div>
             </div>
         @empty
-            <div class="col-span-full eo-soft-card px-6 py-16 text-center">
-                <p class="text-sm font-semibold text-eo-text">No team members yet</p>
-                <x-eo.button size="sm" wire:click="newItem" class="mt-4">＋ Add your first member</x-eo.button>
+            <div class="col-span-full rounded-lg border border-line bg-white px-6 py-16 text-center">
+                <p class="text-[13.5px] font-semibold text-ink">No team members yet</p>
+                <button type="button" wire:click="newItem" class="mt-4 rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ Add your first member</button>
             </div>
         @endforelse
     </div>
-    <p class="mt-3 text-center text-[11px] text-eo-muted">{{ $members->count() }} {{ str('member')->plural($members->count()) }}</p>
+    <p class="mt-3 text-center text-[11px] text-muted">{{ $members->count() }} {{ str('member')->plural($members->count()) }}</p>
 
     {{-- modal --}}
     @if ($showForm)
