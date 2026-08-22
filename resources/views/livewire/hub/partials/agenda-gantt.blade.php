@@ -14,30 +14,30 @@
     <x-empty icon="chart" class="!border-0 !shadow-none" title="Nothing scheduled for this day"
              hint="Sessions plot themselves against the clock as you add them, one lane per room. Copy yesterday's running order if this day repeats it.">
         <x-slot:actions>
-            <button type="button" wire:click="newSession" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add the first session</button>
+            <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
         </x-slot:actions>
     </x-empty>
 @else
     {{-- filters legend --}}
-    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-eo-line px-4 py-2.5">
-        <span class="eo-label">Legend</span>
+    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-line px-4 py-2.5">
+        <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Legend</span>
         @foreach ($legend as [$label, $hex])
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-eo-text">
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-ink">
                 <span class="h-2 w-2 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
             </span>
         @endforeach
-        <span class="ms-auto text-[10px] italic text-eo-muted">dashed = not confirmed</span>
+        <span class="ms-auto text-[10px] italic text-muted">dashed = not confirmed</span>
     </div>
 
     {{-- The board marks conflicts with a pin and a red ring, but a pin
          cannot say WHAT is wrong. The reasons stay on screen rather than
          hiding in a tooltip nobody hovers. --}}
     @if ($conflicts)
-        <div data-conflict-banner class="border-b border-eo-risk/25 bg-eo-risk-soft px-4 py-2 transition">
-            <p class="text-[11px] font-bold text-eo-risk-ink">
+        <div data-conflict-banner class="border-b border-danger/25 bg-danger-soft px-4 py-2 transition">
+            <p class="text-[11px] font-bold text-danger-ink">
                 ⚠ {{ count($conflicts) }} scheduling {{ str('conflict')->plural(count($conflicts)) }} on this day
             </p>
-            <ul class="mt-0.5 space-y-0.5 ps-4 text-[10.5px] text-eo-risk-ink">
+            <ul class="mt-0.5 space-y-0.5 ps-4 text-[10.5px] text-danger-ink">
                 @foreach (collect($conflicts)->flatten()->unique()->take(6) as $reason)
                     <li>· {{ $reason }}</li>
                 @endforeach
@@ -67,23 +67,23 @@
              data-start-min="{{ $timeline['startMin'] }}" data-span-min="{{ $timeline['span'] }}">
 
             {{-- time axis --}}
-            <div class="relative ms-[132px] h-8 border-b border-eo-line">
-                <span class="absolute left-0 top-2 text-[9px] font-bold uppercase tracking-[0.16em] text-eo-muted" style="margin-left: -132px">Time</span>
+            <div class="relative ms-[132px] h-8 border-b border-line">
+                <span class="absolute left-0 top-2 text-[9px] font-bold uppercase tracking-[0.16em] text-muted" style="margin-left: -132px">Time</span>
                 @foreach ($timeline['hours'] as $hour)
-                    <span class="absolute top-2 -translate-x-1/2 text-[10px] font-semibold text-eo-muted" style="left: {{ $hour['left'] }}%">{{ $hour['label'] }}</span>
+                    <span class="absolute top-2 -translate-x-1/2 text-[10px] font-semibold text-muted" style="left: {{ $hour['left'] }}%">{{ $hour['label'] }}</span>
                 @endforeach
 
                 {{-- the conflict pins sit on the axis, above the block they belong to --}}
                 @foreach ($lanes->flatMap->blocks as $b)
                     @if (isset($conflicts[$b['session']->id]))
-                        <span class="absolute top-0 z-20 -translate-x-1/2 text-[11px] leading-none text-eo-risk"
+                        <span class="absolute top-0 z-20 -translate-x-1/2 text-[11px] leading-none text-danger"
                               style="left: {{ $b['left'] }}%"
                               title="{{ implode(' · ', $conflicts[$b['session']->id]) }}">⚠</span>
                     @endif
                 @endforeach
 
                 @if ($nowLeft !== null)
-                    <span class="absolute -top-0.5 z-30 -translate-x-1/2 rounded-md bg-eo-gold px-1.5 py-0.5 text-[9px] font-black text-eo-navy-deep shadow"
+                    <span class="absolute -top-0.5 z-30 -translate-x-1/2 rounded-md bg-gold-500 px-1.5 py-0.5 text-[9px] font-black text-navy-900 shadow"
                           style="left: {{ $nowLeft }}%">{{ now()->format('H:i') }}</span>
                 @endif
             </div>
@@ -93,28 +93,28 @@
                 @if ($nowLeft !== null)
                     {{-- One line down the whole board, so "now" reads
                          against every room at once. --}}
-                    <span class="pointer-events-none absolute inset-y-0 z-20 w-px border-l border-dashed border-eo-gold/70"
+                    <span class="pointer-events-none absolute inset-y-0 z-20 w-px border-l border-dashed border-gold-500/70"
                           style="left: calc(132px + (100% - 132px) * {{ $nowLeft / 100 }})"></span>
                 @endif
 
                 @foreach ($lanes as $lane)
-                    <div class="flex items-stretch border-b border-eo-line last:border-b-0">
+                    <div class="flex items-stretch border-b border-line last:border-b-0">
                         <div class="flex w-[132px] shrink-0 flex-col justify-center gap-0.5 px-2.5 py-3">
-                            <p class="flex items-center gap-1.5 text-[11.5px] font-bold text-eo-text">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-muted"></span>
+                            <p class="flex items-center gap-1.5 text-[11.5px] font-bold text-ink">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-muted"></span>
                                 <span class="truncate">{{ $lane['room'] }}</span>
                             </p>
-                            <p class="ps-3 text-[10px] text-eo-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
+                            <p class="ps-3 text-[10px] text-muted">{{ $lane['blocks']->count() }} {{ str('session')->plural($lane['blocks']->count()) }}</p>
                         </div>
 
                         <div class="relative flex-1" data-room-track data-room-id="{{ $lane['room_id'] }}">
                             @foreach ($timeline['hours'] as $hour)
-                                <span class="absolute inset-y-0 w-px bg-eo-line/70" style="left: {{ $hour['left'] }}%"></span>
+                                <span class="absolute inset-y-0 w-px bg-line/70" style="left: {{ $hour['left'] }}%"></span>
                             @endforeach
 
                             <div class="relative py-2.5" style="min-height: 96px">
                                 @if ($lane['blocks']->isEmpty())
-                                    <p class="px-3 text-[11px] italic text-eo-muted">Nothing booked in this room today.</p>
+                                    <p class="px-3 text-[11px] italic text-muted">Nothing booked in this room today.</p>
                                 @endif
                                 @foreach ($lane['blocks'] as $b)
                                     @php
@@ -136,15 +136,15 @@
                                         $severity = $severityBySession[$sess->id] ?? null;
                                     @endphp
                                     <div wire:key="blk-{{ $sess->id }}"
-                                         class="agenda-block group/blk absolute top-2.5 flex cursor-grab touch-none select-none flex-col justify-between rounded-xl p-2 text-left text-white shadow-sm transition hover:brightness-95 hover:ring-2 hover:ring-white/40 {{ $hasConflict ? 'ring-2 ring-eo-risk ring-offset-1' : '' }} {{ $selected ? 'ring-2 ring-eo-teal ring-offset-1' : '' }} {{ $dimmed ? 'opacity-30' : '' }}"
+                                         class="agenda-block group/blk absolute top-2.5 flex cursor-grab touch-none select-none flex-col justify-between rounded-xl p-2 text-left text-white shadow-sm transition hover:brightness-95 hover:ring-2 hover:ring-white/40 {{ $hasConflict ? 'ring-2 ring-danger ring-offset-1' : '' }} {{ $selected ? 'ring-2 ring-gold-400 ring-offset-1' : '' }} {{ $dimmed ? 'opacity-30' : '' }}"
                                          data-session-id="{{ $sess->id }}" data-start-min="{{ $b['startMin'] }}" data-dur-min="{{ $b['durMin'] }}" data-room-id="{{ $lane['room_id'] }}"
                                          style="left: {{ $b['left'] }}%; width: {{ $b['width'] }}%; height: 80px; background: {{ $b['hex'] }}{{ $sess->isSettled() ? '' : '; outline: 2px dashed rgba(255,255,255,.55); outline-offset: -3px' }}"
                                          title="{{ $sess->title }} · {{ substr($sess->starts_at, 0, 5) }}–{{ substr($sess->ends_at, 0, 5) }} · {{ $sess->statusLabel() }} — drag to reschedule, click to select">
 
                                         @if ($severity === 'high')
-                                            <span class="pointer-events-none absolute -top-1 -right-1 z-10 h-2.5 w-2.5 rounded-full bg-eo-warn ring-2 ring-white" title="High priority — see Inspector"></span>
+                                            <span class="pointer-events-none absolute -top-1 -right-1 z-10 h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-white" title="High priority — see Inspector"></span>
                                         @elseif ($severity === 'medium')
-                                            <span class="pointer-events-none absolute -top-1 -right-1 z-10 h-2 w-2 rounded-full bg-eo-warn/50 ring-2 ring-white" title="Needs attention — see Inspector"></span>
+                                            <span class="pointer-events-none absolute -top-1 -right-1 z-10 h-2 w-2 rounded-full bg-warning/50 ring-2 ring-white" title="Needs attention — see Inspector"></span>
                                         @endif
 
                                         <span class="pointer-events-none min-w-0">
@@ -204,21 +204,21 @@
     </div>
 
     {{-- what the warnings on the board mean, and how big to draw it --}}
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-eo-line px-4 py-2.5">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-4 py-2.5">
         @foreach ([
-            ['text-eo-risk', 'Speaker conflict'],
-            ['text-eo-warn-ink', 'Room capacity risk'],
-            ['text-eo-muted', 'Overlapping session'],
-            ['text-eo-muted', 'Missing presentation'],
+            ['text-danger', 'Speaker conflict'],
+            ['text-warning-ink', 'Room capacity risk'],
+            ['text-muted', 'Overlapping session'],
+            ['text-muted', 'Missing presentation'],
         ] as [$tone, $label])
-            <span class="flex items-center gap-1.5 text-[10.5px] text-eo-muted"><span class="{{ $tone }}">⚠</span>{{ $label }}</span>
+            <span class="flex items-center gap-1.5 text-[10.5px] text-muted"><span class="{{ $tone }}">⚠</span>{{ $label }}</span>
         @endforeach
 
         <div class="ms-auto flex items-center gap-1.5">
-            <button type="button" data-tl-fit class="eo-btn eo-btn-ghost eo-btn-sm !h-7 !px-2.5 !text-[10.5px]">⤢ Fit</button>
-            <button type="button" data-tl-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg border border-eo-line text-eo-muted transition hover:bg-eo-workspace">−</button>
-            <span data-tl-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-eo-text">100%</span>
-            <button type="button" data-tl-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg border border-eo-line text-eo-muted transition hover:bg-eo-workspace">+</button>
+            <button type="button" data-tl-fit class="btn-ghost btn-sm !h-7 !px-2.5 !text-[10.5px]">⤢ Fit</button>
+            <button type="button" data-tl-zoom="-1" class="grid h-6 w-6 place-items-center rounded-lg border border-line text-muted transition hover:bg-page">−</button>
+            <span data-tl-level class="w-10 text-center text-[10.5px] font-bold tabular-nums text-ink">100%</span>
+            <button type="button" data-tl-zoom="1" class="grid h-6 w-6 place-items-center rounded-lg border border-line text-muted transition hover:bg-page">+</button>
         </div>
     </div>
 @endif

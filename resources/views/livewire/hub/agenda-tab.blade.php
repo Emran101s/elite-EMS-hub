@@ -12,13 +12,13 @@
 
     {{-- Import panel --}}
     @if ($showImport)
-        <form wire:submit="import" class="eo-domain-card mb-4 flex flex-wrap items-end gap-3 !p-4">
+        <form wire:submit="import" class="rounded-lg border border-line bg-white mb-4 flex flex-wrap items-end gap-3 !p-4">
             <div class="flex-1">
-                <label class="eo-eo-label !mb-1" for="import-file">CSV file — columns: title, type, start, end, room, speaker, moderator (separate several names with ; )</label>
-                <input id="import-file" type="file" wire:model="importFile" accept=".csv,text/csv" class="eo-input h-10 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white">
-                @error('importFile') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="import-file">CSV file — columns: title, type, start, end, room, speaker, moderator (separate several names with ; )</label>
+                <input id="import-file" type="file" wire:model="importFile" accept=".csv,text/csv" class="h-10 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white focus:border-navy-300 focus:outline-none">
+                @error('importFile') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
             </div>
-            <button type="button" wire:click="$set('showImport', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
+            <button type="button" wire:click="$set('showImport', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
             <x-eo.button type="submit" size="sm" class="!h-10 !px-5" wire:loading.attr="disabled" wire:target="import,importFile">Import</x-eo.button>
         </form>
     @endif
@@ -27,8 +27,8 @@
         <x-empty icon="calendar" title="No agenda days yet"
                  hint="Days come from the event's date range — set the dates in Settings and they appear here, or start one now and the programme builds around it.">
             <x-slot:actions>
-                <button type="button" wire:click="addDay" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add the first day</button>
-                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="eo-btn eo-btn-ghost eo-btn-sm">Set the event dates</a>
+                <button type="button" wire:click="addDay" class="btn-gold btn-sm">＋ Add the first day</button>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="btn-ghost btn-sm">Set the event dates</a>
             </x-slot:actions>
         </x-empty>
     @else
@@ -42,13 +42,13 @@
         <div class="grid items-start gap-3 xl:grid-cols-[240px_minmax(0,1fr)_296px]">
 
             {{-- ═══ LEFT RAIL ═══ --}}
-            <aside class="eo-domain-card flex flex-col gap-4 self-start !p-3.5">
+            <aside class="rounded-lg border border-line bg-white flex flex-col gap-4 self-start !p-3.5">
 
                 {{-- Days --}}
                 <div>
                     <div class="mb-2 flex items-center justify-between px-0.5">
-                        <p class="eo-label">Days</p>
-                        <button type="button" wire:click="addDay" class="text-[11px] font-bold text-eo-teal-ink hover:underline">＋ Add</button>
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Days</p>
+                        <button type="button" wire:click="addDay" class="text-[11px] font-bold text-gold-700 hover:underline">＋ Add</button>
                     </div>
                     <div class="scrollbar-none max-h-[260px] space-y-1.5 overflow-y-auto">
                         @foreach ($dayCards as $card)
@@ -56,20 +56,20 @@
                             <button type="button" wire:click="selectDay({{ $d->id }})"
                                     @class([
                                         'flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition',
-                                        'border-eo-navy bg-eo-navy text-white' => $on,
-                                        'border-eo-line bg-white text-eo-text hover:border-eo-teal/30' => ! $on,
+                                        'border-navy-900 bg-navy-900 text-white' => $on,
+                                        'border-line bg-white text-ink hover:border-gold-300' => ! $on,
                                     ])>
                                 <span class="relative grid h-7 w-7 shrink-0 place-items-center">
                                     <svg class="h-7 w-7 -rotate-90" viewBox="0 0 26 26" aria-hidden="true">
-                                        <circle cx="13" cy="13" r="11" fill="none" stroke="{{ $on ? 'rgba(255,255,255,.16)' : 'var(--color-eo-bg)' }}" stroke-width="2.5" />
-                                        <circle cx="13" cy="13" r="11" fill="none" stroke="var(--color-eo-gold)" stroke-width="2.5" stroke-linecap="round"
+                                        <circle cx="13" cy="13" r="11" fill="none" stroke="{{ $on ? 'rgba(255,255,255,.16)' : 'var(--color-page)' }}" stroke-width="2.5" />
+                                        <circle cx="13" cy="13" r="11" fill="none" stroke="var(--color-gold-500)" stroke-width="2.5" stroke-linecap="round"
                                                 stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $r - ($r * $card['pct'] / 100) }}" />
                                     </svg>
                                     <span class="absolute text-[7.5px] font-black">{{ $card['pct'] }}</span>
                                 </span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-[12px] font-bold">{{ $d->date?->format('D, j M') ?? $d->label }}</span>
-                                    <span class="block text-[10px] {{ $on ? 'text-white/55' : 'text-eo-muted' }}">{{ $card['sessions'] }} {{ str('session')->plural($card['sessions']) }}</span>
+                                    <span class="block text-[10px] {{ $on ? 'text-white/55' : 'text-muted' }}">{{ $card['sessions'] }} {{ str('session')->plural($card['sessions']) }}</span>
                                 </span>
                             </button>
                         @endforeach
@@ -77,26 +77,26 @@
                 </div>
 
                 {{-- Rooms --}}
-                <div class="border-t border-eo-line pt-3.5">
-                    <p class="eo-label mb-1.5">Rooms</p>
+                <div class="border-t border-line pt-3.5">
+                    <p class="mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Rooms</p>
                     <div class="relative mb-2">
-                        <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-eo-muted" />
+                        <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted" />
                         <input type="search" wire:model.live.debounce.250ms="venueSearch" placeholder="Search rooms…"
                                aria-label="Search rooms"
-                               class="eo-input h-8 w-full !rounded-lg !py-0 !ps-7 text-[11.5px]">
+                               class="h-8 w-full rounded-lg border border-line bg-white py-0 ps-7 pe-2 text-[11.5px] text-ink focus:border-navy-300 focus:outline-none">
                     </div>
                     <div class="scrollbar-none max-h-[220px] space-y-1.5 overflow-y-auto">
                         @forelse ($venues as $v)
                             @php
                                 [$dot, $chip, $note] = match ($v['state']) {
-                                    'conflict' => ['bg-eo-risk', 'bg-eo-risk-soft text-eo-risk-ink', $v['conflicts'].' '.str('conflict')->plural($v['conflicts'])],
-                                    'warning' => ['bg-eo-warn', 'bg-eo-warn-soft text-amber-800', $v['over'].' warning'],
-                                    default => ['bg-eo-ok', 'bg-eo-ok-soft text-emerald-800', 'No issues'],
+                                    'conflict' => ['bg-danger', 'bg-danger-soft text-danger-ink', $v['conflicts'].' '.str('conflict')->plural($v['conflicts'])],
+                                    'warning' => ['bg-warning', 'bg-warning-soft text-amber-800', $v['over'].' warning'],
+                                    default => ['bg-success', 'bg-success-soft text-emerald-800', 'No issues'],
                                 };
                             @endphp
-                            <div class="rounded-xl px-1.5 py-1.5 hover:bg-eo-workspace">
-                                <p class="truncate text-[11.5px] font-bold text-eo-text">{{ $v['room']->name }}</p>
-                                <p class="mt-0.5 text-[10px] text-eo-muted">
+                            <div class="rounded-xl px-1.5 py-1.5 hover:bg-page">
+                                <p class="truncate text-[11.5px] font-bold text-ink">{{ $v['room']->name }}</p>
+                                <p class="mt-0.5 text-[10px] text-muted">
                                     @if ($v['room']->capacity) Cap. {{ number_format($v['room']->capacity) }} · @endif{{ $v['sessions'] }} {{ str('session')->plural($v['sessions']) }}
                                 </p>
                                 <span class="mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold {{ $chip }}">
@@ -104,33 +104,33 @@
                                 </span>
                             </div>
                         @empty
-                            <p class="px-1 py-3 text-center text-[11px] text-eo-muted">
+                            <p class="px-1 py-3 text-center text-[11px] text-muted">
                                 {{ trim($venueSearch) === '' ? 'No rooms yet.' : 'No room matches “'.$venueSearch.'”.' }}
                             </p>
                         @endforelse
                     </div>
                     <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}"
-                       class="mt-1.5 block text-center text-[11px] font-semibold text-eo-muted transition hover:text-eo-teal-ink">＋ Add Room</a>
+                       class="mt-1.5 block text-center text-[11px] font-semibold text-muted transition hover:text-gold-700">＋ Add Room</a>
                 </div>
 
                 {{-- Tracks — read-only for now; a full Tracks view is staged for later. --}}
-                <div class="border-t border-eo-line pt-3.5">
-                    <p class="eo-label mb-1.5">Tracks</p>
+                <div class="border-t border-line pt-3.5">
+                    <p class="mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Tracks</p>
                     <div class="scrollbar-none max-h-[140px] space-y-1 overflow-y-auto">
                         @forelse ($trackSummary as $t)
                             <div class="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-[11.5px]">
-                                <span class="min-w-0 truncate text-eo-text">{{ $t['name'] }}</span>
-                                <span class="shrink-0 rounded-full bg-eo-workspace px-1.5 py-0.5 text-[9.5px] font-bold text-eo-muted">{{ $t['count'] }}</span>
+                                <span class="min-w-0 truncate text-ink">{{ $t['name'] }}</span>
+                                <span class="shrink-0 rounded-full bg-page px-1.5 py-0.5 text-[9.5px] font-bold text-muted">{{ $t['count'] }}</span>
                             </div>
                         @empty
-                            <p class="px-1 py-2 text-[11px] text-eo-muted">No sessions on this day yet.</p>
+                            <p class="px-1 py-2 text-[11px] text-muted">No sessions on this day yet.</p>
                         @endforelse
                     </div>
                 </div>
 
                 {{-- Filters --}}
-                <div class="border-t border-eo-line pt-3.5">
-                    <p class="eo-label mb-1.5">Filters</p>
+                <div class="border-t border-line pt-3.5">
+                    <p class="mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Filters</p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach (\App\Models\EventAgendaSession::STATUS_META as $key => [$label, $settled2, $hex])
                             @php $on = in_array($key, $statusFilter, true); @endphp
@@ -138,25 +138,25 @@
                                     @class([
                                         'rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition',
                                         'border-transparent text-white' => $on,
-                                        'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30' => ! $on,
+                                        'border-line bg-white text-muted hover:border-gold-300' => ! $on,
                                     ])
                                     style="{{ $on ? 'background:'.$hex : '' }}">{{ $label }}</button>
                         @endforeach
                     </div>
                     @if ($statusFilter)
-                        <p class="mt-1.5 text-[10px] text-eo-muted">Other statuses are dimmed on the board.</p>
+                        <p class="mt-1.5 text-[10px] text-muted">Other statuses are dimmed on the board.</p>
                     @endif
                 </div>
 
                 {{-- The one action worth a full-width button. --}}
                 <button type="button" wire:click="newSession"
-                        class="mt-auto flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-eo-gold-soft to-eo-gold text-[12.5px] font-black text-eo-navy-deep shadow-[0_10px_22px_-14px_rgba(214,174,52,0.7)] transition hover:brightness-105">
+                        class="mt-auto flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 text-[12.5px] font-black text-navy-900 shadow-[0_10px_22px_-14px_rgba(212,175,55,0.7)] transition hover:brightness-105">
                     ＋ Add Session
                 </button>
             </aside>
 
             {{-- ═══ CENTER CANVAS ═══ --}}
-            <div class="eo-domain-card min-w-0 overflow-hidden !p-0">
+            <div class="rounded-lg border border-line bg-white min-w-0 overflow-hidden !p-0">
                 @if ($view === 'program')
                     @php $programEmpty = collect($programDays)->every(fn ($d) => \App\Services\AgendaProgram::isEmpty($d['program'])); @endphp
                     @if ($programEmpty)
@@ -167,9 +167,9 @@
                                      : 'Add a session and it appears here as a programme card, ready to print.'">
                             <x-slot:actions>
                                 @if ($daySessions)
-                                    <button type="button" wire:click="setAudience('internal')" class="eo-btn eo-btn-primary eo-btn-sm">Show the internal programme</button>
+                                    <button type="button" wire:click="setAudience('internal')" class="btn-gold btn-sm">Show the internal programme</button>
                                 @else
-                                    <button type="button" wire:click="newSession" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add the first session</button>
+                                    <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
                                 @endif
                             </x-slot:actions>
                         </x-empty>
@@ -183,9 +183,9 @@
                         <x-empty icon="chart" class="!border-0 !shadow-none" title="Nothing scheduled for this day"
                                  hint="Sessions plot themselves against the clock as you add them, one lane per room. Copy yesterday's running order if this day repeats it.">
                             <x-slot:actions>
-                                <button type="button" wire:click="newSession" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add the first session</button>
+                                <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
                                 @if ($days->count() > 1)
-                                    <button type="button" wire:click="$toggle('showImport')" class="eo-btn eo-btn-ghost eo-btn-sm">Import from CSV</button>
+                                    <button type="button" wire:click="$toggle('showImport')" class="btn-ghost btn-sm">Import from CSV</button>
                                 @endif
                             </x-slot:actions>
                         </x-empty>
@@ -196,15 +196,15 @@
                      same blocks, same drag. Use existing EventRoom data;
                      no parallel room system. ═══ --}}
                 @elseif ($view === 'rooms')
-                    <div class="flex flex-wrap items-center gap-1.5 border-b border-eo-line px-4 py-2.5">
-                        <span class="eo-label shrink-0">Room</span>
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line px-4 py-2.5">
+                        <span class="shrink-0 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Room</span>
                         <button type="button" wire:click="selectRoomFilter(null)"
-                                @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-eo-navy bg-eo-navy text-white' => ! $roomsViewFilter, 'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30' => $roomsViewFilter])>
+                                @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-navy-900 bg-navy-900 text-white' => ! $roomsViewFilter, 'border-line bg-white text-muted hover:border-gold-300' => $roomsViewFilter])>
                             All Rooms
                         </button>
                         @foreach ($rooms as $room)
                             <button type="button" wire:click="selectRoomFilter({{ $room->id }})"
-                                    @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-eo-navy bg-eo-navy text-white' => $roomsViewFilter === $room->id, 'border-eo-line bg-white text-eo-muted hover:border-eo-teal/30' => $roomsViewFilter !== $room->id])>
+                                    @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-navy-900 bg-navy-900 text-white' => $roomsViewFilter === $room->id, 'border-line bg-white text-muted hover:border-gold-300' => $roomsViewFilter !== $room->id])>
                                 {{ $room->name }}
                             </button>
                         @endforeach
@@ -221,10 +221,10 @@
                         {{-- Workload — sessions, conflicts, capacity, read off
                              the same venue-rail figures the left rail already
                              shows; nothing recomputed for this header. --}}
-                        <div class="grid grid-cols-3 divide-x divide-eo-line border-b border-eo-line text-center">
-                            <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $roomWorkload['sessions'] }}</p><p class="text-[10px] text-eo-muted">{{ str('Session')->plural($roomWorkload['sessions']) }} today</p></div>
-                            <div class="px-3 py-3"><p class="text-[18px] font-black {{ $roomWorkload['conflicts'] ? 'text-eo-risk-ink' : 'text-eo-text' }}">{{ $roomWorkload['conflicts'] }}</p><p class="text-[10px] text-eo-muted">{{ str('Conflict')->plural($roomWorkload['conflicts']) }}</p></div>
-                            <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $roomWorkload['room']->capacity ? number_format($roomWorkload['room']->capacity) : '—' }}</p><p class="text-[10px] text-eo-muted">Capacity</p></div>
+                        <div class="grid grid-cols-3 divide-x divide-line border-b border-line text-center">
+                            <div class="px-3 py-3"><p class="text-[18px] font-black text-ink">{{ $roomWorkload['sessions'] }}</p><p class="text-[10px] text-muted">{{ str('Session')->plural($roomWorkload['sessions']) }} today</p></div>
+                            <div class="px-3 py-3"><p class="text-[18px] font-black {{ $roomWorkload['conflicts'] ? 'text-danger-ink' : 'text-ink' }}">{{ $roomWorkload['conflicts'] }}</p><p class="text-[10px] text-muted">{{ str('Conflict')->plural($roomWorkload['conflicts']) }}</p></div>
+                            <div class="px-3 py-3"><p class="text-[18px] font-black text-ink">{{ $roomWorkload['room']->capacity ? number_format($roomWorkload['room']->capacity) : '—' }}</p><p class="text-[10px] text-muted">Capacity</p></div>
                         </div>
                     @endif
 
@@ -232,7 +232,7 @@
                         <x-empty icon="building" class="!border-0 !shadow-none" title="Empty room — nothing scheduled today"
                                  hint="This room has no sessions on this day. Add one, or drag a session here from another lane in All Rooms.">
                             <x-slot:actions>
-                                <button type="button" wire:click="newSession" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add a session</button>
+                                <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add a session</button>
                             </x-slot:actions>
                         </x-empty>
                     @else
@@ -248,10 +248,10 @@
                         @forelse ($trackGroups as $group)
                             <div>
                                 <div class="mb-2 flex items-center gap-2 px-0.5">
-                                    <p class="text-[12.5px] font-bold text-eo-text">{{ $group['name'] }}</p>
-                                    <span class="rounded-full bg-eo-workspace px-2 py-0.5 text-[10px] font-bold text-eo-muted">{{ $group['sessions']->count() }}</span>
+                                    <p class="text-[12.5px] font-bold text-ink">{{ $group['name'] }}</p>
+                                    <span class="rounded-full bg-page px-2 py-0.5 text-[10px] font-bold text-muted">{{ $group['sessions']->count() }}</span>
                                     @if ($group['name'] === 'Unassigned')
-                                        <span class="text-[10px] italic text-eo-muted">no track chosen yet</span>
+                                        <span class="text-[10px] italic text-muted">no track chosen yet</span>
                                     @endif
                                 </div>
                                 <div class="space-y-1.5">
@@ -269,23 +269,23 @@
                                         @endphp
                                         <button type="button" wire:click="selectSession({{ $s->id }})"
                                                 @class([
-                                                    'flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition hover:border-eo-teal/30',
-                                                    'border-eo-teal bg-eo-teal-soft/30' => $selected,
-                                                    'border-eo-line bg-white' => ! $selected,
+                                                    'flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition hover:border-gold-300',
+                                                    'border-gold-400 bg-gold-50/30' => $selected,
+                                                    'border-line bg-white' => ! $selected,
                                                 ])>
-                                            <span class="w-12 shrink-0 font-mono text-[11px] text-eo-muted">{{ substr($s->starts_at, 0, 5) }}</span>
+                                            <span class="w-12 shrink-0 font-mono text-[11px] text-muted">{{ substr($s->starts_at, 0, 5) }}</span>
                                             <span class="min-w-0 flex-1">
                                                 <span class="flex items-center gap-1.5">
                                                     @if ($severity === 'critical')
-                                                        <span class="shrink-0 text-eo-risk" title="Critical — scheduling conflict">⚠</span>
+                                                        <span class="shrink-0 text-danger" title="Critical — scheduling conflict">⚠</span>
                                                     @elseif ($severity === 'high')
-                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn" title="High priority"></span>
+                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" title="High priority"></span>
                                                     @elseif ($severity === 'medium')
-                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn/50" title="Needs attention"></span>
+                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning/50" title="Needs attention"></span>
                                                     @endif
-                                                    <span class="truncate text-[12.5px] font-bold text-eo-text">{{ $s->title }}</span>
+                                                    <span class="truncate text-[12.5px] font-bold text-ink">{{ $s->title }}</span>
                                                 </span>
-                                                <span class="block truncate text-[10.5px] text-eo-muted">{{ $s->room?->name ?? 'No room' }}@if ($s->speakers->isNotEmpty()) · {{ $s->speakers->first()->name }}@endif</span>
+                                                <span class="block truncate text-[10.5px] text-muted">{{ $s->room?->name ?? 'No room' }}@if ($s->speakers->isNotEmpty()) · {{ $s->speakers->first()->name }}@endif</span>
                                             </span>
                                             <x-eo.status-pill :tone="$tTone" class="shrink-0 !text-[9px]">{{ $s->statusLabel() }}</x-eo.status-pill>
                                         </button>
@@ -296,7 +296,7 @@
                             <x-empty icon="columns" class="!border-0 !shadow-none" title="Nothing scheduled for this day"
                                      hint="Sessions will group themselves by track as you add them — give one a track in the session form and it gets its own lane here.">
                                 <x-slot:actions>
-                                    <button type="button" wire:click="newSession" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add the first session</button>
+                                    <button type="button" wire:click="newSession" class="btn-gold btn-sm">＋ Add the first session</button>
                                 </x-slot:actions>
                             </x-empty>
                         @endforelse
@@ -306,17 +306,17 @@
                      audit view. Row click opens the Inspector; no drag here,
                      a table row is the wrong gesture for it. ═══ --}}
                 @elseif ($view === 'sessions')
-                    <div class="border-b border-eo-line p-3">
+                    <div class="border-b border-line p-3">
                         <div class="relative max-w-xs">
-                            <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                            <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                             <input type="search" wire:model.live.debounce.250ms="sessionSearch" placeholder="Search title or speaker…"
-                                   class="eo-input h-9 w-full !ps-8 text-[12px]">
+                                   class="h-9 w-full rounded-lg border border-line bg-white ps-8 pe-2 text-[12px] text-ink focus:border-navy-300 focus:outline-none">
                         </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-[12px]">
                             <thead>
-                                <tr class="border-b border-eo-line bg-eo-workspace text-left text-[10px] font-bold uppercase tracking-[0.06em] text-eo-muted">
+                                <tr class="border-b border-line bg-page text-left text-[10px] font-bold uppercase tracking-[0.06em] text-muted">
                                     <th class="whitespace-nowrap px-3 py-2">Title</th>
                                     <th class="whitespace-nowrap px-3 py-2">Day</th>
                                     <th class="whitespace-nowrap px-3 py-2">Time</th>
@@ -342,38 +342,38 @@
                                         };
                                     @endphp
                                     <tr wire:click="selectSession({{ $s->id }})"
-                                        @class(['cursor-pointer border-b border-eo-line transition last:border-b-0 hover:bg-eo-workspace', 'bg-eo-teal-soft/20' => $selected])>
-                                        <td class="max-w-[220px] truncate px-3 py-2 font-bold text-eo-text">
+                                        @class(['cursor-pointer border-b border-line transition last:border-b-0 hover:bg-page', 'bg-gold-50/20' => $selected])>
+                                        <td class="max-w-[220px] truncate px-3 py-2 font-bold text-ink">
                                             <span class="flex items-center gap-1.5">
                                                 @if ($rowSeverity === 'critical')
-                                                    <span class="shrink-0 text-eo-risk" title="Critical — scheduling conflict">⚠</span>
+                                                    <span class="shrink-0 text-danger" title="Critical — scheduling conflict">⚠</span>
                                                 @elseif ($rowSeverity === 'high')
-                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn" title="High priority"></span>
+                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" title="High priority"></span>
                                                 @elseif ($rowSeverity === 'medium')
-                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn/50" title="Needs attention"></span>
+                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning/50" title="Needs attention"></span>
                                                 @endif
                                                 <span class="truncate">{{ $s->title }}</span>
                                             </span>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-2 text-eo-muted">{{ $s->day?->date?->format('D j M') ?? '—' }}</td>
-                                        <td class="whitespace-nowrap px-3 py-2 font-mono text-eo-muted">{{ substr($s->starts_at, 0, 5) }}–{{ substr($s->ends_at, 0, 5) }}</td>
-                                        <td class="max-w-[120px] truncate px-3 py-2 text-eo-muted">{{ $s->room?->name ?? '—' }}</td>
-                                        <td class="max-w-[110px] truncate px-3 py-2 text-eo-muted">{{ $s->track ?: '—' }}</td>
-                                        <td class="max-w-[140px] truncate px-3 py-2 text-eo-muted">{{ $s->speakers->pluck('name')->implode(', ') ?: '—' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-2 text-muted">{{ $s->day?->date?->format('D j M') ?? '—' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-2 font-mono text-muted">{{ substr($s->starts_at, 0, 5) }}–{{ substr($s->ends_at, 0, 5) }}</td>
+                                        <td class="max-w-[120px] truncate px-3 py-2 text-muted">{{ $s->room?->name ?? '—' }}</td>
+                                        <td class="max-w-[110px] truncate px-3 py-2 text-muted">{{ $s->track ?: '—' }}</td>
+                                        <td class="max-w-[140px] truncate px-3 py-2 text-muted">{{ $s->speakers->pluck('name')->implode(', ') ?: '—' }}</td>
                                         <td class="whitespace-nowrap px-3 py-2"><x-eo.status-pill :tone="$lTone" class="!text-[9px]">{{ $s->statusLabel() }}</x-eo.status-pill></td>
-                                        <td class="whitespace-nowrap px-3 py-2 text-eo-muted">{{ $s->bookedCount() }}{{ $s->capacity ? '/'.number_format($s->capacity) : '' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-2 text-muted">{{ $s->bookedCount() }}{{ $s->capacity ? '/'.number_format($s->capacity) : '' }}</td>
                                         <td class="whitespace-nowrap px-3 py-2">
                                             <div class="flex items-center justify-end gap-1">
-                                                <button type="button" wire:click.stop="editSession({{ $s->id }})" class="rounded-md p-1 text-eo-muted transition hover:bg-eo-workspace hover:text-eo-text" title="Edit">✎</button>
-                                                <button type="button" wire:click.stop="duplicateSession({{ $s->id }})" class="rounded-md p-1 text-eo-muted transition hover:bg-eo-workspace hover:text-eo-text" title="Duplicate">⧉</button>
+                                                <button type="button" wire:click.stop="editSession({{ $s->id }})" class="rounded-md p-1 text-muted transition hover:bg-page hover:text-ink" title="Edit">✎</button>
+                                                <button type="button" wire:click.stop="duplicateSession({{ $s->id }})" class="rounded-md p-1 text-muted transition hover:bg-page hover:text-ink" title="Duplicate">⧉</button>
                                                 <x-confirm title="Delete “{{ $s->title }}”?" confirm="Delete" run="$wire.deleteSession({{ $s->id }})"
-                                                           class="rounded-md p-1 text-eo-muted transition hover:bg-eo-risk-soft hover:text-eo-risk" title="Delete">✕</x-confirm>
+                                                           class="rounded-md p-1 text-muted transition hover:bg-danger-soft hover:text-danger" title="Delete">✕</x-confirm>
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="px-3 py-10 text-center text-eo-muted">
+                                        <td colspan="9" class="px-3 py-10 text-center text-muted">
                                             {{ trim($sessionSearch) !== '' ? 'No sessions match "'.$sessionSearch.'".' : 'No sessions yet.' }}
                                         </td>
                                     </tr>
@@ -395,28 +395,28 @@
                         $spkNeedsAction = $speakerBoard->where('needsAction', true)->count();
                     @endphp
 
-                    <div class="grid grid-cols-4 divide-x divide-eo-line border-b border-eo-line text-center">
-                        <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $spkTotal }}</p><p class="text-[10px] text-eo-muted">{{ str('Speaker')->plural($spkTotal) }}</p></div>
-                        <div class="px-3 py-3"><p class="text-[18px] font-black text-eo-text">{{ $spkAssigned }}</p><p class="text-[10px] text-eo-muted">Assigned</p></div>
-                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $spkNeedsAction ? 'text-eo-warn-ink' : 'text-eo-text' }}">{{ $spkNeedsAction }}</p><p class="text-[10px] text-eo-muted">Need action</p></div>
-                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $unassignedSessions->isNotEmpty() ? 'text-eo-risk-ink' : 'text-eo-text' }}">{{ $unassignedSessions->count() }}</p><p class="text-[10px] text-eo-muted">Unassigned {{ str('session')->plural($unassignedSessions->count()) }}</p></div>
+                    <div class="grid grid-cols-4 divide-x divide-line border-b border-line text-center">
+                        <div class="px-3 py-3"><p class="text-[18px] font-black text-ink">{{ $spkTotal }}</p><p class="text-[10px] text-muted">{{ str('Speaker')->plural($spkTotal) }}</p></div>
+                        <div class="px-3 py-3"><p class="text-[18px] font-black text-ink">{{ $spkAssigned }}</p><p class="text-[10px] text-muted">Assigned</p></div>
+                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $spkNeedsAction ? 'text-warning-ink' : 'text-ink' }}">{{ $spkNeedsAction }}</p><p class="text-[10px] text-muted">Need action</p></div>
+                        <div class="px-3 py-3"><p class="text-[18px] font-black {{ $unassignedSessions->isNotEmpty() ? 'text-danger-ink' : 'text-ink' }}">{{ $unassignedSessions->count() }}</p><p class="text-[10px] text-muted">Unassigned {{ str('session')->plural($unassignedSessions->count()) }}</p></div>
                     </div>
 
-                    <div class="flex items-center justify-between border-b border-eo-line px-4 py-2.5">
-                        <p class="text-[11px] text-eo-muted">Speaker profiles and billing live on the Speakers tab — add someone there and they appear here the moment they're billed on a session.</p>
-                        <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="shrink-0 text-[11px] font-semibold text-eo-teal-ink hover:underline">＋ Add Speaker</a>
+                    <div class="flex items-center justify-between border-b border-line px-4 py-2.5">
+                        <p class="text-[11px] text-muted">Speaker profiles and billing live on the Speakers tab — add someone there and they appear here the moment they're billed on a session.</p>
+                        <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="shrink-0 text-[11px] font-semibold text-gold-700 hover:underline">＋ Add Speaker</a>
                     </div>
 
                     {{-- Highlight missing speaker assignment: sessions
                          nobody is billed on yet, surfaced up front rather
                          than only discoverable by scrolling every speaker. --}}
                     @if ($unassignedSessions->isNotEmpty())
-                        <div class="border-b border-eo-line bg-eo-risk-soft/40 px-4 py-3">
-                            <p class="mb-1.5 text-[11px] font-bold text-eo-risk-ink">⚠ {{ $unassignedSessions->count() }} {{ str('session')->plural($unassignedSessions->count()) }} with no speaker billed</p>
+                        <div class="border-b border-line bg-danger-soft/40 px-4 py-3">
+                            <p class="mb-1.5 text-[11px] font-bold text-danger-ink">⚠ {{ $unassignedSessions->count() }} {{ str('session')->plural($unassignedSessions->count()) }} with no speaker billed</p>
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach ($unassignedSessions as $u)
                                     <button type="button" wire:click="selectSession({{ $u->id }})"
-                                            class="rounded-lg border border-eo-risk/25 bg-white px-2.5 py-1 text-[11px] font-semibold text-eo-text transition hover:border-eo-risk/50">
+                                            class="rounded-lg border border-danger/25 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink transition hover:border-danger/50">
                                         {{ substr($u->starts_at, 0, 5) }} · {{ $u->title }}
                                     </button>
                                 @endforeach
@@ -424,7 +424,7 @@
                         </div>
                     @endif
 
-                    <div class="divide-y divide-eo-line">
+                    <div class="divide-y divide-line">
                         @forelse ($speakerBoard as $row)
                             @php
                                 $sp = $row['speaker'];
@@ -437,12 +437,12 @@
                             <div class="p-4">
                                 <details>
                                     <summary class="flex cursor-pointer list-none items-center gap-3">
-                                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-eo-navy text-[11px] font-bold text-white">{{ $sp->initials() }}</span>
+                                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy-900 text-[11px] font-bold text-white">{{ $sp->initials() }}</span>
                                         <span class="min-w-0 flex-1">
                                             <span class="flex flex-wrap items-center gap-1.5">
-                                                <span class="text-[13px] font-bold text-eo-text">{{ $sp->name }}</span>
+                                                <span class="text-[13px] font-bold text-ink">{{ $sp->name }}</span>
                                                 @if ($row['worstSeverity'] === 'medium')
-                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn/50" title="Needs attention"></span>
+                                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning/50" title="Needs attention"></span>
                                                 @endif
                                                 @if ($sp->is_keynote)<span title="Keynote">⭐</span>@endif
                                                 <x-eo.status-pill :tone="$spTone" class="!text-[9px]">{{ ucfirst($sp->status) }}</x-eo.status-pill>
@@ -454,15 +454,15 @@
                                                 @if ($row['unconfirmedCount'])<x-eo.status-pill tone="warn" class="!text-[9px]">{{ $row['unconfirmedCount'] }} unconfirmed</x-eo.status-pill>@endif
                                                 @if ($row['missingDetails']->isNotEmpty())<x-eo.status-pill tone="warn" class="!text-[9px]">Missing {{ $row['missingDetails']->implode(', ') }}</x-eo.status-pill>@endif
                                             </span>
-                                            <span class="mt-0.5 block text-[10.5px] text-eo-muted">{{ $sp->title ?: 'No title on file' }}{{ $sp->organization ? ' · '.$sp->organization : '' }} — {{ $row['sessionCount'] }} {{ str('session')->plural($row['sessionCount']) }}</span>
+                                            <span class="mt-0.5 block text-[10.5px] text-muted">{{ $sp->title ?: 'No title on file' }}{{ $sp->organization ? ' · '.$sp->organization : '' }} — {{ $row['sessionCount'] }} {{ str('session')->plural($row['sessionCount']) }}</span>
                                         </span>
-                                        <span class="shrink-0 text-[10px] font-semibold text-eo-teal-ink">Details ▾</span>
+                                        <span class="shrink-0 text-[10px] font-semibold text-gold-700">Details ▾</span>
                                     </summary>
-                                    <div class="mt-3 grid gap-x-6 gap-y-1 rounded-xl bg-eo-workspace px-3.5 py-3 text-[11.5px] sm:grid-cols-2">
-                                        <p><span class="text-eo-muted">Topic</span> — {{ $sp->topic ?: 'Not set' }}</p>
-                                        <p><span class="text-eo-muted">Email</span> — {{ $sp->email ?: 'Not set' }}</p>
-                                        <p><span class="text-eo-muted">Phone</span> — {{ $sp->phone ?: 'Not set' }}</p>
-                                        <p><span class="text-eo-muted">Fee</span> — {{ $sp->fee_cents ? number_format($sp->fee_cents / 100, 2) : 'Not set' }}</p>
+                                    <div class="mt-3 grid gap-x-6 gap-y-1 rounded-xl bg-page px-3.5 py-3 text-[11.5px] sm:grid-cols-2">
+                                        <p><span class="text-muted">Topic</span> — {{ $sp->topic ?: 'Not set' }}</p>
+                                        <p><span class="text-muted">Email</span> — {{ $sp->email ?: 'Not set' }}</p>
+                                        <p><span class="text-muted">Phone</span> — {{ $sp->phone ?: 'Not set' }}</p>
+                                        <p><span class="text-muted">Fee</span> — {{ $sp->fee_cents ? number_format($sp->fee_cents / 100, 2) : 'Not set' }}</p>
                                     </div>
                                 </details>
 
@@ -478,20 +478,20 @@
                                             };
                                         @endphp
                                         <button type="button" wire:click="selectSession({{ $s->id }})"
-                                                class="flex w-full items-center gap-3 rounded-xl border border-eo-line bg-white px-3 py-2 text-left transition hover:border-eo-teal/30">
-                                            <span class="w-12 shrink-0 font-mono text-[11px] text-eo-muted">{{ $r['missingTime'] ? '—' : substr($s->starts_at, 0, 5) }}</span>
+                                                class="flex w-full items-center gap-3 rounded-xl border border-line bg-white px-3 py-2 text-left transition hover:border-gold-300">
+                                            <span class="w-12 shrink-0 font-mono text-[11px] text-muted">{{ $r['missingTime'] ? '—' : substr($s->starts_at, 0, 5) }}</span>
                                             <span class="min-w-0 flex-1">
                                                 <span class="flex items-center gap-1.5">
                                                     @if ($r['severity'] === 'critical')
-                                                        <span class="shrink-0 text-eo-risk" title="Critical — scheduling conflict">⚠</span>
+                                                        <span class="shrink-0 text-danger" title="Critical — scheduling conflict">⚠</span>
                                                     @elseif ($r['severity'] === 'high')
-                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn" title="High priority"></span>
+                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" title="High priority"></span>
                                                     @elseif ($r['severity'] === 'medium')
-                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-eo-warn/50" title="Needs attention"></span>
+                                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning/50" title="Needs attention"></span>
                                                     @endif
-                                                    <span class="truncate text-[12px] font-bold text-eo-text">{{ $s->title }}</span>
+                                                    <span class="truncate text-[12px] font-bold text-ink">{{ $s->title }}</span>
                                                 </span>
-                                                <span class="block truncate text-[10.5px] text-eo-muted">
+                                                <span class="block truncate text-[10.5px] text-muted">
                                                     {{ $s->day?->date?->format('D j M') ?? '—' }} ·
                                                     {{ $r['missingRoom'] ? 'No room' : $s->room?->name }}
                                                     @if ($s->track) · {{ $s->track }} @endif
@@ -500,7 +500,7 @@
                                             <x-eo.status-pill :tone="$rTone" class="shrink-0 !text-[9px]">{{ $s->statusLabel() }}</x-eo.status-pill>
                                         </button>
                                     @empty
-                                        <p class="text-[11px] italic text-eo-muted">Not yet assigned to a session.</p>
+                                        <p class="text-[11px] italic text-muted">Not yet assigned to a session.</p>
                                     @endforelse
                                 </div>
                             </div>
@@ -508,7 +508,7 @@
                             <x-empty icon="users" class="!border-0 !shadow-none" title="No speakers on the roster yet"
                                      hint="Bill someone onto a session and they'll appear here, or add them directly on the Speakers tab.">
                                 <x-slot:actions>
-                                    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="eo-btn eo-btn-primary eo-btn-sm">＋ Add Speaker</a>
+                                    <a href="{{ route('events.hub', [$event, 'tab' => 'speakers']) }}" class="btn-gold btn-sm">＋ Add Speaker</a>
                                 </x-slot:actions>
                             </x-empty>
                         @endforelse
@@ -517,7 +517,7 @@
             </div>
 
             {{-- ═══ RIGHT — INSPECTOR / INSIGHTS ═══ --}}
-            <aside class="eo-domain-card self-start !p-4">
+            <aside class="rounded-lg border border-line bg-white self-start !p-4">
                 @if ($selectedSession)
                     @php
                         $ss = $selectedSession;
@@ -531,36 +531,36 @@
                         };
                     @endphp
                     <div class="mb-3 flex items-start justify-between gap-2">
-                        <p class="eo-label">Inspector</p>
-                        <button type="button" wire:click="selectSession(null)" class="grid h-6 w-6 place-items-center rounded-full text-eo-muted transition hover:bg-eo-workspace" title="Close">✕</button>
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Inspector</p>
+                        <button type="button" wire:click="selectSession(null)" class="grid h-6 w-6 place-items-center rounded-full text-muted transition hover:bg-page" title="Close">✕</button>
                     </div>
 
                     <x-eo.status-pill :tone="$ssTone">{{ $ss->statusLabel() }}</x-eo.status-pill>
-                    <h3 class="eo-font mt-2 text-[16px] font-bold leading-snug text-eo-text">{{ $ss->title }}</h3>
+                    <h3 class="mt-2 text-[16px] font-bold leading-snug text-ink">{{ $ss->title }}</h3>
 
-                    <div class="mt-3 divide-y divide-eo-line text-[12px]">
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">Speaker{{ $ss->speakers->count() === 1 ? '' : 's' }}</span><span class="text-right text-eo-text">{{ $ss->speakers->isNotEmpty() ? $ss->speakers->pluck('name')->implode(', ') : '—' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">Room</span><span class="text-eo-text">{{ $ss->room?->name ?? '—' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">Start</span><span class="font-mono text-eo-text">{{ substr($ss->starts_at, 0, 5) }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">End</span><span class="font-mono text-eo-text">{{ substr($ss->ends_at, 0, 5) }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">Capacity</span><span class="text-eo-text">{{ $ss->bookedCount() }}{{ $ss->capacity ? ' / '.number_format($ss->capacity) : '' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-eo-muted">Approval status</span><x-eo.status-pill :tone="$ssTone" class="!text-[9px]">{{ $ss->statusLabel() }}</x-eo.status-pill></div>
+                    <div class="mt-3 divide-y divide-line text-[12px]">
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Speaker{{ $ss->speakers->count() === 1 ? '' : 's' }}</span><span class="text-right text-ink">{{ $ss->speakers->isNotEmpty() ? $ss->speakers->pluck('name')->implode(', ') : '—' }}</span></div>
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Room</span><span class="text-ink">{{ $ss->room?->name ?? '—' }}</span></div>
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Start</span><span class="font-mono text-ink">{{ substr($ss->starts_at, 0, 5) }}</span></div>
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">End</span><span class="font-mono text-ink">{{ substr($ss->ends_at, 0, 5) }}</span></div>
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Capacity</span><span class="text-ink">{{ $ss->bookedCount() }}{{ $ss->capacity ? ' / '.number_format($ss->capacity) : '' }}</span></div>
+                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Approval status</span><x-eo.status-pill :tone="$ssTone" class="!text-[9px]">{{ $ss->statusLabel() }}</x-eo.status-pill></div>
                     </div>
 
                     {{-- Dependencies — everything this session is waiting on,
                          read off data that already exists elsewhere (the day's
                          conflicts, the speaker roster, the room's equipment
                          list) — nothing here is invented for this panel. --}}
-                    <div class="mt-3 border-t border-eo-line pt-3">
-                        <p class="eo-label mb-1.5">Dependencies</p>
+                    <div class="mt-3 border-t border-line pt-3">
+                        <p class="mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Dependencies</p>
                         @if (empty($dependencies))
-                            <p class="flex items-center gap-1.5 text-[11.5px] text-eo-ok-ink"><span>✓</span> Nothing outstanding</p>
+                            <p class="flex items-center gap-1.5 text-[11.5px] text-success-ink"><span>✓</span> Nothing outstanding</p>
                         @else
                             <ul class="space-y-1.5">
                                 @foreach ($dependencies as $dep)
                                     <li class="flex items-start gap-1.5 text-[11px]">
-                                        <span class="mt-0.5 shrink-0 {{ $dep['tone'] === 'risk' ? 'text-eo-risk' : 'text-eo-warn-ink' }}">⚠</span>
-                                        <span class="text-eo-text">{{ $dep['label'] }}</span>
+                                        <span class="mt-0.5 shrink-0 {{ $dep['tone'] === 'risk' ? 'text-danger' : 'text-warning-ink' }}">⚠</span>
+                                        <span class="text-ink">{{ $dep['label'] }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -569,9 +569,9 @@
 
                     {{-- Move room — a select, not a modal: the room half of
                          what dragging the block onto a lane already does. --}}
-                    <div class="mt-3 border-t border-eo-line pt-3">
-                        <label class="eo-eo-label !mb-1" for="insp-room">Move room</label>
-                        <select id="insp-room" class="eo-select h-9 text-[12px]"
+                    <div class="mt-3 border-t border-line pt-3">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="insp-room">Move room</label>
+                        <select id="insp-room" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-[12px] text-ink focus:border-navy-300 focus:outline-none"
                                 onchange="window.__agendaWire.assignRoom({{ $ss->id }}, this.value || null)">
                             <option value="">— Unassigned —</option>
                             @foreach ($rooms as $room)
@@ -581,28 +581,28 @@
                     </div>
 
                     <div class="mt-4 grid grid-cols-2 gap-1.5">
-                        <button type="button" wire:click="editSession({{ $ss->id }})" class="eo-btn eo-btn-primary eo-btn-sm">Edit</button>
-                        <button type="button" wire:click="duplicateSession({{ $ss->id }})" class="eo-btn eo-btn-ghost eo-btn-sm">Duplicate</button>
-                        <button type="button" wire:click="quickAddSpeaker({{ $ss->id }})" class="eo-btn eo-btn-ghost eo-btn-sm">＋ Speaker</button>
+                        <button type="button" wire:click="editSession({{ $ss->id }})" class="btn-gold btn-sm">Edit</button>
+                        <button type="button" wire:click="duplicateSession({{ $ss->id }})" class="btn-ghost btn-sm">Duplicate</button>
+                        <button type="button" wire:click="quickAddSpeaker({{ $ss->id }})" class="btn-ghost btn-sm">＋ Speaker</button>
                         @if ($ss->status === 'final')
-                            <button type="button" disabled class="eo-btn eo-btn-ghost eo-btn-sm opacity-50">Published</button>
+                            <button type="button" disabled class="btn-ghost btn-sm opacity-50">Published</button>
                         @else
-                            <button type="button" wire:click="publishSession({{ $ss->id }})" class="eo-btn eo-btn-secondary eo-btn-sm">Publish</button>
+                            <button type="button" wire:click="publishSession({{ $ss->id }})" class="rounded-xl border border-gold-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gold-700 transition hover:bg-gold-50">Publish</button>
                         @endif
                     </div>
                 @else
                     {{-- Nothing selected — the day's insights, exactly as before. --}}
-                    <p class="eo-label">Day insights</p>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Day insights</p>
 
                     <div class="mt-2">
-                        <p class="eo-font text-[13px] font-bold text-eo-text">Today overview</p>
-                        <p class="mt-0.5 text-[11px] text-eo-muted">{{ $day?->date?->format('l, j M') ?? 'No day selected' }}</p>
+                        <p class="text-[13px] font-bold text-ink">Today overview</p>
+                        <p class="mt-0.5 text-[11px] text-muted">{{ $day?->date?->format('l, j M') ?? 'No day selected' }}</p>
 
                         @php $r = 2 * M_PI * 26; $done = 0; @endphp
                         <div class="mt-3 flex items-center gap-3.5">
                             <span class="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
                                 <svg class="h-[74px] w-[74px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
-                                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-eo-bg)" stroke-width="7" />
+                                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-page)" stroke-width="7" />
                                     @foreach ($insights['byStatus'] as $row)
                                         @php
                                             $slice = $insights['total'] ? $row['count'] / $insights['total'] : 0;
@@ -615,7 +615,7 @@
                                     @endforeach
                                 </svg>
                                 <span class="absolute text-center">
-                                    <span class="block text-[15px] font-black leading-none text-eo-text">{{ $insights['total'] }}</span>
+                                    <span class="block text-[15px] font-black leading-none text-ink">{{ $insights['total'] }}</span>
                                 </span>
                             </span>
 
@@ -623,11 +623,11 @@
                                 @forelse ($insights['byStatus'] as $row)
                                     <li class="flex items-center gap-1.5 text-[11px]">
                                         <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $row['hex'] }}"></span>
-                                        <span class="w-4 shrink-0 font-bold tabular-nums text-eo-text">{{ $row['count'] }}</span>
-                                        <span class="truncate text-eo-muted">{{ $row['label'] }}</span>
+                                        <span class="w-4 shrink-0 font-bold tabular-nums text-ink">{{ $row['count'] }}</span>
+                                        <span class="truncate text-muted">{{ $row['label'] }}</span>
                                     </li>
                                 @empty
-                                    <li class="text-[11px] text-eo-muted">Nothing scheduled.</li>
+                                    <li class="text-[11px] text-muted">Nothing scheduled.</li>
                                 @endforelse
                             </ul>
                         </div>
@@ -642,49 +642,49 @@
                         ] as $alert)
                             @php
                                 [$ring, $ink] = $alert['count'] === 0
-                                    ? ['ring-eo-line', 'text-eo-muted']
+                                    ? ['ring-line', 'text-muted']
                                     : match ($alert['tone']) {
-                                        'risk' => ['ring-eo-risk/30 bg-eo-risk-soft/40', 'text-eo-risk-ink'],
-                                        'warn' => ['ring-eo-warn/30 bg-eo-warn-soft/40', 'text-eo-warn-ink'],
-                                        default => ['ring-eo-line', 'text-eo-text'],
+                                        'risk' => ['ring-danger/30 bg-danger-soft/40', 'text-danger-ink'],
+                                        'warn' => ['ring-warning/30 bg-warning-soft/40', 'text-warning-ink'],
+                                        default => ['ring-line', 'text-ink'],
                                     };
                             @endphp
                             <div class="flex items-center gap-3 rounded-xl px-2.5 py-2 ring-1 {{ $ring }}">
-                                <span class="eo-font text-[18px] font-black leading-none {{ $ink }}">{{ $alert['count'] }}</span>
-                                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold text-eo-text">{{ $alert['label'] }}</span>
+                                <span class="text-[18px] font-black leading-none {{ $ink }}">{{ $alert['count'] }}</span>
+                                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold text-ink">{{ $alert['label'] }}</span>
                             </div>
                         @endforeach
                     </div>
 
-                    <div class="mt-3 rounded-xl bg-eo-workspace p-3">
+                    <div class="mt-3 rounded-xl bg-page p-3">
                         <div class="flex items-baseline justify-between">
-                            <span class="eo-font text-[18px] font-black leading-none text-eo-text">{{ $insights['pct'] }}%</span>
-                            <span class="text-[11px] font-semibold text-eo-muted">Agenda complete</span>
+                            <span class="text-[18px] font-black leading-none text-ink">{{ $insights['pct'] }}%</span>
+                            <span class="text-[11px] font-semibold text-muted">Agenda complete</span>
                         </div>
-                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-eo-bg">
-                            <div class="h-full rounded-full bg-eo-ok" style="width: {{ $insights['pct'] }}%"></div>
+                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-page">
+                            <div class="h-full rounded-full bg-success" style="width: {{ $insights['pct'] }}%"></div>
                         </div>
-                        <p class="mt-1.5 text-[10.5px] text-eo-muted">{{ $insights['settled'] }} of {{ $insights['total'] }} confirmed on this day</p>
+                        <p class="mt-1.5 text-[10.5px] text-muted">{{ $insights['settled'] }} of {{ $insights['total'] }} confirmed on this day</p>
                     </div>
 
                     {{-- What is on next, but only on the day that is actually today. --}}
                     @if ($insights['next'])
-                        <p class="eo-label mt-3 mb-1.5">Up next</p>
+                        <p class="mt-3 mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Up next</p>
                         @php $n = $insights['next']; [$nLegend, $nHex] = \App\Livewire\Hub\AgendaTab::PALETTE[$n->type] ?? ['Session', '#3B82F6']; @endphp
-                        <button type="button" wire:click="selectSession({{ $n->id }})" class="block w-full rounded-xl bg-eo-workspace p-3 text-left transition hover:-translate-y-px hover:shadow-sm">
+                        <button type="button" wire:click="selectSession({{ $n->id }})" class="block w-full rounded-xl bg-page p-3 text-left transition hover:-translate-y-px hover:shadow-sm">
                             <div class="flex items-center gap-2">
                                 @if ($insights['nextIn'] !== null && $insights['nextIn'] > 0)
-                                    <span class="text-[10px] font-bold uppercase tracking-wide text-eo-muted">In {{ $insights['nextIn'] }} min</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wide text-muted">In {{ $insights['nextIn'] }} min</span>
                                 @endif
                                 <span class="ms-auto inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background: {{ $nHex }}">{{ $nLegend }}</span>
                             </div>
-                            <p class="eo-font mt-1.5 text-[13px] font-bold leading-snug text-eo-text">{{ $n->title }}</p>
-                            <p class="mt-1 text-[11px] text-eo-muted">{{ substr($n->starts_at, 0, 5) }}–{{ substr($n->ends_at, 0, 5) }}@if ($n->room) · {{ $n->room->name }}@endif</p>
+                            <p class="mt-1.5 text-[13px] font-bold leading-snug text-ink">{{ $n->title }}</p>
+                            <p class="mt-1 text-[11px] text-muted">{{ substr($n->starts_at, 0, 5) }}–{{ substr($n->ends_at, 0, 5) }}@if ($n->room) · {{ $n->room->name }}@endif</p>
                         </button>
                     @endif
 
                     <a href="{{ route('events.run-of-show', $event) }}"
-                       class="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-eo-navy text-[12px] font-bold text-white transition hover:bg-eo-navy-deep">
+                       class="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-900 text-[12px] font-bold text-white transition hover:bg-navy-800">
                         View Run of Show →
                     </a>
                 @endif
@@ -693,15 +693,15 @@
 
         {{-- ═══ BOTTOM — COMMAND BAR ═══ everything that acts on the whole
              day or the whole agenda, rather than one session. ═══ --}}
-        <div class="mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-eo-card p-2.5 shadow-[var(--shadow-eo)]">
-            <span class="flex items-center gap-1.5 px-1.5 text-[11px] font-semibold text-eo-muted" wire:loading.remove wire:target="saveSession,moveSession,toggleFlag,assignRoom,publishSession,duplicateSession,confirmDay">
-                <span class="h-1.5 w-1.5 rounded-full bg-eo-ok"></span> Autosaved
+        <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-white p-2.5 shadow-raise">
+            <span class="flex items-center gap-1.5 px-1.5 text-[11px] font-semibold text-muted" wire:loading.remove wire:target="saveSession,moveSession,toggleFlag,assignRoom,publishSession,duplicateSession,confirmDay">
+                <span class="h-1.5 w-1.5 rounded-full bg-success"></span> Autosaved
             </span>
-            <span class="flex items-center gap-1.5 px-1.5 text-[11px] font-semibold text-eo-muted" wire:loading wire:target="saveSession,moveSession,toggleFlag,assignRoom,publishSession,duplicateSession,confirmDay">
-                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-eo-gold"></span> Saving…
+            <span class="flex items-center gap-1.5 px-1.5 text-[11px] font-semibold text-muted" wire:loading wire:target="saveSession,moveSession,toggleFlag,assignRoom,publishSession,duplicateSession,confirmDay">
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-gold-500"></span> Saving…
             </span>
 
-            <div class="flex rounded-xl border border-eo-line bg-white p-0.5">
+            <div class="flex rounded-xl border border-line bg-white p-0.5">
                 @foreach ([
                     ['timeline', 'Timeline', 'chart'],
                     ['rooms', 'Rooms', 'building'],
@@ -711,67 +711,67 @@
                     ['program', 'Programme', 'calendar'],
                 ] as [$key, $label, $icon])
                     <button type="button" wire:click="setView('{{ $key }}')"
-                            @class(['flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-eo-navy text-white' => $view === $key, 'text-eo-muted hover:text-eo-text' => $view !== $key])>
+                            @class(['flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $view === $key, 'text-muted hover:text-ink' => $view !== $key])>
                         <x-icon :name="$icon" class="h-3 w-3" /> {{ $label }}
                     </button>
                 @endforeach
             </div>
 
             @if ($view === 'program')
-                <div class="flex rounded-xl border border-eo-line bg-white p-0.5" title="Public hides setup, press and registration">
-                    <button type="button" wire:click="setAudience('internal')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-eo-navy text-white' => $audience === 'internal', 'text-eo-muted hover:text-eo-text' => $audience !== 'internal'])>Internal</button>
-                    <button type="button" wire:click="setAudience('public')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-eo-navy text-white' => $audience === 'public', 'text-eo-muted hover:text-eo-text' => $audience !== 'public'])>Public</button>
+                <div class="flex rounded-xl border border-line bg-white p-0.5" title="Public hides setup, press and registration">
+                    <button type="button" wire:click="setAudience('internal')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $audience === 'internal', 'text-muted hover:text-ink' => $audience !== 'internal'])>Internal</button>
+                    <button type="button" wire:click="setAudience('public')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $audience === 'public', 'text-muted hover:text-ink' => $audience !== 'public'])>Public</button>
                 </div>
             @endif
 
-            <button type="button" wire:click="$toggle('showImport')" class="eo-btn eo-btn-ghost eo-btn-sm">⇪ Import CSV</button>
-            <a href="{{ route('events.run-of-show', $event) }}" class="eo-btn eo-btn-ghost eo-btn-sm" title="Open the live show-day cue sheet"><x-icon name="calendar" class="h-3.5 w-3.5" /> Run of Show</a>
+            <button type="button" wire:click="$toggle('showImport')" class="btn-ghost btn-sm">⇪ Import CSV</button>
+            <a href="{{ route('events.run-of-show', $event) }}" class="btn-ghost btn-sm" title="Open the live show-day cue sheet"><x-icon name="calendar" class="h-3.5 w-3.5" /> Run of Show</a>
 
             <details class="relative">
-                <summary class="eo-btn eo-btn-ghost eo-btn-sm cursor-pointer list-none">Export ▾</summary>
-                <div class="absolute left-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-eo-line bg-white py-1 shadow-lg">
-                    <p class="px-3 pb-1 pt-2 text-[9.5px] font-bold uppercase tracking-[0.1em] text-eo-muted">This day</p>
+                <summary class="btn-ghost btn-sm cursor-pointer list-none">Export ▾</summary>
+                <div class="absolute left-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg">
+                    <p class="px-3 pb-1 pt-2 text-[9.5px] font-bold uppercase tracking-[0.1em] text-muted">This day</p>
                     @if ($view === 'program')
-                        <a href="{{ route('events.agenda.program.pdf', [$event, 'day' => $day?->id, 'audience' => $audience]) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Programme PDF</a>
+                        <a href="{{ route('events.agenda.program.pdf', [$event, 'day' => $day?->id, 'audience' => $audience]) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Programme PDF</a>
                     @else
-                        <a href="{{ route('events.agenda.timeline.pdf', [$event, 'day' => $day?->id]) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Timeline PDF</a>
+                        <a href="{{ route('events.agenda.timeline.pdf', [$event, 'day' => $day?->id]) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Timeline PDF</a>
                     @endif
-                    <a href="{{ route('events.run-of-show.pdf', [$event, 'day' => $day?->id]) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Run of Show PDF</a>
-                    <p class="border-t border-eo-line px-3 pb-1 pt-2 text-[9.5px] font-bold uppercase tracking-[0.1em] text-eo-muted">All days</p>
-                    <a href="{{ route('events.agenda.timeline.pdf', $event) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Timeline PDF</a>
-                    <a href="{{ route('events.agenda.program.pdf', [$event, 'audience' => $audience]) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Programme PDF</a>
-                    <a href="{{ route('events.agenda.master.pdf', $event) }}" class="block px-3 py-2 text-[11.5px] text-eo-text transition hover:bg-eo-workspace">Master Schedule — incl. crew</a>
+                    <a href="{{ route('events.run-of-show.pdf', [$event, 'day' => $day?->id]) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Run of Show PDF</a>
+                    <p class="border-t border-line px-3 pb-1 pt-2 text-[9.5px] font-bold uppercase tracking-[0.1em] text-muted">All days</p>
+                    <a href="{{ route('events.agenda.timeline.pdf', $event) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Timeline PDF</a>
+                    <a href="{{ route('events.agenda.program.pdf', [$event, 'audience' => $audience]) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Programme PDF</a>
+                    <a href="{{ route('events.agenda.master.pdf', $event) }}" class="block px-3 py-2 text-[11.5px] text-ink transition hover:bg-page">Master Schedule — incl. crew</a>
                 </div>
             </details>
 
             <button type="button" wire:click="$toggle('showClashSummary')"
-                    @class(['eo-btn eo-btn-sm', 'eo-btn-navy' => $showClashSummary, 'eo-btn-ghost' => ! $showClashSummary])>
+                    @class(['btn-sm', 'btn-navy' => $showClashSummary, 'btn-ghost' => ! $showClashSummary])>
                 ⚠ Clash Check
                 @if ($clashSummary->isNotEmpty())
-                    <span class="ms-0.5 rounded-full bg-eo-risk px-1.5 text-[9.5px] font-black text-white">{{ $clashSummary->count() }}</span>
+                    <span class="ms-0.5 rounded-full bg-danger px-1.5 text-[9.5px] font-black text-white">{{ $clashSummary->count() }}</span>
                 @endif
             </button>
 
-            <span class="eo-btn eo-btn-ghost eo-btn-sm cursor-not-allowed opacity-50" title="A whole-programme publish state is staged for a later phase">Publish Programme · Soon</span>
+            <span class="btn-ghost btn-sm cursor-not-allowed opacity-50" title="A whole-programme publish state is staged for a later phase">Publish Programme · Soon</span>
 
             <span class="ms-auto flex items-center gap-2">
                 @if ($day)
                     <details class="relative">
-                        <summary class="eo-btn eo-btn-secondary eo-btn-sm cursor-pointer list-none">Day tools ▾</summary>
-                        <div class="absolute right-0 z-30 mt-1 w-60 overflow-hidden rounded-xl border border-eo-line bg-white py-1 shadow-lg">
-                            <button type="button" wire:click="confirmDay" class="block w-full px-3 py-2 text-left text-[11.5px] text-eo-text transition hover:bg-eo-workspace">
+                        <summary class="cursor-pointer list-none rounded-xl border border-gold-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gold-700 transition hover:bg-gold-50">Day tools ▾</summary>
+                        <div class="absolute right-0 z-30 mt-1 w-60 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg">
+                            <button type="button" wire:click="confirmDay" class="block w-full px-3 py-2 text-left text-[11.5px] text-ink transition hover:bg-page">
                                 ✓ Confirm every session
-                                <span class="block text-[10px] text-eo-muted">Signs off whatever is still draft</span>
+                                <span class="block text-[10px] text-muted">Signs off whatever is still draft</span>
                             </button>
-                            <button type="button" wire:click="duplicateDay({{ $day->id }})" class="block w-full px-3 py-2 text-left text-[11.5px] text-eo-text transition hover:bg-eo-workspace">
+                            <button type="button" wire:click="duplicateDay({{ $day->id }})" class="block w-full px-3 py-2 text-left text-[11.5px] text-ink transition hover:bg-page">
                                 ⧉ Duplicate this day
-                                <span class="block text-[10px] text-eo-muted">Same running order, one day later, back to draft</span>
+                                <span class="block text-[10px] text-muted">Same running order, one day later, back to draft</span>
                             </button>
                             <x-confirm title="Delete this day?"
                                        body="Its {{ $daySessions }} {{ str('session')->plural($daySessions) }} go with it, speakers and all. The event's own dates are not touched."
                                        confirm="Delete the day" tone="danger"
                                        run="$wire.deleteDay({{ $day->id }})"
-                                       class="block w-full px-3 py-2 text-left text-[11.5px] text-eo-risk-ink transition hover:bg-eo-risk-soft">
+                                       class="block w-full px-3 py-2 text-left text-[11.5px] text-danger-ink transition hover:bg-danger-soft">
                                 ✕ Delete this day
                             </x-confirm>
                         </div>
@@ -785,21 +785,21 @@
              pins, every Agenda view and the Inspector already read, just
              laid out as one list instead of scattered per-block. ═══ --}}
         @if ($showClashSummary)
-            <div class="mt-3 eo-domain-card !p-0 overflow-hidden">
-                <div class="flex items-center justify-between border-b border-eo-line px-4 py-3">
+            <div class="mt-3 rounded-lg border border-line bg-white !p-0 overflow-hidden">
+                <div class="flex items-center justify-between border-b border-line px-4 py-3">
                     <div>
-                        <p class="text-[13px] font-bold text-eo-text">
+                        <p class="text-[13px] font-bold text-ink">
                             {{ $clashSummary->isEmpty() ? 'No conflicts found' : $clashSummary->count().' '.str('finding')->plural($clashSummary->count()).' across the event' }}
                         </p>
-                        <p class="text-[10.5px] text-eo-muted">Every day, every room, every billed speaker — worst first.</p>
+                        <p class="text-[10.5px] text-muted">Every day, every room, every billed speaker — worst first.</p>
                     </div>
-                    <button type="button" wire:click="$toggle('showClashSummary')" class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-eo-muted transition hover:bg-eo-workspace" title="Close">✕</button>
+                    <button type="button" wire:click="$toggle('showClashSummary')" class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted transition hover:bg-page" title="Close">✕</button>
                 </div>
 
                 @if ($clashSummary->isEmpty())
-                    <p class="flex items-center gap-2 px-4 py-6 text-[12px] text-eo-ok-ink">✓ Nothing needs attention right now.</p>
+                    <p class="flex items-center gap-2 px-4 py-6 text-[12px] text-success-ink">✓ Nothing needs attention right now.</p>
                 @else
-                    <div class="scrollbar-none max-h-[360px] divide-y divide-eo-line overflow-y-auto">
+                    <div class="scrollbar-none max-h-[360px] divide-y divide-line overflow-y-auto">
                         @foreach ($clashSummary as $row)
                             @php
                                 $sevTone = match ($row['severity']) {
@@ -807,18 +807,18 @@
                                 };
                             @endphp
                             <button type="button" wire:click="selectSession({{ $row['primarySessionId'] }})"
-                                    class="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-eo-workspace">
+                                    class="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-page">
                                 <x-eo.status-pill :tone="$sevTone" class="mt-0.5 shrink-0 !text-[9px] uppercase">{{ $row['severity'] }}</x-eo.status-pill>
                                 <span class="min-w-0 flex-1">
                                     <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                        <span class="text-[11px] font-bold uppercase tracking-[0.04em] text-eo-muted">{{ $row['typeLabel'] }}</span>
-                                        <span class="text-[10.5px] text-eo-muted">{{ $row['dayLabels']->implode(' · ') }}</span>
-                                        @if ($row['roomName'])<span class="text-[10.5px] text-eo-muted">· {{ $row['roomName'] }}</span>@endif
-                                        @if ($row['speakerName'])<span class="text-[10.5px] text-eo-muted">· {{ $row['speakerName'] }}</span>@endif
+                                        <span class="text-[11px] font-bold uppercase tracking-[0.04em] text-muted">{{ $row['typeLabel'] }}</span>
+                                        <span class="text-[10.5px] text-muted">{{ $row['dayLabels']->implode(' · ') }}</span>
+                                        @if ($row['roomName'])<span class="text-[10.5px] text-muted">· {{ $row['roomName'] }}</span>@endif
+                                        @if ($row['speakerName'])<span class="text-[10.5px] text-muted">· {{ $row['speakerName'] }}</span>@endif
                                     </span>
-                                    <span class="mt-0.5 block text-[12.5px] text-eo-text">{{ $row['message'] }}</span>
+                                    <span class="mt-0.5 block text-[12.5px] text-ink">{{ $row['message'] }}</span>
                                 </span>
-                                <span class="shrink-0 self-center text-[10.5px] font-bold text-eo-teal-ink">Open →</span>
+                                <span class="shrink-0 self-center text-[10.5px] font-bold text-gold-700">Open →</span>
                             </button>
                         @endforeach
                     </div>
