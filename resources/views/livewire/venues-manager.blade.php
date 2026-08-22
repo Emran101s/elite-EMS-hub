@@ -1,31 +1,50 @@
+@php
+    $openSupplierIssues = \App\Models\Event::query()
+        ->withCount(['suppliers as issues_count' => fn ($q) => $q->where('event_supplier.status', 'issue')])
+        ->get()
+        ->sum('issues_count');
+@endphp
+
 <div class="max-w-5xl">
-    <x-eo.operations-header active="venues" title="Venues & Locations"
-                 subtitle="Every hotel, hall and site you run events at — entered once, picked by any event.">
+    <x-cc.header eyebrow="Operations Command" title="Venues & Locations" subtitle="Every hotel, hall and site you run events at — entered once, picked by any event.">
         <x-slot:actions>
+            @if (\Illuminate\Support\Facades\Route::has('suppliers.index'))
+                <a href="{{ route('suppliers.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Suppliers →</a>
+            @endif
+            @if (\Illuminate\Support\Facades\Route::has('requirements.index'))
+                <a href="{{ route('requirements.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Equipment →</a>
+            @endif
             <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                 <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search venues…"
-                       class="eo-input h-9 w-48 !rounded-xl !py-0 !ps-9 text-xs">
+                       class="h-9 w-48 rounded-full border border-line bg-white py-0 pl-9 pr-3 text-[12.5px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
             </div>
-            <x-eo.button size="sm" wire:click="newItem">＋ Add Venue</x-eo.button>
+            <button type="button" wire:click="newItem" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">＋ Add Venue</button>
         </x-slot:actions>
-    </x-eo.operations-header>
+    </x-cc.header>
+
+    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <x-cc.kpi-tile label="Suppliers" :value="number_format(\App\Models\Supplier::count())" hint="Vendor directory" />
+        <x-cc.kpi-tile label="Venues" :value="number_format(\App\Models\Venue::count())" hint="Locations on file" tone="live" />
+        <x-cc.kpi-tile label="Equipment" :value="number_format(\App\Models\Requirement::count())" hint="Catalog items" />
+        <x-cc.kpi-tile label="Open supplier issues" :value="number_format($openSupplierIssues)" hint="Flagged across live events" :tone="$openSupplierIssues > 0 ? 'warn' : 'ok'" />
+    </div>
 
     {{-- Hotels are the half the accommodation and transport modules pick from,
          so they are one click away rather than mixed into the whole list. --}}
-    <div class="mt-4 flex flex-wrap items-center gap-1.5">
+    <div class="mt-5 flex flex-wrap items-center gap-1.5">
         @foreach (['all' => 'All venues', 'hotels' => 'Hotels', 'other' => 'Halls & sites'] as $key => $label)
             <button type="button" wire:click="$set('filter', '{{ $key }}')"
                     @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition',
-                        'bg-eo-navy text-white' => $filter === $key,
-                        'bg-white text-eo-muted ring-1 ring-eo-line hover:text-eo-text' => $filter !== $key,
+                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold transition',
+                        'bg-navy-900 text-white' => $filter === $key,
+                        'bg-white text-muted ring-1 ring-line hover:text-ink' => $filter !== $key,
                     ])>
                 {{ $label }}
                 <span @class([
                     'rounded-full px-1.5 text-[10px] tabular-nums',
                     'bg-white/15' => $filter === $key,
-                    'bg-eo-bg text-eo-muted' => $filter !== $key,
+                    'bg-page text-muted' => $filter !== $key,
                 ])>{{ $counts[$key] }}</span>
             </button>
         @endforeach
@@ -43,49 +62,7 @@
         @else
             <div class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 @foreach ($venues as $venue)
-                    <div wire:key="venue-{{ $venue->id }}" class="group eo-soft-card flex flex-col overflow-hidden transition hover:-translate-y-0.5">
-                        <div class="flex flex-1 flex-col p-4">
-                            <div class="flex items-start gap-3">
-                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-eo-bg text-eo-muted">
-                                    <x-icon name="building" class="h-5 w-5" />
-                                </span>
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-bold text-eo-text">{{ $venue->name }}</p>
-                                    <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-micro text-eo-muted">
-                                        @if ($venue->type)<span class="eo-pill bg-eo-bg text-eo-muted">{{ $venue->type }}</span>@endif
-                                        <span>{{ $venue->locationLine() ?: 'No location set' }}</span>
-                                    </p>
-                                </div>
-                                <div class="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
-                                    <button type="button" wire:click="edit({{ $venue->id }})" class="rounded-lg bg-eo-bg px-1.5 py-1 text-[10px] font-bold text-eo-muted hover:bg-eo-line">✎</button>
-                                    <x-confirm title="Delete “{{ $venue->name }}”?"
-                                               body="Events using it keep working — they just lose the venue link."
-                                               confirm="Delete" run="$wire.delete({{ $venue->id }})"
-                                               class="rounded-lg bg-eo-risk/10 px-1.5 py-1 text-[10px] font-bold text-eo-risk hover:bg-eo-risk/20">✕</x-confirm>
-                                </div>
-                            </div>
-
-                            @if ($venue->address)
-                                <p class="mt-2.5 flex items-start gap-1.5 text-micro text-eo-muted"><x-icon name="pin" class="mt-0.5 h-3 w-3 shrink-0 text-eo-muted" />{{ $venue->address }}</p>
-                            @endif
-
-                            @if ($venue->contact_name || $venue->contact_phone || $venue->contact_email)
-                                <div class="mt-2.5 rounded-lg bg-eo-workspace px-2.5 py-1.5 text-micro text-eo-muted">
-                                    @if ($venue->contact_name)<span class="font-semibold text-eo-text">{{ $venue->contact_name }}</span>@endif
-                                    @if ($venue->contact_phone) · {{ $venue->contact_phone }}@endif
-                                    @if ($venue->contact_email) · {{ $venue->contact_email }}@endif
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- light footer: capacity + events --}}
-                        <div class="mt-auto flex items-center gap-2 border-t border-eo-line bg-eo-workspace px-3.5 py-2 text-eo-text">
-                            <x-icon name="building" class="h-3 w-3 shrink-0 text-eo-gold-ink" />
-                            <span class="text-[11px] font-semibold text-eo-muted">{{ $venue->capacity ? number_format($venue->capacity) : '—' }} capacity</span>
-                            <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-eo-muted">{{ $venue->events_count }} {{ str('event')->plural($venue->events_count) }}</span>
-                            <a href="{{ route('venues.show', $venue) }}" wire:navigate class="ml-auto shrink-0 text-[10.5px] font-bold text-eo-teal-ink hover:underline">Open Studio →</a>
-                        </div>
-                    </div>
+                    <x-operations.venue-card :venue="$venue" />
                 @endforeach
             </div>
         @endif
