@@ -155,4 +155,100 @@
         border-radius: 0.6rem;
         flex-shrink: 0;
     }
+
+    /* Plan Studio's "Countdown to Event Day" supporting panel — a pulse
+       strip beneath the Universal Module Header, deliberately lighter
+       than it: no blur, no shadow, a dashed border instead of a card
+       edge, so it never reads as a second, competing header. */
+    .ehc-countdown-panel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.9rem;
+        padding: 0.6rem 1rem;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px dashed var(--color-line);
+    }
+
+    .ehc-countdown-lead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+    }
+
+    .ehc-countdown-days {
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ehc-countdown-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .ehc-countdown-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-note {
+        font-size: 11px;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        margin-left: auto;
+    }
+
+    .ehc-countdown-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .ehc-countdown-stat-value {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ehc-countdown-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--color-muted);
+        border-left: 1px solid var(--color-line);
+        padding-left: 1rem;
+        white-space: nowrap;
+        transition: color 0.15s;
+    }
+
+    .ehc-countdown-export:hover {
+        color: var(--color-ink);
+    }
 }
