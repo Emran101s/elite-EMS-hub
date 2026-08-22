@@ -118,7 +118,7 @@
             {{-- Detail --}}
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-cc.briefing-panel title="{{ $sel->title }}" subtitle="{{ $sel->number }} · {{ $sel->client?->name ?? 'No client' }}">
+                    <x-cc.briefing-panel :title="$sel->title" :subtitle="$sel->number.' · '.($sel->client?->name ?? 'No client')">
                         <x-slot:header>
                             <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold {{ in_array($selState, ['expired', 'declined'], true) ? 'bg-danger-soft text-danger-ink' : ($selState === 'accepted' ? 'bg-success-soft text-success-ink' : 'bg-info-soft text-info-ink') }}">{{ $sel->stateLabel() }}</span>
                         </x-slot:header>

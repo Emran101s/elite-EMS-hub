@@ -83,7 +83,7 @@
 
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-cc.briefing-panel title="{{ $sel->label }}" subtitle="{{ $sel->event?->name ?? '—' }} · {{ $sel->event?->client?->name ?? 'No client' }}">
+                    <x-cc.briefing-panel :title="$sel->label" :subtitle="($sel->event?->name ?? '—').' · '.($sel->event?->client?->name ?? 'No client')">
                         <x-slot:header>
                             <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold {{ $selState === 'overdue' ? 'bg-danger-soft text-danger-ink' : ($selState === 'paid' ? 'bg-success-soft text-success-ink' : 'bg-warning-soft text-warning-ink') }}">{{ EventContractPayment::STATUS_META[$selState][0] }}</span>
                         </x-slot:header>

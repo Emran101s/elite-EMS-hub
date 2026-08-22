@@ -26,9 +26,9 @@
 
     {{-- ══════════ 1 · EXECUTIVE HEADER ══════════ --}}
     <x-cc.header
-        eyebrow="{{ $now->format('l · j F Y') }}"
-        title="{{ $greeting }}, {{ str($user->name)->before(' ') }}"
-        subtitle="{{ $headline }}"
+        :eyebrow="$now->format('l · j F Y')"
+        :title="$greeting.', '.str($user->name)->before(' ')"
+        :subtitle="$headline"
     >
         <x-slot:actions>
             <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-gold-700">

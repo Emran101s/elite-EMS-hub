@@ -91,7 +91,7 @@
         @if ($sel)
             <div class="grid gap-4 xl:grid-cols-12">
                 <div class="xl:col-span-8">
-                    <x-cc.briefing-panel title="{{ $sel->displayTitle() }}" subtitle="{{ $sel->reference ?: 'No reference' }} · {{ $sel->event?->name }}">
+                    <x-cc.briefing-panel :title="$sel->displayTitle()" :subtitle="($sel->reference ?: 'No reference').' · '.$sel->event?->name">
                         <x-billing.stat-card
                             eyebrow="Commercial"
                             title="Contract value"
@@ -133,7 +133,7 @@
 
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-cc.briefing-panel title="{{ $sel->displayTitle() }}" subtitle="{{ EventContract::TYPES[$sel->type]['label'] ?? $sel->type }} · {{ $sel->event?->client?->name ?? 'No client' }}">
+                    <x-cc.briefing-panel :title="$sel->displayTitle()" :subtitle="(EventContract::TYPES[$sel->type]['label'] ?? $sel->type).' · '.($sel->event?->client?->name ?? 'No client')">
                         <x-slot:header>
                             @php [$label] = $statusMeta[$sel->status] ?? ['—', '']; @endphp
                             <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold {{ $sel->status === 'signed' ? 'bg-success-soft text-success-ink' : ($sel->status === 'void' ? 'bg-danger-soft text-danger-ink' : 'bg-info-soft text-info-ink') }}">{{ $label }}</span>

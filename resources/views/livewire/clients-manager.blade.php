@@ -69,7 +69,7 @@
 
             <div class="xl:col-span-5">
                 @if ($sel)
-                    <x-cc.briefing-panel title="{{ $sel->name }}" subtitle="{{ $sel->organization ?: 'Client account' }}">
+                    <x-cc.briefing-panel :title="$sel->name" :subtitle="$sel->organization ?: 'Client account'">
                         <div class="mb-4 flex items-center gap-3">
                             @if ($sel->logo_path)
                                 <img src="{{ asset($sel->logo_path) }}" class="h-14 w-14 rounded-lg object-contain ring-1 ring-line" alt="">

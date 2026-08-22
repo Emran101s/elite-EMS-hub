@@ -17,14 +17,14 @@
             $ownerName = is_object($ownerRaw) ? ($ownerRaw->name ?? null) : $ownerRaw;
             $urgencyTone = $a['milestone']['tone'] ?? (($a['milestone']['overdue'] ?? false) ? 'risk' : null);
         @endphp
-        <x-cc.briefing-panel title="{{ $a['name'] }}" subtitle="{{ $a['client'] ?: 'No client on file' }}">
+        <x-cc.briefing-panel :title="$a['name']" :subtitle="$a['client'] ?: 'No client on file'">
             <x-slot:header>
                 @if ($a['statusLabel'])<span class="rounded-full px-2 py-0.5 text-[10px] font-bold bg-info-soft text-info-ink">{{ $a['statusLabel'] }}</span>@endif
             </x-slot:header>
 
             <div class="grid grid-cols-2 gap-3">
                 <x-cc.kpi-tile label="Health" :value="$a['healthScore'] ?? '—'" :tone="$healthTone" />
-                <x-cc.kpi-tile label="Readiness" value="{{ $a['progress'] }}%" tone="live" />
+                <x-cc.kpi-tile label="Readiness" :value="$a['progress'].'%'" tone="live" />
             </div>
 
             <div class="mt-4 space-y-2 text-[13px]">
