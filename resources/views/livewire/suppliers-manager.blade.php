@@ -1,7 +1,5 @@
 @php
-    // Same event_supplier pivot query x-eo.operations-header runs — kept
-    // identical here since Venues/Equipment still use that shared component
-    // and shouldn't be touched by this page's conversion.
+    // Same event_supplier pivot query the old shared operations-header ran.
     $openSupplierIssues = \App\Models\Event::query()
         ->withCount(['suppliers as issues_count' => fn ($q) => $q->where('event_supplier.status', 'issue')])
         ->get()
