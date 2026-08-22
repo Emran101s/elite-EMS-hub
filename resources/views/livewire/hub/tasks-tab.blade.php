@@ -4,8 +4,8 @@
     {{-- toast host --}}
     <div class="pointer-events-none fixed bottom-6 right-6 z-[60] flex flex-col gap-2">
         <template x-for="t in toasts" :key="t.id">
-            <div class="pointer-events-auto flex items-center gap-2 rounded-xl bg-eo-navy px-4 py-2.5 text-xs font-semibold text-white shadow-eo-float" x-transition>
-                <span class="h-1.5 w-1.5 rounded-full" :class="t.tone === 'ok' ? 'bg-emerald-400' : 'bg-amber-400'"></span><span x-text="t.message"></span>
+            <div class="pointer-events-auto flex items-center gap-2 rounded-lg bg-navy-900 px-4 py-2.5 text-xs font-semibold text-white shadow-float" x-transition>
+                <span class="h-1.5 w-1.5 rounded-full" :class="t.tone === 'ok' ? 'bg-success' : 'bg-warning'"></span><span x-text="t.message"></span>
             </div>
         </template>
     </div>
@@ -30,11 +30,11 @@
                     ['Done', $stats['pct'].'%', null],
                 ] as [$chipLabel, $chipVal, $chipTone])
                     <span @class([
-                        'inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-eyebrow font-bold ring-1',
-                        $chipTone ?: 'bg-white text-eo-text ring-eo-line',
+                        'inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold ring-1',
+                        $chipTone ?: 'bg-white text-ink ring-line',
                     ])>
-                        <span class="text-eo-muted">{{ $chipLabel }}</span>
-                        <span class="tabular-nums text-eo-text">{{ $chipVal }}</span>
+                        <span class="text-muted">{{ $chipLabel }}</span>
+                        <span class="tabular-nums text-ink">{{ $chipVal }}</span>
                     </span>
                 @endforeach
             </div>
@@ -42,33 +42,33 @@
             {{-- slim toolbar --}}
             <div class="mb-3 flex flex-wrap items-center gap-2.5">
                 <div class="relative">
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search tasks…" class="eo-input h-9 w-48 pl-8 text-xs">
-                    <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-eo-muted" />
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search tasks…" class="h-9 w-48 rounded-full border border-line bg-white pl-8 pr-3 text-xs text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+                    <x-icon name="search" class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                 </div>
 
-                <div class="flex rounded-xl border border-eo-line bg-white p-0.5 shadow-sm">
+                <div class="flex rounded-full border border-line bg-white p-0.5 shadow-sm">
                     @foreach (['all' => 'All', 'mine' => 'Mine', 'overdue' => 'Overdue'] as $fk => $flabel)
-                        <button type="button" wire:click="setFocus('{{ $fk }}')" @class(['rounded-lg px-2.5 py-1.5 text-micro font-bold transition', 'bg-eo-navy text-white' => $focus === $fk, 'text-eo-muted hover:text-eo-text' => $focus !== $fk])>{{ $flabel }}</button>
+                        <button type="button" wire:click="setFocus('{{ $fk }}')" @class(['rounded-full px-2.5 py-1.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $focus === $fk, 'text-muted hover:text-ink' => $focus !== $fk])>{{ $flabel }}</button>
                     @endforeach
                 </div>
 
                 <button type="button" @click="cc = ! cc"
-                        :class="cc ? 'border-eo-navy bg-eo-navy text-white' : 'border-eo-line bg-white text-eo-muted hover:border-eo-teal hover:text-eo-teal-ink'"
-                        class="ml-auto flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold shadow-sm transition">
+                        :class="cc ? 'border-navy-900 bg-navy-900 text-white' : 'border-line bg-white text-muted hover:border-navy-300 hover:text-gold-700'"
+                        class="ml-auto flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-bold shadow-sm transition">
                     <x-icon name="chart" class="h-3.5 w-3.5" />
                     <span x-text="cc ? 'Hide panel' : 'Control Center'"></span>
                 </button>
 
-                <x-eo.button wire:click="addTask">＋ New task</x-eo.button>
+                <button type="button" wire:click="addTask" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ New task</button>
             </div>
 
             {{-- module filter --}}
             <div class="mb-4 flex flex-wrap items-center gap-1">
-                <span class="mr-1 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">Module</span>
-                <button type="button" wire:click="filterByModule('')" @class(['h-7 rounded-lg px-2.5 text-micro font-bold transition', 'bg-eo-navy text-white' => $filterArea === '', 'bg-white text-eo-muted ring-1 ring-eo-line hover:text-eo-text' => $filterArea !== ''])>All</button>
+                <span class="mr-1 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Module</span>
+                <button type="button" wire:click="filterByModule('')" @class(['h-7 rounded-full px-2.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $filterArea === '', 'bg-white text-muted ring-1 ring-line hover:text-ink' => $filterArea !== ''])>All</button>
                 @foreach ($moduleCounts as $slug => $count)
                     @php [$mlabel, $mhex] = \App\Models\Task::MODULES[$slug] ?? [ucfirst($slug), 'var(--color-neutral)']; @endphp
-                    <button type="button" wire:click="filterByModule('{{ $slug }}')" @class(['flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-micro font-bold transition', 'text-white' => $filterArea === $slug, 'bg-white text-eo-muted ring-1 ring-eo-line hover:text-eo-text' => $filterArea !== $slug]) @style(['background: '.$mhex => $filterArea === $slug])>
+                    <button type="button" wire:click="filterByModule('{{ $slug }}')" @class(['flex h-7 items-center gap-1.5 rounded-full px-2.5 text-micro font-bold transition', 'text-white' => $filterArea === $slug, 'bg-white text-muted ring-1 ring-line hover:text-ink' => $filterArea !== $slug]) @style(['background: '.$mhex => $filterArea === $slug])>
                         <span class="h-2 w-2 rounded-full" style="background: {{ $filterArea === $slug ? '#fff' : $mhex }}"></span>{{ $mlabel }} <span class="opacity-60">{{ $count }}</span>
                     </button>
                 @endforeach
@@ -91,10 +91,10 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
              x-on:keydown.escape.window="cc = false"
-             class="fixed inset-y-0 right-0 z-30 w-[min(440px,92vw)] overflow-y-auto bg-eo-workspace/95 p-4 shadow-eo-float backdrop-blur">
+             class="fixed inset-y-0 right-0 z-30 w-[min(440px,92vw)] overflow-y-auto bg-page/95 p-4 shadow-float backdrop-blur">
             <div class="mb-3 flex items-center justify-end">
                 <button type="button" @click="cc = false"
-                        class="flex h-8 items-center gap-1.5 rounded-lg bg-white px-2.5 text-eyebrow font-bold text-eo-muted ring-1 ring-eo-line transition hover:text-eo-text">
+                        class="flex h-8 items-center gap-1.5 rounded-lg bg-white px-2.5 text-eyebrow font-bold text-muted ring-1 ring-line transition hover:text-ink">
                     Close ✕
                 </button>
             </div>
