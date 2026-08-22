@@ -8,7 +8,7 @@
             .'<path d="M2 7a4 4 0 0 1 4-4h10.7a4 4 0 0 1 2.9 1.2L22.6 7H38a4 4 0 0 1 4 4v2H2V7Z" fill="'.$hex.'" opacity="0.72"/>'
             .'</svg>';
     };
-    $inp = 'w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-xs text-eo-text placeholder:text-eo-muted hover:border-eo-line focus:border-eo-teal focus:bg-white focus:outline-none';
+    $inp = 'w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-xs text-ink placeholder:text-muted hover:border-line focus:border-navy-300 focus:bg-white focus:outline-none';
     $count = $documents->count() + $folders->count();
 @endphp
 
@@ -32,10 +32,10 @@
                 ['Folders', $drawerFolders, 'grid', null, null, null],
             ]" />
         @endif
-        {{-- eo-soft-card, with a touch of frosted-glass translucency layered
-             on top so this, the one module built entirely around a drop
-             zone, reads as the premium surface the brief asks for. --}}
-        <div class="eo-soft-card overflow-hidden bg-white/90 backdrop-blur-xl">
+        {{-- The one module built entirely around a drop zone — a touch of
+             frosted-glass translucency on the card reads as the premium
+             surface the brief asks for. --}}
+        <div class="overflow-hidden rounded-lg border border-line bg-white/90 shadow-raise backdrop-blur-xl">
             @include('livewire.hub.partials.document-drawer')
         </div>
     </div>
