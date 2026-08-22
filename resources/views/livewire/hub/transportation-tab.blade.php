@@ -23,13 +23,13 @@
 
             {{-- Dense toolbar --}}
             <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-xl border border-eo-line bg-white p-0.5">
-                    <span class="rounded-lg bg-eo-navy-deep px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
+                <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
+                    <span class="rounded-lg bg-navy-900 px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
                     <a href="{{ route('events.transport.dispatch', $event) }}"
-                       class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-eo-muted transition hover:text-eo-text"
+                       class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-muted transition hover:text-ink"
                        title="Lanes against a time axis — plan and catch clashes">Dispatch</a>
                     <a href="{{ route('events.transport.live', $event) }}"
-                       class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-eo-muted transition hover:text-eo-text"
+                       class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-muted transition hover:text-ink"
                        title="Event-day operations — designed for a phone">
                         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>Live
                     </a>
@@ -37,47 +37,47 @@
 
                 @if ($total)
                     <div x-data="{ open: false }" @click.outside="open = false" class="relative">
-                        <button type="button" @click="open = !open" class="eo-btn-ghost btn-sm">
+                        <button type="button" @click="open = !open" class="btn-ghost btn-sm">
                             <span>↧ Export</span>
                             @if ($filterLeg !== '' || $filterDay !== '')
                                 <span class="ml-1 opacity-60">({{ $shown }})</span>
                             @endif
                         </button>
                         <div x-show="open" x-cloak x-transition.opacity.duration.150ms
-                             class="absolute left-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-eo-line bg-white shadow-overlay">
-                            <p class="border-b border-eo-line bg-eo-workspace/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">
+                             class="absolute left-0 z-30 mt-1 w-72 overflow-hidden rounded-xl border border-line bg-white shadow-overlay">
+                            <p class="border-b border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">
                                 {{ $filterLeg || $filterDay ? $shown.' of '.$total.' movements' : 'All '.$total.' movements' }}
                             </p>
                             <a href="{{ route('events.transport.daily-schedule.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
-                               class="block border-b border-eo-line px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">Daily Schedule</span>
-                                <span class="block text-eyebrow text-eo-muted">Ops team — one day per page</span>
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">Daily Schedule</span>
+                                <span class="block text-eyebrow text-muted">Ops team — one day per page</span>
                             </a>
                             <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
-                               class="block border-b border-eo-line px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">Vehicle Manifest</span>
-                                <span class="block text-eyebrow text-eo-muted">Who rides in which vehicle</span>
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">Vehicle Manifest</span>
+                                <span class="block text-eyebrow text-muted">Who rides in which vehicle</span>
                             </a>
                             <a href="{{ route('events.transport.trip-sheet.pdf', [$event, ...array_filter(['day' => $filterDay])]) }}" target="_blank"
-                               class="block border-b border-eo-line px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">Driver Trip Sheets</span>
-                                <span class="block text-eyebrow text-eo-muted">One page per driver, per day</span>
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">Driver Trip Sheets</span>
+                                <span class="block text-eyebrow text-muted">One page per driver, per day</span>
                             </a>
                             <a href="{{ route('events.transport.vip-sheet.pdf', $event) }}" target="_blank"
-                               class="block px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">VIP Transfer Sheets</span>
-                                <span class="block text-eyebrow text-eo-muted">One page per VIP or speaker</span>
+                               class="block px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">VIP Transfer Sheets</span>
+                                <span class="block text-eyebrow text-muted">One page per VIP or speaker</span>
                             </a>
-                            <p class="border-y border-eo-line bg-eo-workspace/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">Whole event</p>
+                            <p class="border-y border-line bg-page/50 px-4 py-2 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Whole event</p>
                             <a href="{{ route('events.transport.master-plan.pdf', $event) }}" target="_blank"
-                               class="block border-b border-eo-line px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">Master Plan</span>
-                                <span class="block text-eyebrow text-eo-muted">Client-facing cover &amp; approval</span>
+                               class="block border-b border-line px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">Master Plan</span>
+                                <span class="block text-eyebrow text-muted">Client-facing cover &amp; approval</span>
                             </a>
                             <a href="{{ route('events.transport.supplier-order.pdf', $event) }}" target="_blank"
-                               class="block px-4 py-2 transition hover:bg-eo-workspace/60">
-                                <span class="block text-xs font-bold text-eo-text">Supplier Order</span>
-                                <span class="block text-eyebrow text-eo-muted">Request per vendor to quote</span>
+                               class="block px-4 py-2 transition hover:bg-page/60">
+                                <span class="block text-xs font-bold text-ink">Supplier Order</span>
+                                <span class="block text-eyebrow text-muted">Request per vendor to quote</span>
                             </a>
                         </div>
                     </div>
@@ -90,17 +90,17 @@
                         confirm="Pull attendees"
                         tone="neutral"
                         run="$wire.pullAttendees()"
-                        class="eo-btn-ghost btn-sm">⇩ Pull {{ $attendeePull }}</x-confirm>
+                        class="btn-ghost btn-sm">⇩ Pull {{ $attendeePull }}</x-confirm>
                 @endif
 
-                <button type="button" wire:click="$toggle('showPlanImport')" class="eo-btn-ghost btn-sm">⇪ Import</button>
+                <button type="button" wire:click="$toggle('showPlanImport')" class="btn-ghost btn-sm">⇪ Import</button>
 
                 <div class="ms-auto flex flex-wrap items-center gap-2">
-                    <button type="button" wire:click="newItem" class="eo-btn-primary btn-sm">＋ Add Movement</button>
+                    <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add Movement</button>
                     @if ($total)
                         <details class="relative" data-menu>
-                            <summary class="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-xl text-[15px] leading-none text-eo-muted transition hover:bg-eo-bg hover:text-eo-text [&::-webkit-details-marker]:hidden">⋮</summary>
-                            <div class="absolute end-0 z-30 mt-1 w-64 overflow-hidden rounded-xl border border-eo-line bg-white py-1 shadow-xl">
+                            <summary class="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-xl text-[15px] leading-none text-muted transition hover:bg-page hover:text-ink [&::-webkit-details-marker]:hidden">⋮</summary>
+                            <div class="absolute end-0 z-30 mt-1 w-64 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl">
                                 <x-confirm
                                     title="Clear the vehicle plan?"
                                     body="Deletes all {{ $total }} {{ \Illuminate\Support\Str::plural('movement', $total) }}. Guests return to the pool so you can plan again. The movements cannot be recovered."
@@ -108,7 +108,7 @@
                                     run="$wire.deleteAllMovements()"
                                     class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">
                                     Clear the vehicle plan
-                                    <span class="block text-[10.5px] font-normal text-eo-muted">Guests stay in the pool.</span>
+                                    <span class="block text-[10.5px] font-normal text-muted">Guests stay in the pool.</span>
                                 </x-confirm>
                             </div>
                         </details>
@@ -118,31 +118,31 @@
 
             {{-- Plan import — slim inset --}}
             @if ($showPlanImport)
-                <div class="rounded-xl border border-eo-line bg-eo-workspace/40 px-3.5 py-3">
+                <div class="rounded-xl border border-line bg-page/40 px-3.5 py-3">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <p class="text-xs font-bold text-eo-text">Import the guest list</p>
-                            <p class="mt-0.5 text-eyebrow leading-relaxed text-eo-muted">
+                            <p class="text-xs font-bold text-ink">Import the guest list</p>
+                            <p class="mt-0.5 text-eyebrow leading-relaxed text-muted">
                                 Excel or CSV — one row per traveller (Name, Direction, Airline, Flight #, Date, Flight Time, Pickup Time, From, To, Phone, Notes).
                                 Guests land in the pool; you book vehicles and place them. Re-import updates instead of duplicating.
                             </p>
                         </div>
-                        <button type="button" wire:click="$set('showPlanImport', false)" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-eo-muted hover:text-eo-text">✕</button>
+                        <button type="button" wire:click="$set('showPlanImport', false)" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-muted hover:text-ink">✕</button>
                     </div>
                     <div class="mt-2.5 flex flex-wrap items-center gap-2.5">
                         <input type="file" wire:model="planFile" accept=".xlsx,.xls,.csv,text/csv"
-                               class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                               class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
                         <button type="button" wire:click="importPlan" wire:loading.attr="disabled" wire:target="importPlan,planFile"
-                                class="eo-btn-primary btn-sm disabled:opacity-50">
+                                class="btn-gold btn-sm disabled:opacity-50">
                             <span wire:loading.remove wire:target="importPlan">Import plan</span>
                             <span wire:loading wire:target="importPlan">Importing…</span>
                         </button>
                         <span wire:loading wire:target="planFile" class="text-eyebrow font-semibold text-amber-700">Uploading…</span>
                         <a href="{{ route('events.transport.plan-template', $event) }}"
-                           class="border-l border-eo-line pl-3 text-eyebrow font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text"
+                           class="border-l border-line pl-3 text-eyebrow font-bold uppercase tracking-wide text-muted hover:text-ink"
                            title="Download a ready-to-fill Excel template">↧ Template</a>
                     </div>
-                    @error('planFile')<p class="mt-1.5 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('planFile')<p class="mt-1.5 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
             @endif
 
@@ -151,11 +151,11 @@
             @endif
 
             {{-- ══ 1 · Guests ══ --}}
-            <section class="eo-soft-card overflow-hidden bg-white/90 backdrop-blur-xl">
-                <div class="flex flex-wrap items-center gap-2.5 border-b border-eo-line px-3.5 py-2">
+            <section class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
+                <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-3.5 py-2">
                     <div class="min-w-0">
-                        <p class="text-[13px] font-bold text-eo-text">1 · Guests</p>
-                        <p class="text-eyebrow text-eo-muted">
+                        <p class="text-[13px] font-bold text-ink">1 · Guests</p>
+                        <p class="text-eyebrow text-muted">
                             @if ($unassignedCount)
                                 {{ $unassignedCount }} still to place
                             @elseif (array_sum($legCounts) > 0 || $guests->isNotEmpty())
@@ -166,28 +166,28 @@
                         </p>
                     </div>
 
-                    <div class="flex rounded-xl border border-eo-line bg-white p-0.5">
+                    <div class="flex rounded-xl border border-line bg-white p-0.5">
                         @foreach (['arrival' => 'Arrivals', 'departure' => 'Departures'] as $leg => $label)
                             <button type="button" wire:click="setGuestLeg('{{ $leg }}')"
                                     @class([
                                         'rounded-lg px-3 py-1.5 text-micro font-bold transition',
-                                        'bg-eo-navy text-white' => $guestLeg === $leg,
-                                        'text-eo-muted hover:text-eo-text' => $guestLeg !== $leg,
+                                        'bg-navy-900 text-white' => $guestLeg === $leg,
+                                        'text-muted hover:text-ink' => $guestLeg !== $leg,
                                     ])>
                                 {{ $label }}
-                                <span class="ml-1 rounded-full {{ $guestLeg === $leg ? 'bg-white/20' : 'bg-eo-bg' }} px-1.5 text-eyebrow">{{ $legCounts[$leg] }}</span>
+                                <span class="ml-1 rounded-full {{ $guestLeg === $leg ? 'bg-white/20' : 'bg-page' }} px-1.5 text-eyebrow">{{ $legCounts[$leg] }}</span>
                             </button>
                         @endforeach
                     </div>
 
-                    <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-eo-muted">
-                        <input type="checkbox" wire:model.live="guestsOnlyUnassigned" class="h-3.5 w-3.5 rounded border-eo-line text-eo-teal focus:ring-eo-teal">
+                    <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-muted">
+                        <input type="checkbox" wire:model.live="guestsOnlyUnassigned" class="h-3.5 w-3.5 rounded border-line text-navy-900 focus:ring-navy-300">
                         Unassigned only
                     </label>
 
                     @if ($legCounts[$guestLeg] > 0)
                         <button type="button" wire:click="suggestGrouping"
-                                class="ml-auto eo-btn-ghost btn-xs"
+                                class="ml-auto btn-ghost btn-xs"
                                 title="Group whoever is left by pickup place and time">✦ Suggest runs</button>
                     @endif
 
@@ -204,21 +204,21 @@
                 </div>
 
                 @if ($assignTargets->isNotEmpty() && ($guests->isNotEmpty() || $unassignedCount))
-                    <div class="flex flex-wrap items-center gap-1.5 border-b border-eo-line bg-eo-workspace/30 px-3.5 py-2">
-                        <span class="me-1 text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Drag onto</span>
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line bg-page/30 px-3.5 py-2">
+                        <span class="me-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Drag onto</span>
                         @foreach ($assignTargets as $t)
                             @php $full = $t->seats() > 0 && $t->manifest->count() >= $t->seats(); @endphp
                             <div data-drop-movement="{{ $t->id }}"
                                  @class([
                                      'flex items-center gap-1.5 rounded-lg border border-dashed px-2 py-1 transition',
                                      'border-emerald-300 bg-emerald-50/50' => ! $full,
-                                     'border-eo-line bg-white opacity-50' => $full,
+                                     'border-line bg-white opacity-50' => $full,
                                  ])
                                  title="Drop guests here to put them on this run">
                                 <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-eyebrow font-black text-white"
                                       style="background: {{ $moduleHex }}">{{ $t->ref_no ?: '–' }}</span>
-                                <span class="max-w-[7rem] truncate text-eyebrow font-bold text-eo-text">{{ $t->depart_at?->format('H:i') ?? 'TBC' }}</span>
-                                <span class="text-eyebrow text-eo-muted">{{ $t->manifest->count() }}/{{ $t->seats() ?: '?' }}</span>
+                                <span class="max-w-[7rem] truncate text-eyebrow font-bold text-ink">{{ $t->depart_at?->format('H:i') ?? 'TBC' }}</span>
+                                <span class="text-eyebrow text-muted">{{ $t->manifest->count() }}/{{ $t->seats() ?: '?' }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -226,14 +226,14 @@
 
                 @if (count($pickedGuests))
                     <div class="flex flex-wrap items-center gap-2.5 border-b border-amber-200/80 bg-amber-50/50 px-3.5 py-2">
-                        <span class="text-xs font-bold text-eo-text">{{ count($pickedGuests) }} selected</span>
+                        <span class="text-xs font-bold text-ink">{{ count($pickedGuests) }} selected</span>
                         <form wire:submit="assignToNumber" class="flex items-center gap-1.5">
-                            <label class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted" for="carNo">Car #</label>
+                            <label class="text-eyebrow font-bold uppercase tracking-wide text-muted" for="carNo">Car #</label>
                             <input id="carNo" type="text" inputmode="numeric" placeholder="#" wire:model="assignRef"
-                                   class="h-8 w-14 rounded-lg border border-eo-line px-2 text-center text-xs font-bold text-eo-text focus:border-amber-400 focus:outline-none">
-                            <button type="submit" class="rounded-lg bg-eo-navy px-2.5 py-1.5 text-eyebrow font-bold text-white hover:bg-eo-navy-mid">Go</button>
+                                   class="h-8 w-14 rounded-lg border border-line px-2 text-center text-xs font-bold text-ink focus:border-amber-400 focus:outline-none">
+                            <button type="submit" class="rounded-lg bg-navy-900 px-2.5 py-1.5 text-eyebrow font-bold text-white hover:bg-navy-800">Go</button>
                         </form>
-                        <select wire:change="assignPicked($event.target.value)" class="eo-input h-8 w-auto !rounded-lg !py-0 text-xs">
+                        <select wire:change="assignPicked($event.target.value)" class="h-8 w-auto rounded-lg border border-line bg-white px-2 text-xs text-ink focus:border-navy-300 focus:outline-none">
                             <option value="">or pick a run…</option>
                             @foreach ($assignTargets as $t)
                                 <option value="{{ $t->id }}">
@@ -242,25 +242,25 @@
                                 </option>
                             @endforeach
                         </select>
-                        <button type="button" wire:click="unassignPicked" class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text">To pool</button>
+                        <button type="button" wire:click="unassignPicked" class="text-eyebrow font-bold uppercase tracking-wide text-muted hover:text-ink">To pool</button>
                         <x-confirm
                             title="Delete {{ count($pickedGuests) }} {{ \Illuminate\Support\Str::plural('guest', count($pickedGuests)) }}?"
                             body="Removes them from this event. This cannot be undone."
                             confirm="Delete"
                             run="$wire.deletePicked()"
                             class="text-eyebrow font-bold uppercase tracking-wide text-red-600 hover:text-red-800">Delete</x-confirm>
-                        <button type="button" wire:click="clearPicked" class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text">Clear</button>
+                        <button type="button" wire:click="clearPicked" class="ml-auto text-eyebrow font-bold uppercase tracking-wide text-muted hover:text-ink">Clear</button>
                     </div>
                 @endif
 
                 @if ($guests->isEmpty() && ! $unassignedCount && array_sum($legCounts) === 0)
                     <div class="px-3.5 py-8 text-center">
-                        <p class="text-sm font-semibold text-eo-text">No guests in the pool yet</p>
-                        <p class="mx-auto mt-1 max-w-md text-eyebrow text-eo-muted">
+                        <p class="text-sm font-semibold text-ink">No guests in the pool yet</p>
+                        <p class="mx-auto mt-1 max-w-md text-eyebrow text-muted">
                             Import a flight list, pull registered attendees, or add passengers on a movement’s manifest.
                         </p>
                         <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
-                            <button type="button" wire:click="$set('showPlanImport', true)" class="eo-btn-ghost btn-sm">⇪ Import guests</button>
+                            <button type="button" wire:click="$set('showPlanImport', true)" class="btn-ghost btn-sm">⇪ Import guests</button>
                             @if ($attendeePull > 0)
                                 <x-confirm
                                     title="Pull {{ $attendeePull }} {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }} into the pool?"
@@ -268,7 +268,7 @@
                                     confirm="Pull attendees"
                                     tone="neutral"
                                     run="$wire.pullAttendees()"
-                                    class="eo-btn-ghost btn-sm">⇩ Pull {{ $attendeePull }}</x-confirm>
+                                    class="btn-ghost btn-sm">⇩ Pull {{ $attendeePull }}</x-confirm>
                             @endif
                         </div>
                     </div>
@@ -276,10 +276,10 @@
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[720px]">
                             <thead>
-                                <tr class="border-b border-eo-line text-left text-eyebrow font-bold uppercase tracking-wide text-eo-muted">
+                                <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
                                     <th class="w-10 px-3.5 py-2">
                                         <input type="checkbox" @checked($allPicked) wire:click="toggleGuestPage({{ json_encode($guestIds) }})"
-                                               class="h-4 w-4 cursor-pointer rounded border-eo-line text-eo-teal focus:ring-eo-teal">
+                                               class="h-4 w-4 cursor-pointer rounded border-line text-navy-900 focus:ring-navy-300">
                                     </th>
                                     <th class="px-2 py-2">Guest</th>
                                     <th class="hidden px-2 py-2 sm:table-cell">Flight</th>
@@ -292,14 +292,14 @@
                                 @forelse ($guests as $g)
                                     @php $picked = in_array($g->id, $pickedGuests, true); @endphp
                                     <tr wire:key="g-{{ $g->id }}" data-guest="{{ $g->id }}"
-                                        @class(['border-b border-eo-line last:border-0 cursor-grab transition hover:bg-eo-workspace/50', 'bg-amber-50/40' => $picked])>
+                                        @class(['border-b border-line last:border-0 cursor-grab transition hover:bg-page/50', 'bg-amber-50/40' => $picked])>
                                         <td class="px-3.5 py-2">
                                             <input type="checkbox" @checked($picked) wire:click="toggleGuest({{ $g->id }})"
-                                                   class="h-4 w-4 cursor-pointer rounded border-eo-line text-eo-teal focus:ring-eo-teal">
+                                                   class="h-4 w-4 cursor-pointer rounded border-line text-navy-900 focus:ring-navy-300">
                                         </td>
                                         <td class="px-2 py-2">
                                             <span class="flex items-center gap-1.5">
-                                                <span class="text-xs font-bold text-eo-text">{{ $g->name }}</span>
+                                                <span class="text-xs font-bold text-ink">{{ $g->name }}</span>
                                                 @if ($g->isPriority())
                                                     <span class="rounded px-1 py-0.5 text-eyebrow font-bold uppercase {{ $g->categoryClass() }}"
                                                           title="Priority — promotes the whole vehicle">{{ $g->categoryLabel() }}</span>
@@ -307,12 +307,12 @@
                                             </span>
                                             <span class="mt-0.5 flex flex-wrap items-center gap-1.5">
                                                 <select wire:change="updatePassenger({{ $g->id }}, 'category', $event.target.value)"
-                                                        class="h-5 w-auto rounded border-0 bg-transparent p-0 pr-4 text-eyebrow font-semibold text-eo-muted hover:text-eo-text focus:ring-0">
+                                                        class="h-5 w-auto rounded border-0 bg-transparent p-0 pr-4 text-eyebrow font-semibold text-muted hover:text-ink focus:ring-0">
                                                     @foreach (\App\Support\Taxonomy::options('passenger_category') as $key => $label)
                                                         <option value="{{ $key }}" @selected($g->category === $key)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
-                                                @if ($g->phone)<span class="text-eyebrow text-eo-muted">{{ $g->phone }}</span>@endif
+                                                @if ($g->phone)<span class="text-eyebrow text-muted">{{ $g->phone }}</span>@endif
                                                 @if ($wa = \App\Support\WhatsApp::toGuest($g))
                                                     <a href="{{ $wa }}" target="_blank" rel="noopener"
                                                        class="text-eyebrow font-bold text-emerald-600 hover:text-emerald-800"
@@ -323,17 +323,17 @@
                                         <td class="hidden px-2 py-2 sm:table-cell">
                                             @if ($g->flight_no)
                                                 <button type="button" wire:click="pickFlight('{{ $g->flight_no }}')"
-                                                        class="rounded-md bg-eo-bg px-1.5 py-0.5 text-xs font-bold text-eo-text transition hover:bg-amber-100"
+                                                        class="rounded-md bg-page px-1.5 py-0.5 text-xs font-bold text-ink transition hover:bg-amber-100"
                                                         title="Select everyone on {{ $g->flight_no }}">{{ $g->flight_no }}</button>
-                                                @if ($g->airline)<span class="ms-1 text-eyebrow text-eo-muted">{{ $g->airline }}</span>@endif
+                                                @if ($g->airline)<span class="ms-1 text-eyebrow text-muted">{{ $g->airline }}</span>@endif
                                             @else
-                                                <span class="text-xs text-eo-muted">{{ $g->airline ?: '—' }}</span>
+                                                <span class="text-xs text-muted">{{ $g->airline ?: '—' }}</span>
                                             @endif
                                         </td>
-                                        <td class="px-2 py-2 text-xs text-eo-text whitespace-nowrap">
+                                        <td class="px-2 py-2 text-xs text-ink whitespace-nowrap">
                                             {{ $g->arrival_on?->format('j M') ?? '—' }}{{ $g->arrival_time ? ' · '.substr($g->arrival_time, 0, 5) : '' }}
                                         </td>
-                                        <td class="hidden px-2 py-2 text-xs font-semibold text-eo-text whitespace-nowrap md:table-cell">
+                                        <td class="hidden px-2 py-2 text-xs font-semibold text-ink whitespace-nowrap md:table-cell">
                                             {{ $g->pickup_time ? substr($g->pickup_time, 0, 5) : '—' }}
                                         </td>
                                         <td class="px-2 py-2">
@@ -354,7 +354,7 @@
                                                         @endforeach
                                                     </select>
                                                     @if ($g->vehicle_no)
-                                                        <span class="text-eyebrow font-bold text-eo-muted whitespace-nowrap">Van {{ $g->vehicle_no }}</span>
+                                                        <span class="text-eyebrow font-bold text-muted whitespace-nowrap">Van {{ $g->vehicle_no }}</span>
                                                     @endif
                                                 </span>
                                             @elseif ($g->transport_id)
@@ -366,7 +366,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-3.5 py-8 text-center text-xs text-eo-muted">
+                                        <td colspan="6" class="px-3.5 py-8 text-center text-xs text-muted">
                                             {{ $guestsOnlyUnassigned ? 'Every '.$guestLeg.' guest is on a vehicle.' : 'No '.$guestLeg.' guests yet — import the flight list above.' }}
                                         </td>
                                     </tr>
@@ -381,11 +381,11 @@
             <section>
                 <div class="mb-2 flex flex-wrap items-end justify-between gap-2">
                     <div>
-                        <p class="text-[13px] font-bold text-eo-text">2 · Vehicle plan</p>
-                        <p class="text-eyebrow text-eo-muted">Book runs, then open a row to name who rides</p>
+                        <p class="text-[13px] font-bold text-ink">2 · Vehicle plan</p>
+                        <p class="text-eyebrow text-muted">Book runs, then open a row to name who rides</p>
                     </div>
                     @if ($total)
-                        <span class="text-eyebrow text-eo-muted">{{ $shown }} of {{ $total }}</span>
+                        <span class="text-eyebrow text-muted">{{ $shown }} of {{ $total }}</span>
                     @endif
                 </div>
 
@@ -394,13 +394,13 @@
                         @if ($total)
                             <div class="flex flex-wrap items-center gap-1">
                                 <button type="button" wire:click="setLeg('')"
-                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === '' ? 'bg-eo-navy text-white' : 'bg-eo-bg text-eo-muted hover:bg-eo-bg' }}">
+                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === '' ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
                                     All <span class="opacity-60">{{ $total }}</span>
                                 </button>
                                 @foreach ($legTabs as $tab)
                                     <button type="button" wire:click="setLeg('{{ $tab['key'] }}')"
                                             @disabled($tab['runs'] === 0)
-                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === $tab['key'] ? 'bg-eo-navy text-white' : ($tab['runs'] ? 'bg-eo-bg text-eo-muted hover:bg-eo-bg' : 'bg-white text-eo-muted') }}"
+                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === $tab['key'] ? 'bg-navy-900 text-white' : ($tab['runs'] ? 'bg-page text-muted hover:bg-page' : 'bg-white text-muted') }}"
                                             title="{{ $tab['hint'] }}">
                                         {{ $tab['label'] }} <span class="opacity-60">{{ $tab['runs'] }}</span>
                                     </button>
@@ -411,14 +411,14 @@
                         @if ($days->isNotEmpty())
                             @if ($total)<span class="hidden h-5 w-px bg-line sm:block" aria-hidden="true"></span>@endif
                             <div class="flex flex-wrap items-center gap-1">
-                                <span class="me-0.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">Day</span>
+                                <span class="me-0.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Day</span>
                                 <button type="button" wire:click="setDay('')"
-                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === '' ? 'bg-eo-navy text-white' : 'bg-eo-bg text-eo-muted hover:bg-eo-bg' }}">
+                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === '' ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
                                     All
                                 </button>
                                 @foreach ($days as $day => $count)
                                     <button type="button" wire:click="setDay('{{ $day }}')"
-                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === $day ? 'bg-eo-navy text-white' : 'bg-eo-bg text-eo-muted hover:bg-eo-bg' }}">
+                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === $day ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
                                         {{ \Carbon\Carbon::parse($day)->format('D j M') }} <span class="opacity-60">{{ $count }}</span>
                                     </button>
                                 @endforeach
@@ -432,8 +432,8 @@
                              :title="$filterDay ? 'Nothing moving on that day' : 'No transport planned yet'"
                              hint="A movement is a service — airport transfer, hotel shuttle, a day at disposal — in a vehicle sized to the group.">
                         <x-slot:actions>
-                            <button type="button" wire:click="newItem" class="eo-btn-primary btn-sm">＋ Add a movement</button>
-                            <a href="{{ route('transport-settings.index') }}" class="eo-btn-ghost btn-sm">Manage vehicles &amp; services →</a>
+                            <button type="button" wire:click="newItem" class="btn-gold btn-sm">＋ Add a movement</button>
+                            <a href="{{ route('transport-settings.index') }}" class="btn-ghost btn-sm">Manage vehicles &amp; services →</a>
                         </x-slot:actions>
                     </x-empty>
                 @else
@@ -441,16 +441,16 @@
                         @foreach ($movements as $day => $group)
                             <div>
                                 <div class="mb-1.5 flex items-center justify-between px-0.5">
-                                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-eo-text">
+                                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-ink">
                                         {{ $day === 'unscheduled' ? 'Not yet scheduled' : \Carbon\Carbon::parse($day)->format('l, j F') }}
                                     </p>
-                                    <p class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted">
+                                    <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">
                                         {{ $group->count() }} {{ \Illuminate\Support\Str::plural('movement', $group->count()) }}
                                         · {{ $group->sum(fn ($x) => $x->paxCount()) }} pax
                                     </p>
                                 </div>
 
-                                <div class="eo-soft-card overflow-hidden bg-white/90 backdrop-blur-xl">
+                                <div class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
                                     @foreach ($group as $m)
                                         @php
                                             $stLabel = $m->statusLabel(); $stClass = $m->statusClass();
@@ -461,31 +461,31 @@
                                                 && $m->driver->isOverloadedOn($m->depart_at->toDateString());
                                             $open = $expandedId === $m->id;
                                             $chip = $m->readinessChip();
-                                            $legClass = ['arrival' => 'bg-emerald-100 text-emerald-700', 'departure' => 'bg-sky-100 text-sky-700'][$m->leg] ?? 'bg-eo-bg text-eo-muted';
+                                            $legClass = ['arrival' => 'bg-emerald-100 text-emerald-700', 'departure' => 'bg-sky-100 text-sky-700'][$m->leg] ?? 'bg-page text-muted';
                                         @endphp
-                                        <div wire:key="mv-{{ $m->id }}" class="border-b border-eo-line last:border-0">
-                                            <div class="group/mv flex flex-wrap cursor-pointer items-center gap-x-2.5 gap-y-1.5 border-l-[3px] px-3 py-2.5 transition hover:bg-eo-workspace/30 {{ $open ? 'bg-eo-workspace/20' : '' }}"
+                                        <div wire:key="mv-{{ $m->id }}" class="border-b border-line last:border-0">
+                                            <div class="group/mv flex flex-wrap cursor-pointer items-center gap-x-2.5 gap-y-1.5 border-l-[3px] px-3 py-2.5 transition hover:bg-page/30 {{ $open ? 'bg-page/20' : '' }}"
                                                  style="border-left-color: {{ $priority ? '#D4AF37' : $moduleHex }}"
                                                  wire:click="toggleExpand({{ $m->id }})">
 
-                                                <span class="shrink-0 text-eo-muted transition group-hover/mv:text-eo-muted {{ $open ? 'rotate-90' : '' }}">▸</span>
+                                                <span class="shrink-0 text-muted transition group-hover/mv:text-muted {{ $open ? 'rotate-90' : '' }}">▸</span>
 
                                                 @if ($m->ref_no)
                                                     <span @class([
                                                               'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black',
-                                                              'bg-gold-500 text-eo-text' => $priority,
+                                                              'bg-gold-500 text-ink' => $priority,
                                                               'text-white' => ! $priority,
                                                           ])
                                                           @if (! $priority) style="background: {{ $moduleHex }}" @endif
                                                           title="Car {{ $m->refLabel() }}">{{ $m->ref_no }}</span>
                                                 @else
-                                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-eo-line text-xs font-black text-eo-muted"
+                                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-line text-xs font-black text-muted"
                                                           title="No car number yet">–</span>
                                                 @endif
 
                                                 <div class="w-12 shrink-0 text-center">
-                                                    <p class="text-sm font-bold leading-none text-eo-text">{{ $m->depart_at?->format('H:i') ?? '—' }}</p>
-                                                    <p class="mt-0.5 text-eyebrow uppercase tracking-wide text-eo-muted">{{ $m->depart_at?->format('D') ?? 'TBC' }}</p>
+                                                    <p class="text-sm font-bold leading-none text-ink">{{ $m->depart_at?->format('H:i') ?? '—' }}</p>
+                                                    <p class="mt-0.5 text-eyebrow uppercase tracking-wide text-muted">{{ $m->depart_at?->format('D') ?? 'TBC' }}</p>
                                                 </div>
 
                                                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
@@ -500,7 +500,7 @@
                                                             <span class="shrink-0 rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $legClass }}"
                                                                   title="{{ \App\Models\EventTransport::LEG_HINTS[$m->leg] ?? '' }}">{{ $m->legLabel() }}</span>
                                                         @endif
-                                                        <p class="truncate text-sm font-semibold text-eo-text">{{ $m->serviceType?->name ?? $m->route }}</p>
+                                                        <p class="truncate text-sm font-semibold text-ink">{{ $m->serviceType?->name ?? $m->route }}</p>
                                                         <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $stClass }}"
                                                               title="{{ \App\Models\EventTransport::STATUS_META[$m->status]['hint'] ?? '' }}">{{ $stLabel }}</span>
                                                         @if ($priority)
@@ -508,7 +508,7 @@
                                                                   title="{{ $m->priorityReason() }}">★ Priority</span>
                                                         @endif
                                                         @if ($over)
-                                                            <span class="rounded-full bg-eo-risk/10 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-red-700">Over capacity</span>
+                                                            <span class="rounded-full bg-danger-soft px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-red-700">Over capacity</span>
                                                         @endif
                                                         @if ($overloaded)
                                                             <span class="rounded-full bg-amber-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-amber-800"
@@ -516,8 +516,8 @@
                                                         @endif
                                                     </div>
                                                     @if ($m->pickup_from || $m->drop_to)
-                                                        <p class="mt-0.5 truncate text-xs font-semibold text-eo-text">
-                                                            {{ $m->pickup_from ?: '—' }} <span class="text-eo-muted">→</span> {{ $m->drop_to ?: '—' }}
+                                                        <p class="mt-0.5 truncate text-xs font-semibold text-ink">
+                                                            {{ $m->pickup_from ?: '—' }} <span class="text-muted">→</span> {{ $m->drop_to ?: '—' }}
                                                         </p>
                                                     @endif
                                                     @php
@@ -529,14 +529,14 @@
                                                         ])->filter();
                                                     @endphp
                                                     @if ($facts->isNotEmpty())
-                                                        <p class="mt-0.5 truncate text-eyebrow text-eo-muted">{{ $facts->join(' · ') }}</p>
+                                                        <p class="mt-0.5 truncate text-eyebrow text-muted">{{ $facts->join(' · ') }}</p>
                                                     @endif
                                                     @if ($m->driver)
-                                                        <p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-eyebrow text-eo-muted">
-                                                            <span class="font-semibold text-eo-text">{{ $m->driver->name }}</span>
+                                                        <p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-eyebrow text-muted">
+                                                            <span class="font-semibold text-ink">{{ $m->driver->name }}</span>
                                                             @if ($m->contactNumber())
                                                                 <a href="tel:{{ $m->contactNumber() }}" wire:click.stop
-                                                                   class="font-semibold text-eo-muted hover:text-eo-text">{{ $m->contactNumber() }}</a>
+                                                                   class="font-semibold text-muted hover:text-ink">{{ $m->contactNumber() }}</a>
                                                             @endif
                                                             @if ($wa = \App\Support\WhatsApp::toDriver($m))
                                                                 <a href="{{ $wa }}" target="_blank" rel="noopener" wire:click.stop
@@ -555,42 +555,42 @@
                                                       title="{{ $chip['detail'] }}">{{ $chip['label'] }}</span>
 
                                                 <div class="hidden w-40 shrink-0 sm:block">
-                                                    <p class="truncate text-xs font-semibold text-eo-text">
-                                                        {{ $m->vehicleType?->name ?? '—' }}@if ($m->vehicles > 1) <span class="text-eo-muted">×{{ $m->vehicles }}</span>@endif
+                                                    <p class="truncate text-xs font-semibold text-ink">
+                                                        {{ $m->vehicleType?->name ?? '—' }}@if ($m->vehicles > 1) <span class="text-muted">×{{ $m->vehicles }}</span>@endif
                                                     </p>
                                                     @if ($m->seats() > 0)
                                                         @php $load = min(100, (int) round($m->paxCount() / max(1, $m->seats()) * 100)); @endphp
                                                         <div class="mt-1 flex items-center gap-1.5">
-                                                            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-eo-bg">
+                                                            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-page">
                                                                 <div class="h-full rounded-full {{ $over ? 'bg-danger' : '' }}"
                                                                      style="width: {{ $load }}%; {{ $over ? '' : 'background: '.$moduleHex }}"></div>
                                                             </div>
-                                                            <span class="shrink-0 text-eyebrow font-bold {{ $over ? 'text-red-700' : 'text-eo-muted' }}">{{ $m->paxCount() }}/{{ $m->seats() }}</span>
+                                                            <span class="shrink-0 text-eyebrow font-bold {{ $over ? 'text-red-700' : 'text-muted' }}">{{ $m->paxCount() }}/{{ $m->seats() }}</span>
                                                         </div>
                                                     @else
-                                                        <p class="mt-0.5 text-eyebrow text-eo-muted">{{ $m->paxCount() }} pax</p>
+                                                        <p class="mt-0.5 text-eyebrow text-muted">{{ $m->paxCount() }} pax</p>
                                                     @endif
                                                 </div>
 
-                                                <p class="hidden w-20 shrink-0 text-right text-xs font-semibold text-eo-text md:block">
+                                                <p class="hidden w-20 shrink-0 text-right text-xs font-semibold text-ink md:block">
                                                     {{ $m->cost_cents ? $money3($m->cost_cents) : '—' }}
                                                 </p>
 
                                                 <div class="flex shrink-0 items-center gap-1" wire:click.stop>
                                                     <button type="button" wire:click="edit({{ $m->id }})"
-                                                            class="rounded-lg bg-eo-bg px-2 py-1.5 text-eyebrow font-bold text-eo-text hover:bg-eo-bg">✎</button>
+                                                            class="rounded-lg bg-page px-2 py-1.5 text-eyebrow font-bold text-ink hover:bg-page">✎</button>
                                                     <details class="relative" data-menu>
-                                                        <summary class="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-lg text-[15px] leading-none text-eo-muted transition hover:bg-eo-bg hover:text-eo-text [&::-webkit-details-marker]:hidden">⋮</summary>
-                                                        <div class="absolute end-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-eo-line bg-white py-1 shadow-xl">
+                                                        <summary class="grid h-7 w-7 cursor-pointer list-none place-items-center rounded-lg text-[15px] leading-none text-muted transition hover:bg-page hover:text-ink [&::-webkit-details-marker]:hidden">⋮</summary>
+                                                        <div class="absolute end-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl">
                                                             @if ($next = $m->nextPlanningStatus())
                                                                 <button type="button" wire:click="advanceStatus({{ $m->id }})"
-                                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-text transition hover:bg-eo-workspace">
+                                                                        class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-ink transition hover:bg-page">
                                                                     → Mark {{ \App\Models\EventTransport::STATUS_META[$next]['label'] }}
-                                                                    <span class="block text-eyebrow font-medium text-eo-muted">{{ \App\Models\EventTransport::STATUS_META[$next]['hint'] }}</span>
+                                                                    <span class="block text-eyebrow font-medium text-muted">{{ \App\Models\EventTransport::STATUS_META[$next]['hint'] }}</span>
                                                                 </button>
                                                             @endif
                                                             <button type="button" wire:click="duplicate({{ $m->id }})"
-                                                                    class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-eo-text transition hover:bg-eo-workspace">
+                                                                    class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-ink transition hover:bg-page">
                                                                 Repeat this run tomorrow
                                                             </button>
                                                             <x-confirm
@@ -598,7 +598,7 @@
                                                                 body="{{ $m->manifest->count() }} named {{ \Illuminate\Support\Str::plural('passenger', $m->manifest->count()) }} return to the guest pool. The movement itself cannot be recovered."
                                                                 confirm="Delete movement"
                                                                 run="$wire.delete({{ $m->id }})"
-                                                                class="block w-full border-t border-eo-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">
+                                                                class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-red-700 transition hover:bg-red-50">
                                                                 Delete this movement
                                                             </x-confirm>
                                                         </div>
@@ -608,18 +608,18 @@
 
                                             {{-- ══ 3 · Manifest ══ --}}
                                             @if ($open)
-                                                <div class="border-t border-eo-line bg-eo-workspace/20">
-                                                    <div class="flex items-center justify-between gap-2 border-b border-eo-line/60 px-3.5 py-1.5">
-                                                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-eo-muted">3 · Manifest</p>
-                                                        <span class="text-eyebrow text-eo-muted">
-                                                            <span class="font-bold text-eo-text">{{ $m->manifest->count() }}</span> named ·
-                                                            <span class="font-bold text-eo-text">{{ $m->seatsFree() }}</span> free
+                                                <div class="border-t border-line bg-page/20">
+                                                    <div class="flex items-center justify-between gap-2 border-b border-line/60 px-3.5 py-1.5">
+                                                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">3 · Manifest</p>
+                                                        <span class="text-eyebrow text-muted">
+                                                            <span class="font-bold text-ink">{{ $m->manifest->count() }}</span> named ·
+                                                            <span class="font-bold text-ink">{{ $m->seatsFree() }}</span> free
                                                         </span>
                                                     </div>
                                                     <div class="overflow-x-auto">
                                                         <table class="w-full min-w-[640px]">
                                                             <thead>
-                                                                <tr class="border-b border-eo-line text-left text-eyebrow font-bold uppercase tracking-wide text-eo-muted">
+                                                                <tr class="border-b border-line text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
                                                                     <th class="w-12 px-3 py-2 text-center">{{ $m->vehicles > 1 ? 'Van' : '#' }}</th>
                                                                     <th class="px-2 py-2">Passenger</th>
                                                                     <th class="px-2 py-2">Flight</th>
@@ -631,19 +631,19 @@
                                                             </thead>
                                                             <tbody>
                                                                 @foreach ($m->manifest as $i => $p)
-                                                                    @php $pin = 'w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-xs text-eo-text placeholder:text-eo-muted hover:border-eo-line focus:border-amber-400 focus:bg-white focus:outline-none'; @endphp
-                                                                    <tr wire:key="pax-{{ $p->id }}" class="group/px border-b border-eo-line last:border-0 hover:bg-white">
+                                                                    @php $pin = 'w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-xs text-ink placeholder:text-muted hover:border-line focus:border-amber-400 focus:bg-white focus:outline-none'; @endphp
+                                                                    <tr wire:key="pax-{{ $p->id }}" class="group/px border-b border-line last:border-0 hover:bg-white">
                                                                         <td class="px-2 py-1.5 text-center">
                                                                             @if ($m->vehicles > 1)
                                                                                 <select wire:change="updatePassenger({{ $p->id }}, 'vehicle_no', $event.target.value)"
-                                                                                        class="w-full cursor-pointer rounded-md border border-eo-line bg-white px-1 py-1 text-eyebrow font-bold text-eo-text"
+                                                                                        class="w-full cursor-pointer rounded-md border border-line bg-white px-1 py-1 text-eyebrow font-bold text-ink"
                                                                                         title="Which vehicle of this run">
                                                                                     @for ($v = 1; $v <= $m->vehicles; $v++)
                                                                                         <option value="{{ $v }}" @selected((int) ($p->vehicle_no ?: 1) === $v)>{{ $v }}</option>
                                                                                     @endfor
                                                                                 </select>
                                                                             @else
-                                                                                <span class="text-eyebrow font-bold text-eo-muted">{{ $i + 1 }}</span>
+                                                                                <span class="text-eyebrow font-bold text-muted">{{ $i + 1 }}</span>
                                                                             @endif
                                                                         </td>
                                                                         <td class="min-w-[120px] px-1 py-1">
@@ -684,7 +684,7 @@
                                                                         <td class="px-2 py-1.5">
                                                                             <button type="button" wire:click="unassignGuest({{ $p->id }})"
                                                                                     title="Take {{ $p->name }} off this vehicle — back to the pool"
-                                                                                    class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-eo-muted opacity-100 transition sm:opacity-0 hover:bg-eo-bg hover:text-eo-text sm:group-hover/px:opacity-100">✕</button>
+                                                                                    class="rounded-lg px-1.5 py-1 text-eyebrow font-bold text-muted opacity-100 transition sm:opacity-0 hover:bg-page hover:text-ink sm:group-hover/px:opacity-100">✕</button>
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
@@ -696,8 +696,8 @@
                                                                             <input type="text" wire:model="newPax.{{ $m->id }}"
                                                                                    wire:keydown.enter="addPassenger({{ $m->id }})"
                                                                                    placeholder="Type a name and press Enter…"
-                                                                                   class="w-full rounded-lg border border-dashed border-eo-line bg-transparent px-2 py-1.5 text-xs text-eo-text placeholder:text-eo-muted focus:border-amber-400 focus:bg-white focus:outline-none">
-                                                                            @error('newPax.'.$m->id)<p class="mt-1 px-2 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                                                                                   class="w-full rounded-lg border border-dashed border-line bg-transparent px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:border-amber-400 focus:bg-white focus:outline-none">
+                                                                            @error('newPax.'.$m->id)<p class="mt-1 px-2 text-xs text-danger-ink">{{ $message }}</p>@enderror
                                                                         </td>
                                                                         <td class="px-2 py-2">
                                                                             <button type="button" wire:click="addPassenger({{ $m->id }})"
@@ -716,46 +716,46 @@
                                                     </div>
 
                                                     @if ($importMoveId === $m->id)
-                                                        <div class="border-t border-eo-line bg-eo-workspace/40 px-3.5 py-3">
+                                                        <div class="border-t border-line bg-page/40 px-3.5 py-3">
                                                             <div class="flex items-start justify-between gap-3">
                                                                 <div>
-                                                                    <p class="text-xs font-bold text-eo-text">Import into this run</p>
-                                                                    <p class="mt-0.5 text-eyebrow leading-relaxed text-eo-muted">
+                                                                    <p class="text-xs font-bold text-ink">Import into this run</p>
+                                                                    <p class="mt-0.5 text-eyebrow leading-relaxed text-muted">
                                                                         Excel or CSV. Columns: Name (required), Airline, Flight #, Arrival Date, Arrival Time, Phone, Email, Pickup Point, Notes.
                                                                     </p>
                                                                 </div>
-                                                                <button type="button" wire:click="closeImport" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-eo-muted hover:text-eo-text">✕</button>
+                                                                <button type="button" wire:click="closeImport" class="shrink-0 rounded-lg px-2 py-1 text-eyebrow font-bold text-muted hover:text-ink">✕</button>
                                                             </div>
                                                             <div class="mt-2.5 flex flex-wrap items-center gap-2.5">
                                                                 <input type="file" wire:model="importFile" accept=".xlsx,.xls,.csv,text/csv"
-                                                                       class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                                                                       class="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
                                                                 <button type="button" wire:click="importPassengers" wire:loading.attr="disabled" wire:target="importPassengers,importFile"
-                                                                        class="eo-btn-primary btn-sm disabled:opacity-50">
+                                                                        class="btn-gold btn-sm disabled:opacity-50">
                                                                     <span wire:loading.remove wire:target="importPassengers">Import</span>
                                                                     <span wire:loading wire:target="importPassengers">Importing…</span>
                                                                 </button>
                                                                 <a href="{{ route('events.transport.template', [$event, $m]) }}"
-                                                                   class="border-l border-eo-line pl-3 text-eyebrow font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text">↧ Template</a>
+                                                                   class="border-l border-line pl-3 text-eyebrow font-bold uppercase tracking-wide text-muted hover:text-ink">↧ Template</a>
                                                             </div>
-                                                            @error('importFile')<p class="mt-1.5 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                                                            @error('importFile')<p class="mt-1.5 text-xs text-danger-ink">{{ $message }}</p>@enderror
                                                         </div>
                                                     @endif
 
                                                     @if ($importMsg && $expandedId === $m->id)
-                                                        <div class="border-t border-eo-line px-3.5 py-2">
+                                                        <div class="border-t border-line px-3.5 py-2">
                                                             <x-alert tone="ok" class="!py-2 !text-xs">{{ $importMsg }}</x-alert>
                                                         </div>
                                                     @endif
 
-                                                    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-eo-line px-3.5 py-2 text-eyebrow text-eo-muted">
+                                                    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3.5 py-2 text-eyebrow text-muted">
                                                         <span>
                                                             @if ($m->vehicleType)
                                                                 {{ $m->vehicleType->name }} holds {{ $m->vehicleType->capacity }} · {{ $m->vehicleCount() }} booked
                                                             @endif
                                                             @if ($m->vehicles > 1 && $m->manifest->isNotEmpty())
-                                                                <span class="ms-1.5 border-l border-eo-line ps-1.5">
+                                                                <span class="ms-1.5 border-l border-line ps-1.5">
                                                                     @foreach ($m->manifestByVehicle() as $no => $pax)
-                                                                        <span class="me-1 rounded bg-eo-bg px-1.5 py-0.5 font-bold text-eo-text">Van {{ $no }}: {{ $pax->count() }}</span>
+                                                                        <span class="me-1 rounded bg-page px-1.5 py-0.5 font-bold text-ink">Van {{ $no }}: {{ $pax->count() }}</span>
                                                                     @endforeach
                                                                 </span>
                                                             @endif
@@ -763,11 +763,11 @@
                                                         <span class="flex items-center gap-3">
                                                             @if ($m->manifest->isNotEmpty())
                                                                 <button type="button" wire:click="autoAssign({{ $m->id }})"
-                                                                        class="font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text"
+                                                                        class="font-bold uppercase tracking-wide text-muted hover:text-ink"
                                                                         title="Fill each vehicle to capacity in order">⇄ Auto-assign</button>
                                                             @endif
                                                             <button type="button" wire:click="openImport({{ $m->id }})"
-                                                                    class="font-bold uppercase tracking-wide text-eo-muted hover:text-eo-text">⇪ Import Excel</button>
+                                                                    class="font-bold uppercase tracking-wide text-muted hover:text-ink">⇪ Import Excel</button>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -785,70 +785,70 @@
         {{-- ══════════ RIGHT · control rail ══════════ --}}
         <div class="space-y-3 xl:sticky xl:top-12 xl:h-fit">
             <div class="cc-panel bg-white/90 backdrop-blur-xl">
-                <div class="cc-head border-eo-line bg-eo-navy-deep">
+                <div class="cc-head">
                     <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
                         <x-icon name="truck" class="h-3.5 w-3.5" />
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-white">Transport Control</span>
+                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Transport Control</span>
                 </div>
 
-                <div class="border-b border-eo-line p-3">
+                <div class="border-b border-line p-3">
                     <button type="button" wire:click="newItem"
                             class="h-9 w-full rounded-xl text-xs font-bold text-white transition hover:opacity-90"
                             style="background: {{ $moduleHex }}">＋ Add Movement</button>
                 </div>
 
-                <div class="border-b border-eo-line p-3">
-                    <p class="eo-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $moduleHex }}"></span> Summary</p>
+                <div class="border-b border-line p-3">
+                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $moduleHex }}"></span> Summary</p>
                     <div class="space-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-eo-muted">Movements</span><span class="font-bold text-eo-text">{{ $total }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Seats booked</span><span class="font-bold text-eo-text">{{ $seatsTotal }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Passengers</span><span class="font-bold text-eo-text">{{ $paxTotal }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Named on manifests</span><span class="font-bold text-eo-text">{{ $namedTotal }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Still to place</span><span class="font-bold {{ $unassignedCount ? 'text-amber-700' : 'text-eo-text' }}">{{ $unassignedCount }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Not ready</span><span class="font-bold {{ $notReady ? 'text-amber-700' : 'text-eo-text' }}">{{ $notReady }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Movements</span><span class="font-bold text-ink">{{ $total }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Seats booked</span><span class="font-bold text-ink">{{ $seatsTotal }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Passengers</span><span class="font-bold text-ink">{{ $paxTotal }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Named on manifests</span><span class="font-bold text-ink">{{ $namedTotal }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Still to place</span><span class="font-bold {{ $unassignedCount ? 'text-amber-700' : 'text-ink' }}">{{ $unassignedCount }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Not ready</span><span class="font-bold {{ $notReady ? 'text-amber-700' : 'text-ink' }}">{{ $notReady }}</span></div>
                         @if ($notReady)
                             <p class="text-eyebrow leading-relaxed text-amber-700">Missing driver, vehicle or passengers</p>
                         @endif
                         @if ($overbooked)
-                            <div class="flex justify-between"><span class="text-eo-muted">Over capacity</span><span class="font-bold text-red-700">{{ $overbooked }}</span></div>
+                            <div class="flex justify-between"><span class="text-muted">Over capacity</span><span class="font-bold text-red-700">{{ $overbooked }}</span></div>
                         @endif
-                        <div class="flex justify-between border-t border-eo-line pt-1.5"><span class="text-eo-muted">Transport cost</span><span class="font-bold text-eo-text">{{ $money3($costTotal) }}</span></div>
+                        <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">Transport cost</span><span class="font-bold text-ink">{{ $money3($costTotal) }}</span></div>
                         <x-budget-routing :routing="$this->budgetRouting()" />
                     </div>
                 </div>
 
                 @if ($fleet->isNotEmpty())
-                    <div class="border-b border-eo-line p-3">
-                        <p class="eo-label !mb-1.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-eo-teal"></span> Vehicles required</p>
+                    <div class="border-b border-line p-3">
+                        <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Vehicles required</p>
                         <div class="space-y-1.5">
                             @foreach ($fleet as $f)
                                 <div class="flex items-baseline justify-between gap-2">
-                                    <span class="min-w-0 truncate text-xs text-eo-text">{{ $f['name'] }}<span class="text-eo-muted"> · max {{ $f['capacity'] }}</span></span>
-                                    <span class="shrink-0 text-xs font-bold text-eo-text">×{{ $f['vehicles'] }}</span>
+                                    <span class="min-w-0 truncate text-xs text-ink">{{ $f['name'] }}<span class="text-muted"> · max {{ $f['capacity'] }}</span></span>
+                                    <span class="shrink-0 text-xs font-bold text-ink">×{{ $f['vehicles'] }}</span>
                                 </div>
-                                <div class="text-eyebrow text-eo-muted">{{ $f['runs'] }} {{ \Illuminate\Support\Str::plural('run', $f['runs']) }} · {{ $f['pax'] }} pax</div>
+                                <div class="text-eyebrow text-muted">{{ $f['runs'] }} {{ \Illuminate\Support\Str::plural('run', $f['runs']) }} · {{ $f['pax'] }} pax</div>
                             @endforeach
                         </div>
-                        <p class="mt-2 text-eyebrow leading-relaxed text-eo-muted">What to order from the supplier.</p>
+                        <p class="mt-2 text-eyebrow leading-relaxed text-muted">What to order from the supplier.</p>
                     </div>
                 @endif
 
                 <div class="space-y-2 p-3">
                     @if ($total)
                         <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
-                           class="block rounded-xl border border-eo-line bg-white px-3 py-2 text-center text-xs font-bold text-eo-text transition hover:border-amber-300 hover:text-eo-text">
+                           class="block rounded-xl border border-line bg-white px-3 py-2 text-center text-xs font-bold text-ink transition hover:border-amber-300 hover:text-ink">
                             ↧ Manifest PDF
                         </a>
                         <div class="grid grid-cols-2 gap-1.5">
                             <a href="{{ route('events.transport.dispatch', $event) }}"
-                               class="rounded-lg border border-eo-line bg-white px-2 py-1.5 text-center text-eyebrow font-bold text-eo-muted hover:border-amber-300">Dispatch</a>
+                               class="rounded-lg border border-line bg-white px-2 py-1.5 text-center text-eyebrow font-bold text-muted hover:border-amber-300">Dispatch</a>
                             <a href="{{ route('events.transport.live', $event) }}"
-                               class="rounded-lg border border-eo-line bg-white px-2 py-1.5 text-center text-eyebrow font-bold text-eo-muted hover:border-amber-300">Live</a>
+                               class="rounded-lg border border-line bg-white px-2 py-1.5 text-center text-eyebrow font-bold text-muted hover:border-amber-300">Live</a>
                         </div>
                     @endif
                     <a href="{{ route('transport-settings.index') }}"
-                       class="block rounded-xl px-3 py-2 text-center text-micro font-semibold text-eo-muted hover:bg-eo-bg hover:text-eo-text">
+                       class="block rounded-xl px-3 py-2 text-center text-micro font-semibold text-muted hover:bg-page hover:text-ink">
                         Manage vehicles &amp; services →
                     </a>
                 </div>
@@ -869,17 +869,17 @@
                             <button type="button" wire:click="$set('leg', '{{ $key }}')"
                                     @class([
                                         'rounded-xl border px-3 py-2 text-left transition',
-                                        'border-eo-navy bg-eo-navy text-white' => $leg === $key,
-                                        'border-eo-line bg-white hover:border-eo-line' => $leg !== $key,
+                                        'border-navy-900 bg-navy-900 text-white' => $leg === $key,
+                                        'border-line bg-white hover:border-line' => $leg !== $key,
                                     ])>
                                 <span class="block text-xs font-bold">{{ $label }}</span>
-                                <span class="block text-eyebrow {{ $leg === $key ? 'text-white/60' : 'text-eo-muted' }}">
+                                <span class="block text-eyebrow {{ $leg === $key ? 'text-white/60' : 'text-muted' }}">
                                     {{ \App\Models\EventTransport::LEG_HINTS[$key] }}
                                 </span>
                             </button>
                         @endforeach
                     </div>
-                    @error('leg')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('leg')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="eo-label !mb-1 !text-eyebrow">Driver</label>
@@ -903,9 +903,9 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <label class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-eo-line px-3 transition hover:border-amber-300">
-                        <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-eo-line text-eo-teal focus:ring-eo-teal">
-                        <span class="text-xs font-semibold text-eo-text">Priority / VIP run</span>
+                    <label class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line px-3 transition hover:border-amber-300">
+                        <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-eo-teal focus:ring-eo-teal">
+                        <span class="text-xs font-semibold text-ink">Priority / VIP run</span>
                     </label>
                 </div>
                 <div>
@@ -925,12 +925,12 @@
                 <div>
                     <label class="eo-label !mb-1 !text-eyebrow">How many vehicles</label>
                     <input type="number" min="1" wire:model="vehicles" class="eo-input h-10 text-sm">
-                    @error('vehicles')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('vehicles')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Passengers <span class="normal-case text-eo-muted">— estimate</span></label>
+                    <label class="eo-label !mb-1 !text-eyebrow">Passengers <span class="normal-case text-muted">— estimate</span></label>
                     <input type="number" min="0" wire:model="passengers" class="eo-input h-10 text-sm" placeholder="0">
-                    <p class="mt-1 text-eyebrow text-eo-muted">Named passengers on the manifest override this.</p>
+                    <p class="mt-1 text-eyebrow text-muted">Named passengers on the manifest override this.</p>
                 </div>
                 <div>
                     <label class="eo-label !mb-1 !text-eyebrow">Pick up from</label>
@@ -974,13 +974,13 @@
                     <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
                     <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Meet & greet at arrivals, name board…">
                 </div>
-                <p class="text-eyebrow text-eo-muted sm:col-span-2">
+                <p class="text-eyebrow text-muted sm:col-span-2">
                     Only the vehicles and services switched on in
-                    <a href="{{ route('transport-settings.index') }}" class="font-semibold text-eo-muted underline hover:text-eo-text">Settings → Transport</a>
+                    <a href="{{ route('transport-settings.index') }}" class="font-semibold text-muted underline hover:text-ink">Settings → Transport</a>
                     appear here.
                 </p>
                 <div class="flex justify-end gap-2 sm:col-span-2">
-                    <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost btn-sm">Cancel</button>
+                    <button type="button" wire:click="$set('showForm', false)" class="btn-ghost btn-sm">Cancel</button>
                     <button type="submit" class="eo-btn-navy btn-sm">{{ $editingId ? 'Update' : 'Add movement' }}</button>
                 </div>
             </form>
