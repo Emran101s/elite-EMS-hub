@@ -75,18 +75,18 @@
 @endphp
 
 @if (! empty($moreDoors))
-    <div class="mt-3 hubx-doors-row">
-        <span class="hubx-doors-label">More</span>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="mr-0.5 text-[9.5px] font-bold uppercase tracking-[0.05em] text-muted">More</span>
         @foreach ($moreDoors as $door)
-            <a href="{{ route('events.hub', [$event, 'tab' => $door['key']]) }}" wire:navigate class="hubx-doors-chip">
-                <span class="hubx-doors-chip-ic" style="color: {{ $badge($door['key']) }}; background: {{ $badge($door['key']) }}15">
+            <a href="{{ route('events.hub', [$event, 'tab' => $door['key']]) }}" wire:navigate class="ehc-doors-chip">
+                <span class="ehc-doors-chip-ic" style="color: {{ $badge($door['key']) }}; background: {{ $badge($door['key']) }}15">
                     <x-icon :name="$door['icon']" class="h-3.5 w-3.5" />
                 </span>
-                <span class="hubx-doors-chip-body">
-                    <span class="hubx-doors-chip-name">{{ $door['label'] }}</span>
-                    <span class="hubx-doors-chip-sub">
+                <span class="flex min-w-0 flex-col gap-0.5">
+                    <span class="whitespace-nowrap text-[11.5px] font-bold text-ink">{{ $door['label'] }}</span>
+                    <span class="whitespace-nowrap text-[9.5px] text-muted">
                         @if ($door['chip'])
-                            <span style="{{ $door['chipStyle'] }}" class="hubx-doors-chip-pill">{{ $door['chip'] }}</span>
+                            <span style="{{ $door['chipStyle'] }}" class="inline-block rounded-full px-1.5 py-0.5 text-[9px] font-bold">{{ $door['chip'] }}</span>
                         @else
                             {{ $door['sub'] }}
                         @endif

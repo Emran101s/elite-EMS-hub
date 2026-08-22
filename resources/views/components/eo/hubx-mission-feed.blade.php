@@ -13,30 +13,33 @@
 @php
     $rows = \App\Support\MissionFeed::rows($event);
     $tone = fn (int $tier) => match ($tier) {
-        1 => ['bg' => 'var(--color-eo-risk-soft)', 'fg' => 'var(--color-eo-risk)'],
-        2 => ['bg' => 'var(--color-eo-teal-soft)', 'fg' => 'var(--color-eo-teal-ink)'],
-        default => ['bg' => 'var(--color-eo-workspace)', 'fg' => 'var(--color-eo-muted)'],
+        1 => ['bg' => 'var(--color-danger-soft)', 'fg' => 'var(--color-danger)'],
+        2 => ['bg' => 'var(--color-gold-50)', 'fg' => 'var(--color-gold-700)'],
+        default => ['bg' => 'var(--color-page)', 'fg' => 'var(--color-muted)'],
     };
 @endphp
 
-<div class="hubx-feed">
-    <p class="eo-label !mb-1">Mission Timeline</p>
+<div class="rounded-lg border border-line bg-white px-4 py-3.5">
+    <p class="mb-1 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Mission Timeline</p>
 
     @if (empty($rows))
-        <p class="hubx-feed-empty">Nothing scheduled and nothing logged yet.</p>
+        <p class="py-1.5 text-[12px] text-muted">Nothing scheduled and nothing logged yet.</p>
     @else
-        <div class="hubx-timeline">
+        <div class="flex flex-col">
             @foreach ($rows as $row)
                 @php $c = $tone($row['tier']); @endphp
-                <a href="{{ $row['href'] }}" wire:navigate class="hubx-timeline-row" style="--tl-color: {{ $c['fg'] }}">
-                    <span class="hubx-timeline-track">
-                        <span class="hubx-timeline-node" style="background: {{ $c['bg'] }}; color: {{ $c['fg'] }}">
+                <a href="{{ $row['href'] }}" wire:navigate class="ehc-timeline-row" style="--tl-color: {{ $c['fg'] }}">
+                    <span class="ehc-timeline-track">
+                        <span class="ehc-timeline-node" style="background: {{ $c['bg'] }}; color: {{ $c['fg'] }}">
                             <x-icon :name="$row['icon']" class="h-3 w-3" />
                         </span>
                     </span>
-                    <span class="hubx-timeline-body">
-                        <span class="hubx-timeline-title">{{ $row['title'] }}</span>
-                        <span class="hubx-timeline-when {{ $row['tier'] === 1 ? 'is-urgent' : '' }}">{{ $row['when'] }}</span>
+                    <span class="ehc-timeline-body">
+                        <span class="min-w-0 truncate text-[12.5px] font-semibold text-ink">{{ $row['title'] }}</span>
+                        <span @class([
+                            'shrink-0 text-[10.5px] font-semibold text-muted',
+                            'rounded-full bg-danger-soft px-1.5 py-0.5 text-danger-ink' => $row['tier'] === 1,
+                        ])>{{ $row['when'] }}</span>
                     </span>
                 </a>
             @endforeach
