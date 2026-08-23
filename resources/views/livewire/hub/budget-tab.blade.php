@@ -685,54 +685,54 @@
         <x-modal :title="$editingId ? 'Edit line' : 'New budget line'" max="2xl"
                  close="set('showForm', false)" wire:key="budget-modal">
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-base font-bold text-eo-text">{{ $editingId ? 'Edit budget line' : 'New budget line' }}</h3>
-                    <button type="button" wire:click="$set('showForm', false)" class="text-eo-muted hover:text-eo-text">✕</button>
+                    <h3 class="text-base font-bold text-ink">{{ $editingId ? 'Edit budget line' : 'New budget line' }}</h3>
+                    <button type="button" wire:click="$set('showForm', false)" class="text-muted hover:text-ink">✕</button>
                 </div>
 
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Category</label>
-                        <select wire:model="category" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Category</label>
+                        <select wire:model="category" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach ($categories as $c)<option value="{{ $c->name }}">{{ $c->name }}</option>@endforeach
                         </select>
-                        @error('category') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
-                        <p class="mt-1 text-eyebrow text-eo-muted">Add or rename categories directly on the ledger.</p>
+                        @error('category') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-eyebrow text-muted">Add or rename categories directly on the ledger.</p>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Description</label>
-                        <input type="text" wire:model="description" class="eo-input h-10 text-sm" placeholder="e.g. Main stage build">
-                        @error('description') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Description</label>
+                        <input type="text" wire:model="description" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Main stage build">
+                        @error('description') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Quantity</label>
-                        <input type="number" min="1" wire:model="quantity" class="eo-input h-10 text-sm">
-                        @error('quantity') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Quantity</label>
+                        <input type="number" min="1" wire:model="quantity" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
+                        @error('quantity') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Unit cost ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="unit" class="eo-input h-10 text-sm" placeholder="0">
-                        @error('unit') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Unit cost ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="unit" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                        @error('unit') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Actual cost ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="actual" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Actual cost ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="actual" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Paid to date ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="paid" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Paid to date ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="paid" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
 
                     {{-- ── What the client is charged ──
                          Leaving both blank is the normal case: the line falls
                          back to the event's management fee, which is what
                          every line did before this existed. --}}
-                    <div class="sm:col-span-2 rounded-xl border border-eo-line bg-eo-workspace/40 p-3">
+                    <div class="sm:col-span-2 rounded-xl border border-line bg-page/40 p-3">
                         <div class="mb-2 flex items-center justify-between gap-3">
-                            <p class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted">What the client is charged</p>
-                            <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-eo-muted">
-                                <input type="checkbox" wire:model.live="billable" class="h-3.5 w-3.5 rounded border-eo-line text-eo-text focus:ring-eo-teal/40">
+                            <p class="text-eyebrow font-bold uppercase tracking-wide text-muted">What the client is charged</p>
+                            <label class="flex cursor-pointer items-center gap-1.5 text-eyebrow font-semibold text-muted">
+                                <input type="checkbox" wire:model.live="billable" class="h-3.5 w-3.5 rounded border-line text-gold-600 focus:ring-gold-400/40">
                                 Billable
                             </label>
                         </div>
@@ -740,56 +740,56 @@
                         @if ($billable)
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label class="eo-label !mb-1 !text-eyebrow">Charge ({{ $event->currency }})</label>
-                                    <input type="number" step="0.01" min="0" wire:model="sell" class="eo-input h-10 text-sm" placeholder="quoted price">
-                                    @error('sell') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Charge ({{ $event->currency }})</label>
+                                    <input type="number" step="0.01" min="0" wire:model="sell" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="quoted price">
+                                    @error('sell') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
-                                    <label class="eo-label !mb-1 !text-eyebrow">…or markup %</label>
-                                    <input type="number" step="0.5" wire:model="markup" class="eo-input h-10 text-sm" placeholder="{{ $event->management_fee_pct ?? 15 }}">
-                                    @error('markup') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">…or markup %</label>
+                                    <input type="number" step="0.5" wire:model="markup" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="{{ $event->management_fee_pct ?? 15 }}">
+                                    @error('markup') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                                 </div>
                             </div>
-                            <p class="mt-1.5 text-eyebrow leading-snug text-eo-muted">
+                            <p class="mt-1.5 text-eyebrow leading-snug text-muted">
                                 Both blank charges cost plus the event's {{ rtrim(rtrim(number_format((float) ($event->management_fee_pct ?? 15), 2), '0'), '.') }}% management fee.
                                 A charge typed here wins over a markup.
                             </p>
                         @else
-                            <p class="text-eyebrow leading-snug text-eo-muted">
+                            <p class="text-eyebrow leading-snug text-muted">
                                 This line is not on the client's invoice. It still costs — it comes out of your margin.
                             </p>
                         @endif
                     </div>
 
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Vendor / supplier</label>
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Vendor / supplier</label>
                         {{-- A name from the directory links the line to that
                              supplier; anything else is still allowed. --}}
-                        <input type="text" wire:model="vendor" list="budget-vendors" class="eo-input h-10 text-sm" placeholder="e.g. Prime AV">
+                        <input type="text" wire:model="vendor" list="budget-vendors" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Prime AV">
                         <datalist id="budget-vendors">
                             @foreach ($vendorNames as $name)<option value="{{ $name }}">@endforeach
                         </datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Invoice #</label>
-                            <input type="text" wire:model="invoice_number" class="eo-input h-10 text-sm" placeholder="—">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Invoice #</label>
+                            <input type="text" wire:model="invoice_number" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Due date</label>
-                            <input type="date" wire:model="due_on" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Due date</label>
+                            <input type="date" wire:model="due_on" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         </div>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Optional notes">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Optional notes">
                     </div>
 
                     <div class="mt-1 flex items-center justify-between sm:col-span-2">
-                        <p class="text-xs text-eo-muted">Budgeted total: <span class="font-bold text-eo-text">{{ $event->currencySymbol() }}{{ number_format((float) ($unit ?: 0) * max(1, (int) $quantity), 0) }}</span></p>
+                        <p class="text-xs text-muted">Budgeted total: <span class="font-bold text-ink">{{ $event->currencySymbol() }}{{ number_format((float) ($unit ?: 0) * max(1, (int) $quantity), 0) }}</span></p>
                         <div class="flex gap-2">
-                            <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                            <button type="submit" wire:loading.attr="disabled" wire:target="save" class="eo-btn-navy h-10 px-6 text-xs">
+                            <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                            <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                                 <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update line' : 'Add line' }}</span>
                                 <span wire:loading wire:target="save">Saving…</span>
                             </button>
@@ -804,37 +804,37 @@
         <x-modal title="Income line" max="md"
                  close="set('showIncomeForm', false)" wire:key="income-modal">
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-base font-bold text-eo-text">{{ $editingIncomeId ? 'Edit income' : 'New income' }}</h3>
-                    <button type="button" wire:click="$set('showIncomeForm', false)" class="text-eo-muted hover:text-eo-text">✕</button>
+                    <h3 class="text-base font-bold text-ink">{{ $editingIncomeId ? 'Edit income' : 'New income' }}</h3>
+                    <button type="button" wire:click="$set('showIncomeForm', false)" class="text-muted hover:text-ink">✕</button>
                 </div>
                 <form wire:submit="saveIncome" class="grid gap-3.5">
-                    <p class="text-eyebrow text-eo-muted">Sponsorship &amp; exhibition income are pulled automatically from those modules — add tickets, grants and other income here.</p>
+                    <p class="text-eyebrow text-muted">Sponsorship &amp; exhibition income are pulled automatically from those modules — add tickets, grants and other income here.</p>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Source</label>
-                        <select wire:model="incomeSource" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Source</label>
+                        <select wire:model="incomeSource" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Support\Taxonomy::options('income_source') as $key => $lbl)<option value="{{ $key }}">{{ $lbl }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Description</label>
-                        <input type="text" wire:model="incomeDesc" class="eo-input h-10 text-sm" placeholder="e.g. 300 delegate tickets">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Description</label>
+                        <input type="text" wire:model="incomeDesc" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. 300 delegate tickets">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Amount ({{ $event->currency }})</label>
-                            <input type="number" step="0.01" min="0" wire:model="incomeAmount" class="eo-input h-10 text-sm" placeholder="0">
-                            @error('incomeAmount') <p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p> @enderror
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Amount ({{ $event->currency }})</label>
+                            <input type="number" step="0.01" min="0" wire:model="incomeAmount" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                            @error('incomeAmount') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                            <select wire:model="incomeStatus" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                            <select wire:model="incomeStatus" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                                 @foreach (\App\Models\EventIncomeItem::STATUSES as $s)<option value="{{ $s }}">{{ ucfirst($s) }}</option>@endforeach
                             </select>
                         </div>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button type="button" wire:click="$set('showIncomeForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="saveIncome" class="eo-btn-navy h-10 px-6 text-xs">
+                        <button type="button" wire:click="$set('showIncomeForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="saveIncome" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                             <span wire:loading.remove wire:target="saveIncome">{{ $editingIncomeId ? 'Update' : 'Add income' }}</span>
                             <span wire:loading wire:target="saveIncome">Saving…</span>
                         </button>
