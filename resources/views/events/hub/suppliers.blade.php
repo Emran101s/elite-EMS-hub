@@ -155,14 +155,14 @@
                             @endif
 
                             <div class="mt-3.5 space-y-2">
-                                <div class="ehc-detail-stat"><span class="text-white/50">Category</span><span class="font-bold text-white">{{ $catLabel }}</span></div>
-                                <div class="ehc-detail-stat"><span class="text-white/50">Rating</span><span class="font-bold text-white">★ {{ number_format($supplier->rating, 1) }}</span></div>
+                                <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="archive" class="h-3 w-3" />Category</span><span class="font-bold text-white">{{ $catLabel }}</span></div>
+                                <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="star" class="h-3 w-3" />Rating</span><span class="font-bold text-white">★ {{ number_format($supplier->rating, 1) }}</span></div>
                                 @if ($supplier->email || $supplier->phone)
-                                    <div class="ehc-detail-stat"><span class="text-white/50">Contact</span><span class="font-bold text-white">{{ $supplier->email ?? $supplier->phone }}</span></div>
+                                    <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="chat" class="h-3 w-3" />Contact</span><span class="font-bold text-white">{{ $supplier->email ?? $supplier->phone }}</span></div>
                                 @endif
-                                <div class="ehc-detail-stat"><span class="text-white/50">Committed</span><span class="font-bold text-white">{{ $money ? $event->money($money['committed']) : '—' }}</span></div>
+                                <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="currency" class="h-3 w-3" />Committed</span><span class="font-bold text-white">{{ $money ? $event->money($money['committed']) : '—' }}</span></div>
                                 @if ($money && $money['paid'] > 0)
-                                    <div class="ehc-detail-stat"><span class="text-white/50">Paid</span><span class="font-bold text-white">{{ $event->money($money['paid']) }}</span></div>
+                                    <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="check" class="h-3 w-3" />Paid</span><span class="font-bold text-white">{{ $event->money($money['paid']) }}</span></div>
                                 @endif
                             </div>
 
@@ -170,7 +170,7 @@
                                 @if ($money)
                                     <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" wire:navigate class="ehc-detail-action is-gold">Open Budget</a>
                                 @endif
-                                <a href="{{ route('suppliers.index') }}" class="ehc-detail-action">Manage →</a>
+                                <a href="{{ route('suppliers.index') }}" class="ehc-detail-action {{ $money ? '' : 'col-span-2' }}">Manage →</a>
                             </div>
                         </div>
                     @endforeach
@@ -241,12 +241,6 @@
                         @if ($supplier->pivot->notes)
                             <p class="mt-2 rounded-lg bg-page px-2.5 py-1.5 text-[10.5px] text-ink">{{ $supplier->pivot->notes }}</p>
                         @endif
-                    </div>
-
-                    <div class="mt-auto flex items-center gap-2 border-t border-line bg-page px-3.5 py-2">
-                        <x-icon name="truck" class="h-3 w-3 shrink-0" style="color: {{ $moduleHex }}" />
-                        <span class="truncate text-eyebrow font-semibold text-ink">{{ \Illuminate\Support\Str::limit($event->name, 22) }}</span>
-                        <span class="ml-auto shrink-0 text-eyebrow font-bold uppercase tracking-wide text-muted">{{ $catLabel }}</span>
                     </div>
                 </div>
             @endforeach
