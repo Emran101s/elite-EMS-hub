@@ -93,6 +93,10 @@
                 <button type="button" class="ehx-header-icon" title="Event Utilities" @click="utilitiesOpen = true">
                     <x-icon name="dots" class="h-3.5 w-3.5" />
                 </button>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" wire:navigate
+                   class="ehx-header-icon" title="Event Settings">
+                    <x-icon name="cog" class="h-3.5 w-3.5" />
+                </a>
             </span>
             <a href="{{ route('events.index') }}" class="ehx-btn ehx-btn-ghost">Portfolio</a>
             <a href="{{ route('events.hub', [$event, 'tab' => $header['critical']['tab'] ?? 'overview']) }}" class="ehx-btn ehx-btn-primary">
