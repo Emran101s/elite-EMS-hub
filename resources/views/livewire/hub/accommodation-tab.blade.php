@@ -361,88 +361,88 @@
                          for a hotel that is not in it yet — a name is only
                          required when nothing was picked. --}}
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow" for="ab-venue">Hotel</label>
-                        <select id="ab-venue" wire:model.live="venue_id" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="ab-venue">Hotel</label>
+                        <select id="ab-venue" wire:model.live="venue_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             <option value="">— type a name below —</option>
                             @foreach ($venues as $v)
                                 <option value="{{ $v->id }}">{{ $v->name }}@if ($v->city) · {{ $v->city }}@endif</option>
                             @endforeach
                         </select>
-                        <p class="mt-1 text-eyebrow text-eo-muted">
+                        <p class="mt-1 text-eyebrow text-muted">
                             Not there yet?
-                            <a href="{{ route('venues.index') }}" class="font-semibold text-eo-teal-ink hover:underline">Add it to Venues</a>
+                            <a href="{{ route('venues.index') }}" class="font-semibold text-gold-700 hover:underline">Add it to Venues</a>
                             so every event can reuse it.
                         </p>
-                        @error('venue_id')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        @error('venue_id')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
 
                     @unless ($venue_id)
                         <div class="sm:col-span-2">
-                            <label class="eo-label !mb-1 !text-eyebrow" for="ab-hotel">…or type the name</label>
-                            <input id="ab-hotel" type="text" wire:model="hotel" class="eo-input h-10 text-sm" placeholder="Fairmont Amman">
-                            @error('hotel')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="ab-hotel">…or type the name</label>
+                            <input id="ab-hotel" type="text" wire:model="hotel" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Fairmont Amman">
+                            @error('hotel')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                     @endunless
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Supplier</label>
-                        <select wire:model="supplier_id" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Supplier</label>
+                        <select wire:model="supplier_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             <option value="">— none —</option>
                             @foreach ($hotels as $h)<option value="{{ $h->id }}">{{ $h->name }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Room category</label>
-                        <input type="text" wire:model="room_type" class="eo-input h-10 text-sm" placeholder="Deluxe" list="room-categories">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Room category</label>
+                        <input type="text" wire:model="room_type" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Deluxe" list="room-categories">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Occupancy</label>
-                        <select wire:model="occupancy" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Occupancy</label>
+                        <select wire:model="occupancy" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             <option value="">—</option>
                             @foreach (\App\Models\EventAccommodation::OCCUPANCIES as $slug => $label)
                                 <option value="{{ $slug }}">{{ $label }}</option>
                             @endforeach
                         </select>
-                        <p class="mt-1 text-eyebrow text-eo-muted">Every room in the block starts here; change any row later.</p>
+                        <p class="mt-1 text-eyebrow text-muted">Every room in the block starts here; change any row later.</p>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">How many rooms</label>
-                        <input type="number" min="1" wire:model="rooms_count" class="eo-input h-10 text-sm">
-                        @error('rooms_count')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">How many rooms</label>
+                        <input type="number" min="1" wire:model="rooms_count" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
+                        @error('rooms_count')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Rate / night ({{ $event->currency }}) <span class="normal-case text-eo-muted">— internal</span></label>
-                        <input type="number" step="0.01" min="0" wire:model="rate" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Rate / night ({{ $event->currency }}) <span class="normal-case text-muted">— internal</span></label>
+                        <input type="number" step="0.01" min="0" wire:model="rate" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Check-in</label>
-                        <input type="date" wire:model="check_in" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Check-in</label>
+                        <input type="date" wire:model="check_in" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Check-out</label>
-                        <input type="date" wire:model="check_out" class="eo-input h-10 text-sm">
-                        @error('check_out')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Check-out</label>
+                        <input type="date" wire:model="check_out" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
+                        @error('check_out')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                        <select wire:model="status" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                        <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach ($blockStatuses as $slug => [$label, $hex])<option value="{{ $slug }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Release / cut-off date</label>
-                        <input type="date" wire:model="cutoff_on" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Release / cut-off date</label>
+                        <input type="date" wire:model="cutoff_on" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Confirmation #</label>
-                        <input type="text" wire:model="confirmation_number" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Confirmation #</label>
+                        <input type="text" wire:model="confirmation_number" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Breakfast included, 2 complimentary upgrades…">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Breakfast included, 2 complimentary upgrades…">
                     </div>
                 <div class="flex justify-end gap-2 sm:col-span-2">
-                    <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost btn-sm">Cancel</button>
-                    <button type="submit" class="eo-btn-navy btn-sm">{{ $editingId ? 'Update block' : 'Create block' }}</button>
+                    <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full font-semibold text-muted transition hover:text-ink">Cancel</button>
+                    <button type="submit" class="btn-sm rounded-full bg-gold-500 font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Update block' : 'Create block' }}</button>
                 </div>
             </form>
         </x-modal>

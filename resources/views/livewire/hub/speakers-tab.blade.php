@@ -119,51 +119,51 @@
         <x-modal :title="$editingId ? 'Edit speaker' : 'New speaker'" max="xl" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Full name</label>
-                        <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="Dr. Layla Haddad">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Full name</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Dr. Layla Haddad">
+                        @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Job title</label>
-                        <input type="text" wire:model="title" class="eo-input h-10 text-sm" placeholder="Minister of Economy">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Job title</label>
+                        <input type="text" wire:model="title" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Minister of Economy">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Organization</label>
-                        <input type="text" wire:model="organization" class="eo-input h-10 text-sm" placeholder="Government of Jordan">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Organization</label>
+                        <input type="text" wire:model="organization" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Government of Jordan">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Talk / topic</label>
-                        <input type="text" wire:model="topic" class="eo-input h-10 text-sm" placeholder="The Future of the Arab Economy">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Talk / topic</label>
+                        <input type="text" wire:model="topic" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="The Future of the Arab Economy">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Email</label>
-                        <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Email</label>
+                        <input type="email" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Phone</label>
-                        <input type="text" wire:model="phone" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Phone</label>
+                        <input type="text" wire:model="phone" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                        <select wire:model="status" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                        <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Models\EventSpeaker::STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Fee ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="fee" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Fee ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="fee" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <label class="flex items-center gap-2 sm:col-span-2">
-                        <input type="checkbox" wire:model="is_keynote" class="h-4 w-4 rounded border-eo-line text-gold-700">
-                        <span class="text-xs font-semibold text-eo-text">Keynote speaker</span>
+                        <input type="checkbox" wire:model="is_keynote" class="h-4 w-4 rounded border-line text-gold-700">
+                        <span class="text-xs font-semibold text-ink">Keynote speaker</span>
                     </label>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Bio</label>
-                        <textarea wire:model="bio" rows="2" class="eo-input text-sm" placeholder="Short biography…"></textarea>
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Bio</label>
+                        <textarea wire:model="bio" rows="2" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none text-sm" placeholder="Short biography…"></textarea>
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="eo-btn-navy h-10 px-6 text-xs">
+                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                             <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Add speaker' }}</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>

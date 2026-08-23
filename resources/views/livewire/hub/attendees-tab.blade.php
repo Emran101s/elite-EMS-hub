@@ -393,64 +393,64 @@
                 <form wire:submit="save" class="grid gap-3.5">
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Full name</label>
-                            <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. Layla Haddad">
-                            @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Full name</label>
+                            <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Layla Haddad">
+                            @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Email</label>
-                            <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="name@company.com">
-                            @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Email</label>
+                            <input type="email" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="name@company.com">
+                            @error('email')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Organization</label>
-                            <input type="text" wire:model="organization" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Organization</label>
+                            <input type="text" wire:model="organization" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Phone</label>
-                            <input type="text" wire:model="phone" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Phone</label>
+                            <input type="text" wire:model="phone" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         </div>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-3">
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Ticket type</label>
-                            <select wire:model="ticket_type" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Ticket type</label>
+                            <select wire:model="ticket_type" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                                 @foreach ($ticketTypes as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                            <select wire:model="status" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                            <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                                 @foreach (\App\Models\EventAttendee::STATUS_META as $val => $meta)<option value="{{ $val }}">{{ $meta[0] }}</option>@endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Fee ({{ $event->currencySymbol() }})</label>
-                            <input type="number" step="0.01" min="0" wire:model="amount" class="eo-input h-10 text-sm" placeholder="0">
-                            @error('amount')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Fee ({{ $event->currencySymbol() }})</label>
+                            <input type="number" step="0.01" min="0" wire:model="amount" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                            @error('amount')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2">
-                        <label class="flex items-center gap-2 text-xs font-semibold text-eo-text"><input type="checkbox" wire:model="vip" class="h-4 w-4 rounded border-eo-line text-gold-700 focus:ring-gold-400"> ★ VIP</label>
+                        <label class="flex items-center gap-2 text-xs font-semibold text-ink"><input type="checkbox" wire:model="vip" class="h-4 w-4 rounded border-line text-gold-700 focus:ring-gold-400"> ★ VIP</label>
                         <div>
-                            <label class="eo-label !mb-1 !text-eyebrow">Dietary / access</label>
-                            <input type="text" wire:model="dietary" class="eo-input h-9 text-sm" placeholder="e.g. Vegetarian, wheelchair">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Dietary / access</label>
+                            <input type="text" wire:model="dietary" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 text-sm" placeholder="e.g. Vegetarian, wheelchair">
                         </div>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <textarea wire:model="notes" rows="2" class="eo-input text-sm"></textarea>
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <textarea wire:model="notes" rows="2" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none text-sm"></textarea>
                     </div>
                     <div class="mt-1 flex items-center gap-3">
                         @if ($editingId)
                             <x-confirm title="Remove this attendee?"
                                        confirm="Remove"
                                        run="$wire.delete({{ $editingId }})"
-                                       class="rounded-xl px-3 py-2 text-xs font-bold text-eo-risk-ink transition hover:bg-eo-risk/5">Delete</x-confirm>
+                                       class="rounded-xl px-3 py-2 text-xs font-bold text-danger-ink transition hover:bg-danger-soft">Delete</x-confirm>
                         @endif
                         <div class="ml-auto flex gap-2">
-                            <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                            <button type="submit" class="eo-btn-navy h-10 px-6 text-xs">{{ $editingId ? 'Save' : 'Add attendee' }}</button>
+                            <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                            <button type="submit" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Save' : 'Add attendee' }}</button>
                         </div>
                     </div>
                 </form>

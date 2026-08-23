@@ -123,53 +123,53 @@
         <x-modal :title="$editingId ? 'Edit exhibitor' : 'New exhibitor'" max="xl" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Company</label>
-                        <input type="text" wire:model="company" class="eo-input h-10 text-sm" placeholder="Acme Technologies">
-                        @error('company')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Company</label>
+                        <input type="text" wire:model="company" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Acme Technologies">
+                        @error('company')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Contact name</label>
-                        <input type="text" wire:model="contact_name" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Contact name</label>
+                        <input type="text" wire:model="contact_name" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Email</label>
-                        <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Email</label>
+                        <input type="email" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Booth number</label>
-                        <input type="text" wire:model="booth_number" class="eo-input h-10 text-sm" placeholder="A-12">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Booth number</label>
+                        <input type="text" wire:model="booth_number" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="A-12">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Booth size</label>
-                        <input type="text" wire:model="booth_size" class="eo-input h-10 text-sm" placeholder="3×3 m">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Booth size</label>
+                        <input type="text" wire:model="booth_size" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="3×3 m">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Package</label>
-                        <select wire:model="package" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Package</label>
+                        <select wire:model="package" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Support\Taxonomy::options('exhibitor_package') as $pk => $pl)<option value="{{ $pk }}">{{ $pl }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                        <select wire:model="status" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                        <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Models\EventExhibitor::STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Booth fee ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="fee" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Booth fee ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="fee" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Paid ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="paid" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Paid ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="paid" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Deliverables, branding rights…">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Deliverables, branding rights…">
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="eo-btn-navy h-10 px-6 text-xs">
+                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                             <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Add exhibitor' }}</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>

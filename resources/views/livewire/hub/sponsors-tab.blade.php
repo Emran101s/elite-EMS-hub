@@ -99,17 +99,17 @@
                         <div wire:key="pkg-{{ $p->id }}" class="group/pkg px-4 py-2.5">
                             @if ($editingPackageId === $p->id)
                                 <div class="space-y-2">
-                                    <input type="text" wire:model="packageEditName" maxlength="60" placeholder="Package name" class="eo-input h-8 w-full text-xs font-semibold">
+                                    <input type="text" wire:model="packageEditName" maxlength="60" placeholder="Package name" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 w-full text-xs font-semibold">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-eyebrow font-semibold text-muted">{{ $event->currencySymbol() }}</span>
-                                        <input type="number" min="0" step="100" wire:model="packageEditPrice" placeholder="Price" class="eo-input h-8 flex-1 text-xs">
+                                        <input type="number" min="0" step="100" wire:model="packageEditPrice" placeholder="Price" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 flex-1 text-xs">
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-eyebrow font-semibold text-muted">Max</span>
-                                        <input type="number" min="1" step="1" wire:model="packageEditSlots" placeholder="Slots (blank = unlimited)" class="eo-input h-8 flex-1 text-xs">
+                                        <input type="number" min="1" step="1" wire:model="packageEditSlots" placeholder="Slots (blank = unlimited)" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 flex-1 text-xs">
                                     </div>
-                                    <input type="text" wire:model="packageEditBlurb" maxlength="160" placeholder="Short tagline (optional)" class="eo-input h-8 w-full text-micro">
-                                    <textarea wire:model="packageEditBenefits" rows="4" placeholder="Benefits — one per line&#10;e.g. Logo on main stage&#10;2 exhibition booths&#10;Speaking slot" class="eo-input w-full py-2 text-micro leading-snug"></textarea>
+                                    <input type="text" wire:model="packageEditBlurb" maxlength="160" placeholder="Short tagline (optional)" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 w-full text-micro">
+                                    <textarea wire:model="packageEditBenefits" rows="4" placeholder="Benefits — one per line&#10;e.g. Logo on main stage&#10;2 exhibition booths&#10;Speaking slot" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none w-full py-2 text-micro leading-snug"></textarea>
                                     <div class="flex items-center gap-2">
                                         <button type="button" wire:click="savePackage" class="rounded-lg bg-navy-900 px-3 py-1 text-eyebrow font-bold text-white">Save</button>
                                         <button type="button" wire:click="cancelEditPackage" class="text-eyebrow font-semibold text-muted hover:text-ink">Cancel</button>
@@ -143,11 +143,11 @@
 
                     {{-- add package --}}
                     <div class="bg-page px-4 py-3">
-                        <input type="text" wire:model="newPackageName" wire:keydown.enter="addPackage" maxlength="60" class="eo-input mb-2 h-8 w-full text-xs" placeholder="New package name…">
+                        <input type="text" wire:model="newPackageName" wire:keydown.enter="addPackage" maxlength="60" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none mb-2 h-8 w-full text-xs" placeholder="New package name…">
                         <div class="flex items-center gap-1.5">
                             <span class="text-eyebrow font-semibold text-muted">{{ $event->currencySymbol() }}</span>
-                            <input type="number" min="0" step="100" wire:model="newPackagePrice" wire:keydown.enter="addPackage" placeholder="Price" class="eo-input h-8 w-20 text-xs">
-                            <input type="number" min="1" step="1" wire:model="newPackageSlots" wire:keydown.enter="addPackage" placeholder="Max" class="eo-input h-8 w-14 text-xs" title="Max slots (blank = unlimited)">
+                            <input type="number" min="0" step="100" wire:model="newPackagePrice" wire:keydown.enter="addPackage" placeholder="Price" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 w-20 text-xs">
+                            <input type="number" min="1" step="1" wire:model="newPackageSlots" wire:keydown.enter="addPackage" placeholder="Max" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-8 w-14 text-xs" title="Max slots (blank = unlimited)">
                             <button type="button" wire:click="addPackage" class="rounded-lg border border-gold-300 bg-gold-50 px-2.5 py-1 text-eyebrow font-bold text-gold-700 hover:bg-gold-50/70">Add</button>
                         </div>
                         @error('newPackageName') <p class="mt-1 text-eyebrow font-semibold text-danger-ink">{{ $message }}</p> @enderror
@@ -177,44 +177,44 @@
         <x-modal :title="$editingId ? 'Edit sponsor' : 'Sell a sponsorship'" max="lg" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Sponsor name</label>
-                        <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. Royal Jordanian">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Sponsor name</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Royal Jordanian">
+                        @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Package</label>
-                        <select wire:model.live="package" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Package</label>
+                        <select wire:model.live="package" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             <option value="">— None —</option>
                             @foreach ($packages as $p)
                                 @php $sold = $soldByPackage[$p->name] ?? 0; $left = $p->slots !== null ? max(0, $p->slots - $sold) : null; $full = $left === 0 && $p->name !== $package; @endphp
                                 <option value="{{ $p->name }}" @disabled($full)>{{ $p->name }}@if ($p->price_cents) · {{ $fmt($p->price_cents) }}@endif @if ($p->slots !== null) · {{ $full ? 'SOLD OUT' : $left.' left' }}@endif</option>
                             @endforeach
                         </select>
-                        @error('package')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
-                        <p class="mt-1 text-eyebrow text-eo-muted">Picking a package fills the amount.</p>
+                        @error('package')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
+                        <p class="mt-1 text-eyebrow text-muted">Picking a package fills the amount.</p>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Amount ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="amount" class="eo-input h-10 text-sm" placeholder="0">
-                        @error('amount')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Amount ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="amount" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                        @error('amount')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Paid to date ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="paid" class="eo-input h-10 text-sm" placeholder="0">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Paid to date ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="paid" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                        <select wire:model="payment_status" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                        <select wire:model="payment_status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Models\EventSponsor::PAYMENT_STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                         </select>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Deliverables, branding rights…">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Deliverables, branding rights…">
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="eo-btn-navy h-10 px-6 text-xs">
+                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                             <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Add sponsor' }}</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>

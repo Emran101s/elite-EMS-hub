@@ -108,79 +108,79 @@
         <x-modal :title="$editingId ? 'Edit occasion' : 'New occasion'" max="xl" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">What is it</label>
-                        <input type="text" wire:model="title" class="eo-input h-10 text-sm" placeholder="Welcome coffee break, Gala dinner…">
-                        @error('title')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">What is it</label>
+                        <input type="text" wire:model="title" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Welcome coffee break, Gala dinner…">
+                        @error('title')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Type</label>
-                        <select wire:model="type" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Type</label>
+                        <select wire:model="type" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Models\EventCateringItem::TYPES as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Date</label>
-                        <input type="date" wire:model="occasion_date" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Date</label>
+                        <input type="date" wire:model="occasion_date" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                     </div>
 
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Venue</label>
-                        <div class="inline-flex rounded-xl border border-eo-line bg-white p-1">
-                            <button type="button" wire:click="$set('venue_mode', 'in_house')" class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $venue_mode === 'in_house' ? 'bg-eo-navy text-white' : 'text-eo-muted hover:text-eo-text' }}">In venue</button>
-                            <button type="button" wire:click="$set('venue_mode', 'outside')" class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $venue_mode === 'outside' ? 'bg-eo-navy text-white' : 'text-eo-muted hover:text-eo-text' }}">Outside</button>
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Venue</label>
+                        <div class="inline-flex rounded-xl border border-line bg-white p-1">
+                            <button type="button" wire:click="$set('venue_mode', 'in_house')" class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $venue_mode === 'in_house' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">In venue</button>
+                            <button type="button" wire:click="$set('venue_mode', 'outside')" class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $venue_mode === 'outside' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Outside</button>
                         </div>
                     </div>
                     @if ($venue_mode === 'in_house')
                         <div class="sm:col-span-2">
-                            <label class="eo-label !mb-1 !text-eyebrow">Room</label>
-                            <select wire:model="room_id" class="eo-input h-10 text-sm">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Room</label>
+                            <select wire:model="room_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                                 <option value="">— Pick a room —</option>
                                 @foreach ($rooms as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach
                             </select>
                         </div>
                     @else
                         <div class="sm:col-span-2">
-                            <label class="eo-label !mb-1 !text-eyebrow">Location</label>
-                            <input type="text" wire:model="location" class="eo-input h-10 text-sm" placeholder="Fakhreldin Restaurant, Amman">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Location</label>
+                            <input type="text" wire:model="location" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Fakhreldin Restaurant, Amman">
                         </div>
                     @endif
 
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Covers</label>
-                        <input type="number" min="0" wire:model="headcount" class="eo-input h-10 text-sm" placeholder="—">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Covers</label>
+                        <input type="number" min="0" wire:model="headcount" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="—">
                     </div>
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                        <select wire:model="status" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                        <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach (\App\Models\EventCateringItem::STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                         </select>
                     </div>
 
                     <div>
-                        <label class="eo-label !mb-1 !text-eyebrow">Rate ({{ $event->currency }})</label>
-                        <input type="number" step="0.01" min="0" wire:model="cost" class="eo-input h-10 text-sm" placeholder="0">
-                        @error('cost')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Rate ({{ $event->currency }})</label>
+                        <input type="number" step="0.01" min="0" wire:model="cost" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                        @error('cost')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <label class="flex items-end gap-2 pb-2.5">
-                        <input type="checkbox" wire:model="per_person" class="h-4 w-4 rounded border-eo-line text-eo-teal">
-                        <span class="text-xs font-semibold text-eo-text">Per person, not a flat total</span>
+                        <input type="checkbox" wire:model="per_person" class="h-4 w-4 rounded border-line text-gold-600">
+                        <span class="text-xs font-semibold text-ink">Per person, not a flat total</span>
                     </label>
 
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Supplier</label>
-                        <select wire:model="supplier_id" class="eo-input h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Supplier</label>
+                        <select wire:model="supplier_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             <option value="">— None on file —</option>
                             @foreach ($suppliers as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                         </select>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                        <textarea wire:model="notes" rows="2" class="eo-input text-sm" placeholder="Dietary requirements, menu notes…"></textarea>
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                        <textarea wire:model="notes" rows="2" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none text-sm" placeholder="Dietary requirements, menu notes…"></textarea>
                     </div>
 
                     <div class="flex justify-end gap-2 sm:col-span-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-eo-muted hover:text-eo-text">Cancel</button>
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="eo-btn-navy h-10 px-6 text-xs">
+                        <button type="button" wire:click="$set('showForm', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-10 rounded-full bg-gold-500 px-6 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
                             <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Add occasion' }}</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>
