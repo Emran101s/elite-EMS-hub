@@ -863,7 +863,7 @@
                  close="$set('showForm', false)">
             <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label class="eo-label !mb-1 !text-eyebrow">Movement type</label>
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Movement type</label>
                     <div class="grid grid-cols-3 gap-2">
                         @foreach (\App\Models\EventTransport::LEGS as $key => $label)
                             <button type="button" wire:click="$set('leg', '{{ $key }}')"
@@ -882,97 +882,97 @@
                     @error('leg')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Driver</label>
-                    <select wire:model="driver_id" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Driver</label>
+                    <select wire:model="driver_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— unassigned —</option>
                         @foreach ($drivers as $d)<option value="{{ $d->id }}">{{ $d->label() }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Vehicle (specific car)</label>
-                    <select wire:model="vehicle_id" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Vehicle (specific car)</label>
+                    <select wire:model="vehicle_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— any of this type —</option>
                         @foreach ($fleetVehicles as $v)<option value="{{ $v->id }}">{{ $v->label() }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Supplier</label>
-                    <select wire:model="supplier_id" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Supplier</label>
+                    <select wire:model="supplier_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— none —</option>
                         @foreach ($suppliers as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                     </select>
                 </div>
                 <div class="flex items-end">
                     <label class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-line px-3 transition hover:border-amber-300">
-                        <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-eo-teal focus:ring-eo-teal">
+                        <input type="checkbox" wire:model="is_vip" class="h-4 w-4 rounded border-line text-gold-600 focus:ring-gold-400">
                         <span class="text-xs font-semibold text-ink">Priority / VIP run</span>
                     </label>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Service</label>
-                    <select wire:model="service_type_id" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Service</label>
+                    <select wire:model="service_type_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— none —</option>
                         @foreach ($serviceTypes as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Vehicle</label>
-                    <select wire:model="vehicle_type_id" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Vehicle</label>
+                    <select wire:model="vehicle_type_id" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— none —</option>
                         @foreach ($vehicleTypes as $v)<option value="{{ $v->id }}">{{ $v->label() }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">How many vehicles</label>
-                    <input type="number" min="1" wire:model="vehicles" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">How many vehicles</label>
+                    <input type="number" min="1" wire:model="vehicles" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                     @error('vehicles')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Passengers <span class="normal-case text-muted">— estimate</span></label>
-                    <input type="number" min="0" wire:model="passengers" class="eo-input h-10 text-sm" placeholder="0">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Passengers <span class="normal-case text-muted">— estimate</span></label>
+                    <input type="number" min="0" wire:model="passengers" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                     <p class="mt-1 text-eyebrow text-muted">Named passengers on the manifest override this.</p>
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Pick up from</label>
-                    <input type="text" wire:model="pickup_from" class="eo-input h-10 text-sm" placeholder="Queen Alia Airport">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Pick up from</label>
+                    <input type="text" wire:model="pickup_from" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Queen Alia Airport">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Drop off at</label>
-                    <input type="text" wire:model="drop_to" class="eo-input h-10 text-sm" placeholder="Fairmont Amman">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Drop off at</label>
+                    <input type="text" wire:model="drop_to" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Fairmont Amman">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Pick-up date &amp; time</label>
-                    <input type="datetime-local" wire:model="depart_at" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Pick-up date &amp; time</label>
+                    <input type="datetime-local" wire:model="depart_at" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Flight number</label>
-                    <input type="text" wire:model="flight_no" class="eo-input h-10 text-sm" placeholder="RJ 512">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Flight number</label>
+                    <input type="text" wire:model="flight_no" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="RJ 512">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Flight lands / arrives</label>
-                    <input type="datetime-local" wire:model="arrive_at" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Flight lands / arrives</label>
+                    <input type="datetime-local" wire:model="arrive_at" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Provider</label>
-                    <input type="text" wire:model="provider" class="eo-input h-10 text-sm" placeholder="Petra Limo">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Provider</label>
+                    <input type="text" wire:model="provider" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Petra Limo">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Driver contact</label>
-                    <input type="text" wire:model="driver_contact" class="eo-input h-10 text-sm" placeholder="+962 79 555 0100">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Driver contact</label>
+                    <input type="text" wire:model="driver_contact" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="+962 79 555 0100">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Cost ({{ $event->currency }})</label>
-                    <input type="number" step="0.001" min="0" wire:model="cost" class="eo-input h-10 text-sm" placeholder="0">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Cost ({{ $event->currency }})</label>
+                    <input type="number" step="0.001" min="0" wire:model="cost" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
                 </div>
                 <div>
-                    <label class="eo-label !mb-1 !text-eyebrow">Status</label>
-                    <select wire:model="status" class="eo-input h-10 text-sm">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
+                    <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                         @foreach (\App\Models\EventTransport::STATUSES as $st)<option value="{{ $st }}">{{ ucfirst($st) }}</option>@endforeach
                     </select>
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="eo-label !mb-1 !text-eyebrow">Notes</label>
-                    <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Meet & greet at arrivals, name board…">
+                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Notes</label>
+                    <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Meet & greet at arrivals, name board…">
                 </div>
                 <p class="text-eyebrow text-muted sm:col-span-2">
                     Only the vehicles and services switched on in
@@ -981,7 +981,7 @@
                 </p>
                 <div class="flex justify-end gap-2 sm:col-span-2">
                     <button type="button" wire:click="$set('showForm', false)" class="btn-ghost btn-sm">Cancel</button>
-                    <button type="submit" class="eo-btn-navy btn-sm">{{ $editingId ? 'Update' : 'Add movement' }}</button>
+                    <button type="submit" class="btn-sm rounded-full bg-gold-500 font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Update' : 'Add movement' }}</button>
                 </div>
             </form>
         </x-modal>
