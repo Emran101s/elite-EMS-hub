@@ -63,16 +63,37 @@
         </div>
     @else
         {{-- Nothing selected: the portfolio's own summary, not an empty box —
-             the panel always has something true to say. --}}
+             the panel always has something true to say. Leads with the one
+             mission the Fleet Health Strip would point at first (worst
+             scored), so the panel is doing something even before you've
+             clicked anything, not just repeating the header's own figures. --}}
+        @php
+            $groupRank = fn ($m) => match ($m['healthGroup'] ?? null) {
+                'risk' => 0, 'warn' => 1, 'live' => 2, 'ok' => 3, default => 4,
+            };
+            $worst = collect($deck)->sortBy([fn ($m) => $groupRank($m), fn ($m) => $m['healthScore'] ?? 999])->first();
+        @endphp
         <x-cc.briefing-panel title="Portfolio Summary" subtitle="Select a mission to inspect">
             <div class="grid grid-cols-2 gap-3">
                 @foreach ($figures as $f)
                     <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" />
                 @endforeach
             </div>
-            <p class="mt-4 text-[12.5px] leading-relaxed text-muted">
-                Pick a mission from the board, timeline or table — its detail opens here, in this same panel, whichever view you're reading.
-            </p>
+
+            @if ($worst && ($worst['healthGroup'] ?? null) === 'risk')
+                <button type="button" wire:click="activate({{ $worst['id'] }})"
+                        class="mt-4 flex w-full items-center gap-2.5 rounded-md bg-danger-soft px-3 py-2.5 text-start transition hover:brightness-95">
+                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[11px] font-black tabular-nums text-danger-ink">{{ $worst['healthScore'] ?? '—' }}</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block text-eyebrow font-bold uppercase tracking-[0.1em] text-danger-ink">Needs you first</span>
+                        <span class="block truncate text-[12.5px] font-semibold text-ink">{{ $worst['name'] }}</span>
+                    </span>
+                </button>
+            @else
+                <p class="mt-4 text-[12.5px] leading-relaxed text-muted">
+                    Pick a mission from the board, timeline or table — its detail opens here, in this same panel, whichever view you're reading.
+                </p>
+            @endif
         </x-cc.briefing-panel>
     @endif
 </div>

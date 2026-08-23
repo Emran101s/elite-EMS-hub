@@ -18,7 +18,7 @@
     $hasActiveFilters = $q !== '' || $tab !== 'all' || $queue || $stage || $starred;
 @endphp
 
-<div class="eo-event-atmosphere space-y-5 rounded-[24px]">
+<div class="space-y-5 rounded-[24px] bg-[radial-gradient(120%_80%_at_100%_0%,rgba(212,175,55,0.06),transparent_45%),radial-gradient(90%_60%_at_0%_100%,rgba(11,31,58,0.045),transparent_40%)] bg-page">
 
     {{-- ══════════════════════════════════════════════════════════════
          1 · EVENT PORTFOLIO HEADER
@@ -56,6 +56,11 @@
             @endif
         @endforeach
     </div>
+
+    {{-- Fleet Health Strip — one bar per mission currently in view, worst
+         first. A second, faster way into the same shared detail panel
+         every view below already opens into. --}}
+    <x-events.health-strip :deck="$deck" :active="$active" />
 
     {{-- ══════════════════════════════════════════════════════════════
          2 · PORTFOLIO COMMAND FILTER BAR
