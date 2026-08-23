@@ -10,8 +10,11 @@
                ]">
 
     {{-- ══ Event Command Header + Event Utilities drawer ══
-         Identity, status, location, dates, journey type. Real numbers off
-         EventCommandHeader::for() — see resources/views/components/eo/hubx-header.blade.php.
+         Identity, status, location, dates, journey type — and, in the same
+         card, the Event Pulse row (Health/Readiness/Days Out/Budget/Risk):
+         folded into the header itself rather than floating as its own
+         strip underneath it. Real numbers off EventCommandHeader::for() —
+         see resources/views/components/eo/hubx-header.blade.php.
          Team Workload and Recent Activity used to sit permanently on
          Overview; they're real, just secondary — accessed intentionally
          from the header's own ⋯ icon now, not stacked on every visit.
@@ -19,7 +22,7 @@
          the rendered DOM, even though they're separate Blade components)
          agree on open/closed state. ══ --}}
     <div x-data="{ utilitiesOpen: false }">
-        <x-hub.header :event="$event" :header="$header" />
+        <x-hub.header :event="$event" :header="$header" :health="$health" />
         <x-hub.utilities-drawer :event="$event" :workload="$workload" />
     </div>
 
@@ -30,14 +33,6 @@
          Full-width row, not a grid column — see hub/module-nav.blade.php. ══ --}}
     <div class="mt-3">
         <x-hub.module-nav :event="$event" :header="$header" :active-tab="$tab" />
-    </div>
-
-    {{-- ══ Event Pulse Strip ══
-         Health + Readiness (primary), Days Out / Budget / Risk (secondary).
-         Shown on every tab now, not just Overview, so the event's vitals
-         stay visible no matter which module is open. ══ --}}
-    <div class="mt-2">
-        <x-hub.kpi-strip :event="$event" :header="$header" :health="$health" />
     </div>
 
     @php
@@ -63,7 +58,7 @@
          tab's own existing content, unchanged — Mission Timeline IS the
          Overview workspace now, not a card floating in a bigger layout.
          Right: the Universal Module Inspector, per-module data. ══ --}}
-    <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-2">
+    <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-3">
         <div class="min-w-0">
             {{-- Universal Module Header — same modules the Inspector has
                  real data for, shown once inside the module's own content
