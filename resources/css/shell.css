@@ -19,10 +19,35 @@
 
     /* A section-panel row that is "selected" lifts off the panel via shadow
        + ring rather than a color fill — concept/nav.blade.php's own trick,
-       named here since every row in the panel can be in this state. */
+       named here since every row in the panel can be in this state. A gold
+       hairline down the leading edge marks it as the current page without a
+       heavy fill. */
     .shellx-row-active {
+        position: relative;
         background: var(--color-page);
         box-shadow: 0 1px 2px rgba(11, 31, 58, 0.06), inset 0 0 0 1px #fff, 0 0 0 1px var(--color-line);
+    }
+    .shellx-row-active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 1.1rem;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: var(--color-gold-500);
+    }
+
+    /* The panel's area-header block — a whisper-faint gold wash in the
+       top-right so the header reads as a distinct anchor above the rows,
+       not just more white space. */
+    .shellx-panel-head::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 90% at 100% 0%, rgba(212, 175, 55, 0.09) 0%, transparent 55%);
+        pointer-events: none;
     }
 
     /* Drawer mechanics below the 1280px (xl) breakpoint — the one thing

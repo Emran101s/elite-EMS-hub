@@ -181,6 +181,47 @@ class NavPanel
         return null;
     }
 
+    /**
+     * A one-line "what's live in this area right now" line for the panel's
+     * header block — the number you'd want before you even click a row.
+     *
+     * One cheap count per area at most, and only the current area's arm of
+     * the match runs per request (the nav renders on every page), so this
+     * costs one extra query on the pages that show it and none elsewhere.
+     * An area with no single honest headline number returns null and the
+     * header falls back to a plain subtitle.
+     *
+     * @return array{value:string,label:string,tone:string}|null
+     */
+    public static function areaMeta(string $area): ?array
+    {
+        return match ($area) {
+            'workspace', 'events' => self::meta(self::liveEvents(), 'live event', 'ok'),
+            'tasks' => self::meta(self::openTasks(), 'open task', 'warn'),
+            'crm' => self::meta(Deal::whereIn('stage', Deal::OPEN)->count(), 'deal', 'info', 'in play'),
+            'operations' => self::meta(\App\Models\Supplier::count(), 'supplier', 'neutral', 'on file'),
+            'team' => self::meta(\App\Models\User::count(), 'person', 'neutral'),
+            default => null,
+        };
+    }
+
+    /**
+     * Builds the header stat, pluralising the noun to the count so it never
+     * reads "1 deals". $noun is singular; $trail is any words that follow it.
+     *
+     * @return array{value:string,label:string,tone:string}|null
+     */
+    private static function meta(int $count, string $noun, string $tone, string $trail = ''): ?array
+    {
+        if ($count === 0) {
+            return null;
+        }
+
+        $label = str($noun)->plural($count)->toString();
+
+        return ['value' => (string) $count, 'label' => trim($label.' '.$trail), 'tone' => $tone];
+    }
+
     /** Which area the current request is in. Falls back to the workspace. */
     public static function currentArea(): string
     {
@@ -222,7 +263,7 @@ class NavPanel
             ],
             'events' => [
                 ['Events', [
-                    ['label' => 'Event Portfolio', 'href' => route('events.index'), 'icon' => 'calendar', 'count' => null, 'active' => request()->routeIs('events.index') && ! request()->boolean('archived')],
+                    ['label' => 'Event Portfolio', 'href' => route('events.index'), 'icon' => 'calendar', 'count' => self::liveEvents(), 'active' => request()->routeIs('events.index') && ! request()->boolean('archived')],
                     ['Event Studio', 'events.create', 'sparkles', null],
                     ['Projects', 'projects.index', 'folder', null],
                     ['label' => 'Archived Events', 'href' => route('events.index', ['archived' => 1]), 'icon' => 'archive', 'count' => null, 'active' => request()->routeIs('events.index') && request()->boolean('archived')],
@@ -327,11 +368,17 @@ class NavPanel
      */
     private static function openTasks(): int
     {
-        return Task::whereNotIn('status', ['done', 'cancelled'])->count();
+        // Memoised: areaMeta() and sections() can both ask for it in the same
+        // render, and it's the same number either way.
+        static $count = null;
+
+        return $count ??= Task::whereNotIn('status', ['done', 'cancelled'])->count();
     }
 
     private static function liveEvents(): int
     {
-        return Event::whereNull('archived_at')->count();
+        static $count = null;
+
+        return $count ??= Event::whereNull('archived_at')->count();
     }
 }
