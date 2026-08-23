@@ -18,7 +18,9 @@
 
     // The event's vitals — Event Pulse — live inside this same card now,
     // one hairline below identity, rather than floating as their own
-    // strip underneath the header. Same five figures, same sources.
+    // strip underneath the header. Health itself is called out separately
+    // as the ring in the top-right corner (see below); the strip carries
+    // the five figures behind it.
     $countdown = collect($header['scale'])->firstWhere('icon', 'clock');
     $budgetPct = $event->budgetUsedPct();
     $cost = $event->costForecast();
@@ -39,18 +41,26 @@
     $healthColor = match ($health['group'] ?? 'neutral') {
         'track' => 'var(--color-success-ink)', 'warn' => 'var(--color-warning-ink)', 'risk' => 'var(--color-danger-ink)', default => 'var(--color-muted)',
     };
+    $healthPct = $health['score'] !== null ? max(0, min(100, (int) $health['score'])) : 0;
+    $healthLabel = $health['score'] !== null ? ucfirst(str_replace('_', ' ', $health['status'])) : 'Not scored';
+
+    $registered = $event->attendees->count();
+    $expected = (int) $event->expected_participants;
+
+    $readinessPct = $header['readiness']['pct'];
+    $budgetBarPct = $budgetPct !== null ? max(0, min(100, $budgetPct)) : 0;
 
     $stats = [
-        ['label' => 'Health Score', 'value' => $health['score'] !== null ? $health['score'] : '—',
-            'sub' => $health['score'] !== null ? ucfirst(str_replace('_', ' ', $health['status'])) : 'Not scored', 'color' => $healthColor],
-        ['label' => 'Readiness', 'value' => $header['readiness']['pct'].'%',
-            'sub' => $header['readiness']['met'].' / '.$header['readiness']['total'].' gates met', 'color' => 'var(--color-gold-700)'],
-        ['label' => 'Days Out', 'value' => $countdown['value'] ?? '—',
-            'sub' => $countdown['label'] ?? 'Unscheduled', 'color' => 'var(--color-ink)'],
-        ['label' => 'Budget Used', 'value' => $budgetPct !== null ? $budgetPct.'%' : '—',
-            'sub' => $event->money($cost['forecast']).' / '.$event->money($cost['cap']), 'color' => $budgetPct !== null && $budgetPct > 100 ? 'var(--color-danger-ink)' : 'var(--color-ink)'],
-        ['label' => 'Risk Level', 'value' => $riskLevel,
-            'sub' => $event->risks->filter->isOpen()->count().' active', 'color' => $riskColor],
+        ['label' => 'Readiness', 'icon' => 'check', 'tone' => 'gold', 'value' => $readinessPct.'%',
+            'sub' => $header['readiness']['met'].' / '.$header['readiness']['total'].' gates met', 'color' => 'var(--color-gold-700)', 'bar' => $readinessPct],
+        ['label' => 'Days Out', 'icon' => 'clock', 'tone' => 'navy', 'value' => $countdown['value'] ?? '—',
+            'sub' => $countdown['label'] ?? 'Unscheduled', 'color' => 'var(--color-ink)', 'bar' => null],
+        ['label' => 'Budget Used', 'icon' => 'currency', 'tone' => 'success', 'value' => $budgetPct !== null ? $budgetPct.'%' : '—',
+            'sub' => $event->money($cost['forecast']).' / '.$event->money($cost['cap']), 'color' => $budgetPct !== null && $budgetPct > 100 ? 'var(--color-danger-ink)' : 'var(--color-ink)', 'bar' => $budgetPct !== null ? $budgetBarPct : null],
+        ['label' => 'Risk Level', 'icon' => 'bell', 'tone' => 'warning', 'value' => $riskLevel,
+            'sub' => $event->risks->filter->isOpen()->count().' active', 'color' => $riskColor, 'bar' => null],
+        ['label' => 'Attendees', 'icon' => 'users', 'tone' => 'purple', 'value' => number_format($expected > 0 ? $expected : $registered),
+            'sub' => $registered.' registered', 'color' => 'var(--color-ink)', 'bar' => null],
     ];
 @endphp
 
@@ -86,7 +96,7 @@
             </div>
         </div>
 
-        <div class="flex shrink-0 items-center gap-2">
+        <div class="flex shrink-0 items-center gap-3">
             <span class="ehx-header-icon-row">
                 <span class="ehx-header-icon" title="Star"><x-icon name="star" class="h-3.5 w-3.5" /></span>
                 <span class="ehx-header-icon" title="Expand"><x-icon name="grid" class="h-3.5 w-3.5" /></span>
@@ -102,15 +112,31 @@
             <a href="{{ route('events.hub', [$event, 'tab' => $header['critical']['tab'] ?? 'overview']) }}" class="ehx-btn ehx-btn-primary">
                 {{ $header['critical']['cta'] ?? 'Open Event' }}
             </a>
+
+            <div class="ehx-health-ring-wrap">
+                <div class="ehx-health-ring" style="--ehx-ring-color: {{ $healthColor }}; --ehx-ring-pct: {{ $healthPct }}%">
+                    <span class="ehx-health-ring-value" style="color: {{ $healthColor }}">{{ $health['score'] !== null ? $health['score'] : '—' }}</span>
+                </div>
+                <p class="ehx-health-ring-label">Health</p>
+                <p class="ehx-health-ring-status" style="color: {{ $healthColor }}">{{ $healthLabel }}</p>
+            </div>
         </div>
     </div>
 
     <div class="ehx-header-stats">
         @foreach ($stats as $s)
             <div class="ehx-header-stat">
-                <p class="ehx-header-stat-label">{{ $s['label'] }}</p>
-                <p class="ehx-header-stat-value" style="color: {{ $s['color'] }}">{{ $s['value'] }}</p>
-                <p class="ehx-header-stat-sub" style="color: {{ $s['color'] }}">{{ $s['sub'] }}</p>
+                <span class="ehx-header-stat-icon is-{{ $s['tone'] }}">
+                    <x-icon :name="$s['icon']" class="h-4 w-4" />
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="ehx-header-stat-label">{{ $s['label'] }}</p>
+                    <p class="ehx-header-stat-value" style="color: {{ $s['color'] }}">{{ $s['value'] }}</p>
+                    <p class="ehx-header-stat-sub" style="color: {{ $s['color'] }}">{{ $s['sub'] }}</p>
+                    @if ($s['bar'] !== null)
+                        <span class="ehx-header-stat-bar"><span class="ehx-header-stat-bar-fill is-{{ $s['tone'] }}" style="width: {{ $s['bar'] }}%"></span></span>
+                    @endif
+                </div>
             </div>
         @endforeach
     </div>

@@ -113,9 +113,11 @@
             <a href="{{ $m['href'] }}" wire:navigate data-dock-item
                class="ehx-dock-item {{ $m['active'] ? 'is-active' : '' }}"
                x-show="{{ $i }} < visibleCount" title="{{ $m['label'] }}">
-                <span class="ehx-dock-item-icon"><x-icon :name="$m['icon']" class="h-[19px] w-[19px]" /></span>
+                <span class="ehx-dock-item-icon"><x-icon :name="$m['icon']" class="h-4 w-4" /></span>
                 <span class="ehx-dock-item-label">{{ $m['label'] }}</span>
-                <span class="ehx-dock-dot is-{{ $m['dotTone'] }}"></span>
+                @if ($m['dotTone'] !== 'ok')
+                    <span class="ehx-dock-dot is-{{ $m['dotTone'] }}"></span>
+                @endif
             </a>
         @endforeach
     </div>
@@ -126,8 +128,8 @@
     <div class="relative shrink-0" @click.outside="moreOpen = false">
         <button type="button" x-ref="more" @click="moreOpen = !moreOpen" :aria-expanded="moreOpen.toString()"
                 class="ehx-dock-item ehx-dock-more" :class="{ 'is-active': moreActive }">
-            <span class="ehx-dock-item-icon"><x-icon name="grid" class="h-[19px] w-[19px]" /></span>
-            <span class="ehx-dock-item-label">More Modules</span>
+            <span class="ehx-dock-item-label">More</span>
+            <span class="ehx-dock-item-icon"><x-icon name="chevron" class="h-3.5 w-3.5" /></span>
         </button>
 
         <div x-show="moreOpen" x-cloak class="ehx-modnav-flyout">

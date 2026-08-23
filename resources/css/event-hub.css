@@ -86,6 +86,9 @@
         .ehx-header-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 0; }
     }
     .ehx-header-stat {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
         min-width: 0;
         padding: 0 1.15rem;
         border-left: 1px solid var(--color-line);
@@ -95,9 +98,62 @@
         .ehx-header-stat { padding: 0 0.7rem; border-left: 1px solid var(--color-line); }
         .ehx-header-stat:nth-child(odd) { padding-left: 0; border-left: none; }
     }
+    .ehx-header-stat-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        border-radius: 0.7rem;
+        margin-top: 0.1rem;
+    }
+    .ehx-header-stat-icon.is-gold { color: var(--color-gold-700); background: var(--color-gold-50); }
+    .ehx-header-stat-icon.is-navy { color: var(--color-navy-800); background: var(--color-line); }
+    .ehx-header-stat-icon.is-success { color: var(--color-success-ink); background: var(--color-success-soft); }
+    .ehx-header-stat-icon.is-warning { color: var(--color-warning-ink); background: var(--color-warning-soft); }
+    .ehx-header-stat-icon.is-purple { color: #7c3aed; background: #f3e8ff; }
     .ehx-header-stat-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
     .ehx-header-stat-value { margin-top: 0.3rem; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
     .ehx-header-stat-sub { margin-top: 0.3rem; font-size: 10.5px; font-weight: 600; opacity: 0.75; }
+    .ehx-header-stat-bar {
+        display: block;
+        margin-top: 0.45rem;
+        width: 100%;
+        max-width: 120px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--color-line);
+        overflow: hidden;
+    }
+    .ehx-header-stat-bar-fill { display: block; height: 100%; border-radius: 999px; }
+    .ehx-header-stat-bar-fill.is-gold { background: linear-gradient(90deg, var(--color-gold-400), var(--color-gold-600)); }
+    .ehx-header-stat-bar-fill.is-success { background: linear-gradient(90deg, #34d399, var(--color-success-ink)); }
+
+    /* ── Health ring — the score pulled out of the stat strip and given
+         its own focal treatment, top-right of the identity row. ── */
+    .ehx-health-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; padding-left: 0.5rem; }
+    .ehx-health-ring {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 68px;
+        height: 68px;
+        border-radius: 9999px;
+        background: conic-gradient(var(--ehx-ring-color, var(--color-gold-500)) var(--ehx-ring-pct, 0%), var(--color-line) 0);
+    }
+    .ehx-health-ring::after {
+        content: '';
+        position: absolute;
+        inset: 5px;
+        border-radius: 9999px;
+        background: #fff;
+    }
+    .ehx-health-ring-value { position: relative; z-index: 1; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .ehx-health-ring-label { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+    .ehx-health-ring-status { font-size: 11px; font-weight: 700; }
+    @media (max-width: 639px) {
+        .ehx-health-ring-wrap { padding-left: 0; }
+    }
     .ehx-header-name {
         display: block;
         position: relative;
@@ -167,11 +223,12 @@
         z-index: 40;
         display: flex;
         align-items: stretch;
-        gap: 0.35rem;
-        border-radius: 1.25rem;
-        padding: 0.5rem;
-        background: linear-gradient(170deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
-        box-shadow: 0 22px 45px -24px rgba(6, 20, 38, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+        gap: 0.3rem;
+        border-radius: 9999px;
+        padding: 0.4rem;
+        background: #fff;
+        border: 1px solid var(--color-line);
+        box-shadow: var(--shadow-raise);
     }
     /* The row clips to whatever fits; the More button sits outside it as a
        fixed-width flex sibling — kept apart deliberately so the row's own
@@ -181,56 +238,60 @@
     .ehx-dock-row {
         display: flex;
         align-items: stretch;
-        gap: 0.35rem;
+        gap: 0.3rem;
         flex: 1;
         min-width: 0;
         overflow: hidden;
     }
     .ehx-dock-item {
+        position: relative;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
+        gap: 0.4rem;
         flex-shrink: 0;
-        min-width: 62px;
-        max-width: 92px;
-        padding: 0.6rem 0.4rem 0.55rem;
-        border-radius: 0.9rem;
-        color: rgba(255, 255, 255, 0.55);
-        text-align: center;
-        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        padding: 0.55rem 0.85rem;
+        border-radius: 9999px;
+        color: var(--color-muted);
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease;
     }
     .ehx-dock-item-icon { display: grid; place-items: center; }
     .ehx-dock-item-label {
-        max-width: 100%;
+        max-width: 108px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 10.5px;
+        font-size: 12.5px;
         font-weight: 700;
     }
-    .ehx-dock-dot { width: 5px; height: 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.25); }
-    .ehx-dock-dot.is-ok { background: var(--color-success-on-dark); }
-    .ehx-dock-dot.is-warn { background: var(--color-warning-on-dark); }
-    .ehx-dock-dot.is-alarm { background: var(--color-danger-on-dark); }
-    .ehx-dock-item:hover { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.85); }
+    .ehx-dock-dot {
+        position: absolute;
+        left: 50%;
+        bottom: 2px;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--color-warning);
+    }
+    .ehx-dock-dot.is-alarm { background: var(--color-danger); }
+    .ehx-dock-item.is-active .ehx-dock-dot { background: var(--color-gold-300); }
+    .ehx-dock-item:hover { background: var(--color-page); color: var(--color-ink); }
     .ehx-dock-item.is-active {
         color: #fff;
-        background: color-mix(in srgb, var(--color-gold-500) 18%, rgba(255, 255, 255, 0.05));
-        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-400) 45%, transparent), 0 10px 22px -12px rgba(212, 175, 55, 0.55);
+        background: linear-gradient(165deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
+        box-shadow: 0 10px 20px -12px rgba(6, 20, 38, 0.55);
     }
-    .ehx-dock-item.is-active .ehx-dock-item-icon { color: var(--color-gold-300); }
     .ehx-dock-more {
-        min-width: 82px;
-        color: var(--color-gold-300);
-        background: color-mix(in srgb, var(--color-gold-500) 14%, transparent);
-        border: 1px solid color-mix(in srgb, var(--color-gold-500) 30%, transparent);
+        color: var(--color-gold-700);
+        background: var(--color-gold-50);
     }
-    .ehx-dock-more:hover { background: color-mix(in srgb, var(--color-gold-500) 22%, transparent); color: var(--color-gold-200); }
+    .ehx-dock-more:hover { background: color-mix(in srgb, var(--color-gold-500) 20%, var(--color-gold-50)); }
     .ehx-dock-more.is-active {
-        background: color-mix(in srgb, var(--color-gold-500) 30%, transparent);
-        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-400) 55%, transparent);
+        color: #fff;
+        background: linear-gradient(165deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
     }
 
     .ehx-modnav-badge {
