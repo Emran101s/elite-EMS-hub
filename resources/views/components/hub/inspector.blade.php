@@ -58,6 +58,7 @@
                 @if ($m['attention']->isNotEmpty())
                     @foreach ($m['attention'] as $signal)
                         <a href="{{ route('events.hub', [$event, 'tab' => $signal['tab']]) }}" wire:navigate class="ehx-panel-attention-row">
+                            <span class="ehx-panel-attention-dot is-{{ $signal['tone'] === 'alarm' ? 'alarm' : 'warn' }}"></span>
                             <x-icon :name="$signal['icon']" class="h-3.5 w-3.5 text-muted" />
                             <span class="text-[11.5px] font-semibold text-ink">{{ $signal['label'] }}</span>
                             <span class="ml-auto shrink-0 text-[10.5px] text-muted">{{ $signal['why'] }}</span>
@@ -74,7 +75,7 @@
                             <div class="ehx-panel-activity-row">
                                 <x-user-avatar :user="$entry->user" size="h-5 w-5" text="text-[8px]" />
                                 <div class="min-w-0">
-                                    <p class="truncate text-[11px] text-muted">{{ $entry->summary() }}</p>
+                                    <p class="truncate text-[11px] font-semibold text-ink">{{ $entry->describe() }}</p>
                                     <p class="text-[9.5px] text-muted opacity-75">{{ $entry->user?->name ?? 'System' }} · {{ $entry->created_at->diffForHumans() }}</p>
                                 </div>
                             </div>
@@ -127,7 +128,7 @@
                                 <div class="ehx-panel-activity-row">
                                     <x-user-avatar :user="$entry->user" size="h-5 w-5" text="text-[8px]" />
                                     <div class="min-w-0">
-                                        <p class="truncate text-[11px] text-muted">{{ $entry->summary() }}</p>
+                                        <p class="truncate text-[11px] font-semibold text-ink">{{ $entry->describe() }}</p>
                                         <p class="text-[9.5px] text-muted opacity-75">{{ $entry->user?->name ?? 'System' }} · {{ $entry->created_at->diffForHumans() }}</p>
                                     </div>
                                 </div>

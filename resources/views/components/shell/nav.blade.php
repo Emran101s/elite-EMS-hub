@@ -16,7 +16,17 @@
     $sections = \App\Support\NavPanel::sections($current);
 @endphp
 
-<div class="shellx-drawer fixed inset-y-0 left-0 z-40 flex -translate-x-full gap-3 p-3 xl:static xl:z-auto xl:translate-x-0 xl:p-0"
+{{--
+    xl:sticky + a viewport-relative max-height is what makes the panel's own
+    overflow-y-auto (and the fade cues below) ever actually engage — without
+    a height cap this flex child just stretches to match the main column's
+    height (a very tall page makes an equally tall, empty-at-the-bottom
+    sidebar), and without sticky it scrolls away with the page on anything
+    longer than one screen. xl:top-4 matches the shell root's own sm:p-4
+    (1rem) padding, active at this breakpoint, so the pinned nav sits flush
+    with the same edge the rest of the shell uses.
+--}}
+<div class="shellx-drawer fixed inset-y-0 left-0 z-40 flex -translate-x-full gap-3 p-3 xl:sticky xl:top-4 xl:z-auto xl:max-h-[calc(100vh-2rem)] xl:translate-x-0 xl:p-0"
      :class="nav ? 'translate-x-0' : '-translate-x-full'">
 
     {{-- ══ THE RAIL — which area ══ --}}
@@ -77,31 +87,46 @@
             </button>
         </div>
 
-        <nav class="scrollbar-none min-h-0 flex-1 overflow-y-auto px-2.5 pb-3" aria-label="Sections">
-            @forelse ($sections as $section)
-                <p class="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-navy-300">{{ $section['label'] }}</p>
+        <div class="relative min-h-0 flex-1"
+             x-data="{
+                 atTop: true, atBottom: true,
+                 check() {
+                     const el = this.$refs.sections;
+                     if (! el) return;
+                     this.atTop = el.scrollTop <= 2;
+                     this.atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 2;
+                 },
+             }"
+             x-init="$nextTick(() => check())">
+            <nav x-ref="sections" @scroll="check()" class="scrollbar-none h-full overflow-y-auto px-2.5 pb-3" aria-label="Sections">
+                @forelse ($sections as $section)
+                    <p class="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-navy-300">{{ $section['label'] }}</p>
 
-                @foreach ($section['items'] as $item)
-                    <a href="{{ $item['href'] }}" wire:navigate
-                       @class([
-                           'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition',
-                           'shellx-row-active' => $item['active'],
-                           'hover:bg-page/60' => ! $item['active'],
-                       ])>
-                        <x-icon :name="$item['icon']" class="h-4 w-4 shrink-0 {{ $item['active'] ? 'text-gold-600' : 'text-navy-300' }}" />
-                        <span class="min-w-0 flex-1 truncate text-[12.5px] {{ $item['active'] ? 'font-bold text-navy-900' : 'font-medium text-navy-700' }}">{{ $item['label'] }}</span>
-                        @if ($item['count'] !== null)
-                            <span class="shrink-0 text-[11px] font-semibold tabular-nums text-navy-300">{{ $item['count'] }}</span>
-                        @endif
-                    </a>
-                @endforeach
+                    @foreach ($section['items'] as $item)
+                        <a href="{{ $item['href'] }}" wire:navigate
+                           @class([
+                               'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition',
+                               'shellx-row-active' => $item['active'],
+                               'hover:bg-page/60' => ! $item['active'],
+                           ])>
+                            <x-icon :name="$item['icon']" class="h-4 w-4 shrink-0 {{ $item['active'] ? 'text-gold-600' : 'text-navy-300' }}" />
+                            <span class="min-w-0 flex-1 truncate text-[12.5px] {{ $item['active'] ? 'font-bold text-navy-900' : 'font-medium text-navy-700' }}">{{ $item['label'] }}</span>
+                            @if ($item['count'] !== null)
+                                <span class="shrink-0 text-[11px] font-semibold tabular-nums text-navy-300">{{ $item['count'] }}</span>
+                            @endif
+                        </a>
+                    @endforeach
 
-                @unless ($loop->last)
-                    <div class="my-2.5 h-px bg-line"></div>
-                @endunless
-            @empty
-                <p class="px-2 py-6 text-center text-[11.5px] text-muted">Nothing here yet.</p>
-            @endforelse
-        </nav>
+                    @unless ($loop->last)
+                        <div class="my-2.5 h-px bg-line"></div>
+                    @endunless
+                @empty
+                    <p class="px-2 py-6 text-center text-[11.5px] text-muted">Nothing here yet.</p>
+                @endforelse
+            </nav>
+
+            <div class="shellx-fade shellx-fade-top" :class="{ 'opacity-0': atTop }"></div>
+            <div class="shellx-fade shellx-fade-bottom" :class="{ 'opacity-0': atBottom }"></div>
+        </div>
     </aside>
 </div>

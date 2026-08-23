@@ -55,4 +55,15 @@ class AuditLog extends Model
                 .($pair[0] ?? '—').' → '.($pair[1] ?? '—'))
             ->implode(' · ');
     }
+
+    /**
+     * Same as summary(), but never blank. A created or deleted row carries no
+     * diff by design (Auditable::writeAudit() only ever attaches changes to
+     * 'updated'), so summary() alone leaves those rows with nothing to show —
+     * this falls back to what happened instead of what changed.
+     */
+    public function describe(): string
+    {
+        return $this->summary() ?: trim(($this->label ?? $this->auditable_type ?? 'Record').' '.$this->action);
+    }
 }

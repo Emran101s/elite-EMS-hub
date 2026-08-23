@@ -466,13 +466,29 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 0.1rem;
-        border-radius: 0.55rem;
+        padding: 0.45rem 0.4rem;
+        margin: 0 -0.4rem;
+        border-radius: 0.6rem;
         transition: background 0.12s ease;
     }
     .ehx-panel-attention-row:hover { background: var(--color-page); }
-    .ehx-panel-tertiary { opacity: 0.85; padding-top: 0.7rem; border-top: 1px dashed var(--color-line); }
-    .ehx-panel-activity-row { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem 0.05rem; }
+    .ehx-panel-attention-dot { width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0; background: var(--color-warning); }
+    .ehx-panel-attention-dot.is-alarm { background: var(--color-danger); }
+    /* A plain solid rule, same weight as .ehx-panel-detail's own top divider
+       — no opacity wash on the block beneath it. A section here (Needs
+       Attention, Recent Activity, Related Modules) is still real content,
+       not a footnote, so it reads at full contrast like everything above it. */
+    .ehx-panel-tertiary { padding-top: 0.85rem; border-top: 1px solid var(--color-line); }
+    .ehx-panel-activity-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.4rem 0.4rem;
+        margin: 0 -0.4rem;
+        border-radius: 0.6rem;
+        transition: background 0.12s ease;
+    }
+    .ehx-panel-activity-row:hover { background: var(--color-page); }
     .ehx-panel-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.3rem; padding: 0.9rem 0.5rem; }
     .ehx-panel-empty-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 999px; margin-bottom: 0.2rem; }
     .ehx-panel-empty-cta { margin-top: 0.4rem; font-size: 10.5px; font-weight: 700; color: var(--color-gold-700); transition: opacity 0.15s ease; }

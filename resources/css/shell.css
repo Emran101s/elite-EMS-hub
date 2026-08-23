@@ -31,4 +31,20 @@
     .shellx-drawer {
         transition: transform 220ms ease;
     }
+
+    /* Scroll cue for the sections panel — a soft fade at whichever edge
+       still has content past it, instead of a visible scrollbar (the list
+       itself keeps scrollbar-width:none). Alpine toggles opacity-0 once
+       that edge is reached; the fade itself is a static gradient. */
+    .shellx-fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 26px;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 5;
+    }
+    .shellx-fade-top { top: 0; background: linear-gradient(to bottom, #fff 0%, transparent 100%); }
+    .shellx-fade-bottom { bottom: 0; background: linear-gradient(to top, #fff 0%, transparent 100%); }
 }
