@@ -133,11 +133,12 @@
         </button>
 
         <div x-show="moreOpen" x-cloak class="ehx-modnav-flyout">
+            <p class="ehx-modnav-flyout-eyebrow">More modules</p>
             @foreach ($items as $i => $m)
                 <a href="{{ $m['href'] }}" wire:navigate
-                   class="ehx-modnav-flyout-item {{ $m['active'] ? 'is-active' : '' }}"
+                   class="ehx-modnav-flyout-item {{ $m['active'] ? 'shellx-row-active font-bold text-ink' : '' }}"
                    x-show="{{ $i }} >= visibleCount">
-                    <x-icon :name="$m['icon']" class="h-3.5 w-3.5" />
+                    <x-icon :name="$m['icon']" class="h-4 w-4 {{ $m['active'] ? 'text-gold-600' : 'text-muted' }}" />
                     <span class="flex-1">{{ $m['label'] }}</span>
                     @if ($m['issues'] > 0)
                         <span class="ehx-modnav-badge {{ $m['dotTone'] === 'warn' ? 'is-wait' : '' }}">{{ $m['issues'] }}</span>
