@@ -380,13 +380,14 @@ class EventHubTest extends TestCase
     }
 
     /**
-     * The Module Navigation Bar marks the active tab.
+     * The Module dock marks the active tab.
      *
      * Event Command Header pass: the vertical Compact Module Rail (and the
      * Stage Radar / Orbit Journey it sat beside) is gone outright, replaced
-     * by a horizontal pill-tab strip — see hub/module-nav.blade.php. Its
-     * contract is the same as the rail's before it: the item for the
-     * current tab carries is-active, and no other item does.
+     * by a horizontal pill-tab strip, later restyled into a dark dock — see
+     * hub/module-nav.blade.php. Its contract is the same as the rail's
+     * before it: the item for the current tab carries is-active, and no
+     * other item does.
      */
     public function test_module_nav_marks_the_active_tab(): void
     {
@@ -397,7 +398,7 @@ class EventHubTest extends TestCase
         // element (stopping at its own closing tag) rather than searching
         // the rest of the page, where every other module's own label text
         // also legitimately appears.
-        $activeItem = fn (string $html) => preg_match('/ehx-modnav-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
+        $activeItem = fn (string $html) => preg_match('/ehx-dock-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
 
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
             ->assertOk()->getContent();

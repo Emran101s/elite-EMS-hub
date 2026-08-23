@@ -157,49 +157,82 @@
     }
     .ehx-btn-primary:hover { filter: brightness(1.05); }
 
-    /* ── Module Navigation Bar ────────────────────────────────────────── */
-    .ehx-modnav {
+    /* ── Module dock ──────────────────────────────────────────────────
+       A dark floating dock, one slot per enabled module, inspired by a
+       tab-bar/dock reference — stacked icon/label/status-dot per item,
+       gold glow on the active slot, a permanently gold-tinted "More
+       Modules" slot at the end. Replaces the old light pill-strip. */
+    .ehx-dock {
         position: relative;
         z-index: 40;
         display: flex;
-        align-items: center;
-        border-radius: 1.1rem;
-        padding: 0.35rem;
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow-raise);
-        backdrop-filter: blur(10px);
+        align-items: stretch;
+        gap: 0.35rem;
+        border-radius: 1.25rem;
+        padding: 0.5rem;
+        background: linear-gradient(170deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
+        box-shadow: 0 22px 45px -24px rgba(6, 20, 38, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
     }
-    .ehx-modnav-scroll {
+    /* The row clips to whatever fits; the More button sits outside it as a
+       fixed-width flex sibling — kept apart deliberately so the row's own
+       overflow:hidden never clips the More button's flyout (a descendant
+       of the row would be clipped by it, even though the flyout itself
+       escapes via position:absolute). */
+    .ehx-dock-row {
         display: flex;
-        align-items: center;
-        gap: 0.2rem;
+        align-items: stretch;
+        gap: 0.35rem;
         flex: 1;
         min-width: 0;
-        overflow-x: auto;
-        scrollbar-width: none;
+        overflow: hidden;
     }
-    .ehx-modnav-scroll::-webkit-scrollbar { display: none; }
-    .ehx-modnav-scroll.is-overflowing {
-        mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
-        -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
-    }
-    .ehx-modnav-item {
-        display: inline-flex;
+    .ehx-dock-item {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 0.4rem;
+        justify-content: center;
+        gap: 0.3rem;
         flex-shrink: 0;
-        padding: 0.5rem 0.8rem;
-        border-radius: 0.8rem;
-        font-size: 12.5px;
-        font-weight: 700;
-        color: var(--color-muted);
-        white-space: nowrap;
-        transition: background-color 0.15s ease, color 0.15s ease;
+        min-width: 62px;
+        max-width: 92px;
+        padding: 0.6rem 0.4rem 0.55rem;
+        border-radius: 0.9rem;
+        color: rgba(255, 255, 255, 0.55);
+        text-align: center;
+        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     }
-    .ehx-modnav-item:hover { background: var(--color-page); color: var(--color-ink); }
-    .ehx-modnav-item.is-active { background: var(--color-navy-900); color: #fff; }
-    .ehx-modnav-item.is-active :where(svg) { opacity: 0.9; }
+    .ehx-dock-item-icon { display: grid; place-items: center; }
+    .ehx-dock-item-label {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+    .ehx-dock-dot { width: 5px; height: 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.25); }
+    .ehx-dock-dot.is-ok { background: var(--color-success-on-dark); }
+    .ehx-dock-dot.is-warn { background: var(--color-warning-on-dark); }
+    .ehx-dock-dot.is-alarm { background: var(--color-danger-on-dark); }
+    .ehx-dock-item:hover { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.85); }
+    .ehx-dock-item.is-active {
+        color: #fff;
+        background: color-mix(in srgb, var(--color-gold-500) 18%, rgba(255, 255, 255, 0.05));
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-400) 45%, transparent), 0 10px 22px -12px rgba(212, 175, 55, 0.55);
+    }
+    .ehx-dock-item.is-active .ehx-dock-item-icon { color: var(--color-gold-300); }
+    .ehx-dock-more {
+        min-width: 82px;
+        color: var(--color-gold-300);
+        background: color-mix(in srgb, var(--color-gold-500) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--color-gold-500) 30%, transparent);
+    }
+    .ehx-dock-more:hover { background: color-mix(in srgb, var(--color-gold-500) 22%, transparent); color: var(--color-gold-200); }
+    .ehx-dock-more.is-active {
+        background: color-mix(in srgb, var(--color-gold-500) 30%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-400) 55%, transparent);
+    }
+
     .ehx-modnav-badge {
         display: inline-flex;
         align-items: center;
@@ -215,7 +248,6 @@
         line-height: 1;
     }
     .ehx-modnav-badge.is-wait { background: var(--color-warning); }
-    .ehx-modnav-item.is-active .ehx-modnav-badge { background: rgba(255, 255, 255, 0.25); }
     .ehx-modnav-flyout {
         position: absolute;
         right: 0;
