@@ -52,23 +52,18 @@
          The Command Stack is gone outright — not collapsed, not a drawer,
          not replaced by anything else. Its job (what needs a person) is
          already covered by the Header's own attention pill, Event Pulse,
-         the Universal Module Header, and the Inspector's Next Action.
-         Removing the column gives the workspace the width back. Left:
-         the Universal Module Header (every tab but Overview) then the
-         tab's own existing content, unchanged — Mission Timeline IS the
-         Overview workspace now, not a card floating in a bigger layout.
-         Right: the Universal Module Inspector, per-module data. ══ --}}
+         and the Inspector's Next Action. Removing the column gives the
+         workspace the width back. Left: the tab's own existing content,
+         unchanged — Mission Timeline IS the Overview workspace now, not a
+         card floating in a bigger layout. Right: the Universal Module
+         Inspector, per-module data. ══ --}}
     <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-3">
         <div class="min-w-0">
-            {{-- Universal Module Header — same modules the Inspector has
-                 real data for, shown once inside the module's own content
-                 rather than on Overview (which is the whole dashboard, not
-                 a single module). --}}
-            @if ($showPanel && $tab !== 'overview')
-                <div class="mb-2">
-                    <x-hub.module-header :event="$event" :header="$header" :tab="$tab" />
-                </div>
-            @endif
+            {{-- Universal Module Header (hub/module-header.blade.php) is
+                 turned off here for now, per direct instruction — pending
+                 a decision on what replaces it. Component and its
+                 HubModuleInspector data source are untouched, just not
+                 rendered. --}}
 
             @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
         </div>

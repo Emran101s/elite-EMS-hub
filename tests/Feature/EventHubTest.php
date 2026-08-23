@@ -370,23 +370,13 @@ class EventHubTest extends TestCase
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
 
-        // And it reaches the module's own tab — the Universal Module Header
-        // (Command Stack's replacement for "what needs a person, per
-        // module") shows each module's own Overdue/Pending stat only when
-        // that module's tab is open, not from Overview.
-        $tasksHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))
-            ->assertOk()->getContent();
-        $this->assertMatchesRegularExpression(
-            '/ehx-module-header-stat-value">1<\/span>\s*<span class="ehx-module-header-stat-label">Overdue</',
-            $tasksHtml,
-        );
-
-        $approvalsHtml = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
-            ->assertOk()->getContent();
-        $this->assertMatchesRegularExpression(
-            '/ehx-module-header-stat-value">1<\/span>\s*<span class="ehx-module-header-stat-label">Pending</',
-            $approvalsHtml,
-        );
+        // The Universal Module Header (hub/module-header.blade.php) used to
+        // surface each module's own Overdue/Pending stat here, but it's
+        // turned off in the chrome for now (hub.blade.php no longer renders
+        // it — pending a decision on what replaces it). The tabs still
+        // render fine without it; assert that much.
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))->assertOk();
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))->assertOk();
     }
 
     /**

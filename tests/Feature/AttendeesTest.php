@@ -31,11 +31,13 @@ class AttendeesTest extends TestCase
         $event->update(['enabled_modules' => ['attendees']]);
         // The tab's own stat strip (Registered/Checked in/VIPs/Ticket revenue)
         // was removed as a duplicate of the Universal Module Header, which
-        // shows the same four figures under its own labels — "Registered"
-        // still applies, "Revenue" is that header's label for the same
-        // number "Ticket revenue" used to carry.
+        // showed the same four figures under its own labels. The Universal
+        // Module Header is itself turned off in the chrome for now
+        // (hub.blade.php no longer renders it), so "Registered"/"Revenue"
+        // are not asserted here — nothing on the page currently carries
+        // them. The tab still needs to render without error.
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'attendees']))
-            ->assertOk()->assertSee('Registered')->assertSee('Revenue');
+            ->assertOk();
     }
 
     public function test_add_attendee_and_check_in(): void
