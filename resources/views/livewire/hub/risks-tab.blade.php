@@ -122,19 +122,19 @@
                     @endif
 
                     <div class="mt-3.5 space-y-2">
-                        <div class="ehc-detail-stat"><span class="text-white/50">Category</span><span class="font-bold text-white">{{ str($selected->category)->replace('_', ' ')->title() }}</span></div>
-                        <div class="ehc-detail-stat"><span class="text-white/50">Severity</span><span class="font-bold text-white">{{ $selected->probability }}×{{ $selected->impact }} = {{ $selected->severity() }}</span></div>
-                        <div class="ehc-detail-stat"><span class="text-white/50">Owner</span><span class="font-bold text-white">{{ $selected->owner?->name ?? 'Unassigned' }}</span></div>
-                        <div class="ehc-detail-stat"><span class="text-white/50">Status</span><span class="font-bold text-white"><x-status-badge :status="$selected->status" /></span></div>
+                        <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="archive" class="h-3 w-3" />Category</span><span class="font-bold text-white">{{ str($selected->category)->replace('_', ' ')->title() }}</span></div>
+                        <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="bell" class="h-3 w-3" />Severity</span><span class="font-bold text-white">{{ $selected->probability }}×{{ $selected->impact }} = {{ $selected->severity() }}</span></div>
+                        <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="users" class="h-3 w-3" />Owner</span><span class="font-bold text-white">{{ $selected->owner?->name ?? 'Unassigned' }}</span></div>
+                        <div class="ehc-detail-stat"><span class="flex items-center gap-1.5 text-white/50"><x-icon name="flag" class="h-3 w-3" />Status</span><span class="font-bold text-white"><x-status-badge :status="$selected->status" /></span></div>
                     </div>
 
-                    <div class="mt-4 grid grid-cols-2 gap-1.5">
+                    <div class="mt-4 grid grid-cols-3 gap-1.5">
                         @if ($selected->isOpen())
                             <button type="button" wire:click="setStatus({{ $selected->id }}, 'mitigated')" class="ehc-detail-action is-gold">✓ Mitigated</button>
                             <button type="button" wire:click="setStatus({{ $selected->id }}, 'escalated')" class="ehc-detail-action is-danger">▲ Escalate</button>
                             <button type="button" wire:click="setStatus({{ $selected->id }}, 'closed')" class="ehc-detail-action">✕ Close</button>
                         @else
-                            <button type="button" wire:click="setStatus({{ $selected->id }}, 'open')" class="ehc-detail-action is-gold">↺ Reopen</button>
+                            <button type="button" wire:click="setStatus({{ $selected->id }}, 'open')" class="ehc-detail-action is-gold col-span-3">↺ Reopen</button>
                         @endif
                     </div>
                 @endif

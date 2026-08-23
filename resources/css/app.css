@@ -397,11 +397,6 @@
     .op-card {
         @apply relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_10px_26px_-16px_rgba(11,31,58,0.45)] transition duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-[0_22px_46px_-20px_rgba(11,31,58,0.5)];
     }
-    /* The footer that anchors an operational card. Was navy; a card that rests
-       on the workspace does not need a dark base to look grounded. */
-    .op-card-foot {
-        @apply mt-auto flex items-center gap-2 border-t border-line bg-page/60 px-3.5 py-2 text-navy-700;
-    }
 
     /* Soft status/priority pill — pair with inline colour via style="". */
     .pill {
