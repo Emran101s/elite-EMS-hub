@@ -7,18 +7,18 @@
 
 @php
     $valueClass = match ($tone) {
-        'ok' => 'text-eo-ok-ink',
-        'warn' => 'text-eo-warn-ink',
-        'risk' => 'text-eo-risk',
-        'live' => 'text-eo-teal-ink',
-        default => 'text-eo-text',
+        'ok' => 'text-success-ink',
+        'warn' => 'text-warning-ink',
+        'risk' => 'text-danger-ink',
+        'live' => 'text-info-ink',
+        default => 'text-ink',
     };
 @endphp
 
-<div {{ $attributes->class(['eo-soft-card flex min-w-[140px] flex-col gap-1 px-4 py-3.5']) }}>
-    <p class="eo-label">{{ $label }}</p>
+<div {{ $attributes->class(['flex min-w-[140px] flex-col gap-1 rounded-lg border border-line bg-white px-4 py-3.5 shadow-raise']) }}>
+    <p class="eyebrow">{{ $label }}</p>
     <p class="text-[22px] font-bold tabular-nums tracking-tight {{ $valueClass }}">{{ $value }}</p>
     @if ($hint)
-        <p class="text-[12px] text-eo-muted">{{ $hint }}</p>
+        <p class="text-[12px] text-muted">{{ $hint }}</p>
     @endif
 </div>
