@@ -6,7 +6,7 @@
 <div class="space-y-4" wire:poll.20s>
 
     {{-- ══ where the door is up to ══ --}}
-    <div class="rounded-3xl bg-gradient-to-br from-eo-navy to-eo-navy-deep p-5 text-white shadow-eo-float">
+    <div class="rounded-3xl bg-gradient-to-br from-navy-800 to-navy-950 p-5 text-white shadow-float">
         <div class="flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <div>
                 <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-white/50">Arrived</p>
@@ -14,7 +14,7 @@
             </div>
             <div>
                 <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-white/50">Still to come</p>
-                <p class="text-[34px] font-black leading-none text-eo-teal-lit">{{ number_format($toCome) }}</p>
+                <p class="text-[34px] font-black leading-none text-gold-300">{{ number_format($toCome) }}</p>
             </div>
             <div>
                 <p class="text-eyebrow font-bold uppercase tracking-[0.18em] text-white/50">Expected</p>
@@ -26,22 +26,22 @@
         </div>
 
         <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15">
-            <div class="h-full rounded-full bg-eo-teal-lit transition-all duration-500" style="width: {{ $pct }}%"></div>
+            <div class="h-full rounded-full bg-gold-400 transition-all duration-500" style="width: {{ $pct }}%"></div>
         </div>
     </div>
 
     {{-- ══ find them ══ --}}
-    <div class="eo-soft-card-pad">
+    <div class="rounded-lg border border-line bg-white shadow-raise p-5">
         <input type="search" wire:model.live.debounce.250ms="q" autofocus
                placeholder="Name, email or organisation…"
-               class="eo-input h-14 w-full text-lg">
+               class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-14 w-full text-lg">
 
         @if (mb_strlen(trim($q)) < 2)
-            <p class="mt-3 text-center text-[12px] text-eo-muted">
+            <p class="mt-3 text-center text-[12px] text-muted">
                 Type two letters to find somebody. Badges scan straight through — this is for the ones without.
             </p>
         @elseif ($matches->isEmpty())
-            <div class="mt-4 rounded-2xl bg-eo-warn-soft px-4 py-3">
+            <div class="mt-4 rounded-2xl bg-warning-soft px-4 py-3">
                 <p class="text-[13px] font-bold text-amber-900">Nobody on the list matches “{{ trim($q) }}”.</p>
                 <p class="mt-0.5 text-[11.5px] text-amber-900/70">
                     Check the spelling, try their organisation, or register them at
@@ -55,42 +55,42 @@
     @foreach ($matches as $person)
         @php $in = $person->checked_in_at; @endphp
         <div wire:key="p-{{ $person->id }}"
-             @class(['eo-soft-card-pad flex flex-wrap items-center gap-3',
-                 'ring-2 ring-eo-ok' => $justAdmitted === $person->id])>
+             @class(['rounded-lg border border-line bg-white shadow-raise p-5 flex flex-wrap items-center gap-3',
+                 'ring-2 ring-success' => $justAdmitted === $person->id])>
 
             <span class="min-w-0 flex-1">
-                <span class="block text-[16px] font-bold text-eo-text">{{ $person->name }}</span>
-                <span class="block truncate text-[12px] text-eo-muted">
+                <span class="block text-[16px] font-bold text-ink">{{ $person->name }}</span>
+                <span class="block truncate text-[12px] text-muted">
                     {{ collect([$person->organization, $person->job_title, $person->email])->filter()->join(' · ') }}
                 </span>
 
                 <span class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <span class="rounded-full bg-eo-bg px-2 py-0.5 font-mono text-[10.5px] font-bold tracking-[0.14em] text-eo-muted">{{ $person->reference() }}</span>
+                    <span class="rounded-full bg-page px-2 py-0.5 font-mono text-[10.5px] font-bold tracking-[0.14em] text-muted">{{ $person->reference() }}</span>
                     @if ($person->ticket_type)
-                        <span class="eo-pill-premium">{{ $person->ticket_type }}</span>
+                        <span class="inline-flex items-center rounded-full bg-gold-50 px-2 py-0.5 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200">{{ $person->ticket_type }}</span>
                     @endif
                     @if ($person->vip)
-                        <span class="rounded-full bg-eo-navy px-2 py-0.5 text-[10.5px] font-bold text-eo-gold-soft">VIP</span>
+                        <span class="rounded-full bg-navy-900 px-2 py-0.5 text-[10.5px] font-bold text-gold-300">VIP</span>
                     @endif
                     {{-- What the kitchen needs to know, where the desk will see it. --}}
                     @if ($person->dietary)
-                        <span class="rounded-full bg-eo-warn-soft px-2 py-0.5 text-[10.5px] font-bold text-amber-800">{{ $person->dietary }}</span>
+                        <span class="rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-amber-800">{{ $person->dietary }}</span>
                     @endif
                 </span>
             </span>
 
             <span class="shrink-0">
                 @if ($person->status === 'cancelled')
-                    <span class="text-[12px] font-bold text-eo-muted">Cancelled — see a supervisor</span>
+                    <span class="text-[12px] font-bold text-muted">Cancelled — see a supervisor</span>
                 @elseif ($in)
                     <span class="flex items-center gap-2">
-                        <span class="text-[12.5px] font-bold text-eo-ok-ink">In at {{ $in->format('H:i') }}</span>
+                        <span class="text-[12.5px] font-bold text-success-ink">In at {{ $in->format('H:i') }}</span>
                         <button type="button" wire:click="undo({{ $person->id }})"
-                                class="rounded-lg px-2 py-1 text-[11px] font-semibold text-eo-muted transition hover:text-eo-risk-ink">Undo</button>
+                                class="rounded-lg px-2 py-1 text-[11px] font-semibold text-muted transition hover:text-danger-ink">Undo</button>
                     </span>
                 @else
                     <button type="button" wire:click="admit({{ $person->id }})"
-                            class="eo-btn-primary !rounded-2xl !px-6 !py-3 text-[14px]">
+                            class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400 !rounded-2xl !px-6 !py-3 text-[14px]">
                         Admit
                     </button>
                 @endif
@@ -100,13 +100,13 @@
 
     {{-- ══ the last few through ══ --}}
     @if ($recent->isNotEmpty() && mb_strlen(trim($q)) < 2)
-        <div class="eo-soft-card-pad">
-            <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-eo-muted">Just arrived</p>
+        <div class="rounded-lg border border-line bg-white shadow-raise p-5">
+            <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-muted">Just arrived</p>
             @foreach ($recent as $person)
                 <div wire:key="r-{{ $person->id }}" class="mt-1.5 flex items-baseline gap-2 text-[12.5px]">
-                    <span class="font-semibold text-eo-text">{{ $person->name }}</span>
-                    <span class="truncate text-eo-muted">{{ $person->organization }}</span>
-                    <span class="ms-auto shrink-0 tabular-nums text-eo-muted">{{ $person->checked_in_at?->format('H:i') }}</span>
+                    <span class="font-semibold text-ink">{{ $person->name }}</span>
+                    <span class="truncate text-muted">{{ $person->organization }}</span>
+                    <span class="ms-auto shrink-0 tabular-nums text-muted">{{ $person->checked_in_at?->format('H:i') }}</span>
                 </div>
             @endforeach
         </div>
