@@ -34,7 +34,7 @@
         @endif
     </div>
 
-    <p class="text-[11px] font-semibold text-eo-muted">
+    <p class="text-[11px] font-semibold text-muted">
         Command Briefing is a rule-based advisor, not a model — every flagged item names the record it came from.
     </p>
 </div>
