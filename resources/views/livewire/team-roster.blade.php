@@ -67,9 +67,9 @@
 
                 <form wire:submit="save" class="grid gap-4">
                     <div>
-                        <label class="eo-label mb-1">Profile photo (optional)</label>
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Profile photo (optional)</label>
                         <div class="flex items-center gap-3">
-                            <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-eo-navy text-sm font-bold text-eo-gold ring-2 ring-eo-line">
+                            <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-navy-900 text-sm font-bold text-gold-600 ring-2 ring-line">
                                 @if ($photo)
                                     <img src="{{ $photo->temporaryUrl() }}" class="h-full w-full object-cover" alt="preview">
                                 @elseif ($editingId && ($u = \App\Models\User::find($editingId)) && $u->avatar_path)
@@ -80,29 +80,29 @@
                             </span>
                             <div class="flex-1">
                                 <input type="file" wire:model="photo" accept="image/png,image/jpeg,image/webp"
-                                       class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-eo-navy-deep">
-                                <div wire:loading wire:target="photo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
-                                @error('photo')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
-                                <p class="mt-1 text-[11px] text-eo-muted">Leave blank to keep initials.</p>
+                                       class="block w-full text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-navy-950">
+                                <div wire:loading wire:target="photo" class="mt-1 text-[11px] font-semibold text-gold-700">Uploading…</div>
+                                @error('photo')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
+                                <p class="mt-1 text-[11px] text-muted">Leave blank to keep initials.</p>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="eo-label mb-1">Full name</label>
-                        <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. Layla Haddad">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Full name</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Layla Haddad">
+                        @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="eo-label mb-1">Email</label>
-                            <input type="email" wire:model="email" class="eo-input h-10 text-sm" placeholder="name@company.com">
-                            @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                            <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Email</label>
+                            <input type="email" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="name@company.com">
+                            @error('email')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="eo-label mb-1">Role</label>
-                            <select wire:model="role" class="eo-select h-10 text-sm">
+                            <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Role</label>
+                            <select wire:model="role" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none h-10 text-sm">
                                 @foreach ($roles as $val => $label)
                                     <option value="{{ $val }}">{{ $label }}</option>
                                 @endforeach
@@ -111,13 +111,13 @@
                     </div>
 
                     <div>
-                        <label class="eo-label mb-1">Job title (optional)</label>
-                        <input type="text" wire:model="title" class="eo-input h-10 text-sm" placeholder="e.g. Event Coordinator">
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Job title (optional)</label>
+                        <input type="text" wire:model="title" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. Event Coordinator">
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                        <x-eo.button type="submit" size="sm" wire:loading.attr="disabled" wire:target="save,photo">{{ $editingId ? 'Update' : 'Add member' }}</x-eo.button>
+                        <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save,photo" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400 disabled:opacity-60">{{ $editingId ? 'Update' : 'Add member' }}</button>
                     </div>
                 </form>
         </x-modal>

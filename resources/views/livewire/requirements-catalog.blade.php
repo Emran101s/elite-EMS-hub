@@ -87,22 +87,22 @@
         <x-modal :title="$editingId ? 'Edit equipment' : 'New equipment'" max="md" close="set('showForm', false)">
                 <form wire:submit="save" class="grid gap-3.5">
                     <div>
-                        <label class="eo-label mb-1">Equipment name</label>
-                        <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="e.g. AV & sound system">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Equipment name</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="e.g. AV & sound system">
+                        @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label mb-1">Unit price</label>
-                        <input type="number" step="0.01" min="0" wire:model="price" class="eo-input h-10 text-sm" placeholder="0">
-                        @error('price')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Unit price</label>
+                        <input type="number" step="0.01" min="0" wire:model="price" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="0">
+                        @error('price')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label mb-1">Notes (optional)</label>
-                        <input type="text" wire:model="notes" class="eo-input h-10 text-sm" placeholder="Spec, supplier, etc.">
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Notes (optional)</label>
+                        <input type="text" wire:model="notes" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Spec, supplier, etc.">
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                        <x-eo.button type="submit" size="sm">{{ $editingId ? 'Update' : 'Add' }}</x-eo.button>
+                        <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
+                        <button type="submit" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Update' : 'Add' }}</button>
                     </div>
                 </form>
         </x-modal>
