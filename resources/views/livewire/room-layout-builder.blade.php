@@ -5,27 +5,27 @@
     {{-- Header --}}
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="text-xs font-semibold text-eo-teal-ink hover:text-eo-teal-deep">← {{ $event->name }} · Venue</a>
-            <h2 class="mt-0.5 text-lg font-bold text-eo-text">{{ $room->name }}</h2>
-            <p class="text-xs text-eo-muted">{{ str($room->type)->replace('_', ' ')->title() }}
+            <a href="{{ route('events.hub', [$event, 'tab' => 'venue']) }}" class="text-xs font-semibold text-gold-700 hover:text-gold-700">← {{ $event->name }} · Venue</a>
+            <h2 class="mt-0.5 text-lg font-bold text-ink">{{ $room->name }}</h2>
+            <p class="text-xs text-muted">{{ str($room->type)->replace('_', ' ')->title() }}
                 @if ($room->capacity) · room capacity {{ number_format($room->capacity) }} @endif
-                · <span class="font-semibold text-eo-text">{{ $seatTotal }}</span> seats
-                @if (count($room->requirements ?? [])) · <span class="font-semibold text-eo-text">{{ count($room->requirements) }}</span> equipment @endif
-                @if ($room->totalCents()) · <span class="font-semibold text-eo-text">{{ $event->money($room->totalCents()) }}</span> total @endif
+                · <span class="font-semibold text-ink">{{ $seatTotal }}</span> seats
+                @if (count($room->requirements ?? [])) · <span class="font-semibold text-ink">{{ count($room->requirements) }}</span> equipment @endif
+                @if ($room->totalCents()) · <span class="font-semibold text-ink">{{ $event->money($room->totalCents()) }}</span> total @endif
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
             {{-- exports — available on both the Layout and Equipment views --}}
-            <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank" class="eo-btn-ghost eo-btn-sm" title="Floor plan to scale + inspector">↧ Layout PDF</a>
-            <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank" class="eo-btn-ghost eo-btn-sm" title="AV &amp; equipment prep sheet">↧ Equipment PDF</a>
+            <a href="{{ route('events.room-layout.pdf', [$event, $room]) }}" target="_blank" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300" title="Floor plan to scale + inspector">↧ Layout PDF</a>
+            <a href="{{ route('events.room-equipment.pdf', [$event, $room]) }}" target="_blank" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300" title="AV &amp; equipment prep sheet">↧ Equipment PDF</a>
 
             {{-- Workspace tabs --}}
-            <div class="inline-flex rounded-xl border border-eo-line bg-white p-1">
+            <div class="inline-flex rounded-xl border border-line bg-white p-1">
                 <button type="button" wire:click="$set('view', 'floor')"
-                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view === 'floor' ? 'bg-eo-navy text-white' : 'text-eo-muted hover:text-eo-text' }}">⊞ Layout</button>
+                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view === 'floor' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">⊞ Layout</button>
                 <button type="button" wire:click="$set('view', 'equipment')"
-                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view !== 'floor' ? 'bg-eo-navy text-white' : 'text-eo-muted hover:text-eo-text' }}">
-                    🎛 Equipment @if (count($room->requirements ?? []))<span class="ml-1 rounded-full bg-eo-teal-soft px-1.5 text-eyebrow text-eo-teal-ink">{{ count($room->requirements) }}</span>@endif
+                        class="rounded-lg px-4 py-1.5 text-xs font-bold transition {{ $view !== 'floor' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">
+                    🎛 Equipment @if (count($room->requirements ?? []))<span class="ml-1 rounded-full bg-gold-50 px-1.5 text-eyebrow text-gold-700">{{ count($room->requirements) }}</span>@endif
                 </button>
             </div>
         </div>
@@ -50,10 +50,10 @@
         @endphp
         <div class="grid gap-4 xl:grid-cols-[196px_minmax(0,1fr)_300px]">
             {{-- LEFT · shape palette --}}
-            <div class="eo-soft-card h-fit p-3.5">
+            <div class="rounded-lg border border-line bg-white shadow-raise h-fit p-3.5">
                 {{-- ✦ Seating generator — opens a full-size modal so the controls are readable --}}
                 <button type="button" wire:click="openSeatModal"
-                        class="mb-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-eo-teal-lit to-eo-teal-deep px-3 py-2.5 text-xs font-bold text-white shadow-eo-teal-glow transition hover:brightness-105">
+                        class="mb-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3 py-2.5 text-xs font-bold text-white shadow-[0_0_0_3px_rgba(212,175,55,0.25)] transition hover:brightness-105">
                     <span>✦</span> Auto-generate seating
                 </button>
                 @if ($seatMsg)<p class="mb-1 rounded-lg bg-emerald-50 px-2 py-1.5 text-eyebrow font-semibold leading-tight text-emerald-700">{{ $seatMsg }}</p>@endif
@@ -67,27 +67,27 @@
                     ];
                 @endphp
                 @foreach ($palette as $gLabel => $types)
-                    <p class="eo-field-label {{ $loop->first ? 'mt-3.5 !mb-2.5 border-t border-eo-line pt-3' : 'mt-3.5 !mb-2.5' }}">{{ $gLabel }}</p>
+                    <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted {{ $loop->first ? 'mt-3.5 !mb-2.5 border-t border-line pt-3' : 'mt-3.5 !mb-2.5' }}">{{ $gLabel }}</p>
                     <div class="grid grid-cols-2 gap-2">
                         @foreach ($types as $type)
                             @php [$label, $seats, $w, $h] = $presets[$type]; @endphp
                             <button type="button" wire:click="addElement('{{ $type }}')"
-                                    class="group flex flex-col items-center gap-1 rounded-xl border border-eo-line bg-eo-workspace/40 px-1.5 py-2 transition hover:border-eo-teal hover:bg-eo-teal-soft/50 hover:shadow-sm">
+                                    class="group flex flex-col items-center gap-1 rounded-xl border border-line bg-page/40 px-1.5 py-2 transition hover:border-gold-400 hover:bg-gold-50/50 hover:shadow-sm">
                                 <span class="flex h-11 w-full items-center justify-center overflow-hidden">
                                     <span class="block" style="transform: scale({{ round(min(50 / $w, 38 / $h), 3) }}); transform-origin: center;">
                                         <x-layout-element :type="$type" :seats="$type === 'chair' ? 0 : ($type === 'round' ? 8 : 0)" :w="$w" :h="$h" />
                                     </span>
                                 </span>
-                                <span class="text-eyebrow font-bold text-eo-text">{{ $type === 'table' ? 'Table' : $label }}</span>
+                                <span class="text-eyebrow font-bold text-ink">{{ $type === 'table' ? 'Table' : $label }}</span>
                             </button>
                         @endforeach
                     </div>
                 @endforeach
-                <p class="mt-3 border-t border-eo-line pt-2.5 text-eyebrow leading-snug text-eo-muted">Click to drop → drag to place → click to select &amp; resize.</p>
+                <p class="mt-3 border-t border-line pt-2.5 text-eyebrow leading-snug text-muted">Click to drop → drag to place → click to select &amp; resize.</p>
             </div>
 
             {{-- CENTER · canvas --}}
-            <div class="eo-soft-card overflow-auto p-4"
+            <div class="rounded-lg border border-line bg-white shadow-raise overflow-auto p-4"
                  x-data="{
                     drag: null, moved: false, spin: null,
                     down(e, id) { this.drag = { id, el: e.currentTarget, x: null, y: null }; this.moved = false; e.currentTarget.setPointerCapture?.(e.pointerId); e.preventDefault(); },
@@ -131,25 +131,25 @@
 
                 {{-- bulk toolbar: select-all / delete-selected / clear-all --}}
                 <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <span class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted">{{ count($elements) }} {{ \Illuminate\Support\Str::plural('item', count($elements)) }} on the plan</span>
+                    <span class="text-eyebrow font-bold uppercase tracking-wide text-muted">{{ count($elements) }} {{ \Illuminate\Support\Str::plural('item', count($elements)) }} on the plan</span>
                     <button type="button" wire:click="selectAll" @disabled(empty($elements))
-                            class="rounded-lg border border-eo-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-eo-text transition enabled:hover:border-eo-teal disabled:opacity-40">Select all</button>
+                            class="rounded-lg border border-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-ink transition enabled:hover:border-gold-400 disabled:opacity-40">Select all</button>
                     @if (count($selectedIds ?? []))
                         <button type="button" wire:click="deleteSelected"
-                                class="rounded-lg bg-eo-risk px-2.5 py-1.5 text-eyebrow font-bold text-white transition hover:brightness-110">Delete selected ({{ count($selectedIds) }})</button>
+                                class="rounded-lg bg-danger px-2.5 py-1.5 text-eyebrow font-bold text-white transition hover:brightness-110">Delete selected ({{ count($selectedIds) }})</button>
                         <button type="button" wire:click="clearSelection"
-                                class="rounded-lg px-2 py-1.5 text-eyebrow font-bold text-eo-muted hover:text-eo-text">Cancel</button>
+                                class="rounded-lg px-2 py-1.5 text-eyebrow font-bold text-muted hover:text-ink">Cancel</button>
                     @endif
                     <x-confirm title="Delete everything on the plan?" confirm="Clear" run="$wire.clearAll" :disabled="empty($elements)"
-                               class="ml-auto rounded-lg border border-eo-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-eo-risk-ink transition enabled:hover:bg-eo-risk-soft disabled:opacity-40">Clear all</x-confirm>
+                               class="ml-auto rounded-lg border border-line bg-white px-2.5 py-1.5 text-eyebrow font-bold text-danger-ink transition enabled:hover:bg-danger-soft disabled:opacity-40">Clear all</x-confirm>
                 </div>
 
                 <div class="mx-auto shrink-0" style="width:960px;">
-                    <div x-ref="canvas" @pointerdown.self="$wire.selectElement('')" class="relative rounded-xl border border-eo-line"
-                         style="width:960px; height:560px; background: var(--color-eo-card);
+                    <div x-ref="canvas" @pointerdown.self="$wire.selectElement('')" class="relative rounded-xl border border-line"
+                         style="width:960px; height:560px; background: #fff;
                             @if(!$scale) background-image:
-                                linear-gradient(var(--color-eo-line) 1px, transparent 1px),
-                                linear-gradient(90deg, var(--color-eo-line) 1px, transparent 1px);
+                                linear-gradient(var(--color-line) 1px, transparent 1px),
+                                linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
                             background-size: 40px 40px, 40px 40px; @endif">
 
                         {{-- centred venue floor (to scale) — CAD-style drawing, left as-is --}}
@@ -177,11 +177,11 @@
                                  style="left:{{ $el['x'] }}px; top:{{ $el['y'] }}px; transform: translate(-50%, -50%); z-index: {{ $sel || $bulk ? 30 : 10 }};">
                                 {{-- bulk-select checkbox (for select-all / delete-selected) --}}
                                 <button type="button" wire:click="toggleInSelection('{{ $el['id'] }}')" @pointerdown.stop
-                                        class="absolute -left-2.5 -top-2.5 z-40 flex h-5 w-5 items-center justify-center rounded-md border-2 border-white text-eyebrow font-black shadow transition {{ $bulk ? 'bg-info text-white' : 'bg-white text-eo-muted opacity-0 group-hover:opacity-100' }}"
+                                        class="absolute -left-2.5 -top-2.5 z-40 flex h-5 w-5 items-center justify-center rounded-md border-2 border-white text-eyebrow font-black shadow transition {{ $bulk ? 'bg-info text-white' : 'bg-white text-muted opacity-0 group-hover:opacity-100' }}"
                                         title="Select for bulk delete">{{ $bulk ? '✓' : '＋' }}</button>
                                 @if (($el['type'] ?? '') === 'seatblock')
                                     @php $geo = \App\Models\EventRoom::seatChairs($el, $scale ?: 12); @endphp
-                                    <div data-rot style="transform: rotate({{ $el['rot'] ?? 0 }}deg); width:{{ $geo['w'] }}px; height:{{ $geo['h'] }}px;" class="relative {{ $sel ? 'rounded-lg ring-2 ring-eo-teal ring-offset-4' : '' }}">
+                                    <div data-rot style="transform: rotate({{ $el['rot'] ?? 0 }}deg); width:{{ $geo['w'] }}px; height:{{ $geo['h'] }}px;" class="relative {{ $sel ? 'rounded-lg ring-2 ring-gold-400 ring-offset-4' : '' }}">
                                         @foreach ($geo['desks'] as [$dx, $dy, $dw, $dh])
                                             <span class="absolute rounded-sm bg-navy-100 ring-1 ring-navy-200" style="left:{{ $geo['w'] / 2 + $dx - $dw / 2 }}px; top:{{ $geo['h'] / 2 + $dy - $dh / 2 }}px; width:{{ $dw }}px; height:{{ $dh }}px;"></span>
                                         @endforeach
@@ -198,9 +198,9 @@
                                             <span class="pointer-events-none absolute -translate-x-full -translate-y-1/2 pr-0.5 text-eyebrow font-bold text-navy-400" style="left:{{ $geo['w'] / 2 + $lx }}px; top:{{ $geo['h'] / 2 + $ly }}px;">{{ $lt }}</span>
                                         @endforeach
                                     </div>
-                                    <span class="pointer-events-none absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-eo-navy px-1.5 py-px text-eyebrow font-bold text-white">{{ $el['seats'] ?? 0 }} seats</span>
+                                    <span class="pointer-events-none absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-navy-900 px-1.5 py-px text-eyebrow font-bold text-white">{{ $el['seats'] ?? 0 }} seats</span>
                                 @else
-                                    <div data-rot style="transform: rotate({{ $el['rot'] ?? 0 }}deg);" class="{{ $sel ? 'rounded-lg ring-2 ring-eo-teal ring-offset-2' : '' }}">
+                                    <div data-rot style="transform: rotate({{ $el['rot'] ?? 0 }}deg);" class="{{ $sel ? 'rounded-lg ring-2 ring-gold-400 ring-offset-2' : '' }}">
                                         <x-layout-element :type="$el['type']" :seats="$el['seats'] ?? 0" :w="$el['w'] ?? 96" :h="$el['h'] ?? 96" :scale="$scale" />
                                     </div>
                                     @if (($el['seats'] ?? 0) > 0)
@@ -210,26 +210,26 @@
 
                                 {{-- item name, upright, above the piece --}}
                                 @if (! empty($el['name']))
-                                    <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-white/90 px-1.5 py-px text-eyebrow font-bold text-eo-text shadow-sm ring-1 ring-eo-line">{{ $el['name'] }}</span>
+                                    <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-white/90 px-1.5 py-px text-eyebrow font-bold text-ink shadow-sm ring-1 ring-line">{{ $el['name'] }}</span>
                                 @endif
 
                                 @if ($sel)
                                     {{-- drag-to-rotate handle --}}
                                     <div class="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 flex-col items-center">
                                         <div @pointerdown.stop.prevent="startSpin($event, '{{ $el['id'] }}')"
-                                             class="flex h-6 w-6 cursor-grab items-center justify-center rounded-full border-2 border-white bg-eo-teal text-micro text-white shadow-md active:cursor-grabbing"
+                                             class="flex h-6 w-6 cursor-grab items-center justify-center rounded-full border-2 border-white bg-gold-500 text-micro text-white shadow-md active:cursor-grabbing"
                                              title="Drag to rotate · hold Shift for free angle">⟳</div>
-                                        <div class="h-3 w-px bg-eo-teal-lit"></div>
+                                        <div class="h-3 w-px bg-gold-500-lit"></div>
                                     </div>
                                     {{-- delete --}}
                                     <button type="button" wire:click="removeElement('{{ $el['id'] }}')" @pointerdown.stop
-                                            class="absolute -right-2.5 -top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-eo-risk text-eyebrow font-bold text-white shadow-md transition hover:scale-110"
+                                            class="absolute -right-2.5 -top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-eyebrow font-bold text-white shadow-md transition hover:scale-110"
                                             title="Delete (or press Delete key)">✕</button>
                                 @endif
                             </div>
                         @empty
                             <div class="pointer-events-none flex h-full items-center justify-center">
-                                <p class="text-sm text-eo-muted">Pick a shape on the left to start building →</p>
+                                <p class="text-sm text-muted">Pick a shape on the left to start building →</p>
                             </div>
                         @endforelse
                     </div>
@@ -238,34 +238,34 @@
 
             {{-- RIGHT · inspector rail --}}
             <div class="xl:sticky xl:top-4 xl:h-fit">
-                <div class="eo-soft-card overflow-hidden">
+                <div class="rounded-lg border border-line bg-white shadow-raise overflow-hidden">
                     {{-- rail header --}}
-                    <div class="flex items-center justify-between border-b border-eo-line bg-eo-navy px-4 py-3">
-                        <span class="text-xs font-bold uppercase tracking-[0.14em] text-eo-teal-lit">Inspector</span>
-                        <x-confirm title="Clear the whole layout?" confirm="Clear" run="$wire.clearAll" :disabled="empty($elements)" class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-eo-risk/70 disabled:opacity-30">Clear</x-confirm>
+                    <div class="flex items-center justify-between border-b border-line bg-navy-900 px-4 py-3">
+                        <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-400">Inspector</span>
+                        <x-confirm title="Clear the whole layout?" confirm="Clear" run="$wire.clearAll" :disabled="empty($elements)" class="rounded-lg bg-white/10 px-2.5 py-1 text-eyebrow font-bold text-white transition hover:bg-danger/70 disabled:opacity-30">Clear</x-confirm>
                     </div>
 
                     {{-- Room dimensions --}}
-                    <div class="border-b border-eo-line p-4">
-                        <p class="eo-field-label !mb-2.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-eo-teal"></span> Room dimensions</p>
+                    <div class="border-b border-line p-4">
+                        <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted !mb-2.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Room dimensions</p>
                         <div class="flex items-end gap-2">
                             <div class="flex-1">
-                                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Width · m</label>
-                                <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="width_m" class="eo-input h-9 w-full text-sm" placeholder="—">
+                                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Width · m</label>
+                                <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="width_m" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm" placeholder="—">
                             </div>
-                            <span class="pb-2 text-eo-muted">×</span>
+                            <span class="pb-2 text-muted">×</span>
                             <div class="flex-1">
-                                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Length · m</label>
-                                <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="length_m" class="eo-input h-9 w-full text-sm" placeholder="—">
+                                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Length · m</label>
+                                <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="length_m" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm" placeholder="—">
                             </div>
                         </div>
                         @if ($area)
-                            <div class="mt-3 flex items-center justify-between rounded-xl bg-eo-workspace/60 px-3 py-2">
-                                <span class="text-eyebrow font-semibold text-eo-muted">Floor area</span>
-                                <span class="text-sm font-bold text-eo-text">{{ number_format($area, 0) }} m²</span>
+                            <div class="mt-3 flex items-center justify-between rounded-xl bg-page/60 px-3 py-2">
+                                <span class="text-eyebrow font-semibold text-muted">Floor area</span>
+                                <span class="text-sm font-bold text-ink">{{ number_format($area, 0) }} m²</span>
                             </div>
                         @else
-                            <p class="mt-2 text-eyebrow text-eo-muted">Set dimensions for a to-scale grid, rulers &amp; real table sizes.</p>
+                            <p class="mt-2 text-eyebrow text-muted">Set dimensions for a to-scale grid, rulers &amp; real table sizes.</p>
                         @endif
                     </div>
 
@@ -281,17 +281,17 @@
                         @endphp
                         <div class="p-4" wire:key="props-{{ $sid }}">
                             <div class="mb-3 flex items-center justify-between">
-                                <p class="eo-field-label !mb-0 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-eo-teal"></span> {{ $label }}</p>
-                                <button type="button" wire:click="removeElement('{{ $sid }}')" class="text-eyebrow font-bold text-eo-risk-ink hover:underline">Delete</button>
+                                <p class="mb-0 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> {{ $label }}</p>
+                                <button type="button" wire:click="removeElement('{{ $sid }}')" class="text-eyebrow font-bold text-danger-ink hover:underline">Delete</button>
                             </div>
 
                             {{-- NAME --}}
                             <label class="mb-3 block">
-                                <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Name / label</span>
+                                <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Name / label</span>
                                 <input type="text" maxlength="40" value="{{ $selected['name'] ?? '' }}"
                                        wire:change="nameElement('{{ $sid }}', $event.target.value)"
                                        placeholder="e.g. Head table, Booth A, VIP round"
-                                       class="eo-input h-9 w-full text-sm">
+                                       class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                             </label>
 
                             {{-- SEATBLOCK · edit the arrangement's counts & table sizes --}}
@@ -329,55 +329,55 @@
                                         default => null,
                                     };
                                 @endphp
-                                <p class="eo-field-label !mb-1.5 !text-eyebrow">Arrangement · edit</p>
+                                <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted !mb-1.5 !text-eyebrow">Arrangement · edit</p>
                                 <div class="mb-2 grid grid-cols-2 gap-2">
                                     @foreach ($counts as [$lbl, $fld, $v])
                                         <label class="block">
-                                            <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">{{ $lbl }}</span>
+                                            <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">{{ $lbl }}</span>
                                             <input type="number" min="0" value="{{ $v }}"
                                                    wire:change="updateSeatblock('{{ $sid }}', '{{ $fld }}', $event.target.value)"
-                                                   class="eo-input h-9 w-full text-sm">
+                                                   class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                                         </label>
                                     @endforeach
                                     @if ($cmField)
                                         <label class="col-span-2 block">
-                                            <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">{{ $cmField[0] }}</span>
+                                            <span class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">{{ $cmField[0] }}</span>
                                             <div class="flex items-center gap-1">
                                                 <input type="number" step="10" value="{{ (int) round(($sb[$cmField[1]] ?? 1.8) * 100) }}"
                                                        wire:change="updateSeatblock('{{ $sid }}', '{{ $cmField[1] }}', $event.target.value)"
-                                                       class="eo-input h-9 w-full text-sm">
+                                                       class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                                                 @if ($cmField[2])
-                                                    <span class="text-eo-muted">×</span>
+                                                    <span class="text-muted">×</span>
                                                     <input type="number" step="10" value="{{ (int) round(($sb[$cmField[2]] ?? 0.6) * 100) }}"
                                                            wire:change="updateSeatblock('{{ $sid }}', '{{ $cmField[2] }}', $event.target.value)"
-                                                           class="eo-input h-9 w-full text-sm">
+                                                           class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                                                 @endif
                                             </div>
                                         </label>
                                     @endif
                                 </div>
-                                <div class="mb-3 flex items-center justify-between rounded-xl bg-eo-workspace/60 px-3 py-2">
-                                    <span class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Total chairs</span>
-                                    <span class="text-base font-black text-eo-text">{{ $sb['seats'] ?? 0 }}</span>
+                                <div class="mb-3 flex items-center justify-between rounded-xl bg-page/60 px-3 py-2">
+                                    <span class="text-eyebrow font-bold uppercase tracking-wide text-muted">Total chairs</span>
+                                    <span class="text-base font-black text-ink">{{ $sb['seats'] ?? 0 }}</span>
                                 </div>
                             @endif
 
                             {{-- SIZE (non-seatblock only) --}}
                             @unless ($selected['type'] === 'seatblock')
-                            <p class="eo-field-label !mb-1.5 !text-eyebrow">Size {{ $scale ? '· metres' : '· pixels' }}</p>
+                            <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted !mb-1.5 !text-eyebrow">Size {{ $scale ? '· metres' : '· pixels' }}</p>
                             @if ($scale)
                                 @if ($isRound)
-                                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Diameter (m)</label>
-                                    <input type="number" min="0.2" step="0.1" value="{{ $wM }}" wire:change="setSizeMeters('{{ $sid }}', 'both', $event.target.value)" class="eo-input mb-3 h-9 w-full text-sm">
+                                    <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Diameter (m)</label>
+                                    <input type="number" min="0.2" step="0.1" value="{{ $wM }}" wire:change="setSizeMeters('{{ $sid }}', 'both', $event.target.value)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none mb-3 h-9 w-full text-sm">
                                 @else
                                     <div class="mb-3 grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Width (m)</label>
-                                            <input type="number" min="0.2" step="0.1" value="{{ $wM }}" wire:change="setSizeMeters('{{ $sid }}', 'w', $event.target.value)" class="eo-input h-9 w-full text-sm">
+                                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Width (m)</label>
+                                            <input type="number" min="0.2" step="0.1" value="{{ $wM }}" wire:change="setSizeMeters('{{ $sid }}', 'w', $event.target.value)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                                         </div>
                                         <div>
-                                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Length (m)</label>
-                                            <input type="number" min="0.2" step="0.1" value="{{ $hM }}" wire:change="setSizeMeters('{{ $sid }}', 'h', $event.target.value)" class="eo-input h-9 w-full text-sm">
+                                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Length (m)</label>
+                                            <input type="number" min="0.2" step="0.1" value="{{ $hM }}" wire:change="setSizeMeters('{{ $sid }}', 'h', $event.target.value)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-9 w-full text-sm">
                                         </div>
                                     </div>
                                 @endif
@@ -385,14 +385,14 @@
                                 {{-- no room size yet → px steppers + hint --}}
                                 @if ($isRound)
                                     <div class="mb-2 flex items-center gap-1">
-                                        <button type="button" wire:click="resizeElement('{{ $sid }}', 'both', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">−</button>
-                                        <span class="flex-1 text-center text-xs font-bold text-eo-text">{{ $selected['w'] ?? 96 }} px</span>
-                                        <button type="button" wire:click="resizeElement('{{ $sid }}', 'both', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">+</button>
+                                        <button type="button" wire:click="resizeElement('{{ $sid }}', 'both', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">−</button>
+                                        <span class="flex-1 text-center text-xs font-bold text-ink">{{ $selected['w'] ?? 96 }} px</span>
+                                        <button type="button" wire:click="resizeElement('{{ $sid }}', 'both', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">+</button>
                                     </div>
                                 @else
                                     <div class="mb-2 grid grid-cols-2 gap-2">
-                                        <div class="flex items-center gap-1"><button type="button" wire:click="resizeElement('{{ $sid }}', 'w', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">−</button><span class="flex-1 text-center text-micro font-bold text-eo-text">W</span><button type="button" wire:click="resizeElement('{{ $sid }}', 'w', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">+</button></div>
-                                        <div class="flex items-center gap-1"><button type="button" wire:click="resizeElement('{{ $sid }}', 'h', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">−</button><span class="flex-1 text-center text-micro font-bold text-eo-text">L</span><button type="button" wire:click="resizeElement('{{ $sid }}', 'h', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">+</button></div>
+                                        <div class="flex items-center gap-1"><button type="button" wire:click="resizeElement('{{ $sid }}', 'w', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">−</button><span class="flex-1 text-center text-micro font-bold text-ink">W</span><button type="button" wire:click="resizeElement('{{ $sid }}', 'w', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">+</button></div>
+                                        <div class="flex items-center gap-1"><button type="button" wire:click="resizeElement('{{ $sid }}', 'h', -10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">−</button><span class="flex-1 text-center text-micro font-bold text-ink">L</span><button type="button" wire:click="resizeElement('{{ $sid }}', 'h', 10)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">+</button></div>
                                     </div>
                                 @endif
                                 <p class="mb-3 text-eyebrow text-amber-700">Set room dimensions above to size in metres.</p>
@@ -401,51 +401,51 @@
 
                             {{-- ROTATION --}}
                             <div class="mb-3">
-                                <label class="mb-1 flex items-center justify-between text-eyebrow font-bold uppercase tracking-wide text-eo-muted"><span>Rotation</span><span class="text-eo-text">{{ $rot }}°</span></label>
+                                <label class="mb-1 flex items-center justify-between text-eyebrow font-bold uppercase tracking-wide text-muted"><span>Rotation</span><span class="text-ink">{{ $rot }}°</span></label>
                                 <div class="flex items-center gap-1.5">
-                                    <button type="button" wire:click="rotateBy('{{ $sid }}', -15)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal" title="−15°">⟲</button>
-                                    <input type="range" min="0" max="359" step="1" value="{{ $rot }}" wire:change="setRotation('{{ $sid }}', $event.target.value)" class="h-1.5 flex-1 accent-eo-teal">
-                                    <button type="button" wire:click="rotateBy('{{ $sid }}', 15)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal" title="+15°">⟳</button>
+                                    <button type="button" wire:click="rotateBy('{{ $sid }}', -15)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400" title="−15°">⟲</button>
+                                    <input type="range" min="0" max="359" step="1" value="{{ $rot }}" wire:change="setRotation('{{ $sid }}', $event.target.value)" class="h-1.5 flex-1 accent-gold-500">
+                                    <button type="button" wire:click="rotateBy('{{ $sid }}', 15)" class="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400" title="+15°">⟳</button>
                                 </div>
                                 <div class="mt-1.5 flex gap-1">
                                     @foreach ([0, 45, 90, 135, 180, 270] as $deg)
-                                        <button type="button" wire:click="setRotation('{{ $sid }}', {{ $deg }})" class="flex-1 rounded-md border border-eo-line py-0.5 text-eyebrow font-bold {{ $rot === $deg ? 'bg-eo-navy text-white' : 'text-eo-muted hover:border-eo-teal' }}">{{ $deg }}°</button>
+                                        <button type="button" wire:click="setRotation('{{ $sid }}', {{ $deg }})" class="flex-1 rounded-md border border-line py-0.5 text-eyebrow font-bold {{ $rot === $deg ? 'bg-navy-900 text-white' : 'text-muted hover:border-gold-400' }}">{{ $deg }}°</button>
                                     @endforeach
                                 </div>
-                                <p class="mt-1 text-eyebrow text-eo-muted">Tip: drag the teal handle on the canvas to rotate freely (hold Shift for any angle).</p>
+                                <p class="mt-1 text-eyebrow text-muted">Tip: drag the teal handle on the canvas to rotate freely (hold Shift for any angle).</p>
                             </div>
 
                             {{-- SEATS --}}
                             @if (($selected['seats'] ?? 0) > 0 || in_array($selected['type'], ['round', 'banquet', 'boardroom', 'crescent', 'ushape', 'classroom', 'theater'], true))
-                                <div class="flex items-center justify-between rounded-xl bg-eo-workspace/60 px-3 py-2">
-                                    <span class="text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Seats</span>
+                                <div class="flex items-center justify-between rounded-xl bg-page/60 px-3 py-2">
+                                    <span class="text-eyebrow font-bold uppercase tracking-wide text-muted">Seats</span>
                                     <div class="flex items-center gap-1">
-                                        <button type="button" wire:click="changeSeats('{{ $sid }}', -1)" class="flex h-6 w-6 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">−</button>
-                                        <span class="min-w-7 text-center text-xs font-bold text-eo-text">{{ $selected['seats'] ?? 0 }}</span>
-                                        <button type="button" wire:click="changeSeats('{{ $sid }}', 1)" class="flex h-6 w-6 items-center justify-center rounded-lg border border-eo-line bg-white text-sm font-bold text-eo-text transition hover:border-eo-teal">+</button>
+                                        <button type="button" wire:click="changeSeats('{{ $sid }}', -1)" class="flex h-6 w-6 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">−</button>
+                                        <span class="min-w-7 text-center text-xs font-bold text-ink">{{ $selected['seats'] ?? 0 }}</span>
+                                        <button type="button" wire:click="changeSeats('{{ $sid }}', 1)" class="flex h-6 w-6 items-center justify-center rounded-lg border border-line bg-white text-sm font-bold text-ink transition hover:border-gold-400">+</button>
                                     </div>
                                 </div>
                             @endif
                         </div>
                     @else
                         <div class="p-4">
-                            <p class="eo-field-label !mb-2.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-eo-muted"></span> Layout stats</p>
+                            <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted !mb-2.5 flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-navy-300"></span> Layout stats</p>
                             <div class="grid grid-cols-2 gap-2">
-                                <div class="rounded-xl bg-eo-workspace/60 px-3 py-2.5"><p class="text-lg font-bold text-eo-text">{{ $seatTotal }}</p><p class="text-eyebrow uppercase tracking-wide text-eo-muted">Seats</p></div>
-                                <div class="rounded-xl bg-eo-workspace/60 px-3 py-2.5"><p class="text-lg font-bold text-eo-text">{{ $tablesCount }}</p><p class="text-eyebrow uppercase tracking-wide text-eo-muted">Tables</p></div>
-                                <div class="rounded-xl bg-eo-workspace/60 px-3 py-2.5"><p class="text-lg font-bold text-eo-text">{{ count($elements) }}</p><p class="text-eyebrow uppercase tracking-wide text-eo-muted">Elements</p></div>
-                                <div class="rounded-xl bg-eo-workspace/60 px-3 py-2.5">
-                                    <p class="text-lg font-bold text-eo-text">{{ $area && $seatTotal ? number_format($seatTotal / $area, 1) : '—' }}</p>
-                                    <p class="text-eyebrow uppercase tracking-wide text-eo-muted">Seats / m²</p>
+                                <div class="rounded-xl bg-page/60 px-3 py-2.5"><p class="text-lg font-bold text-ink">{{ $seatTotal }}</p><p class="text-eyebrow uppercase tracking-wide text-muted">Seats</p></div>
+                                <div class="rounded-xl bg-page/60 px-3 py-2.5"><p class="text-lg font-bold text-ink">{{ $tablesCount }}</p><p class="text-eyebrow uppercase tracking-wide text-muted">Tables</p></div>
+                                <div class="rounded-xl bg-page/60 px-3 py-2.5"><p class="text-lg font-bold text-ink">{{ count($elements) }}</p><p class="text-eyebrow uppercase tracking-wide text-muted">Elements</p></div>
+                                <div class="rounded-xl bg-page/60 px-3 py-2.5">
+                                    <p class="text-lg font-bold text-ink">{{ $area && $seatTotal ? number_format($seatTotal / $area, 1) : '—' }}</p>
+                                    <p class="text-eyebrow uppercase tracking-wide text-muted">Seats / m²</p>
                                 </div>
                             </div>
                             @if ($room->capacity && $seatTotal)
                                 <div class="mt-3">
-                                    <div class="mb-1 flex justify-between text-eyebrow font-semibold text-eo-muted"><span>Capacity fill</span><span>{{ min(100, (int) round($seatTotal / $room->capacity * 100)) }}%</span></div>
-                                    <div class="h-1.5 overflow-hidden rounded-full bg-eo-bg"><div class="h-full rounded-full bg-eo-teal" style="width: {{ min(100, (int) round($seatTotal / $room->capacity * 100)) }}%"></div></div>
+                                    <div class="mb-1 flex justify-between text-eyebrow font-semibold text-muted"><span>Capacity fill</span><span>{{ min(100, (int) round($seatTotal / $room->capacity * 100)) }}%</span></div>
+                                    <div class="h-1.5 overflow-hidden rounded-full bg-page"><div class="h-full rounded-full bg-gold-500" style="width: {{ min(100, (int) round($seatTotal / $room->capacity * 100)) }}%"></div></div>
                                 </div>
                             @endif
-                            <p class="mt-3 text-eyebrow leading-snug text-eo-muted">Select any element on the canvas to resize it, change seats, or rotate.</p>
+                            <p class="mt-3 text-eyebrow leading-snug text-muted">Select any element on the canvas to resize it, change seats, or rotate.</p>
                         </div>
                     @endif
                 </div>
@@ -456,43 +456,43 @@
         @php $reqs = $room->requirements ?? []; $reqTotal = $room->requirementsTotalCents(); $venueTotal = $room->totalCents(); @endphp
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
             {{-- MAIN · equipment list --}}
-            <div class="eo-soft-card p-6">
+            <div class="rounded-lg border border-line bg-white shadow-raise p-6">
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-bold text-eo-text">Venue Equipment</h3>
-                        <p class="text-eyebrow text-eo-muted">Everything this venue needs, each with a price. The total flows into the Budget under Venues.</p>
+                        <h3 class="text-base font-bold text-ink">Venue Equipment</h3>
+                        <p class="text-eyebrow text-muted">Everything this venue needs, each with a price. The total flows into the Budget under Venues.</p>
                     </div>
-                    <span class="text-lg font-bold text-eo-text">{{ $reqTotal ? $event->money($reqTotal) : '—' }}</span>
+                    <span class="text-lg font-bold text-ink">{{ $reqTotal ? $event->money($reqTotal) : '—' }}</span>
                 </div>
 
                 @if ($catalog->isNotEmpty())
-                    <select wire:change="pickReq($event.target.value)" class="eo-select mb-2 h-10 w-full text-sm">
+                    <select wire:change="pickReq($event.target.value)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none mb-2 h-10 w-full text-sm">
                         <option value="">— Pick from Equipment Catalog —</option>
                         @foreach ($catalog as $ci)<option value="{{ $ci->id }}">{{ $ci->name }}@if ($ci->unit_price_cents) · {{ number_format($ci->unit_price_cents / 100) }}@endif</option>@endforeach
                     </select>
                 @endif
                 <div class="mb-1.5 flex flex-wrap items-center gap-1.5">
-                    <input type="text" wire:model="reqName" wire:keydown.enter="addRequirement" maxlength="120" placeholder="Equipment (or pick from catalog)" class="eo-input h-10 min-w-0 flex-1 text-sm">
-                    <span class="text-eyebrow font-semibold text-eo-muted">{{ $event->currencySymbol() }}</span>
-                    <input type="number" min="0" step="0.01" wire:model="reqCost" wire:keydown.enter="addRequirement" placeholder="Rate" title="Price per unit, per day" class="eo-input h-10 w-24 text-sm">
-                    <span class="text-eyebrow font-semibold text-eo-muted">×</span>
-                    <input type="number" min="1" wire:model="reqQty" wire:keydown.enter="addRequirement" placeholder="Qty" title="How many" class="eo-input h-10 w-16 text-sm">
-                    <span class="text-eyebrow font-semibold text-eo-muted">×</span>
-                    <input type="number" min="1" wire:model="reqDays" wire:keydown.enter="addRequirement" placeholder="Days" title="For how many days" class="eo-input h-10 w-16 text-sm">
-                    <button type="button" wire:click="addRequirement" class="eo-btn-primary h-10 shrink-0 !px-4 text-xs">{{ $editingReqId ? '✓ Save' : '＋ Add' }}</button>
+                    <input type="text" wire:model="reqName" wire:keydown.enter="addRequirement" maxlength="120" placeholder="Equipment (or pick from catalog)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 min-w-0 flex-1 text-sm">
+                    <span class="text-eyebrow font-semibold text-muted">{{ $event->currencySymbol() }}</span>
+                    <input type="number" min="0" step="0.01" wire:model="reqCost" wire:keydown.enter="addRequirement" placeholder="Rate" title="Price per unit, per day" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 w-24 text-sm">
+                    <span class="text-eyebrow font-semibold text-muted">×</span>
+                    <input type="number" min="1" wire:model="reqQty" wire:keydown.enter="addRequirement" placeholder="Qty" title="How many" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 w-16 text-sm">
+                    <span class="text-eyebrow font-semibold text-muted">×</span>
+                    <input type="number" min="1" wire:model="reqDays" wire:keydown.enter="addRequirement" placeholder="Days" title="For how many days" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 w-16 text-sm">
+                    <button type="button" wire:click="addRequirement" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400 h-10 shrink-0 !px-4 text-xs">{{ $editingReqId ? '✓ Save' : '＋ Add' }}</button>
                     @if ($editingReqId)
-                        <button type="button" wire:click="cancelEditRequirement" class="h-10 shrink-0 rounded-xl px-3 text-xs font-bold text-eo-muted transition hover:text-eo-text">Cancel</button>
+                        <button type="button" wire:click="cancelEditRequirement" class="h-10 shrink-0 rounded-xl px-3 text-xs font-bold text-muted transition hover:text-ink">Cancel</button>
                     @endif
                 </div>
-                <p class="mb-3 text-eyebrow text-eo-muted">
+                <p class="mb-3 text-eyebrow text-muted">
                     The rate is <b>per unit, per day</b> — 12 table microphones over 5 days is 12 × 5, not a total worked out on paper.
                     Blank counts as one. This venue is held for <b>{{ $room->chargedDays() }}</b> {{ str('day')->plural($room->chargedDays()) }}.
                 </p>
-                @error('reqName') <p class="mb-2 text-eyebrow font-semibold text-eo-risk-ink">{{ $message }}</p> @enderror
+                @error('reqName') <p class="mb-2 text-eyebrow font-semibold text-danger-ink">{{ $message }}</p> @enderror
 
-                <ul class="divide-y divide-eo-line">
+                <ul class="divide-y divide-line">
                     @forelse ($reqs as $req)
-                        <li wire:key="dreq-{{ $req['id'] }}" @class(['group flex items-center justify-between gap-2 py-2.5', 'rounded-lg bg-eo-teal-soft/60 px-2' => $editingReqId === $req['id']])>
+                        <li wire:key="dreq-{{ $req['id'] }}" @class(['group flex items-center justify-between gap-2 py-2.5', 'rounded-lg bg-gold-50/60 px-2' => $editingReqId === $req['id']])>
                             @php
                                 $rQty = max(1, (int) ($req['qty'] ?? 1)); $rDays = max(1, (int) ($req['days'] ?? 1));
                                 $rSt = $req['status'] ?? 'needed';
@@ -501,9 +501,9 @@
                                 $stClass = $stMeta['class'];
                             @endphp
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-sm text-eo-text">{{ $req['name'] }}</span>
+                                <span class="block truncate text-sm text-ink">{{ $req['name'] }}</span>
                                 {{-- The working shown, so the total can be checked without opening it. --}}
-                                <span class="block text-eyebrow text-eo-muted">
+                                <span class="block text-eyebrow text-muted">
                                     {{ $event->money($req['cost_cents'] ?? 0) }}
                                     @if ($rQty > 1) × {{ $rQty }} @endif
                                     @if ($rDays > 1) × {{ $rDays }} days @endif
@@ -522,22 +522,22 @@
                                 <button type="button" wire:click="advanceRequirement('{{ $req['id'] }}')"
                                         title="Needed → Requested → Confirmed → On-site"
                                         class="rounded-full px-2 py-0.5 text-eyebrow font-bold transition hover:opacity-75 {{ $stClass }}">{{ $stLabel }}</button>
-                                <span class="text-sm font-semibold text-eo-text">{{ $event->money(\App\Models\EventRoom::requirementCents($req)) }}</span>
-                                <button type="button" wire:click="editRequirement('{{ $req['id'] }}')" title="Edit" class="rounded-lg px-1.5 py-0.5 text-eyebrow font-bold text-eo-muted opacity-0 transition hover:bg-eo-bg hover:text-eo-text group-hover:opacity-100">✎</button>
-                                <button type="button" wire:click="removeRequirement('{{ $req['id'] }}')" class="rounded-lg bg-eo-risk-soft px-1.5 py-0.5 text-eyebrow font-bold text-eo-risk opacity-0 transition hover:bg-eo-risk-soft/70 group-hover:opacity-100">✕</button>
+                                <span class="text-sm font-semibold text-ink">{{ $event->money(\App\Models\EventRoom::requirementCents($req)) }}</span>
+                                <button type="button" wire:click="editRequirement('{{ $req['id'] }}')" title="Edit" class="rounded-lg px-1.5 py-0.5 text-eyebrow font-bold text-muted opacity-0 transition hover:bg-page hover:text-ink group-hover:opacity-100">✎</button>
+                                <button type="button" wire:click="removeRequirement('{{ $req['id'] }}')" class="rounded-lg bg-danger-soft px-1.5 py-0.5 text-eyebrow font-bold text-danger-ink opacity-0 transition hover:bg-danger-soft/70 group-hover:opacity-100">✕</button>
                             </span>
                         </li>
                     @empty
-                        <li class="py-6 text-center text-xs text-eo-muted">No equipment yet — add anything this venue needs with its price.</li>
+                        <li class="py-6 text-center text-xs text-muted">No equipment yet — add anything this venue needs with its price.</li>
                     @endforelse
                 </ul>
             </div>
 
             {{-- RIGHT · totals rail --}}
             <div class="xl:sticky xl:top-12 xl:h-fit">
-                <div class="eo-soft-card overflow-hidden">
-                    <div class="border-b border-eo-line bg-eo-navy px-4 py-3">
-                        <span class="text-xs font-bold uppercase tracking-[0.14em] text-eo-teal-lit">Cost Summary</span>
+                <div class="rounded-lg border border-line bg-white shadow-raise overflow-hidden">
+                    <div class="border-b border-line bg-navy-900 px-4 py-3">
+                        <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold-400">Cost Summary</span>
                     </div>
                     <div class="space-y-2 p-4 text-sm">
                         @php
@@ -546,13 +546,13 @@
                             $dParts = [($room->daysAreCounted() ? $room->daysOnTheAgenda() ?: 1 : $room->days).' '.($room->daysAreCounted() ? 'on the agenda' : 'set')];
                             if ($room->setup_days) $dParts[] = $room->setup_days.' setup';
                         @endphp
-                        <div class="flex justify-between gap-2"><span class="text-eo-muted">Hire · {{ $event->money($room->cost_cents ?? 0) }} × {{ $room->chargedDays() }} {{ str('day')->plural($room->chargedDays()) }} <span class="text-eyebrow">({{ implode(' + ', $dParts) }})</span></span><span class="shrink-0 font-bold text-eo-text">{{ $room->cost_cents ? $event->money($room->hireCents()) : '—' }}</span></div>
-                        <div class="flex justify-between"><span class="text-eo-muted">Equipment</span><span class="font-bold text-eo-text">{{ $reqTotal ? $event->money($reqTotal) : '—' }}</span></div>
-                        <div class="flex items-center justify-between border-t border-eo-line pt-2"><span class="text-micro font-bold uppercase tracking-wide text-eo-text">Venue total</span><span class="text-base font-bold text-eo-text">{{ $event->money($venueTotal) }}</span></div>
+                        <div class="flex justify-between gap-2"><span class="text-muted">Hire · {{ $event->money($room->cost_cents ?? 0) }} × {{ $room->chargedDays() }} {{ str('day')->plural($room->chargedDays()) }} <span class="text-eyebrow">({{ implode(' + ', $dParts) }})</span></span><span class="shrink-0 font-bold text-ink">{{ $room->cost_cents ? $event->money($room->hireCents()) : '—' }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Equipment</span><span class="font-bold text-ink">{{ $reqTotal ? $event->money($reqTotal) : '—' }}</span></div>
+                        <div class="flex items-center justify-between border-t border-line pt-2"><span class="text-micro font-bold uppercase tracking-wide text-ink">Venue total</span><span class="text-base font-bold text-ink">{{ $event->money($venueTotal) }}</span></div>
                     </div>
-                    <div class="border-t border-eo-line p-4">
-                        <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" class="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-eo-teal/30 bg-eo-teal-soft/60 text-xs font-bold text-eo-teal-ink transition hover:bg-eo-teal-soft">Syncs to Budget · Venues →</a>
-                        <a href="{{ route('requirements.index') }}" class="mt-2 block text-center text-eyebrow font-semibold text-eo-teal-ink hover:text-eo-teal-deep">Manage the Equipment Catalog →</a>
+                    <div class="border-t border-line p-4">
+                        <a href="{{ route('events.hub', [$event, 'tab' => 'budget']) }}" class="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-gold-400/30 bg-gold-50/60 text-xs font-bold text-gold-700 transition hover:bg-gold-50">Syncs to Budget · Venues →</a>
+                        <a href="{{ route('requirements.index') }}" class="mt-2 block text-center text-eyebrow font-semibold text-gold-700 hover:text-gold-700">Manage the Equipment Catalog →</a>
                     </div>
                 </div>
             </div>
@@ -572,20 +572,20 @@
             <div class="space-y-5">
 
                 {{-- STEP 1 · room size (generate needs it) --}}
-                <div class="rounded-xl border {{ $hasDims ? 'border-eo-line bg-eo-workspace/40' : 'border-amber-300 bg-eo-warn-soft' }} p-4">
+                <div class="rounded-xl border {{ $hasDims ? 'border-line bg-page/40' : 'border-amber-300 bg-warning-soft' }} p-4">
                     <div class="flex items-center justify-between">
-                        <p class="eo-field-label !mb-0 flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-eo-navy text-eyebrow font-black text-white">1</span> Room size</p>
+                        <p class="mb-0 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-navy-900 text-eyebrow font-black text-white">1</span> Room size</p>
                         @unless ($hasDims)<span class="text-eyebrow font-bold uppercase tracking-wide text-amber-700">Required first</span>@endunless
                     </div>
                     <div class="mt-2.5 flex items-end gap-3">
                         <div class="flex-1">
-                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Width · m</label>
-                            <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="width_m" class="eo-input h-11 w-full text-sm" placeholder="e.g. 12">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Width · m</label>
+                            <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="width_m" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 w-full text-sm" placeholder="e.g. 12">
                         </div>
-                        <span class="pb-3 text-eo-muted">×</span>
+                        <span class="pb-3 text-muted">×</span>
                         <div class="flex-1">
-                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-eo-muted">Length · m</label>
-                            <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="length_m" class="eo-input h-11 w-full text-sm" placeholder="e.g. 16">
+                            <label class="mb-1 block text-eyebrow font-bold uppercase tracking-wide text-muted">Length · m</label>
+                            <input type="number" min="0" step="0.5" wire:model.live.debounce.400ms="length_m" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 w-full text-sm" placeholder="e.g. 16">
                         </div>
                     </div>
                     @unless ($hasDims)<p class="mt-2 text-micro text-amber-700">Set the room’s real dimensions so seating is generated to scale.</p>@endunless
@@ -593,17 +593,17 @@
 
                 {{-- STEP 2 · arrangement --}}
                 <div>
-                    <p class="eo-field-label flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-eo-navy text-eyebrow font-black text-white">2</span> Arrangement</p>
+                    <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-navy-900 text-eyebrow font-black text-white">2</span> Arrangement</p>
                     <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         @foreach (\App\Models\EventRoom::SEATING_ARRANGEMENTS as $k => [$lbl, $blurb, $f])
                             <button type="button" wire:click="$set('seatArr', '{{ $k }}')"
                                     @class([
                                         'rounded-xl border p-2.5 text-left transition',
-                                        'border-eo-teal bg-eo-teal-soft/60 shadow-sm' => $seatArr === $k,
-                                        'border-eo-line bg-white hover:border-eo-teal/40' => $seatArr !== $k,
+                                        'border-gold-400 bg-gold-50/60 shadow-sm' => $seatArr === $k,
+                                        'border-line bg-white hover:border-gold-400/40' => $seatArr !== $k,
                                     ])>
-                                <span class="block text-xs font-bold text-eo-text">{{ $lbl }}</span>
-                                <span class="mt-0.5 block text-eyebrow leading-tight text-eo-muted">{{ \Illuminate\Support\Str::limit($blurb, 46) }}</span>
+                                <span class="block text-xs font-bold text-ink">{{ $lbl }}</span>
+                                <span class="mt-0.5 block text-eyebrow leading-tight text-muted">{{ \Illuminate\Support\Str::limit($blurb, 46) }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -611,30 +611,30 @@
 
                 {{-- STEP 3 · numbers --}}
                 <div>
-                    <p class="eo-field-label flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-eo-navy text-eyebrow font-black text-white">3</span> {{ $isU ? 'Tables & chairs' : 'How many & how comfortable' }}</p>
+                    <p class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted flex items-center gap-1.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-navy-900 text-eyebrow font-black text-white">3</span> {{ $isU ? 'Tables & chairs' : 'How many & how comfortable' }}</p>
 
                     @if ($isU)
                         {{-- Table Designer — every table the same size, chairs on the outer edge --}}
                         <div class="grid gap-3 sm:grid-cols-3">
                             <x-field label="Head tables" hint="Across the top (2–3).">
-                                <input type="number" wire:model.live.debounce.350ms="uHeadTables" min="1" max="12" class="eo-input h-11 text-sm">
+                                <input type="number" wire:model.live.debounce.350ms="uHeadTables" min="1" max="12" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                             </x-field>
                             <x-field label="Tables per arm" hint="Down each side.">
-                                <input type="number" wire:model.live.debounce.350ms="uArmTables" min="0" max="24" class="eo-input h-11 text-sm">
+                                <input type="number" wire:model.live.debounce.350ms="uArmTables" min="0" max="24" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                             </x-field>
                             <x-field label="Chairs per table">
-                                <input type="number" wire:model.live.debounce.350ms="uPerTable" min="1" max="8" class="eo-input h-11 text-sm">
+                                <input type="number" wire:model.live.debounce.350ms="uPerTable" min="1" max="8" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                             </x-field>
                             <x-field label="Table size · cm (length × depth)" class="sm:col-span-2">
                                 <div class="flex items-center gap-2">
-                                    <input type="number" wire:model.live.debounce.350ms="tableW_cm" min="60" max="300" step="10" class="eo-input h-11 text-sm" title="Length">
-                                    <span class="text-eo-muted">×</span>
-                                    <input type="number" wire:model.live.debounce.350ms="tableH_cm" min="40" max="120" step="10" class="eo-input h-11 text-sm" title="Depth">
+                                    <input type="number" wire:model.live.debounce.350ms="tableW_cm" min="60" max="300" step="10" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm" title="Length">
+                                    <span class="text-muted">×</span>
+                                    <input type="number" wire:model.live.debounce.350ms="tableH_cm" min="40" max="120" step="10" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm" title="Depth">
                                 </div>
                             </x-field>
                             <x-field label="Chair · cm">
                                 <input type="number" step="5" min="30" max="120" value="{{ (int) round((float) $seatSize * 100) }}"
-                                       wire:change="$set('seatSize', $event.target.value / 100)" class="eo-input h-11 text-sm">
+                                       wire:change="$set('seatSize', $event.target.value / 100)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                             </x-field>
                         </div>
                         {{-- live total --}}
@@ -642,63 +642,63 @@
                             $uTot = ((int) $uHeadTables + 2 * (int) $uArmTables) * (int) $uPerTable;
                             $uTables = (int) $uHeadTables + 2 * (int) $uArmTables;
                         @endphp
-                        <p class="mt-2 rounded-lg bg-eo-bg/60 px-3 py-2 text-micro text-eo-text">
-                            <span class="font-black text-eo-text">{{ $uTables }} tables</span> · <span class="font-black text-eo-text">{{ $uTot }} chairs</span> ·
+                        <p class="mt-2 rounded-lg bg-page/60 px-3 py-2 text-micro text-ink">
+                            <span class="font-black text-ink">{{ $uTables }} tables</span> · <span class="font-black text-ink">{{ $uTot }} chairs</span> ·
                             each {{ $tableW_cm }}×{{ $tableH_cm }}cm · chairs on the outer edge, open to the stage.
                         </p>
                     @else
                         <div class="grid gap-3 sm:grid-cols-2">
                             <x-field label="Seats (target)">
-                                <input type="number" wire:model="seatTarget" min="1" placeholder="e.g. 200" @disabled($seatFill) class="eo-input h-11 text-sm disabled:opacity-40">
+                                <input type="number" wire:model="seatTarget" min="1" placeholder="e.g. 200" @disabled($seatFill) class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm disabled:opacity-40">
                             </x-field>
                             <x-field label="Chair size · cm" hint="Standard seat is 60cm.">
                                 <input type="number" step="5" min="30" max="120" value="{{ (int) round((float) $seatSize * 100) }}"
-                                       wire:change="$set('seatSize', $event.target.value / 100)" class="eo-input h-11 text-sm">
+                                       wire:change="$set('seatSize', $event.target.value / 100)" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                             </x-field>
                             @if (in_array($fam, ['grid', 'chevron', 'ring'], true))
                                 <x-field label="Space between chairs · cm">
-                                    <input type="number" step="1" min="0" max="60" wire:model="seatGapCm" class="eo-input h-11 text-sm">
+                                    <input type="number" step="1" min="0" max="60" wire:model="seatGapCm" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                                 </x-field>
                                 <x-field label="Legroom (front-to-back)">
-                                    <select wire:model="seatComfort" class="eo-select h-11 text-sm">
+                                    <select wire:model="seatComfort" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none h-11 text-sm">
                                         @foreach (\App\Models\EventRoom::SEATING_COMFORT as $k => [$lbl])<option value="{{ $k }}">{{ $lbl }}</option>@endforeach
                                     </select>
                                 </x-field>
                             @endif
                             @if ($fam === 'grid')
                                 <x-field label="Aisles">
-                                    <select wire:model="seatAisles" class="eo-select h-11 text-sm">
+                                    <select wire:model="seatAisles" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none h-11 text-sm">
                                         <option value="0">None</option><option value="1">Center</option><option value="2">Two</option>
                                     </select>
                                 </x-field>
                             @endif
                             @if ($seatArr === 'banquet')
                                 <x-field label="Seats per table">
-                                    <input type="number" wire:model="tableSeats" min="4" max="12" class="eo-input h-11 text-sm">
+                                    <input type="number" wire:model="tableSeats" min="4" max="12" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                                 </x-field>
                                 <x-field label="Table diameter · cm" hint="Standard banquet round is 180cm.">
-                                    <input type="number" wire:model="roundDia_cm" min="90" max="300" step="10" class="eo-input h-11 text-sm">
+                                    <input type="number" wire:model="roundDia_cm" min="90" max="300" step="10" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-11 text-sm">
                                 </x-field>
                             @endif
                         </div>
                         @if (in_array($fam, ['grid'], true))
-                            <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-eo-text"><input type="checkbox" wire:model="seatLabels" class="h-4 w-4 rounded border-eo-line text-eo-teal focus:ring-eo-teal/40"> Row labels (A, B, C…)</label>
+                            <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-ink"><input type="checkbox" wire:model="seatLabels" class="h-4 w-4 rounded border-line text-gold-600 focus:ring-gold-400/40"> Row labels (A, B, C…)</label>
                         @endif
                         @if ($fam !== 'perimeter')
-                            <label class="mt-2 flex items-center gap-2 text-xs font-semibold text-eo-text"><input type="checkbox" wire:model.live="seatFill" class="h-4 w-4 rounded border-eo-line text-eo-teal focus:ring-eo-teal/40"> Fill the room to maximum capacity</label>
+                            <label class="mt-2 flex items-center gap-2 text-xs font-semibold text-ink"><input type="checkbox" wire:model.live="seatFill" class="h-4 w-4 rounded border-line text-gold-600 focus:ring-gold-400/40"> Fill the room to maximum capacity</label>
                         @endif
                     @endif
 
-                    @error('seatTarget')<p class="mt-2 rounded-lg bg-eo-risk-soft px-2.5 py-1.5 text-xs font-semibold text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('seatTarget')<p class="mt-2 rounded-lg bg-danger-soft px-2.5 py-1.5 text-xs font-semibold text-danger-ink">{{ $message }}</p>@enderror
                 </div>
             </div>
 
             <x-slot:footer>
-                <button type="button" wire:click="$set('showSeatModal', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
+                <button type="button" wire:click="$set('showSeatModal', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
                 @if ($isU)
-                    <button type="button" wire:click="designUShape" class="eo-btn-primary eo-btn-sm">✦ Design U-shape</button>
+                    <button type="button" wire:click="designUShape" class="btn-sm rounded-full bg-gold-500 font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">✦ Design U-shape</button>
                 @else
-                    <button type="button" wire:click="generateSeating" class="eo-btn-primary eo-btn-sm">✦ Generate</button>
+                    <button type="button" wire:click="generateSeating" class="btn-sm rounded-full bg-gold-500 font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">✦ Generate</button>
                 @endif
             </x-slot:footer>
         </x-modal>
