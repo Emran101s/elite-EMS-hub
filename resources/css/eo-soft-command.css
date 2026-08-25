@@ -380,12 +380,15 @@
         font-weight: 700;
     }
 
-    .eo-pill-ok { background: var(--color-eo-ok-soft); color: var(--color-eo-ok-ink); }
-    .eo-pill-warn { background: var(--color-eo-warn-soft); color: #92400e; }
-    .eo-pill-risk { background: var(--color-eo-risk-soft); color: var(--color-eo-risk-ink); }
-    .eo-pill-pending { background: var(--color-eo-bg); color: var(--color-eo-muted); }
-    .eo-pill-live { background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink); }
-    .eo-pill-premium { background: #fbf7ea; color: var(--color-eo-gold-ink); }
+    /* Pills, aligned to the brand semantic tokens so every x-eo.status-pill
+       across the app reads on the navy/gold system — 'live' in particular
+       was teal, now the brand info (blue). */
+    .eo-pill-ok { background: var(--color-success-soft); color: var(--color-success-ink); }
+    .eo-pill-warn { background: var(--color-warning-soft); color: var(--color-warning-ink); }
+    .eo-pill-risk { background: var(--color-danger-soft); color: var(--color-danger-ink); }
+    .eo-pill-pending { background: var(--color-page); color: var(--color-muted); }
+    .eo-pill-live { background: var(--color-info-soft); color: var(--color-info-ink); }
+    .eo-pill-premium { background: var(--color-gold-50); color: var(--color-gold-700); }
 
     /* Gallery / demo workspace chrome */
     .eo-gallery-shell {
