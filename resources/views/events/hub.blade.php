@@ -36,15 +36,20 @@
     </div>
 
     @php
-        // Every module HubModuleInspector::data() has a real case for (see
-        // its match()) plus Overview, which falls back to the Agenda case.
-        // ai/settings/reports stay out — they're utility tabs, not modules
-        // with their own readiness/metrics story, same exclusion the Module
-        // Navigation Bar's own "More" list already makes.
+        // The Universal Inspector shows only on tabs that DON'T already carry
+        // their own right-hand rail. A tab with its own control panel —
+        // budget/sponsors/transportation/catering/exhibition/accommodation/
+        // attendees all render a fixed 1fr+300px sidebar; risks/suppliers a
+        // 1fr+320px detail card; planning/tasks a full-width board with an
+        // overlay control center — would otherwise cram a redundant THIRD
+        // column (its own rail + the inspector) into ~1000px, the exact
+        // "everything's squeezed / wasted gutters" problem this fixes. Those
+        // tabs get the whole width for their own layout; the inspector is
+        // kept for the simple list/card/document tabs that genuinely have an
+        // empty right side to fill.
         $showPanel = in_array($tab, [
-            'overview', 'agenda', 'budget', 'transportation', 'approvals', 'accommodation', 'planning',
-            'tasks', 'risks', 'speakers', 'venue', 'suppliers', 'catering', 'exhibition',
-            'sponsors', 'attendees', 'pricing', 'brief', 'contract', 'files',
+            'overview', 'agenda', 'approvals', 'speakers',
+            'venue', 'pricing', 'brief', 'contract', 'files',
         ], true);
     @endphp
 
