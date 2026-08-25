@@ -23,7 +23,7 @@
     @if ($clients->isEmpty())
         <x-eo.empty-state title="No clients yet" hint="Add the organizations you run events for." icon="identification">
             <x-slot:actions>
-                <x-eo.button wire:click="newItem">＋ Add your first client</x-eo.button>
+                <button type="button" wire:click="newItem" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add your first client</button>
             </x-slot:actions>
         </x-eo.empty-state>
     @else
@@ -119,9 +119,9 @@
         <x-modal :title="$editingId ? 'Edit client' : 'Add client'" max="lg" close="set('showForm', false)">
             <form wire:submit="save" class="grid gap-4">
                 <div>
-                    <label class="eo-label mb-1">Logo (optional)</label>
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Logo (optional)</label>
                     <div class="flex items-center gap-3">
-                        <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-eo-navy text-sm font-bold text-eo-gold ring-1 ring-eo-line">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-navy-900 text-sm font-bold text-gold-600 ring-1 ring-line">
                             @if ($logo)
                                 <img src="{{ $logo->temporaryUrl() }}" class="h-full w-full object-contain" alt="preview">
                             @elseif ($editingId && ($c = \App\Models\Client::find($editingId)) && $c->logo_path)
@@ -132,45 +132,45 @@
                         </span>
                         <div class="flex-1">
                             <input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                   class="block w-full text-xs text-eo-muted file:mr-3 file:rounded-lg file:border-0 file:bg-eo-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white">
-                            <div wire:loading wire:target="logo" class="mt-1 text-[11px] font-semibold text-eo-teal-ink">Uploading…</div>
-                            @error('logo')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                                   class="block w-full text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white">
+                            <div wire:loading wire:target="logo" class="mt-1 text-[11px] font-semibold text-gold-700">Uploading…</div>
+                            @error('logo')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="eo-label mb-1">Client name</label>
-                        <input type="text" wire:model="name" class="eo-input" placeholder="e.g. Qatar Tech Authority">
-                        @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Client name</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="e.g. Qatar Tech Authority">
+                        @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label mb-1">Industry / sector</label>
-                        <input type="text" wire:model="organization" class="eo-input" placeholder="e.g. Government">
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Industry / sector</label>
+                        <input type="text" wire:model="organization" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="e.g. Government">
                     </div>
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Website</label>
-                    <input type="text" wire:model="website" class="eo-input" placeholder="e.g. qta.gov.qa">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Website</label>
+                    <input type="text" wire:model="website" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="e.g. qta.gov.qa">
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="eo-label mb-1">Email</label>
-                        <input type="email" wire:model="email" class="eo-input">
-                        @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Email</label>
+                        <input type="email" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+                        @error('email')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="eo-label mb-1">Phone</label>
-                        <input type="text" wire:model="phone" class="eo-input">
+                        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Phone</label>
+                        <input type="text" wire:model="phone" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Notes</label>
-                    <textarea wire:model="notes" rows="2" class="eo-input"></textarea>
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Notes</label>
+                    <textarea wire:model="notes" rows="2" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none"></textarea>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                    <x-eo.button type="submit" size="sm">{{ $editingId ? 'Update' : 'Add client' }}</x-eo.button>
+                    <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full border border-line font-semibold text-muted transition hover:text-ink">Cancel</button>
+                    <button type="submit" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Update' : 'Add client' }}</button>
                 </div>
             </form>
         </x-modal>
