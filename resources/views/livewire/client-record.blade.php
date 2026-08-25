@@ -228,31 +228,31 @@
                  close="$set('showContact', false)" max="lg">
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="eo-label mb-1">Name</label>
-                    <input type="text" wire:model="c_name" placeholder="e.g. Layla Haddad" class="eo-input">
-                    @error('c_name')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Name</label>
+                    <input type="text" wire:model="c_name" placeholder="e.g. Layla Haddad" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+                    @error('c_name')<p class="mt-1 text-[11px] text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Title</label>
-                    <input type="text" wire:model="c_title" placeholder="e.g. Head of Events" class="eo-input">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Title</label>
+                    <input type="text" wire:model="c_title" placeholder="e.g. Head of Events" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Email</label>
-                    <input type="email" wire:model="c_email" placeholder="name@client.com" class="eo-input">
-                    @error('c_email')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Email</label>
+                    <input type="email" wire:model="c_email" placeholder="name@client.com" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+                    @error('c_email')<p class="mt-1 text-[11px] text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Phone</label>
-                    <input type="text" wire:model="c_phone" placeholder="+962 …" class="eo-input">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Phone</label>
+                    <input type="text" wire:model="c_phone" placeholder="+962 …" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="eo-label mb-1">Notes</label>
-                    <textarea wire:model="c_notes" rows="2" class="eo-textarea" placeholder="Anything worth remembering."></textarea>
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Notes</label>
+                    <textarea wire:model="c_notes" rows="2" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="Anything worth remembering."></textarea>
                 </div>
             </div>
             <x-slot:footer>
-                <button type="button" wire:click="$set('showContact', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                <x-eo.button size="sm" wire:click="saveContact">{{ $editingContact ? 'Save contact' : 'Add contact' }}</x-eo.button>
+                <button type="button" wire:click="$set('showContact', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
+                <button type="button" wire:click="saveContact" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingContact ? 'Save contact' : 'Add contact' }}</button>
             </x-slot:footer>
         </x-modal>
     @endif

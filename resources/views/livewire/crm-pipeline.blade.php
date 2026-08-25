@@ -113,73 +113,73 @@
         <x-modal :title="$editingId ? 'Edit deal' : 'New deal'" close="$set('showForm', false)" max="2xl">
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label class="eo-label mb-1">What is it?</label>
-                    <input type="text" wire:model="title" placeholder="e.g. Regional Summit 2027" class="eo-input">
-                    @error('title')<p class="mt-1 text-[11px] text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">What is it?</label>
+                    <input type="text" wire:model="title" placeholder="e.g. Regional Summit 2027" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
+                    @error('title')<p class="mt-1 text-[11px] text-danger-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Client</label>
-                    <select wire:model.live="client_id" class="eo-select">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Client</label>
+                    <select wire:model.live="client_id" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                         @foreach ($clients as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Contact</label>
-                    <select wire:model="contact_id" class="eo-select">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Contact</label>
+                    <select wire:model="contact_id" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                         <option value="">— none —</option>
                         @foreach ($contacts as $c)<option value="{{ $c->id }}">{{ $c->name }}{{ $c->title ? ' · '.$c->title : '' }}</option>@endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Stage</label>
-                    <select wire:model="stage" class="eo-select">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Stage</label>
+                    <select wire:model="stage" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                         @foreach (\App\Models\Deal::STAGES as $sv => [$sl, $sp, $sh])<option value="{{ $sv }}">{{ $sl }}</option>@endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Value</label>
-                    <input type="number" step="0.01" min="0" wire:model="value" placeholder="0.00" class="eo-input">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Value</label>
+                    <input type="number" step="0.01" min="0" wire:model="value" placeholder="0.00" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Owner</label>
-                    <select wire:model="owner_id" class="eo-select">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Owner</label>
+                    <select wire:model="owner_id" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                         <option value="">— unassigned —</option>
                         @foreach ($users as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Source</label>
-                    <select wire:model="source" class="eo-select">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Source</label>
+                    <select wire:model="source" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                         <option value="">—</option>
                         @foreach (\App\Support\Taxonomy::options('deal_source') as $sv => $sl)<option value="{{ $sv }}">{{ $sl }}</option>@endforeach
                     </select>
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Decision expected</label>
-                    <input type="date" wire:model="expected_close_on" class="eo-input">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Decision expected</label>
+                    <input type="date" wire:model="expected_close_on" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Event would run</label>
-                    <input type="date" wire:model="expected_event_on" class="eo-input">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Event would run</label>
+                    <input type="date" wire:model="expected_event_on" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="eo-label mb-1">Notes</label>
-                    <textarea wire:model="notes" rows="3" class="eo-textarea" placeholder="What do we know?"></textarea>
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Notes</label>
+                    <textarea wire:model="notes" rows="3" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="What do we know?"></textarea>
                 </div>
             </div>
 
             <x-slot:footer>
-                <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                <x-eo.button size="sm" wire:click="saveDeal">{{ $editingId ? 'Save deal' : 'Create deal' }}</x-eo.button>
+                <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
+                <button type="button" wire:click="saveDeal" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">{{ $editingId ? 'Save deal' : 'Create deal' }}</button>
             </x-slot:footer>
         </x-modal>
     @endif
@@ -189,12 +189,12 @@
         <x-modal title="Mark this deal lost" subtitle="A pipeline without loss reasons teaches you nothing."
                  close="$set('losingId', null)" max="md">
             <div>
-                <label class="eo-label mb-1">What happened?</label>
-                <input type="text" wire:model="lostReason" placeholder="e.g. Budget cut · went to a competitor · postponed" class="eo-input">
+                <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">What happened?</label>
+                <input type="text" wire:model="lostReason" placeholder="e.g. Budget cut · went to a competitor · postponed" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none">
             </div>
             <x-slot:footer>
-                <button type="button" wire:click="$set('losingId', null)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
-                <button type="button" wire:click="confirmLost" class="eo-btn-danger eo-btn-sm">Mark lost</button>
+                <button type="button" wire:click="$set('losingId', null)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
+                <button type="button" wire:click="confirmLost" class="btn-sm rounded-full bg-danger-soft font-bold text-danger-ink transition hover:brightness-95">Mark lost</button>
             </x-slot:footer>
         </x-modal>
     @endif
