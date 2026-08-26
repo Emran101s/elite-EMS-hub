@@ -34,33 +34,33 @@
         </x-slot:actions>
     </x-cc.header>
 
-    {{-- Portfolio pulse — exactly four figures, so the header reads at a
-         glance rather than repeating what the filter bar and board already
-         say. --}}
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        @foreach ($figures as $f)
-            @php
-                $tone = match (true) {
-                    str_contains(strtolower($f['label']), 'risk') => 'risk',
-                    str_contains(strtolower($f['label']), 'health') => 'live',
-                    str_contains(strtolower($f['label']), 'active') => 'ok',
-                    default => null,
-                };
-            @endphp
-            @if ($f['href'] ?? null)
-                <a href="{{ $f['href'] }}" wire:navigate class="block">
+    {{-- Portfolio pulse — four figures and the Fleet Health strip share one
+         band so the top reads as a single command surface, not a stack of
+         thin rows. Figures glance the book; the fleet bars are a second,
+         faster way into the same shared detail panel every view opens into. --}}
+    <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            @foreach ($figures as $f)
+                @php
+                    $tone = match (true) {
+                        str_contains(strtolower($f['label']), 'risk') => 'risk',
+                        str_contains(strtolower($f['label']), 'health') => 'live',
+                        str_contains(strtolower($f['label']), 'active') => 'ok',
+                        default => null,
+                    };
+                @endphp
+                @if ($f['href'] ?? null)
+                    <a href="{{ $f['href'] }}" wire:navigate class="block">
+                        <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
+                    </a>
+                @else
                     <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
-                </a>
-            @else
-                <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" :tone="$tone" />
-            @endif
-        @endforeach
-    </div>
+                @endif
+            @endforeach
+        </div>
 
-    {{-- Fleet Health Strip — one bar per mission currently in view, worst
-         first. A second, faster way into the same shared detail panel
-         every view below already opens into. --}}
-    <x-events.health-strip :deck="$deck" :active="$active" />
+        <x-events.health-strip :deck="$deck" :active="$active" />
+    </div>
 
     {{-- ══════════════════════════════════════════════════════════════
          2 · PORTFOLIO COMMAND FILTER BAR

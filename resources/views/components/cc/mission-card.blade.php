@@ -75,38 +75,46 @@
             'shadow-float ring-2 ring-gold-400/60' => $selected,
         ])
     >
-        <div class="mb-3 flex items-start justify-between gap-2">
+        {{-- Header: a readiness ring gives each card an instant visual anchor
+             (the same language the hero/compact variants use) instead of the
+             twin grey stat boxes that made every board card tall and samey. --}}
+        <div class="flex items-start gap-3">
+            @if (! is_null($ready))
+                <div class="ccx-ring h-11 w-11 shrink-0" style="--ccx-ring: var(--color-gold-500); --ccx-ring-pct: {{ $ready }}%" title="{{ $ready }}% ready">
+                    <span class="ccx-ring-value !text-[10px]">{{ $ready }}</span>
+                </div>
+            @endif
             <div class="min-w-0 flex-1">
-                <h3 class="truncate text-[14.5px] font-bold text-ink">{{ $name }}</h3>
-                @if ($client)<p class="mt-0.5 truncate text-[11px] text-muted">{{ $client }}</p>@endif
-            </div>
-            <div class="flex shrink-0 flex-col items-end gap-1">
-                @if ($stage)<span class="rounded-full px-2 py-0.5 text-[9.5px] font-bold bg-info-soft text-info-ink">{{ $stage }}</span>@endif
-                @if ($daysOutLabel)<span class="text-[10px] font-bold tabular-nums text-muted">{{ $daysOutLabel }}</span>@endif
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="min-w-0 truncate text-[14.5px] font-bold text-ink">{{ $name }}</h3>
+                    @if ($stage)<span class="shrink-0 rounded-full bg-info-soft px-2 py-0.5 text-[9.5px] font-bold text-info-ink">{{ $stage }}</span>@endif
+                </div>
+                @if ($client || $daysOutLabel)
+                    <p class="mt-0.5 truncate text-[11px] text-muted">{{ collect([$client, $daysOutLabel])->filter()->implode(' · ') }}</p>
+                @endif
             </div>
         </div>
 
-        <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
             <span class="flex items-center gap-1"><x-icon name="calendar" class="h-3 w-3 shrink-0" />{{ $dateLabel ?? 'Date TBC' }}</span>
             <span class="flex min-w-0 items-center gap-1 truncate"><x-icon name="pin" class="h-3 w-3 shrink-0" />{{ $where ?? 'Venue TBC' }}</span>
         </div>
 
-        <div class="mb-3 grid grid-cols-2 gap-2">
-            <div class="rounded-md bg-page px-2.5 py-2">
-                <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Health</p>
-                <p class="mt-0.5 flex items-center gap-1.5">
-                    <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ $toneInk($healthTone) }}"></span>
-                    <b class="text-[13px] tabular-nums text-ink">{{ $healthScore ?? '—' }}</b>
-                </p>
-            </div>
-            <div class="rounded-md bg-page px-2.5 py-2">
-                <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Readiness</p>
-                <p class="mt-0.5 text-[13px] font-bold tabular-nums text-ink">{{ $ready !== null ? $ready.'%' : '—' }}</p>
-            </div>
+        {{-- Health + owner on one tight line — no grey box, just the read. --}}
+        <div class="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[11px]">
+            <span class="flex min-w-0 items-center gap-1.5">
+                <span class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Health</span>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ $toneInk($healthTone) }}"></span>
+                <b class="tabular-nums text-ink">{{ $healthScore ?? '—' }}</b>
+                @if ($healthPillLabel)<span class="truncate text-muted">· {{ $healthPillLabel }}</span>@endif
+            </span>
+            @if ($ownerInitials)
+                <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-navy-900 text-[8.5px] font-bold text-white" title="Owner · {{ $ownerName }}">{{ $ownerInitials }}</span>
+            @endif
         </div>
 
         @if ($budgetLabel)
-            <div class="mb-3">
+            <div class="mt-2.5">
                 <div class="flex items-baseline justify-between gap-2 text-[11px]">
                     <span class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Budget</span>
                     <span class="truncate text-ink"><b class="font-bold">{{ $budgetLabel }}</b> <span class="text-muted">{{ $budgetOf }}</span></span>
@@ -119,16 +127,8 @@
             </div>
         @endif
 
-        @if ($ownerName)
-            <div class="mb-3 flex items-center gap-2">
-                <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-navy-900 text-[8.5px] font-bold text-white">{{ $ownerInitials }}</span>
-                <span class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted !text-[9px]">Owner</span>
-                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold text-ink">{{ $ownerName }}</span>
-            </div>
-        @endif
-
         @if ($milestone)
-            <div class="flex items-center gap-2 rounded-md bg-page px-2.5 py-2">
+            <div class="mt-2.5 flex items-center gap-2 rounded-md bg-page px-2.5 py-2">
                 <span class="min-w-0 flex-1 truncate text-[11px] text-ink">{{ $milestone['title'] }}</span>
                 @if ($urgencyLabel)<span class="shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold {{ $toneSoftClass($urgencyTone) }}">{{ $urgencyLabel }}</span>@endif
             </div>
