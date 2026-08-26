@@ -7,7 +7,9 @@
         'red' => 'risk', 'amber' => 'warn', 'green' => 'ok', 'blue' => 'live', default => null,
     };
 
-    $money = fn (int $cents, string $cur = 'JOD') => \App\Support\Money::abbreviated($cents, $cur);
+    // NB: viewData also passes a $money array (PortfolioFinance totals); keep
+    // it reachable by naming the formatting helper $fmt rather than shadowing.
+    $fmt = fn (int $cents, string $cur = 'JOD') => \App\Support\Money::abbreviated($cents, $cur);
 @endphp
 
 <div class="space-y-6">
@@ -47,6 +49,11 @@
             </a>
         @endforeach
     </div>
+
+    {{-- ══════════ 2b · PORTFOLIO PULSE — lifecycle + cashflow at a glance ══════════ --}}
+    @if ($events->isNotEmpty())
+        <x-cc.portfolio-pulse :stages="$stages" />
+    @endif
 
     {{-- ══════════ 3 · MAIN GRID ══════════ --}}
     <div class="grid gap-4 xl:grid-cols-12">
@@ -144,13 +151,31 @@
             </x-cc.briefing-panel>
 
             <div class="rounded-lg border border-line bg-white p-4">
-                <p class="mb-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Money to collect</p>
+                @php $collectMax = (int) $receivables->max(fn ($r) => $r->outstandingCents()); @endphp
+                <div class="mb-3 flex items-baseline justify-between gap-2">
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Money to collect</p>
+                    @if ($receivables->isNotEmpty())
+                        <span class="text-[12px] font-extrabold tabular-nums text-ink">{{ $fmt((int) $receivables->sum(fn ($r) => $r->outstandingCents())) }}</span>
+                    @endif
+                </div>
                 @forelse ($receivables as $r)
-                    <a href="{{ route('events.hub', [$r->event, 'tab' => 'contract']) }}" class="flex items-center justify-between gap-2 border-b border-line py-2 text-[12px] last:border-b-0">
-                        <span class="min-w-0 truncate font-semibold text-ink">{{ $r->event->name }}</span>
-                        <span @class(['shrink-0 font-bold tabular-nums', 'text-danger-ink' => $r->status() === 'overdue', 'text-ink' => $r->status() !== 'overdue'])>
-                            {{ $money($r->outstandingCents(), $r->event->currency ?? 'JOD') }}
-                        </span>
+                    @php
+                        $out = (int) $r->outstandingCents();
+                        $overdue = $r->status() === 'overdue';
+                    @endphp
+                    <a href="{{ route('events.hub', [$r->event, 'tab' => 'contract']) }}" class="group block py-2">
+                        <div class="flex items-center justify-between gap-2 text-[12px]">
+                            <span class="min-w-0 truncate font-semibold text-ink group-hover:text-gold-700">{{ $r->event->name }}</span>
+                            <span @class(['shrink-0 font-bold tabular-nums', 'text-danger-ink' => $overdue, 'text-ink' => ! $overdue])>
+                                {{ $fmt($out, $r->event->currency ?? 'JOD') }}
+                            </span>
+                        </div>
+                        <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-page">
+                            <span class="block h-full rounded-full {{ $overdue ? 'bg-danger' : 'bg-gold-500' }}" style="width: {{ $collectMax > 0 ? max(6, round($out / $collectMax * 100)) : 0 }}%"></span>
+                        </div>
+                        @if ($overdue)
+                            <p class="mt-1 text-[10px] font-bold uppercase tracking-wide text-danger-ink">Overdue</p>
+                        @endif
                     </a>
                 @empty
                     <p class="text-[11.5px] text-muted">Nothing outstanding.</p>
