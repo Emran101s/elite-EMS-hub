@@ -31,31 +31,31 @@
         @foreach ($groups as $group)
             <section>
                 <div class="mb-3">
-                    <h2 class="eo-title">{{ $group['title'] }}</h2>
-                    <p class="mt-0.5 text-xs text-eo-muted">{{ $group['note'] }}</p>
+                    <h2 class="text-[15px] font-bold text-ink">{{ $group['title'] }}</h2>
+                    <p class="mt-0.5 text-xs text-muted">{{ $group['note'] }}</p>
                 </div>
 
-                <div class="eo-soft-card divide-y divide-eo-line overflow-hidden">
+                <div class="rounded-lg border border-line bg-white shadow-raise divide-y divide-line overflow-hidden">
                     @foreach ($group['items'] as [$title, $desc, $route, $icon, $unit])
                         @continue (! \Illuminate\Support\Facades\Route::has($route))
                         @php $n = $counts[$route] ?? null; @endphp
-                        <a href="{{ route($route) }}" class="group flex items-center gap-4 px-4 py-3.5 transition hover:bg-eo-workspace">
-                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-eo-bg text-eo-muted transition group-hover:bg-eo-teal-soft group-hover:text-eo-teal-ink">
+                        <a href="{{ route($route) }}" class="group flex items-center gap-4 px-4 py-3.5 transition hover:bg-page">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-page text-muted transition group-hover:bg-gold-50 group-hover:text-gold-700">
                                 <x-icon :name="$icon" class="h-4 w-4" />
                             </span>
                             <span class="min-w-0 flex-1">
-                                <span class="block text-[13.5px] font-bold text-eo-text">{{ $title }}</span>
-                                <span class="block truncate text-[11.5px] text-eo-muted">{{ $desc }}</span>
+                                <span class="block text-[13.5px] font-bold text-ink">{{ $title }}</span>
+                                <span class="block truncate text-[11.5px] text-muted">{{ $desc }}</span>
                             </span>
                             {{-- What is actually in there. A library index that
                                  makes you open each one to find out is a menu. --}}
                             @isset ($n)
                                 <span class="hidden shrink-0 text-right sm:block">
-                                    <span class="block text-[15px] font-bold tabular-nums leading-none {{ $n ? 'text-eo-text' : 'text-eo-muted' }}">{{ number_format($n) }}</span>
-                                    <span class="mt-0.5 block text-[10px] text-eo-muted">{{ $unit }}</span>
+                                    <span class="block text-[15px] font-bold tabular-nums leading-none {{ $n ? 'text-ink' : 'text-muted' }}">{{ number_format($n) }}</span>
+                                    <span class="mt-0.5 block text-[10px] text-muted">{{ $unit }}</span>
                                 </span>
                             @endisset
-                            <span class="shrink-0 text-eo-muted transition group-hover:translate-x-0.5 group-hover:text-eo-teal-ink">→</span>
+                            <span class="shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-gold-700">→</span>
                         </a>
                     @endforeach
                 </div>

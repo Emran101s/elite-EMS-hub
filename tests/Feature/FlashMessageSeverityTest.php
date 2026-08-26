@@ -28,7 +28,7 @@ class FlashMessageSeverityTest extends TestCase
             ->get(route('company.index'))
             ->assertOk()
             ->assertSee('Company profile saved.')
-            ->assertSee('bg-eo-ok-soft', false);
+            ->assertSee('bg-success-soft', false);
     }
 
     public function test_a_blocked_action_renders_in_its_own_red_banner_not_the_green_one(): void
@@ -40,7 +40,7 @@ class FlashMessageSeverityTest extends TestCase
             ->get(route('company.index'))
             ->assertOk()
             ->assertSee("You can't remove your own account.")
-            ->assertSee('bg-eo-risk-soft', false);
+            ->assertSee('bg-danger-soft', false);
     }
 
     public function test_the_two_banners_can_appear_together_without_one_swallowing_the_other(): void

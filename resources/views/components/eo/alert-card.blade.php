@@ -5,16 +5,16 @@
 
 @php
     $styles = match ($tone) {
-        'ok', 'success' => 'bg-eo-ok-soft text-eo-text ring-eo-ok/25',
-        'warn', 'warning' => 'bg-eo-warn-soft text-eo-text ring-eo-warn/30',
-        'risk', 'danger' => 'bg-eo-risk-soft text-eo-text ring-eo-risk/25',
-        default => 'bg-eo-teal-soft text-eo-text ring-eo-teal/25',
+        'ok', 'success' => 'bg-success-soft text-ink ring-success/25',
+        'warn', 'warning' => 'bg-warning-soft text-ink ring-warning/30',
+        'risk', 'danger' => 'bg-danger-soft text-ink ring-danger/25',
+        default => 'bg-info-soft text-ink ring-info/25',
     };
     $accent = match ($tone) {
-        'ok', 'success' => 'bg-eo-ok',
-        'warn', 'warning' => 'bg-eo-warn',
-        'risk', 'danger' => 'bg-eo-risk',
-        default => 'bg-eo-teal',
+        'ok', 'success' => 'bg-success',
+        'warn', 'warning' => 'bg-warning',
+        'risk', 'danger' => 'bg-danger',
+        default => 'bg-info',
     };
 @endphp
 
@@ -24,7 +24,7 @@
         @if ($title)
             <p class="text-[13px] font-semibold">{{ $title }}</p>
         @endif
-        <div class="text-[13px] {{ $title ? 'mt-0.5 text-eo-muted' : 'font-medium' }}">
+        <div class="text-[13px] {{ $title ? 'mt-0.5 text-muted' : 'font-medium' }}">
             {{ $slot }}
         </div>
     </div>
