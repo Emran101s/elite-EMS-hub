@@ -15,30 +15,30 @@
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="eo-font min-h-screen bg-eo-workspace text-eo-text antialiased">
+<body class=" min-h-screen bg-page text-ink antialiased">
     <div class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
         {{-- Soft Command glow — teal and gold, the same accent pair as the rest of the platform. --}}
-        <div class="pointer-events-none absolute -top-40 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-eo-gold-soft/15 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-52 left-1/4 h-96 w-96 rounded-full bg-eo-teal/10 blur-3xl"></div>
+        <div class="pointer-events-none absolute -top-40 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-gold-50/15 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-52 left-1/4 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"></div>
 
         <div class="relative w-full {{ $width }}">
             <div class="mb-8 flex justify-center">
                 <span class="inline-flex items-center gap-2.5">
-                    <span class="relative grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-b from-eo-gold-soft/25 to-transparent">
-                        <svg viewBox="0 0 24 24" class="h-6 w-6 text-eo-gold" fill="currentColor" aria-hidden="true">
+                    <span class="relative grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-b from-gold-300/25 to-transparent">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6 text-gold-600" fill="currentColor" aria-hidden="true">
                             <path d="M12 1.6l2.35 7.4 7.4 2.35-7.4 2.35-2.35 7.4-2.35-7.4L2.25 11.35l7.4-2.35z"/>
                         </svg>
                     </span>
                     <span class="flex flex-col leading-none">
-                        <span class="text-lg font-bold tracking-[0.24em] text-eo-text">ELITE</span>
-                        <span class="mt-1 text-[0.55rem] font-semibold tracking-[0.3em] text-eo-gold-ink">BUSINESS&nbsp;HUB</span>
+                        <span class="text-lg font-bold tracking-[0.24em] text-ink">ELITE</span>
+                        <span class="mt-1 text-[0.55rem] font-semibold tracking-[0.3em] text-gold-700">BUSINESS&nbsp;HUB</span>
                     </span>
                 </span>
             </div>
 
             {{ $slot }}
 
-            <p class="mt-6 text-center text-xs text-eo-muted">© {{ date('Y') }} Elite Business Hub</p>
+            <p class="mt-6 text-center text-xs text-muted">© {{ date('Y') }} Elite Business Hub</p>
         </div>
     </div>
 </body>

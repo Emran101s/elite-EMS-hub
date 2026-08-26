@@ -6,7 +6,6 @@
    ~1,500 utility usages depend on them, so the names stayed and only the
    values came home. */
 @import 'tailwindcss';
-@import './eo-soft-command.css';
 @import './eo-hub-redesign.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

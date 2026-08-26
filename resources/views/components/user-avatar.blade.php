@@ -3,9 +3,9 @@
 {{-- Photo when the user has one; graphite initials otherwise. --}}
 @if ($user?->avatar_path)
     <img src="{{ asset($user->avatar_path) }}" alt="{{ $user->name }}"
-         {{ $attributes->merge(['class' => "{$size} shrink-0 rounded-full object-cover ring-2 ring-eo-line"]) }}>
+         {{ $attributes->merge(['class' => "{$size} shrink-0 rounded-full object-cover ring-2 ring-line"]) }}>
 @else
-    <span {{ $attributes->merge(['class' => "flex {$size} shrink-0 items-center justify-center rounded-full bg-eo-navy {$text} font-bold text-white ring-2 ring-eo-line"]) }}>
+    <span {{ $attributes->merge(['class' => "flex {$size} shrink-0 items-center justify-center rounded-full bg-navy-900 {$text} font-bold text-white ring-2 ring-line"]) }}>
         {{ $user?->initials() }}
     </span>
 @endif

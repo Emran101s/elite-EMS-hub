@@ -5,9 +5,9 @@
         @if ($event->logo_path)
             <img src="{{ asset($event->logo_path) }}" alt="" class="mx-auto mb-3 h-12 w-auto object-contain">
         @endif
-        <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-eo-teal-ink">{{ \App\Support\Taxonomy::label('event_type', $event->type) }}</p>
-        <h1 class="mt-1 text-2xl font-bold leading-tight text-eo-text">{{ $event->name }}</h1>
-        <p class="mt-1.5 text-sm text-eo-muted">
+        <p class="text-eyebrow font-bold uppercase tracking-[0.2em] text-gold-700">{{ \App\Support\Taxonomy::label('event_type', $event->type) }}</p>
+        <h1 class="mt-1 text-2xl font-bold leading-tight text-ink">{{ $event->name }}</h1>
+        <p class="mt-1.5 text-sm text-muted">
             {{ $event->starts_at?->format('j F Y') }}@if ($event->ends_at && ! $event->ends_at->isSameDay($event->starts_at)) – {{ $event->ends_at->format('j F Y') }}@endif
             @if ($event->city) · {{ $event->city }}@endif
         </p>
@@ -15,32 +15,32 @@
 
     {{-- ══════════ The receipt ══════════ --}}
     @if ($reference)
-        <div class="eo-soft-card-pad text-center">
-            <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-eo-ok-soft text-2xl text-eo-ok-ink">✓</span>
-            <h2 class="mt-3 text-lg font-bold text-eo-text">You're registered</h2>
-            <p class="mx-auto mt-1.5 max-w-[38ch] text-sm text-eo-muted">
+        <div class="rounded-lg border border-line bg-white shadow-raise p-5 text-center">
+            <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-success-soft text-2xl text-success-ink">✓</span>
+            <h2 class="mt-3 text-lg font-bold text-ink">You're registered</h2>
+            <p class="mx-auto mt-1.5 max-w-[38ch] text-sm text-muted">
                 We've got your details for {{ $event->name }}. Keep this reference — it's on your badge.
             </p>
 
-            <p class="mt-4 inline-block rounded-xl bg-eo-navy px-5 py-2.5 font-mono text-xl font-bold tracking-[0.2em] text-white">
+            <p class="mt-4 inline-block rounded-xl bg-navy-900 px-5 py-2.5 font-mono text-xl font-bold tracking-[0.2em] text-white">
                 {{ $reference }}
             </p>
 
             @if ($event->registration_note)
-                <p class="mt-4 whitespace-pre-line border-t border-eo-line pt-4 text-left text-[12.5px] leading-relaxed text-eo-muted">{{ $event->registration_note }}</p>
+                <p class="mt-4 whitespace-pre-line border-t border-line pt-4 text-left text-[12.5px] leading-relaxed text-muted">{{ $event->registration_note }}</p>
             @endif
         </div>
 
     {{-- ══════════ Closed ══════════ --}}
     @elseif (! $live)
-        <div class="eo-soft-card-pad text-center">
-            <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-eo-bg text-xl text-eo-muted">
+        <div class="rounded-lg border border-line bg-white shadow-raise p-5 text-center">
+            <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-page text-xl text-muted">
                 {{ $full ? '⌛' : '✕' }}
             </span>
-            <h2 class="mt-3 text-lg font-bold text-eo-text">
+            <h2 class="mt-3 text-lg font-bold text-ink">
                 {{ $full ? 'Fully booked' : 'Registration is closed' }}
             </h2>
-            <p class="mx-auto mt-1.5 max-w-[38ch] text-sm text-eo-muted">
+            <p class="mx-auto mt-1.5 max-w-[38ch] text-sm text-muted">
                 {{ $full
                     ? 'Every place for this event has been taken. Get in touch if you would like to be told about a cancellation.'
                     : 'This event is not taking registrations at the moment.' }}
@@ -49,9 +49,9 @@
 
     {{-- ══════════ The form ══════════ --}}
     @else
-        <form wire:submit="register" class="eo-soft-card-pad space-y-4">
+        <form wire:submit="register" class="rounded-lg border border-line bg-white shadow-raise p-5 space-y-4">
             @if ($event->registration_note)
-                <p class="whitespace-pre-line rounded-xl bg-eo-bg/70 px-4 py-3 text-[12.5px] leading-relaxed text-eo-muted">{{ $event->registration_note }}</p>
+                <p class="whitespace-pre-line rounded-xl bg-page/70 px-4 py-3 text-[12.5px] leading-relaxed text-muted">{{ $event->registration_note }}</p>
             @endif
 
             {{-- The form is whatever this event asks — see
@@ -66,19 +66,19 @@
                 @endphp
 
                 <label class="block" wire:key="fld-{{ $field->id }}">
-                    <span class="eo-field-label">
+                    <span class="mb-1.5 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">
                         {{ $field->label }}
-                        @if ($field->required)<span class="text-eo-risk-ink">*</span>@endif
+                        @if ($field->required)<span class="text-danger-ink">*</span>@endif
                     </span>
 
                     @switch ($field->type)
                         @case('textarea')
-                            <textarea rows="3" wire:model="form.{{ $field->key }}" class="eo-textarea"
+                            <textarea rows="3" wire:model="form.{{ $field->key }}" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none"
                                       placeholder="{{ $field->placeholder }}"></textarea>
                             @break
 
                         @case('select')
-                            <select wire:model="form.{{ $field->key }}" class="eo-select">
+                            <select wire:model="form.{{ $field->key }}" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none">
                                 @unless ($field->required)<option value="">—</option>@endunless
                                 @foreach ($field->options ?? [] as $option)
                                     <option value="{{ $option }}">{{ $option }}</option>
@@ -94,22 +94,22 @@
 
                             @forelse ($byDay as $day => $sessions)
                                 <span class="mt-2 block">
-                                    <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-eo-muted">{{ $day }}</span>
+                                    <span class="block text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">{{ $day }}</span>
 
                                     @foreach ($sessions as $session)
                                         @php $full = $session->isFull(); $left = $session->seatsLeft(); @endphp
                                         <label @class([
                                                    'mt-1 flex items-start gap-2 rounded-xl border px-3 py-2 text-[12.5px]',
-                                                   'cursor-pointer border-eo-line bg-white text-eo-text hover:border-eo-teal' => ! $full,
-                                                   'cursor-not-allowed border-eo-line bg-eo-bg/60 text-eo-muted' => $full,
+                                                   'cursor-pointer border-line bg-white text-ink hover:border-gold-400' => ! $full,
+                                                   'cursor-not-allowed border-line bg-page/60 text-muted' => $full,
                                                ])>
                                             <input type="checkbox" value="{{ $session->id }}"
                                                    wire:model="form.{{ $field->key }}"
                                                    @disabled($full)
-                                                   class="mt-0.5 h-3.5 w-3.5 rounded border-eo-line">
+                                                   class="mt-0.5 h-3.5 w-3.5 rounded border-line">
                                             <span class="min-w-0 flex-1">
                                                 <span class="block font-semibold">{{ $session->title }}</span>
-                                                <span class="block text-[11px] {{ $full ? 'text-eo-muted' : 'text-eo-muted' }}">
+                                                <span class="block text-[11px] {{ $full ? 'text-muted' : 'text-muted' }}">
                                                     {{-- starts_at is a clock string on this model, not a date;
                                                          the agenda prints it the same way. --}}
                                                     @if ($session->starts_at) {{ substr($session->starts_at, 0, 5) }} @endif
@@ -121,16 +121,16 @@
                                     @endforeach
                                 </span>
                             @empty
-                                <span class="mt-1 block text-[12px] italic text-eo-muted">The programme is not published yet.</span>
+                                <span class="mt-1 block text-[12px] italic text-muted">The programme is not published yet.</span>
                             @endforelse
                             @break
 
                         @case('multiselect')
                             <span class="mt-1 grid gap-1.5 sm:grid-cols-2">
                                 @foreach ($field->options ?? [] as $option)
-                                    <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-eo-line bg-white px-3 py-2 text-[12.5px] text-eo-text">
+                                    <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-[12.5px] text-ink">
                                         <input type="checkbox" value="{{ $option }}" wire:model="form.{{ $field->key }}"
-                                               class="h-3.5 w-3.5 rounded border-eo-line">
+                                               class="h-3.5 w-3.5 rounded border-line">
                                         {{ $option }}
                                     </label>
                                 @endforeach
@@ -140,33 +140,33 @@
                         @case('checkbox')
                             <span class="mt-1 flex items-center gap-2">
                                 <input type="checkbox" wire:model="form.{{ $field->key }}"
-                                       class="h-4 w-4 rounded border-eo-line">
-                                <span class="text-[12.5px] text-eo-muted">{{ $field->placeholder ?: 'Yes' }}</span>
+                                       class="h-4 w-4 rounded border-line">
+                                <span class="text-[12.5px] text-muted">{{ $field->placeholder ?: 'Yes' }}</span>
                             </span>
                             @break
 
                         @default
                             <input type="{{ ['email' => 'email', 'phone' => 'tel', 'number' => 'number', 'date' => 'date'][$field->type] ?? 'text' }}"
-                                   wire:model="form.{{ $field->key }}" class="eo-input"
+                                   wire:model="form.{{ $field->key }}" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none"
                                    autocomplete="{{ $auto }}"
                                    placeholder="{{ $field->placeholder }}"
                                    @if ($field->required) required @endif>
                     @endswitch
 
                     @if ($field->help)
-                        <span class="mt-1 block text-[11px] text-eo-muted">{{ $field->help }}</span>
+                        <span class="mt-1 block text-[11px] text-muted">{{ $field->help }}</span>
                     @endif
-                    @error($err)<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error($err)<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </label>
             @endforeach
 
-            <button type="submit" class="eo-btn-primary w-full !py-3" wire:loading.attr="disabled">
+            <button type="submit" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400 w-full !py-3" wire:loading.attr="disabled">
                 <span wire:loading.remove wire:target="register">Register for this event</span>
                 <span wire:loading wire:target="register">Registering…</span>
             </button>
 
             @if ($event->registration_capacity)
-                <p class="text-center text-[11px] text-eo-muted">
+                <p class="text-center text-[11px] text-muted">
                     {{ max(0, $event->registration_capacity - $event->registeredCount()) }} of
                     {{ $event->registration_capacity }} places left
                 </p>
@@ -174,7 +174,7 @@
         </form>
     @endif
 
-    <p class="mt-5 text-center text-[11px] text-eo-muted">
+    <p class="mt-5 text-center text-[11px] text-muted">
         Organised by {{ \App\Models\CompanyProfile::current()->name }}
     </p>
 </div>
