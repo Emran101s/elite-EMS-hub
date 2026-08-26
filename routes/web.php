@@ -22,8 +22,6 @@ use App\Http\Controllers\FlowBoardController;
 use App\Http\Controllers\InvoicePdfController;
 use App\Http\Controllers\MasterSchedulePdfController;
 use App\Http\Controllers\NavConceptController;
-use App\Http\Controllers\SoftCommandGalleryController;
-use App\Http\Controllers\SoftCommandShellController;
 use App\Http\Controllers\PlanStudioPdfController;
 use App\Http\Controllers\ProposalPdfController;
 use App\Http\Controllers\RoomEquipmentPdfController;
@@ -153,8 +151,6 @@ Route::middleware('auth')->group(function () {
     if (app()->environment('local')) {
         Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
         Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
-        Route::get('/design/soft-command', SoftCommandGalleryController::class)->name('design.soft-command');
-        Route::get('/design/soft-command-shell', SoftCommandShellController::class)->name('design.soft-command-shell');
     }
 
     Route::get('/events', EventsIndex::class)->name('events.index');
