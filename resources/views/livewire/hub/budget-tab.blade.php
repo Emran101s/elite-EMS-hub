@@ -17,12 +17,9 @@
     $price = $view === 'price';
     $feePct = (float) ($event->management_fee_pct ?? \App\Models\EventBudgetItem::DEFAULT_FEE_PCT);
     $money = 'w-24 shrink-0 text-right';
-    // Per-category colour + icon, cycled by position — a distinct chip like the builder concept.
-    $catPalette = [
-        ['bg-navy-900/10', 'text-navy-900'], ['bg-gold-200/40', 'text-gold-800'], ['bg-success-soft', 'text-success-ink'],
-        ['bg-warning-soft', 'text-warning-ink'], ['bg-danger-soft', 'text-danger-ink'], ['bg-info-soft', 'text-info-ink'],
-        ['bg-gold-50', 'text-gold-700'], ['bg-page', 'text-muted'], ['bg-gold-50/50', 'text-gold-800'],
-    ];
+    // Per-category icon, cycled by position. Colour comes from $catSolid
+    // (defined by the "Where the money goes" band below) so a category's
+    // ledger row and its share of that bar wear the same colour.
     $catIcons = ['users', 'building', 'clipboard', 'grid', 'star', 'truck', 'archive', 'currency', 'chart'];
 @endphp
 
@@ -215,6 +212,65 @@
                 </div>
             </div>
 
+            {{-- ══ Where the money goes — spend composition ══
+                 The one read the header (budget used) and the sidebar (P&L
+                 summary) don't give: how the cost splits across categories,
+                 seen rather than added up from the ledger below. Read-only,
+                 off the same forecast the ledger totals — a segmented share
+                 bar plus a legend, biggest first. Each category keeps the
+                 colour it takes from its position in the ledger, so the band
+                 and the rows beneath it read as one thing. --}}
+            @php
+                $catSolid = [
+                    'var(--color-navy-900)', 'var(--color-gold-500)', 'var(--color-success)',
+                    'var(--color-warning)', 'var(--color-danger)', 'var(--color-info)',
+                    'var(--color-gold-700)', 'var(--color-navy-400)', 'var(--color-gold-300)',
+                ];
+                $catColorFor = [];
+                foreach ($sections as $ci => $cs) {
+                    $catColorFor[$cs['name']] = $catSolid[$ci % count($catSolid)];
+                }
+                $composition = collect($sections)
+                    ->map(fn ($cs) => [
+                        'name' => $cs['name'],
+                        'cost' => (int) $cs['items']->sum(fn ($it) => $it->costCents()),
+                        'color' => $catColorFor[$cs['name']],
+                    ])
+                    ->filter(fn ($r) => $r['cost'] > 0)
+                    ->sortByDesc('cost')
+                    ->values();
+                $compTotal = (int) $composition->sum('cost');
+            @endphp
+
+            @if ($compTotal > 0)
+                <div class="mb-3 rounded-lg border border-line bg-white p-4">
+                    <div class="mb-3 flex items-baseline justify-between gap-3">
+                        <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Where the money goes</p>
+                        <p class="text-[13px] font-bold tabular-nums text-ink">{{ $fmt($compTotal) }} <span class="font-semibold text-muted">forecast</span></p>
+                    </div>
+
+                    {{-- segmented share bar --}}
+                    <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-page">
+                        @foreach ($composition as $c)
+                            <span class="h-full first:rounded-l-full last:rounded-r-full"
+                                  style="width: {{ max(1.5, round($c['cost'] / $compTotal * 100, 2)) }}%; background: {{ $c['color'] }}"
+                                  title="{{ $c['name'] }} · {{ $fmt($c['cost']) }}"></span>
+                        @endforeach
+                    </div>
+
+                    {{-- legend --}}
+                    <div class="mt-3 grid grid-cols-2 gap-x-5 gap-y-1.5 sm:grid-cols-3 xl:grid-cols-4">
+                        @foreach ($composition as $c)
+                            <div class="flex items-center gap-2 text-[11.5px]">
+                                <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $c['color'] }}"></span>
+                                <span class="min-w-0 flex-1 truncate font-semibold text-ink">{{ $c['name'] }}</span>
+                                <span class="shrink-0 tabular-nums text-muted">{{ round($c['cost'] / $compTotal * 100) }}%</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
                 {{-- ══ builder toolbar ══ --}}
                 @unless ($event->budgetLocked())
                     <div class="mb-2.5 flex flex-wrap items-center gap-1.5">
@@ -264,8 +320,11 @@
                                     $paidPctCat = $catEst > 0 ? min(100, round($catPaid / $catEst * 100)) : 0;
                                     $isRenaming = $section['id'] && $editingCategoryId === $section['id'];
                                     $catArg = addslashes($section['name']);
-                                    [$cbg, $cfg] = $catPalette[$loop->index % count($catPalette)];
                                     $cicon = $catIcons[$loop->index % count($catIcons)];
+                                    // Same solid the "Where the money goes" band gives this
+                                    // category, so its ledger row and its share of the bar
+                                    // read as one — see $catSolid above.
+                                    $csolid = $catSolid[$loop->index % count($catSolid)];
                                 @endphp
 
                                 <div wire:key="catblock-{{ $section['key'] }}" @if ($section['id']) data-cat="{{ $section['id'] }}" @endif class="cat-block">
@@ -284,7 +343,7 @@
                                             <button type="button" wire:click="toggleCollapse('{{ $section['key'] }}')" class="flex min-w-0 flex-1 items-center gap-2.5 text-left">
                                                 <span class="shrink-0 text-eyebrow text-muted transition-transform {{ $isOpen ? 'rotate-90' : '' }}">▶</span>
                                                 <span class="w-4 shrink-0 text-center text-eyebrow font-bold text-muted">{{ $loop->iteration }}</span>
-                                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg {{ $cbg }} {{ $cfg }}"><x-icon :name="$cicon" class="h-3.5 w-3.5" /></span>
+                                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white" style="background: {{ $csolid }}"><x-icon :name="$cicon" class="h-3.5 w-3.5" /></span>
                                                 <span class="truncate text-sm font-bold text-ink">{{ $section['name'] }}</span>
                                                 <span class="shrink-0 rounded-full bg-page px-2 py-0.5 text-eyebrow font-bold text-muted">{{ $secItems->count() }} {{ str('item')->plural($secItems->count()) }}</span>
                                                 @if ($catFlagged)<span class="shrink-0 text-micro text-danger">⚑</span>@endif
