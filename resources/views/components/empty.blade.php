@@ -13,17 +13,17 @@
     render identically — every existing <x-empty> call site updates for free
     without touching the 23 files that use it.
 --}}
-<div {{ $attributes->class(['eo-soft-card flex flex-col items-center px-6 py-14 text-center']) }}>
+<div {{ $attributes->class(['rounded-lg border border-line bg-white shadow-raise flex flex-col items-center px-6 py-14 text-center']) }}>
     @if ($icon)
-        <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-eo-teal-soft text-eo-teal-ink">
+        <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-50 text-gold-700">
             <x-icon :name="$icon" class="h-5 w-5" />
         </span>
     @endif
 
-    <p class="text-[15px] font-semibold text-eo-text">{{ $title }}</p>
+    <p class="text-[15px] font-semibold text-ink">{{ $title }}</p>
 
     @if ($hint)
-        <p class="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-eo-muted">{{ $hint }}</p>
+        <p class="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-muted">{{ $hint }}</p>
     @endif
 
     @isset($actions)
