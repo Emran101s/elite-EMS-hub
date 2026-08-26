@@ -196,7 +196,11 @@ class EventRoom extends Model
     /** Total seats across all placed elements. */
     public function seatCount(): int
     {
-        return collect($this->layout ?? [])->sum(fn ($el) => (int) ($el['seats'] ?? 0));
+        // Defensive: a malformed layout (a string, not an array — see
+        // RoomLayoutBuilder::mount) would otherwise be wrapped as a single
+        // element and read $el['seats'] off a string.
+        return collect(is_array($this->layout) ? $this->layout : [])
+            ->sum(fn ($el) => is_array($el) ? (int) ($el['seats'] ?? 0) : 0);
     }
 
     /**
