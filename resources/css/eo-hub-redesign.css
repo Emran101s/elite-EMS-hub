@@ -22,11 +22,11 @@
        rest of the workspace (Event Pulse); the graphite family is the
        Header/Command Stack's own dark surface, distinct from — and one
        shade warmer than — the app's own navy-deep atmosphere behind it. */
-    --color-hubx-pearl: #f7f2e6;
-    --color-hubx-pearl-deep: #efe6d0;
-    --color-hubx-graphite: #1a1f2b;
-    --color-hubx-graphite-deep: #0e121a;
-    --color-hubx-graphite-mid: #242b3a;
+    --color-hubx-pearl: #fbf7ea;
+    --color-hubx-pearl-deep: #f5ebc8;
+    --color-hubx-graphite: #0b1f3a;
+    --color-hubx-graphite-deep: #061426;
+    --color-hubx-graphite-mid: #142842;
 }
 
 @layer components {
@@ -86,7 +86,7 @@
         position: absolute;
         inset: 0 0 auto 0;
         height: 2px;
-        background: linear-gradient(90deg, transparent 0%, var(--color-eo-gold) 18%, var(--color-eo-gold-soft) 50%, var(--color-eo-gold) 82%, transparent 100%);
+        background: linear-gradient(90deg, transparent 0%, var(--color-gold-500) 18%, var(--color-gold-400) 50%, var(--color-gold-500) 82%, transparent 100%);
         opacity: 0.75;
     }
 
@@ -102,7 +102,7 @@
         margin-top: 0.05rem;
         border-radius: 1rem;
         background: linear-gradient(165deg, var(--color-hubx-graphite-mid) 0%, var(--color-hubx-graphite-deep) 100%);
-        color: var(--color-eo-gold-soft);
+        color: var(--color-gold-400);
         box-shadow: 0 12px 22px -12px rgba(14, 18, 26, 0.5);
     }
 
@@ -131,10 +131,10 @@
         font-size: 27px;
         font-weight: 800;
         letter-spacing: -0.015em;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
         line-height: 1.2;
     }
-    .hubx-header-name .font-medium { color: var(--color-eo-muted) !important; }
+    .hubx-header-name .font-medium { color: var(--color-muted) !important; }
 
     .hubx-header-meta {
         margin-top: 0.4rem;
@@ -144,7 +144,7 @@
         align-items: center;
         gap: 0.5rem;
         font-size: 12.5px;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
     }
 
     .hubx-header-dot::before {
@@ -171,16 +171,16 @@
         width: 36px;
         height: 36px;
         border-radius: 0.75rem;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
         background: rgba(255, 255, 255, 0.6);
-        border: 1px solid var(--color-eo-line);
+        border: 1px solid var(--color-line);
         font: inherit;
         transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
     .hubx-header-icon:hover {
-        color: var(--color-eo-teal-ink);
-        border-color: var(--color-eo-teal);
-        background: var(--color-eo-teal-soft);
+        color: var(--color-gold-700);
+        border-color: var(--color-gold-500);
+        background: var(--color-gold-50);
     }
 
     /* The primary CTA — the one place gold fills a button rather than
@@ -193,7 +193,7 @@
        against this one. */
     .hubx-header .eo-btn-primary {
         position: relative;
-        background: linear-gradient(165deg, var(--color-eo-gold-soft) 0%, var(--color-eo-gold) 100%);
+        background: linear-gradient(165deg, var(--color-gold-400) 0%, var(--color-gold-500) 100%);
         color: var(--color-hubx-graphite-deep);
         box-shadow: 0 10px 20px -12px rgba(214, 174, 52, 0.5);
     }
@@ -246,13 +246,13 @@
         border-radius: 0.8rem;
         font-size: 12.5px;
         font-weight: 700;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
         white-space: nowrap;
         transition: background-color 0.15s ease, color 0.15s ease;
     }
-    .hubx-modnav-item:hover { background: var(--color-eo-workspace); color: var(--color-eo-text); }
+    .hubx-modnav-item:hover { background: var(--color-page); color: var(--color-ink); }
     .hubx-modnav-item.is-active {
-        background: var(--color-eo-navy);
+        background: var(--color-navy-900);
         color: #fff;
     }
     .hubx-modnav-item.is-active :where(svg) { opacity: 0.9; }
@@ -270,13 +270,13 @@
         height: 16px;
         padding: 0 4px;
         border-radius: 999px;
-        background: var(--color-eo-risk);
+        background: var(--color-danger);
         color: #fff;
         font-size: 9.5px;
         font-weight: 800;
         line-height: 1;
     }
-    .hubx-modnav-badge.is-wait { background: var(--color-eo-warn); }
+    .hubx-modnav-badge.is-wait { background: var(--color-warning); }
     .hubx-modnav-item.is-active .hubx-modnav-badge { background: rgba(255, 255, 255, 0.25); }
 
     .hubx-modnav-flyout {
@@ -288,7 +288,7 @@
         padding: 0.35rem;
         border-radius: 1rem;
         background: #fff;
-        border: 1px solid var(--color-eo-line);
+        border: 1px solid var(--color-line);
         box-shadow: var(--shadow-eo-float);
         display: grid;
         gap: 0.15rem;
@@ -302,10 +302,10 @@
         border-radius: 0.65rem;
         font-size: 12px;
         font-weight: 600;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
     }
-    .hubx-modnav-flyout-item:hover { background: var(--color-eo-workspace); }
-    .hubx-modnav-flyout-item.is-active { background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink); }
+    .hubx-modnav-flyout-item:hover { background: var(--color-page); }
+    .hubx-modnav-flyout-item.is-active { background: var(--color-gold-50); color: var(--color-gold-700); }
 
     .hubx-pill {
         display: inline-flex;
@@ -351,7 +351,7 @@
         gap: 1.1rem;
         margin-top: 0.85rem;
         padding-top: 0.75rem;
-        border-top: 1px solid var(--color-eo-line);
+        border-top: 1px solid var(--color-line);
     }
 
     .hubx-module-header-stat {
@@ -363,7 +363,7 @@
     .hubx-module-header-stat-value {
         font-size: 15px;
         font-weight: 800;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
         font-variant-numeric: tabular-nums;
     }
 
@@ -372,7 +372,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
     }
 
     .hubx-module-header-next {
@@ -417,7 +417,7 @@
     .hubx-utilities-title {
         font-size: 14px;
         font-weight: 800;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
     }
 
     .hubx-utilities-close {
@@ -425,18 +425,18 @@
         padding: 0.3rem 0.6rem;
         font-size: 10.5px;
         font-weight: 700;
-        color: var(--color-eo-muted);
-        background: var(--color-eo-workspace);
+        color: var(--color-muted);
+        background: var(--color-page);
         transition: color 0.15s ease;
     }
-    .hubx-utilities-close:hover { color: var(--color-eo-text); }
+    .hubx-utilities-close:hover { color: var(--color-ink); }
 
     .hubx-utilities-tabs {
         display: flex;
         gap: 0.3rem;
         padding: 0.25rem;
         border-radius: 0.8rem;
-        background: var(--color-eo-workspace);
+        background: var(--color-page);
         margin-bottom: 1rem;
     }
 
@@ -446,10 +446,10 @@
         border-radius: 0.55rem;
         font-size: 11px;
         font-weight: 700;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
         transition: background 0.15s ease, color 0.15s ease;
     }
-    .hubx-utilities-tab.is-active { background: #fff; color: var(--color-eo-text); box-shadow: var(--shadow-eo); }
+    .hubx-utilities-tab.is-active { background: #fff; color: var(--color-ink); box-shadow: var(--shadow-eo); }
 
     .hubx-utilities-body { display: flex; flex-direction: column; }
 
@@ -458,7 +458,7 @@
         align-items: flex-start;
         gap: 0.6rem;
         padding: 0.6rem 0.1rem;
-        border-bottom: 1px solid var(--color-eo-line);
+        border-bottom: 1px solid var(--color-line);
     }
     .hubx-utilities-row:last-child { border-bottom: none; }
 
@@ -468,21 +468,21 @@
         width: 28px;
         height: 28px;
         border-radius: 999px;
-        background: var(--color-eo-workspace);
-        color: var(--color-eo-muted);
+        background: var(--color-page);
+        color: var(--color-muted);
         flex-shrink: 0;
     }
 
     .hubx-utilities-row-title {
         font-size: 12px;
         font-weight: 600;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
         line-height: 1.4;
     }
 
     .hubx-utilities-row-sub {
         font-size: 10.5px;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
         margin-top: 0.1rem;
     }
 
@@ -490,21 +490,21 @@
         flex-shrink: 0;
         font-size: 11px;
         font-weight: 700;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
     }
 
     .hubx-utilities-bar {
         margin-top: 0.35rem;
         height: 4px;
         border-radius: 999px;
-        background: var(--color-eo-workspace);
+        background: var(--color-page);
         overflow: hidden;
     }
     .hubx-utilities-bar-fill { height: 100%; border-radius: 999px; }
 
     .hubx-utilities-empty {
         font-size: 12px;
-        color: var(--color-eo-muted);
+        color: var(--color-muted);
         padding: 0.6rem 0.1rem;
     }
 
@@ -540,8 +540,8 @@
         width: 34px;
         height: 34px;
         border-radius: 0.75rem;
-        background: color-mix(in srgb, var(--color-eo-teal) 16%, transparent);
-        color: var(--color-eo-teal-ink);
+        background: color-mix(in srgb, var(--color-gold-500) 16%, transparent);
+        color: var(--color-gold-700);
     }
 
     /* Everything below the head — real, but a clear step down from the
@@ -551,7 +551,7 @@
     .hubx-panel-detail {
         margin-top: 1.1rem;
         padding-top: 1rem;
-        border-top: 1px solid var(--color-eo-line);
+        border-top: 1px solid var(--color-line);
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -570,7 +570,7 @@
         display: block;
         border-radius: 1.1rem;
         padding: 0.85rem;
-        background: linear-gradient(165deg, var(--color-eo-navy) 0%, var(--color-eo-navy-deep) 100%);
+        background: linear-gradient(165deg, var(--color-navy-900) 0%, var(--color-navy-950) 100%);
         color: #fff;
         transition: opacity 0.15s ease;
     }
@@ -604,7 +604,7 @@
         border-radius: 0.55rem;
         transition: background 0.12s ease;
     }
-    .hubx-panel-attention-row:hover { background: var(--color-eo-workspace); }
+    .hubx-panel-attention-row:hover { background: var(--color-page); }
 
     /* Recent Activity / Related Modules — the least-often-needed tier, so
        it sits at reduced opacity rather than fighting the sections above
@@ -612,7 +612,7 @@
     .hubx-panel-tertiary {
         opacity: 0.85;
         padding-top: 0.7rem;
-        border-top: 1px dashed var(--color-eo-line);
+        border-top: 1px dashed var(--color-line);
     }
 
     .hubx-panel-activity-row {
@@ -647,7 +647,7 @@
         margin-top: 0.4rem;
         font-size: 10.5px;
         font-weight: 700;
-        color: var(--color-eo-teal-ink);
+        color: var(--color-gold-700);
         transition: opacity 0.15s ease;
     }
     .hubx-panel-empty-cta:hover { opacity: 0.8; }
@@ -742,7 +742,7 @@
         border-radius: 0.85rem;
         padding: 0.5rem 0.55rem;
         background: rgba(255, 255, 255, 0.55);
-        border: 1px solid var(--color-eo-line);
+        border: 1px solid var(--color-line);
         box-shadow: none;
         display: flex;
         flex-direction: column;
@@ -754,7 +754,7 @@
         font-family: var(--font-eo);
         font-size: 14.5px;
         font-weight: 700;
-        color: var(--color-eo-text);
+        color: var(--color-ink);
         font-variant-numeric: tabular-nums;
     }
 

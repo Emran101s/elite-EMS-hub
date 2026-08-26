@@ -2,7 +2,7 @@
 
 @php
     $healthColor = match ($header['health']['status']) {
-        'track' => '#15803d', 'warn' => '#92400e', 'risk' => '#b91c1c', default => 'var(--color-eo-muted)',
+        'track' => '#15803d', 'warn' => '#92400e', 'risk' => '#b91c1c', default => 'var(--color-muted)',
     };
 @endphp
 
@@ -15,7 +15,7 @@
         <div class="min-w-0 flex-1">
             <div class="mb-2 flex flex-wrap items-center gap-2 max-w-full">
                 @if ($venue->type)
-                    <span class="hubx-pill" style="background: var(--color-eo-teal-soft); color: var(--color-eo-teal-ink);">{{ $venue->type }}</span>
+                    <span class="hubx-pill" style="background: var(--color-gold-50); color: var(--color-gold-700);">{{ $venue->type }}</span>
                 @endif
                 <span class="hubx-pill" style="background: color-mix(in srgb, {{ $healthColor }} 16%, transparent); color: {{ $healthColor }}">
                     Health {{ $header['health']['score'] }}
