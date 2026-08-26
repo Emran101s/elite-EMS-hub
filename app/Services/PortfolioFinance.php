@@ -117,13 +117,28 @@ class PortfolioFinance
             $charged = $in($priced['sell']);
             $net = $booked - $cost;
 
+            // The client is BOOKED at what has been collected (income['total']'s
+            // "report what you have, not what you hoped for" rule), so the client
+            // cancels out of booked − collected and a signed-but-unpaid contract
+            // would show no money owed — the exact hole that made "Revenue at
+            // Risk" read zero beside a receivables panel listing real instalments.
+            // The client's outstanding therefore comes straight off the contract
+            // schedule, the same source receivables()/overdueReceivable read.
+            // Sponsor and exhibitor shortfalls need no such help: they ARE booked
+            // at the agreed figure, so booked − collected already holds them.
+            $clientReceivable = $event->contract
+                ? $in((int) $event->contract->payments->sum(fn (EventContractPayment $p) => $p->outstandingCents()))
+                : 0;
+
             return [
                 'event' => $event,
                 'currency' => $cur,
                 // What has actually been contracted and sold.
                 'income' => $booked,
                 'collected' => $in($income['collected']),
-                'receivable' => max(0, $booked - $in($income['collected'])),
+                // Money owed to you: sponsor/exhibitor agreed-but-unpaid (held in
+                // booked − collected) plus the client's outstanding instalments.
+                'receivable' => max(0, $booked - $in($income['collected'])) + $clientReceivable,
                 // What the work is priced at, line by line. Not the same
                 // question: an event can be fully priced and have billed none
                 // of it, and the gap between the two is the invoice you owe.
