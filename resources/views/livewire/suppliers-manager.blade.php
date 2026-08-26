@@ -75,51 +75,51 @@
                  max="xl" close="$set('showForm', false)">
             <form wire:submit="save" class="grid gap-3.5 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label class="eo-label mb-1">Supplier name</label>
-                    <input type="text" wire:model="name" class="eo-input h-10 text-sm" placeholder="Petra Catering Co.">
-                    @error('name')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Supplier name</label>
+                    <input type="text" wire:model="name" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Petra Catering Co.">
+                    @error('name')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">Category</label>
-                    <select wire:model="category" class="eo-select h-10 text-sm">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Category</label>
+                    <select wire:model="category" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none h-10 text-sm">
                         <option value="">— None —</option>
                         @foreach (\App\Models\Supplier::CATEGORIES as $c)
                             <option value="{{ $c }}">{{ str($c)->replace('_', ' & ')->title() }}</option>
                         @endforeach
                     </select>
-                    @error('category')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    @error('category')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Rating</label>
-                    <input type="number" min="0" max="5" step="0.1" wire:model="rating" class="eo-input h-10 text-sm" placeholder="4.5">
-                    @error('rating')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Rating</label>
+                    <input type="number" min="0" max="5" step="0.1" wire:model="rating" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="4.5">
+                    @error('rating')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label class="eo-label mb-1">City</label>
-                    <input type="text" wire:model="city" class="eo-input h-10 text-sm" placeholder="Amman">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">City</label>
+                    <input type="text" wire:model="city" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Amman">
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Country</label>
-                    <input type="text" wire:model="country" class="eo-input h-10 text-sm" placeholder="Jordan">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Country</label>
+                    <input type="text" wire:model="country" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="Jordan">
                 </div>
 
-                <div class="sm:col-span-2 mt-1 border-t border-eo-line pt-3">
-                    <p class="eo-label">Contact</p>
+                <div class="sm:col-span-2 mt-1 border-t border-line pt-3">
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Contact</p>
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Phone</label>
-                    <input type="text" wire:model="phone" class="eo-input h-10 text-sm" placeholder="+962 6 000 0000">
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Phone</label>
+                    <input type="text" wire:model="phone" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="+962 6 000 0000">
                 </div>
                 <div>
-                    <label class="eo-label mb-1">Email</label>
-                    <input type="text" wire:model="email" class="eo-input h-10 text-sm" placeholder="events@petracatering.com">
-                    @error('email')<p class="mt-1 text-xs text-eo-risk-ink">{{ $message }}</p>@enderror
+                    <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">Email</label>
+                    <input type="text" wire:model="email" class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm" placeholder="events@petracatering.com">
+                    @error('email')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="flex justify-end gap-2 sm:col-span-2">
-                    <button type="button" wire:click="$set('showForm', false)" class="eo-btn-ghost eo-btn-sm">Cancel</button>
+                    <button type="button" wire:click="$set('showForm', false)" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Cancel</button>
                     <x-eo.button type="submit" size="sm">{{ $editingId ? 'Update supplier' : 'Add supplier' }}</x-eo.button>
                 </div>
             </form>

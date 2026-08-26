@@ -21,10 +21,10 @@
 
 <div>
     @if ($label)
-        <label class="eo-label mb-1">{{ $label }}</label>
+        <label class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted mb-1">{{ $label }}</label>
     @endif
 
-    <select {{ $attributes->class(['eo-select']) }}>
+    <select {{ $attributes->class(['w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink focus:border-navy-300 focus:outline-none']) }}>
         @if ($emptyLabel)
             <option value="">{{ $emptyLabel }}</option>
         @endif

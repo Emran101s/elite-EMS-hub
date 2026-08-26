@@ -30,7 +30,7 @@ class EoEntitySelectTest extends TestCase
             ['suppliers' => Supplier::whereIn('id', [$a->id, $b->id])->orderBy('name')->get(['id', 'name'])],
         );
 
-        $this->assertStringContainsString('eo-select', $html);
+        $this->assertStringContainsString('<select', $html);
         $this->assertStringContainsString('wire:model="supplier_id"', $html);
         $this->assertStringContainsString('value="'.$a->id.'"', $html);
         $this->assertStringContainsString('Prime AV', $html);
@@ -60,7 +60,7 @@ class EoEntitySelectTest extends TestCase
             ['venues' => Venue::whereKey($venue->id)->get(['id', 'name', 'city'])],
         );
 
-        $this->assertStringContainsString('eo-select', $html);
+        $this->assertStringContainsString('<select', $html);
         $this->assertStringContainsString('wire:model.live="venue_id"', $html);
         $this->assertStringContainsString('Royal Convention Centre', $html);
         $this->assertStringContainsString('Amman', $html);
