@@ -143,11 +143,11 @@ class PricingTab extends Component
             'section' => $this->itemSection ?: null,
             'detail' => trim($this->detail) ?: null,
             'unit' => $this->unit,
-            // Rounded to a tenth of a cent, not a whole one — cost_cents and
-            // sell_cents are decimal(15,1) now, so a typed 127.116 keeps its
-            // third decimal instead of being rounded to 127.12 on save.
-            'cost_cents' => round((float) ($this->cost ?: 0) * 100, 1),
-            'sell_cents' => round((float) ($this->sell ?: 0) * 100, 1),
+            // Whole integer cents (see EventInvoiceItem::casts): a float like
+            // 25000.0 is fine on SQLite but Postgres rejects it for the integer
+            // columns.
+            'cost_cents' => (int) round((float) ($this->cost ?: 0) * 100),
+            'sell_cents' => (int) round((float) ($this->sell ?: 0) * 100),
             'currency' => $this->event->currency ?: 'JOD',
             'tax_pct' => trim($this->tax) === '' ? null : (float) $this->tax,
             'active' => $this->active,

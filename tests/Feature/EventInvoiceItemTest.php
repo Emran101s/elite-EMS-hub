@@ -83,6 +83,29 @@ class EventInvoiceItemTest extends TestCase
         $this->assertFalse($item->isUnderwater());
     }
 
+    public function test_money_cents_store_as_whole_integers_not_decimals(): void
+    {
+        // Regression: a decimal:1 cast serialises even 25000 as "25000.0",
+        // which SQLite tolerates but Postgres rejects for these integer
+        // columns. A fractional-cent input must land as whole integer cents.
+        $event = $this->event();
+
+        $this->tab($event)->call('newItem')
+            ->set('name', 'Fractional priced line')
+            ->set('code', 'FRAC-1')
+            ->set('unit', 'item')
+            ->set('cost', '127.116')
+            ->set('sell', '203.204')
+            ->call('save');
+
+        $item = $event->invoiceItems()->firstOrFail();
+
+        $this->assertIsInt($item->cost_cents, 'cents are integers, not a decimal:1 string');
+        $this->assertIsInt($item->sell_cents);
+        $this->assertSame(12712, $item->cost_cents, 'whole cents, rounded once');
+        $this->assertSame(20320, $item->sell_cents);
+    }
+
     public function test_a_price_below_cost_is_called_what_it_is(): void
     {
         $event = $this->event();

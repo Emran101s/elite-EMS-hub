@@ -42,10 +42,11 @@ class InvoiceLine extends Model
     {
         return [
             'qty' => 'float',
-            // decimal:1, not integer — unit_cents is decimal(15,1) now
-            // (tenths of a cent), so a unit price of 127.116 keeps its
-            // third decimal instead of being rounded away on read.
-            'unit_cents' => 'decimal:1',
+            // Whole integer cents. A decimal:1 cast serialises even 25000 as
+            // "25000.0", which SQLite tolerates but Postgres rejects for this
+            // integer column (the decimal(15,1) widening never converts it on
+            // Postgres). A unit price is exact to the cent.
+            'unit_cents' => 'integer',
         ];
     }
 

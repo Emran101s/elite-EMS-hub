@@ -94,6 +94,18 @@ class InvoiceTest extends TestCase
         $this->assertEquals(10149 + (int) round(10149 * 0.16), $invoice->totalCents());
     }
 
+    public function test_line_unit_cents_are_whole_integers_not_decimals(): void
+    {
+        // Regression: a decimal:1 cast returns "1250.0", which Postgres rejects
+        // for this integer column. unit_cents is whole integer cents.
+        $this->actor();
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft']);
+        $line = $invoice->lines()->create(['description' => 'Fee', 'qty' => 1, 'unit_cents' => 12_50]);
+
+        $this->assertIsInt($line->fresh()->unit_cents, 'unit_cents is an integer, not a decimal:1 string');
+        $this->assertSame(1250, $line->fresh()->unit_cents);
+    }
+
     /**
      * Draft and void are what the office decided, so they win. Everything else
      * is arithmetic — a sent invoice with the money in is paid, whatever

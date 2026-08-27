@@ -33,11 +33,12 @@ class EventInvoiceItem extends Model
     protected function casts(): array
     {
         return [
-            // decimal:1, not integer — the underlying columns are
-            // decimal(15,1) now (tenths of a cent), so a price of 127.116
-            // keeps its third decimal instead of being rounded away on read.
-            'cost_cents' => 'decimal:1',
-            'sell_cents' => 'decimal:1',
+            // Whole integer cents. A decimal:1 cast serialises even 25000 as
+            // "25000.0", which SQLite tolerates but Postgres rejects for these
+            // integer columns (the decimal(15,1) widening never converts them
+            // on Postgres). A priced line is exact to the cent.
+            'cost_cents' => 'integer',
+            'sell_cents' => 'integer',
             'tax_pct' => 'float',
             'active' => 'boolean',
         ];

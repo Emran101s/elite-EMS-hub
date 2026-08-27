@@ -286,10 +286,9 @@ class InvoiceEditor extends Component
         $fields = [
             'description' => trim($this->description),
             'qty' => (float) $this->qty,
-            // Rounded to a tenth of a cent, not a whole one — unit_cents is
-            // decimal(15,1) now, so a typed 127.116 keeps its third decimal
-            // instead of being rounded to 127.12 on save.
-            'unit_cents' => round((float) ($this->unit ?: 0) * 100, 1),
+            // Whole integer cents (see InvoiceLine::casts): a float like 25000.0
+            // is fine on SQLite but Postgres rejects it for the integer column.
+            'unit_cents' => (int) round((float) ($this->unit ?: 0) * 100),
         ];
 
         if ($this->editingLine) {
