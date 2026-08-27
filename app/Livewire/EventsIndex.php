@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Event;
 use App\Models\EventApproval;
 use App\Models\EventContractPayment;
+use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use App\Services\EventMission;
 use Carbon\Carbon;
@@ -433,6 +434,17 @@ class EventsIndex extends Component
             $lanes = $this->view === 'path' ? $this->lanes($deck) : null;
             $months = $this->view === 'path' ? $this->months($sorted) : null;
 
+            // Real readiness gates per event, for the Hub Grid's module
+            // honeycomb. The deck's events are already eager-loaded with every
+            // relation readiness() reads (EventMission::RELATIONS), so this
+            // adds no queries — one hub, its modules, and which are ready.
+            if ($this->view === 'board') {
+                $headerService = app(EventCommandHeader::class);
+                $gates = $deck->mapWithKeys(fn ($m) => [
+                    $m['id'] => ($m['event'] ?? null) ? $headerService->readiness($m['event']) : null,
+                ]);
+            }
+
             $active = $this->activeId ? $deck->firstWhere('id', $this->activeId) : null;
 
             // Board and Path show the whole book (see the note on
@@ -462,6 +474,7 @@ class EventsIndex extends Component
         return view('livewire.events-index', [
             'deck' => $deck,
             'board' => $board,
+            'gates' => $gates ?? collect(),
             'rows' => $rows,
             // Kept under its old name for anything that reads the paginator.
             'events' => $rows,
