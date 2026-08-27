@@ -203,10 +203,12 @@ class TransportationTab extends Component
             // edits to the catalogue don't silently rewrite past movements.
             'capacity' => $vehicle ? $vehicle->capacity * max(1, $this->vehicles) : null,
             'passengers' => $this->passengers ?: 0,
-            // Rounded to a tenth of a cent, not a whole one — cost_cents is
-            // decimal(15,1) now, so a typed 127.116 keeps its third decimal
-            // instead of being rounded to 127.12 before it ever saves.
-            'cost_cents' => round((float) ($this->cost ?: 0) * 100, 1),
+            // Whole integer cents. A float like 25000.0 is fine on SQLite but
+            // Postgres rejects it for an integer column, and the decimal(15,1)
+            // widening never actually converts this column on Postgres — so a
+            // transport cost is stored to the cent, which is all a vehicle
+            // charge ever needs.
+            'cost_cents' => (int) round((float) ($this->cost ?: 0) * 100),
             'status' => $this->status,
             'notes' => $this->notes ?: null,
         ];
