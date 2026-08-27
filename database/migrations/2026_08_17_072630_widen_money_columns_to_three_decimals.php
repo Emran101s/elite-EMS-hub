@@ -18,8 +18,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // No ->unsigned(): Postgres has no unsigned numeric type, and on
+        // Postgres a `decimal(...)->unsigned()->change()` silently fails to
+        // alter the column — it stayed integer while the two invoice columns
+        // below (same change, no unsigned) converted cleanly, so a fractional
+        // cost hit the un-widened column and errored. Dropping unsigned makes
+        // this match them. (MySQL treats a negative transport cost as nonsense
+        // anyway; nothing writes one.)
         Schema::table('event_transport', function (Blueprint $table) {
-            $table->decimal('cost_cents', 15, 1)->unsigned()->default(0)->change();
+            $table->decimal('cost_cents', 15, 1)->default(0)->change();
         });
 
         Schema::table('event_invoice_items', function (Blueprint $table) {
