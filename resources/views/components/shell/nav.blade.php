@@ -41,8 +41,8 @@
      :class="nav ? 'translate-x-0' : '-translate-x-full'">
 
     {{-- ══ THE RAIL — which area ══ --}}
-    <div class="flex w-[60px] shrink-0 flex-col gap-3">
-        <nav class="shellx-rail flex min-h-0 flex-1 flex-col items-center gap-1 rounded-[22px] p-2.5 shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)]"
+    <div class="flex w-[84px] shrink-0 flex-col gap-3">
+        <nav class="shellx-rail flex min-h-0 flex-1 flex-col items-center gap-0.5 rounded-[22px] p-2 shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)]"
              aria-label="Areas">
 
             <a href="{{ route('home') }}" class="mb-1 grid h-11 w-11 place-items-center rounded-2xl" title="Elite Business Hub">
@@ -53,20 +53,22 @@
             @foreach (\App\Support\NavPanel::AREAS as $key => $area)
                 @continue (! \Illuminate\Support\Facades\Route::has($area['route']))
                 @php $active = $key === $current; @endphp
+                {{-- Labelled rail: every area names itself, so the icons stop
+                     being a guessing game (truck = Operations, sparkles =
+                     Intelligence, id-card = Commercial). title="" stays for the
+                     accessible tooltip and the chrome test; the label is now
+                     visible in the rail rather than only on hover. --}}
                 <a href="{{ route($area['route']) }}" title="{{ $area['label'] }}"
                    @class([
-                       'group relative grid h-11 w-11 place-items-center rounded-2xl transition',
+                       'group relative flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-1.5 transition',
                        'bg-gold-500/15 text-gold-300 ring-1 ring-gold-400/30' => $active,
-                       'text-white/45 hover:bg-white/[0.07] hover:text-white/85' => ! $active,
+                       'text-white/60 hover:bg-white/[0.07] hover:text-white/90' => ! $active,
                    ])>
                     @if ($active)
-                        <span class="absolute -left-2.5 h-5 w-1 rounded-full bg-gold-400"></span>
+                        <span class="absolute -left-2 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-gold-400"></span>
                     @endif
-                    <x-icon :name="$area['icon']" class="h-[18px] w-[18px]" />
-
-                    <span class="pointer-events-none absolute left-full z-50 ml-3 hidden whitespace-nowrap rounded-lg bg-navy-900 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg group-hover:block">
-                        {{ $area['label'] }}
-                    </span>
+                    <x-icon :name="$area['icon']" class="h-[18px] w-[18px] shrink-0" />
+                    <span class="block w-full text-center text-[9px] font-semibold leading-[1.1] tracking-tight [overflow-wrap:anywhere]">{{ $area['label'] }}</span>
                 </a>
             @endforeach
 
@@ -77,15 +79,19 @@
 
         @if (\Illuminate\Support\Facades\Route::has(\App\Support\NavPanel::SETTINGS['route']))
             <a href="{{ route(\App\Support\NavPanel::SETTINGS['route']) }}" title="{{ \App\Support\NavPanel::SETTINGS['label'] }}"
-               class="grid h-12 w-[60px] place-items-center rounded-[22px] shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)] transition
+               class="flex h-14 w-[84px] flex-col items-center justify-center gap-1 rounded-[22px] shadow-[0_18px_40px_-24px_rgba(11,31,58,0.75)] transition
                       {{ $current === 'settings' ? 'bg-navy-900 text-gold-400' : 'bg-navy-900 text-white/60 hover:text-white' }}">
                 <x-icon name="cog" class="h-[18px] w-[18px]" />
+                <span class="text-[9px] font-semibold leading-none tracking-tight">Settings</span>
             </a>
         @endif
     </div>
 
-    {{-- ══ THE PANEL — what's inside the area ══ --}}
-    <aside class="flex w-[280px] shrink-0 flex-col overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)]">
+    {{-- ══ THE PANEL — what's inside the area ══
+         Width caps to the viewport in the mobile drawer (100vw − the rail,
+         gaps and drawer padding) so the wider labelled rail can never push
+         the panel off the right edge; on xl it resolves to the full 280px. --}}
+    <aside class="flex w-[min(280px,calc(100vw-120px))] shrink-0 flex-col overflow-hidden rounded-[22px] border border-line bg-white shadow-[0_20px_50px_-32px_rgba(11,31,58,0.45)] xl:w-[280px]">
         {{-- Area header — a real anchor, not just an eyebrow. The area's own
              emblem in a navy tile, its name, and the one live number worth
              knowing before you click anything. This is what fills the top of
