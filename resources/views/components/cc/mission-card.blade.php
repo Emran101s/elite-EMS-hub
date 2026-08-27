@@ -73,18 +73,19 @@
         @endif
         @if (! $clickable && $resolvedHref) href="{{ $resolvedHref }}" @endif
         @class([
-            'block rounded-lg border border-line bg-white p-3.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2',
+            'group block rounded-lg border border-line bg-gradient-to-b from-white to-page p-3.5 shadow-raise transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2',
             'cursor-pointer' => $clickable,
-            'hover:-translate-y-0.5 hover:shadow-float' => (bool) $resolvedHref || $clickable,
-            'shadow-float ring-2 ring-gold-400/60' => $selected,
+            'hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-float' => (bool) $resolvedHref || $clickable,
+            'border-gold-400 shadow-float ring-2 ring-gold-400/70' => $selected,
         ])
     >
         {{-- Header: a readiness ring gives each card an instant visual anchor
              (the same language the hero/compact variants use) instead of the
-             twin grey stat boxes that made every board card tall and samey. --}}
+             twin grey stat boxes that made every board card tall and samey.
+             A faint gold halo makes it the card's jewel, echoing the hero. --}}
         <div class="flex items-start gap-3">
             @if (! is_null($ready))
-                <div class="ccx-ring h-11 w-11 shrink-0" style="--ccx-ring: var(--color-gold-500); --ccx-ring-pct: {{ $ready }}%" title="{{ $ready }}% ready">
+                <div class="ccx-ring h-11 w-11 shrink-0 ring-4 ring-gold-50" style="--ccx-ring: var(--color-gold-500); --ccx-ring-pct: {{ $ready }}%" title="{{ $ready }}% ready">
                     <span class="ccx-ring-value !text-[10px]">{{ $ready }}</span>
                 </div>
             @endif
@@ -140,8 +141,8 @@
 
         @if ($resolvedHref)
             <a href="{{ $resolvedHref }}" wire:navigate @if ($clickable) onclick="event.stopPropagation()" @endif
-               class="mt-3 flex items-center gap-1 border-t border-line pt-2.5 text-[11px] font-bold text-gold-700 transition hover:text-gold-800">
-                Open Event <x-icon name="chevron" class="h-3 w-3 -rotate-90" />
+               class="mt-3 flex items-center gap-1 border-t border-line pt-2.5 text-[11px] font-bold text-gold-700 transition hover:text-gold-800 focus-visible:outline-none focus-visible:text-gold-800">
+                Open Event <x-icon name="chevron" class="h-3 w-3 -rotate-90 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </a>
         @endif
     </{{ $cardTag }}>
