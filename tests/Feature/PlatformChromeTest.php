@@ -132,30 +132,34 @@ class PlatformChromeTest extends TestCase
     }
 
     /**
-     * The rail must not be a clipping box.
+     * The rail names its areas out loud, and does not clip them.
      *
-     * Its hover labels are painted OUTSIDE it (absolute, left-full), so any
-     * overflow that is not visible swallows them — which is exactly what
-     * happened to the More menu inside the scrolling pill row, and what
-     * happened again to these labels an hour after that was fixed. A test,
-     * because twice is a pattern.
+     * The eight area icons carry no meaning on their own (truck = Operations,
+     * sparkles = Intelligence), so each one now shows its label inline in the
+     * rail — not only in a hover flyout nobody discovers. This asserts the
+     * labels are actually rendered inside the rail, and that the rail is not a
+     * clipping box that would swallow a label wrapping to a second line.
      */
-    public function test_the_rail_does_not_clip_the_labels_that_hang_off_it(): void
+    public function test_the_rail_names_its_areas_and_does_not_clip_them(): void
     {
         [, $user] = $this->ctx();
 
         $html = $this->actingAs($user)->get(route('home'))->assertOk()->getContent();
 
-        // The nav's OWN class list, not its subtree: the decorative layer
-        // inside it is absolutely positioned and clips itself on purpose, to
-        // keep its orbit arcs from bleeding across the page. That is fine.
-        // What must never clip is the box the labels hang off.
         $railBox = (string) str($html)->before('aria-label="Areas"')->afterLast('<nav ');
         $rail = (string) str($html)->after('aria-label="Areas"')->before('</nav>');
 
-        $this->assertStringContainsString('left-full', $rail, 'the labels still hang off the rail');
+        // Every area's label is visible text in the rail, not just a title="".
+        foreach (NavPanel::AREAS as $area) {
+            if (Route::has($area['route'])) {
+                $this->assertStringContainsString('>'.$area['label'].'</span>', $rail,
+                    "the rail shows the '{$area['label']}' label inline, not only on hover");
+            }
+        }
+
+        // A label that wraps must not be clipped by an overflow on the rail box.
         $this->assertStringNotContainsString('overflow-hidden', $railBox,
-            'the rail clips, so its hover labels are painted where nobody can see them');
+            'the rail clips, so a wrapped area label is painted where nobody can see it');
         $this->assertStringNotContainsString('overflow-x-auto', $railBox);
         $this->assertStringNotContainsString('overflow-y-auto', $railBox);
     }
