@@ -18,9 +18,9 @@
      wire:key="tdrawer-{{ $detail->id }}"
      x-data x-on:keydown.escape.window="$wire.closeTask()">
 
-    <div class="fixed inset-0 bg-navy-900/50 backdrop-blur-[2px]" wire:click="closeTask"></div>
+    <div class="fixed inset-0 bg-navy-900/50 backdrop-blur-[2px]" wire:click="closeTask" aria-hidden="true"></div>
 
-    <div class="relative my-auto w-full max-w-[720px] overflow-hidden rounded-lg bg-white shadow-overlay">
+    <div role="dialog" aria-modal="true" aria-label="Task detail" class="relative my-auto w-full max-w-[720px] overflow-hidden rounded-lg bg-white shadow-overlay">
 
         {{-- ── head: what it is, and where it stands ── --}}
         <div class="relative border-b border-line bg-page px-7 pt-6">

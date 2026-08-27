@@ -74,10 +74,10 @@
 
     {{-- ══════════ TOOLBAR: view switcher + filters + add ══════════ --}}
     <div class="mb-3 flex flex-wrap items-center gap-2.5">
-        <div class="flex rounded-full border border-line bg-white p-0.5 shadow-sm">
+        <div role="group" aria-label="Choose a view" class="flex rounded-full border border-line bg-white p-0.5 shadow-sm">
             @foreach ($views as $vk => [$vlabel, $vicon])
-                <button type="button" wire:click="setView('{{ $vk }}')" @class(['flex items-center gap-1.5 rounded-full px-3 py-1.5 text-micro font-bold transition', 'bg-navy-900 text-white' => $view === $vk, 'text-muted hover:text-ink' => $view !== $vk])>
-                    <x-icon :name="$vicon" class="h-3.5 w-3.5" /> {{ $vlabel }}
+                <button type="button" wire:click="setView('{{ $vk }}')" aria-pressed="{{ $view === $vk ? 'true' : 'false' }}" @class(['flex items-center gap-1.5 rounded-full px-3 py-1.5 text-micro font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $view === $vk, 'text-muted hover:text-ink' => $view !== $vk])>
+                    <x-icon :name="$vicon" class="h-3.5 w-3.5" aria-hidden="true" /> {{ $vlabel }}
                 </button>
             @endforeach
         </div>

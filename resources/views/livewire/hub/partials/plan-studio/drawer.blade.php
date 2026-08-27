@@ -3,9 +3,10 @@
     [$sd, $st] = $selected->subtaskProgress();
     $ini = fn ($n) => \Illuminate\Support\Str::of($n)->explode(' ')->filter()->map(fn ($p) => mb_substr($p, 0, 1))->take(2)->implode('');
 @endphp
-<div class="fixed inset-0 z-40 flex justify-end" wire:key="drawer-{{ $selected->id }}">
-    <div class="absolute inset-0 bg-navy-900/40" wire:click="closeDrawer"></div>
-    <aside class="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-overlay">
+<div class="fixed inset-0 z-40 flex justify-end" wire:key="drawer-{{ $selected->id }}"
+     x-data x-on:keydown.escape.window="$wire.closeDrawer()">
+    <div class="absolute inset-0 bg-navy-900/40" wire:click="closeDrawer" aria-hidden="true"></div>
+    <aside role="dialog" aria-modal="true" aria-label="Deliverable detail" class="relative flex h-full w-full max-w-[440px] flex-col bg-white shadow-overlay">
 
         {{-- header --}}
         <div class="relative shrink-0 border-b border-line bg-page px-5 pb-4 pt-4 text-ink">

@@ -1,6 +1,7 @@
-<div class="fixed inset-0 z-40 flex justify-end" wire:key="tracks-panel">
-    <div class="absolute inset-0 bg-navy-900/40" wire:click="$set('showTracks', false)"></div>
-    <aside class="relative flex h-full w-full max-w-[420px] flex-col bg-white shadow-overlay">
+<div class="fixed inset-0 z-40 flex justify-end" wire:key="tracks-panel"
+     x-data x-on:keydown.escape.window="$wire.set('showTracks', false)">
+    <div class="absolute inset-0 bg-navy-900/40" wire:click="$set('showTracks', false)" aria-hidden="true"></div>
+    <aside role="dialog" aria-modal="true" aria-label="Tracks and goals" class="relative flex h-full w-full max-w-[420px] flex-col bg-white shadow-overlay">
         <div class="relative shrink-0 overflow-hidden bg-navy-900 px-5 pb-4 pt-4 text-white">
             <div class="relative flex items-start justify-between">
                 <div>
