@@ -287,7 +287,10 @@
                 <button type="button" wire:click="newRoom" class="h-9 w-full rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Venue</button>
             </div>
 
-            {{-- location --}}
+            {{-- location — assign the venue and jump straight to its own Venue
+                 Studio here, rather than hunting for one field in Settings.
+                 This is the two-way link that connects a booking to the place
+                 it happens (Venue Studio carries the reverse link back). --}}
             <div class="border-b border-line p-3">
                 <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Event location</p>
                 <div class="flex items-center gap-2.5">
@@ -297,7 +300,30 @@
                         <p class="truncate text-eyebrow text-muted">{{ $event->city }}@if ($event->city && $event->country), {{ $event->country }}@endif</p>
                     </div>
                 </div>
-                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="mt-1.5 block text-eyebrow font-semibold text-gold-700 hover:text-gold-600">✎ Change in Settings →</a>
+
+                {{-- assign / change the venue in place --}}
+                <select wire:change="setVenue($event.target.value)" aria-label="Event venue"
+                        class="mt-2 h-8 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-ink focus:border-navy-300 focus:outline-none">
+                    <option value="">— No venue linked —</option>
+                    @foreach ($venues as $v)
+                        <option value="{{ $v->id }}" @selected($event->venue_id === $v->id)>{{ $v->name }}@if ($v->city) · {{ $v->city }}@endif</option>
+                    @endforeach
+                </select>
+
+                @if ($event->venue)
+                    <a href="{{ route('venues.show', $event->venue) }}"
+                       class="mt-2 flex items-center justify-between gap-2 rounded-lg border border-gold-300 bg-gold-50 px-2.5 py-1.5 text-eyebrow font-bold text-gold-700 transition hover:bg-gold-50/70">
+                        <span class="inline-flex items-center gap-1.5"><x-icon name="building" class="h-3.5 w-3.5" /> Open in Venue Studio</span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    @if ($venueSpaces->isNotEmpty())
+                        <p class="mt-1.5 text-eyebrow leading-snug text-muted">{{ $event->venue->name }} has {{ $venueSpaces->count() }} {{ str('space')->plural($venueSpaces->count()) }} in its catalog — link a room to one when you add it, so its floor plan starts from the real place.</p>
+                    @endif
+                @else
+                    <p class="mt-1.5 text-eyebrow leading-snug text-muted">Link a venue to reach its own spaces, documents and contacts in Venue Studio.</p>
+                @endif
+
+                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="mt-1.5 block text-eyebrow font-semibold text-muted hover:text-ink">City, dates &amp; full details in Settings →</a>
             </div>
         </div>
 
