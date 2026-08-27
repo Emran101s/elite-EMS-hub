@@ -1,33 +1,38 @@
 {{-- ══════════════════════════════════════════════════════════════
-     SELECTED EVENT DETAIL PANEL — the one panel Mission Board, Timeline,
-     Table and Calendar all share. Desktop: sticky right column.
-     Narrower than xl: stacks below the workspace, same content, same
-     order — never at the bottom of a scroll you have to hunt for, always
-     the next thing after the view you were reading.
+     SELECTED EVENT DETAIL PANEL — the one panel Board, Timeline, Table
+     and Calendar all share. Desktop: sticky right rail. Below the board
+     grid's breakpoint it stacks under the workspace, same content, same
+     order. Concourse-styled to match the portfolio it sits beside.
      ══════════════════════════════════════════════════════════════ --}}
-<div class="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
+@php
+    $cxHex = fn ($g) => match ($g) {
+        'risk' => 'var(--cx-risk)', 'warn' => 'var(--cx-warn)', 'ok' => 'var(--cx-ok)', default => 'var(--cx-info)',
+    };
+@endphp
+<aside class="cx-rail cx-reveal cx-d4" aria-label="Mission detail">
     @if ($active)
         @php
             $a = $active;
-            $healthTone = match ($a['healthGroup'] ?? null) {
-                'risk' => 'risk', 'warn' => 'warn', 'ok' => 'ok', default => null,
-            };
             $typeLabel = $a['event']->type ? str($a['event']->type)->replace('_', ' ')->title() : null;
             $ownerRaw = $a['milestone']['owner'] ?? null;
             $ownerName = is_object($ownerRaw) ? ($ownerRaw->name ?? null) : $ownerRaw;
             $urgencyTone = $a['milestone']['tone'] ?? (($a['milestone']['overdue'] ?? false) ? 'risk' : null);
         @endphp
-        <x-cc.briefing-panel :title="$a['name']" :subtitle="$a['client'] ?: 'No client on file'">
-            <x-slot:header>
-                @if ($a['statusLabel'])<span class="rounded-full px-2 py-0.5 text-[10px] font-bold bg-info-soft text-info-ink">{{ $a['statusLabel'] }}</span>@endif
-            </x-slot:header>
-
-            <div class="grid grid-cols-2 gap-3">
-                <x-cc.kpi-tile label="Health" :value="$a['healthScore'] ?? '—'" :tone="$healthTone" />
-                <x-cc.kpi-tile label="Readiness" :value="$a['progress'].'%'" tone="live" />
+        <div class="cx-card">
+            <div class="cx-dp-head">
+                <div style="min-width:0">
+                    <h2 class="cx-dp-name">{{ $a['name'] }}</h2>
+                    <p class="cx-dp-sub">{{ $a['client'] ?: 'No client on file' }}</p>
+                </div>
+                @if ($a['statusLabel'])<span class="cx-tag tone-info">{{ $a['statusLabel'] }}</span>@endif
             </div>
 
-            <div class="mt-4 space-y-2 text-[13px]">
+            <div class="cx-dp-stats">
+                <div class="cx-dp-stat"><span class="cx-sv"><span class="cx-hd" style="background:{{ $cxHex($a['healthGroup'] ?? null) }}"></span>{{ $a['healthScore'] ?? '—' }}</span><span class="cx-sl">Health</span></div>
+                <div class="cx-dp-stat"><span class="cx-sv">{{ $a['progress'] }}%</span><span class="cx-sl">Readiness</span></div>
+            </div>
+
+            <div>
                 @foreach ([
                     ['Event type', $typeLabel ?? '—'],
                     ['Date', $a['dates']],
@@ -35,65 +40,60 @@
                     ['Budget', $a['budgetLabel'] ? $a['budgetLabel'].' '.$a['budgetOf'] : '—'],
                     ['Owner', $ownerName ?: 'Unassigned'],
                 ] as [$k, $v])
-                    <div class="flex justify-between gap-3 border-b border-line/70 pb-2 last:border-0 last:pb-0">
-                        <span class="text-muted">{{ $k }}</span>
-                        <span class="min-w-0 truncate text-end font-semibold text-ink">{{ $v }}</span>
-                    </div>
+                    <div class="cx-field"><span class="cx-fk">{{ $k }}</span><span class="cx-fv">{{ $v }}</span></div>
                 @endforeach
             </div>
 
             @if ($a['milestone'])
-                <div class="mt-4 rounded-md bg-page px-3 py-2.5">
-                    <div class="flex items-baseline justify-between gap-2">
-                        <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Next action</span>
-                        @if ($urgencyTone)
-                            <span class="rounded-full px-2 py-0.5 text-[9.5px] font-bold {{ $urgencyTone === 'risk' ? 'bg-danger-soft text-danger-ink' : 'bg-warning-soft text-warning-ink' }}">{{ $urgencyTone === 'risk' ? 'Overdue' : 'Due today' }}</span>
-                        @endif
+                <div class="cx-next">
+                    <div class="cx-nh">
+                        <span class="cx-nk">Next action</span>
+                        @if ($urgencyTone)<span class="cx-tag {{ $urgencyTone === 'risk' ? 'tone-risk' : 'tone-warn' }}">{{ $urgencyTone === 'risk' ? 'Overdue' : 'Due today' }}</span>@endif
                     </div>
-                    <p class="mt-1 truncate text-[12.5px] font-semibold text-ink">{{ $a['milestone']['title'] }}</p>
-                    <p class="text-[11px] text-muted">{{ $a['milestone']['due'] }}</p>
+                    <p class="cx-nt">{{ $a['milestone']['title'] }}</p>
+                    <p class="cx-nd">{{ $a['milestone']['due'] }}</p>
                 </div>
             @endif
-        </x-cc.briefing-panel>
 
-        <div class="rounded-lg border border-line bg-white p-4">
-            <p class="mb-3 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Mission Actions</p>
-            <a href="{{ route('events.hub', $a['event']) }}" wire:navigate
-               class="flex w-full items-center justify-center rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open Event Hub →</a>
+            <a href="{{ route('events.hub', $a['event']) }}" wire:navigate class="cx-btn cx-btn-accent" style="width:100%;justify-content:center;margin-top:14px">Open Event Hub →</a>
         </div>
     @else
-        {{-- Nothing selected: the portfolio's own summary, not an empty box —
-             the panel always has something true to say. Leads with the one
-             mission the Fleet Health Strip would point at first (worst
-             scored), so the panel is doing something even before you've
-             clicked anything, not just repeating the header's own figures. --}}
+        {{-- Nothing selected: the portfolio's own summary, not an empty box.
+             Leads with the worst-scored mission so the panel is doing something
+             before you've clicked anything. --}}
         @php
             $groupRank = fn ($m) => match ($m['healthGroup'] ?? null) {
                 'risk' => 0, 'warn' => 1, 'live' => 2, 'ok' => 3, default => 4,
             };
             $worst = collect($deck)->sortBy([fn ($m) => $groupRank($m), fn ($m) => $m['healthScore'] ?? 999])->first();
         @endphp
-        <x-cc.briefing-panel title="Portfolio Summary" subtitle="Select a mission to inspect">
-            <div class="grid grid-cols-2 gap-3">
+        <div class="cx-card">
+            <div class="cx-dp-head">
+                <div>
+                    <h2 class="cx-dp-name">Portfolio Summary</h2>
+                    <p class="cx-dp-sub">Select a mission to inspect</p>
+                </div>
+            </div>
+            <div class="cx-dp-stats" style="grid-template-columns:1fr 1fr">
                 @foreach ($figures as $f)
-                    <x-cc.kpi-tile :label="$f['label']" :value="$f['value']" :hint="$f['note'] ?? null" />
+                    <div class="cx-dp-stat">
+                        <span class="cx-sv">{{ $f['value'] }}</span>
+                        <span class="cx-sl">{{ $f['label'] }}</span>
+                    </div>
                 @endforeach
             </div>
 
             @if ($worst && ($worst['healthGroup'] ?? null) === 'risk')
-                <button type="button" wire:click="activate({{ $worst['id'] }})"
-                        class="mt-4 flex w-full items-center gap-2.5 rounded-md bg-danger-soft px-3 py-2.5 text-start transition hover:brightness-95">
-                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[11px] font-black tabular-nums text-danger-ink">{{ $worst['healthScore'] ?? '—' }}</span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block text-eyebrow font-bold uppercase tracking-[0.1em] text-danger-ink">Needs you first</span>
-                        <span class="block truncate text-[12.5px] font-semibold text-ink">{{ $worst['name'] }}</span>
+                <button type="button" wire:click="activate({{ $worst['id'] }})" class="cx-firstup">
+                    <span class="cx-fus">{{ $worst['healthScore'] ?? '—' }}</span>
+                    <span style="min-width:0">
+                        <span class="cx-fuk">Needs you first</span>
+                        <span class="cx-fut">{{ $worst['name'] }}</span>
                     </span>
                 </button>
             @else
-                <p class="mt-4 text-[12.5px] leading-relaxed text-muted">
-                    Pick a mission from the board, timeline or table — its detail opens here, in this same panel, whichever view you're reading.
-                </p>
+                <p class="cx-hint">Pick a mission from the board, timeline or table — its detail opens here, in this same panel, whichever view you're reading.</p>
             @endif
-        </x-cc.briefing-panel>
+        </div>
     @endif
-</div>
+</aside>
