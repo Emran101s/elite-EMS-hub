@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
@@ -42,12 +43,12 @@ class InvoiceEditorTest extends TestCase
     }
 
     /** The company profile is not part of the demo seed, so tests make one. */
-    private function house(array $attrs): \App\Models\CompanyProfile
+    private function house(array $attrs): CompanyProfile
     {
-        $house = \App\Models\CompanyProfile::firstOrNew([]);
+        $house = CompanyProfile::firstOrNew([]);
         $house->fill($attrs + ['name' => $house->name ?: 'Elite Business Hub'])->save();
 
-        \App\Models\CompanyProfile::forgetHouse();
+        CompanyProfile::forgetHouse();
 
         return $house;
     }

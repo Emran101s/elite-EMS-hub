@@ -6,6 +6,7 @@ use App\Livewire\VenueStudio\OverviewTab;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\VenueCommandHeader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -70,7 +71,7 @@ class VenueReadinessModeTest extends TestCase
         $venue->spaces()->create(['name' => 'A', 'type' => 'breakout',
             'capacity_by_setup' => ['theater' => 100]]); // capacity set, no dimensions
 
-        $header = app(\App\Services\VenueCommandHeader::class)->for($venue->fresh());
+        $header = app(VenueCommandHeader::class)->for($venue->fresh());
 
         $this->assertFalse($header['readiness']['gates'][1]['met'], 'Capacity documented gate should be unmet without dimensions');
         $this->assertLessThan(100, $header['health']['score'], 'health score should be penalized for the same gap');

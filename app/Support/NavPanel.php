@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\Deal;
 use App\Models\Event;
+use App\Models\Supplier;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
@@ -199,8 +201,8 @@ class NavPanel
             'workspace', 'events' => self::meta(self::liveEvents(), 'live event', 'ok'),
             'tasks' => self::meta(self::openTasks(), 'open task', 'warn'),
             'crm' => self::meta(Deal::whereIn('stage', Deal::OPEN)->count(), 'deal', 'info', 'in play'),
-            'operations' => self::meta(\App\Models\Supplier::count(), 'supplier', 'neutral', 'on file'),
-            'team' => self::meta(\App\Models\User::count(), 'person', 'neutral'),
+            'operations' => self::meta(Supplier::count(), 'supplier', 'neutral', 'on file'),
+            'team' => self::meta(User::count(), 'person', 'neutral'),
             default => null,
         };
     }

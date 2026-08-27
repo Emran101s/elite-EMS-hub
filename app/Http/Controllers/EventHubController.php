@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Services\BudgetSync;
 use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use Illuminate\View\View;
@@ -99,7 +100,7 @@ class EventHubController extends Controller
 
         // Commitments the budget cannot count. Rooms held at a rate nobody has
         // agreed are real; a budget that omits them silently is not.
-        $pending = app(\App\Services\BudgetSync::class)->pending($event);
+        $pending = app(BudgetSync::class)->pending($event);
 
         if ($pending !== []) {
             $alerts->push([

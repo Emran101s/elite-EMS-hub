@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Hub\AgendaTab;
 use App\Models\Event;
 use App\Models\EventAgendaSession;
 use App\Models\EventAttendee;
@@ -140,7 +141,7 @@ class ReportsOverview extends Component
                 }) / 60, 1),
                 'speakers' => $events->sum(fn (Event $e) => $e->speakers->count()),
                 'rooms' => $events->sum(fn (Event $e) => $e->rooms->count()),
-                'byType' => collect(\App\Livewire\Hub\AgendaTab::PALETTE)
+                'byType' => collect(AgendaTab::PALETTE)
                     ->map(fn ($meta, $type) => [
                         'label' => $meta[0], 'hex' => $meta[1],
                         'count' => $sessions->where('type', $type)->count(),

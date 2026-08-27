@@ -8,9 +8,11 @@ use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventSpeaker;
 use App\Models\Supplier;
+use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
+use App\Support\Workflow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -90,7 +92,7 @@ class EventContractTest extends TestCase
         $event->update(['name' => 'Hikma Fellowship']);
 
         $summary = $contract->fresh()->status === 'draft'
-            ? \App\Models\EventContract::liveEventSummary($event->fresh())
+            ? EventContract::liveEventSummary($event->fresh())
             : $contract->fresh()->data['event'];
 
         $this->assertSame('Hikma Fellowship', $summary['name']);
@@ -121,7 +123,7 @@ class EventContractTest extends TestCase
         $event->update(['name' => 'Hikma Fellowship']);
 
         $summary = $contract->fresh()->status === 'draft'
-            ? \App\Models\EventContract::liveEventSummary($event->fresh())
+            ? EventContract::liveEventSummary($event->fresh())
             : $contract->fresh()->data['event'];
 
         $this->assertSame('Hekma Project', $summary['name'], 'a sent document is a record of what was sent, not a live view');
@@ -690,7 +692,7 @@ class EventContractTest extends TestCase
 
             $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
                 ->assertOk()
-                ->assertSee(\App\Support\Workflow::label('contract_status', $status));
+                ->assertSee(Workflow::label('contract_status', $status));
 
             $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'contract']))->assertOk();
             $this->actingAs($user)->get(route('contracts.index'))->assertOk();
@@ -703,11 +705,11 @@ class EventContractTest extends TestCase
         [$user, $event] = $this->make();
         EventContract::forEvent($event)->update(['status' => 'partially_signed']);
 
-        \App\Support\Workflow::seed();
-        \App\Models\TaxonomyTerm::where('taxonomy', \App\Support\Workflow::taxonomy('contract_status'))
+        Workflow::seed();
+        TaxonomyTerm::where('taxonomy', Workflow::taxonomy('contract_status'))
             ->where('key', 'partially_signed')
             ->firstOrFail()->update(['label' => 'Half signed']);
-        \App\Support\Workflow::forget();
+        Workflow::forget();
 
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
             ->assertOk()->assertSee('Half signed');
@@ -1574,7 +1576,7 @@ class EventContractTest extends TestCase
 
         foreach (['parties', 'value-and-payments', 'budget-assumptions', 'contract-body', 'signatories'] as $panel) {
             $this->assertStringContainsString("at = (at === '{$panel}'", $html, "{$panel} toggles the group");
-            $this->assertStringContainsString("x-collapse.duration.300ms", $html);
+            $this->assertStringContainsString('x-collapse.duration.300ms', $html);
         }
     }
 }

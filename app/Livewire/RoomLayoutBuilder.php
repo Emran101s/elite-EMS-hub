@@ -5,12 +5,12 @@ namespace App\Livewire;
 use App\Models\Event;
 use App\Models\EventRoom;
 use App\Models\Requirement;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Venue'])]
 class RoomLayoutBuilder extends Component

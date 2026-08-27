@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\Proposal;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -290,7 +291,7 @@ class BudgetSync
      * the caller and keyed by "type:id" — reading it here instead of
      * querying per module record is the whole point of passing it in.
      */
-    private function upsert(Event $event, \Illuminate\Support\Collection $linked, string $type, int $id, array $fields): int
+    private function upsert(Event $event, Collection $linked, string $type, int $id, array $fields): int
     {
         $line = $linked->get($type.':'.$id);
 

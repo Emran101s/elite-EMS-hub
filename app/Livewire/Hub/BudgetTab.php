@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventIncomeItem;
+use App\Models\Supplier;
 use App\Services\BudgetSync;
 use App\Services\CurrencyService;
 use App\Support\Taxonomy;
@@ -554,7 +555,7 @@ class BudgetTab extends Component
             return null;
         }
 
-        return \App\Models\Supplier::whereRaw('lower(name) = ?', [mb_strtolower($vendor)])->value('id');
+        return Supplier::whereRaw('lower(name) = ?', [mb_strtolower($vendor)])->value('id');
     }
 
     /** Copy a line within its section, ready to tweak. */
@@ -715,7 +716,7 @@ class BudgetTab extends Component
                 'description' => $desc,
                 'quantity' => 1,
                 'estimated_cents' => 0,
-                                // Not costed yet, which is null — 0 would mean it costs nothing.
+                // Not costed yet, which is null — 0 would mean it costs nothing.
                 'actual_cents' => null,
                 'paid_cents' => 0,
                 'payment_status' => 'pending',
@@ -895,7 +896,7 @@ class BudgetTab extends Component
             // Names for the vendor field's datalist: this event's suppliers
             // first, since a line is nearly always one of them.
             'vendorNames' => $this->event->suppliers->pluck('name')
-                ->merge(\App\Models\Supplier::orderBy('name')->pluck('name'))
+                ->merge(Supplier::orderBy('name')->pluck('name'))
                 ->unique()->values(),
             // What the modules put here, and what they could not.
             'linkedByModule' => $items->whereNotNull('source_type')

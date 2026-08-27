@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 /**
  * One link in an approval's chain.
@@ -83,9 +84,9 @@ class ApprovalStep extends Model
      * changes, the recipient list must change with it or somebody waits on an
      * email that was never sent.
      *
-     * @return \Illuminate\Support\Collection<int,User>
+     * @return Collection<int,User>
      */
-    public function recipients(?int $excludeUserId = null): \Illuminate\Support\Collection
+    public function recipients(?int $excludeUserId = null): Collection
     {
         $candidates = $this->approver_id
             ? User::whereKey($this->approver_id)->get()

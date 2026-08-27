@@ -30,27 +30,39 @@ class PricingTab extends Component
     public Event $event;
 
     public string $q = '';
+
     public bool $showInactive = false;
 
     /** The row being edited; 0 means a new one, null means none. */
     public ?int $editingId = null;
 
     public string $code = '';
+
     public string $name = '';
+
     public string $itemCategory = '';
+
     public string $itemSection = '';
+
     public string $detail = '';
+
     public string $unit = 'item';
+
     public string $cost = '';
+
     public string $sell = '';
+
     public string $tax = '';
+
     public bool $active = true;
 
     /** Pulling from the house list. */
     public bool $showCatalogue = false;
+
     public string $catalogueQuery = '';
 
     public $importFile = null;
+
     public string $importMsg = '';
 
     public function mount(Event $event): void

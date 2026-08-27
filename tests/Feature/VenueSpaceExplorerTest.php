@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\VenueStudio\SpaceExplorerTab;
+use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\VenueSpace;
@@ -69,7 +70,7 @@ class VenueSpaceExplorerTest extends TestCase
     {
         $venue = Venue::create(['name' => 'Fairmont Amman', 'city' => 'Amman']);
         $space = $venue->spaces()->create(['name' => 'Main Hall', 'type' => 'main_hall']);
-        $event = \App\Models\Event::factory()->create(['venue_id' => $venue->id]);
+        $event = Event::factory()->create(['venue_id' => $venue->id]);
         $room = $event->rooms()->create(['name' => 'Main Hall', 'venue_space_id' => $space->id]);
 
         Livewire::actingAs($this->actor())->test(SpaceExplorerTab::class, ['venue' => $venue])

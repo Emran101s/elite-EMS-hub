@@ -3,11 +3,11 @@
 namespace App\Livewire;
 
 use App\Models\CompanyProfile;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Company Profile', 'hideTitleRow' => true])]
 class CompanySettings extends Component

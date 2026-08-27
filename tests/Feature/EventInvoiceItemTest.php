@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Livewire\Hub\PricingTab;
 use App\Livewire\InvoiceEditor;
 use App\Models\Event;
-use App\Models\EventInvoiceItem;
 use App\Models\Invoice;
 use App\Models\ServiceItem;
 use App\Models\User;

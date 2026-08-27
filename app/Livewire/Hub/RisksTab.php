@@ -6,8 +6,8 @@ use App\Models\Event;
 use App\Models\EventRisk;
 use App\Models\User;
 use App\Support\Taxonomy;
-use Livewire\Component;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Component;
 
 class RisksTab extends Component
 {

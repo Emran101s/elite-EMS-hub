@@ -5,9 +5,9 @@ namespace App\Livewire;
 use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Event;
+use App\Models\EventInvoiceItem;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
-use App\Models\EventInvoiceItem;
 use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -37,21 +37,32 @@ class InvoiceEditor extends Component
 
     /* ── the document's own fields ── */
     public string $bill_to = '';
+
     public ?int $event_id = null;
+
     public ?int $client_id = null;
+
     public string $issued_on = '';
+
     public string $due_on = '';
+
     public string $currency = '';
+
     public string $tax_pct = '0';
+
     public string $fee_pct = '0';
+
     public string $notes = '';
+
     public string $terms = '';
 
     /** The line being edited, or null. 0 means "a new one". */
     public ?int $editingLine = null;
 
     public string $description = '';
+
     public string $qty = '1';
+
     public string $unit = '';
 
     /** Money typed into the record box. */

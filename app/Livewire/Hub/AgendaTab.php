@@ -711,7 +711,7 @@ class AgendaTab extends Component
      * last: it is where a session lands when nobody has chosen a lane for
      * it yet, not a track in its own right.
      *
-     * @return \Illuminate\Support\Collection<int, array{name: string, sessions: \Illuminate\Support\Collection}>
+     * @return Collection<int, array{name: string, sessions: Collection}>
      */
     private function trackGroups(Collection $sessions): Collection
     {
@@ -757,7 +757,7 @@ class AgendaTab extends Component
      *
      * @param  array<int, array<int, array<int, string>>>  $conflictsByDay
      * @param  array<int, string>  $severityBySession
-     * @return \Illuminate\Support\Collection<int, array>
+     * @return Collection<int, array>
      */
     private function speakerBoard(Collection $days, array $conflictsByDay, array $severityBySession): Collection
     {
@@ -814,7 +814,7 @@ class AgendaTab extends Component
      * rest of the board already reads — this is a different shape of the
      * same list, not a second opinion.
      *
-     * @return \Illuminate\Support\Collection<int, array>
+     * @return Collection<int, array>
      */
     private function clashSummaryRows(Collection $findings, Collection $days): Collection
     {

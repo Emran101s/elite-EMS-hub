@@ -6,9 +6,9 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\Requirement;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 class VenueTab extends Component
 {

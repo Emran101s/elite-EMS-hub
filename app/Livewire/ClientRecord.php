@@ -7,9 +7,9 @@ use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\DealActivity;
 use App\Support\Taxonomy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * Everything about one client, in one place.

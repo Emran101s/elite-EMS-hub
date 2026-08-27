@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Venue;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,7 @@ class VenueContractStatusTest extends TestCase
             'password' => bcrypt('x'), 'role' => 'admin']);
     }
 
-    private function contractDoc(Venue $venue, User $user, string $status, ?\Carbon\Carbon $createdAt = null): void
+    private function contractDoc(Venue $venue, User $user, string $status, ?Carbon $createdAt = null): void
     {
         $doc = $venue->documents()->create([
             'category' => 'contract', 'status' => $status,

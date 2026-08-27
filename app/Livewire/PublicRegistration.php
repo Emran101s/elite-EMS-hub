@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\CompanyProfile;
 use App\Models\Event;
+use App\Models\EventAttendee;
 use App\Notifications\RegistrationConfirmed;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
@@ -63,7 +64,7 @@ class PublicRegistration extends Component
     }
 
     /** The registration already on file for this address, if there is one. */
-    private function existing(): ?\App\Models\EventAttendee
+    private function existing(): ?EventAttendee
     {
         $email = trim((string) ($this->form['email'] ?? ''));
 
