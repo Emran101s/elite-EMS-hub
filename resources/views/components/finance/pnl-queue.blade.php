@@ -38,7 +38,10 @@
                     <span class="block truncate text-[11px] text-muted">{{ $e->client?->name ?? 'No client' }} · {{ $e->starts_at?->format('M Y') ?? 'no date' }}</span>
                 </span>
                 <span class="shrink-0 text-end">
-                    <span @class(['block text-[13px] font-bold tabular-nums', 'text-danger-ink' => $row['net'] < 0, 'text-ink' => $row['net'] >= 0])>{{ $money($row['net']) }}</span>
+                    {{-- Coloured by priced net (profitability), not realized net —
+                         so an event that's priced profitably but not yet paid
+                         doesn't read as a red loss. --}}
+                    <span @class(['block text-[13px] font-bold tabular-nums', 'text-danger-ink' => ($row['pricedNet'] ?? $row['net']) < 0, 'text-ink' => ($row['pricedNet'] ?? $row['net']) >= 0])>{{ $money($row['net']) }}</span>
                     <span class="block text-[10px] text-muted">{{ $m === null ? '—' : $m.'% margin' }}</span>
                 </span>
             </button>

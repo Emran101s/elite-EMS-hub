@@ -27,7 +27,13 @@
              late, which "owed" alone would not tell you to chase. --}}
         <x-cc.kpi-tile label="Overdue" :value="$money($t['overdueReceivable'])" :hint="$t['overdueCount'].' '.str('instalment')->plural($t['overdueCount']).' past due'" :tone="$t['overdueReceivable'] ? 'risk' : 'ok'" />
         <x-cc.kpi-tile label="Cost" :value="$money($t['cost'])" :hint="$money($t['payable']).' unpaid'" />
-        <x-cc.kpi-tile label="Net" :value="$money($t['net'])" :hint="$t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin'" :tone="$t['net'] < 0 ? 'risk' : 'ok'" />
+        {{-- Priced net (charged − cost) is the "are these profitable" answer;
+             realized net (income − cost) goes negative while contracts sit
+             unpaid, so it's shown as context in the hint, not as the headline
+             loss it used to read as. --}}
+        <x-cc.kpi-tile label="Net · priced" :value="$money($t['pricedNet'])"
+            :hint="($t['pricedMargin'] === null ? 'nothing priced yet' : $t['pricedMargin'].'% margin').' · '.$money($t['net']).' realized'"
+            :tone="$t['pricedNet'] < 0 ? 'risk' : 'ok'" />
     </div>
 
     <div class="grid gap-4 xl:grid-cols-12">

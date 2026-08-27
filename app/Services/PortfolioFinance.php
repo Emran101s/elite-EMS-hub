@@ -154,7 +154,14 @@ class PortfolioFinance
                 'cost' => $cost,
                 'paid' => $paid,
                 'payable' => max(0, $cost - $paid),
+                // Realized net: income counts only money collected, so this
+                // goes deeply negative while contracts sit unpaid. Honest, but
+                // it reads as a loss on work that is priced profitably — so the
+                // priced net below is shown alongside it, never instead of it.
                 'net' => $net,
+                // Priced net: what the work is worth against its cost, billed
+                // or not. This is the "are these events profitable" answer.
+                'pricedNet' => $charged - $cost,
                 // Margin against income, not against budget — the question is
                 // what share of what you charge you keep.
                 'margin' => $booked > 0 ? (int) round($net / $booked * 100) : null,
@@ -191,6 +198,7 @@ class PortfolioFinance
             'paid' => (int) $rows->sum('paid'),
             'payable' => (int) $rows->sum('payable'),
             'net' => $income - $cost,
+            'pricedNet' => $charged - $cost,
             'margin' => $income > 0 ? (int) round(($income - $cost) / $income * 100) : null,
             'pricedMargin' => $charged > 0 ? (int) round(($charged - $cost) / $charged * 100) : null,
             'events' => $rows->count(),

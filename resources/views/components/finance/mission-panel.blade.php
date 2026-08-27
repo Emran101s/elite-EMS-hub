@@ -10,9 +10,10 @@
         <p class="mt-0.5 text-[11.5px] text-muted">{{ $event->client?->name ?? 'No client' }}</p>
 
         <div class="mt-3.5 rounded-md bg-page px-3 py-2.5">
-            <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted">Mission net</p>
-            <p class="mt-1 text-[18px] font-extrabold tabular-nums" style="color: {{ $selected['net'] < 0 ? 'var(--color-warning-ink)' : 'var(--color-success-ink)' }}">{{ $money($selected['net']) }}</p>
-            <p class="mt-0.5 text-[11px] text-muted">Charged {{ $money($selected['charged']) }} · Cost {{ $money($selected['cost']) }}</p>
+            @php $pn = $selected['pricedNet'] ?? ($selected['charged'] - $selected['cost']); @endphp
+            <p class="text-eyebrow font-bold uppercase tracking-[0.1em] text-muted">Mission net · priced</p>
+            <p class="mt-1 text-[18px] font-extrabold tabular-nums" style="color: {{ $pn < 0 ? 'var(--color-warning-ink)' : 'var(--color-success-ink)' }}">{{ $money($pn) }}</p>
+            <p class="mt-0.5 text-[11px] text-muted">Charged {{ $money($selected['charged']) }} · Cost {{ $money($selected['cost']) }} · {{ $money($selected['net']) }} realized</p>
         </div>
 
         <div class="mt-4 space-y-2 text-[13px]">
