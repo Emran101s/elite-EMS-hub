@@ -22,10 +22,17 @@ class ResourceConflicts
     /** @return Collection<int, array{type:string, severity:string, label:string, detail:string, events:array}> */
     public function detect(): Collection
     {
+        // Two events sharing a start date is exactly the case a venue clash
+        // exists to catch, so orderBy('starts_at') alone leaves the pair
+        // tied. SQLite happens to return tied rows in insertion order;
+        // Postgres does not promise that, so which event showed first in a
+        // clash card could flip between requests. The id tie-break makes it
+        // the same order every time, on every driver.
         $events = Event::active()
             ->whereNotNull('starts_at')
             ->with(['venue', 'teamMembers', 'suppliers'])
             ->orderBy('starts_at')
+            ->orderBy('id')
             ->get();
 
         return collect()
