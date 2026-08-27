@@ -63,4 +63,31 @@ class VenueRoomLinkTest extends TestCase
             ->call('editRoom', $room->id)
             ->assertSet('room_venue_space_id', (string) $space->id);
     }
+
+    public function test_the_venue_can_be_assigned_and_cleared_from_the_venue_tab(): void
+    {
+        $venue = Venue::create(['name' => 'Kempinski Aqaba', 'city' => 'Aqaba']);
+        $event = Event::factory()->create(['venue_id' => null]);
+
+        $screen = Livewire::actingAs($this->actor())->test(VenueTab::class, ['event' => $event]);
+
+        // Assign in place — no trip to Settings.
+        $screen->call('setVenue', (string) $venue->id);
+        $this->assertSame($venue->id, $event->fresh()->venue_id);
+
+        // And clear it back to unlinked.
+        $screen->call('setVenue', '');
+        $this->assertNull($event->fresh()->venue_id);
+    }
+
+    public function test_assigning_a_non_existent_venue_is_rejected(): void
+    {
+        $event = Event::factory()->create(['venue_id' => null]);
+
+        Livewire::actingAs($this->actor())->test(VenueTab::class, ['event' => $event])
+            ->call('setVenue', '999999')
+            ->assertHasErrors('venue_id');
+
+        $this->assertNull($event->fresh()->venue_id);
+    }
 }

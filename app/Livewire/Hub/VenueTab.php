@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\Requirement;
+use App\Models\Venue;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -15,6 +16,23 @@ class VenueTab extends Component
     use BulkSelectable, RoutesCostsToBudget;
 
     public Event $event;
+
+    /**
+     * Assign (or clear) the event's venue right here, instead of sending the
+     * user off to the Settings form to find one field. Once set, the panel
+     * links straight to that venue's own Venue Studio — the two-way link that
+     * used to be missing between a booking and the place it happens.
+     */
+    public function setVenue($venueId): void
+    {
+        Gate::authorize('write');
+        $venueId = $venueId === '' || $venueId === null ? null : (int) $venueId;
+        validator(['venue_id' => $venueId], ['venue_id' => ['nullable', 'exists:venues,id']])->validate();
+        $this->event->update(['venue_id' => $venueId]);
+        // Drop the cached relation so the re-render shows the new venue (and
+        // its own spaces, which feed the room form's "Venue's own space" list).
+        $this->event->refresh();
+    }
 
     /** Delete the selected rooms. */
     public function deleteSelected(): void
@@ -172,6 +190,7 @@ class VenueTab extends Component
             'rooms' => $this->event->rooms()->withCount('sessions')->orderBy('name')->get(),
             'catalog' => Requirement::orderBy('name')->get(),
             'venueSpaces' => $this->event->venue?->spaces ?? collect(),
+            'venues' => Venue::orderBy('name')->get(['id', 'name', 'city']),
         ]);
     }
 }
