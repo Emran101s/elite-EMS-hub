@@ -43,8 +43,10 @@
                 @endphp
                 <button type="button" wire:click="{{ $selectAction }}({{ $m['id'] }})"
                         title="{{ $m['name'] }} · {{ $score !== null ? $score.' health' : 'not scored' }}"
+                        aria-label="{{ $m['name'] }}, {{ $score !== null ? 'health '.$score : 'not scored' }}"
+                        aria-pressed="{{ $isActive ? 'true' : 'false' }}"
                         @class([
-                            'w-5 shrink-0 rounded-md rounded-b-sm transition-all hover:opacity-100',
+                            'w-5 shrink-0 rounded-md rounded-b-sm transition-all hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1',
                             'ring-2 ring-gold-400 ring-offset-1' => $isActive,
                         ])
                         style="height: {{ $h }}px; background: {{ $tone }}; opacity: {{ $isActive ? 1 : 0.85 }}">

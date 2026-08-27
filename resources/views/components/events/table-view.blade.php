@@ -49,7 +49,9 @@
                         @php $on = $active && $m['id'] === $active['id']; @endphp
                         @php $ticked = in_array($m['id'], $selectedIds, true); @endphp
                         <div wire:key="row-{{ $m['id'] }}" wire:click="activate({{ $m['id'] }})"
-                             @class(['relative grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition',
+                             role="button" tabindex="0" aria-label="Open {{ $m['name'] }}" @if ($on && ! $ticked) aria-current="true" @endif
+                             wire:keydown.enter="activate({{ $m['id'] }})" wire:keydown.space.prevent="activate({{ $m['id'] }})"
+                             @class(['relative grid cursor-pointer '.$cols.' items-center gap-3 px-4 py-3 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-400',
                                  'bg-gold-50' => $on && ! $ticked,
                                  'bg-danger-soft' => $ticked,
                                  'hover:bg-page' => ! $on && ! $ticked])>

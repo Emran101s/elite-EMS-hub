@@ -66,10 +66,14 @@
          instead of navigating away — only the "Open Event" link leaves
          the page, so scanning the board never costs you the board. --}}
     <{{ $cardTag }}
-        @if ($clickable) wire:click="{{ $selectAction }}({{ $m['id'] }})" role="button" tabindex="0" @endif
+        @if ($clickable)
+            wire:click="{{ $selectAction }}({{ $m['id'] }})" role="button" tabindex="0"
+            aria-pressed="{{ $selected ? 'true' : 'false' }}" aria-label="Select {{ $name }}"
+            wire:keydown.enter="{{ $selectAction }}({{ $m['id'] }})" wire:keydown.space.prevent="{{ $selectAction }}({{ $m['id'] }})"
+        @endif
         @if (! $clickable && $resolvedHref) href="{{ $resolvedHref }}" @endif
         @class([
-            'block rounded-lg border border-line bg-white p-3.5 transition',
+            'block rounded-lg border border-line bg-white p-3.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2',
             'cursor-pointer' => $clickable,
             'hover:-translate-y-0.5 hover:shadow-float' => (bool) $resolvedHref || $clickable,
             'shadow-float ring-2 ring-gold-400/60' => $selected,
