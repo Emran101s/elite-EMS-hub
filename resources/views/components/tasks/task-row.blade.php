@@ -16,7 +16,10 @@
     <x-user-avatar :user="$task->assignee" size="h-8 w-8" text="text-[11px]" />
 
     <div class="min-w-0 flex-1">
-        <p class="truncate text-[13.5px] font-semibold text-ink">{{ $task->title }}</p>
+        {{-- A quick-captured task with no title yet reads as a tidy placeholder
+             with an amber "still needs a title/owner/due date" dot, not a broken
+             row — the same treatment the planning board already gives records. --}}
+        <x-record-title :record="$task" fallback="Untitled task" class="max-w-full text-[13.5px] font-semibold text-ink" />
         <p class="mt-0.5 truncate text-[11.5px] text-muted">
             @if ($task->event){{ $task->event->name }}@endif
             @if ($task->assignee) · {{ $task->assignee->name }}@endif
