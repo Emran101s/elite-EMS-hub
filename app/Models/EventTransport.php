@@ -189,10 +189,11 @@ class EventTransport extends Model
             'is_vip' => 'boolean',
             'capacity' => 'integer',
             'passengers' => 'integer',
-            // decimal:1, not integer — the underlying column is decimal(15,1)
-            // now (tenths of a cent), so a cost of 127.116 keeps its third
-            // decimal instead of being rounded away on read.
-            'cost_cents' => 'decimal:1',
+            // Whole integer cents. A decimal:1 cast serialises even 25000 as
+            // "25000.0", which SQLite tolerates but Postgres rejects for this
+            // integer column (the decimal(15,1) widening never converts it on
+            // Postgres). A transport charge is exact to the cent, so store it so.
+            'cost_cents' => 'integer',
         ];
     }
 
