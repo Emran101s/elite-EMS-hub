@@ -24,7 +24,7 @@
         "@fontsource/jetbrains-mono": "^5.3.0",
         "html-to-image": "^1.11.13",
         "html2canvas": "^1.4.1",
-        "puppeteer": "^25.4.0",
+        "puppeteer": "^25.8.0",
         "sortablejs": "^1.15.7"
     }
 }
