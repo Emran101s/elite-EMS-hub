@@ -165,6 +165,104 @@
             <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold {{ $toneSoftClass($healthTone) }}">{{ $healthPillLabel }}</span>
         @endif
     </{{ $tag }}>
+
+@elseif ($variant === 'spotlight')
+    {{-- spotlight — one premium, editorial hero for the highest-priority
+         mission at the top of the board. The page's single dark focal moment,
+         and its one orchestrated motion: the panel rises in and the readiness
+         bar fills. Everything else on the page stays hover-only. --}}
+    <style>
+        @keyframes evx-rise { from { opacity: 0; transform: translateY(16px); } }
+        @keyframes evx-fill { from { width: 0; } }
+        .evx-spotlight { animation: evx-rise .6s cubic-bezier(.2,.7,.2,1) both; }
+        .evx-spotlight .evx-bar { animation: evx-fill 1.15s cubic-bezier(.2,.7,.2,1) both; animation-delay: .12s; }
+        @media (prefers-reduced-motion: reduce) { .evx-spotlight, .evx-spotlight .evx-bar { animation: none !important; } }
+    </style>
+    <div
+        @if ($clickable)
+            wire:click="{{ $selectAction }}({{ $m['id'] }})" role="button" tabindex="0"
+            aria-pressed="{{ $selected ? 'true' : 'false' }}" aria-label="Select {{ $name }}"
+            wire:keydown.enter="{{ $selectAction }}({{ $m['id'] }})" wire:keydown.space.prevent="{{ $selectAction }}({{ $m['id'] }})"
+        @endif
+        @class([
+            'evx-spotlight group relative cursor-pointer overflow-hidden rounded-lg border border-navy-800 p-6 text-white shadow-float transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2',
+            'ring-2 ring-gold-400' => $selected,
+        ])
+        style="background: linear-gradient(158deg, #16294a 0%, #0b1f3a 46%, #061426 100%)"
+    >
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-60"
+             style="background: radial-gradient(72% 90% at 100% 0%, rgba(212,175,55,.16), transparent 55%)"></div>
+
+        <div class="relative">
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gold-300">
+                    <span class="h-1.5 w-1.5 rounded-full bg-gold-400"></span> Spotlight
+                </span>
+                @if ($type)<span class="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">{{ $type }}</span>@endif
+                @if ($stage)<span class="rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-bold text-info-ink">{{ $stage }}</span>@endif
+                @if ($urgencyLabel)<span class="ms-auto rounded-full px-2.5 py-1 text-[10px] font-bold {{ $toneSoftClass($urgencyTone) }}">{{ $urgencyLabel }}</span>@endif
+            </div>
+
+            <div class="flex items-start justify-between gap-5">
+                <div class="min-w-0">
+                    <h3 class="pf text-[26px] font-semibold leading-tight text-white sm:text-[30px]">{{ $name }}</h3>
+                    <p class="mt-1.5 truncate text-[13px] text-white/60">{{ collect([$client, $where, $dateLabel])->filter()->implode(' · ') }}</p>
+                </div>
+                @if (! is_null($ready))
+                    <div class="relative grid h-[104px] w-[104px] shrink-0 place-items-center rounded-full"
+                         style="background: conic-gradient(var(--color-gold-500) {{ $ready }}%, rgba(255,255,255,.12) 0)" aria-hidden="true">
+                        <div class="absolute inset-[7px] rounded-full" style="background:#0c1d38"></div>
+                        <div class="relative text-center">
+                            <div class="pf text-[28px] font-bold leading-none text-white">{{ $ready }}</div>
+                            <div class="text-[8.5px] font-bold uppercase tracking-[0.14em] text-white/50">% ready</div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            @if (! is_null($ready))
+                <div class="mt-5">
+                    <div class="mb-1.5 flex items-center justify-between text-[11px]">
+                        <span class="font-bold uppercase tracking-[0.12em] text-white/50">Mission readiness</span>
+                        <span class="font-bold tabular-nums text-gold-300">{{ $ready }}%</span>
+                    </div>
+                    <div class="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div class="evx-bar h-full rounded-full bg-gradient-to-r from-gold-500 to-gold-300" style="width: {{ $ready }}%"></div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="mt-5 grid grid-cols-2 gap-x-5 gap-y-3 border-t border-white/10 pt-4 sm:grid-cols-4">
+                @if ($daysOutLabel)
+                    <div><p class="text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/45">Days out</p><p class="mt-0.5 text-[14px] font-bold text-white">{{ $daysOutLabel }}</p></div>
+                @endif
+                <div>
+                    <p class="text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/45">Health</p>
+                    <p class="mt-0.5 flex items-center gap-1.5 text-[14px] font-bold text-white">
+                        <span class="h-2 w-2 rounded-full" style="background: {{ $toneInk($healthTone) }}"></span>{{ $healthScore ?? '—' }}
+                        @if ($healthPillLabel)<span class="text-[11px] font-semibold text-white/50">{{ $healthPillLabel }}</span>@endif
+                    </p>
+                </div>
+                @if ($budgetLabel)
+                    <div><p class="text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/45">Budget</p><p class="mt-0.5 text-[14px] font-bold text-white">{{ $budgetLabel }} <span class="text-[11px] font-normal text-white/45">{{ $budgetOf }}</span></p></div>
+                @endif
+                @if ($milestone)
+                    <div class="min-w-0"><p class="text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/45">Next action</p><p class="mt-0.5 truncate text-[13px] font-semibold text-white">{{ $milestone['title'] }}</p></div>
+                @endif
+            </div>
+
+            @if ($resolvedHref)
+                <div class="mt-5 flex flex-wrap items-center gap-3">
+                    <a href="{{ $resolvedHref }}" wire:navigate onclick="event.stopPropagation()"
+                       class="inline-flex items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-[12.5px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+                        Open event <x-icon name="chevron" class="h-3 w-3 -rotate-90" aria-hidden="true" />
+                    </a>
+                    <span class="text-[11.5px] text-white/45">Select the card to preview it on the right &rarr;</span>
+                </div>
+            @endif
+        </div>
+    </div>
+
 @else
     {{-- hero — the spotlight card for the nearest mission --}}
     <{{ $tag }} @if ($resolvedHref) href="{{ $resolvedHref }}" @endif

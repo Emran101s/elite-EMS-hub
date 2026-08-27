@@ -98,13 +98,31 @@
 
                 {{-- ── MISSION BOARD ── --}}
                 @if ($view === 'board')
+                    @php
+                        // Spotlight the single highest-priority mission. The board
+                        // is already ordered worst/soonest-first, so it's the first
+                        // mission of the first non-empty group. Pulled out here so it
+                        // headlines the board and isn't also drawn in the grid below.
+                        $spotlight = collect($board)->first(fn ($g) => $g['missions']->isNotEmpty())['missions']->first() ?? null;
+                        $spotlightId = $spotlight['id'] ?? null;
+                    @endphp
+
+                    @if ($spotlight)
+                        <div class="mb-6">
+                            <x-cc.mission-card :mission="$spotlight" variant="spotlight" selectAction="activate"
+                                :selected="$active && $active['id'] === $spotlightId"
+                                wire:key="spotlight-{{ $spotlightId }}" />
+                        </div>
+                    @endif
+
                     <div class="space-y-7">
                         @foreach ($board as $group)
-                            @continue ($group['missions']->isEmpty())
+                            @php $missions = $group['missions']->reject(fn ($m) => $m['id'] === $spotlightId)->values(); @endphp
+                            @continue ($missions->isEmpty())
                             <div>
                                 <div class="mb-1 flex items-center gap-2">
                                     <h2 class="text-[14px] font-bold text-ink">{{ $group['label'] }}</h2>
-                                    <span class="rounded-full bg-page px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $group['missions']->count() }}</span>
+                                    <span class="rounded-full bg-page px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $missions->count() }}</span>
                                 </div>
                                 <p class="mb-3 text-[11.5px] text-muted">
                                     {{ match ($group['label']) {
@@ -115,7 +133,7 @@
                                     } }}
                                 </p>
                                 <div class="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-                                    @foreach ($group['missions'] as $m)
+                                    @foreach ($missions as $m)
                                         <x-cc.mission-card :mission="$m" variant="board" selectAction="activate"
                                             :selected="$active && $active['id'] === $m['id']"
                                             wire:key="board-{{ $m['id'] }}" />
