@@ -38,19 +38,10 @@
             @endforelse
         </div>
 
-        {{-- Upcoming events at this venue. --}}
-        <div class="mt-2.5">
-            <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted !text-[9px] opacity-70">Upcoming Events</p>
-            @forelse ($header['upcoming'] as $event)
-                <a href="{{ route('events.hub', $event) }}" wire:navigate class="hubx-panel-attention-row">
-                    <x-icon name="calendar" class="h-3.5 w-3.5 text-muted" />
-                    <span class="text-[11.5px] font-semibold text-ink">{{ $event->name }}</span>
-                    <span class="ml-auto shrink-0 text-[10.5px] text-muted">{{ $event->starts_at->format('j M') }}</span>
-                </a>
-            @empty
-                <p class="text-[10px] text-muted opacity-75">Nothing booked here yet.</p>
-            @endforelse
-        </div>
+        {{-- Events at this venue live in their own panel above this tower (the
+             studio's reverse-link card), which lists every event and points at
+             each one's Venue tab — so the tower no longer repeats an "Upcoming
+             Events" list of the same bookings. --}}
 
         {{-- Spaces still missing setup-capacity data — a real readiness gap. --}}
         @if ($undocumented->isNotEmpty())
