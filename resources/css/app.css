@@ -49,7 +49,7 @@
     --color-line: #e2e8f0;
     --color-fill: #e8edf4; /* gray-filled inputs (wizard/forms) */
     --color-ink: #0b1f3a;
-    --color-muted: #64748b;
+    --color-muted: #5e6d80; /* darkened from #64748b: hits WCAG AA (4.5:1) on both white (5.28) and the page bg (4.74); #64748b was 4.27 on page */
 
     /* Health semantics: on track / in progress / at risk */
     --color-track: #22c55e;

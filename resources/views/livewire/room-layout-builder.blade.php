@@ -217,7 +217,7 @@
                                     {{-- drag-to-rotate handle --}}
                                     <div class="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 flex-col items-center">
                                         <div @pointerdown.stop.prevent="startSpin($event, '{{ $el['id'] }}')"
-                                             class="flex h-6 w-6 cursor-grab items-center justify-center rounded-full border-2 border-white bg-gold-500 text-micro text-white shadow-md active:cursor-grabbing"
+                                             class="flex h-6 w-6 cursor-grab items-center justify-center rounded-full border-2 border-white bg-gold-500 text-micro text-navy-900 shadow-md active:cursor-grabbing"
                                              title="Drag to rotate · hold Shift for free angle">⟳</div>
                                         <div class="h-3 w-px bg-gold-500-lit"></div>
                                     </div>

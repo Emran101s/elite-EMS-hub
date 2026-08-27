@@ -138,7 +138,7 @@
                            ])>
                             <span @class([
                                 'grid h-7 w-7 shrink-0 place-items-center rounded-lg transition',
-                                'bg-gold-50 text-gold-600' => $item['active'],
+                                'bg-gold-50 text-gold-700' => $item['active'],
                                 'bg-page text-navy-300 group-hover/nav:text-navy-600' => ! $item['active'],
                             ])>
                                 <x-icon :name="$item['icon']" class="h-[15px] w-[15px]" />

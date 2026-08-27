@@ -149,7 +149,7 @@
                             <span class="block text-[11.5px] font-bold text-ink">No management fee on this offer</span>
                             <span class="block text-[10.5px] text-muted">Add the house rate — leave it off if the price already includes it.</span>
                         </span>
-                        <span class="shrink-0 rounded-lg bg-gold-500 px-2 py-1 text-[10.5px] font-bold text-white">Add it</span>
+                        <span class="shrink-0 rounded-lg bg-gold-500 px-2 py-1 text-[10.5px] font-bold text-navy-900">Add it</span>
                     </button>
                 @endif
             </div>
