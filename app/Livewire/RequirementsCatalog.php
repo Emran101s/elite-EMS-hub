@@ -3,14 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\Requirement;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Equipment Catalog'])]
+#[Layout('components.layouts.app', ['title' => 'Equipment Catalog', 'hideTitleRow' => true])]
 class RequirementsCatalog extends Component
 {
     use WithFileUploads;

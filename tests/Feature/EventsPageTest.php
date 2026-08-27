@@ -68,31 +68,33 @@ class EventsPageTest extends TestCase
         $this->assertCount(Event::whereNull('archived_at')->where('name', 'like', '%ICFT%')->count(), $selected);
     }
 
-    public function test_the_deck_opens_on_a_mission_and_steps_through_the_book(): void
+    public function test_mission_board_selects_a_mission_into_the_shared_detail_panel(): void
     {
         $user = $this->actor();
         $icft = Event::where('name', 'ICFT 2026')->firstOrFail();
 
+        // Mission Board is the default view. Nothing is selected yet, so the
+        // panel shows the portfolio summary rather than any one mission.
         $c = Livewire::actingAs($user)->test(EventsIndex::class)
-            ->assertSet('view', 'deck')
-            ->assertSee('Active mission');
+            ->assertSet('view', 'board')
+            ->assertSee('Portfolio Summary');
 
-        // Picking a card brings it into the centre; the detail travels with it.
+        // Picking a card selects it — the one detail panel every view shares
+        // updates in place, nothing moves to the bottom of the page.
         $c->call('activate', $icft->id)
             ->assertSet('activeId', $icft->id)
             ->assertSee('ICFT 2026')
-            ->assertSee('Next milestone');
+            ->assertSee('Next action');
+    }
 
-        $deck = $c->viewData('deck');
-        $at = $c->viewData('activeAt');
+    public function test_the_retired_deck_view_resolves_to_mission_board(): void
+    {
+        $user = $this->actor();
 
-        // Stepping moves along the order on screen, not the database order.
-        $c->call('step', 1);
-        $this->assertSame($deck[min($deck->count() - 1, $at + 1)]['id'], $c->get('activeId'));
-
-        // And it stops at the ends rather than wrapping round.
-        $c->call('step', -1)->call('step', -1)->call('step', -1)->call('step', -1)->call('step', -1);
-        $this->assertSame($deck->first()['id'], $c->get('activeId'));
+        // The spatial Deck is retired as a live view (see EventsIndex::VIEWS
+        // and mount()'s ?view= mapping) — an old bookmarked ?view=deck link
+        // must still land somewhere real rather than error or go blank.
+        $this->actingAs($user)->get('/events?view=deck')->assertOk()->assertSee('Event Portfolio');
     }
 
     public function test_manager_can_permanently_delete_an_event_and_the_audit_trail_survives(): void
@@ -216,7 +218,9 @@ class EventsPageTest extends TestCase
             $this->assertNotEmpty($lane['missions']);
         }
 
-        // The old calendar URL lands here rather than on a blank page.
-        $this->actingAs($user)->get('/events?view=calendar')->assertOk()->assertSee('Flight Path');
+        // The old calendar URL still lands on a real page rather than a
+        // blank one — since Phase C that's Mission Board (the new default
+        // for any unrecognised ?view=), not Timeline/Flight Path any more.
+        $this->actingAs($user)->get('/events?view=calendar')->assertOk()->assertSee('Mission Board');
     }
 }

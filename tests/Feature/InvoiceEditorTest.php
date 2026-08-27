@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
@@ -42,12 +43,12 @@ class InvoiceEditorTest extends TestCase
     }
 
     /** The company profile is not part of the demo seed, so tests make one. */
-    private function house(array $attrs): \App\Models\CompanyProfile
+    private function house(array $attrs): CompanyProfile
     {
-        $house = \App\Models\CompanyProfile::firstOrNew([]);
+        $house = CompanyProfile::firstOrNew([]);
         $house->fill($attrs + ['name' => $house->name ?: 'Elite Business Hub'])->save();
 
-        \App\Models\CompanyProfile::forgetHouse();
+        CompanyProfile::forgetHouse();
 
         return $house;
     }
@@ -115,12 +116,12 @@ class InvoiceEditorTest extends TestCase
 
         $line = $invoice->lines->last();
         $this->assertSame('Additional AV crew, 3 days', $line->description);
-        $this->assertSame(85_000, $line->unit_cents);
-        $this->assertSame(255_000, $line->amountCents(), '3 × 850.00');
+        $this->assertEquals(85_000, $line->unit_cents);
+        $this->assertEquals(255_000, $line->amountCents(), '3 × 850.00');
 
         // Edited.
         $c->call('editLine', $line->id)->set('unit', '900')->call('saveLine');
-        $this->assertSame(90_000, $line->fresh()->unit_cents);
+        $this->assertEquals(90_000, $line->fresh()->unit_cents);
 
         // Removed.
         $c->call('deleteLine', $line->id);
@@ -225,7 +226,7 @@ class InvoiceEditorTest extends TestCase
 
         $c->call('record');
         $invoice = $invoice->fresh()->load('lines');
-        $this->assertSame($invoice->totalCents(), $invoice->paid_cents);
+        $this->assertEquals($invoice->totalCents(), $invoice->paid_cents);
         $this->assertSame('paid', $invoice->state());
 
         $c->call('clearPaid');
@@ -295,11 +296,11 @@ class InvoiceEditorTest extends TestCase
         $invoice->lines()->create(['description' => 'Rooms', 'qty' => 36, 'unit_cents' => 95_00]);
         $invoice = $invoice->fresh()->load('lines');
 
-        $this->assertSame(3_420_00, $invoice->subtotalCents());
+        $this->assertEquals(3_420_00, $invoice->subtotalCents());
         $this->assertSame(513_00, $invoice->feeCents(), '15% of the work');
-        $this->assertSame(3_933_00, $invoice->netCents());
+        $this->assertEquals(3_933_00, $invoice->netCents());
         $this->assertSame((int) round(3_933_00 * 0.16), $invoice->taxCents(), 'tax on the net, fee included');
-        $this->assertSame(3_933_00 + (int) round(3_933_00 * 0.16), $invoice->totalCents());
+        $this->assertEquals(3_933_00 + (int) round(3_933_00 * 0.16), $invoice->totalCents());
     }
 
     /** With no fee the arithmetic is exactly what it always was. */
@@ -311,7 +312,7 @@ class InvoiceEditorTest extends TestCase
         $invoice = $invoice->fresh()->load('lines');
 
         $this->assertSame(0, $invoice->feeCents());
-        $this->assertSame($invoice->subtotalCents(), $invoice->netCents());
+        $this->assertEquals($invoice->subtotalCents(), $invoice->netCents());
         $this->assertSame(160_00, $invoice->taxCents());
     }
 
@@ -330,7 +331,7 @@ class InvoiceEditorTest extends TestCase
 
         $this->assertSame(0.0, (float) $invoice->fee_pct,
             'the schedule already includes the fee');
-        $this->assertSame($invoice->subtotalCents(), $invoice->netCents());
+        $this->assertEquals($invoice->subtotalCents(), $invoice->netCents());
     }
 
     /** A negotiated rate lives on the event, so attaching one adopts it. */

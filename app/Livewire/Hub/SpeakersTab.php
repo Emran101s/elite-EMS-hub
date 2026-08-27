@@ -6,9 +6,9 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Livewire\Concerns\RoutesCostsToBudget;
 use App\Models\Event;
 use App\Models\EventSpeaker;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 class SpeakersTab extends Component
 {
@@ -127,7 +127,7 @@ class SpeakersTab extends Component
 
     public function render()
     {
-        $speakers = $this->event->speakers()->orderByDesc('is_keynote')->get();
+        $speakers = $this->event->speakers()->orderByDesc('is_keynote')->with('sessions')->get();
 
         return view('livewire.hub.speakers-tab', [
             'speakers' => $speakers,

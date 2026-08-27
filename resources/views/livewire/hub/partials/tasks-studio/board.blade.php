@@ -19,17 +19,17 @@
             {{-- column header --}}
             <div class="kanban-head">
                 <span class="h-2.5 w-2.5 rounded-full" style="background: {{ $shex }}"></span>
-                <span class="text-xs font-bold text-navy-800">{{ $slabel }}</span>
-                <span class="rounded-full bg-white px-2 text-eyebrow font-bold text-navy-400 ring-1 ring-line">{{ $col->count() }}</span>
-                <button type="button" wire:click="addTask(null, null, '{{ $sv }}')" class="ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-navy-300 transition hover:bg-white hover:text-gold-600" title="Add a task here">＋</button>
+                <span class="text-xs font-bold text-ink">{{ $slabel }}</span>
+                <span class="rounded-full bg-white px-2 text-eyebrow font-bold text-muted ring-1 ring-line">{{ $col->count() }}</span>
+                <button type="button" wire:click="addTask(null, null, '{{ $sv }}')" class="ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-muted transition hover:bg-white hover:text-gold-700" title="Add a task here">＋</button>
             </div>
 
             {{-- droppable column body --}}
-            <div data-task-col="{{ $sv }}" class="flex min-h-[120px] flex-1 flex-col gap-3 rounded-2xl bg-navy-900/[0.03] p-2.5 ring-1 ring-inset ring-navy-900/[0.04]">
+            <div data-task-col="{{ $sv }}" class="flex min-h-[120px] flex-1 flex-col gap-3 rounded-lg bg-navy-900/[0.03] p-2.5 ring-1 ring-inset ring-navy-900/[0.04]">
                 @forelse ($col as $item)
                     @include('livewire.hub.partials.tasks-studio.card', ['item' => $item])
                 @empty
-                    <button type="button" wire:click="addTask(null, null, '{{ $sv }}')" class="rounded-2xl border border-dashed border-line py-6 text-center text-eyebrow font-bold uppercase tracking-wide text-navy-300 transition hover:border-gold-300 hover:text-gold-600">＋ Add task</button>
+                    <button type="button" wire:click="addTask(null, null, '{{ $sv }}')" class="rounded-lg border border-dashed border-line py-6 text-center text-eyebrow font-bold uppercase tracking-wide text-muted transition hover:border-navy-300 hover:text-gold-700">＋ Add task</button>
                 @endforelse
             </div>
         </div>

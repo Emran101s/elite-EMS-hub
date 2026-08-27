@@ -226,31 +226,48 @@ class EventContract extends Model
             .($seq > 1 ? '-'.$seq : '');
     }
 
+    /**
+     * Name, dates, venue, location — as the event stands right now.
+     *
+     * defaultData() calls this once, to seed the snapshot a contract carries
+     * from the moment it exists. Rendering calls it again, live, for as long
+     * as the contract is still a draft — see paper.blade.php. One formula for
+     * "what does the event currently look like", so the two never drift into
+     * disagreeing about what "60 days before the Event" or "Sweimeh, Jordan"
+     * actually means.
+     */
+    public static function liveEventSummary(Event $event): array
+    {
+        $dates = $event->starts_at && $event->ends_at
+            ? $event->starts_at->format('j').'–'.$event->ends_at->format('j M Y')
+            : ($event->starts_at?->format('j M Y') ?? 'To be confirmed');
+        $location = trim(($event->city ? $event->city.', ' : '').($event->country ?? 'Jordan'), ', ');
+
+        return [
+            'name' => $event->name,
+            'dates' => $dates,
+            'venue' => $event->venue?->name ?? 'To be confirmed',
+            'location' => $location ?: 'Amman, Jordan',
+        ];
+    }
+
     public static function defaultData(Event $event, string $type = 'client', ?Model $party = null): array
     {
         // Non-client documents start lean: a title, the event context, the
         // counterparty, and an empty body the planner fills. The rich clause
         // libraries per type arrive with the template phase.
         if ($type !== 'client') {
-            $dates = $event->starts_at && $event->ends_at
-                ? $event->starts_at->format('j').'–'.$event->ends_at->format('j M Y')
-                : ($event->starts_at?->format('j M Y') ?? 'To be confirmed');
-            $location = trim(($event->city ? $event->city.', ' : '').($event->country ?? 'Jordan'), ', ');
+            $eventSummary = self::liveEventSummary($event);
 
             $base = [
                 'meta' => [
                     'title_en' => self::TYPES[$type]['label'].($party?->name ? ' — '.$party->name : ''),
                     'title_ar' => '',
-                    'place' => $location ?: 'Amman, Jordan',
+                    'place' => $eventSummary['location'],
                     'date' => now()->format('j F Y'),
                 ],
                 'currency' => $event->currency ?: CompanyProfile::currency(),
-                'event' => [
-                    'name' => $event->name,
-                    'dates' => $dates,
-                    'venue' => $event->venue?->name ?? 'To be confirmed',
-                    'location' => $location ?: 'Amman, Jordan',
-                ],
+                'event' => $eventSummary,
                 'counterparty' => [
                     'name_en' => $party?->name ?? '',
                     'email' => $party->email ?? null,
@@ -293,25 +310,17 @@ class EventContract extends Model
         // saying the project is worth nothing).
         $forecast = $event->costForecast();
         $estimated = $forecast['forecast'] ?: $forecast['cap'];
-        $dates = $event->starts_at && $event->ends_at
-            ? $event->starts_at->format('j').'–'.$event->ends_at->format('j M Y')
-            : ($event->starts_at?->format('j M Y') ?? 'To be confirmed');
-        $location = trim(($event->city ? $event->city.', ' : '').($event->country ?? 'Jordan'), ', ');
+        $eventSummary = self::liveEventSummary($event);
 
         return [
             'meta' => [
                 'title_en' => 'Event Management Services Agreement',
                 'title_ar' => 'اتفاقية خدمات إدارة الفعاليات',
-                'place' => $location ?: 'Amman, Jordan',
+                'place' => $eventSummary['location'],
                 'date' => now()->format('j F Y'),
                 'confidentiality' => 'Confidential',
             ],
-            'event' => [
-                'name' => $event->name,
-                'dates' => $dates,
-                'venue' => $event->venue?->name ?? 'To be confirmed',
-                'location' => $location ?: 'Amman, Jordan',
-            ],
+            'event' => $eventSummary,
             'first_party' => [
                 'name_en' => 'Al Sattam for Exhibitions, Conferences & Consulting Services, trading as Elite Business Hub',
                 'name_ar' => 'شركة السطام للمعارض والمؤتمرات والخدمات الاستشارية، وتعمل تحت الاسم التجاري إيليت بزنس هَب',

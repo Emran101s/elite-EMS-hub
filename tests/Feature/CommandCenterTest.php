@@ -31,12 +31,15 @@ class CommandCenterTest extends TestCase
     {
         $user = $this->actor();
 
+        // Phase D: action-first — the KPI strip, Today's Command Queue and
+        // Executive Intelligence replaced the old figures row and the
+        // "book by stage" card that used to carry these labels.
         $this->actingAs($user)->get('/')->assertOk()
-            ->assertSee('Today')
+            ->assertSee('Command Queue')
             ->assertSee('The week ahead')
-            ->assertSee('The book')
-            ->assertSee('Signals')
-            ->assertSee('In the book');
+            ->assertSee('Nearest missions')
+            ->assertSee('Command Briefing')
+            ->assertSee('Active Events');
     }
 
     public function test_the_operations_room_is_gone_and_its_url_lands_here(): void
@@ -89,17 +92,18 @@ class CommandCenterTest extends TestCase
     {
         $user = $this->actor();
 
-        $figures = collect(Livewire::actingAs($user)->test(Dashboard::class)->viewData('figures'));
+        // Renamed for Phase D's KPI strip — same figures, same computation.
+        $kpis = collect(Livewire::actingAs($user)->test(Dashboard::class)->viewData('kpis'));
         $service = app(EventHealthService::class);
 
         $expected = Event::whereNull('archived_at')->with(EventHealthService::RELATIONS)->get()
             ->filter(fn (Event $e) => in_array($service->breakdown($e)['status'], ['at_risk', 'behind'], true))
             ->count();
 
-        $this->assertSame($expected, $figures->firstWhere('label', 'At risk')['value']);
+        $this->assertSame($expected, $kpis->firstWhere('label', 'Operational Risks')['value']);
         $this->assertSame(
             Event::whereNull('archived_at')->count(),
-            $figures->firstWhere('label', 'In the book')['value'],
+            $kpis->firstWhere('label', 'Active Events')['value'],
         );
     }
 }

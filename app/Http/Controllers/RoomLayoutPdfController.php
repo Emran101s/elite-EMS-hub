@@ -36,7 +36,7 @@ class RoomLayoutPdfController extends Controller
             'event' => $event,
             'room' => $room,
             'theme' => $event->theme(),
-            'elements' => $room->layout ?? [],
+            'elements' => is_array($room->layout) ? $room->layout : [],
             'css' => $this->compiledCss(),
         ])->render();
 

@@ -11,6 +11,7 @@ use App\Models\EventTransport;
 use App\Models\User;
 use App\Observers\BudgetSourceObserver;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +31,25 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->defineGates();
         $this->watchBudgetSources();
+        $this->guardPilotMail();
+    }
+
+    /**
+     * Phase 2's pilot-week safeguard: every outbound message, whatever its
+     * real recipient, is redirected to one internal inbox — so a mistake in
+     * an approval/registration/invite flow during the first days of real use
+     * cannot reach an actual attendee or client contact.
+     *
+     * Dormant by default. Both conditions must be true to activate:
+     * production environment AND MAIL_PILOT_REDIRECT set in .env. Neither is
+     * true today, so this has no effect until the pilot host is deliberately
+     * configured for it — see docs/38 §3.2 step 5.
+     */
+    private function guardPilotMail(): void
+    {
+        if (app()->environment('production') && config('mail.pilot_redirect')) {
+            Mail::alwaysTo(config('mail.pilot_redirect'));
+        }
     }
 
     /**

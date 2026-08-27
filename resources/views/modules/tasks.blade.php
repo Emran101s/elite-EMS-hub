@@ -1,64 +1,69 @@
-<x-layouts.app title="Tasks" subtitle="Everything on the to-do list across events and projects.">
-    {{-- ══ Task status strip ══
-         This was the platform's last dark slab. Every other page opens with
-         the same divided card of figures, and a page that opens differently
-         reads as a page from a different product. ══ --}}
+<x-layouts.app title="Tasks" :hide-title-row="true">
     @php
         $totalTasks = max($counts->sum(), 1);
-        $donePct = (int) round((($counts['done'] ?? 0) + ($counts['approved'] ?? 0)) / $totalTasks * 100);
+        $closedCount = ($counts['done'] ?? 0) + ($counts['approved'] ?? 0);
+        $donePct = (int) round($closedCount / $totalTasks * 100);
 
-        // The tones follow the model's own stage colours, so a new status can
-        // never arrive here wearing the wrong one.
-        $stageTone = [
-            'todo' => 'navy', 'doing' => 'blue', 'review' => 'gold',
-            'approved' => 'green', 'done' => 'green', 'cancelled' => 'red',
-        ];
+        $stages = collect(\App\Models\Task::STAGES)->mapWithKeys(fn ($stage, $key) => [
+            $key => ['label' => $stage[0], 'hex' => $stage[1], 'count' => $counts[$key] ?? 0],
+        ]);
+
+        // Active/Closed, not six near-empty buckets — the page shows 25 tasks
+        // at a time, and a finer split than the model's own open/closed flag
+        // risks a section with nothing in it depending on which page you're on.
+        $active = $tasks->filter(fn ($t) => \App\Models\Task::STAGES[$t->status][2] ?? true);
+        $closed = $tasks->filter(fn ($t) => ! (\App\Models\Task::STAGES[$t->status][2] ?? true));
     @endphp
 
-    <x-figure-strip class="mb-4" :figures="$counts->filter(fn ($c) => $c > 0)
-        ->map(fn ($count, $status) => [
-            'label' => \App\Models\Task::STAGES[$status][0] ?? str($status)->headline()->toString(),
-            'note' => round($count / $totalTasks * 100) . '% of the board',
-            'value' => $count,
-            'icon' => 'clipboard',
-            'tone' => $stageTone[$status] ?? 'blue',
-            'href' => route('tasks.index', ['status' => $status]),
-        ])->values()->all()" />
+    <x-cc.header eyebrow="Task Command" title="Tasks" subtitle="Everything on the to-do list across events and projects." />
 
-    <div class="card mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-        <span class="eyebrow">Completion</span>
-        <div class="h-2 min-w-[180px] flex-1 overflow-hidden rounded-full bg-navy-50">
-            <div class="h-full rounded-full bg-emerald-500" style="width: {{ $donePct }}%"></div>
+    <div class="mt-5 grid gap-4 lg:grid-cols-[1fr_260px]">
+        <x-tasks.stage-flow :stages="$stages" />
+
+        <div class="flex items-center gap-4 rounded-lg border border-line bg-white p-5">
+            <div class="ccx-ring h-[72px] w-[72px] shrink-0" style="--ccx-ring: var(--color-success); --ccx-ring-pct: {{ $donePct }}%">
+                <span class="ccx-ring-value !text-[16px]">{{ $donePct }}%</span>
+            </div>
+            <div class="min-w-0">
+                <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Completion</p>
+                <p class="mt-1 text-[13px] font-semibold text-ink">{{ $closedCount }} of {{ $counts->sum() }} closed</p>
+                <p class="mt-0.5 text-[11.5px] text-muted">Done + Approved</p>
+            </div>
         </div>
-        <span class="pf text-[15px] font-black text-navy-950">{{ $donePct }}%</span>
-        <span class="text-[11.5px] text-muted">{{ ($counts['done'] ?? 0) + ($counts['approved'] ?? 0) }} of {{ $counts->sum() }} closed</span>
     </div>
 
-    <div class="card divide-y divide-line">
-        @forelse ($tasks as $task)
-            <div class="flex items-center gap-4 px-6 py-4">
-                <span @class([
-                        'h-2.5 w-2.5 shrink-0 rounded-full',
-                        'bg-track' => $task->status === 'done',
-                        'bg-warn' => $task->status === 'doing',
-                        'bg-navy-200' => $task->status === 'todo',
-                    ])></span>
-                <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold text-navy-900">{{ $task->title }}</p>
-                    <p class="mt-0.5 text-xs text-muted">
-                        @if ($task->event) {{ $task->event->name }} @endif
-                        @if ($task->assignee) · {{ $task->assignee->name }} @endif
-                    </p>
-                </div>
-                @if ($task->priority === 'urgent' || $task->priority === 'high')
-                    <span class="rounded-full bg-risk/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase text-red-700">{{ $task->priority }}</span>
-                @endif
-                <p class="hidden w-24 text-right text-xs text-muted sm:block">{{ $task->due_on?->format('j M') }}</p>
-                <x-status-badge :status="$task->status" class="hidden sm:inline-flex" />
+    <div class="mt-5 space-y-4">
+        <div class="overflow-hidden rounded-lg border border-line bg-white">
+            <div class="flex items-center gap-2 border-b border-line bg-page px-5 py-3">
+                <h2 class="text-[13px] font-bold text-ink">Active</h2>
+                <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $active->count() }}</span>
             </div>
-        @empty
-            <p class="px-6 py-12 text-center text-sm text-muted">No tasks yet.</p>
-        @endforelse
+            <div class="divide-y divide-line">
+                @forelse ($active as $task)
+                    <x-tasks.task-row :task="$task" />
+                @empty
+                    <p class="px-5 py-10 text-center text-[13px] text-muted">Nothing active on this page.</p>
+                @endforelse
+            </div>
+        </div>
+
+        @if ($closed->isNotEmpty())
+            <div class="overflow-hidden rounded-lg border border-line bg-white">
+                <div class="flex items-center gap-2 border-b border-line bg-page px-5 py-3">
+                    <h2 class="text-[13px] font-bold text-ink">Closed</h2>
+                    <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $closed->count() }}</span>
+                </div>
+                <div class="divide-y divide-line">
+                    @foreach ($closed as $task)
+                        <x-tasks.task-row :task="$task" />
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if ($tasks->isEmpty())
+            <div class="rounded-lg border border-line bg-white px-5 py-12 text-center text-[13px] text-muted">No tasks yet.</div>
+        @endif
     </div>
 
     <div class="mt-4">{{ $tasks->links() }}</div>

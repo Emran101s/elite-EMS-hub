@@ -52,7 +52,7 @@ class InvoiceTest extends TestCase
         $this->assertSame($p->contract_id, $invoice->contract_id);
         $this->assertSame('draft', $invoice->status);
         $this->assertCount(1, $invoice->lines);
-        $this->assertSame($p->amount_cents, $invoice->subtotalCents());
+        $this->assertEquals($p->amount_cents, $invoice->subtotalCents());
         $this->assertSame($p->due_on?->toDateString(), $invoice->due_on?->toDateString(),
             'the promise the contract made is the date it is due');
     }
@@ -71,7 +71,7 @@ class InvoiceTest extends TestCase
         $invoice->lines->first()->update(['unit_cents' => 12345, 'description' => 'Amended']);
 
         $this->assertSame($was, $p->fresh()->amount_cents, 'the installment is untouched');
-        $this->assertSame(12345, $invoice->fresh()->load('lines')->subtotalCents());
+        $this->assertEquals(12345, $invoice->fresh()->load('lines')->subtotalCents());
         $this->assertSame($p->id, $invoice->lines->first()->payment_id, 'provenance survives the edit');
     }
 
@@ -89,9 +89,21 @@ class InvoiceTest extends TestCase
         $invoice->load('lines');
 
         // 3 × 33.33 = 99.99, 1.5 × 1.00 = 1.50 → 101.49
-        $this->assertSame(10149, $invoice->subtotalCents());
+        $this->assertEquals(10149, $invoice->subtotalCents());
         $this->assertSame((int) round(10149 * 0.16), $invoice->taxCents());
-        $this->assertSame(10149 + (int) round(10149 * 0.16), $invoice->totalCents());
+        $this->assertEquals(10149 + (int) round(10149 * 0.16), $invoice->totalCents());
+    }
+
+    public function test_line_unit_cents_are_whole_integers_not_decimals(): void
+    {
+        // Regression: a decimal:1 cast returns "1250.0", which Postgres rejects
+        // for this integer column. unit_cents is whole integer cents.
+        $this->actor();
+        $invoice = Invoice::create(['number' => Invoice::nextNumber(), 'status' => 'draft']);
+        $line = $invoice->lines()->create(['description' => 'Fee', 'qty' => 1, 'unit_cents' => 12_50]);
+
+        $this->assertIsInt($line->fresh()->unit_cents, 'unit_cents is an integer, not a decimal:1 string');
+        $this->assertSame(1250, $line->fresh()->unit_cents);
     }
 
     /**
@@ -202,7 +214,7 @@ class InvoiceTest extends TestCase
         $c->call('record', $invoice->id);
 
         $invoice = $invoice->fresh()->load('lines');
-        $this->assertSame($invoice->totalCents(), $invoice->paid_cents);
+        $this->assertEquals($invoice->totalCents(), $invoice->paid_cents);
         $this->assertSame('paid', $invoice->state());
         $this->assertSame('sent', $invoice->status,
             'money against a draft means it was sent and nobody said so');
@@ -217,8 +229,8 @@ class InvoiceTest extends TestCase
         $invoice = Invoice::with('lines')->latest('id')->firstOrFail();
 
         $c->call('record', $invoice->id, 9_999_999);
-        $this->assertSame($invoice->fresh()->load('lines')->totalCents(), $invoice->fresh()->paid_cents);
-        $this->assertSame(0, $invoice->fresh()->load('lines')->outstandingCents());
+        $this->assertEquals($invoice->fresh()->load('lines')->totalCents(), $invoice->fresh()->paid_cents);
+        $this->assertEquals(0, $invoice->fresh()->load('lines')->outstandingCents());
     }
 
     /**
@@ -329,7 +341,7 @@ class InvoiceTest extends TestCase
         $c->call('record', $invoice->id, $invoice->totalCents() / 100 / 2);   // half
 
         $p->refresh();
-        $this->assertSame((int) round($invoice->totalCents() / 2), $p->paid_cents);
+        $this->assertEquals((int) round($invoice->totalCents() / 2), $p->paid_cents);
         $this->assertSame('partial', $p->status());
     }
 
@@ -390,6 +402,36 @@ class InvoiceTest extends TestCase
         $p->refresh()->load('invoiceLines.invoice');
         $this->assertFalse($p->isInvoiced());
         $this->assertContains($p->id, $c->viewData('ready')->pluck('id'));
+    }
+
+    /**
+     * A deleted draft's row is gone from every screen, but its number is not
+     * gone from the unique index — nextNumber() has to know that, or the very
+     * next raise recomputes the same "free" number, collides, and — because
+     * that computation is deterministic — fails the same way on every retry
+     * createNumbered() makes and surfaces as a raw 500. This is the sequence
+     * that produced exactly that 500 in the running app: raise, delete the
+     * draft, raise again.
+     */
+    public function test_raising_again_after_a_deleted_draft_does_not_collide(): void
+    {
+        $user = $this->actor();
+        $p = $this->payment();
+
+        $first = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $firstInvoice = Invoice::latest('id')->firstOrFail();
+        $firstNumber = $firstInvoice->number;
+
+        $first->call('destroyDraft', $firstInvoice->id);
+        $this->assertSoftDeleted('invoices', ['id' => $firstInvoice->id]);
+
+        // The installment is ready again — raising it must succeed, not throw.
+        $second = Livewire::actingAs($user)->test(InvoicesLedger::class)->call('raise', $p->id);
+        $second->assertOk();
+
+        $secondInvoice = Invoice::latest('id')->firstOrFail();
+        $this->assertNotSame($firstNumber, $secondInvoice->number,
+            'a deleted draft\'s number must stay retired, never reissued to a different invoice');
     }
 
     /**

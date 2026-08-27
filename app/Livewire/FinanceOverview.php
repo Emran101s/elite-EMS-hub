@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Services\PortfolioFinance;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -17,16 +18,25 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Finance',
-    'subtitle' => 'The whole book — what it earns, what it costs, and who owes whom.',
+    'hideTitleRow' => true,
 ])]
 class FinanceOverview extends Component
 {
-    /** net · margin · income · cost */
+    /** net · margin · income · cost · charged */
+    #[Url(as: 'sort')]
     public string $sort = 'net';
+
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
+
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
 
     public function sortBy(string $key): void
     {
-        if (in_array($key, ['net', 'margin', 'income', 'cost'], true)) {
+        if (in_array($key, ['net', 'margin', 'income', 'cost', 'charged'], true)) {
             $this->sort = $key;
         }
     }
@@ -45,8 +55,12 @@ class FinanceOverview extends Component
             default => $rows->sortByDesc('net'),
         };
 
+        $rows = $sorted->values();
+        $selected = $rows->first(fn (array $r) => ($r['event']->id ?? null) === $this->selectedId) ?? $rows->first();
+
         return view('livewire.finance-overview', [
-            'rows' => $sorted->values(),
+            'rows' => $rows,
+            'selected' => $selected,
             'totals' => $finance->totals(),
             'receivables' => $finance->receivables(),
             'payables' => $finance->payables(),

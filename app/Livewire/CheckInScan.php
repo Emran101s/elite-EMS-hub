@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Event;
 use App\Models\EventAttendee;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -21,7 +22,7 @@ use Livewire\Component;
  * code — and that the only thing it can do is mark somebody present. It
  * cannot read the list, edit anyone, or say who else is coming.
  */
-#[Layout('components.layouts.guest', ['width' => 'max-w-md'])]
+#[Layout('components.layouts.guest-eo', ['width' => 'max-w-md'])]
 class CheckInScan extends Component
 {
     public Event $event;
@@ -105,7 +106,7 @@ class CheckInScan extends Component
      * front of them. Today's bookings only — a badge scanned at a Tuesday
      * workshop should not offer Thursday's.
      */
-    public function sessionsToday(): \Illuminate\Support\Collection
+    public function sessionsToday(): Collection
     {
         if (! $this->attendee) {
             return collect();

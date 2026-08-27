@@ -3,12 +3,13 @@
 namespace App\Livewire;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Clients'])]
+#[Layout('components.layouts.app', ['title' => 'Clients', 'hideTitleRow' => true])]
 class ClientsManager extends Component
 {
     use WithFileUploads;
@@ -16,6 +17,10 @@ class ClientsManager extends Component
     public bool $showForm = false;
 
     public ?int $editingId = null;
+
+    /** Soft Command MDA — selected client in the queue. */
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
 
     public string $name = '';
 
@@ -32,7 +37,13 @@ class ClientsManager extends Component
     /** Uploaded logo (optional). */
     public $logo = null;
 
+    #[Url(as: 'q')]
     public string $search = '';
+
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
 
     public function newItem(): void
     {
@@ -44,6 +55,7 @@ class ClientsManager extends Component
     public function edit(int $id): void
     {
         $c = Client::findOrFail($id);
+        $this->selectedId = $c->id;
         $this->editingId = $c->id;
         $this->name = $c->name;
         $this->organization = $c->organization ?? '';
@@ -110,6 +122,9 @@ class ClientsManager extends Component
             ->withCount('events')
             ->orderBy('name')->get();
 
-        return view('livewire.clients-manager', ['clients' => $clients]);
+        return view('livewire.clients-manager', [
+            'clients' => $clients,
+            'selected' => $clients->firstWhere('id', $this->selectedId) ?? $clients->first(),
+        ]);
     }
 }

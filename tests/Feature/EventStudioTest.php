@@ -35,7 +35,7 @@ class EventStudioTest extends TestCase
             ->assertSee('Event Studio')
             ->assertSee('Define your event. The platform builds everything around it.')
             ->assertSee('Live preview')
-            ->assertSee('Event Identity');
+            ->assertSee('Identity');
     }
 
     public function test_a_room_is_checked_when_you_leave_it(): void
@@ -45,17 +45,57 @@ class EventStudioTest extends TestCase
         // Nothing answered: the first room refuses to let you past.
         Livewire::actingAs($user)->test(EventCreate::class)
             ->call('next')
-            ->assertHasErrors(['name', 'template'])
+            ->assertHasErrors(['name', 'category', 'originKind'])
             ->assertSet('step', 1);
 
-        // Answered: it lets you through to When & Where.
+        // Answered: it lets you through to Origin.
         Livewire::actingAs($user)->test(EventCreate::class)
             ->set('name', 'Arab Investment Summit 2027')
-            ->set('new_client', 'Arab Investment Group')
-            ->call('chooseTemplate', 'summit')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
             ->call('next')
             ->assertHasNoErrors()
             ->assertSet('step', 2);
+    }
+
+    public function test_origin_decides_whether_a_client_is_required(): void
+    {
+        $user = $this->actor();
+
+        // Commercial: a client is required to leave Origin.
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('name', 'Arab Investment Summit 2027')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
+            ->call('next') // leaves Identity, lands on Origin
+            ->assertSet('step', 2)
+            ->set('originSource', 'proposal')
+            ->call('next') // tries to leave Origin without a client
+            ->assertHasErrors(['client_id'])
+            ->assertSet('step', 2);
+
+        // Internal: no client needed, Origin lets you straight through.
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('name', 'All-Hands 2027')
+            ->call('chooseCategory', 'corporate')
+            ->set('originKind', 'internal')
+            ->call('next')
+            ->assertSet('step', 2)
+            ->set('originSource', 'initiative')
+            ->call('next')
+            ->assertHasNoErrors()
+            ->assertSet('step', 3);
+    }
+
+    public function test_switching_origin_branch_clears_the_stale_source(): void
+    {
+        $user = $this->actor();
+
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'deal')
+            ->set('originKind', 'internal')
+            ->assertSet('originSource', '');
     }
 
     public function test_the_preview_reports_only_what_has_been_answered(): void
@@ -66,8 +106,10 @@ class EventStudioTest extends TestCase
         $this->assertSame(0, $c->instance()->readiness()['pct'], 'an empty studio has defined nothing');
 
         $c->set('name', 'Arab Investment Summit 2027')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Arab Investment Group')
-            ->call('chooseTemplate', 'summit')
             ->set('starts_at', now()->addMonths(3)->toDateString())
             ->set('city', 'Amman');
 
@@ -76,6 +118,9 @@ class EventStudioTest extends TestCase
         $this->assertGreaterThan(0, $after['pct']);
         $this->assertLessThan(100, $after['pct'], 'it does not claim progress that has not been made');
         $this->assertContains('A sentence about it', $after['missing']);
+        $this->assertFalse($after['sections']['identity']['complete'], 'no description yet');
+        $this->assertTrue($after['sections']['origin']['complete']);
+        $this->assertTrue($after['sections']['modules']['complete'], 'choosing a category pre-enables its modules');
     }
 
     /**
@@ -89,8 +134,8 @@ class EventStudioTest extends TestCase
         $user = $this->actor();
 
         $studio = Livewire::actingAs($user)->test(EventCreate::class)
-            ->call('chooseTemplate', 'summit')
-            ->call('goTo', 3);
+            ->call('chooseCategory', 'summit')
+            ->call('goTo', 4);
 
         foreach (array_keys(Event::HUB_MODULES) as $key) {
             $studio->assertSeeHtml("toggleModule('{$key}')");
@@ -136,15 +181,17 @@ class EventStudioTest extends TestCase
         // the same session would open on the first one's answers.
         session()->forget('event-studio.draft');
 
-        // Named but undated: launching bounces back to When & Where, room 2.
+        // Everything but the date: launching bounces back to Blueprint, room 3.
         Livewire::actingAs($user)->test(EventCreate::class)
             ->set('name', 'Arab Investment Summit 2027')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Arab Investment Group')
-            ->call('chooseTemplate', 'summit')
             ->set('step', 5)
             ->call('save')
             ->assertHasErrors(['starts_at'])
-            ->assertSet('step', 2);
+            ->assertSet('step', 3);
     }
 
     public function test_nothing_is_written_until_launch(): void
@@ -154,8 +201,10 @@ class EventStudioTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->set('name', 'Arab Investment Summit 2027')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Arab Investment Group')
-            ->call('chooseTemplate', 'summit')
             ->set('starts_at', now()->addMonths(3)->toDateString())
             ->call('goTo', 5);
 
@@ -169,9 +218,10 @@ class EventStudioTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->set('name', 'Arab Investment Summit 2027')
+            ->call('chooseCategory', 'summit')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Arab Investment Group')
-            ->call('chooseTemplate', 'summit')
-            ->set('statusPill', 'proposal')
             ->set('priority', 'high')
             ->set('starts_at', $start->toDateString())
             ->set('ends_at', $start->copy()->addDays(2)->toDateString())
@@ -193,5 +243,25 @@ class EventStudioTest extends TestCase
         // The dates scaffold the agenda, which is what the preview promised.
         $this->assertCount(3, $event->agendaDays);
         $this->assertNotEmpty($event->enabled_modules);
+    }
+
+    public function test_an_internal_event_launches_without_a_crm_client(): void
+    {
+        $user = $this->actor();
+        $before = Client::count();
+
+        Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('name', 'Annual All-Hands')
+            ->call('chooseCategory', 'corporate')
+            ->set('originKind', 'internal')
+            ->set('originSource', 'executive')
+            ->set('starts_at', now()->addMonths(2)->toDateString())
+            ->call('save');
+
+        $event = Event::where('name', 'Annual All-Hands')->firstOrFail();
+
+        $this->assertNull($event->client_id);
+        $this->assertSame('confirmed', $event->stage);
+        $this->assertSame($before, Client::count(), 'no client should be invented for an internal event');
     }
 }

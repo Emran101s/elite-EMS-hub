@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Venue;
 use Illuminate\Support\Collection;
 
 /**
@@ -39,6 +40,24 @@ class ResourceConflicts
             ->concat($this->teamClashes($events))
             ->concat($this->supplierOverbooking($events))
             ->values();
+    }
+
+    /** This one venue's own clashes — the same overlap rule, scoped to a single venue. */
+    public function forVenue(Venue $venue): Collection
+    {
+        $events = Event::active()
+            ->where('venue_id', $venue->id)
+            ->whereNotNull('starts_at')
+            ->orderBy('starts_at')
+            ->get();
+
+        return collect($this->overlappingPairs($events))->map(fn ($pair) => [
+            'type' => 'venue',
+            'severity' => 'risk',
+            'label' => $venue->name,
+            'detail' => $this->pairLine($pair),
+            'events' => $this->eventRefs($pair),
+        ]);
     }
 
     /** Every pair of overlapping events sharing a venue. */

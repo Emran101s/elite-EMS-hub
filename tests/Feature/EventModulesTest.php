@@ -94,7 +94,7 @@ class EventModulesTest extends TestCase
 
         $t = $event->transport()->firstOrFail();
         $this->assertSame('Airport → Hotel', $t->route);
-        $this->assertSame(25000, $t->cost_cents);
+        $this->assertEquals(25000, $t->cost_cents);
         $this->assertSame(14, $t->seats());          // 7 per van × 2 vans
         $this->assertFalse($t->isOverbooked());
     }
@@ -160,7 +160,7 @@ class EventModulesTest extends TestCase
         $b = $event->roomBlocks()->firstOrFail();
         $this->assertSame(5, $b->nights());
         $this->assertSame(10, $b->roomNights());
-        $this->assertSame(150000, $b->totalCents());
+        $this->assertEquals(150000, $b->totalCents());
     }
 
     public function test_currency_formatting_switches_symbol(): void

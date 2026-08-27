@@ -4,11 +4,11 @@ namespace App\Livewire;
 
 use App\Models\CompanyProfile;
 use App\Models\EventBudgetItem;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Defaults & Templates'])]
+#[Layout('components.layouts.app', ['title' => 'Defaults & Templates', 'hideTitleRow' => true])]
 class DefaultsSettings extends Component
 {
     /** @var array<int,string> */

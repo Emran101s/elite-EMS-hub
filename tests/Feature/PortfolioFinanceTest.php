@@ -6,6 +6,8 @@ use App\Livewire\FinanceOverview;
 use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
+use App\Models\EventContract;
+use App\Models\EventContractPayment;
 use App\Models\EventIncomeItem;
 use App\Models\User;
 use App\Services\CurrencyService;
@@ -236,6 +238,36 @@ class PortfolioFinanceTest extends TestCase
         $this->assertSame(40_000, $row['clientIncome'], 'the client has been billed 40,000');
         $this->assertSame(60_000, $row['unbilled'], 'the sponsor money is not billing for the work');
         $this->assertSame(940_000, $row['income'], 'but it is still income, and it still counts towards net');
+    }
+
+    /**
+     * A signed contract you have not been paid on is money at risk — the whole
+     * point of the "Revenue at Risk" figure. The client is booked at what has
+     * been collected, so the contract's outstanding instalments have to be added
+     * explicitly or a fully-unpaid deal reports nothing owed while the ledger
+     * holds real instalments — exactly what made the KPI read zero next to a
+     * receivables panel listing the money.
+     */
+    public function test_a_signed_but_unpaid_contract_is_money_at_risk(): void
+    {
+        $event = Event::factory()->create(['stage' => 'planning']);
+        $contract = EventContract::forEvent($event);
+        EventContractPayment::create([
+            'event_id' => $event->id, 'contract_id' => $contract->id,
+            'label' => 'On signature', 'pct' => 100, 'amount_cents' => 350_000_00, 'sort' => 1,
+        ]);
+
+        $row = app(PortfolioFinance::class)->statement()->first();
+        $this->assertSame(0, $row['collected'], 'nothing paid yet');
+        $this->assertSame(350_000_00, $row['receivable'], 'the whole contract is owed, not zero');
+        $this->assertSame(350_000_00, app(PortfolioFinance::class)->totals()['receivable']);
+
+        // Pay part of it — only the shortfall is still at risk.
+        EventContractPayment::where('event_id', $event->id)->first()->update(['paid_cents' => 150_000_00]);
+
+        $row = app(PortfolioFinance::class)->statement()->first();
+        $this->assertSame(150_000_00, $row['collected']);
+        $this->assertSame(200_000_00, $row['receivable'], 'only the unpaid remainder is at risk');
     }
 
     public function test_the_portfolio_never_disagrees_with_the_event_it_links_to(): void

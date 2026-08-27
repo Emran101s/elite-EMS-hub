@@ -37,6 +37,8 @@ use App\Http\Controllers\TransportManifestPdfController;
 use App\Http\Controllers\TransportManifestTemplateController;
 use App\Http\Controllers\TransportMasterPlanPdfController;
 use App\Http\Controllers\TransportPlanTemplateController;
+use App\Http\Controllers\VenueDocumentController;
+use App\Http\Controllers\VenueStudioController;
 use App\Http\Controllers\VipTransferSheetPdfController;
 use App\Livewire\AiAssistant;
 use App\Livewire\ArrivalsDesk;
@@ -80,6 +82,7 @@ use App\Models\EventSponsor;
 use App\Models\Project;
 use App\Models\RegistrationTemplate;
 use App\Models\Requirement;
+use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Task;
 use App\Models\TaxonomyTerm;
@@ -133,10 +136,22 @@ Route::middleware('auth')->group(function () {
     // hub's own button, lands on the dashboard instead of a 404.
     Route::redirect('/operations-room', '/')->name('operations-room');
 
-    // Design prototype. Real records, a proposed visual language; nothing in
-    // the platform depends on it, so it can be kept or deleted whole.
-    Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
-    Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
+    // Design prototypes and component galleries — local development only.
+    //
+    // These render real records behind a proposed visual language. Nothing in
+    // the platform depends on them, and they are genuinely useful while the
+    // remaining modules are converted onto eo-*, so they are kept rather than
+    // deleted. But they are scaffolding: on a shared or pilot host they are
+    // surface area a colleague can reach and be confused by, and one of them
+    // prints live event data in an unreviewed layout.
+    //
+    // Gated on `local` rather than `! production` deliberately — a pilot host
+    // running APP_ENV=staging must not get them either. Tests run as
+    // `testing`, and none of them exercise these routes.
+    if (app()->environment('local')) {
+        Route::get('/concept/flow', FlowBoardController::class)->name('concept.flow');
+        Route::get('/concept/nav', NavConceptController::class)->name('concept.nav');
+    }
 
     Route::get('/events', EventsIndex::class)->name('events.index');
 
@@ -296,6 +311,14 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/venues', VenuesManager::class)->name('venues.index');
 
+    Route::get('/venues/{venue}', [VenueStudioController::class, 'show'])
+        ->whereNumber('venue')->name('venues.show');
+
+    Route::get('/venues/{venue}/documents/{document}/download', [VenueDocumentController::class, 'download'])
+        ->whereNumber('venue')->whereNumber('document')->name('venues.documents.download');
+    Route::get('/venues/{venue}/documents/{document}/view', [VenueDocumentController::class, 'view'])
+        ->whereNumber('venue')->whereNumber('document')->name('venues.documents.view');
+
     Route::get('/requirements', RequirementsCatalog::class)->name('requirements.index');
     Route::get('/requirements/pdf', EquipmentPdfController::class)->name('requirements.pdf');
 
@@ -326,6 +349,7 @@ Route::middleware('auth')->group(function () {
             'sponsor-packages.index' => count(CompanyProfile::current()->sponsorPackages()),
             'transport-settings.index' => TransportVehicle::count() + TransportDriver::count(),
             'registration-templates.index' => RegistrationTemplate::count(),
+            'catalogue.index' => ServiceItem::count(),
         ],
     ]))->name('settings.index');
     Route::get('/settings/clients', ClientsManager::class)->name('clients.index');

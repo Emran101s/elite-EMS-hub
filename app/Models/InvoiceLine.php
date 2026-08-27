@@ -42,6 +42,10 @@ class InvoiceLine extends Model
     {
         return [
             'qty' => 'float',
+            // Whole integer cents. A decimal:1 cast serialises even 25000 as
+            // "25000.0", which SQLite tolerates but Postgres rejects for this
+            // integer column (the decimal(15,1) widening never converts it on
+            // Postgres). A unit price is exact to the cent.
             'unit_cents' => 'integer',
         ];
     }
@@ -57,9 +61,15 @@ class InvoiceLine extends Model
         return $this->belongsTo(EventContractPayment::class, 'payment_id');
     }
 
-    /** Rounded once, here, so a total is never the sum of unrounded halves. */
-    public function amountCents(): int
+    /**
+     * Rounded once, here, so a total is never the sum of unrounded halves.
+     *
+     * Rounded to a tenth of a cent, not a whole one — unit_cents itself
+     * carries that same tenth now, and rounding it away here would just
+     * reintroduce the truncation at one remove.
+     */
+    public function amountCents(): float
     {
-        return (int) round($this->qty * $this->unit_cents);
+        return round($this->qty * (float) $this->unit_cents, 1);
     }
 }

@@ -29,6 +29,29 @@ class PortfolioFinance
     public function __construct(private readonly CurrencyService $fx) {}
 
     /**
+     * Reuse a collection the caller already loaded, instead of events()
+     * running its own query for it.
+     *
+     * Opt-in only — nothing about the default path changes. A caller that
+     * already has events loaded for its own purposes (Command Center, at
+     * least) can widen that eager-load once, by the handful of relations
+     * this service specifically needs (see events()'s own with([...]) for
+     * the list), and hand the result in here rather than paying for a
+     * second full portfolio query moments later.
+     *
+     * The caller is trusted to have loaded what statement() reads — this
+     * does not verify or lazy-load anything, on purpose: a service that
+     * silently patched gaps would hide exactly the N+1 this method exists
+     * to remove.
+     */
+    public function useEvents(Collection $events): static
+    {
+        $this->eventsMemo = $events;
+
+        return $this;
+    }
+
+    /**
      * The currency the whole book is reported in — the company's own.
      *
      * Events are run in whatever currency the client pays in, so a portfolio
@@ -94,13 +117,28 @@ class PortfolioFinance
             $charged = $in($priced['sell']);
             $net = $booked - $cost;
 
+            // The client is BOOKED at what has been collected (income['total']'s
+            // "report what you have, not what you hoped for" rule), so the client
+            // cancels out of booked − collected and a signed-but-unpaid contract
+            // would show no money owed — the exact hole that made "Revenue at
+            // Risk" read zero beside a receivables panel listing real instalments.
+            // The client's outstanding therefore comes straight off the contract
+            // schedule, the same source receivables()/overdueReceivable read.
+            // Sponsor and exhibitor shortfalls need no such help: they ARE booked
+            // at the agreed figure, so booked − collected already holds them.
+            $clientReceivable = $event->contract
+                ? $in((int) $event->contract->payments->sum(fn (EventContractPayment $p) => $p->outstandingCents()))
+                : 0;
+
             return [
                 'event' => $event,
                 'currency' => $cur,
                 // What has actually been contracted and sold.
                 'income' => $booked,
                 'collected' => $in($income['collected']),
-                'receivable' => max(0, $booked - $in($income['collected'])),
+                // Money owed to you: sponsor/exhibitor agreed-but-unpaid (held in
+                // booked − collected) plus the client's outstanding instalments.
+                'receivable' => max(0, $booked - $in($income['collected'])) + $clientReceivable,
                 // What the work is priced at, line by line. Not the same
                 // question: an event can be fully priced and have billed none
                 // of it, and the gap between the two is the invoice you owe.
@@ -116,7 +154,14 @@ class PortfolioFinance
                 'cost' => $cost,
                 'paid' => $paid,
                 'payable' => max(0, $cost - $paid),
+                // Realized net: income counts only money collected, so this
+                // goes deeply negative while contracts sit unpaid. Honest, but
+                // it reads as a loss on work that is priced profitably — so the
+                // priced net below is shown alongside it, never instead of it.
                 'net' => $net,
+                // Priced net: what the work is worth against its cost, billed
+                // or not. This is the "are these events profitable" answer.
+                'pricedNet' => $charged - $cost,
                 // Margin against income, not against budget — the question is
                 // what share of what you charge you keep.
                 'margin' => $booked > 0 ? (int) round($net / $booked * 100) : null,
@@ -153,10 +198,43 @@ class PortfolioFinance
             'paid' => (int) $rows->sum('paid'),
             'payable' => (int) $rows->sum('payable'),
             'net' => $income - $cost,
+            'pricedNet' => $charged - $cost,
             'margin' => $income > 0 ? (int) round(($income - $cost) / $income * 100) : null,
             'pricedMargin' => $charged > 0 ? (int) round(($charged - $cost) / $charged * 100) : null,
             'events' => $rows->count(),
+            'overdueReceivable' => $this->overdueReceivableCents(),
+            'overdueCount' => $this->overdueReceivableCount(),
         ];
+    }
+
+    /**
+     * Contract instalments money is owed against, past their due date and
+     * still short — the same rows receivables() lists, without its display
+     * cap. A partly-paid instalment counts here too: some of it landing does
+     * not make the rest on time, and EventContractPayment::status() would
+     * otherwise call that "partial" and drop it from "overdue" silently.
+     */
+    private function overdueReceivablesQuery()
+    {
+        return EventContractPayment::query()
+            ->with('event')
+            ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
+            ->whereNotNull('due_on')
+            ->where('due_on', '<', now()->toDateString())
+            ->whereColumn('paid_cents', '<', 'amount_cents');
+    }
+
+    /** Overdue money owed to you, converted into the book's base currency. */
+    public function overdueReceivableCents(): int
+    {
+        return (int) $this->overdueReceivablesQuery()->get()
+            ->sum(fn (EventContractPayment $p) => $this->toBase($p->outstandingCents(), $p->event?->currency));
+    }
+
+    /** How many instalments that is — portfolio-wide, not the "Due now" panel's take(). */
+    public function overdueReceivableCount(): int
+    {
+        return $this->overdueReceivablesQuery()->count();
     }
 
     /**

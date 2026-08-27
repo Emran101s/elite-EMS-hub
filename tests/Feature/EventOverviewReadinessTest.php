@@ -34,12 +34,32 @@ class EventOverviewReadinessTest extends TestCase
         $html = $this->actingAs($this->actor())
             ->get(route('events.hub', $event))->assertOk()->getContent();
 
-        // brief, contract, agenda, venue, transport, registration — all untouched.
-        $this->assertSame(6, substr_count($html, 'Not started'));
+        // Event Command Header pass: Overview's More Doors row only carries
+        // the four modules the Module Navigation Bar doesn't surface
+        // directly — brief, contract, registration (3, on a blank event;
+        // speakers has no status chip, only a count) — agenda/venue/
+        // transport moved off Overview entirely, since the nav bar already
+        // covers them. The Stage Radar/Orbit Journey ring is gone (removed
+        // outright, not replaced by another lifecycle diagram), so its 8
+        // stage cards no longer count here.
+        //
+        // Module Header/Inspector role-separation pass: Overview's own
+        // Inspector no longer falls back to Agenda's metrics (which used to
+        // read "Not started" on a blank event and contribute a 4th hit) — it
+        // reads the event's own readiness gates instead. A blank event has
+        // no agenda/speakers/suppliers/transport gates to fail, so the only
+        // gate that applies (Venue assigned) sits alongside two gates that
+        // start met (Approvals cleared, No open severe risk) — 2 of 3 met
+        // reads "On Track", not "Not started". 3, not 3 + 1.
+        $this->assertSame(3, substr_count($html, 'Not started'));
     }
 
     public function test_a_full_agenda_reads_ready(): void
     {
+        // Mission Control pass: the Agenda door (and its "N sessions" line)
+        // is gone from Overview — Agenda is rail-only now. The real
+        // equivalent signal on today's Overview is Mission Timeline picking
+        // up the session itself, since it starts in the future.
         $event = Event::factory()->create();
         $day = EventAgendaDay::create(['event_id' => $event->id, 'date' => now()->addWeek(), 'label' => 'Day 1']);
         EventAgendaSession::create([
@@ -50,7 +70,7 @@ class EventOverviewReadinessTest extends TestCase
         $html = $this->actingAs($this->actor())
             ->get(route('events.hub', $event->fresh()))->assertOk()->getContent();
 
-        $this->assertStringContainsString('1 session', $html);
+        $this->assertStringContainsString('Opening keynote', $html);
     }
 
     public function test_a_flagged_movement_needs_attention_not_in_progress(): void
@@ -75,8 +95,11 @@ class EventOverviewReadinessTest extends TestCase
             ->get(route('events.hub', $event))->assertOk()->getContent();
 
         $this->assertStringContainsString('Registration', $html);
-        // brief, contract, agenda, venue, transport are still untouched — only registration moved.
-        $this->assertSame(5, substr_count($html, 'Not started'));
+        // Only brief + contract are left "Not started" in the More Doors
+        // row (registration itself now reads Ready) — see
+        // test_untouched_modules_read_not_started for why the Event
+        // Inspector's own status pill no longer adds a 3rd hit.
+        $this->assertSame(2, substr_count($html, 'Not started'));
     }
 
     /** A disabled module's door must not appear at all — it would only bounce back to Overview. */

@@ -3,11 +3,11 @@
 namespace App\Livewire;
 
 use App\Models\CompanyProfile;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
-#[Layout('components.layouts.app', ['title' => 'Sponsorship Packages'])]
+#[Layout('components.layouts.app', ['title' => 'Sponsorship Packages', 'hideTitleRow' => true])]
 class SponsorPackagesSettings extends Component
 {
     /** @var array<int,array{name:string,price:string,slots:string,benefits:string}> */

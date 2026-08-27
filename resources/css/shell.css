@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Global shell — Phase 1 (nav, header, workspace frame, right-panel slot).
+
+   Navy/gold, reusing app.css's own brand @theme tokens directly — no new
+   color tokens defined here. Prefixed .shellx- (not .shell-) so nothing
+   collides with app.css's own dead .shell-* block, deleted in this same
+   pass. Most of the visual language lives as plain Tailwind utilities
+   directly in the shell/*.blade.php files (matching how concept/nav.blade.php
+   proved the look out with zero custom CSS) — this file only holds the
+   handful of shapes reused across more than one row/item.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer components {
+    /* The rail's own gradient — one recipe, not repeated as an arbitrary
+       Tailwind value in three places. */
+    .shellx-rail {
+        background: linear-gradient(180deg, var(--color-navy-800) 0%, var(--color-navy-900) 45%, var(--color-navy-950) 100%);
+    }
+
+    /* A section-panel row that is "selected" lifts off the panel via shadow
+       + ring rather than a color fill — concept/nav.blade.php's own trick,
+       named here since every row in the panel can be in this state. A gold
+       hairline down the leading edge marks it as the current page without a
+       heavy fill. */
+    .shellx-row-active {
+        position: relative;
+        background: var(--color-page);
+        box-shadow: 0 1px 2px rgba(11, 31, 58, 0.06), inset 0 0 0 1px #fff, 0 0 0 1px var(--color-line);
+    }
+    .shellx-row-active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 1.1rem;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: var(--color-gold-500);
+    }
+
+    /* The panel's area-header block — a whisper-faint gold wash in the
+       top-right so the header reads as a distinct anchor above the rows,
+       not just more white space. */
+    .shellx-panel-head::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 90% at 100% 0%, rgba(212, 175, 55, 0.09) 0%, transparent 55%);
+        pointer-events: none;
+    }
+
+    /* Drawer mechanics below the 1280px (xl) breakpoint — the one thing
+       that genuinely needs a transition definition rather than a Tailwind
+       utility toggle. */
+    .shellx-drawer {
+        transition: transform 220ms ease;
+    }
+
+    /* Scroll cue for the sections panel — a soft fade at whichever edge
+       still has content past it, instead of a visible scrollbar (the list
+       itself keeps scrollbar-width:none). Alpine toggles opacity-0 once
+       that edge is reached; the fade itself is a static gradient. */
+    .shellx-fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 26px;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 5;
+    }
+    .shellx-fade-top { top: 0; background: linear-gradient(to bottom, #fff 0%, transparent 100%); }
+    .shellx-fade-bottom { bottom: 0; background: linear-gradient(to top, #fff 0%, transparent 100%); }
+}

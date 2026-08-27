@@ -14,11 +14,6 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
- * One canvas, not a three-step slog: answer a few questions on the left and
- * watch the event build itself on the right. Picking a type sets the crest and
- * the modules that type usually needs — all still editable before you commit.
- */
-/**
  * Event Studio.
  *
  * Not a form. A form asks you to fill it, save it, and find out later what you
@@ -27,11 +22,11 @@ use Livewire\WithFileUploads;
  *
  * Five rooms, and a preview that is never stale:
  *
- *   1 Identity        who it is for, what kind of thing it is
- *   2 When & where     the dates everything else hangs off
- *   3 Modules          which of the twenty-one it needs
- *   4 Details          the numbers and the sentence
- *   5 Review & launch  what is about to be built
+ *   1 Identity    what kind of event this is
+ *   2 Origin      where it is coming from — commercial or internal
+ *   3 Blueprint   when, where, and how big
+ *   4 Modules     which parts of the platform it needs
+ *   5 Launch      what is about to be built
  *
  * Nothing is written until Launch. Until then the preview IS the event.
  */
@@ -42,11 +37,11 @@ class EventCreate extends Component
 
     /** The five rooms: key => [label, what it settles]. */
     public const STEPS = [
-        1 => ['Event Identity', 'Who it is for, and what kind of thing it is'],
-        2 => ['When & Where', 'The dates everything else hangs off'],
-        3 => ['Modules & Tools', 'Which parts of the platform it needs'],
-        4 => ['Additional Details', 'The numbers, and the sentence about it'],
-        5 => ['Review & Launch', 'What is about to be built'],
+        1 => ['Identity', 'What kind of event this is'],
+        2 => ['Origin', 'Where it is coming from'],
+        3 => ['Blueprint', 'When, where, and how big'],
+        4 => ['Modules', 'Which parts of the platform it needs'],
+        5 => ['Launch', 'What is about to be built'],
     ];
 
     public int $step = 1;
@@ -60,40 +55,70 @@ class EventCreate extends Component
     /** The preview, stripped to what a delegate would be shown. */
     public bool $asAttendee = false;
 
-    /** Type templates: key => [label, event type, icon, default modules]. */
-    /** Type tiles: key => [label, event type, icon, default modules, what it is]. */
-    public const TEMPLATES = [
-        'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports'], 'Large scale knowledge sharing'],
-        'summit' => ['Summit', 'summit', 'sparkles', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'sponsors'], 'Executive level summit'],
-        'exhibition' => ['Exhibition', 'exhibition', 'building', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'files', 'attendees'], 'Products & services showcase'],
-        'workshop' => ['Workshop', 'workshop', 'clipboard', ['agenda', 'tasks', 'budget', 'venue', 'attendees'], 'Interactive hands-on session'],
-        'seminar' => ['Seminar', 'training_program', 'identification', ['agenda', 'tasks', 'venue', 'attendees'], 'Educational seminar'],
-        'gala' => ['Gala Dinner', 'gala_dinner', 'star', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees'], 'Evening gala & dinner'],
-        'corporate' => ['Corporate', 'product_launch', 'folder', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees'], 'Corporate meeting/event'],
-        'awards' => ['Awards', 'awards_ceremony', 'star', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees'], 'Awards & recognition'],
-        'hybrid' => ['Hybrid', 'hybrid_event', 'globe', ['agenda', 'tasks', 'budget', 'venue', 'attendees', 'reports'], 'In-person & online'],
-        'outdoor' => ['Outdoor', 'outdoor_event', 'sparkles', ['tasks', 'budget', 'suppliers', 'venue', 'attendees'], 'Outdoor experience'],
-        'other' => ['Other', 'public_event', 'dots', ['tasks', 'budget', 'venue', 'attendees'], 'Custom event type'],
+    /** Event category: key => [label, event type, icon, default modules]. */
+    public const CATEGORIES = [
+        'conference' => ['Conference', 'conference', 'chat', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'reports']],
+        'summit' => ['Summit', 'summit', 'sparkles', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees', 'sponsors']],
+        'exhibition' => ['Exhibition', 'exhibition', 'building', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'files', 'attendees']],
+        'workshop' => ['Workshop', 'workshop', 'clipboard', ['agenda', 'tasks', 'budget', 'venue', 'attendees']],
+        'gala' => ['Gala', 'gala_dinner', 'star', ['tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees']],
+        'corporate' => ['Corporate', 'product_launch', 'folder', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'attendees']],
+        'awards' => ['Awards', 'awards_ceremony', 'star', ['agenda', 'tasks', 'budget', 'suppliers', 'venue', 'sponsors', 'attendees']],
     ];
 
-    /** Status pills → lifecycle stage. */
-    public const STATUS_PILLS = ['lead' => 'draft', 'proposal' => 'proposal', 'confirmed' => 'confirmed'];
+    /** How exclusive the event is: key => [label, hex]. */
+    public const VIP_LEVELS = [
+        'standard' => ['Standard', '#64748B'],
+        'vip' => ['VIP', '#D4AF37'],
+        'executive' => ['Executive', '#0B1F3A'],
+        'head_of_state' => ['Head of State', '#7C2D12'],
+    ];
 
-    // ── Who & what ──
+    /** How delegates attend: key => [label, icon]. */
+    public const FORMATS = [
+        'in_person' => ['In-Person', 'pin'],
+        'virtual' => ['Virtual', 'globe'],
+        'hybrid' => ['Hybrid', 'grid'],
+    ];
+
+    /** Origin, commercial branch: key => label. */
+    public const ORIGIN_COMMERCIAL = ['deal' => 'Deal', 'proposal' => 'Proposal', 'contract' => 'Contract'];
+
+    /** Origin, internal branch: key => label. */
+    public const ORIGIN_INTERNAL = ['initiative' => 'Internal Initiative', 'program' => 'Strategic Program', 'executive' => 'Executive Request'];
+
+    /** Origin decides how committed the event already is — the lifecycle stage it launches into. */
+    public const ORIGIN_STAGE = [
+        'deal' => 'draft',
+        'proposal' => 'proposal',
+        'contract' => 'confirmed',
+        'initiative' => 'draft',
+        'program' => 'planning',
+        'executive' => 'confirmed',
+    ];
+
+    // ── Identity ──
+    public string $name = '';
+
+    public string $category = '';
+
+    public string $priority = 'normal';
+
+    public string $description = '';
+
+    /** 'commercial' | 'internal' — decides what Origin offers next. */
+    public string $originKind = '';
+
+    // ── Origin ──
+    public string $originSource = '';
+
     public ?int $client_id = null;
 
     public string $new_client = '';
 
     public bool $newClientMode = false;
 
-    public string $name = '';
-
-    /** Uploaded cover image + logo (both optional). */
-    public $cover = null;
-
-    public $logo = null;
-
-    // ── When & where ──
+    // ── Blueprint ──
     public string $starts_at = '';
 
     public string $ends_at = '';
@@ -106,10 +131,11 @@ class EventCreate extends Component
 
     public ?int $venue_id = null;
 
-    // ── Details ──
-    public string $description = '';
-
     public string $expected_participants = '';
+
+    public string $vipLevel = 'standard';
+
+    public string $format = 'in_person';
 
     public string $budget = '';
 
@@ -117,13 +143,12 @@ class EventCreate extends Component
 
     public ?int $project_manager_id = null;
 
-    public string $priority = 'normal';
+    /** Uploaded cover image + logo (both optional). */
+    public $cover = null;
 
-    // ── Shape ──
-    public string $statusPill = 'lead';
+    public $logo = null;
 
-    public ?string $template = null;
-
+    // ── Modules ──
     public array $modules = [];
 
     public function mount(): void
@@ -133,8 +158,8 @@ class EventCreate extends Component
         $this->country = (string) ($company->country ?: '');
         $this->currency = (string) $company->default_currency;
 
-        // No modules and no type until you choose one. The studio used to open
-        // with a conference's seven already ticked while no type tile was lit —
+        // No modules and no category until you choose one. The studio used to
+        // open with a conference's seven already ticked while no tile was lit —
         // the launch bar said "7 selected" and the workspace said nothing was
         // picked. An empty studio should look empty.
 
@@ -148,6 +173,12 @@ class EventCreate extends Component
     public function updated(): void
     {
         $this->saveDraft();
+    }
+
+    /** Changing the branch invalidates whatever source you had picked in the old one. */
+    public function updatedOriginKind(): void
+    {
+        $this->originSource = '';
     }
 
     private function saveDraft(): void
@@ -252,13 +283,13 @@ class EventCreate extends Component
         $this->newClientMode ? $this->client_id = null : $this->new_client = '';
     }
 
-    public function chooseTemplate(string $key): void
+    public function chooseCategory(string $key): void
     {
-        if (! isset(self::TEMPLATES[$key])) {
+        if (! isset(self::CATEGORIES[$key])) {
             return;
         }
-        $this->template = $key;
-        $this->modules = self::TEMPLATES[$key][3]; // pre-enable what this type usually needs
+        $this->category = $key;
+        $this->modules = self::CATEGORIES[$key][3]; // pre-enable what this category usually needs
     }
 
     public function toggleModule(string $key): void
@@ -274,7 +305,13 @@ class EventCreate extends Component
     /** The type this event will be created as (defaults to conference). */
     public function resolvedType(): string
     {
-        return self::TEMPLATES[$this->template ?? 'conference'][1];
+        return self::CATEGORIES[$this->category !== '' ? $this->category : 'conference'][1];
+    }
+
+    /** The options Origin should offer, given the branch already chosen in Identity. */
+    public function originOptions(): array
+    {
+        return $this->originKind === 'internal' ? self::ORIGIN_INTERNAL : self::ORIGIN_COMMERCIAL;
     }
 
     /** Agenda days the date range will scaffold — shown live in the preview. */
@@ -312,7 +349,7 @@ class EventCreate extends Component
         $event = Event::create([
             'name' => $this->name,
             'type' => $type,
-            'stage' => self::STATUS_PILLS[$this->statusPill] ?? 'draft',
+            'stage' => self::ORIGIN_STAGE[$this->originSource] ?? 'draft',
             'city' => $this->city ?: ($company->city ?: 'TBD'),
             'country' => $this->country ?: ($company->country ?: 'Jordan'),
             'currency' => $this->currency ?: $company->default_currency,
@@ -356,22 +393,26 @@ class EventCreate extends Component
         $rules = match ($step) {
             1 => [
                 'name' => ['required', 'string', 'max:120'],
-                'client_id' => ['required_without:new_client', 'nullable', 'exists:clients,id'],
-                'new_client' => ['nullable', 'string', 'max:120'],
-                'template' => ['required'],
-                'statusPill' => ['required', 'in:'.implode(',', array_keys(self::STATUS_PILLS))],
+                'category' => ['required', 'in:'.implode(',', array_keys(self::CATEGORIES))],
                 'priority' => ['required', 'in:'.implode(',', array_keys(Event::PRIORITIES))],
+                'description' => ['nullable', 'string', 'max:600'],
+                'originKind' => ['required', 'in:commercial,internal'],
             ],
-            2 => [
+            2 => array_merge([
+                'originSource' => ['required', 'in:'.implode(',', array_keys($this->originOptions()))],
+                'new_client' => ['nullable', 'string', 'max:120'],
+            ], $this->originKind === 'commercial'
+                ? ['client_id' => ['required_without:new_client', 'nullable', 'exists:clients,id']]
+                : ['client_id' => ['nullable', 'exists:clients,id']]),
+            3 => [
                 'starts_at' => ['required', 'date'],
                 'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
                 'timezone' => ['required', 'string', 'max:60'],
                 'city' => ['nullable', 'string', 'max:80'],
                 'venue_id' => ['nullable', 'exists:venues,id'],
-            ],
-            4 => [
-                'description' => ['nullable', 'string', 'max:600'],
                 'expected_participants' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+                'vipLevel' => ['nullable', 'in:'.implode(',', array_keys(self::VIP_LEVELS))],
+                'format' => ['nullable', 'in:'.implode(',', array_keys(self::FORMATS))],
                 'budget' => ['nullable', 'numeric', 'min:0'],
                 'project_manager_id' => ['nullable', 'exists:users,id'],
                 'cover' => ['nullable', 'image', 'max:8192'],
@@ -383,8 +424,10 @@ class EventCreate extends Component
         if ($rules) {
             $this->validate($rules, [
                 'name.required' => 'Give the event a name — everything else is built around it.',
+                'category.required' => 'Pick the kind of event this is.',
+                'originKind.required' => 'Say whether this is commercial or internal.',
+                'originSource.required' => 'Pick where this event is coming from.',
                 'client_id.required_without' => 'Choose a client, or add a new one.',
-                'template.required' => 'Pick the kind of event this is.',
                 'starts_at.required' => 'Pick a start date. The agenda, the transport and the run of show all hang off it.',
                 'ends_at.after_or_equal' => 'The end date cannot be before the start.',
             ]);
@@ -392,45 +435,80 @@ class EventCreate extends Component
     }
 
     /**
-     * How much of the event is defined — the figure the preview reports.
+     * Every gate the studio checks, grouped by the room that answers it — the
+     * one place readiness and the per-room status in the launch summary are
+     * both computed from, so they can never disagree with each other.
      *
-     * Counted off the same answers the studio asks for, so it cannot claim
-     * progress you have not made.
+     * @return array<string, array<string, bool>>
+     */
+    private function gates(): array
+    {
+        return [
+            'identity' => [
+                'A name' => $this->name !== '',
+                'A category' => $this->category !== '',
+                'A sentence about it' => trim($this->description) !== '',
+            ],
+            'origin' => [
+                'Commercial or internal' => $this->originKind !== '',
+                'An origin source' => $this->originSource !== '',
+                'A client' => $this->originKind === 'internal' || $this->client_id !== null || trim($this->new_client) !== '',
+            ],
+            'blueprint' => [
+                'A start date' => $this->starts_at !== '',
+                'A city or venue' => $this->city !== '' || $this->venue_id !== null,
+                'An expected headcount' => $this->expected_participants !== '',
+            ],
+            'modules' => [
+                'At least one module' => $this->modules !== [],
+            ],
+        ];
+    }
+
+    /**
+     * How much of the event is defined — the figure the preview reports, both
+     * overall and room by room. Counted off the same answers the studio asks
+     * for, so it cannot claim progress you have not made.
      *
-     * @return array{pct:int,done:int,total:int,missing:array<int,string>}
+     * @return array{pct:int,done:int,total:int,missing:array<int,string>,sections:array}
      */
     public function readiness(): array
     {
-        $gates = [
-            'A name' => $this->name !== '',
-            'A client' => $this->client_id !== null || trim($this->new_client) !== '',
-            'A kind of event' => $this->template !== null,
-            'A start date' => $this->starts_at !== '',
-            'A city or venue' => $this->city !== '' || $this->venue_id !== null,
-            'At least one module' => $this->modules !== [],
-            'A sentence about it' => trim($this->description) !== '',
-            'An expected headcount' => $this->expected_participants !== '',
-        ];
+        $sections = $this->gates();
+        $flatGates = array_merge(...array_values($sections));
+        $done = count(array_filter($flatGates));
+        $total = count($flatGates);
 
-        $done = count(array_filter($gates));
+        $sectionStatus = [];
+        foreach ($sections as $key => $gates) {
+            $sDone = count(array_filter($gates));
+            $sTotal = count($gates);
+            $sectionStatus[$key] = [
+                'label' => ucfirst($key),
+                'done' => $sDone,
+                'total' => $sTotal,
+                'complete' => $sDone === $sTotal,
+                'pct' => $sTotal ? (int) round($sDone / $sTotal * 100) : 100,
+            ];
+        }
 
         return [
-            'pct' => (int) round($done / count($gates) * 100),
+            'pct' => $total ? (int) round($done / $total * 100) : 0,
             'done' => $done,
-            'total' => count($gates),
-            'missing' => array_keys(array_filter($gates, fn ($met) => ! $met)),
+            'total' => $total,
+            'missing' => array_keys(array_filter($flatGates, fn ($met) => ! $met)),
+            'sections' => $sectionStatus,
         ];
     }
 
     /** Which room each field is answered in, so a failed launch can go there. */
     private const ROOM_OF = [
-        'name' => 1, 'client_id' => 1, 'new_client' => 1, 'template' => 1,
-        'statusPill' => 1, 'priority' => 1,
-        'starts_at' => 2, 'ends_at' => 2, 'timezone' => 2, 'city' => 2,
-        'country' => 2, 'venue_id' => 2,
-        'modules' => 3,
-        'description' => 4, 'expected_participants' => 4, 'budget' => 4,
-        'currency' => 4, 'project_manager_id' => 4, 'cover' => 4, 'logo' => 4,
+        'name' => 1, 'category' => 1, 'priority' => 1, 'description' => 1, 'originKind' => 1,
+        'originSource' => 2, 'client_id' => 2, 'new_client' => 2,
+        'starts_at' => 3, 'ends_at' => 3, 'timezone' => 3, 'city' => 3, 'country' => 3,
+        'venue_id' => 3, 'expected_participants' => 3, 'vipLevel' => 3, 'format' => 3,
+        'budget' => 3, 'currency' => 3, 'project_manager_id' => 3, 'cover' => 3, 'logo' => 3,
+        'modules' => 4,
     ];
 
     private function validateAll(): void
@@ -453,19 +531,26 @@ class EventCreate extends Component
     private function validateAllRules(): void
     {
         $this->validate([
-            'client_id' => ['required_without:new_client', 'nullable', 'exists:clients,id'],
-            'new_client' => ['nullable', 'string', 'max:120'],
             'name' => ['required', 'string', 'max:120'],
+            'category' => ['required', 'in:'.implode(',', array_keys(self::CATEGORIES))],
+            'originKind' => ['required', 'in:commercial,internal'],
+            'originSource' => ['required', 'in:'.implode(',', array_keys($this->originOptions()))],
+            'client_id' => $this->originKind === 'commercial'
+                ? ['required_without:new_client', 'nullable', 'exists:clients,id']
+                : ['nullable', 'exists:clients,id'],
+            'new_client' => ['nullable', 'string', 'max:120'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'timezone' => ['required', 'string', 'max:60'],
             'city' => ['nullable', 'string', 'max:80'],
-            'statusPill' => ['required', 'in:'.implode(',', array_keys(self::STATUS_PILLS))],
             'cover' => ['nullable', 'image', 'max:8192'],
             'logo' => ['nullable', 'image', 'max:4096'],
         ], [
             'client_id.required_without' => 'Choose a client or add a new one.',
             'name.required' => 'Give the event a title.',
+            'category.required' => 'Pick the kind of event this is.',
+            'originKind.required' => 'Say whether this is commercial or internal.',
+            'originSource.required' => 'Pick where this event is coming from.',
             'starts_at.required' => 'Pick a start date.',
             'ends_at.after_or_equal' => 'The end date can’t be before the start.',
         ]);
@@ -480,7 +565,11 @@ class EventCreate extends Component
             'clients' => Client::orderBy('name')->get(),
             'venues' => Venue::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
-            'templates' => self::TEMPLATES,
+            'categories' => self::CATEGORIES,
+            'vipLevels' => self::VIP_LEVELS,
+            'formats' => self::FORMATS,
+            'originCommercial' => self::ORIGIN_COMMERCIAL,
+            'originInternal' => self::ORIGIN_INTERNAL,
             'hubModules' => Event::HUB_MODULES,
             'priorities' => Event::PRIORITIES,
             'timezones' => ['UTC', 'Asia/Amman', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Bahrain', 'Europe/London', 'America/New_York'],

@@ -27,7 +27,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Invoices',
-    'subtitle' => 'What has been billed, what is owed, and what is still waiting to be raised.',
+    'hideTitleRow' => true,
 ])]
 class InvoicesLedger extends Component
 {
@@ -38,16 +38,26 @@ class InvoicesLedger extends Component
     #[Url(as: 'q')]
     public string $q = '';
 
+    /** Soft Command MDA — selected invoice in the Collection Panel. */
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
+
     /** Amounts typed into a row, keyed by invoice id. Blank settles in full. */
     public array $amount = [];
 
     /** Whether the "ready to invoice" drawer is open. */
     public bool $showReady = true;
 
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
+
     public function setState(string $state): void
     {
         $this->state = in_array($state, ['all', 'draft', 'sent', 'overdue', 'partial', 'paid', 'void'], true)
             ? $state : 'all';
+        $this->selectedId = null;
     }
 
     public function toggleReady(): void
@@ -220,10 +230,21 @@ class InvoicesLedger extends Component
         // you are reading, not what you are owed.
         $all = Invoice::with('lines')->get();
         $outstanding = $all->filter->isOutstanding();
-        $overdue = $all->filter(fn (Invoice $i) => $i->state() === 'overdue');
+        // Not state() === 'overdue': that bucket exists for the filter chips
+        // above and calls a part-paid invoice "partial" before it ever checks
+        // the due date, so a late invoice with something already in would
+        // silently drop out of this figure. This KPI asks the real question
+        // instead — passed its due date, and still owed something — so a
+        // part-paid late invoice still counts as overdue here.
+        $overdue = $all->filter(fn (Invoice $i) => ! in_array($i->status, ['draft', 'void'], true)
+            && $i->due_on?->isPast()
+            && $i->outstandingCents() > 0);
+
+        $selected = $rows->firstWhere('id', $this->selectedId) ?? $rows->first();
 
         return view('livewire.invoices-ledger', [
             'rows' => $rows,
+            'selected' => $selected,
             'ready' => $ready,
             'figures' => [
                 ['label' => 'Outstanding', 'value' => $this->money($outstanding->sum(fn ($i) => $i->outstandingCents())),

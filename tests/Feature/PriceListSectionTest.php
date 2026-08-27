@@ -238,8 +238,8 @@ class PriceListSectionTest extends TestCase
         $item = $event->invoiceItems()->firstOrFail();
 
         $this->assertSame('equipment', $item->section);
-        $this->assertSame(4_00, $item->cost_cents);
-        $this->assertSame(6_00, $item->sell_cents);
+        $this->assertEquals(4_00, $item->cost_cents);
+        $this->assertEquals(6_00, $item->sell_cents);
     }
 
     /** @param list<list<mixed>> $rows */

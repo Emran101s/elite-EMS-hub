@@ -28,8 +28,16 @@ use App\Models\Event;
  */
 class Money
 {
-    /** "$1,250" or "JD 1,250" — the everyday reading. */
-    public static function forScreen(?int $cents, string $currency): string
+    /**
+     * "$1,250" or "JD 1,250" — the everyday reading.
+     *
+     * $cents accepts float as well as int: a handful of columns (transport
+     * cost, event-priced items, invoice lines) carry a tenth of a cent now
+     * so a typed-in price can keep its third decimal — an int-only
+     * signature would silently truncate that fraction right back off on
+     * the way to the screen.
+     */
+    public static function forScreen(int|float|null $cents, string $currency): string
     {
         $symbol = Event::CURRENCIES[$currency][0] ?? $currency;
         $sep = strlen($symbol) > 1 ? ' ' : '';
@@ -37,17 +45,21 @@ class Money
         return $symbol.$sep.number_format(($cents ?? 0) / 100);
     }
 
-    /** "USD 1,250.00" — the currency code, and the cents, for a document someone signs. */
-    public static function forDocument(?int $cents, string $currency): string
+    /**
+     * "USD 1,250.00" — the currency code, and the cents, for a document
+     * someone signs. $decimals defaults to 2 everywhere except the few
+     * screens (Invoice Editor) that opt into a third decimal explicitly.
+     */
+    public static function forDocument(int|float|null $cents, string $currency, int $decimals = 2): string
     {
-        return $currency.' '.number_format(($cents ?? 0) / 100, 2);
+        return $currency.' '.number_format(($cents ?? 0) / 100, $decimals);
     }
 
     /**
      * "$1.2K" past a thousand currency units, "$850" below it — a portfolio
      * tile reads faster as a shape than as six digits.
      */
-    public static function abbreviated(?int $cents, string $currency): string
+    public static function abbreviated(int|float|null $cents, string $currency): string
     {
         $symbol = Event::CURRENCIES[$currency][0] ?? $currency;
         $sep = strlen($symbol) > 1 ? ' ' : '';

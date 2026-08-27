@@ -24,7 +24,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Payments',
-    'subtitle' => 'Every installment in the book, in the order the money is due.',
+    'hideTitleRow' => true,
 ])]
 class PaymentsLedger extends Component
 {
@@ -35,13 +35,23 @@ class PaymentsLedger extends Component
     #[Url(as: 'q')]
     public string $q = '';
 
+    /** Soft Command MDA — selected installment in the Reconciliation Panel. */
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
+
     /** Amounts typed into a row, keyed by payment id. Blank settles in full. */
     public array $amount = [];
+
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
 
     public function setStatus(string $status): void
     {
         $this->status = in_array($status, ['all', 'overdue', 'pending', 'partial', 'paid'], true)
             ? $status : 'all';
+        $this->selectedId = null;
     }
 
     /**
@@ -145,12 +155,20 @@ class PaymentsLedger extends Component
         $all = EventContractPayment::query()
             ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))->get();
 
-        $overdue = $all->filter(fn ($p) => $p->status() === 'overdue');
+        // Not status() === 'overdue': that calls a part-paid instalment
+        // "partial" before it ever checks the due date, so one that is late
+        // AND has something already in would silently drop out of this
+        // figure. This asks the real question — passed its due date, and
+        // still short — so a part-paid late instalment still counts here.
+        $overdue = $all->filter(fn ($p) => $p->due_on?->isPast() && $p->outstandingCents() > 0);
         $thisMonth = $all->filter(fn ($p) => $p->due_on?->isSameMonth(now()) && $p->status() !== 'paid');
+
+        $selected = $rows->firstWhere('id', $this->selectedId) ?? $rows->first();
 
         return view('livewire.payments-ledger', [
             'months' => $months,
             'rows' => $rows,
+            'selected' => $selected,
             'figures' => [
                 ['label' => 'Overdue', 'value' => $this->money($overdue->sum(fn ($p) => $p->outstandingCents())),
                     'icon' => 'bell', 'tone' => $overdue->isEmpty() ? 'green' : 'red',

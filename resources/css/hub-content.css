@@ -1,0 +1,301 @@
+/* Event Hub content tabs — the "Split Workspace" template.
+   Reads app.css's existing brand + semantic tokens, zero new @theme
+   entries. Prefixed .ehc-* to stay distinct from the chrome's own
+   .ehx-* classes (resources/css/event-hub.css) — chrome and content
+   are separately owned, never confused. */
+@layer components {
+    .ehc-split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+        gap: 0.85rem;
+        align-items: start;
+    }
+    @media (max-width: 1023px) {
+        .ehc-split { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .ehc-row {
+        display: block;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.12s ease;
+    }
+    .ehc-row:hover { background: var(--color-page); }
+    .ehc-row.is-selected {
+        background: color-mix(in srgb, var(--color-gold-500) 8%, white);
+        box-shadow: inset 3px 0 0 0 var(--color-gold-500);
+    }
+
+    /* The detail card — permanently dark, sticky, distinct from the
+       light register beside it. Same idea Risks already proved out
+       (a focused "inspector" surface), carried onto the navy palette. */
+    .ehc-detail {
+        position: sticky;
+        top: 0;
+        border-radius: var(--radius-lg);
+        padding: 1.1rem;
+        background: linear-gradient(165deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
+        color: rgba(255, 255, 255, 0.92);
+        box-shadow: var(--shadow-float);
+    }
+
+    .ehc-detail-stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 0.55rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
+    }
+    .ehc-detail-stat:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .ehc-detail-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        border-radius: 0.7rem;
+        padding: 0.55rem;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.85);
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .ehc-detail-action:hover { background: rgba(255, 255, 255, 0.14); }
+    .ehc-detail-action.is-gold {
+        background: color-mix(in srgb, var(--color-gold-500) 30%, transparent);
+        border-color: color-mix(in srgb, var(--color-gold-500) 50%, transparent);
+    }
+    .ehc-detail-action.is-danger {
+        background: color-mix(in srgb, var(--color-danger) 28%, transparent);
+        border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+    }
+
+    /* Overview's Mission Timeline — nodes on a single connecting line,
+       carried over from the graphite system onto navy/gold tokens. */
+    .ehc-timeline-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.4rem 0.1rem;
+        border-radius: 0.6rem;
+        transition: background 0.12s ease;
+    }
+    .ehc-timeline-row:hover { background: var(--color-page); }
+
+    .ehc-timeline-track {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        width: 26px;
+        flex-shrink: 0;
+        align-self: stretch;
+    }
+    .ehc-timeline-track::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        background: linear-gradient(180deg, var(--color-danger) 0%, var(--color-line) 22%, var(--color-line) 78%, var(--color-gold-400) 100%);
+        opacity: 0.55;
+        transform: translateX(-50%);
+    }
+    .ehc-timeline-row:first-child .ehc-timeline-track::before { top: 50%; }
+    .ehc-timeline-row:last-child .ehc-timeline-track::before { bottom: 50%; }
+
+    .ehc-timeline-node {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        margin-top: 0.3rem;
+        border-radius: 999px;
+        box-shadow: 0 0 0 3px #fff, 0 0 0 4.5px color-mix(in srgb, var(--tl-color, var(--color-muted)) 45%, transparent);
+    }
+
+    .ehc-timeline-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-line);
+    }
+    .ehc-timeline-row:last-child .ehc-timeline-body { border-bottom: none; }
+
+    /* Overview's "More doors" chip row — the modules the compact rail
+       doesn't surface directly. */
+    .ehc-doors-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.65rem 0.4rem 0.4rem;
+        border-radius: 0.9rem;
+        background: white;
+        border: 1px solid var(--color-line);
+        box-shadow: var(--shadow-raise);
+        transition: transform 0.15s ease;
+    }
+    .ehc-doors-chip:hover { transform: translateY(-1px); }
+
+    .ehc-doors-chip-ic {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 0.6rem;
+        flex-shrink: 0;
+    }
+
+    /* Plan Studio's "Countdown to Event Day" supporting panel — a pulse
+       strip beneath the Universal Module Header, deliberately lighter
+       than it: no blur, no shadow, a dashed border instead of a card
+       edge, so it never reads as a second, competing header. */
+    .ehc-countdown-panel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.9rem;
+        padding: 0.6rem 1rem;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px dashed var(--color-line);
+    }
+
+    .ehc-countdown-lead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+    }
+
+    .ehc-countdown-days {
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ehc-countdown-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .ehc-countdown-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-note {
+        font-size: 11px;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        margin-left: auto;
+    }
+
+    .ehc-countdown-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .ehc-countdown-stat-value {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ehc-countdown-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-muted);
+    }
+
+    .ehc-countdown-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--color-muted);
+        border-left: 1px solid var(--color-line);
+        padding-left: 1rem;
+        white-space: nowrap;
+        transition: color 0.15s;
+    }
+
+    .ehc-countdown-export:hover {
+        color: var(--color-ink);
+    }
+
+    /* Budget's Price-mode banner — the one figure set the Universal
+       Module Header can't cover (a sell-side question), shown only
+       while Price mode is active. Migrated from eo-hub-redesign.css's
+       .hubx-price-banner-* (Budget was its only caller). */
+    .ehc-price-banner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+        border-radius: var(--radius-lg);
+        padding: 0.8rem 1.1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-float);
+        backdrop-filter: blur(10px);
+    }
+
+    .ehc-price-banner-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .ehc-price-banner-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-muted);
+    }
+
+    .ehc-price-banner-value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ehc-price-banner-note {
+        flex-basis: 100%;
+        font-size: 11px;
+        color: var(--color-muted);
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--color-line);
+    }
+}

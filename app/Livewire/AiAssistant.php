@@ -16,7 +16,7 @@ use Livewire\Component;
  * fire, what is blocked, what is late, what is missing — and every line names
  * the record it came from and links straight to it.
  */
-#[Layout('components.layouts.app', ['title' => 'AI Assistant', 'subtitle' => 'What needs a person today, across every event — and where to find it.'])]
+#[Layout('components.layouts.app', ['title' => 'Command Briefing', 'hideTitleRow' => true])]
 class AiAssistant extends Component
 {
     /** all · critical · warning — how much noise you want. */

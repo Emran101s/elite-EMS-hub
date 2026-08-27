@@ -1,0 +1,792 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Event Hub — Premium Mission Control redesign.
+
+   Scoped entirely to new `.hubx-*` classes so nothing here can leak
+   into Command Center, Event Portfolio, or any other page that reuses
+   the shared `.eo-*` design system. The outer dark-atmosphere / light
+   rounded-workspace shell already exists globally (.eo-app-shell /
+   .eo-workspace-shell) and is untouched — this file only styles what
+   sits inside the Event Hub's own content slot.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@theme {
+    /* Two accents the existing eo-* palette doesn't carry, needed for the
+       Approvals/Programme signal colours this redesign uses. */
+    --color-hubx-violet: #7c6bd9;
+    --color-hubx-blue: #3b6fd4;
+
+    /* A layering vocabulary beyond flat white — white / pearl / glass /
+       graphite, each surface tier picked deliberately rather than every
+       card defaulting to the same rgba(255,255,255,.75) glass. Pearl is
+       a warm, gold-adjacent off-white for the one card that outranks the
+       rest of the workspace (Event Pulse); the graphite family is the
+       Header/Command Stack's own dark surface, distinct from — and one
+       shade warmer than — the app's own navy-deep atmosphere behind it. */
+    --color-hubx-pearl: #fbf7ea;
+    --color-hubx-pearl-deep: #f5ebc8;
+    --color-hubx-graphite: #0b1f3a;
+    --color-hubx-graphite-deep: #061426;
+    --color-hubx-graphite-mid: #142842;
+}
+
+@layer components {
+    /* ── Page grid ─────────────────────────────────────────────────────
+       Desktop (≥1280px): workspace | inspector, side by side. The Command
+       Stack is gone outright (not collapsed, not a drawer) — its job was
+       already covered by the Header's own attention pill, Event Pulse,
+       the Universal Module Header, and the Inspector's Next Action. The
+       Module Navigation Bar and Event Pulse Strip sit above this grid as
+       their own full-width rows, not as grid columns — see hub.blade.php.
+       Tablet/mobile (<1280px): inspector drops below the workspace, full
+       width; below 1280px there was never a second column to begin
+       with once the stack left, so there's nothing further to collapse. */
+    .hubx-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.85rem;
+        align-items: start;
+    }
+
+    .hubx-grid.has-panel {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+    }
+
+    /* ── Header — the flagship identity surface ───────────────────────
+       E.4 luxury pass: the earlier all-graphite card read as a cockpit,
+       not an identity surface — Elite EMS's own ratio is 80% light / 20%
+       dark, so the card itself goes back to the shell's light glass
+       (matching Module Header/Inspector/Pulse), and the "20% dark" the
+       brief asks for is spent deliberately, in one place, as the
+       graphite avatar chip beside the name — not smeared across the
+       whole card. Gold stays the one accent this card is allowed that
+       nothing else in the shell gets (the hairline top edge and the
+       primary CTA), same locally-scoped exception as before; everything
+       else here now reads off the shared eo-* tokens like its siblings. */
+    .hubx-header {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.65rem 1.9rem;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo-float);
+        backdrop-filter: blur(14px);
+    }
+
+    /* The one hairline of gold on the page's most important edge —
+       "gold accent," spent once, at full strength, rather than smeared
+       thin across several elements. */
+    .hubx-header::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--color-gold-500) 18%, var(--color-gold-400) 50%, var(--color-gold-500) 82%, transparent 100%);
+        opacity: 0.75;
+    }
+
+    /* The one deliberate dark note on the card — an identity mark, the
+       same idiom the Universal Module Header uses for its own icon chip,
+       scaled up and in the header's own graphite rather than a module
+       accent colour, since this chip stands for the event itself. */
+    .hubx-header-avatar {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        margin-top: 0.05rem;
+        border-radius: 1rem;
+        background: linear-gradient(165deg, var(--color-hubx-graphite-mid) 0%, var(--color-hubx-graphite-deep) 100%);
+        color: var(--color-gold-400);
+        box-shadow: 0 12px 22px -12px rgba(14, 18, 26, 0.5);
+    }
+
+    @media (max-width: 639px) {
+        .hubx-header { flex-direction: column; padding: 1.25rem; }
+        .hubx-header-avatar { width: 40px; height: 40px; border-radius: 0.85rem; }
+        .hubx-header-name { font-size: 19px; white-space: normal; overflow: visible; text-overflow: clip; }
+        /* Five items (3 icon buttons + Portfolio + the primary CTA) don't
+           fit one line under ~375px — wrap rather than overflow the card,
+           and let it fill the card's width instead of hugging the right
+           edge the way the two-column desktop layout does. */
+        .hubx-header > .flex.shrink-0 {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+    }
+
+    .hubx-header-name {
+        display: block;
+        position: relative;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-eo);
+        font-size: 27px;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        color: var(--color-ink);
+        line-height: 1.2;
+    }
+    .hubx-header-name .font-medium { color: var(--color-muted) !important; }
+
+    .hubx-header-meta {
+        margin-top: 0.4rem;
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 12.5px;
+        color: var(--color-muted);
+    }
+
+    .hubx-header-dot::before {
+        content: '•';
+        margin-right: 0.5rem;
+        opacity: 0.4;
+    }
+
+    .hubx-header-icon-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-right: 0.15rem;
+    }
+
+    /* Same 36px as .eo-btn-sm beside it — the icon row and the Portfolio /
+       primary-action buttons used to sit at two different heights (30px vs
+       36px) in the same row, which read as slightly misaligned rather than
+       one considered action group. */
+    .hubx-header-icon {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 0.75rem;
+        color: var(--color-muted);
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--color-line);
+        font: inherit;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .hubx-header-icon:hover {
+        color: var(--color-gold-700);
+        border-color: var(--color-gold-500);
+        background: var(--color-gold-50);
+    }
+
+    /* The primary CTA — the one place gold fills a button rather than
+       just accenting an edge, because this is the one action the header
+       exists to point at. Everywhere else in the shell, gold stays an
+       accent and teal stays the CTA colour — this override is scoped to
+       .hubx-header alone. Portfolio uses the shared .eo-btn-ghost as-is
+       now that the card itself is light — the dark-glass re-skin it
+       needed against the old graphite card would be a stray dark chip
+       against this one. */
+    .hubx-header .eo-btn-primary {
+        position: relative;
+        background: linear-gradient(165deg, var(--color-gold-400) 0%, var(--color-gold-500) 100%);
+        color: var(--color-hubx-graphite-deep);
+        box-shadow: 0 10px 20px -12px rgba(214, 174, 52, 0.5);
+    }
+    .hubx-header .eo-btn-primary:hover { filter: brightness(1.05); }
+
+    /* ── Module Navigation Bar ─────────────────────────────────────────
+       Horizontal pill strip, Event Command Header architecture — replaces
+       the old vertical Compact Module Rail. Light glass bar, matching
+       every other panel in this shell; the active tab is the one filled
+       pill (bg-eo-navy), same "is-active = solid navy" convention already
+       used by the Budget mode switcher and Agenda's view switcher. ── */
+    .hubx-modnav {
+        position: relative;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        border-radius: 1.1rem;
+        padding: 0.35rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(10px);
+    }
+
+    .hubx-modnav-scroll {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .hubx-modnav-scroll::-webkit-scrollbar { display: none; }
+
+    /* The only hint, on a touch screen with no visible scrollbar, that the
+       tab strip keeps going past the edge — a soft fade, not an icon or
+       arrow, so it reads as "more of this" rather than another control. */
+    .hubx-modnav-scroll.is-overflowing {
+        mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    }
+
+    .hubx-modnav-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+        padding: 0.5rem 0.8rem;
+        border-radius: 0.8rem;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--color-muted);
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .hubx-modnav-item:hover { background: var(--color-page); color: var(--color-ink); }
+    .hubx-modnav-item.is-active {
+        background: var(--color-navy-900);
+        color: #fff;
+    }
+    .hubx-modnav-item.is-active :where(svg) { opacity: 0.9; }
+
+    /* Badge hierarchy: alarm (red) is the only tone that should visually
+       interrupt — a "wait" signal (something pending, not yet late) reads
+       in the same quieter amber the rest of the shell already uses for
+       "needs a look" rather than "needs a look now". Everything on this
+       bar stays quiet except the one thing that's actually urgent. */
+    .hubx-modnav-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background: var(--color-danger);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .hubx-modnav-badge.is-wait { background: var(--color-warning); }
+    .hubx-modnav-item.is-active .hubx-modnav-badge { background: rgba(255, 255, 255, 0.25); }
+
+    .hubx-modnav-flyout {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.4rem);
+        z-index: 30;
+        min-width: 190px;
+        padding: 0.35rem;
+        border-radius: 1rem;
+        background: #fff;
+        border: 1px solid var(--color-line);
+        box-shadow: var(--shadow-eo-float);
+        display: grid;
+        gap: 0.15rem;
+    }
+
+    .hubx-modnav-flyout-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.65rem;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-ink);
+    }
+    .hubx-modnav-flyout-item:hover { background: var(--color-page); }
+    .hubx-modnav-flyout-item.is-active { background: var(--color-gold-50); color: var(--color-gold-700); }
+
+    .hubx-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    /* ── Universal Module Header ──────────────────────────────────── */
+    .hubx-module-header {
+        border-radius: 1.25rem;
+        padding: 0.9rem 1.1rem;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo);
+        backdrop-filter: blur(12px);
+    }
+
+    .hubx-module-header-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 0.7rem;
+    }
+
+    .hubx-module-header-icon {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: 0.75rem;
+    }
+
+    .hubx-module-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.1rem;
+        margin-top: 0.85rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-line);
+    }
+
+    .hubx-module-header-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .hubx-module-header-stat-value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .hubx-module-header-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-muted);
+    }
+
+    .hubx-module-header-next {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        margin-left: auto;
+    }
+
+    /* Budget's Price-mode banner moved to resources/css/hub-content.css
+       (.ehc-price-banner) once Budget migrated onto navy/gold. */
+
+    /* ── Event Utilities drawer (Team Workload + Recent Activity) ────── */
+    .hubx-utilities-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(11, 19, 34, 0.35);
+    }
+
+    .hubx-utilities-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 50;
+        width: min(400px, 92vw);
+        overflow-y: auto;
+        padding: 1.1rem;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: -24px 0 60px -24px rgba(11, 19, 34, 0.45);
+        backdrop-filter: blur(8px);
+    }
+
+    .hubx-utilities-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+    }
+
+    .hubx-utilities-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--color-ink);
+    }
+
+    .hubx-utilities-close {
+        border-radius: 0.6rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--color-muted);
+        background: var(--color-page);
+        transition: color 0.15s ease;
+    }
+    .hubx-utilities-close:hover { color: var(--color-ink); }
+
+    .hubx-utilities-tabs {
+        display: flex;
+        gap: 0.3rem;
+        padding: 0.25rem;
+        border-radius: 0.8rem;
+        background: var(--color-page);
+        margin-bottom: 1rem;
+    }
+
+    .hubx-utilities-tab {
+        flex: 1;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.55rem;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-muted);
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .hubx-utilities-tab.is-active { background: #fff; color: var(--color-ink); box-shadow: var(--shadow-eo); }
+
+    .hubx-utilities-body { display: flex; flex-direction: column; }
+
+    .hubx-utilities-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.6rem 0.1rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+    .hubx-utilities-row:last-child { border-bottom: none; }
+
+    .hubx-utilities-row-system {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--color-page);
+        color: var(--color-muted);
+        flex-shrink: 0;
+    }
+
+    .hubx-utilities-row-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-ink);
+        line-height: 1.4;
+    }
+
+    .hubx-utilities-row-sub {
+        font-size: 10.5px;
+        color: var(--color-muted);
+        margin-top: 0.1rem;
+    }
+
+    .hubx-utilities-row-when {
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink);
+    }
+
+    .hubx-utilities-bar {
+        margin-top: 0.35rem;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--color-page);
+        overflow: hidden;
+    }
+    .hubx-utilities-bar-fill { height: 100%; border-radius: 999px; }
+
+    .hubx-utilities-empty {
+        font-size: 12px;
+        color: var(--color-muted);
+        padding: 0.6rem 0.1rem;
+    }
+
+    /* Mission Timeline (Overview) and More Doors chip row moved to
+       resources/css/hub-content.css (.ehc-timeline-* and .ehc-doors-*)
+       once both rendering components moved onto navy/gold tokens. */
+
+    /* Countdown to Event Day (Plan Studio) moved to
+       resources/css/hub-content.css (.ehc-countdown-*) — exclusive to
+       this one tab, moved onto navy/gold tokens. */
+
+    /* ── Right Detail Panel ────────────────────────────────────────── */
+    .hubx-panel {
+        position: sticky;
+        top: 0;
+        border-radius: 1.5rem;
+        padding: 1.3rem 1.2rem;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow-eo-float);
+        backdrop-filter: blur(14px);
+    }
+
+    .hubx-panel-head {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .hubx-panel-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 0.75rem;
+        background: color-mix(in srgb, var(--color-gold-500) 16%, transparent);
+        color: var(--color-gold-700);
+    }
+
+    /* Everything below the head — real, but a clear step down from the
+       identity+status zone above it. Readiness/metrics live in the
+       Universal Module Header now, not here; this starts straight from
+       ownership. */
+    .hubx-panel-detail {
+        margin-top: 1.1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-line);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hubx-panel-owner {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Action — the Inspector's one CTA distinct from the Header's own
+       identity/readiness/next-action zone: a real, module-specific
+       ?action=add link, never an invented one (see supportsAdd). */
+    .hubx-panel-action {
+        display: block;
+        border-radius: 1.1rem;
+        padding: 0.85rem;
+        background: linear-gradient(165deg, var(--color-navy-900) 0%, var(--color-navy-950) 100%);
+        color: #fff;
+        transition: opacity 0.15s ease;
+    }
+    .hubx-panel-action:hover { opacity: 0.9; }
+
+    /* Readiness Gates (Event Inspector only) — one row per gate, a dot
+       rather than a repeated percentage, since the percentage itself
+       already lives in Event Pulse above. */
+    .hubx-panel-gate-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.1rem;
+    }
+
+    .hubx-panel-gate-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+    /* Needs Attention (Event Inspector only) — the same signals the
+       Module Nav Bar's badges carry, spelled out with a reason and a way
+       in; a link, not a static row. */
+    .hubx-panel-attention-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.1rem;
+        border-radius: 0.55rem;
+        transition: background 0.12s ease;
+    }
+    .hubx-panel-attention-row:hover { background: var(--color-page); }
+
+    /* Recent Activity / Related Modules — the least-often-needed tier, so
+       it sits at reduced opacity rather than fighting the sections above
+       it for attention. */
+    .hubx-panel-tertiary {
+        opacity: 0.85;
+        padding-top: 0.7rem;
+        border-top: 1px dashed var(--color-line);
+    }
+
+    .hubx-panel-activity-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.4rem 0.05rem;
+    }
+
+    /* Empty state (module Inspector only) — one intentional message
+       instead of a bare "No recent activity" line and a lot of unused
+       space, for a module with neither progress nor a paper trail yet. */
+    .hubx-panel-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.3rem;
+        padding: 0.9rem 0.5rem;
+    }
+
+    .hubx-panel-empty-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        margin-bottom: 0.2rem;
+    }
+
+    .hubx-panel-empty-cta {
+        margin-top: 0.4rem;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--color-gold-700);
+        transition: opacity 0.15s ease;
+    }
+    .hubx-panel-empty-cta:hover { opacity: 0.8; }
+
+    /* Inspector footer CTA — "Open [module] →", colour set inline per
+       module via style="". Module Inspectors only — Overview has no
+       single module to open. */
+    .hubx-panel-viewall {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border-radius: 0.85rem;
+        padding: 0.6rem 0.75rem;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        transition: opacity 0.15s ease;
+    }
+    .hubx-panel-viewall:hover { opacity: 0.82; }
+
+    /* ── Event Pulse (Health + Readiness, unified) ────────────────────
+       Was two cards living in the same 5-up grid as Days Out/Budget/
+       Risk — same weight class as figures that matter far less. Pulled
+       into one band; the gap between primary and secondary is now a
+       material difference, not just a size difference — Pulse sits on
+       its own warm pearl surface (the one card besides the Header/Stack
+       that isn't plain white glass), secondary tiles go flatter and
+       smaller so the step down reads immediately, not just on close
+       inspection. Same data throughout. ── */
+    .hubx-pulse-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+
+    .hubx-pulse {
+        position: relative;
+        flex: 1.4 1 200px;
+        border-radius: 1.25rem;
+        padding: 0.85rem 1.1rem;
+        background: linear-gradient(160deg, #fffefb 0%, var(--color-hubx-pearl) 100%);
+        border: 1px solid rgba(214, 174, 52, 0.22);
+        box-shadow: var(--shadow-eo-float), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .hubx-pulse-label {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8a7345;
+        margin-bottom: 0.5rem;
+    }
+
+    .hubx-pulse-row {
+        display: flex;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .hubx-pulse-stat { flex: 1; min-width: 0; }
+
+    .hubx-pulse-divider {
+        width: 1px;
+        background: rgba(214, 174, 52, 0.25);
+    }
+
+    .hubx-pulse-value {
+        margin-top: 0.3rem;
+        font-family: var(--font-eo);
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.01em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Secondary strip (Days Out / Budget / Risk) ───────────────────
+       Clearly a step down from Event Pulse now — plain white (the
+       flattest tier in the shell), no lift, smaller figures, quieter
+       label. Reads as reference detail, not a second headline. ── */
+    .hubx-kpi-strip {
+        flex: 1 1 180px;
+        display: grid;
+        gap: 0.4rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .hubx-kpi-card {
+        border-radius: 0.85rem;
+        padding: 0.5rem 0.55rem;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--color-line);
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .hubx-kpi-value {
+        margin-top: 0.25rem;
+        font-family: var(--font-eo);
+        font-size: 14.5px;
+        font-weight: 700;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .hubx-kpi-sub {
+        margin-top: 0.15rem;
+        font-size: 8.5px;
+        font-weight: 600;
+        opacity: 0.75;
+    }
+
+    .hubx-kpi-card .eo-label { opacity: 0.65; font-size: 8.5px; }
+
+    /* Module Workspace Interior (.hubx-ws-*) moved to
+       resources/css/hub-content.css (.ehc-split/.ehc-row/.ehc-detail-*)
+       once its only two callers (Risks, Suppliers) moved onto navy/gold
+       tokens. */
+
+    /* ── Responsive overrides ──────────────────────────────────────────
+       Placed last on purpose: every rule above (.hubx-grid, etc.) is a
+       plain class selector, so without deliberate source-order control
+       here, whichever definition appears LAST in the file wins at every
+       viewport, media query or not — these have to come after the base
+       rules to actually override them at narrower widths.
+       Desktop (≥1280px): workspace | inspector, side by side.
+       Tablet/mobile (<1280px): inspector drops below the workspace, full
+       width. The Module Navigation Bar is unaffected — it's a full-width
+       row above this grid, already horizontally scrollable at any width. */
+    @media (max-width: 1279px) {
+        .hubx-grid,
+        .hubx-grid.has-panel {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .hubx-col-panel { grid-column: 1 / -1; margin-top: 0.85rem; }
+    }
+}

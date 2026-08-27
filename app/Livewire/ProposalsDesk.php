@@ -25,7 +25,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Proposals',
-    'subtitle' => 'What has been offered, what is still out, and what came back a yes.',
+    'hideTitleRow' => true,
 ])]
 class ProposalsDesk extends Component
 {
@@ -36,15 +36,25 @@ class ProposalsDesk extends Component
     #[Url(as: 'q')]
     public string $q = '';
 
+    /** Soft Command MDA — selected offer in the Commercial Control Panel. */
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
+
     /** A decline reason typed into a row, keyed by proposal id. */
     public array $reason = [];
 
     public bool $showReady = true;
 
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
+
     public function setState(string $state): void
     {
         $this->state = in_array($state, ['all', 'draft', 'sent', 'expired', 'accepted', 'declined'], true)
             ? $state : 'all';
+        $this->selectedId = null;
     }
 
     public function toggleReady(): void
@@ -201,8 +211,11 @@ class ProposalsDesk extends Component
         $accepted = $all->where('status', 'accepted');
         $decided = $all->whereIn('status', ['accepted', 'declined']);
 
+        $selected = $rows->firstWhere('id', $this->selectedId) ?? $rows->first();
+
         return view('livewire.proposals-desk', [
             'rows' => $rows,
+            'selected' => $selected,
             'ready' => $ready,
             'figures' => [
                 ['label' => 'Out there', 'value' => $this->money($live->sum(fn ($p) => $p->totalCents())),

@@ -8,7 +8,7 @@
     Livewire action — keeps "Saving…" language consistent without re-handing
     wire:loading.remove / wire:loading on every screen.
 
-    <button wire:click="save" class="btn-navy">
+    <button wire:click="save" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">
         <x-busy target="save" busy="Saving…">Save</x-busy>
     </button>
 --}}

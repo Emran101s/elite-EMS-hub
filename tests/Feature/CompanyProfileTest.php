@@ -64,6 +64,9 @@ class CompanyProfileTest extends TestCase
         ]);
 
         Livewire::actingAs($user)->test(EventCreate::class)
+            ->call('chooseCategory', 'conference')
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'deal')
             ->set('name', 'Gulf Forum')
             ->set('new_client', 'Gulf Org')
             ->set('starts_at', '2027-01-10')

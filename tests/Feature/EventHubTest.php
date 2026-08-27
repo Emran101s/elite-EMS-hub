@@ -6,7 +6,9 @@ use App\Http\Controllers\EventHubController;
 use App\Livewire\EventCreate;
 use App\Livewire\EventsIndex;
 use App\Models\Event;
+use App\Models\EventContract;
 use App\Models\User;
+use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -112,27 +114,24 @@ class EventHubTest extends TestCase
     {
         $user = $this->actor();
 
-        // The portfolio has three views and no more: the Deck to browse it,
-        // the List to work it, the Flight Path to plan it.
+        // Phase C.1 restructured the portfolio: four views, named in the UI as
+        // Mission Board, Timeline, Table and Calendar. The Deck and Mission
+        // Radar are both retired, and "Flight Path" is now called Timeline.
         $this->actingAs($user)->get('/events')->assertOk()
-            ->assertSee('Projects &amp; Events', false)
-            ->assertSee('Deck View')->assertSee('List View')->assertSee('Flight Path')
-            ->assertSee('Active mission')
-            ->assertSee('ICFT 2026')
-            ->assertSee('Next milestone')
-            ->assertSee('AI insight');
+            ->assertSee('Event Portfolio')
+            ->assertSee('Mission Board')
+            ->assertSee('Timeline')->assertSee('Table')->assertSee('Calendar')
+            ->assertSee('ICFT 2026');
 
         $this->actingAs($user)->get('/events?view=list')->assertOk()
-            ->assertSee('Operational management')
-            ->assertSee('Quick actions')
             ->assertSee('ICFT 2026');
 
         $this->actingAs($user)->get('/events?view=path')->assertOk()
-            ->assertSee('Strategic event timeline')
             ->assertSee('ICFT 2026');
 
         // Filters narrow the board. Asserted through the component's paginator,
-        // since the Event Radar always lists every event in the page HTML.
+        // since Board and Timeline always list every matching event in the
+        // page HTML.
         $names = function (array $sets) use ($user) {
             $c = Livewire::actingAs($user)->test(EventsIndex::class);
             foreach ($sets as $k => $v) {
@@ -146,8 +145,8 @@ class EventHubTest extends TestCase
         $this->assertContains('Private Dinner', $names(['stage' => 'live'])->all());
         $this->assertContains('Tech Expo 2026', $names(['q' => 'Doha'])->all());
 
-        // Anything else falls back to the Deck rather than erroring.
-        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Active mission');
+        // Anything else falls back to Mission Board rather than erroring.
+        $this->actingAs($user)->get('/events?view=kanban')->assertOk()->assertSee('Mission Board');
     }
 
     public function test_wizard_builds_an_event_on_one_canvas_with_a_live_preview(): void
@@ -156,13 +155,15 @@ class EventHubTest extends TestCase
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
         Livewire::actingAs($user)->test(EventCreate::class)
+            ->set('originKind', 'commercial')
+            ->set('originSource', 'proposal')
             ->set('new_client', 'Royal Office')
             ->set('name', 'Royal Gala 2027')
             ->set('starts_at', '2027-05-20')
             ->set('ends_at', '2027-05-22')
             // The preview reacts as you type — 3 days, and the crest for a gala.
             ->assertViewHas('previewDays', 3)
-            ->call('chooseTemplate', 'gala')
+            ->call('chooseCategory', 'gala')
             ->assertViewHas('previewType', 'gala_dinner')
             ->call('toggleModule', 'agenda') // gala doesn't include agenda by default — turn it on
             ->call('save')
@@ -182,7 +183,7 @@ class EventHubTest extends TestCase
 
         Livewire::actingAs($user)->test(EventCreate::class)
             ->call('save')
-            ->assertHasErrors(['name', 'starts_at', 'client_id']);
+            ->assertHasErrors(['name', 'starts_at', 'category', 'originKind', 'originSource']);
     }
 
     public function test_disabled_module_tab_falls_back_to_overview(): void
@@ -198,17 +199,20 @@ class EventHubTest extends TestCase
             ->assertOk()->assertSee('Budget');
 
         // Requesting a disabled tab silently shows Overview (no agenda tab link).
+        // Mission Control pass: "Event Overview" (the old dashboard card) is
+        // gone; Mission Timeline (née Mission Feed — same data, evolved
+        // presentation) is Overview's own real element now.
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'agenda']))
-            ->assertOk()->assertSee('Event Overview');
+            ->assertOk()->assertSee('Mission Timeline');
     }
 
     public function test_the_header_reports_scale_readiness_and_what_needs_a_person(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
-        $event->load(\App\Services\EventCommandHeader::RELATIONS);
+        $event->load(EventCommandHeader::RELATIONS);
 
-        $header = app(\App\Services\EventCommandHeader::class)->for($event);
+        $header = app(EventCommandHeader::class)->for($event);
 
         // Every figure is counted, so it has to agree with the records.
         $this->assertSame($event->speakers->count(), (int) collect($header['scale'])->firstWhere('label', 'Speakers')['value']);
@@ -224,8 +228,12 @@ class EventHubTest extends TestCase
 
         // The header is one card now, so these read shorter than the four
         // blocks they replace — same four things, a third of the height.
+        // Command Stack is gone (its job — what needs a person — is now
+        // covered by the header's own attention pill, Event Pulse, the
+        // Universal Module Header, and the Inspector's Next Action); Health
+        // and Readiness are Event Pulse's own unconditional labels, shown
+        // on every tab, so they remain the right always-present assertion.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next')
             ->assertSee('Readiness')
             ->assertSee('Health');
     }
@@ -240,7 +248,7 @@ class EventHubTest extends TestCase
     public function test_the_critical_card_sees_lesser_risks_and_undated_tasks(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         // Clear the decks, then leave exactly one undated open task.
@@ -254,7 +262,7 @@ class EventHubTest extends TestCase
             'due_on' => null,
         ]);
 
-        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $critical = $service->critical($event->fresh()->load(EventCommandHeader::RELATIONS));
         $this->assertSame('Sign off the floor plan', $critical['title']);
         $this->assertSame('No date set', $critical['due']);
 
@@ -268,7 +276,7 @@ class EventHubTest extends TestCase
             'impact' => 3,
         ]);
 
-        $critical = $service->critical($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $critical = $service->critical($event->fresh()->load(EventCommandHeader::RELATIONS));
         $this->assertSame('Venue contract unsigned', $critical['title']);
         $this->assertSame('risks', $critical['tab']);
     }
@@ -288,13 +296,24 @@ class EventHubTest extends TestCase
         $event->approvals()->delete();
         $event->tasks()->delete();
 
+        // Phase E folded the header's three-card grid into one hub mission
+        // card, so "Risk level" and "Nothing is waiting on you" are gone as
+        // labels. The contract this test protects is unchanged: with nothing
+        // outstanding the header keeps its shape rather than collapsing.
+        //
+        // "Clear"/"Next action"/"Nothing pressing"/"Owner" dropped from this
+        // test: they asserted Event Core's and Priority Area's own
+        // always-rendered rows, both retired by the Event Command Header
+        // pass (Event Core sat inside the removed Stage Radar; Priority
+        // Area was retired in favour of the Command Stack, which has since
+        // been removed outright — its job now lives in the header's
+        // attention pill, Event Pulse, the Universal Module Header, and the
+        // Inspector). What "keeps its shape" now is the always-shown Event
+        // Pulse Strip — Health and Readiness render on every tab regardless
+        // of whether risks/approvals/tasks are empty.
         $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('Next')
-            ->assertSee('Nothing is waiting on you')
-            ->assertSee('Due')
-            ->assertSee('Owner')
-            ->assertSee('Risk level')
-            ->assertSee('Clear');
+            ->assertSee('Health')
+            ->assertSee('Readiness');
     }
 
     /**
@@ -306,7 +325,7 @@ class EventHubTest extends TestCase
     public function test_the_tabs_say_where_the_work_is(): void
     {
         $user = $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
         $event->tasks()->delete();
@@ -320,14 +339,14 @@ class EventHubTest extends TestCase
         $event->rooms()->each(fn ($r) => $r->update(['cost_cents' => 1_000_00]));
 
         // A quiet event puts nothing on any tab.
-        $this->assertSame([], $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS)));
+        $this->assertSame([], $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS)));
 
         // One overdue task, one open one that is not yet due: only the first counts.
         $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
         $event->tasks()->create(['title' => 'Soon', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->addWeek()]);
         $event->approvals()->create(['title' => 'Agenda', 'type' => 'agenda', 'status' => 'pending']);
 
-        $a = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $a = $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS));
 
         $this->assertSame(1, $a['tasks']['count']);
         $this->assertSame('1 overdue', $a['tasks']['why']);
@@ -346,59 +365,65 @@ class EventHubTest extends TestCase
             'check_in' => now()->addMonth(), 'check_out' => now()->addMonth()->addDays(3), 'status' => 'held',
         ]);
 
-        $b = $service->attention($event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS));
+        $b = $service->attention($event->fresh()->load(EventCommandHeader::RELATIONS));
 
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
 
-        // And it reaches the tab row.
-        $this->actingAs($user)->get(route('events.hub', $event))->assertOk()
-            ->assertSee('1 overdue')
-            ->assertSee('1 pending');
+        // The Universal Module Header (hub/module-header.blade.php) used to
+        // surface each module's own Overdue/Pending stat here, but it's
+        // turned off in the chrome for now (hub.blade.php no longer renders
+        // it — pending a decision on what replaces it). The tabs still
+        // render fine without it; assert that much.
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))->assertOk();
+        $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))->assertOk();
     }
 
     /**
-     * The way to the next module survives the scroll.
+     * The Module dock marks the active tab.
      *
-     * There used to be a separate 41px rail pinned above the tabs, because the
-     * tabs themselves cost 136px and pinning those would have eaten a seventh
-     * of every screenful. The nav is 70px now, so it is the thing that sticks
-     * and the rail is gone — one pinned element instead of two, and it is the
-     * one you actually use.
+     * Event Command Header pass: the vertical Compact Module Rail (and the
+     * Stage Radar / Orbit Journey it sat beside) is gone outright, replaced
+     * by a horizontal pill-tab strip, later restyled into a dark dock — see
+     * hub/module-nav.blade.php. Its contract is the same as the rail's
+     * before it: the item for the current tab carries is-active, and no
+     * other item does.
      */
-    public function test_the_module_nav_survives_the_scroll(): void
+    public function test_module_nav_marks_the_active_tab(): void
     {
         $user = $this->actor();
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        $event->tasks()->delete();
-        $event->tasks()->create(['title' => 'Late', 'status' => 'todo', 'priority' => 'normal', 'due_on' => now()->subWeek()]);
+        // The active item is a single <a>...</a> — capture just that one
+        // element (stopping at its own closing tag) rather than searching
+        // the rest of the page, where every other module's own label text
+        // also legitimately appears.
+        $activeItem = fn (string $html) => preg_match('/ehx-dock-item is-active"[\s\S]*?<\/a>/', $html, $m) ? $m[0] : '';
 
         $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'budget']))
             ->assertOk()->getContent();
 
-        $nav = (string) str($html)->after('aria-label="Event modules"')->before('</nav>');
-        $box = (string) str($html)->before('aria-label="Event modules"')->afterLast('<div ');
+        $this->assertStringContainsString('>Budget<', $activeItem($html));
+        $this->assertStringNotContainsString('>Approvals<', $activeItem($html));
 
-        $this->assertStringContainsString('sticky top-0', $box, 'the nav must survive the scroll');
-        $this->assertStringContainsString('Tasks', $nav);
+        $html = $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))
+            ->assertOk()->getContent();
 
-        // Its counts come from the same place as the header's, so the two can
-        // never disagree about what is waiting.
-        $this->assertStringContainsString('1 overdue', $nav);
+        $this->assertStringContainsString('>Approvals<', $activeItem($html));
+        $this->assertStringNotContainsString('>Budget<', $activeItem($html));
     }
 
     /** A draft is waiting on nobody; a sent document is waiting on a pen. */
     public function test_only_issued_documents_count_against_the_contract_tab(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
         $event = Event::where('name', 'ICFT 2026')->firstOrFail();
 
-        $contract = \App\Models\EventContract::forEvent($event);
+        $contract = EventContract::forEvent($event);
         $contract->update(['status' => 'draft']);
 
-        $load = fn () => $event->fresh()->load(\App\Services\EventCommandHeader::RELATIONS);
+        $load = fn () => $event->fresh()->load(EventCommandHeader::RELATIONS);
         $this->assertArrayNotHasKey('contract', $service->attention($load()));
 
         $contract->update(['status' => 'sent']);
@@ -408,7 +433,7 @@ class EventHubTest extends TestCase
     public function test_a_name_with_an_edition_splits_and_a_plain_name_does_not(): void
     {
         $this->actor();
-        $service = app(\App\Services\EventCommandHeader::class);
+        $service = app(EventCommandHeader::class);
 
         $split = $service->title(new Event(['name' => 'The First World Public Summit . Arab World']));
         $this->assertSame('The First World Public Summit', $split['lead']);

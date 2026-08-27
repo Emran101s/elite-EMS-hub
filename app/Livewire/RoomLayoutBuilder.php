@@ -5,12 +5,12 @@ namespace App\Livewire;
 use App\Models\Event;
 use App\Models\EventRoom;
 use App\Models\Requirement;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 #[Layout('components.layouts.app', ['title' => 'Venue'])]
 class RoomLayoutBuilder extends Component
@@ -91,7 +91,12 @@ class RoomLayoutBuilder extends Component
         abort_unless($room->event_id === $event->id, 404);
         $this->event = $event;
         $this->room = $room;
-        $this->elements = $room->layout ?? [];
+        // $elements is a typed array property, but a room can carry a
+        // malformed/legacy layout — the column is cast to array, yet a value
+        // stored as a JSON string (rather than a JSON array) decodes back to
+        // a string and would fatal on assignment. Coerce anything that isn't
+        // an array to empty; the next save rewrites it in the right shape.
+        $this->elements = is_array($room->layout) ? $room->layout : [];
         $this->width_m = $room->width_m ? rtrim(rtrim(number_format((float) $room->width_m, 2, '.', ''), '0'), '.') : '';
         $this->length_m = $room->length_m ? rtrim(rtrim(number_format((float) $room->length_m, 2, '.', ''), '0'), '.') : '';
     }

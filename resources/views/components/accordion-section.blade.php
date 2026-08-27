@@ -21,21 +21,21 @@
 ])
 
 <section {{ $attributes->merge(['class' => 'overflow-hidden rounded-2xl border border-line bg-white transition-shadow duration-300']) }}
-         x-bind:class="at === @js($id) && 'shadow-[0_18px_40px_-30px_rgba(11,31,58,0.5)]'">
+         x-bind:class="at === @js($id) && 'shadow-eo'">
     <button type="button"
             x-on:click="at = (at === @js($id) ? null : @js($id))"
             x-bind:aria-expanded="at === @js($id) ? 'true' : 'false'"
             class="flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-page/60">
         @if ($num !== null)
-            <span class="pf text-lg font-bold text-gold-700">{{ $num }}</span>
+            <span class="text-lg font-bold text-gold-700">{{ $num }}</span>
         @endif
         <span class="min-w-0 flex-1">
-            <span class="block text-sm font-bold text-navy-900">{{ $title }}</span>
+            <span class="block text-sm font-bold text-ink">{{ $title }}</span>
             @if ($summary !== null)
                 <span class="block truncate text-eyebrow text-muted">{{ $summary }}</span>
             @endif
         </span>
-        <span class="shrink-0 text-navy-300 transition-transform duration-300"
+        <span class="shrink-0 text-muted transition-transform duration-300"
               x-bind:class="at === @js($id) && 'rotate-180'" aria-hidden="true">▾</span>
     </button>
 

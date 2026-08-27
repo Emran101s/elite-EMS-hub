@@ -23,7 +23,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Contracts',
-    'subtitle' => 'Every agreement in the book — what is drafted, what is out for signature, and what is signed.',
+    'hideTitleRow' => true,
 ])]
 class ContractsRegister extends Component
 {
@@ -33,6 +33,10 @@ class ContractsRegister extends Component
 
     #[Url(as: 'q')]
     public string $q = '';
+
+    /** Soft Command MDA — selected document in Signature / Payment Panel. */
+    #[Url(as: 'selected')]
+    public ?int $selectedId = null;
 
     /** A status key, or 'all'. */
     #[Url(as: 'status')]
@@ -45,6 +49,11 @@ class ContractsRegister extends Component
     /** reference · event · value · due — how the register is ordered. */
     public string $sort = 'due';
 
+    public function select(int $id): void
+    {
+        $this->selectedId = $this->selectedId === $id ? null : $id;
+    }
+
     public function setView(string $view): void
     {
         if (in_array($view, ['register', 'pipeline'], true)) {
@@ -56,6 +65,7 @@ class ContractsRegister extends Component
     {
         $this->status = $status === 'all' || in_array($status, EventContract::STATUSES, true)
             ? $status : 'all';
+        $this->selectedId = null;
     }
 
     public function setType(string $type): void
@@ -134,8 +144,12 @@ class ContractsRegister extends Component
             fn (EventContract $c) => $c->payments->sum(fn ($p) => $p->outstandingCents())
         );
 
+        $docs = $sorted->values();
+        $selected = $docs->firstWhere('id', $this->selectedId) ?? $docs->first();
+
         return view('livewire.contracts-register', [
-            'docs' => $sorted->values(),
+            'docs' => $docs,
+            'selected' => $selected,
             'nextDue' => $nextDue,
             'lanes' => collect(['draft' => 'Draft', 'sent' => 'Out for signature', 'signed' => 'Signed', 'void' => 'Void'])
                 ->map(fn (string $label, string $key) => [

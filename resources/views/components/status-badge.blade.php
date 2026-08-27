@@ -1,21 +1,24 @@
 @props(['status'])
 
 @php
+    // Same status→tone mapping, now on the shared .pill shape + brand tone
+    // colours (navy/gold), so this and <x-eo.status-pill> share one tone
+    // language without eo-soft-command.css's eo-pill-* classes.
     $tone = match ($status) {
         'on_track', 'completed', 'done', 'active', 'approved', 'paid', 'delivered',
-        'final', 'live', 'mitigated', 'confirmed', 'contracted' => 'bg-track/10 text-emerald-700 ring-track/30',
+        'final', 'live', 'mitigated', 'confirmed', 'contracted' => 'bg-success-soft text-success-ink',
 
         'in_progress', 'doing', 'todo', 'review', 'planning', 'pending', 'on_hold', 'production', 'partial',
         'quoted', 'monitoring', 'waiting_speaker', 'needs_review', 'proposal',
-        'requested', 'in_production' => 'bg-warn/10 text-amber-700 ring-warn/30',
+        'requested', 'in_production' => 'bg-warning-soft text-warning-ink',
 
         'at_risk', 'behind', 'urgent', 'rejected', 'escalated', 'issue',
-        'cancelled', 'blocked', 'needs_revision' => 'bg-risk/10 text-red-700 ring-risk/30',
+        'cancelled', 'blocked', 'needs_revision' => 'bg-danger-soft text-danger-ink',
 
-        default => 'bg-navy-50 text-navy-600 ring-navy-200', // draft, closed, …
+        default => 'bg-page text-muted', // draft, closed, …
     };
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 {$tone}"]) }}>
+<span {{ $attributes->class(['pill', $tone]) }}>
     {{ str($status)->replace('_', ' ')->title() }}
 </span>

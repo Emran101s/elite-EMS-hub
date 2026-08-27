@@ -16,6 +16,17 @@
         : null;
     $isLetter = $type === 'letter';
 
+    // A draft has agreed to nothing yet, so the whole document tracks the
+    // event — rename it, move the venue, and the header AND the recital
+    // sentence below both follow. Once it is out the door ($status past
+    // 'draft') this freezes on the data snapshot instead: a sent or signed
+    // document must not silently reword itself under the reader. Resolved
+    // here, once, before $recitals reads $data['event'] a few lines down —
+    // every consumer of $data['event'] in this render sees the same answer.
+    if (($status ?? 'draft') === 'draft') {
+        $data['event'] = \App\Models\EventContract::liveEventSummary($event);
+    }
+
     // The preamble: who is contracting, where, on what date, and what for.
     // Generated rather than stored, so it can never drift from the parties and
     // dates panels — edit a representative there and this sentence follows.

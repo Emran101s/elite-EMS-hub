@@ -1,75 +1,68 @@
 <div>
     @php
-        $approvedCount = $decided->where('status', 'approved')->count();
-        $rejectedCount = $decided->where('status', 'rejected')->count();
-        $revisionCount = $decided->where('status', 'needs_revision')->count();
         $moduleHex = \App\Models\Event::moduleColor('approvals');
     @endphp
 
-    <x-stat-strip class="mb-3" :stats="[
-        ['Pending', $pending->count(), 'clock', null, null, null, $pending->isNotEmpty() ? 'text-amber-700' : 'text-navy-900'],
-        ['Approved', $approvedCount, 'check', null, null, null, 'text-emerald-600'],
-        ['Rejected', $rejectedCount, 'flag', null, null, null, $rejectedCount ? 'text-red-700' : 'text-navy-900'],
-        ['Needs revision', $revisionCount, 'clipboard', null, null, null, $revisionCount ? 'text-amber-700' : 'text-navy-900'],
-    ]" />
-
+    {{-- Pending / Approved / Rejected duplicated the Universal Module
+         Header exactly; "Needs revision" is still visible per-decision in
+         History below, so nothing is lost by dropping the strip. --}}
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p class="text-eyebrow text-muted">Budget · supplier · design · venue · agenda · client · payment · report</p>
-        <button type="button" wire:click="$toggle('showForm')" class="btn-gold h-9 px-3.5 text-xs">＋ Request Approval</button>
+        <button type="button" wire:click="$toggle('showForm')" class="h-9 rounded-full bg-gold-500 px-3.5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Request Approval</button>
     </div>
 
     @if ($showForm)
-        <form wire:submit="save" class="card mb-4 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+        <form wire:submit="save" class="mb-4 grid gap-3 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
-                <label class="field-label !mb-1 !text-eyebrow" for="a-title">What needs approval?</label>
-                <input id="a-title" type="text" wire:model="title" class="input h-9 text-sm" placeholder="e.g. Revised catering budget">
-                @error('title') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="a-title">What needs approval?</label>
+                <input id="a-title" type="text" wire:model="title" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none" placeholder="e.g. Revised catering budget">
+                @error('title') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="field-label !mb-1 !text-eyebrow" for="a-type">Type</label>
-                <select id="a-type" wire:model="type" class="input h-9 text-sm">
+                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="a-type">Type</label>
+                <select id="a-type" wire:model="type" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
                     @foreach (\App\Support\Taxonomy::options('approval_type') as $tk => $tl)<option value="{{ $tk }}">{{ $tl }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="field-label !mb-1 !text-eyebrow" for="a-notes">Notes</label>
-                <input id="a-notes" type="text" wire:model="notes" class="input h-9 text-sm" placeholder="Optional context">
+                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="a-notes">Notes</label>
+                <input id="a-notes" type="text" wire:model="notes" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none" placeholder="Optional context">
             </div>
             <div>
-                <label class="field-label !mb-1 !text-eyebrow" for="a-amount">Amount</label>
-                <input id="a-amount" type="number" min="0" step="0.01" wire:model="amount" class="input h-9 text-sm" placeholder="Optional">
-                @error('amount') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="a-amount">Amount</label>
+                <input id="a-amount" type="number" min="0" step="0.01" wire:model="amount" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none" placeholder="Optional">
+                @error('amount') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                 @if ($threshold && in_array($type, \App\Models\EventApproval::AMOUNT_GATED_TYPES, true))
                     <p class="mt-1 text-eyebrow text-muted">Over {{ $event->money($threshold) }} adds a required Admin sign-off step automatically.</p>
                 @endif
             </div>
 
             <div class="sm:col-span-2 xl:col-span-4">
-                <p class="field-label !mb-1 !text-eyebrow">Who signs off, in order</p>
+                <p class="mb-1 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Who signs off, in order</p>
                 <p class="mb-2 text-eyebrow text-muted">Leave a step's approver blank for "any manager" — the platform's default. Add a step to require a second, later decision.</p>
                 <div class="space-y-1.5">
                     @foreach ($steps as $i => $step)
                         <div class="flex items-center gap-1.5">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-50 text-eyebrow font-bold text-navy-500">{{ $i + 1 }}</span>
-                            <input type="text" wire:model="steps.{{ $i }}.label" class="input h-9 flex-1 text-sm" placeholder="Step name (optional) — e.g. Finance">
-                            <select wire:model="steps.{{ $i }}.approver_id" class="input h-9 w-40 text-sm">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-page text-eyebrow font-bold text-muted">{{ $i + 1 }}</span>
+                            <input type="text" wire:model="steps.{{ $i }}.label" class="h-9 flex-1 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none" placeholder="Step name (optional) — e.g. Finance">
+                            <select wire:model="steps.{{ $i }}.approver_id" class="h-9 w-40 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
                                 <option value="">Any manager</option>
                                 @foreach ($managers as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach
                             </select>
                             @if (count($steps) > 1)
-                                <button type="button" wire:click="removeStep({{ $i }})" class="shrink-0 rounded-lg px-2 py-1.5 text-eyebrow font-bold text-navy-300 hover:bg-red-50 hover:text-red-600">✕</button>
+                                <button type="button" wire:click="removeStep({{ $i }})" class="shrink-0 rounded-lg px-2 py-1.5 text-eyebrow font-bold text-muted hover:bg-danger-soft hover:text-danger-ink">✕</button>
                             @endif
                         </div>
-                        @error('steps.'.$i.'.approver_id') <p class="ms-8 text-xs text-risk">{{ $message }}</p> @enderror
+                        @error('steps.'.$i.'.approver_id') <p class="ms-8 text-xs text-danger-ink">{{ $message }}</p> @enderror
                     @endforeach
                 </div>
-                @error('steps') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                @error('steps') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                 <button type="button" wire:click="addStep" class="mt-1.5 text-eyebrow font-semibold text-gold-700 hover:underline">＋ Add another step</button>
             </div>
 
             <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
-                <button type="button" wire:click="$set('showForm', false)" class="h-9 rounded-xl px-4 text-xs font-semibold text-navy-600 hover:text-navy-900">Cancel</button>
-                <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-navy h-9 px-5 text-xs">
+                <button type="button" wire:click="$set('showForm', false)" class="h-9 rounded-full px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
+                <button type="submit" wire:loading.attr="disabled" wire:target="save" class="h-9 rounded-full bg-navy-900 px-5 text-xs font-bold text-white transition hover:bg-navy-800">
                     <x-busy target="save" busy="Submitting…">Submit Request</x-busy>
                 </button>
             </div>
@@ -78,20 +71,17 @@
 
     <div class="grid gap-4 lg:grid-cols-2">
         {{-- Pending queue --}}
-        <div class="card overflow-hidden">
+        <div class="overflow-hidden rounded-lg border border-line bg-white">
             <div class="flex items-center gap-2.5 border-b border-line px-4 py-2.5">
                 <span class="flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
                     <x-icon name="identification" class="h-3.5 w-3.5" />
                 </span>
-                <h3 class="pf text-sm font-bold text-navy-900">Pending</h3>
-                <span class="rounded-full bg-amber-50 px-2 py-0.5 text-eyebrow font-bold tabular-nums text-amber-800 ring-1 ring-amber-200">{{ $pending->count() }}</span>
+                <h3 class="text-sm font-bold text-ink">Pending</h3>
+                <span class="rounded-full bg-warning-soft px-2 py-0.5 text-eyebrow font-bold tabular-nums text-warning-ink">{{ $pending->count() }}</span>
             </div>
 
             @if ($pending->isEmpty())
-                <div class="flex flex-col items-center gap-1.5 px-4 py-10 text-center">
-                    <x-icon name="check" class="h-4 w-4 text-emerald-500" />
-                    <p class="text-xs text-muted">Queue is clear — nothing awaiting a decision.</p>
-                </div>
+                <x-empty icon="check" title="Queue is clear" hint="Nothing awaiting a decision." class="!rounded-none !border-0 !shadow-none" />
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($pending as $approval)
@@ -105,14 +95,14 @@
                         <li class="px-4 py-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
+                                    <p class="text-sm font-semibold text-ink">{{ $approval->title }}</p>
                                     <p class="mt-0.5 text-eyebrow text-muted">
                                         {{ str($approval->type)->title() }}
                                         · {{ $approval->requester?->name ?? '—' }}
                                         · {{ $approval->created_at->diffForHumans() }}
                                     </p>
                                     @if ($isChain && $current)
-                                        <p class="mt-1 text-eyebrow font-semibold text-navy-600">Step {{ $currentIndex + 1 }} of {{ $steps->count() }} — awaiting {{ $current->assigneeLabel() }}</p>
+                                        <p class="mt-1 text-eyebrow font-semibold text-ink">Step {{ $currentIndex + 1 }} of {{ $steps->count() }} — awaiting {{ $current->assigneeLabel() }}</p>
                                         @php $done = $steps->whereIn('status', ['approved', 'rejected', 'needs_revision']); @endphp
                                         @if ($done->isNotEmpty())
                                             <p class="mt-0.5 text-eyebrow text-muted">
@@ -121,10 +111,10 @@
                                         @endif
                                     @endif
                                     @if ($approval->notes)
-                                        <p class="mt-1 truncate text-eyebrow text-navy-600">{{ $approval->notes }}</p>
+                                        <p class="mt-1 truncate text-eyebrow text-ink">{{ $approval->notes }}</p>
                                     @endif
                                 </div>
-                                <span class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">{{ $approval->type }}</span>
+                                <span class="shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-warning-ink">{{ $approval->type }}</span>
                             </div>
 
                             @can('decide-approvals')
@@ -153,11 +143,11 @@
                                     @if ($canDecide)
                                         <div class="mt-2 flex flex-wrap gap-1.5">
                                             <button type="button" wire:click="decide({{ $approval->id }}, 'approved')"
-                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-emerald-700 ring-1 ring-line hover:ring-emerald-300">✓ Approve</button>
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-success-ink ring-1 ring-line hover:ring-success">✓ Approve</button>
                                             <button type="button" wire:click="decide({{ $approval->id }}, 'rejected')"
-                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-red-700 ring-1 ring-line hover:ring-red-300">✕ Reject</button>
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-danger-ink ring-1 ring-line hover:ring-danger">✕ Reject</button>
                                             <button type="button" wire:click="decide({{ $approval->id }}, 'needs_revision')"
-                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-amber-700 ring-1 ring-line hover:ring-amber-300">↺ Revise</button>
+                                                    class="rounded-md bg-white px-2 py-1 text-eyebrow font-bold text-warning-ink ring-1 ring-line hover:ring-warning">↺ Revise</button>
                                         </div>
                                     @elseif ($assignedElsewhere)
                                         <p class="mt-2 text-eyebrow font-semibold text-muted">
@@ -175,7 +165,7 @@
                                         <div class="mt-2">
                                             @if ($delegatingId === $approval->id)
                                                 <div class="flex flex-wrap items-center gap-1.5">
-                                                    <select wire:model="delegateTo" class="input h-8 min-w-[10rem] flex-1 text-eyebrow">
+                                                    <select wire:model="delegateTo" class="h-8 min-w-[10rem] flex-1 rounded-lg border border-line bg-white px-2 text-eyebrow text-ink focus:border-navy-300 focus:outline-none">
                                                         <option value="">Hand off to…</option>
                                                         @foreach ($delegateTargets as $m)
                                                             <option value="{{ $m->id }}">{{ $m->name }}</option>
@@ -184,12 +174,12 @@
                                                     <button type="button" wire:click="delegate({{ $approval->id }})"
                                                             class="rounded-md bg-navy-900 px-2 py-1 text-eyebrow font-bold text-white hover:bg-navy-800">Hand off</button>
                                                     <button type="button" wire:click="cancelDelegate"
-                                                            class="rounded-md px-2 py-1 text-eyebrow font-semibold text-muted hover:text-navy-900">Cancel</button>
+                                                            class="rounded-md px-2 py-1 text-eyebrow font-semibold text-muted hover:text-ink">Cancel</button>
                                                 </div>
-                                                @error('delegateTo') <p class="mt-1 text-xs text-risk">{{ $message }}</p> @enderror
+                                                @error('delegateTo') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
                                             @else
                                                 <button type="button" wire:click="startDelegate({{ $approval->id }})"
-                                                        class="text-eyebrow font-semibold text-navy-500 underline-offset-2 hover:text-navy-900 hover:underline">
+                                                        class="text-eyebrow font-semibold text-muted underline-offset-2 hover:text-ink hover:underline">
                                                     Hand off to someone else
                                                 </button>
                                             @endif
@@ -197,7 +187,7 @@
                                     @endif
                                 @endif
                             @else
-                                <p class="mt-2 text-eyebrow text-muted">Awaiting a manager’s decision.</p>
+                                <p class="mt-2 text-eyebrow text-muted">Awaiting a manager's decision.</p>
                             @endcan
                         </li>
                     @endforeach
@@ -206,17 +196,17 @@
         </div>
 
         {{-- History --}}
-        <div class="card overflow-hidden">
+        <div class="overflow-hidden rounded-lg border border-line bg-white">
             <div class="flex items-center gap-2.5 border-b border-line px-4 py-2.5">
-                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-navy-100 text-navy-600">
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-page text-muted">
                     <x-icon name="archive" class="h-3.5 w-3.5" />
                 </span>
-                <h3 class="pf text-sm font-bold text-navy-900">History</h3>
-                <span class="text-eyebrow font-bold tabular-nums text-navy-400">{{ $decided->count() }}</span>
+                <h3 class="text-sm font-bold text-ink">History</h3>
+                <span class="text-eyebrow font-bold tabular-nums text-muted">{{ $decided->count() }}</span>
             </div>
 
             @if ($decided->isEmpty())
-                <p class="px-4 py-10 text-center text-xs text-muted">No decisions yet.</p>
+                <x-empty icon="archive" title="No decisions yet" hint="Approved, rejected and revised requests will show up here." class="!rounded-none !border-0 !shadow-none" />
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($decided as $approval)
@@ -224,7 +214,7 @@
                         <li class="px-4 py-2.5">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="truncate text-sm font-semibold text-navy-900">{{ $approval->title }}</p>
+                                    <p class="truncate text-sm font-semibold text-ink">{{ $approval->title }}</p>
                                     <p class="truncate text-eyebrow text-muted">
                                         {{ str($approval->type)->title() }}
                                         · {{ $approval->decider?->name ?? '—' }}
@@ -239,10 +229,10 @@
                                     @foreach ($approval->steps as $step)
                                         @php
                                             $stepTone = match ($step->status) {
-                                                'approved' => 'text-emerald-700',
-                                                'rejected' => 'text-red-700',
-                                                'needs_revision' => 'text-amber-700',
-                                                'skipped' => 'text-navy-300',
+                                                'approved' => 'text-success-ink',
+                                                'rejected' => 'text-danger-ink',
+                                                'needs_revision' => 'text-warning-ink',
+                                                'skipped' => 'text-line',
                                                 default => 'text-muted',
                                             };
                                             $stepMark = match ($step->status) {

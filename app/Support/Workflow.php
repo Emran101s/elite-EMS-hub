@@ -177,19 +177,6 @@ class Workflow
         return 'state:'.$set;
     }
 
-    /**
-     * key => label, in order. The constants are the fallback, so a state the
-     * code knows about always resolves even if nothing has been seeded.
-     */
-    public static function options(string $set): array
-    {
-        $terms = self::terms($set);
-
-        return $terms->isEmpty()
-            ? collect(self::meta($set, 'states'))->map(fn ($d) => $d[0])->all()
-            : $terms->pluck('label', 'key')->all();
-    }
-
     /** Every state with its wording, colour and whether it is still offered. */
     public static function rows(string $set): Collection
     {

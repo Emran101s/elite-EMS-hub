@@ -9,177 +9,74 @@
                    ['label' => \App\Models\Event::moduleLabel($tab)],
                ]">
 
-    {{-- ══ The header ══
-         Identity, scale, the one thing that needs a person, module-by-module
-         progress, where to go, and what is true right now. See
-         resources/views/components/event-header.blade.php for why it is these
-         four blocks and not the one white bar it replaces. ══ --}}
-    <x-event-header :event="$event" :header="$header" />
-
-    {{-- ══ Module nav ══
-         Twenty-three equal-weight pills wrapping to two rows was furniture —
-         a seventh of a laptop screen before the work started. The strip is now
-         a single row: the daily doors stay visible, everything else lives under
-         More (grouped by the same families MODULE_COLORS already implies). The
-         tab you are on is always promoted into the strip, so you never lose
-         your place. Words still, not icon tiles — that lesson holds. Colour
-         dots still name the family. ══ --}}
-    @php
-        $modules = \App\Models\Event::HUB_TABS;
-        $attention = $header['attention'] ?? [];
-
-        // Daily doors — the ones a coordinator opens every day the show is
-        // running, per docs/19's workflow spine. Everything else, however
-        // important, is a few-times-a-project door rather than a daily one,
-        // and lives under More.
-        $primaryKeys = ['overview', 'tasks', 'agenda', 'venue', 'transportation', 'budget'];
-
-        $enabled = collect($modules)->keys()->filter(fn ($key) => $event->moduleEnabled($key))->values();
-
-        $primary = collect($primaryKeys)->filter(fn ($key) => $enabled->contains($key))->values();
-        if ($enabled->contains($tab) && ! $primary->contains($tab)) {
-            $primary = $primary->push($tab);
-        }
-
-        $overflowKeys = $enabled->reject(fn ($key) => $primary->contains($key))->values();
-
-        // Same family language as MODULE_COLORS — Plan blue, Programme teal,
-        // Logistics amber, Exhibition violet, Sell green, Grow grey/gold.
-        $families = [
-            'Plan' => ['planning', 'pricing', 'approvals', 'brief', 'contract', 'risks'],
-            'Programme' => ['speakers'],
-            'Logistics' => ['suppliers', 'accommodation', 'catering'],
-            'Partners' => ['exhibition', 'sponsors'],
-            'Sell' => ['attendees'],
-            'Library' => ['files', 'reports'],
-            'System' => ['ai', 'settings'],
-        ];
-
-        $overflowByFamily = collect($families)->map(
-            fn (array $keys) => collect($keys)->filter(fn ($key) => $overflowKeys->contains($key))->values()
-        )->filter->isNotEmpty();
-
-        // Anything enabled that isn't in a family bucket still shows (forward-safe).
-        $bucketed = $overflowByFamily->flatten();
-        $ungrouped = $overflowKeys->reject(fn ($key) => $bucketed->contains($key))->values();
-        if ($ungrouped->isNotEmpty()) {
-            $overflowByFamily = $overflowByFamily->put('More', $ungrouped);
-        }
-
-        $overflowAttention = $overflowKeys->sum(fn ($key) => (int) ($attention[$key]['count'] ?? 0));
-        $overflowAlarm = $overflowKeys->contains(fn ($key) => ($attention[$key]['tone'] ?? null) === 'alarm');
-
-        $tabLink = function (string $key, bool $inMenu = false) use ($modules, $tab, $attention): array {
-            [$label, $note] = $modules[$key];
-            $active = $tab === $key;
-            $hex = \App\Models\Event::moduleColor($key);
-            $n = $attention[$key] ?? null;
-
-            return compact('label', 'note', 'active', 'hex', 'n', 'inMenu');
-        };
-    @endphp
-    <div class="sticky top-0 z-20 -mx-4 mt-3 border-b border-line bg-page/92 px-4 backdrop-blur lg:-mx-6 lg:px-6"
-         x-data="{ more: false }"
-         @keydown.escape.window="more = false">
-        <nav class="flex items-center gap-1 py-1.5" aria-label="Event modules">
-            <div class="scrollbar-none flex min-w-0 flex-1 items-center gap-x-0.5 overflow-x-auto">
-                @foreach ($primary as $key)
-                    @php extract($tabLink($key)); @endphp
-                    <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
-                       @if ($active) aria-current="page" @endif
-                       title="{{ $note }}"
-                       @class([
-                           'group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[5px] text-[12px] font-bold transition',
-                           'text-white shadow-[0_6px_14px_-6px_rgba(11,31,58,0.55)]' => $active,
-                           'font-semibold text-navy-400 hover:bg-navy-50 hover:text-navy-900' => ! $active,
-                       ])
-                       style="{{ $active ? 'background:' . $hex . ';' : '' }}">
-                        <span class="h-[5px] w-[5px] shrink-0 rounded-full transition"
-                              style="background: {{ $active ? 'rgba(255,255,255,.85)' : $hex }}; opacity: {{ $active ? 1 : 0.5 }}"
-                              aria-hidden="true"></span>
-                        {{ $label }}
-                        @if ($n)
-                            <span title="{{ $n['why'] }}" @class([
-                                'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
-                                'bg-white/25 text-white' => $active,
-                                'bg-risk/12 text-red-700' => ! $active && $n['tone'] === 'alarm',
-                                'bg-gold-100 text-gold-800' => ! $active && $n['tone'] !== 'alarm',
-                            ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-
-            @if ($overflowKeys->isNotEmpty())
-                <div class="relative shrink-0 ps-1">
-                    <button type="button"
-                            @click="more = ! more"
-                            :aria-expanded="more.toString()"
-                            aria-haspopup="true"
-                            aria-controls="hub-modules-more"
-                            class="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-bold transition"
-                            :class="more ? 'bg-navy-900 text-white' : 'text-navy-500 hover:bg-navy-50 hover:text-navy-900'">
-                        More
-                        @if ($overflowAttention > 0)
-                            <span @class([
-                                'grid h-[16px] min-w-[16px] place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
-                                'bg-risk/20 text-red-700' => $overflowAlarm,
-                                'bg-gold-100 text-gold-800' => ! $overflowAlarm,
-                            ])
-                                  :class="more ? '!bg-white/25 !text-white' : ''">{{ $overflowAttention > 99 ? '99+' : $overflowAttention }}</span>
-                        @endif
-                        <svg class="h-3 w-3 opacity-60 transition" :class="more && 'rotate-180'" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-
-                    <div id="hub-modules-more"
-                         x-show="more"
-                         x-cloak
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 translate-y-1"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 translate-y-1"
-                         @click.outside="more = false"
-                         class="absolute end-0 top-full z-30 mt-1.5 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_24px_50px_-28px_rgba(11,31,58,0.55)]">
-                        <div class="max-h-[min(28rem,70vh)] overflow-y-auto p-2">
-                            @foreach ($overflowByFamily as $family => $keys)
-                                <p class="px-2.5 pb-1 pt-2 text-eyebrow font-bold uppercase tracking-[0.16em] text-navy-300 first:pt-1">{{ $family }}</p>
-                                <div class="grid gap-0.5">
-                                    @foreach ($keys as $key)
-                                        @php extract($tabLink($key, true)); @endphp
-                                        <a href="{{ route('events.hub', [$event, 'tab' => $key]) }}"
-                                           @click="more = false"
-                                           title="{{ $note }}"
-                                           @class([
-                                               'flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition',
-                                               'bg-navy-50 text-navy-900' => $active,
-                                               'text-navy-700 hover:bg-page' => ! $active,
-                                           ])>
-                                            <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $hex }}" aria-hidden="true"></span>
-                                            <span class="min-w-0 flex-1 truncate">{{ $label }}</span>
-                                            <span class="truncate text-eyebrow font-medium text-navy-300">{{ $note }}</span>
-                                            @if ($n)
-                                                <span title="{{ $n['why'] }}" @class([
-                                                    'grid h-[16px] min-w-[16px] shrink-0 place-items-center rounded-full px-1 text-[9.5px] font-black tabular-nums',
-                                                    'bg-risk/12 text-red-700' => $n['tone'] === 'alarm',
-                                                    'bg-gold-100 text-gold-800' => $n['tone'] !== 'alarm',
-                                                ])>{{ $n['count'] > 99 ? '99+' : $n['count'] }}</span>
-                                            @endif
-                                        </a>
-                                    @endforeach
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </nav>
+    {{-- ══ Event Command Header + Event Utilities drawer ══
+         Identity, status, location, dates, journey type — and, in the same
+         card, the Event Pulse row (Health/Readiness/Days Out/Budget/Risk):
+         folded into the header itself rather than floating as its own
+         strip underneath it. Real numbers off EventCommandHeader::for() —
+         see resources/views/components/eo/hubx-header.blade.php.
+         Team Workload and Recent Activity used to sit permanently on
+         Overview; they're real, just secondary — accessed intentionally
+         from the header's own ⋯ icon now, not stacked on every visit.
+         Shared x-data so the header's button and the drawer (siblings in
+         the rendered DOM, even though they're separate Blade components)
+         agree on open/closed state. ══ --}}
+    <div x-data="{ utilitiesOpen: false }">
+        <x-hub.header :event="$event" :header="$header" :health="$health" />
+        <x-hub.utilities-drawer :event="$event" :workload="$workload" />
     </div>
 
-    <div class="mt-5">
-        @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
+    {{-- ══ Module Navigation Bar ══
+         Replaces the old Stage Radar / Orbit Journey entirely — no radar,
+         no orbit, no lifecycle diagram. A flat door per enabled module,
+         same meters()/attention() numbers as everywhere else on this page.
+         Full-width row, not a grid column — see hub/module-nav.blade.php. ══ --}}
+    <div class="mt-3">
+        <x-hub.module-nav :event="$event" :header="$header" :active-tab="$tab" />
+    </div>
+
+    @php
+        // The Universal Inspector shows only on tabs that DON'T already carry
+        // their own right-hand rail. A tab with its own control panel —
+        // budget/sponsors/transportation/catering/exhibition/accommodation/
+        // attendees all render a fixed 1fr+300px sidebar; risks/suppliers a
+        // 1fr+320px detail card; planning/tasks a full-width board with an
+        // overlay control center — would otherwise cram a redundant THIRD
+        // column (its own rail + the inspector) into ~1000px, the exact
+        // "everything's squeezed / wasted gutters" problem this fixes. Those
+        // tabs get the whole width for their own layout; the inspector is
+        // kept for the simple list/card/document tabs that genuinely have an
+        // empty right side to fill.
+        $showPanel = in_array($tab, [
+            'overview', 'agenda', 'approvals', 'speakers',
+            'venue', 'pricing', 'brief', 'contract', 'files',
+        ], true);
+    @endphp
+
+    {{-- ══ Active Workspace | Inspector ══
+         The Command Stack is gone outright — not collapsed, not a drawer,
+         not replaced by anything else. Its job (what needs a person) is
+         already covered by the Header's own attention pill, Event Pulse,
+         and the Inspector's Next Action. Removing the column gives the
+         workspace the width back. Left: the tab's own existing content,
+         unchanged — Mission Timeline IS the Overview workspace now, not a
+         card floating in a bigger layout. Right: the Universal Module
+         Inspector, per-module data. ══ --}}
+    <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-3">
+        <div class="min-w-0">
+            {{-- Universal Module Header (hub/module-header.blade.php) is
+                 turned off here for now, per direct instruction — pending
+                 a decision on what replaces it. Component and its
+                 HubModuleInspector data source are untouched, just not
+                 rendered. --}}
+
+            @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
+        </div>
+
+        @if ($showPanel)
+            <div class="ehx-col-panel">
+                <x-hub.inspector :event="$event" :header="$header" :tab="$tab" />
+            </div>
+        @endif
     </div>
 </x-layouts.app>

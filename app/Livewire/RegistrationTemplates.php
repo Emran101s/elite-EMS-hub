@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\RegistrationField;
 use App\Models\RegistrationTemplate;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,7 +18,7 @@ use Livewire\Component;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Registration templates',
-    'subtitle' => 'Question sets you build once. An event starts from a copy and owns it after.',
+    'hideTitleRow' => true,
 ])]
 class RegistrationTemplates extends Component
 {
@@ -25,6 +26,7 @@ class RegistrationTemplates extends Component
     public ?int $editingId = null;
 
     public string $name = '';
+
     public string $note = '';
 
     /** @var list<array<string,mixed>> */
@@ -111,7 +113,7 @@ class RegistrationTemplates extends Component
             // files answers under it, and a template that renames its keys
             // every save would make two events disagree about the same
             // question.
-            $key = trim((string) ($f['key'] ?? '')) ?: \Illuminate\Support\Str::of($label)->slug('_')->limit(40, '')->toString();
+            $key = trim((string) ($f['key'] ?? '')) ?: Str::of($label)->slug('_')->limit(40, '')->toString();
 
             while (in_array($key, $usedKeys, true)) {
                 $key .= '_2';

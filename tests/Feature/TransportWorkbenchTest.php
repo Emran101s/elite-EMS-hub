@@ -99,7 +99,7 @@ class TransportWorkbenchTest extends TestCase
             ->assertSee('Planned');
     }
 
-    public function test_not_ready_count_is_on_the_strip(): void
+    public function test_not_ready_count_is_visible_in_transport_control(): void
     {
         $this->movement('planned');
 

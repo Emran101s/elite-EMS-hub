@@ -40,7 +40,7 @@ class AgendaConflictTest extends TestCase
 
         Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
             ->assertSee('scheduling')
-            ->assertSee('double-booked with'); // room clash flagged on the card
+            ->assertSee('double-booked:'); // room clash flagged on the card
     }
 
     public function test_same_speaker_overlap_is_flagged(): void
@@ -58,7 +58,7 @@ class AgendaConflictTest extends TestCase
         $b->speakers()->attach($chen, ['role' => 'keynote', 'sort' => 0]);
 
         Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
-            ->assertSee('Dr. Chen also speaks at', false);
+            ->assertSee('Dr. Chen is double-booked', false);
     }
 
     public function test_session_bills_multiple_speakers_with_roles(): void

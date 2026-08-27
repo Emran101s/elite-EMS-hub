@@ -8,9 +8,11 @@ use App\Models\Event;
 use App\Models\EventContract;
 use App\Models\EventSpeaker;
 use App\Models\Supplier;
+use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Support\ContractAppendices;
 use App\Support\ContractClauses;
+use App\Support\Workflow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -72,6 +74,59 @@ class EventContractTest extends TestCase
         $contract->update(['data' => $data]);
 
         $this->assertSame('USD', $contract->fresh()->currencyCode());
+    }
+
+    /**
+     * The header prints "{name} · {dates} · {location}" from paper.blade.php,
+     * reading $data['event'] — a snapshot taken once, when the contract was
+     * first opened. Renaming the event afterwards must reach a still-draft
+     * document exactly as renaming its currency already does above.
+     */
+    public function test_a_draft_document_tracks_the_events_name_after_a_rename(): void
+    {
+        $event = Event::factory()->create(['name' => 'Hekma Project']);
+        $contract = EventContract::forEvent($event);
+
+        $this->assertSame('Hekma Project', $contract->data['event']['name'], 'sanity: the snapshot seeded with the original name');
+
+        $event->update(['name' => 'Hikma Fellowship']);
+
+        $summary = $contract->fresh()->status === 'draft'
+            ? EventContract::liveEventSummary($event->fresh())
+            : $contract->fresh()->data['event'];
+
+        $this->assertSame('Hikma Fellowship', $summary['name']);
+    }
+
+    /** The exact bug: the live preview panel, rendered, after a rename. */
+    public function test_the_rendered_preview_shows_the_events_current_name(): void
+    {
+        [$user, $event] = $this->make();
+        $event->update(['name' => 'Hekma Project']);
+        $c = $this->tab($user, $event);
+        $c->assertSee('Hekma Project');
+
+        $event->update(['name' => 'Hikma Fellowship']);
+
+        $this->tab($user, $event)
+            ->assertSee('Hikma Fellowship')
+            ->assertDontSee('Hekma Project');
+    }
+
+    /** Once it has left the building, the printed header must not reword itself. */
+    public function test_a_sent_documents_header_keeps_the_name_it_was_sent_with(): void
+    {
+        $event = Event::factory()->create(['name' => 'Hekma Project']);
+        $contract = EventContract::forEvent($event);
+        $contract->update(['status' => 'sent']);
+
+        $event->update(['name' => 'Hikma Fellowship']);
+
+        $summary = $contract->fresh()->status === 'draft'
+            ? EventContract::liveEventSummary($event->fresh())
+            : $contract->fresh()->data['event'];
+
+        $this->assertSame('Hekma Project', $summary['name'], 'a sent document is a record of what was sent, not a live view');
     }
 
     public function test_body_seeds_as_editable_bilingual_blocks(): void
@@ -637,7 +692,7 @@ class EventContractTest extends TestCase
 
             $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
                 ->assertOk()
-                ->assertSee(\App\Support\Workflow::label('contract_status', $status));
+                ->assertSee(Workflow::label('contract_status', $status));
 
             $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'contract']))->assertOk();
             $this->actingAs($user)->get(route('contracts.index'))->assertOk();
@@ -650,11 +705,11 @@ class EventContractTest extends TestCase
         [$user, $event] = $this->make();
         EventContract::forEvent($event)->update(['status' => 'partially_signed']);
 
-        \App\Support\Workflow::seed();
-        \App\Models\TaxonomyTerm::where('taxonomy', \App\Support\Workflow::taxonomy('contract_status'))
+        Workflow::seed();
+        TaxonomyTerm::where('taxonomy', Workflow::taxonomy('contract_status'))
             ->where('key', 'partially_signed')
             ->firstOrFail()->update(['label' => 'Half signed']);
-        \App\Support\Workflow::forget();
+        Workflow::forget();
 
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'overview']))
             ->assertOk()->assertSee('Half signed');
@@ -1521,7 +1576,7 @@ class EventContractTest extends TestCase
 
         foreach (['parties', 'value-and-payments', 'budget-assumptions', 'contract-body', 'signatories'] as $panel) {
             $this->assertStringContainsString("at = (at === '{$panel}'", $html, "{$panel} toggles the group");
-            $this->assertStringContainsString("x-collapse.duration.300ms", $html);
+            $this->assertStringContainsString('x-collapse.duration.300ms', $html);
         }
     }
 }

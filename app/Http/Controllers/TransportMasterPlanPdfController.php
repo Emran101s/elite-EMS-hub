@@ -61,7 +61,7 @@ class TransportMasterPlanPdfController extends Controller
         $guests = $event->transferGuests()->get();
         $vipCount = $movements->filter(fn (EventTransport $m) => $m->isPriority())->count();
 
-        $costCents = (int) $movements->sum('cost_cents');
+        $costCents = $movements->sum('cost_cents');
 
         $html = view('events.transport-master-plan-pdf', [
             'event' => $event,

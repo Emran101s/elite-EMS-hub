@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\Deal;
 use App\Models\Event;
+use App\Models\Supplier;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
@@ -36,23 +38,42 @@ class NavPanel
         ],
         'events' => [
             'label' => 'Events', 'icon' => 'calendar', 'route' => 'events.index',
-            'match' => ['events.*'],
+            // projects.* lived under the old Library area; Projects is an
+            // Events core link (added in the Sidebar Diet), so this is where
+            // "you are on the Projects page" should now resolve to.
+            'match' => ['events.*', 'projects.*'],
         ],
         'tasks' => [
             'label' => 'Tasks', 'icon' => 'clipboard', 'route' => 'tasks.index',
             'match' => ['tasks.*'],
         ],
+        // Key stays 'crm' — only the label changes. Renaming the key would
+        // touch every route-independent place that keys off it (primaryAction,
+        // sections, the drift-prone stuff); the route names (crm.index,
+        // clients.index…) are the actual product surface and are untouched.
         'crm' => [
-            'label' => 'CRM', 'icon' => 'identification', 'route' => 'crm.index',
-            'match' => ['crm.*'],
+            'label' => 'Commercial', 'icon' => 'identification', 'route' => 'crm.index',
+            'match' => ['crm.*', 'clients.*', 'proposals.*', 'contracts.*', 'sponsors.*'],
         ],
         'finance' => [
             'label' => 'Finance', 'icon' => 'currency', 'route' => 'finance.index',
-            'match' => ['finance.*'],
+            'match' => ['finance.*', 'invoices.*', 'payments.*'],
         ],
-        'library' => [
-            'label' => 'Library', 'icon' => 'archive', 'route' => 'suppliers.index',
-            'match' => ['suppliers.*', 'venues.*', 'requirements.*', 'projects.*', 'team.*', 'sponsors.*', 'ai.*', 'reports.*'],
+        // Library, dissolved: its eight links were three different jobs
+        // wearing one label. Suppliers/Venues/Equipment run events (Operations),
+        // Reports/AI make sense of them (Intelligence), Team was never really
+        // a "directory" at all.
+        'operations' => [
+            'label' => 'Operations', 'icon' => 'truck', 'route' => 'suppliers.index',
+            'match' => ['suppliers.*', 'venues.*', 'requirements.*'],
+        ],
+        'intelligence' => [
+            'label' => 'Intelligence', 'icon' => 'sparkles', 'route' => 'reports.index',
+            'match' => ['reports.*', 'ai.*'],
+        ],
+        'team' => [
+            'label' => 'Team', 'icon' => 'users', 'route' => 'team.index',
+            'match' => ['team.*'],
         ],
     ];
 
@@ -93,14 +114,6 @@ class NavPanel
     ];
 
     /**
-     * Areas the fixed panel already covers.
-     *
-     * Everywhere else — the CRM, the library, Settings — still appends its own
-     * sections underneath, or Venues, Team and Reports would have no door left.
-     */
-    public const PANEL_COVERS = ['workspace', 'events', 'tasks'];
-
-    /**
      * @return Collection<int,array{label:string,items:Collection}>
      */
     public static function panel(): Collection
@@ -122,11 +135,20 @@ class NavPanel
             ->values();
     }
 
-    /** Settings sits apart on the rail, as it does in most tools. */
+    /**
+     * Settings sits apart on the rail, as it does in most tools.
+     *
+     * 'clients.*' does not belong here: Clients lives in Commercial's own
+     * match list too, and AREAS is checked first in currentArea(), so a
+     * shared pattern always resolved to Commercial — Settings could never
+     * highlight while looking at a route it no longer even links to.
+     * 'catalogue.*' and 'registration-templates.*' are added because those
+     * two routes are only reachable from Settings and matched nowhere else.
+     */
     public const SETTINGS = [
         'label' => 'Settings', 'icon' => 'cog', 'route' => 'settings.index',
         'match' => ['settings.*', 'company.*', 'taxonomies.*', 'workflows.*', 'defaults.*',
-            'clients.*', 'transport-settings.*', 'sponsor-packages.*'],
+            'transport-settings.*', 'sponsor-packages.*', 'catalogue.*', 'registration-templates.*'],
     ];
 
     /**
@@ -144,7 +166,7 @@ class NavPanel
         $candidates = match (self::currentArea()) {
             'events' => [['＋ Create Event', 'sparkles', 'events.create']],
             'crm' => [['＋ New Client', 'identification', 'clients.index']],
-            'library' => [['＋ Add Venue', 'building', 'venues.index']],
+            'operations' => [['＋ Add Venue', 'building', 'venues.index']],
             default => [],
         };
 
@@ -159,6 +181,47 @@ class NavPanel
         }
 
         return null;
+    }
+
+    /**
+     * A one-line "what's live in this area right now" line for the panel's
+     * header block — the number you'd want before you even click a row.
+     *
+     * One cheap count per area at most, and only the current area's arm of
+     * the match runs per request (the nav renders on every page), so this
+     * costs one extra query on the pages that show it and none elsewhere.
+     * An area with no single honest headline number returns null and the
+     * header falls back to a plain subtitle.
+     *
+     * @return array{value:string,label:string,tone:string}|null
+     */
+    public static function areaMeta(string $area): ?array
+    {
+        return match ($area) {
+            'workspace', 'events' => self::meta(self::liveEvents(), 'live event', 'ok'),
+            'tasks' => self::meta(self::openTasks(), 'open task', 'warn'),
+            'crm' => self::meta(Deal::whereIn('stage', Deal::OPEN)->count(), 'deal', 'info', 'in play'),
+            'operations' => self::meta(Supplier::count(), 'supplier', 'neutral', 'on file'),
+            'team' => self::meta(User::count(), 'person', 'neutral'),
+            default => null,
+        };
+    }
+
+    /**
+     * Builds the header stat, pluralising the noun to the count so it never
+     * reads "1 deals". $noun is singular; $trail is any words that follow it.
+     *
+     * @return array{value:string,label:string,tone:string}|null
+     */
+    private static function meta(int $count, string $noun, string $tone, string $trail = ''): ?array
+    {
+        if ($count === 0) {
+            return null;
+        }
+
+        $label = str($noun)->plural($count)->toString();
+
+        return ['value' => (string) $count, 'label' => trim($label.' '.$trail), 'tone' => $tone];
     }
 
     /** Which area the current request is in. Falls back to the workspace. */
@@ -190,10 +253,22 @@ class NavPanel
     public static function sections(string $area): Collection
     {
         return collect(match ($area) {
+            // The dashboard's own anchors, not new pages — Command Center is
+            // one screen, so its core links are the things on it worth
+            // jumping straight to. Pre-built items (not [label, route, icon,
+            // count] tuples) because a fragment isn't a route.
+            'workspace' => [
+                ['Command Center', [
+                    ['label' => 'Dashboard', 'href' => route('home'), 'icon' => 'home', 'count' => null, 'active' => request()->routeIs('home')],
+                    ['label' => 'Live Alerts', 'href' => route('home').'#live-alerts', 'icon' => 'bell', 'count' => null, 'active' => false],
+                ]],
+            ],
             'events' => [
                 ['Events', [
-                    ['All events', 'events.index', 'calendar', null],
-                    ['New event', 'events.create', 'sparkles', null],
+                    ['label' => 'Event Portfolio', 'href' => route('events.index'), 'icon' => 'calendar', 'count' => self::liveEvents(), 'active' => request()->routeIs('events.index') && ! request()->boolean('archived')],
+                    ['Event Studio', 'events.create', 'sparkles', null],
+                    ['Projects', 'projects.index', 'folder', null],
+                    ['label' => 'Archived Events', 'href' => route('events.index', ['archived' => 1]), 'icon' => 'archive', 'count' => null, 'active' => request()->routeIs('events.index') && request()->boolean('archived')],
                 ]],
             ],
             'tasks' => [
@@ -202,49 +277,61 @@ class NavPanel
                 ]],
             ],
             'crm' => [
-                ['Pipeline', [
+                ['Commercial Command', [
                     ['Deal board', 'crm.index', 'columns', Deal::whereIn('stage', Deal::OPEN)->count()],
                     ['Clients', 'clients.index', 'identification', null],
+                    ['Proposals', 'proposals.index', 'document', null],
+                    ['Contracts', 'contracts.index', 'document', null],
+                    // Sponsorships stays inside Commercial rather than
+                    // becoming its own rail domain — it's a commercial deal
+                    // like any other, just one that funds a booth instead of
+                    // buying one.
+                    ['Sponsorships', 'sponsors.index', 'star', null],
                 ]],
             ],
             'finance' => [
-                ['Money', [
+                ['Finance Command', [
                     ['Profit & loss', 'finance.index', 'chart', null],
+                    ['Invoices', 'invoices.index', 'currency', null],
+                    ['Payments', 'payments.index', 'card', null],
                 ]],
             ],
-            'library' => [
-                ['Directories', [
+            'operations' => [
+                ['Operations', [
                     ['Suppliers', 'suppliers.index', 'truck', null],
                     ['Venues', 'venues.index', 'building', null],
-                    ['Projects', 'projects.index', 'folder', null],
-                    ['Team', 'team.index', 'users', null],
-                ]],
-                ['Catalogues', [
                     ['Equipment', 'requirements.index', 'archive', null],
-                    ['Sponsorships', 'sponsors.index', 'star', null],
-                ]],
-                ['Grow', [
-                    ['Reports', 'reports.index', 'chart', null],
-                    ['AI Assistant', 'ai.index', 'sparkles', null],
                 ]],
             ],
+            'intelligence' => [
+                ['Intelligence', [
+                    ['Reports', 'reports.index', 'chart', null],
+                    ['Command Briefing', 'ai.index', 'sparkles', null],
+                ]],
+            ],
+            'team' => [
+                ['Team', [
+                    ['Team roster', 'team.index', 'users', null],
+                ]],
+            ],
+            // Two groups, not three: configuration you set once, and the
+            // priced/reusable things an event starts from. Clients,
+            // Suppliers, Venues, Equipment and Team & Roles used to be
+            // listed here too — they are daily-work destinations that
+            // already have a home in their own domain, so this panel no
+            // longer carries a second door to any of them.
             'settings' => [
-                ['Workspace', [
+                ['Workspace Configuration', [
                     ['Company Profile', 'company.index', 'cog', null],
                     ['Types & Lists', 'taxonomies.index', 'grid', null],
                     ['Statuses & Colours', 'workflows.index', 'chart', null],
                     ['Defaults', 'defaults.index', 'clipboard', null],
-                    ['Team & Roles', 'team.index', 'users', null],
                 ]],
-                ['Directories', [
-                    ['Clients', 'clients.index', 'identification', null],
-                    ['Suppliers', 'suppliers.index', 'truck', null],
-                    ['Venues', 'venues.index', 'building', null],
-                ]],
-                ['Catalogues', [
-                    ['Equipment', 'requirements.index', 'archive', null],
+                ['Catalogues & Templates', [
                     ['Sponsorship packages', 'sponsor-packages.index', 'star', null],
                     ['Transport', 'transport-settings.index', 'truck', null],
+                    ['Price list', 'catalogue.index', 'currency', null],
+                    ['Registration templates', 'registration-templates.index', 'document', null],
                 ]],
             ],
             default => [
@@ -258,8 +345,11 @@ class NavPanel
             ->map(fn (array $section) => [
                 'label' => $section[0],
                 'items' => collect($section[1])
-                    ->filter(fn (array $item) => Route::has($item[1]))
-                    ->map(fn (array $item) => [
+                    // A pre-built item (Command Center's anchors, the archive
+                    // link) carries its own href already — a fragment or a
+                    // query string was never a route name to look up.
+                    ->filter(fn (array $item) => isset($item['href']) || Route::has($item[1]))
+                    ->map(fn (array $item) => isset($item['href']) ? $item : [
                         'label' => $item[0],
                         'href' => route($item[1]),
                         'icon' => $item[2],
@@ -278,36 +368,19 @@ class NavPanel
      * Finance screen is furniture. Empty stages are not drawn: a folder with
      * nothing in it is a row you have to read to dismiss.
      */
-    public static function tree(string $area): Collection
-    {
-        if (! in_array($area, ['workspace', 'events'], true)) {
-            return collect();
-        }
-
-        $events = Event::whereNull('archived_at')
-            ->withCount(['tasks as open_tasks' => fn ($q) => $q->whereNotIn('status', ['done', 'cancelled'])])
-            ->with('client')
-            ->orderByDesc('starts_at')
-            ->get();
-
-        return collect(Workflow::SETS['event_stage']['states'])
-            ->map(fn ($_, string $stage) => [
-                'key' => $stage,
-                'label' => Workflow::label('event_stage', $stage),
-                'color' => Workflow::color('event_stage', $stage),
-                'events' => $events->where('stage', $stage)->values(),
-            ])
-            ->filter(fn (array $group) => $group['events']->isNotEmpty())
-            ->values();
-    }
-
     private static function openTasks(): int
     {
-        return Task::whereNotIn('status', ['done', 'cancelled'])->count();
+        // Memoised: areaMeta() and sections() can both ask for it in the same
+        // render, and it's the same number either way.
+        static $count = null;
+
+        return $count ??= Task::whereNotIn('status', ['done', 'cancelled'])->count();
     }
 
     private static function liveEvents(): int
     {
-        return Event::whereNull('archived_at')->count();
+        static $count = null;
+
+        return $count ??= Event::whereNull('archived_at')->count();
     }
 }

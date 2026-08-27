@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Livewire\Hub\PricingTab;
 use App\Livewire\InvoiceEditor;
 use App\Models\Event;
-use App\Models\EventInvoiceItem;
 use App\Models\Invoice;
 use App\Models\ServiceItem;
 use App\Models\User;
@@ -77,11 +76,34 @@ class EventInvoiceItemTest extends TestCase
 
         $item = $event->invoiceItems()->firstOrFail();
 
-        $this->assertSame(78_00, $item->cost_cents);
-        $this->assertSame(95_00, $item->sell_cents);
-        $this->assertSame(17_00, $item->marginCents());
+        $this->assertEquals(78_00, $item->cost_cents);
+        $this->assertEquals(95_00, $item->sell_cents);
+        $this->assertEquals(17_00, $item->marginCents());
         $this->assertSame(18, $item->marginPct());
         $this->assertFalse($item->isUnderwater());
+    }
+
+    public function test_money_cents_store_as_whole_integers_not_decimals(): void
+    {
+        // Regression: a decimal:1 cast serialises even 25000 as "25000.0",
+        // which SQLite tolerates but Postgres rejects for these integer
+        // columns. A fractional-cent input must land as whole integer cents.
+        $event = $this->event();
+
+        $this->tab($event)->call('newItem')
+            ->set('name', 'Fractional priced line')
+            ->set('code', 'FRAC-1')
+            ->set('unit', 'item')
+            ->set('cost', '127.116')
+            ->set('sell', '203.204')
+            ->call('save');
+
+        $item = $event->invoiceItems()->firstOrFail();
+
+        $this->assertIsInt($item->cost_cents, 'cents are integers, not a decimal:1 string');
+        $this->assertIsInt($item->sell_cents);
+        $this->assertSame(12712, $item->cost_cents, 'whole cents, rounded once');
+        $this->assertSame(20320, $item->sell_cents);
     }
 
     public function test_a_price_below_cost_is_called_what_it_is(): void
@@ -92,7 +114,7 @@ class EventInvoiceItemTest extends TestCase
         ]);
 
         $this->assertTrue($item->isUnderwater());
-        $this->assertSame(-20_00, $item->marginCents());
+        $this->assertEquals(-20_00, $item->marginCents());
 
         $this->assertCount(1, $this->tab($event)->viewData('underwater'));
     }
@@ -106,8 +128,8 @@ class EventInvoiceItemTest extends TestCase
         $a->invoiceItems()->create(['code' => 'ACC-DBL', 'name' => 'Room', 'unit' => 'room_night', 'sell_cents' => 95_00]);
         $b->invoiceItems()->create(['code' => 'ACC-DBL', 'name' => 'Room', 'unit' => 'room_night', 'sell_cents' => 78_00]);
 
-        $this->assertSame(95_00, $a->invoiceItems()->first()->sell_cents);
-        $this->assertSame(78_00, $b->invoiceItems()->first()->sell_cents);
+        $this->assertEquals(95_00, $a->invoiceItems()->first()->sell_cents);
+        $this->assertEquals(78_00, $b->invoiceItems()->first()->sell_cents);
     }
 
     public function test_a_code_cannot_be_priced_twice_on_one_event(): void
@@ -131,8 +153,8 @@ class EventInvoiceItemTest extends TestCase
         $item = $event->invoiceItems()->firstOrFail();
 
         $this->assertSame($house->id, $item->service_item_id, 'provenance is kept');
-        $this->assertSame(95_00, $item->sell_cents, 'at the house price, to begin with');
-        $this->assertSame(0, $item->cost_cents,
+        $this->assertEquals(95_00, $item->sell_cents, 'at the house price, to begin with');
+        $this->assertEquals(0, $item->cost_cents,
             'what a supplier will charge for THIS event is a fact nobody has yet');
         $this->assertSame('room_night', $item->unit);
     }
@@ -147,7 +169,7 @@ class EventInvoiceItemTest extends TestCase
 
         $house->update(['unit_price_cents' => 140_00]);
 
-        $this->assertSame(95_00, $event->invoiceItems()->first()->sell_cents,
+        $this->assertEquals(95_00, $event->invoiceItems()->first()->sell_cents,
             'the event was priced at 95 and stays priced at 95');
     }
 
@@ -192,8 +214,8 @@ class EventInvoiceItemTest extends TestCase
         $this->assertStringContainsString('skipped', $c->get('importMsg'));
 
         $room = $event->invoiceItems()->where('code', 'ACC-DBL')->firstOrFail();
-        $this->assertSame(78_00, $room->cost_cents);
-        $this->assertSame(95_00, $room->sell_cents);
+        $this->assertEquals(78_00, $room->cost_cents);
+        $this->assertEquals(95_00, $room->sell_cents);
         $this->assertSame('room_night', $room->unit);
 
         // A second pass at a new price is a correction, not a duplicate.
@@ -203,7 +225,7 @@ class EventInvoiceItemTest extends TestCase
         ]))->call('import');
 
         $this->assertSame(2, $event->invoiceItems()->count());
-        $this->assertSame(88_00, $room->fresh()->sell_cents);
+        $this->assertEquals(88_00, $room->fresh()->sell_cents);
         $this->assertStringContainsString('1 repriced', $c->get('importMsg'));
     }
 
@@ -231,7 +253,7 @@ class EventInvoiceItemTest extends TestCase
 
         $line = $invoice->fresh()->load('lines')->lines->firstOrFail();
 
-        $this->assertSame(78_00, $line->unit_cents, "this event's price, not the house 95");
+        $this->assertEquals(78_00, $line->unit_cents, "this event's price, not the house 95");
         $this->assertSame(36.0, $line->qty);
         $this->assertSame('Double room, 5★ — 12 rooms × 3 nights', $line->description);
     }
@@ -250,7 +272,7 @@ class EventInvoiceItemTest extends TestCase
 
         $c->call('pick', $house->id)->set('factors', [2, 1])->call('saveLine');
 
-        $this->assertSame(95_00, $invoice->fresh()->load('lines')->lines->first()->unit_cents);
+        $this->assertEquals(95_00, $invoice->fresh()->load('lines')->lines->first()->unit_cents);
     }
 
     public function test_a_retired_item_is_not_offered_on_an_invoice(): void

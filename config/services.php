@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Microsoft Clarity — session-recording analytics. Off by default: the
+    // snippet only renders when CLARITY_PROJECT_ID is set, and that project
+    // ID lives in your own clarity.microsoft.com account, never here.
+    'clarity' => [
+        'project_id' => env('CLARITY_PROJECT_ID'),
+    ],
+
 ];

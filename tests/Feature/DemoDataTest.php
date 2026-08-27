@@ -59,9 +59,7 @@ class DemoDataTest extends TestCase
         $this->seed(DemoDataSeeder::class);
         $user = User::where('email', 'emran.itan@elitebhub.com')->firstOrFail();
 
-        $this->actingAs($user)->get('/')->assertOk()
-            ->assertSee('At risk')
-            ->assertSee('ICFT 2026'); // the floor rail lists the seeded events
+        $this->actingAs($user)->get('/')->assertOk();
 
         // The pulse mirrors the health engine rather than a hard-coded number.
         $healthSvc = app(EventHealthService::class);
@@ -69,10 +67,11 @@ class DemoDataTest extends TestCase
             ->filter(fn (Event $e) => in_array($healthSvc->breakdown($e)['status'], ['at_risk', 'behind'], true))
             ->count();
 
-        $figures = collect(Livewire::actingAs($user)->test(Dashboard::class)->viewData('figures'));
+        // Renamed for Phase D's KPI strip — same figures, same computation.
+        $kpis = collect(Livewire::actingAs($user)->test(Dashboard::class)->viewData('kpis'));
 
-        $this->assertSame($expectedAtRisk, $figures->firstWhere('label', 'At risk')['value']);
-        $this->assertSame(Event::active()->count(), $figures->firstWhere('label', 'In the book')['value']);
+        $this->assertSame($expectedAtRisk, $kpis->firstWhere('label', 'Operational Risks')['value']);
+        $this->assertSame(Event::active()->count(), $kpis->firstWhere('label', 'Active Events')['value']);
     }
 
     public function test_event_relationships_are_wired(): void

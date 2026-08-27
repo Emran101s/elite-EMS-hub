@@ -2,21 +2,21 @@
 
     {{-- ══════════ Which set ══════════ --}}
     <aside class="self-start lg:sticky lg:top-4">
-        <div class="card overflow-hidden">
-            <div class="border-b border-line px-4 py-3"><p class="eyebrow">Workflows</p></div>
+        <div class="rounded-lg border border-line bg-white shadow-raise overflow-hidden">
+            <div class="border-b border-line px-4 py-3"><p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Workflows</p></div>
             <div class="p-1.5">
                 @foreach ($sets as $s)
                     <button type="button" wire:click="pick('{{ $s['key'] }}')"
                             @class([
                                 'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left transition',
                                 'bg-navy-900 text-white' => $set === $s['key'],
-                                'text-navy-600 hover:bg-navy-50 hover:text-navy-900' => $set !== $s['key'],
+                                'text-muted hover:bg-page hover:text-ink' => $set !== $s['key'],
                             ])>
                         <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{{ $s['label'] }}</span>
                         <span @class([
                             'shrink-0 rounded-full px-1.5 text-[10px] font-bold tabular-nums',
                             'bg-white/15 text-white' => $set === $s['key'],
-                            'bg-navy-50 text-navy-500' => $set !== $s['key'],
+                            'bg-page text-muted' => $set !== $s['key'],
                         ])>{{ $s['count'] }}</span>
                     </button>
                 @endforeach
@@ -31,34 +31,34 @@
     </aside>
 
     {{-- ══════════ The states ══════════ --}}
-    <section class="card overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-page/40 px-4 py-3">
+    <section class="rounded-lg border border-line bg-white shadow-raise overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-page px-4 py-3">
             <div class="min-w-0">
-                <h2 class="pf text-[16px] font-bold text-navy-900">{{ $setLabel }}</h2>
+                <h2 class="text-[16px] font-bold text-ink">{{ $setLabel }}</h2>
                 <p class="mt-0.5 text-[11.5px] text-muted">{{ $setNote }}</p>
             </div>
             <div class="flex shrink-0 items-center gap-2">
                 @if ($changed)
                     <x-confirm title="Put “{{ $setLabel }}” back to the wording and colours it shipped with?"
                                confirm="Restore" tone="warn" run="$wire.restore"
-                               class="btn-ghost btn-sm">Restore defaults</x-confirm>
+                               class="rounded-full border border-line px-4 py-2 text-xs font-semibold text-ink transition hover:border-gold-300">Restore defaults</x-confirm>
                 @endif
-                <button type="button" wire:click="save" class="btn-gold btn-sm">Save</button>
+                <button type="button" wire:click="save" class="rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Save</button>
             </div>
         </div>
 
         <div class="flex items-center gap-3 border-b border-line px-4 py-1.5">
             <span class="w-4 shrink-0"></span>
-            <span class="w-9 shrink-0 eyebrow">Colour</span>
-            <span class="min-w-0 flex-1 eyebrow">What you call it</span>
-            <span class="hidden w-40 shrink-0 eyebrow sm:block">Key &amp; shipped wording</span>
+            <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted w-9 shrink-0">Colour</span>
+            <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted min-w-0 flex-1">What you call it</span>
+            <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted hidden w-40 shrink-0 sm:block">Key &amp; shipped wording</span>
         </div>
 
         <div class="divide-y divide-line" data-states>
             @foreach ($rows as $row)
                 <div wire:key="state-{{ $row['key'] }}" data-state="{{ $row['key'] }}"
-                     class="group/row flex items-center gap-3 px-4 py-2 transition hover:bg-page/40">
-                    <span class="cat-drag grid h-6 w-4 shrink-0 cursor-grab place-items-center text-navy-200 transition group-hover/row:text-navy-400"
+                     class="group/row flex items-center gap-3 px-4 py-2 transition hover:bg-page">
+                    <span class="cat-drag grid h-6 w-4 shrink-0 cursor-grab place-items-center text-muted transition group-hover/row:text-ink"
                           title="Drag to reorder">⋮⋮</span>
 
                     {{-- The swatch is the input: the colour is the thing you are picking. --}}
@@ -73,15 +73,15 @@
                              server-rendered HTML, not only after hydration. --}}
                         <input type="text" wire:model.blur="labels.{{ $row['key'] }}"
                                value="{{ $labels[$row['key']] ?? $row['label'] }}" maxlength="40"
-                               class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-[12.5px] font-bold text-navy-900 transition hover:border-line focus:border-gold-400 focus:bg-white focus:outline-none">
-                        @error('labels.'.$row['key'])<p class="px-2 text-[10.5px] text-risk">{{ $message }}</p>@enderror
-                        @error('colors.'.$row['key'])<p class="px-2 text-[10.5px] text-risk">{{ $message }}</p>@enderror
+                               class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-[12.5px] font-bold text-ink transition hover:border-line focus:border-gold-400/40 focus:bg-white focus:outline-none">
+                        @error('labels.'.$row['key'])<p class="px-2 text-[10.5px] text-danger-ink">{{ $message }}</p>@enderror
+                        @error('colors.'.$row['key'])<p class="px-2 text-[10.5px] text-danger-ink">{{ $message }}</p>@enderror
                     </div>
 
                     {{-- The key is what every record and every line of code holds,
                          so it is shown and never editable. --}}
                     <div class="hidden w-40 shrink-0 text-[10.5px] leading-tight sm:block">
-                        <code class="rounded bg-page px-1 py-px font-mono text-[10px] text-navy-400">{{ $row['key'] }}</code>
+                        <code class="rounded bg-page px-1 py-px font-mono text-[10px] text-muted">{{ $row['key'] }}</code>
                         @if ($row['label'] !== $row['default_label'])
                             <span class="mt-0.5 block truncate text-muted">was “{{ $row['default_label'] }}”</span>
                         @endif
@@ -90,7 +90,7 @@
             @endforeach
         </div>
 
-        <p class="border-t border-line bg-page/50 px-4 py-2.5 text-[11px] text-muted">
+        <p class="border-t border-line bg-page px-4 py-2.5 text-[11px] text-muted">
             Renaming is always safe: records store the key on the right, never the wording. Order is the order
             these appear in every dropdown and on every board.
         </p>

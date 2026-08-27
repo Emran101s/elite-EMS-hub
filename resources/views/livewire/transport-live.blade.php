@@ -8,18 +8,17 @@
 
 <div wire:poll.30s>
 
-    {{-- ══ live header strip: the one navy band, carrying the identity.
-         Uses the approved .strip-dark tone — near-black was rejected before. ══ --}}
-    <div class="strip-dark -mx-4 -mt-4 mb-4 !rounded-none px-4 py-4 text-white sm:-mx-6 sm:-mt-6 sm:px-6">
+    {{-- ══ live header strip: the one graphite band, carrying the identity. ══ --}}
+    <div class="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-navy-800 to-navy-950 text-white shadow-float -mx-4 -mt-4 mb-4 !rounded-none px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6">
         <div class="mb-3 h-0.5 w-12 rounded-full" style="background: {{ $moduleHex }}" aria-hidden="true"></div>
         <div class="flex flex-wrap items-center gap-3">
             <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}"
                class="text-xs font-semibold text-white/50 hover:text-white">← Transportation</a>
-            <span class="ml-auto flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1">
-                <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-                <span class="text-eyebrow font-bold uppercase tracking-[0.14em] text-emerald-300">Live</span>
+            <span class="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                <span class="h-2 w-2 animate-pulse rounded-full bg-gold-400"></span>
+                Live
             </span>
-            <span class="pf text-lg font-black tabular-nums">{{ now()->format('H:i') }}</span>
+            <span class="text-lg font-black tabular-nums">{{ now()->format('H:i') }}</span>
         </div>
         <h1 class="mt-2 flex items-center gap-2.5 text-2xl font-black leading-tight">
             <span class="flex h-8 w-8 items-center justify-center rounded-lg text-white" style="background: {{ $moduleHex }}">
@@ -38,7 +37,7 @@
                         @class([
                             'rounded-full px-3 py-1.5 text-xs font-bold transition',
                             'bg-navy-900 text-white' => $day === $d,
-                            'bg-navy-50 text-navy-600 hover:bg-navy-100' => $day !== $d,
+                            'bg-page text-ink hover:bg-line' => $day !== $d,
                         ])>
                     {{ \Carbon\Carbon::parse($d)->format('D j M') }}
                 </button>
@@ -50,12 +49,12 @@
     @if ($unstaffed || $noShows)
         <div class="mb-4 flex flex-wrap gap-2">
             @if ($unstaffed)
-                <span class="rounded-xl bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">
+                <span class="rounded-xl bg-warning-soft px-3 py-2 text-xs font-bold text-amber-800">
                     ⚠ {{ $unstaffed }} {{ \Illuminate\Support\Str::plural('run', $unstaffed) }} with no driver
                 </span>
             @endif
             @if ($noShows)
-                <span class="rounded-xl bg-navy-50 px-3 py-2 text-xs font-bold text-navy-600">
+                <span class="rounded-xl bg-page px-3 py-2 text-xs font-bold text-muted">
                     {{ $noShows }} no-{{ \Illuminate\Support\Str::plural('show', $noShows) }}
                 </span>
             @endif
@@ -69,11 +68,11 @@
     {{-- ══ the board ══ --}}
     @php
         $sections = [
-            ['issues', 'Needs attention', 'text-red-600', 'border-red-200 bg-red-50/50'],
+            ['issues', 'Needs attention', 'text-danger-ink', 'border-danger/30 bg-danger-soft/50'],
             ['now', 'Now', 'text-sky-600', 'border-sky-200 bg-sky-50/40'],
-            ['next', 'Next · within 2 hours', 'text-gold-700', 'border-line'],
+            ['next', 'Next · within 2 hours', 'text-gold-300', 'border-line'],
             ['later', 'Later today', 'text-muted', 'border-line'],
-            ['done', 'Done', 'text-navy-300', 'border-line'],
+            ['done', 'Done', 'text-muted', 'border-line'],
         ];
     @endphp
 
@@ -93,29 +92,29 @@
                 @endphp
 
                 <div wire:key="live-{{ $m->id }}"
-                     @class(['card !p-4', $cardClass, 'opacity-60' => $settled])>
+                     @class(['rounded-lg border border-line bg-white shadow-raise !p-4', $cardClass, 'opacity-60' => $settled])>
 
                     {{-- line one: car, time, route --}}
                     <div class="flex items-start gap-3">
                         <span @class([
                             'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-black',
-                            'bg-gold-500 text-navy-950' => $m->isPriority(),
+                            'bg-gold-500 text-navy-900' => $m->isPriority(),
                             'bg-navy-900 text-white' => ! $m->isPriority(),
                         ])>{{ $m->ref_no }}</span>
 
                         <div class="min-w-0 flex-1">
                             <p class="flex flex-wrap items-baseline gap-2">
-                                <span class="pf text-2xl font-black leading-none tabular-nums text-navy-900">
+                                <span class="text-2xl font-black leading-none tabular-nums text-ink">
                                     {{ $m->effectiveDeparture()?->format('H:i') ?? 'TBC' }}
                                 </span>
                                 @if ($late)
                                     <span class="text-xs font-bold text-amber-700 line-through">{{ $m->depart_at?->format('H:i') }}</span>
                                 @endif
                                 @if ($m->isPriority())
-                                    <span class="rounded bg-gold-100 px-1.5 py-0.5 text-eyebrow font-black uppercase text-gold-800">★ Priority</span>
+                                    <span class="inline-flex items-center rounded-full bg-gold-50 px-2 py-0.5 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200">★ Priority</span>
                                 @endif
                             </p>
-                            <p class="mt-1 truncate text-sm font-semibold text-navy-900">
+                            <p class="mt-1 truncate text-sm font-semibold text-ink">
                                 {{ $m->pickup_from ?: '—' }} → {{ $m->drop_to ?: '—' }}
                             </p>
                             <p class="mt-0.5 text-eyebrow text-muted">
@@ -128,28 +127,28 @@
                     </div>
 
                     @if ($m->issue_note)
-                        <p class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">{{ $m->issue_note }}</p>
+                        <p class="mt-3 rounded-xl bg-danger-soft px-3 py-2 text-sm font-semibold text-danger-ink">{{ $m->issue_note }}</p>
                     @endif
 
                     {{-- the driver, and how to reach them --}}
                     <div class="mt-3 flex flex-wrap items-center gap-2">
                         @if ($m->driver)
-                            <span class="text-sm font-bold text-navy-900">{{ $m->driver->name }}</span>
+                            <span class="text-sm font-bold text-ink">{{ $m->driver->name }}</span>
                             @if ($m->contactNumber())
                                 <a href="tel:{{ $m->contactNumber() }}"
-                                   class="rounded-lg bg-navy-50 px-3 py-2 text-xs font-bold text-navy-700 hover:bg-navy-100">📞 Call</a>
+                                   class="rounded-lg bg-page px-3 py-2 text-xs font-bold text-ink hover:bg-line">📞 Call</a>
                             @endif
                             @if ($wa = \App\Support\WhatsApp::toDriver($m))
                                 <a href="{{ $wa }}" target="_blank" rel="noopener"
                                    class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100">WhatsApp</a>
                             @endif
                         @else
-                            <span class="rounded-lg bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">No driver assigned</span>
+                            <span class="rounded-lg bg-warning-soft px-3 py-2 text-xs font-bold text-amber-800">No driver assigned</span>
                         @endif
 
                         @if ($m->manifest->isNotEmpty())
                             <button type="button" wire:click="toggleOpen({{ $m->id }})"
-                                    class="ml-auto rounded-lg bg-navy-50 px-3 py-2 text-xs font-bold text-navy-700 hover:bg-navy-100">
+                                    class="ml-auto rounded-lg bg-page px-3 py-2 text-xs font-bold text-ink hover:bg-line">
                                 {{ $open ? 'Hide' : 'Passengers' }} ({{ $m->manifest->count() }})
                             </button>
                         @endif
@@ -164,19 +163,19 @@
                                             title="{{ $p->isNoShow() ? 'Un-mark' : 'Mark as a no-show' }}"
                                             @class([
                                                 'h-7 w-7 shrink-0 rounded-lg text-xs font-black transition',
-                                                'bg-red-100 text-red-700' => $p->isNoShow(),
-                                                'bg-navy-50 text-navy-400 hover:bg-navy-100' => ! $p->isNoShow(),
+                                                'bg-danger-soft text-danger-ink' => $p->isNoShow(),
+                                                'bg-page text-muted hover:bg-line' => ! $p->isNoShow(),
                                             ])>{{ $p->isNoShow() ? '✕' : '○' }}</button>
 
-                                    <span @class(['min-w-0 flex-1 truncate text-sm text-navy-900', 'line-through opacity-50' => $p->isNoShow()])>
+                                    <span @class(['min-w-0 flex-1 truncate text-sm text-ink', 'line-through opacity-50' => $p->isNoShow()])>
                                         {{ $p->name }}
                                         @if ($p->isPriority())
-                                            <span class="ml-1 rounded bg-gold-100 px-1 text-eyebrow font-black uppercase text-gold-800">{{ $p->categoryLabel() }}</span>
+                                            <span class="inline-flex items-center rounded-full bg-gold-50 px-2 py-0.5 text-[10px] font-bold text-gold-700 ring-1 ring-gold-200 ml-1">{{ $p->categoryLabel() }}</span>
                                         @endif
                                     </span>
 
                                     @if ($p->phone)
-                                        <a href="tel:{{ $p->phone }}" class="shrink-0 rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-700">📞</a>
+                                        <a href="tel:{{ $p->phone }}" class="shrink-0 rounded-lg bg-page px-2.5 py-1.5 text-eyebrow font-bold text-ink">📞</a>
                                     @endif
                                 </div>
                             @endforeach
@@ -191,7 +190,7 @@
                                         class="{{ $tap }} bg-emerald-600 text-white hover:bg-emerald-700">✓ Arrived</button>
                             @elseif ($m->status === 'issue')
                                 <button type="button" wire:click="resolveIssue({{ $m->id }})"
-                                        class="{{ $tap }} bg-navy-900 text-white hover:bg-navy-800">Resolved</button>
+                                        class="{{ $tap }} bg-navy-900 text-white hover:bg-navy-950">Resolved</button>
                             @else
                                 <button type="button" wire:click="start({{ $m->id }})"
                                         class="{{ $tap }} bg-sky-600 text-white hover:bg-sky-700">▸ On the way</button>
@@ -199,7 +198,7 @@
 
                             @if ($m->status !== 'issue')
                                 <button type="button" wire:click="openIssue({{ $m->id }})"
-                                        class="{{ $tap }} max-w-[7rem] bg-red-50 text-red-700 hover:bg-red-100">⚠ Issue</button>
+                                        class="{{ $tap }} max-w-[7rem] bg-danger-soft text-danger-ink hover:bg-danger-soft/70">⚠ Issue</button>
                             @endif
                         </div>
 
@@ -208,18 +207,18 @@
                             <span class="text-eyebrow font-bold uppercase tracking-wide text-muted">Delay</span>
                             @foreach ([15, 30, 60] as $mins)
                                 <button type="button" wire:click="delay({{ $m->id }}, {{ $mins }})"
-                                        class="rounded-lg bg-navy-50 px-2.5 py-1.5 text-eyebrow font-bold text-navy-600 hover:bg-navy-100">
+                                        class="rounded-lg bg-page px-2.5 py-1.5 text-eyebrow font-bold text-ink hover:bg-line">
                                     +{{ $mins }}m
                                 </button>
                             @endforeach
                             @if ($late)
                                 <button type="button" wire:click="clearDelay({{ $m->id }})"
-                                        class="rounded-lg px-2 py-1.5 text-eyebrow font-bold text-navy-400 hover:text-navy-900">clear</button>
+                                        class="rounded-lg px-2 py-1.5 text-eyebrow font-bold text-muted hover:text-ink">clear</button>
                             @endif
                         </div>
                     @else
                         <button type="button" wire:click="undo({{ $m->id }})"
-                                class="mt-3 text-eyebrow font-bold uppercase tracking-wide text-navy-400 hover:text-navy-900">↺ Undo</button>
+                                class="mt-3 text-eyebrow font-bold uppercase tracking-wide text-muted hover:text-ink">↺ Undo</button>
                     @endif
 
                     {{-- issue note box --}}
@@ -227,13 +226,13 @@
                         <div class="mt-3 border-t border-line pt-3">
                             <textarea wire:model="issueNote" rows="2" autofocus
                                       placeholder="What happened? e.g. vehicle broke down at the airport"
-                                      class="input w-full text-sm"></textarea>
-                            @error('issueNote')<p class="mt-1 text-xs text-risk">{{ $message }}</p>@enderror
+                                      class="w-full rounded-lg border border-line bg-white px-3 py-2 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none w-full text-sm"></textarea>
+                            @error('issueNote')<p class="mt-1 text-xs text-danger-ink">{{ $message }}</p>@enderror
                             <div class="mt-2 flex gap-2">
                                 <button type="button" wire:click="flagIssue({{ $m->id }})"
                                         class="{{ $tap }} bg-red-600 text-white hover:bg-red-700">Flag it</button>
                                 <button type="button" wire:click="openIssue({{ $m->id }})"
-                                        class="{{ $tap }} max-w-[6rem] bg-navy-50 text-navy-700 hover:bg-navy-100">Cancel</button>
+                                        class="{{ $tap }} max-w-[6rem] bg-page text-ink hover:bg-line">Cancel</button>
                             </div>
                         </div>
                     @endif
@@ -246,13 +245,13 @@
         <x-empty icon="truck" title="Nothing moving on this day"
                  hint="Movements scheduled for {{ \Carbon\Carbon::parse($day)->format('D j M') }} appear here once they have a departure time. Plan them on the List, then come back when the day starts.">
             <x-slot:actions>
-                <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}" class="btn-gold btn-sm">← Open the List</a>
-                <a href="{{ route('events.transport.dispatch', $event) }}" class="btn-ghost btn-sm">Check Dispatch</a>
+                <a href="{{ route('events.hub', ['event' => $event, 'tab' => 'transportation']) }}" class="btn-sm rounded-full bg-gold-500 font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">← Open the List</a>
+                <a href="{{ route('events.transport.dispatch', $event) }}" class="btn-sm rounded-full border border-line font-semibold text-ink transition hover:border-gold-300">Check Dispatch</a>
             </x-slot:actions>
         </x-empty>
     @endif
 
-    <p class="mt-10 text-center text-eyebrow text-navy-300">
+    <p class="mt-10 text-center text-eyebrow text-muted">
         Refreshes every 30 seconds · {{ now()->format('D j M · H:i') }}
     </p>
 </div>

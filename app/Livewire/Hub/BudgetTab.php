@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventIncomeItem;
+use App\Models\Supplier;
 use App\Services\BudgetSync;
 use App\Services\CurrencyService;
 use App\Support\Taxonomy;
@@ -120,10 +121,16 @@ class BudgetTab extends Component
 
     public function mount(): void
     {
-        $this->event->ensureBudgetCategories();
+        // sync() already calls ensureBudgetCategories() itself — a second
+        // call here just paid for a repeat exists() check.
         app(BudgetSync::class)->sync($this->event);
+        // sync() can create/update/delete budget items and categories, so the
+        // controller's base eager-load is stale the moment it returns — one
+        // fresh load here, read by render() too, instead of both this method
+        // and render() each re-querying items and categories on their own.
+        $this->event->load(['budgetItems', 'budgetCategories']);
         // Categories start collapsed — a clean "builder" overview; click to expand.
-        $this->collapsed = $this->event->budgetCategories()->pluck('name')->map(fn ($n) => 'cat:'.$n)->all();
+        $this->collapsed = $this->event->budgetCategories->pluck('name')->map(fn ($n) => 'cat:'.$n)->all();
         $this->budgetCap = $this->event->budget_cents ? (string) ($this->event->budget_cents / 100) : '';
         $this->feePct = rtrim(rtrim(number_format($this->event->management_fee_pct ?? EventBudgetItem::DEFAULT_FEE_PCT, 2), '0'), '.');
         $this->clientTarget = $this->event->client_target_cents ? (string) ($this->event->client_target_cents / 100) : '';
@@ -132,7 +139,9 @@ class BudgetTab extends Component
         // Start in Build while planning; switch to Track once real costs are
         // recorded. A mode asked for in the URL wins — it was chosen on purpose.
         if (! in_array(request('mode'), ['build', 'track', 'price'], true)) {
-            $this->view = $this->event->budgetItems()->whereNotNull('actual_cents')->exists() ? 'track' : 'build';
+            // budgetItems is already loaded fresh (above) — no need for its
+            // own exists() query.
+            $this->view = $this->event->budgetItems->contains(fn ($i) => $i->actual_cents !== null) ? 'track' : 'build';
         }
         if (request('action') === 'add') {
             $this->newLine();
@@ -546,7 +555,7 @@ class BudgetTab extends Component
             return null;
         }
 
-        return \App\Models\Supplier::whereRaw('lower(name) = ?', [mb_strtolower($vendor)])->value('id');
+        return Supplier::whereRaw('lower(name) = ?', [mb_strtolower($vendor)])->value('id');
     }
 
     /** Copy a line within its section, ready to tweak. */
@@ -707,7 +716,7 @@ class BudgetTab extends Component
                 'description' => $desc,
                 'quantity' => 1,
                 'estimated_cents' => 0,
-                                // Not costed yet, which is null — 0 would mean it costs nothing.
+                // Not costed yet, which is null — 0 would mean it costs nothing.
                 'actual_cents' => null,
                 'paid_cents' => 0,
                 'payment_status' => 'pending',
@@ -719,8 +728,11 @@ class BudgetTab extends Component
 
     public function render()
     {
-        $items = $this->event->budgetItems()->with('room')->orderBy('id')->get();
-        $cats = $this->event->budgetCategories()->get();
+        // Both already loaded fresh (post-sync) in mount() — nothing here
+        // reads item->room, so the with('room') this used to carry was
+        // eager-loading a relation the view never touches.
+        $items = $this->event->budgetItems->sortBy('id')->values();
+        $cats = $this->event->budgetCategories;
         $known = $cats->pluck('name');
 
         // One section per category, in the user's order — empty categories included.
@@ -884,7 +896,7 @@ class BudgetTab extends Component
             // Names for the vendor field's datalist: this event's suppliers
             // first, since a line is nearly always one of them.
             'vendorNames' => $this->event->suppliers->pluck('name')
-                ->merge(\App\Models\Supplier::orderBy('name')->pluck('name'))
+                ->merge(Supplier::orderBy('name')->pluck('name'))
                 ->unique()->values(),
             // What the modules put here, and what they could not.
             'linkedByModule' => $items->whereNotNull('source_type')

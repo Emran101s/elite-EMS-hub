@@ -31,14 +31,16 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 #[Layout('components.layouts.app', [
     'title' => 'Price list',
-    'subtitle' => 'What the company sells, what one of each costs, and how it is counted.',
+    'hideTitleRow' => true,
 ])]
 class CatalogueSettings extends Component
 {
     use WithFileUploads;
 
     public string $q = '';
+
     public string $category = 'all';
+
     public bool $showInactive = false;
 
     /**
@@ -52,18 +54,28 @@ class CatalogueSettings extends Component
     public ?int $editingId = null;
 
     public string $code = '';
+
     public string $name = '';
+
     public string $itemCategory = '';
+
     public string $itemSection = '';
+
     public string $detail = '';
+
     public string $unit = 'item';
+
     public string $price = '';
+
     public string $currency = '';
+
     public string $tax = '';
+
     public bool $active = true;
 
     /** Import */
     public $importFile = null;
+
     public string $importMsg = '';
 
     /**

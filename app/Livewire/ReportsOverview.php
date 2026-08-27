@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Hub\AgendaTab;
 use App\Models\Event;
 use App\Models\EventAgendaSession;
 use App\Models\EventAttendee;
@@ -29,7 +30,7 @@ use Livewire\Component;
  *   Programme     how much stage there is, and who is on it
  *   People        who registered, and who actually came
  */
-#[Layout('components.layouts.app', ['title' => 'Reports', 'subtitle' => 'The whole book, read across — delivery, money, programme and people.'])]
+#[Layout('components.layouts.app', ['title' => 'Reports', 'hideTitleRow' => true])]
 class ReportsOverview extends Component
 {
     /** all · live · upcoming · delivered — which slice of the book to read. */
@@ -140,7 +141,7 @@ class ReportsOverview extends Component
                 }) / 60, 1),
                 'speakers' => $events->sum(fn (Event $e) => $e->speakers->count()),
                 'rooms' => $events->sum(fn (Event $e) => $e->rooms->count()),
-                'byType' => collect(\App\Livewire\Hub\AgendaTab::PALETTE)
+                'byType' => collect(AgendaTab::PALETTE)
                     ->map(fn ($meta, $type) => [
                         'label' => $meta[0], 'hex' => $meta[1],
                         'count' => $sessions->where('type', $type)->count(),

@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 #[Fillable(['tenant_id',
-    'event_id', 'name', 'type', 'capacity', 'cost_cents', 'days', 'setup_days', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
+    'event_id', 'venue_space_id', 'name', 'type', 'capacity', 'cost_cents', 'days', 'setup_days', 'requirements', 'width_m', 'length_m', 'layout', 'equipment'])]
 class EventRoom extends Model
 {
     use BelongsToTenant;
@@ -196,7 +196,11 @@ class EventRoom extends Model
     /** Total seats across all placed elements. */
     public function seatCount(): int
     {
-        return collect($this->layout ?? [])->sum(fn ($el) => (int) ($el['seats'] ?? 0));
+        // Defensive: a malformed layout (a string, not an array — see
+        // RoomLayoutBuilder::mount) would otherwise be wrapped as a single
+        // element and read $el['seats'] off a string.
+        return collect(is_array($this->layout) ? $this->layout : [])
+            ->sum(fn ($el) => is_array($el) ? (int) ($el['seats'] ?? 0) : 0);
     }
 
     /**
@@ -510,6 +514,12 @@ class EventRoom extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /** The venue's own permanent space this booking claims, if a coordinator linked one. */
+    public function venueSpace(): BelongsTo
+    {
+        return $this->belongsTo(VenueSpace::class);
     }
 
     public function sessions(): HasMany

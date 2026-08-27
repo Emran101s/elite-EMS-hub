@@ -7,9 +7,9 @@ use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\DealActivity;
 use App\Support\Taxonomy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * Everything about one client, in one place.
@@ -189,10 +189,10 @@ class ClientRecord extends Component
         ])->layout('components.layouts.app', [
             // The title is the client, so it can only be set at render time.
             'title' => $this->client->name,
-            'subtitle' => 'Client record — people, deals, events and every conversation.',
+            'hideTitleRow' => true,
             'crumbs' => [
                 ['label' => 'Command Center', 'href' => route('home')],
-                ['label' => 'CRM', 'href' => route('crm.index')],
+                ['label' => 'Commercial', 'href' => route('crm.index')],
                 ['label' => $this->client->name],
             ],
         ]);

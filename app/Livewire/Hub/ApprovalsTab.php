@@ -4,7 +4,10 @@ namespace App\Livewire\Hub;
 
 use App\Models\CompanyProfile;
 use App\Models\Event;
+use App\Models\EventApproval;
 use App\Models\User;
+use App\Notifications\ApprovalDecided;
+use App\Notifications\ApprovalRequested;
 use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -150,6 +153,10 @@ class ApprovalsTab extends Component
             $escalated = true;
         }
 
+        // Tell whoever the first step is waiting on. Only the first — the rest
+        // of the chain is told as it reaches them, in decide().
+        $this->announce($approval->fresh());
+
         $stepCount = count($configured) + ($escalated ? 1 : 0);
         $chained = $stepCount > 1 ? ' ('.$stepCount.'-step chain'.($escalated ? ', admin sign-off required' : '').')' : '';
         session()->flash('status', "Approval requested: “{$this->title}”{$chained}.");
@@ -194,6 +201,22 @@ class ApprovalsTab extends Component
         }
 
         $approval->syncStatusFromSteps();
+
+        $approval->refresh();
+
+        if ($approval->status === 'pending') {
+            // The chain moved on: tell whoever it landed on.
+            $this->announce($approval);
+        } else {
+            // It resolved. Close the loop with whoever raised it — unless they
+            // just decided it themselves, which the guard above prevents, but
+            // delegation makes that assumption worth not relying on.
+            $requester = $approval->requester;
+
+            if ($requester && filled($requester->email) && $requester->id !== auth()->id()) {
+                $requester->notify(new ApprovalDecided($approval, $decision, auth()->user()?->name));
+            }
+        }
 
         $label = $step->assigneeLabel();
         $stepNote = $approval->steps()->count() > 1 ? " — {$label}'s step" : '';
@@ -265,13 +288,52 @@ class ApprovalsTab extends Component
         return $this->redirectRoute('events.hub', [$this->event, 'tab' => 'approvals']);
     }
 
+    /**
+     * Mail the people the approval's current step is waiting on.
+     *
+     * Silent when the chain has no live step, and never mails the requester —
+     * they cannot decide their own request, so the only thing an email would
+     * tell them is something they already know.
+     */
+    private function announce(EventApproval $approval): void
+    {
+        $step = $approval->currentStep();
+
+        if ($step === null) {
+            return;
+        }
+
+        foreach ($step->recipients(excludeUserId: $approval->requested_by) as $approver) {
+            $approver->notify(new ApprovalRequested($approval, $step));
+        }
+    }
+
     public function render()
     {
         return view('livewire.hub.approvals-tab', [
             'pending' => $this->event->approvals()->with(['requester', 'steps.approver'])->where('status', 'pending')->latest()->get(),
             'decided' => $this->event->approvals()->with(['requester', 'decider', 'steps.approver', 'steps.decider'])->whereNot('status', 'pending')->latest('decided_at')->get(),
-            'managers' => User::query()->get()->filter(fn (User $u) => $u->isAtLeast('manager'))->values(),
+            'managers' => $this->managers(),
             'threshold' => CompanyProfile::approvalThresholdCents(),
         ]);
+    }
+
+    /**
+     * Everyone eligible to be named on a step — manager rank or above.
+     *
+     * Same rule as User::isAtLeast('manager'), but isAtLeast() resolves
+     * activeWorkspace() per instance with no cross-row memoization, so
+     * filtering the whole roster through it fired one workspaces query per
+     * user. This reads the one rule it's built on — the pivot role on the
+     * tenant's one workspace, falling back to users.role — off a single
+     * eager load instead.
+     */
+    private function managers()
+    {
+        return User::with('workspaces')->get()->filter(function (User $u) {
+            $effective = $u->workspaces->first()?->pivot?->role ?? $u->role;
+
+            return (User::ROLE_RANK[$effective] ?? 0) >= User::ROLE_RANK['manager'];
+        })->values();
     }
 }

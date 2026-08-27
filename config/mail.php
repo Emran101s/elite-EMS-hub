@@ -115,4 +115,19 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Pilot Mail Redirect
+    |--------------------------------------------------------------------------
+    |
+    | Phase 2's pilot-week safeguard (see AppServiceProvider::guardPilotMail
+    | and docs/38 §3.2 step 5). When set on a production host, every outbound
+    | message is redirected here regardless of its real recipient. Unset in
+    | every environment today — this key exists so the pilot host has
+    | somewhere to put the value without a code change.
+    |
+    */
+
+    'pilot_redirect' => env('MAIL_PILOT_REDIRECT'),
+
 ];

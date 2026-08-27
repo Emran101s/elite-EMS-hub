@@ -33,6 +33,10 @@ class EventInvoiceItem extends Model
     protected function casts(): array
     {
         return [
+            // Whole integer cents. A decimal:1 cast serialises even 25000 as
+            // "25000.0", which SQLite tolerates but Postgres rejects for these
+            // integer columns (the decimal(15,1) widening never converts them
+            // on Postgres). A priced line is exact to the cent.
             'cost_cents' => 'integer',
             'sell_cents' => 'integer',
             'tax_pct' => 'float',
@@ -59,7 +63,7 @@ class EventInvoiceItem extends Model
     /* ── what it earns ── */
 
     /** Per unit. Negative means it is being sold below what it costs. */
-    public function marginCents(): int
+    public function marginCents(): float
     {
         return $this->sell_cents - $this->cost_cents;
     }

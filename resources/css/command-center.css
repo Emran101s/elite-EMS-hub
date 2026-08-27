@@ -1,0 +1,33 @@
+/* Command Center — Phase 2 content layer.
+   Everything expressible as a Tailwind utility (cards, buttons, chips, type)
+   is written that way directly in the cc/* components, reading app.css's
+   existing brand + semantic tokens. What's here is only what a utility class
+   can't express: the readiness ring's per-instance conic-gradient. */
+@layer components {
+    /* Readiness ring — --ccx-ring is the tone colour, --ccx-ring-pct the
+       fill, both set inline per-instance since they're data-driven. */
+    .ccx-ring {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        background: conic-gradient(var(--ccx-ring, var(--color-gold-500)) var(--ccx-ring-pct, 0%), var(--color-line) 0);
+    }
+    .ccx-ring::after {
+        content: '';
+        position: absolute;
+        inset: 3px;
+        border-radius: 9999px;
+        background: white;
+    }
+    .ccx-ring-value {
+        position: relative;
+        z-index: 1;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+}

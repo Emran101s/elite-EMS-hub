@@ -203,6 +203,11 @@ class TransportationTab extends Component
             // edits to the catalogue don't silently rewrite past movements.
             'capacity' => $vehicle ? $vehicle->capacity * max(1, $this->vehicles) : null,
             'passengers' => $this->passengers ?: 0,
+            // Whole integer cents. A float like 25000.0 is fine on SQLite but
+            // Postgres rejects it for an integer column, and the decimal(15,1)
+            // widening never actually converts this column on Postgres — so a
+            // transport cost is stored to the cent, which is all a vehicle
+            // charge ever needs.
             'cost_cents' => (int) round((float) ($this->cost ?: 0) * 100),
             'status' => $this->status,
             'notes' => $this->notes ?: null,
@@ -1131,11 +1136,16 @@ class TransportationTab extends Component
 
         $movements = EventTransport::selection($inLeg, '', $this->filterDay);
 
+        // The whole pool, read once — everything below that only counts or
+        // groups it (not the flight-ordered listing itself) works off this
+        // instead of its own fresh transferGuests() query.
+        $transferGuests = $this->event->transferGuests;
+
         // Vehicles this leg's guests are already riding, wherever they sit.
-        $assignedElsewhere = $this->event->transferGuests()
+        $assignedElsewhere = $transferGuests
             ->where('direction', $this->guestLeg)
             ->whereNotNull('transport_id')
-            ->distinct()->pluck('transport_id')->all();
+            ->pluck('transport_id')->unique()->values()->all();
 
         return view('livewire.hub.transportation-tab', [
             'movements' => $movements->groupBy(fn (EventTransport $m) => $m->depart_at?->format('Y-m-d') ?? 'unscheduled'),
@@ -1157,12 +1167,12 @@ class TransportationTab extends Component
             'costTotal' => $all->sum('cost_cents'),
             // ── the guest pool ──
             'guests' => $this->guestPool(),
-            'unassignedCount' => $this->event->transferGuests()->whereNull('transport_id')->count(),
+            'unassignedCount' => $transferGuests->whereNull('transport_id')->count(),
             'attendeePull' => $this->event->attendees()->where('status', '!=', 'cancelled')
-                ->whereNotIn('id', $this->event->transferGuests()->whereNotNull('attendee_id')->pluck('attendee_id'))->count(),
+                ->whereNotIn('id', $transferGuests->whereNotNull('attendee_id')->pluck('attendee_id'))->count(),
             'legCounts' => [
-                'arrival' => $this->event->transferGuests()->where('direction', 'arrival')->whereNull('transport_id')->count(),
-                'departure' => $this->event->transferGuests()->where('direction', 'departure')->whereNull('transport_id')->count(),
+                'arrival' => $transferGuests->where('direction', 'arrival')->whereNull('transport_id')->count(),
+                'departure' => $transferGuests->where('direction', 'departure')->whereNull('transport_id')->count(),
             ],
             // You can only put arriving guests on arriving runs. "Other" stays on
             // offer both ways — a venue shuttle carries whoever needs it — and a

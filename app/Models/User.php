@@ -65,7 +65,7 @@ class User extends Authenticatable
     }
 
     /** Role seniority, for "at least this role" checks. */
-    private const ROLE_RANK = [
+    public const ROLE_RANK = [
         'viewer' => 0,
         'coordinator' => 1,
         'manager' => 2,

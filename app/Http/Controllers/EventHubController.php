@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Services\BudgetSync;
 use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use Illuminate\View\View;
@@ -34,13 +35,20 @@ class EventHubController extends Controller
         }
 
         $event->load([
-            'client', 'venue', 'projectManager', 'project',
-            'rooms', 'cateringItems.room', 'agendaDays.sessions.room', 'agendaSessions.day',
-            'tasks.assignee', 'budgetItems.supplier', 'suppliers', 'roomBlocks',
-            'attendees', 'transport.manifest',
-            'sponsors', 'risks.owner', 'approvals.requester', 'approvals.decider',
+            'client', 'venue', 'projectManager',
+            'rooms', 'cateringItems', 'agendaDays.sessions.room', 'agendaSessions.day',
+            'tasks.assignee', 'budgetItems', 'suppliers', 'roomBlocks',
+            'attendees', 'transport.manifest', 'transferGuests',
+            'sponsors', 'risks.owner', 'approvals.requester',
             'teamMembers', 'speakers', 'brief', 'contract',
         ]);
+
+        // approvals.decider: nothing outside the Approvals tab reads it —
+        // Health/Header/Alerts only ever read requester. Loading it on
+        // every tab paid for a relation nineteen tabs never touch.
+        if ($tab === 'approvals') {
+            $event->loadMissing('approvals.decider');
+        }
 
         return view('events.hub', [
             'event' => $event,
@@ -92,7 +100,7 @@ class EventHubController extends Controller
 
         // Commitments the budget cannot count. Rooms held at a rate nobody has
         // agreed are real; a budget that omits them silently is not.
-        $pending = app(\App\Services\BudgetSync::class)->pending($event);
+        $pending = app(BudgetSync::class)->pending($event);
 
         if ($pending !== []) {
             $alerts->push([

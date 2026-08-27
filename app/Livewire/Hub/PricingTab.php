@@ -30,27 +30,39 @@ class PricingTab extends Component
     public Event $event;
 
     public string $q = '';
+
     public bool $showInactive = false;
 
     /** The row being edited; 0 means a new one, null means none. */
     public ?int $editingId = null;
 
     public string $code = '';
+
     public string $name = '';
+
     public string $itemCategory = '';
+
     public string $itemSection = '';
+
     public string $detail = '';
+
     public string $unit = 'item';
+
     public string $cost = '';
+
     public string $sell = '';
+
     public string $tax = '';
+
     public bool $active = true;
 
     /** Pulling from the house list. */
     public bool $showCatalogue = false;
+
     public string $catalogueQuery = '';
 
     public $importFile = null;
+
     public string $importMsg = '';
 
     public function mount(Event $event): void
@@ -131,6 +143,9 @@ class PricingTab extends Component
             'section' => $this->itemSection ?: null,
             'detail' => trim($this->detail) ?: null,
             'unit' => $this->unit,
+            // Whole integer cents (see EventInvoiceItem::casts): a float like
+            // 25000.0 is fine on SQLite but Postgres rejects it for the integer
+            // columns.
             'cost_cents' => (int) round((float) ($this->cost ?: 0) * 100),
             'sell_cents' => (int) round((float) ($this->sell ?: 0) * 100),
             'currency' => $this->event->currency ?: 'JOD',
@@ -238,7 +253,7 @@ class PricingTab extends Component
                 continue;
             }
 
-            $money = fn ($v) => (int) round((float) str_replace(',', '', (string) $v) * 100);
+            $money = fn ($v) => round((float) str_replace(',', '', (string) $v) * 100, 1);
 
             $fields = [
                 'name' => $name,
