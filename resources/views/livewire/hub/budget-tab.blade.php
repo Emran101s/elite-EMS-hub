@@ -554,10 +554,10 @@
                 {{-- mode --}}
                 <div class="border-b border-line p-3">
                     <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Mode</p>
-                    <div class="flex rounded-xl border border-line bg-page/40 p-0.5">
-                        <button type="button" wire:click="$set('view', 'build')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Build</button>
-                        <button type="button" wire:click="$set('view', 'track')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Track</button>
-                        <button type="button" wire:click="$set('view', 'price')" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Price</button>
+                    <div role="group" aria-label="Budget view" class="flex rounded-xl border border-line bg-page/40 p-0.5">
+                        <button type="button" wire:click="$set('view', 'build')" aria-pressed="{{ $view === 'build' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Build</button>
+                        <button type="button" wire:click="$set('view', 'track')" aria-pressed="{{ $view === 'track' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Track</button>
+                        <button type="button" wire:click="$set('view', 'price')" aria-pressed="{{ $view === 'price' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Price</button>
                     </div>
                     <p class="mt-1.5 text-eyebrow leading-snug text-muted">{{ match ($view) {
                         'build' => 'Plan quantity × unit estimates.',

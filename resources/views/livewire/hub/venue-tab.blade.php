@@ -136,13 +136,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if ($rooms->isNotEmpty())
-                        <span class="inline-flex items-center rounded-full border border-line bg-white p-0.5">
-                            <button type="button" @click="setMode('list')"
+                        <span role="group" aria-label="Room layout" class="inline-flex items-center rounded-full border border-line bg-white p-0.5">
+                            <button type="button" @click="setMode('list')" :aria-pressed="mode === 'list'"
                                     :class="mode === 'list' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition">List</button>
-                            <button type="button" @click="setMode('cards')"
+                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1">List</button>
+                            <button type="button" @click="setMode('cards')" :aria-pressed="mode === 'cards'"
                                     :class="mode === 'cards' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition">Cards</button>
+                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1">Cards</button>
                         </span>
                     @endif
                     <button type="button" wire:click="newRoom" class="h-8 rounded-full bg-gold-500 px-3 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Venue</button>

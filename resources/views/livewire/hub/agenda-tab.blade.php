@@ -710,17 +710,17 @@
                     ['speakers', 'Speakers', 'users'],
                     ['program', 'Programme', 'calendar'],
                 ] as [$key, $label, $icon])
-                    <button type="button" wire:click="setView('{{ $key }}')"
-                            @class(['flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $view === $key, 'text-muted hover:text-ink' => $view !== $key])>
-                        <x-icon :name="$icon" class="h-3 w-3" /> {{ $label }}
+                    <button type="button" wire:click="setView('{{ $key }}')" aria-pressed="{{ $view === $key ? 'true' : 'false' }}"
+                            @class(['flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $view === $key, 'text-muted hover:text-ink' => $view !== $key])>
+                        <x-icon :name="$icon" class="h-3 w-3" aria-hidden="true" /> {{ $label }}
                     </button>
                 @endforeach
             </div>
 
             @if ($view === 'program')
-                <div class="flex rounded-xl border border-line bg-white p-0.5" title="Public hides setup, press and registration">
-                    <button type="button" wire:click="setAudience('internal')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $audience === 'internal', 'text-muted hover:text-ink' => $audience !== 'internal'])>Internal</button>
-                    <button type="button" wire:click="setAudience('public')" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition', 'bg-navy-900 text-white' => $audience === 'public', 'text-muted hover:text-ink' => $audience !== 'public'])>Public</button>
+                <div role="group" aria-label="Programme audience" class="flex rounded-xl border border-line bg-white p-0.5" title="Public hides setup, press and registration">
+                    <button type="button" wire:click="setAudience('internal')" aria-pressed="{{ $audience === 'internal' ? 'true' : 'false' }}" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $audience === 'internal', 'text-muted hover:text-ink' => $audience !== 'internal'])>Internal</button>
+                    <button type="button" wire:click="setAudience('public')" aria-pressed="{{ $audience === 'public' ? 'true' : 'false' }}" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $audience === 'public', 'text-muted hover:text-ink' => $audience !== 'public'])>Public</button>
                 </div>
             @endif
 
