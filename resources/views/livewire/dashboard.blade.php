@@ -36,7 +36,10 @@
             <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-gold-700">
                 <span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Command Center
             </span>
-            <a href="{{ route('ai.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Open Command Briefing</a>
+            {{-- One way in, not three. This header carried "Open Command
+                 Briefing" and "✦ Command Briefing" side by side — the same
+                 destination, near-identical labels — and the Briefing card
+                 further down the page repeats the link a third time. --}}
             <a href="{{ route('ai.index') }}" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:-translate-y-0.5 hover:bg-gold-400">✦ Command Briefing</a>
         </x-slot:actions>
     </x-cc.header>
@@ -63,9 +66,13 @@
             <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Today's Command Queue</p>
             <div class="space-y-3">
                 @php
+                    // Approvals are not listed here: every pending one is a
+                    // Command Briefing signal in the column to the right, with
+                    // the waiting time this list never showed. The KPI strip
+                    // still counts them. Open Risks below carries only those
+                    // scoring under 15 — the louder ones are Briefing signals
+                    // too, and were being listed twice.
                     $queueGroups = [
-                        ['key' => 'approvals', 'label' => 'Approvals', 'icon' => 'identification', 'tone' => 'warn',
-                            'empty' => 'Nothing waiting on you'],
                         ['key' => 'overdue', 'label' => 'Overdue Tasks', 'icon' => 'clipboard', 'tone' => 'risk',
                             'empty' => 'Nothing overdue'],
                         ['key' => 'dueToday', 'label' => 'Due Today', 'icon' => 'clock', 'tone' => 'warn',
