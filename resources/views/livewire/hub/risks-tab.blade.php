@@ -1,4 +1,4 @@
-<div>
+<div class="cx-canvas">
     {{-- The Open/Critical/Resolved/Total figures already live in the
          Universal Module Header above this — repeating them here as a
          second stat strip was the exact "duplicated status information"
@@ -6,11 +6,11 @@
          instead. --}}
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p class="text-eyebrow text-muted">Open risks with severity ≥ 20 cap Event Health at "At Risk".</p>
-        <button type="button" wire:click="$toggle('showForm')" class="h-9 rounded-full bg-gold-500 px-3.5 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Register Risk</button>
+        <button type="button" wire:click="$toggle('showForm')" class="cx-btn cx-btn-accent" style="height:34px">＋ Register Risk</button>
     </div>
 
     @if ($showForm)
-        <form wire:submit="save" class="mb-4 grid gap-3 rounded-lg border border-line bg-white p-5 sm:grid-cols-2 xl:grid-cols-4">
+        <form wire:submit="save" class="cx-lcard mb-3 grid gap-3 p-3.5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
                 <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="r-title">Risk</label>
                 <input id="r-title" type="text" wire:model="title" class="h-10 w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none" placeholder="e.g. Venue contract pending signature">
@@ -56,12 +56,11 @@
     @endif
 
     @if ($risks->isEmpty())
-        <x-empty icon="flag" title="Risk register is empty"
-                 hint="Register the first risk so severity feeds Event Health — open risks with severity ≥ 20 cap the score at &quot;At Risk&quot;.">
-            <x-slot:actions>
-                <x-eo.button size="sm" wire:click="$set('showForm', true)">＋ Register the first risk</x-eo.button>
-            </x-slot:actions>
-        </x-empty>
+        <div class="cx-empty">
+            <h3>Risk register is empty</h3>
+            <p>Register the first risk so severity feeds Event Health — open risks with severity ≥ 20 cap the score at &quot;At Risk&quot;.</p>
+            <button type="button" wire:click="$set('showForm', true)" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Register the first risk</button>
+        </div>
     @else
         @php $selected = $risks->firstWhere('id', $selectedRiskId); @endphp
         <x-hub-content.split>
@@ -79,10 +78,10 @@
                         <x-hub-content.split-row :active="$selectedRiskId === $risk->id" class="grid grid-cols-2 items-center gap-2 md:grid-cols-12 md:gap-3">
                             <div class="col-span-2 flex items-start gap-2 md:col-span-5">
                                 <span @class([
-                                    'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                                    'bg-danger' => $risk->severity() >= 15,
-                                    'bg-warning' => $risk->severity() >= 8 && $risk->severity() < 15,
-                                    'bg-line' => $risk->severity() < 8,
+                                    'cx-hexdot mt-1.5 shrink-0',
+                                    'is-high' => $risk->severity() >= 15,
+                                    'is-mid' => $risk->severity() >= 8 && $risk->severity() < 15,
+                                    'is-low' => $risk->severity() < 8,
                                 ])></span>
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-semibold text-ink">{{ $risk->title }}</p>

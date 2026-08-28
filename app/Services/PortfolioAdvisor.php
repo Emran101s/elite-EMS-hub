@@ -166,7 +166,10 @@ class PortfolioAdvisor
         $book = $events->count().' '.str('event')->plural($events->count());
 
         return match (true) {
-            $critical > 0 => $critical.' '.str('thing')->plural($critical).' need you today, across '.$book.'.',
+            // "3 things need you today" read as though three items existed,
+            // on a page also showing 35 overdue tasks and a 13-item briefing.
+            // It counts criticals; it now says so.
+            $critical > 0 => $critical.' critical '.str('item')->plural($critical).' across '.$book.', and '.($attention->count() - $critical).' more worth a look.',
             $attention->isNotEmpty() => 'Nothing critical. '.$attention->count().' '.str('item')->plural($attention->count()).' worth a look across '.$book.'.',
             $live > 0 => $live.' '.str('event')->plural($live).' running and nothing flagged. Watch the room.',
             default => 'Nothing is flagged across '.$book.'. Good day to get ahead.',
