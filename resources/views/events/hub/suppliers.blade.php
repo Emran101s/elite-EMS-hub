@@ -33,15 +33,14 @@
      showed the same top-4-by-rating list on every visit whether or not
      anyone was looking at Suppliers. Real content ($supplier->rating,
      the same field), just living on the page it's actually about now. --}}
+<div class="cx-canvas">
 @if ($event->suppliers->where('rating', '>', 0)->isNotEmpty())
-    <div class="mb-4 overflow-hidden rounded-lg border border-line bg-white">
-        <div class="flex items-center justify-between border-b border-line px-4 py-2.5">
-            <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Top rated on this event</p>
-        </div>
+    <div class="cx-lcard">
+        <div class="cx-lcard-head"><span class="cx-lt">Top rated on this event</span></div>
         <div class="divide-y divide-line">
             @foreach ($event->suppliers->sortByDesc('rating')->take(4) as $supplier)
                 <div class="flex items-center gap-3 px-4 py-2.5">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-page text-eyebrow font-bold text-ink">{{ str($supplier->name)->substr(0, 1) }}</span>
+                    <span class="cx-cathex" style="background: {{ $moduleHex }}">{{ str($supplier->name)->substr(0, 1) }}</span>
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-xs font-semibold text-ink">{{ $supplier->name }}</span>
                         <span class="block text-eyebrow text-muted">{{ str($supplier->category)->replace('_', ' & ')->title() }}</span>
@@ -65,13 +64,9 @@
         <p class="text-eyebrow text-muted">Requested → quoted → approved → contracted → in production → delivered → completed</p>
         <div class="ms-auto flex items-center gap-2">
             @if ($event->suppliers->isNotEmpty())
-                <span class="inline-flex items-center rounded-full border border-line bg-white p-0.5">
-                    <button type="button" @click="setMode('list')"
-                            :class="mode === 'list' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                            class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition">List</button>
-                    <button type="button" @click="setMode('cards')"
-                            :class="mode === 'cards' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                            class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition">Cards</button>
+                <span class="cx-seg">
+                    <button type="button" @click="setMode('list')" :aria-pressed="mode === 'list'">List</button>
+                    <button type="button" @click="setMode('cards')" :aria-pressed="mode === 'cards'">Cards</button>
                 </span>
             @endif
             <a href="{{ route('suppliers.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-xs font-semibold text-ink transition hover:border-navy-300">Manage suppliers →</a>
@@ -79,12 +74,11 @@
     </div>
 
     @if ($event->suppliers->isEmpty())
-        <x-empty icon="truck" title="No suppliers on this event yet"
-                 hint="Assign suppliers from your Suppliers module to track quotes, contracts and delivery readiness here.">
-            <x-slot:actions>
-                <a href="{{ route('suppliers.index') }}" class="rounded-full bg-gold-500 px-3.5 py-2 text-[12px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Open Suppliers module →</a>
-            </x-slot:actions>
-        </x-empty>
+        <div class="cx-empty">
+            <h3>No suppliers on this event yet</h3>
+            <p>Assign suppliers from your Suppliers module to track quotes, contracts and delivery readiness here.</p>
+            <a href="{{ route('suppliers.index') }}" class="cx-btn cx-btn-accent" style="display:inline-flex">Open Suppliers module →</a>
+        </div>
     @else
         {{-- dense list + selected-supplier context panel. Cards mode below
              already shows every supplier's full detail inline, so the panel
@@ -113,7 +107,7 @@
                                 class="grid grid-cols-2 items-center gap-2 md:grid-cols-12 md:gap-3"
                             >
                                 <div class="col-span-2 flex min-w-0 items-center gap-2.5 md:col-span-5">
-                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style="background: {{ $moduleHex }}">{{ str($supplier->name)->substr(0, 1) }}</span>
+                                    <span class="cx-cathex" style="background: {{ $moduleHex }}">{{ str($supplier->name)->substr(0, 1) }}</span>
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-bold text-ink">{{ $supplier->name }}</p>
                                         <p class="truncate text-eyebrow text-muted">{{ collect([$supplier->email, $supplier->phone, $supplier->city])->filter()->implode(' · ') ?: '★ '.number_format($supplier->rating, 1) }}</p>
@@ -196,11 +190,11 @@
                     $pct = $readiness[$supplier->pivot->status] ?? 10;
                     $money = $spend[$supplier->id] ?? null;
                 @endphp
-                <div wire:key="sup-card-{{ $supplier->id }}" class="group flex flex-col overflow-hidden rounded-lg border border-line bg-white {{ $supplier->pivot->status === 'issue' ? '!border-danger ring-1 ring-danger-soft' : '' }}">
+                <div wire:key="sup-card-{{ $supplier->id }}" class="group cx-lcard !mb-0 {{ $supplier->pivot->status === 'issue' ? '!border-danger ring-1 ring-danger-soft' : '' }}">
                     <div class="flex flex-1 flex-col p-4">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex min-w-0 items-center gap-3">
-                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white" style="background: {{ $moduleHex }}">{{ str($supplier->name)->substr(0, 1) }}</span>
+                                <span class="cx-cathex" style="width:38px;height:42px;background: {{ $moduleHex }}">{{ str($supplier->name)->substr(0, 1) }}</span>
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-bold text-ink">{{ $supplier->name }}</p>
                                     <div class="mt-1 flex items-center gap-1.5">
@@ -246,4 +240,5 @@
             @endforeach
         </div>
     @endif
+</div>
 </div>

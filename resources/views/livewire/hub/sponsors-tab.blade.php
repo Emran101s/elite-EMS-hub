@@ -9,7 +9,7 @@
     $moduleHex = \App\Models\Event::moduleColor('sponsors');
 @endphp
 
-<div>
+<div class="cx-canvas">
     {{-- Sponsors / Committed / Received / Packages already live in the
          Universal Module Header above this — the lead strip that used to
          repeat them here is gone rather than kept as a second copy. The
@@ -26,25 +26,25 @@
         @if ($target > 0 && $committed < $target)
             <p class="text-eyebrow text-muted">{{ $fmt($target - $committed) }} left to target</p>
         @endif
-        <button type="button" wire:click="newItem" class="ms-auto h-9 rounded-full bg-gold-500 px-3.5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Sell a sponsorship</button>
+        <button type="button" wire:click="newItem" class="ms-auto cx-btn cx-btn-accent" style="height:36px">＋ Sell a sponsorship</button>
     </div>
 
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         {{-- ══════════ MAIN ══════════ --}}
         <div class="min-w-0">
             @if ($sponsors->isEmpty())
-                <x-empty icon="star" title="No sponsors sold yet"
-                         hint="Set your package prices in the catalog, then sell a package — the amount fills in automatically and rolls up into the budget's income.">
-                    <x-slot:actions>
-                        <button type="button" wire:click="newItem" class="h-10 rounded-full bg-gold-500 px-5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Sell a sponsorship</button>
-                    </x-slot:actions>
-                </x-empty>
+                <div class="cx-empty">
+                    <h3>No sponsors sold yet</h3>
+                    <p>Set your package prices in the catalog, then sell a package — the amount fills in automatically and rolls up into the budget's income.</p>
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Sell a sponsorship</button>
+                </div>
             @else
                 <x-bulk-bar :count="$this->selectedCount()" noun="sponsor" />
-                <div class="overflow-hidden overflow-x-auto rounded-lg border border-line bg-white">
+                <div class="cx-lcard">
+                  <div class="overflow-x-auto">
                     <table class="w-full min-w-[560px]">
                         <thead>
-                            <tr class="border-b border-line bg-page text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
+                            <tr class="border-b border-line text-left text-[10px] font-bold uppercase tracking-[0.06em] text-muted" style="background:var(--cx-surface-2)">
                                 <th class="w-8 pl-3.5"></th>
                                 <th class="px-3.5 py-2">Sponsor</th>
                                 <th class="px-2.5 py-2">Package</th>
@@ -78,19 +78,20 @@
                             @endforeach
                         </tbody>
                     </table>
+                  </div>
                 </div>
             @endif
         </div>
 
         {{-- ══════════ RIGHT · control rail ══════════ --}}
         <div class="xl:sticky xl:top-12 xl:h-fit">
-            <div class="cc-panel">
-                <div class="cc-head">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                        <x-icon name="star" class="h-3.5 w-3.5" />
+            <div class="cx-panel">
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ $moduleHex }}"><x-icon name="star" class="h-3 w-3" /></span>
+                        Sponsors Control
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Sponsors Control</span>
-                    <span class="relative ml-auto text-eyebrow font-semibold text-muted">{{ $packages->count() }} pkgs</span>
+                    <span class="text-[10px] font-semibold" style="color:rgba(240,231,213,.6)">{{ $packages->count() }} pkgs</span>
                 </div>
 
                 {{-- package catalog --}}
@@ -155,14 +156,15 @@
                 </div>
 
                 {{-- summary + action --}}
-                <div class="border-t border-line p-4">
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Summary</p>
                     <div class="mb-3 space-y-1.5 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Target</span><span class="font-bold text-ink">{{ $target ? $fmt($target) : '—' }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Committed</span><span class="font-bold text-ink">{{ $fmt($committed) }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Received</span><span class="font-bold text-success-ink">{{ $fmt($received) }}</span></div>
                         <div class="flex justify-between border-t border-line pt-1.5"><span class="text-muted">Outstanding</span><span class="font-bold text-ink">{{ $fmt(max(0, $committed - $received)) }}</span></div>
                     </div>
-                    <button type="button" wire:click="newItem" class="h-10 w-full rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Sell a sponsorship</button>
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent w-full justify-center" style="height:40px">＋ Sell a sponsorship</button>
                     <a href="{{ route('events.sponsorship', $event) }}" target="_blank" class="mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-line bg-white text-xs font-bold text-ink transition hover:border-navy-300">
                         <span class="text-gold-600">✦</span> Generate prospectus
                     </a>

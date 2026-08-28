@@ -64,11 +64,7 @@
          Inspector, per-module data. ══ --}}
     <div class="ehx-grid {{ $showPanel ? 'has-panel' : '' }} mt-3">
         <div class="min-w-0">
-            {{-- Universal Module Header (hub/module-header.blade.php) is
-                 turned off here for now, per direct instruction — pending
-                 a decision on what replaces it. Component and its
-                 HubModuleInspector data source are untouched, just not
-                 rendered. --}}
+            <x-hub.module-header :event="$event" :header="$header" :tab="$tab" />
 
             @includeIf('events.hub.' . $tab, ['event' => $event, 'health' => $health, 'ai' => $ai, 'alerts' => $alerts, 'workload' => $workload])
         </div>

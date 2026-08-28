@@ -2,64 +2,70 @@
 
 @php
     $m = \App\Support\HubModuleInspector::data($event, $header, $tab);
-    $statusColor = match (true) {
-        $m['pct'] === null || $m['pct'] === 0 => 'var(--color-muted)',
-        $m['pct'] >= 60 => 'var(--color-success)',
-        default => 'var(--color-danger)',
+    $statusTone = match (true) {
+        $m['pct'] === null || $m['pct'] === 0 => 'tone-muted',
+        $m['pct'] >= 60 => 'tone-ok',
+        default => 'tone-risk',
+    };
+    $statusValueColor = match ($statusTone) {
+        'tone-ok' => 'var(--cx-ok)',
+        'tone-risk' => 'var(--cx-risk)',
+        default => 'rgba(234,240,251,.5)',
     };
 @endphp
 
-<div class="ehx-module-header">
-    <div class="ehx-module-header-top">
-        <span class="ehx-module-header-icon" style="background: color-mix(in srgb, {{ $m['color'] }} 16%, transparent); color: {{ $m['color'] }}">
-            <x-icon :name="$m['icon']" class="h-5 w-5" />
-        </span>
-        <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-[17px] font-extrabold text-ink">{{ $m['label'] }}</h2>
-                <span class="ehx-pill" style="background: color-mix(in srgb, {{ $statusColor }} 16%, transparent); color: {{ $statusColor }}">
-                    {{ $m['statusWord'] }}
-                </span>
+<div class="cx-canvas" style="padding: 0 0 16px">
+    <div class="cx-modhero">
+        <div class="cx-modhero-top">
+            <span class="cx-modhero-hex" style="background: color-mix(in srgb, {{ $m['color'] }} 30%, transparent); color: {{ $m['color'] }}">
+                <x-icon :name="$m['icon']" class="h-[18px] w-[18px]" />
+            </span>
+
+            <div class="min-w-0 flex-1">
+                <div class="cx-modhero-title">
+                    <h2>{{ $m['label'] }}</h2>
+                    <span class="cx-tag {{ $statusTone }}">{{ $m['statusWord'] }}</span>
+                </div>
+                @if ($m['purpose'])
+                    <p class="cx-modhero-purpose">{{ $m['purpose'] }}</p>
+                @endif
             </div>
-            @if ($m['purpose'])
-                <p class="mt-0.5 text-[12px] text-muted">{{ $m['purpose'] }}</p>
-            @endif
-        </div>
 
-        <div class="flex shrink-0 items-center gap-2">
-            <a href="{{ route('events.hub', [$event, 'tab' => $m['tab']]) }}" class="ehx-btn ehx-btn-primary !py-1.5 !px-3 !text-[11.5px]">
-                Open {{ $m['label'] }}
-            </a>
-        </div>
-    </div>
-
-    <div class="ehx-module-header-row">
-        @if ($m['pct'] !== null)
-            <div class="ehx-module-header-stat">
-                <span class="ehx-module-header-stat-value" style="color: {{ $statusColor }}">{{ $m['pct'] }}%</span>
-                <span class="ehx-module-header-stat-label">Readiness</span>
-            </div>
-        @endif
-
-        @foreach ($m['metrics'] ?? [] as $metric)
-            <div class="ehx-module-header-stat">
-                <span class="ehx-module-header-stat-value">{{ $metric['value'] }}</span>
-                <span class="ehx-module-header-stat-label">{{ $metric['label'] }}</span>
-            </div>
-        @endforeach
-
-        <div class="ehx-module-header-stat">
-            <span class="ehx-module-header-stat-value !text-[13px]">{{ $m['owner']?->name ?? 'No owner assigned' }}</span>
-            <span class="ehx-module-header-stat-label">Owner</span>
-        </div>
-
-        @if ($m['nextAction'])
-            <div class="ehx-module-header-next">
-                <span class="ehx-module-header-stat-label">Next Action</span>
-                <a href="{{ route('events.hub', [$event, 'tab' => $m['nextAction']['tab']]) }}" wire:navigate class="ehx-module-header-stat-value !text-[13px] hover:underline">
-                    {{ $m['nextAction']['title'] }} →
+            <div class="cx-modhero-cta">
+                <a href="{{ route('events.hub', [$event, 'tab' => $m['tab']]) }}" class="cx-btn cx-btn-accent">
+                    Open {{ $m['label'] }}
                 </a>
             </div>
-        @endif
+        </div>
+
+        <div class="cx-modhero-stats">
+            @if ($m['pct'] !== null)
+                <div class="cx-modstat">
+                    <span class="cx-msv" style="color: {{ $statusValueColor }}">{{ $m['pct'] }}%</span>
+                    <span class="cx-msl">Readiness</span>
+                </div>
+            @endif
+
+            @foreach ($m['metrics'] ?? [] as $metric)
+                <div class="cx-modstat">
+                    <span class="cx-msv">{{ $metric['value'] }}</span>
+                    <span class="cx-msl">{{ $metric['label'] }}</span>
+                </div>
+            @endforeach
+
+            <div class="cx-modstat">
+                <span class="cx-msv" style="font-size: 13px">{{ $m['owner']?->name ?? 'No owner assigned' }}</span>
+                <span class="cx-msl">Owner</span>
+            </div>
+
+            @if ($m['nextAction'])
+                <div class="cx-modhero-next">
+                    <span class="cx-msl">Next Action</span>
+                    <a href="{{ route('events.hub', [$event, 'tab' => $m['nextAction']['tab']]) }}" wire:navigate>
+                        {{ $m['nextAction']['title'] }} →
+                    </a>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
