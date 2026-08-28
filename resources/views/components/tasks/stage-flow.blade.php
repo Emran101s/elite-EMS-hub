@@ -3,7 +3,7 @@
 {{-- A connected pipeline, not a grid of disconnected tiles — one thin line
      running behind every stage's own dot, so the six numbers read as one
      workflow narrowing toward Done rather than six interchangeable boxes. --}}
-<div class="rounded-lg border border-line bg-white p-5">
+<div class="rounded-lg border border-line bg-white p-3.5">
     <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Workflow</p>
 
     <div class="relative mt-4">

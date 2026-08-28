@@ -17,10 +17,10 @@
 
     <x-cc.header eyebrow="Task Command" title="Tasks" subtitle="Everything on the to-do list across events and projects." />
 
-    <div class="mt-5 grid gap-4 lg:grid-cols-[1fr_260px]">
+    <div class="mt-4 grid gap-3 lg:grid-cols-[1fr_260px]">
         <x-tasks.stage-flow :stages="$stages" />
 
-        <div class="flex items-center gap-4 rounded-lg border border-line bg-white p-5">
+        <div class="flex items-center gap-3.5 rounded-lg border border-line bg-white p-3.5">
             <div class="ccx-ring h-[72px] w-[72px] shrink-0" style="--ccx-ring: var(--color-success); --ccx-ring-pct: {{ $donePct }}%">
                 <span class="ccx-ring-value !text-[16px]">{{ $donePct }}%</span>
             </div>
@@ -32,9 +32,9 @@
         </div>
     </div>
 
-    <div class="mt-5 space-y-4">
+    <div class="mt-4 space-y-3">
         <div class="overflow-hidden rounded-lg border border-line bg-white">
-            <div class="flex items-center gap-2 border-b border-line bg-page px-5 py-3">
+            <div class="flex items-center gap-2 border-b border-line bg-page px-4 py-2.5">
                 <h2 class="text-[13px] font-bold text-ink">Active</h2>
                 <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $active->count() }}</span>
             </div>
@@ -42,14 +42,14 @@
                 @forelse ($active as $task)
                     <x-tasks.task-row :task="$task" />
                 @empty
-                    <p class="px-5 py-10 text-center text-[13px] text-muted">Nothing active on this page.</p>
+                    <p class="px-4 py-7 text-center text-[13px] text-muted">Nothing active on this page.</p>
                 @endforelse
             </div>
         </div>
 
         @if ($closed->isNotEmpty())
             <div class="overflow-hidden rounded-lg border border-line bg-white">
-                <div class="flex items-center gap-2 border-b border-line bg-page px-5 py-3">
+                <div class="flex items-center gap-2 border-b border-line bg-page px-4 py-2.5">
                     <h2 class="text-[13px] font-bold text-ink">Closed</h2>
                     <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold tabular-nums text-muted">{{ $closed->count() }}</span>
                 </div>
@@ -62,7 +62,7 @@
         @endif
 
         @if ($tasks->isEmpty())
-            <div class="rounded-lg border border-line bg-white px-5 py-12 text-center text-[13px] text-muted">No tasks yet.</div>
+            <div class="rounded-lg border border-line bg-white px-4 py-8 text-center text-[13px] text-muted">No tasks yet.</div>
         @endif
     </div>
 
