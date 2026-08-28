@@ -8,7 +8,7 @@
     $marginPct = $totals['sell'] > 0 ? (int) round($margin / $totals['sell'] * 100) : null;
 @endphp
 
-<div class="space-y-3">
+<div class="cx-canvas space-y-2.5">
 
     {{-- "Items" is dropped — it's an exact duplicate of the Universal Module
          Header's own count. The three money figures stay: the header shows
@@ -34,28 +34,24 @@
         </label>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
-            <a href="{{ route('events.pricing.template', $event) }}"
-               class="flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3 text-xs font-semibold text-ink shadow-sm transition hover:border-navy-300">
+            <a href="{{ route('events.pricing.template', $event) }}" class="cx-btn cx-btn-ghost" style="height:34px">
                 <x-icon name="archive" class="h-3.5 w-3.5 text-muted" /> Template
             </a>
 
             @if ($may)
-                <button type="button" wire:click="toggleCatalogue"
-                        @class(['flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold shadow-sm transition',
-                            'border-gold-300 bg-gold-50 text-gold-700' => $showCatalogue,
-                            'border-line bg-white text-ink hover:border-navy-300' => ! $showCatalogue])>
-                    <x-icon name="list" class="h-3.5 w-3.5" /> House list
+                <button type="button" wire:click="toggleCatalogue" class="cx-chip {{ $showCatalogue ? 'is-on' : '' }}" style="height:34px">
+                    <x-icon name="list" class="me-1 inline h-3.5 w-3.5 align-middle" /> House list
                 </button>
 
-                <button type="button" wire:click="newItem" class="h-9 rounded-full bg-gold-500 px-3.5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ New item</button>
+                <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="height:34px">＋ New item</button>
             @endif
         </div>
     </div>
 
     {{-- ══ the house list, pulled one at a time ══ --}}
     @if ($showCatalogue)
-        <div class="overflow-hidden rounded-lg border border-gold-200 bg-white">
-            <div class="flex flex-wrap items-center gap-2 border-b border-line bg-gold-50/50 px-4 py-2.5">
+        <div class="cx-lcard" style="border-color: var(--cx-accent)">
+            <div class="flex flex-wrap items-center gap-2 border-b border-line px-3.5 py-2" style="background: var(--cx-accent-wash)">
                 <span class="min-w-0">
                     <span class="block text-[12.5px] font-bold text-ink">The house price list</span>
                     <span class="block text-[11px] text-muted">
@@ -71,14 +67,10 @@
                  enough that "what does the hotel provide" is a real question. --}}
             <div class="flex flex-wrap items-center gap-1.5 border-b border-line bg-white px-4 py-2">
                 <button type="button" wire:click="$set('catalogueQuery', '')"
-                        @class(['rounded-full px-2.5 py-1 text-[10.5px] font-bold transition',
-                            'bg-navy-900 text-white' => $catalogueQuery === '',
-                            'bg-page text-muted hover:text-ink' => $catalogueQuery !== ''])>All</button>
+                        class="cx-chip {{ $catalogueQuery === '' ? 'is-on' : '' }}">All</button>
                 @foreach ($sections as $label)
                     <button type="button" wire:click="$set('catalogueQuery', @js($label))"
-                            @class(['rounded-full px-2.5 py-1 text-[10.5px] font-bold transition',
-                                'bg-navy-900 text-white' => $catalogueQuery === $label,
-                                'bg-page text-muted hover:text-ink' => $catalogueQuery !== $label])>{{ $label }}</button>
+                            class="cx-chip {{ $catalogueQuery === $label ? 'is-on' : '' }}">{{ $label }}</button>
                 @endforeach
             </div>
 
@@ -117,9 +109,9 @@
 
     {{-- ══ import ══ --}}
     @if ($may)
-        <div class="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-white p-3.5">
-            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-navy-900 text-gold-400">
-                <x-icon name="archive" class="h-4 w-4" />
+        <div class="cx-lcard flex flex-wrap items-center gap-3 p-3">
+            <span class="cx-cathex shrink-0" style="width:28px;height:31px;background:var(--cx-espresso-1);color:var(--cx-accent)">
+                <x-icon name="archive" class="h-3.5 w-3.5" />
             </span>
             <span class="min-w-0">
                 <span class="block text-[12.5px] font-bold text-ink">Import this event's prices</span>
@@ -130,7 +122,7 @@
                    class="ms-auto max-w-[240px] text-[11px] text-ink file:mr-2 file:rounded-lg file:border-0 file:bg-page file:px-2.5 file:py-1.5 file:text-[11px] file:font-bold file:text-ink">
 
             <button type="button" wire:click="import" @disabled(! $importFile)
-                    class="rounded-full bg-navy-900 px-3.5 py-2 text-[12px] font-bold text-white transition hover:bg-navy-800 disabled:opacity-30">
+                    class="cx-btn cx-btn-accent disabled:opacity-30" style="height:34px">
                 Import
             </button>
 
@@ -141,7 +133,7 @@
 
     {{-- ══ the editor ══ --}}
     @if ($editingId !== null)
-        <div class="rounded-lg border border-gold-200 bg-gold-50/40 p-4">
+        <div class="cx-lcard p-3.5" style="border-color: var(--cx-accent); background: var(--cx-accent-wash)">
             <p class="mb-3 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">{{ $editingId ? 'Edit the item' : 'A new item' }}</p>
 
             <div class="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
@@ -263,13 +255,15 @@
 
     {{-- ══ the list ══ --}}
     @if ($items->isEmpty())
-        <x-empty icon="currency" title="Nothing priced for this event yet"
-                 hint="Add an item, pull some from the house list, or import a filled template." />
+        <div class="cx-empty">
+            <h3>Nothing priced for this event yet</h3>
+            <p>Add an item, pull some from the house list, or import a filled template.</p>
+        </div>
     @else
         <div class="space-y-3">
             @foreach ($groups as $group => $rows)
-                <div class="overflow-hidden rounded-lg border border-line bg-white">
-                    <div class="flex items-center gap-2 border-b border-line bg-page px-3.5 py-1.5">
+                <div class="cx-lcard">
+                    <div class="flex items-center gap-2 border-b border-line px-3.5 py-1.5" style="background: var(--cx-surface-2)">
                         <span class="text-eyebrow font-black uppercase tracking-[0.14em] text-ink">{{ $group }}</span>
                         <span class="text-eyebrow font-semibold text-muted">{{ $rows->count() }}</span>
                         {{-- Who supplies it, which the category does not say. --}}
