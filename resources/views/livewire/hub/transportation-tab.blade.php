@@ -148,6 +148,41 @@
                 <x-alert tone="ok">{{ $planMsg }}</x-alert>
             @endif
 
+            {{-- ══ WHAT IS BLOCKING SHOW DAY ══
+                 "Not ready: 2" was a figure in the right rail with the reason
+                 in small print underneath it, while the row itself carried the
+                 blocker as a chip in the middle — next to a seat-fill bar that
+                 is visually louder and, at 7/7, is not a problem at all.
+
+                 On the morning, the only question this screen has to answer
+                 fast is which runs cannot go and why. So it is answered first,
+                 grouped by what is actually missing, before anything else. --}}
+            @php
+                // $movements is grouped by day, so flatten before filtering.
+                $blocked = $movements->flatten()->reject(fn ($m) => $m->isSettled() || $m->isReady());
+                $byGap = ['driver' => 0, 'vehicle' => 0, 'passengers' => 0];
+                foreach ($blocked as $m) {
+                    foreach ($m->readiness()['missing'] as $gap) {
+                        if (isset($byGap[$gap])) { $byGap[$gap]++; }
+                    }
+                }
+                $gapWords = ['driver' => 'no driver', 'vehicle' => 'no vehicle', 'passengers' => 'nobody riding'];
+            @endphp
+            @if ($blocked->isNotEmpty())
+                <div class="cx-lcard mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
+                     style="border-color: var(--cx-warn); background: var(--cx-warn-wash)">
+                    <span class="flex items-center gap-2 text-[12px] font-bold" style="color: var(--cx-warn-ink)">
+                        <span class="cx-hexdot" style="background: var(--cx-warn)"></span>
+                        {{ $blocked->count() }} {{ str('run')->plural($blocked->count()) }} not ready
+                    </span>
+                    @foreach ($byGap as $gap => $n)
+                        @continue (! $n)
+                        <span class="text-[11.5px]" style="color: var(--cx-warn-ink)">{{ $n }} × {{ $gapWords[$gap] }}</span>
+                    @endforeach
+                    <span class="ms-auto text-[10.5px]" style="color: var(--cx-warn-ink); opacity:.75">Each is marked on its row below.</span>
+                </div>
+            @endif
+
             @include('livewire.hub.transport.guests')
             {{-- ══ 2 · Vehicle plan ══ --}}
             <section>

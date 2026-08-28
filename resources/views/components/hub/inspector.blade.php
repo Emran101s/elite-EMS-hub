@@ -13,7 +13,19 @@
     $isEmpty = ! $isOverview && ($m['pct'] === null || $m['pct'] === 0) && $m['recent']->isEmpty();
 @endphp
 
+{{-- ══ WHAT THIS PANEL IS FOR ══
+     On a module tab the Universal Module Header sits about 40px above
+     this, already carrying the module's name, its status pill and its
+     owner. The Inspector repeated all three, then offered "Related
+     modules" that named the tab you were standing on, and closed with an
+     "Open <module>" button to the page you were already reading.
+
+     So on a module tab it now carries only what the header does not: what
+     changed recently, and where to go next. On Overview it keeps its own
+     head, because there the header describes the event rather than a
+     module, and the readiness gates below have nothing above them. --}}
 <div class="ehx-panel">
+    @if ($isOverview)
     <div class="ehx-panel-head">
         <span class="ehx-panel-icon" style="background: color-mix(in srgb, {{ $m['color'] }} 16%, transparent); color: {{ $m['color'] }}">
             <x-icon :name="$m['icon']" class="h-4 w-4" />
@@ -26,15 +38,18 @@
             {{ $m['statusWord'] }}
         </span>
     </div>
+    @endif
 
     <div class="ehx-panel-detail">
-        @if ($m['owner'])
-            <div class="ehx-panel-owner">
-                <x-user-avatar :user="$m['owner']" size="h-6 w-6" text="text-[9px]" />
-                <p class="truncate text-[11px] text-muted"><span class="font-semibold text-ink">{{ $m['owner']->name }}</span> · Owner</p>
-            </div>
-        @else
-            <p class="text-[10.5px] text-muted">No owner assigned</p>
+        @if ($isOverview)
+            @if ($m['owner'])
+                <div class="ehx-panel-owner">
+                    <x-user-avatar :user="$m['owner']" size="h-6 w-6" text="text-[9px]" />
+                    <p class="truncate text-[11px] text-muted"><span class="font-semibold text-ink">{{ $m['owner']->name }}</span> · Owner</p>
+                </div>
+            @else
+                <p class="text-[10.5px] text-muted">No owner assigned</p>
+            @endif
         @endif
 
         @if ($isOverview)
@@ -157,9 +172,5 @@
         @endif
     </div>
 
-    @unless ($isOverview)
-        <a href="{{ route('events.hub', [$event, 'tab' => $m['tab']]) }}" wire:navigate class="ehx-panel-viewall mt-2" style="color: var(--color-gold-700); background: var(--color-gold-50);">
-            Open {{ $m['label'] }} →
-        </a>
-    @endunless
+
 </div>
