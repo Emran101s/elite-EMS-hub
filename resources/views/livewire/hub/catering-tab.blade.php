@@ -13,7 +13,7 @@
     $dateLabel = fn ($k) => $k === '_undated' ? 'Date not set' : \Illuminate\Support\Carbon::parse($k)->format('l, j F Y');
     $moduleHex = \App\Models\Event::moduleColor('catering');
 @endphp
-<div>
+<div class="cx-canvas">
     {{-- Occasions / Confirmed / Covers / Total cost already live in the
          Universal Module Header above this — the lead strip that used to
          repeat them here is gone rather than kept as a second copy. --}}
@@ -21,16 +21,15 @@
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0">
     @if ($items->isEmpty())
-        <x-empty icon="cup" title="No food & beverage yet"
-                 hint="Coffee breaks, lunches, a gala dinner at an outside restaurant — each occasion is its own line, with its own date, venue and rate.">
-            <x-slot:actions>
-                <button type="button" wire:click="newItem" class="h-10 rounded-full bg-gold-500 px-5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add the first occasion</button>
-            </x-slot:actions>
-        </x-empty>
+        <div class="cx-empty">
+            <h3>No food &amp; beverage yet</h3>
+            <p>Coffee breaks, lunches, a gala dinner at an outside restaurant — each occasion is its own line, with its own date, venue and rate.</p>
+            <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Add the first occasion</button>
+        </div>
     @else
         <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
             <x-bulk-bar :count="$this->selectedCount()" noun="occasion" />
-            <button type="button" wire:click="newItem" class="ms-auto h-8 rounded-full bg-gold-500 px-3 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Occasion</button>
+            <button type="button" wire:click="newItem" class="ms-auto cx-btn cx-btn-accent" style="height:32px;padding:0 12px">＋ Add Occasion</button>
         </div>
         <div class="space-y-4">
             @foreach ($byDate as $dateKey => $dayItems)
@@ -42,12 +41,12 @@
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($dayItems as $c)
                             @php [$stLabel, $stClass] = $statusMeta[$c->status] ?? $statusMeta['planned']; @endphp
-                            <div wire:key="cat-{{ $c->id }}" class="group/ct flex flex-col overflow-hidden rounded-lg border border-line bg-white {{ $this->isSelected($c->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
+                            <div wire:key="cat-{{ $c->id }}" class="group/ct cx-lcard !mb-0 flex flex-col {{ $this->isSelected($c->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
                                 <div class="flex flex-1 flex-col p-3.5">
                                     <div class="flex items-start justify-between gap-2.5">
-                                        <div class="flex min-w-0 items-center gap-2.5">
+                                        <div class="flex min-w-0 items-center gap-3">
                                             <button type="button" wire:click="toggleSelect({{ $c->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($c->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-line text-transparent hover:border-muted' }}" title="Select">✓</button>
-                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style="color: {{ $moduleHex }}; background: {{ $moduleHex }}15">
+                                            <span class="cx-cathex" style="background: {{ $moduleHex }}">
                                                 <x-icon :name="$typeIcon[$c->type] ?? 'cup'" class="h-4 w-4" />
                                             </span>
                                             <div class="min-w-0">
@@ -86,18 +85,18 @@
         </div>
 
         <div class="xl:sticky xl:top-4 xl:h-fit">
-            <div class="cc-panel">
-                <div class="cc-head">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                        <x-icon name="cup" class="h-3.5 w-3.5" />
+            <div class="cx-panel">
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ $moduleHex }}"><x-icon name="cup" class="h-3 w-3" /></span>
+                        F&amp;B Control
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">F&amp;B Control</span>
                 </div>
-                <div class="border-b border-line p-3">
+                <div class="cx-panel-sec">
                     <x-budget-routing :routing="$this->budgetRouting()" />
                 </div>
-                <div class="p-3">
-                    <button type="button" wire:click="newItem" class="h-9 w-full rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Occasion</button>
+                <div class="cx-panel-sec">
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent w-full justify-center" style="height:36px">＋ Add Occasion</button>
                 </div>
             </div>
         </div>
