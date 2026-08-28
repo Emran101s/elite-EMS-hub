@@ -55,6 +55,11 @@
             'overview', 'approvals', 'speakers',
             'venue', 'pricing', 'brief', 'contract', 'files',
         ], true);
+
+        // ...and only when it actually has something to say. A panel whose
+        // whole content is "No recent activity" plus two links the module nav
+        // bar already carries does not earn 280px from the tab beside it.
+        $showPanel = $showPanel && \App\Support\HubModuleInspector::hasContent($event, $header, $tab);
     @endphp
 
     {{-- ══ Active Workspace | Inspector ══
