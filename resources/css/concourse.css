@@ -431,6 +431,13 @@
   .cx-modhero-next a:hover { color: var(--cx-accent-hi); }
   @media (max-width: 640px) { .cx-modhero-top { flex-wrap: wrap; } .cx-modhero-cta { width: 100%; } .cx-modhero-cta .cx-btn { width: 100%; justify-content: center; } }
 
+  /* Sticky navy command bar — the Brief tab's document toolbar. Same navy
+     ground and gold glow as the module hero, but a bar rather than a card:
+     it stays put while the dossier scrolls under it. */
+  .cx-briefbar { position: relative; overflow: hidden; border-radius: var(--cx-radius); background: linear-gradient(150deg, var(--cx-espresso-1), var(--cx-espresso-2)); border: 1px solid var(--cx-espresso-line); box-shadow: var(--cx-shadow-lift); }
+  .cx-briefbar::before { content: ''; position: absolute; top: -90%; right: -4%; width: 34%; height: 240%; background: radial-gradient(ellipse at center, var(--cx-accent-glow), transparent 62%); pointer-events: none; }
+  .cx-briefbar > * { position: relative; }
+
   .cx-footnote { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--cx-line); font-family: var(--cx-mono); font-size: 10.5px; letter-spacing: .05em; color: var(--cx-faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 
   /* motion */

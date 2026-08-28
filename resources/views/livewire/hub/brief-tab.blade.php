@@ -1,15 +1,12 @@
-<div class="-mx-1">
+<div class="cx-canvas -mx-1">
     {{-- ══ Command bar ══ --}}
-    <div class="sticky top-16 z-20 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-navy-900 px-5 py-3.5 shadow-float">
-        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
-            <div class="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.18),transparent_70%)]"></div>
-        </div>
+    <div class="cx-briefbar sticky top-16 z-20 mb-5 flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
         <div class="relative flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-500 text-navy-900 shadow">
+            <span class="cx-cathex" style="background: var(--cx-accent); color: var(--cx-ink)">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity=".3"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
             </span>
             <div>
-                <p class="text-eyebrow font-bold uppercase tracking-[0.32em] text-gold-400">Event Dossier</p>
+                <p class="text-eyebrow font-bold uppercase tracking-[0.32em]" style="color: var(--cx-accent-hi)">Event Dossier</p>
                 <p class="text-sm font-semibold text-white">Event Brief</p>
             </div>
             <select
@@ -35,7 +32,7 @@
         <div class="relative flex flex-wrap items-center gap-2">
             <span class="mr-1 flex items-center gap-1.5 text-eyebrow font-medium text-white/50">
                 <span wire:loading.remove class="flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-success"></span> Saved</span>
-                <span wire:loading class="flex items-center gap-1.5 text-gold-400"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-gold-500"></span> Saving…</span>
+                <span wire:loading class="flex items-center gap-1.5" style="color: var(--cx-accent-hi)"><span class="h-1.5 w-1.5 animate-pulse rounded-full" style="background: var(--cx-accent)"></span> Saving…</span>
             </span>
             <div class="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5">
                 <span class="text-eyebrow font-bold uppercase tracking-wider text-white/40">Ver</span>
@@ -58,8 +55,7 @@
                        confirm="Reset" tone="warn"
                        run="$wire.resetToTemplate()"
                        class="flex h-9 w-9 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/5 hover:text-white/80">↺</x-confirm>
-            <a href="{{ route('events.brief.pdf', $event) }}" target="_blank"
-               class="flex h-9 items-center gap-1.5 rounded-lg bg-gold-500 px-4 text-micro font-bold text-navy-900 shadow transition hover:bg-gold-400">
+            <a href="{{ route('events.brief.pdf', $event) }}" target="_blank" class="cx-btn cx-btn-accent" style="height:36px">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Export PDF
             </a>
         </div>
@@ -72,9 +68,9 @@
 
     @if (! empty($generated))
         @php $total = array_sum($generated); @endphp
-        <div class="mb-5 overflow-hidden rounded-lg border border-success-soft bg-gradient-to-r from-success-soft to-white px-5 py-4">
+        <div class="cx-lcard mb-5 px-5 py-4" style="background: linear-gradient(100deg, var(--cx-ok-wash), var(--cx-surface))">
             <div class="flex flex-wrap items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-success text-sm text-white">✓</span>
+                <span class="cx-cathex text-sm" style="width:28px;height:31px;background:var(--cx-ok)">✓</span>
                 <div class="flex-1">
                     <p class="text-sm font-bold text-ink">
                         {{ $total > 0 ? 'Plan generated from the brief' : 'Everything is already in sync' }}
@@ -147,8 +143,7 @@
                     {{-- Typing saves on its own; this is the button that says so.
                          Autosave that leaves no mark is autosave nobody trusts. --}}
                     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-                        <button type="button" wire:click="saveSection('{{ $key }}')"
-                                class="rounded-full bg-navy-900 px-3.5 py-2 text-[11.5px] font-bold text-white transition hover:bg-navy-800">
+                        <button type="button" wire:click="saveSection('{{ $key }}')" class="cx-btn cx-btn-ghost" style="height:34px">
                             Save this section
                         </button>
 
@@ -224,10 +219,10 @@
                 });
         @endphp
         <div class="xl:sticky xl:top-12">
-            <div class="rounded-lg bg-page p-3 ring-1 ring-line sm:p-5">
+            <div class="cx-lcard p-3 sm:p-5" style="background: var(--cx-surface-2); margin-bottom: 0">
                 <div class="mb-2 flex items-center justify-between px-1">
                     <span class="flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.16em] text-muted">
-                        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success"></span> Live preview
+                        <span class="h-1.5 w-1.5 animate-pulse rounded-full" style="background: var(--cx-ok)"></span> Live preview
                     </span>
                     <span class="text-eyebrow text-muted">Exactly what exports</span>
                 </div>
