@@ -45,13 +45,18 @@ class EventOverviewReadinessTest extends TestCase
         //
         // Module Header/Inspector role-separation pass: Overview's own
         // Inspector no longer falls back to Agenda's metrics (which used to
-        // read "Not started" on a blank event and contribute a 4th hit) — it
-        // reads the event's own readiness gates instead. A blank event has
-        // no agenda/speakers/suppliers/transport gates to fail, so the only
-        // gate that applies (Venue assigned) sits alongside two gates that
-        // start met (Approvals cleared, No open severe risk) — 2 of 3 met
-        // reads "On Track", not "Not started". 3, not 3 + 1.
-        $this->assertSame(3, substr_count($html, 'Not started'));
+        // read "Not started" on a blank event) — it reads the event's own
+        // readiness gates instead. A blank event has no agenda/speakers/
+        // suppliers/transport gates to fail, so the only gate that applies
+        // (Venue assigned) sits alongside two gates that start met (Approvals
+        // cleared, No open severe risk) — 2 of 3 met reads "On Track", not
+        // "Not started". So: 3 from the More Doors row.
+        //
+        // The Universal Module Header (hub/module-header.blade.php) is back
+        // above every tab's content — on Overview it renders the Overview
+        // module's own status pill, which reads "Not started" at 0% on a
+        // blank event. That's a 4th, legitimate hit.
+        $this->assertSame(4, substr_count($html, 'Not started'));
     }
 
     public function test_a_full_agenda_reads_ready(): void
@@ -95,11 +100,11 @@ class EventOverviewReadinessTest extends TestCase
             ->get(route('events.hub', $event))->assertOk()->getContent();
 
         $this->assertStringContainsString('Registration', $html);
-        // Only brief + contract are left "Not started" in the More Doors
-        // row (registration itself now reads Ready) — see
-        // test_untouched_modules_read_not_started for why the Event
-        // Inspector's own status pill no longer adds a 3rd hit.
-        $this->assertSame(2, substr_count($html, 'Not started'));
+        // Only brief + contract are left "Not started" in the More Doors row
+        // (registration itself now reads Ready) — 2 from that row, plus the
+        // Universal Module Header's own "Not started" pill for Overview (see
+        // test_untouched_modules_read_not_started) — 3.
+        $this->assertSame(3, substr_count($html, 'Not started'));
     }
 
     /** A disabled module's door must not appear at all — it would only bounce back to Overview. */
