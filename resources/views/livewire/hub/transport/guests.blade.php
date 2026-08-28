@@ -95,11 +95,15 @@
                 @endif
 
                 @if ($guests->isEmpty() && ! $unassignedCount && array_sum($legCounts) === 0)
-                    <div class="cx-empty !border-0 !shadow-none">
-                        <h3>No guests in the pool yet</h3>
-                        <p>Import a flight list, pull registered attendees, or add passengers on a movement's manifest.</p>
-                        <div class="flex flex-wrap items-center justify-center gap-2">
-                            <button type="button" wire:click="$set('showPlanImport', true)" class="btn-ghost btn-sm">⇪ Import guests</button>
+                    {{-- An empty staging pool is not worth 230px at the top of the
+                         screen. It used to sit above the movements as a full empty
+                         state, pushing the runs — the thing you are actually here
+                         to look at — toward the fold. One line, with the two ways
+                         to fill it, until there is something in it. --}}
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 text-[11.5px]">
+                        <span class="text-muted">No guests staged yet — import a flight list, or pull registered attendees.</span>
+                        <span class="ms-auto flex items-center gap-2">
+                            <button type="button" wire:click="$set('showPlanImport', true)" class="font-semibold" style="color: var(--cx-accent-ink)">⇪ Import guests</button>
                             @if ($attendeePull > 0)
                                 <x-confirm
                                     title="Pull {{ $attendeePull }} {{ \Illuminate\Support\Str::plural('attendee', $attendeePull) }} into the pool?"
@@ -107,9 +111,9 @@
                                     confirm="Pull attendees"
                                     tone="neutral"
                                     run="$wire.pullAttendees()"
-                                    class="btn-ghost btn-sm">⇩ Pull {{ $attendeePull }}</x-confirm>
+                                    class="font-semibold text-muted transition hover:text-ink">⇩ Pull {{ $attendeePull }}</x-confirm>
                             @endif
-                        </div>
+                        </span>
                     </div>
                 @else
                     <div class="overflow-x-auto">
