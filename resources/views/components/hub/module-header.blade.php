@@ -12,6 +12,11 @@
         'tone-risk' => 'var(--cx-risk)',
         default => 'rgba(234,240,251,.5)',
     };
+
+    // A module with no readiness figure and no metrics (Overview, Reports)
+    // would otherwise spend a whole second band of navy on one owner name.
+    // In that case the owner folds up into the top row instead.
+    $hasStats = $m['pct'] !== null || ! empty($m['metrics']) || $m['nextAction'];
 @endphp
 
 <div class="cx-canvas" style="padding: 0 0 16px">
@@ -29,6 +34,12 @@
                 @if ($m['purpose'])
                     <p class="cx-modhero-purpose">{{ $m['purpose'] }}</p>
                 @endif
+                @unless ($hasStats)
+                    <p class="cx-modhero-purpose" style="margin-top:3px">
+                        <span style="color: rgba(234,240,251,.85); font-weight:600">{{ $m['owner']?->name ?? 'No owner assigned' }}</span>
+                        <span style="opacity:.6"> · Owner</span>
+                    </p>
+                @endunless
             </div>
 
             <div class="cx-modhero-cta">
@@ -38,6 +49,7 @@
             </div>
         </div>
 
+        @if ($hasStats)
         <div class="cx-modhero-stats">
             @if ($m['pct'] !== null)
                 <div class="cx-modstat">
@@ -67,5 +79,6 @@
                 </div>
             @endif
         </div>
+        @endif
     </div>
 </div>
