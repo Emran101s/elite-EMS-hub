@@ -19,8 +19,8 @@
     $money = 'w-24 shrink-0 text-right';
     // Per-category icon, cycled by position. Colour comes from $catSolid
     // (below) so a category's ledger row and its share of the "Where the
-    // money goes" bar wear the same colour — the band partial reads this
-    // same array from here rather than defining its own.
+    // money goes" honeycomb wear the same colour — the composition partial
+    // reads this same array from here rather than defining its own.
     $catIcons = ['users', 'building', 'clipboard', 'grid', 'star', 'truck', 'archive', 'currency', 'chart'];
     $catSolid = [
         'var(--color-navy-900)', 'var(--color-gold-500)', 'var(--color-success)',
@@ -29,7 +29,7 @@
     ];
 @endphp
 
-<div>
+<div class="cx-canvas">
     {{-- The old Budget headline strip (ring + total/forecast/paid/remaining
          figures, in a dark x-module-head) is retired here — the Event Hub's
          new Universal Module Header shows the equivalent forecast/committed/
@@ -44,31 +44,33 @@
          Price mode is the one exception the Universal Module Header can't
          cover — it's a sell-side question ("what is this charged at")
          the header's forecast/committed/cap figures don't answer, and
-         nothing else on this page shows it. Kept, in the new glass style
+         nothing else on this page shows it. Kept, in the hero-card style
          instead of the old dark strip, only while Price mode is active. --}}
     @if ($price)
         @php $sellSummary = $event->sellSummary(); @endphp
-        <div class="ehc-price-banner">
-            <div class="ehc-price-banner-stat">
-                <span class="ehc-price-banner-label">Cost to us</span>
-                <span class="ehc-price-banner-value">{{ $fmt($sellSummary['cost']) }}</span>
+        <div class="cx-lhero cx-reveal cx-d1" style="margin-bottom:16px">
+            <div class="cx-lhero-row" style="gap:20px">
+                <div>
+                    <span class="cx-lhero-k">Cost to us</span>
+                    <p class="cx-lhero-v">{{ $fmt($sellSummary['cost']) }}</p>
+                </div>
+                <div>
+                    <span class="cx-lhero-k">Charged to client</span>
+                    <p class="cx-lhero-v">{{ $fmt($sellSummary['sell']) }}</p>
+                </div>
+                <div>
+                    <span class="cx-lhero-k">Gross margin</span>
+                    <p class="cx-lhero-v" style="color: {{ $sellSummary['margin'] < 0 ? '#f08a7d' : 'var(--cx-accent-hi)' }}">
+                        {{ $sellSummary['margin'] >= 0 ? '' : '−' }}{{ $fmt(abs($sellSummary['margin'])) }}
+                    </p>
+                </div>
+                <div>
+                    <span class="cx-lhero-k">Margin</span>
+                    <p class="cx-lhero-v">{{ $sellSummary['marginPct'] ?? '—' }}{{ $sellSummary['marginPct'] !== null ? '%' : '' }}</p>
+                </div>
             </div>
-            <div class="ehc-price-banner-stat">
-                <span class="ehc-price-banner-label">Charged to client</span>
-                <span class="ehc-price-banner-value">{{ $fmt($sellSummary['sell']) }}</span>
-            </div>
-            <div class="ehc-price-banner-stat">
-                <span class="ehc-price-banner-label">Gross margin</span>
-                <span class="ehc-price-banner-value" style="color: {{ $sellSummary['margin'] < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}">
-                    {{ $sellSummary['margin'] >= 0 ? '' : '−' }}{{ $fmt(abs($sellSummary['margin'])) }}
-                </span>
-            </div>
-            <div class="ehc-price-banner-stat">
-                <span class="ehc-price-banner-label">Margin</span>
-                <span class="ehc-price-banner-value">{{ $sellSummary['marginPct'] ?? '—' }}{{ $sellSummary['marginPct'] !== null ? '%' : '' }}</span>
-            </div>
-            <p class="ehc-price-banner-note">
-                <strong>How it was priced:</strong>
+            <p class="cx-lhero-sub" style="margin-top:12px">
+                <strong style="color:var(--cx-cream)">How it was priced:</strong>
                 {{ $sellSummary['priced'] }} of {{ $sellSummary['lines'] }} {{ str('line')->plural($sellSummary['lines']) }} priced by hand.
                 The rest charge cost plus the {{ rtrim(rtrim(number_format($sellSummary['fee'], 2), '0'), '.') }}% management fee.
                 @if ($sellSummary['absorbed'] > 0)
@@ -120,11 +122,11 @@
 
                 <x-bulk-bar :count="$this->selectedCount()" noun="line" />
 
-                <div class="rounded-lg border border-line bg-white overflow-hidden">
+                <div class="cx-lcard">
                     <div class="overflow-x-auto">
                         <div class="{{ $track || $price ? 'min-w-[680px]' : 'min-w-[380px]' }}">
                             {{-- column labels --}}
-                            <div class="flex items-center gap-2 border-b border-line bg-page/40 px-3 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-muted">
+                            <div class="cx-lcolhead">
                                 <span class="flex-1">Category / Line item</span>
                                 <span class="{{ $money }}">{{ match ($view) { 'track' => 'Budget', 'price' => 'Cost', default => 'Estimated cost' } }}</span>
                                 @if ($track)
@@ -152,16 +154,16 @@
                                     $isRenaming = $section['id'] && $editingCategoryId === $section['id'];
                                     $catArg = addslashes($section['name']);
                                     $cicon = $catIcons[$loop->index % count($catIcons)];
-                                    // Same solid the "Where the money goes" band gives this
-                                    // category, so its ledger row and its share of the bar
-                                    // read as one — see $catSolid above.
+                                    // Same solid the "Where the money goes" honeycomb gives this
+                                    // category, so its ledger row and its hex read as one — see
+                                    // $catSolid above.
                                     $csolid = $catSolid[$loop->index % count($catSolid)];
                                 @endphp
 
                                 <div wire:key="catblock-{{ $section['key'] }}" @if ($section['id']) data-cat="{{ $section['id'] }}" @endif class="cat-block">
                                 {{-- ── category header ── --}}
                                 <div class="group/cat border-b border-line bg-white">
-                                    <div class="flex items-center gap-2 px-3 py-1.5">
+                                    <div class="cx-cathead">
                                         @if ($isRenaming)
                                             <span class="shrink-0 text-eyebrow text-muted">▶</span>
                                             <input type="text" wire:model="categoryEditName" wire:keydown.enter="saveCategoryName" maxlength="60" class="h-8 min-w-0 flex-1 rounded-lg border border-line bg-white px-2.5 text-sm font-bold text-ink focus:border-navy-300 focus:outline-none">
@@ -174,9 +176,9 @@
                                             <button type="button" wire:click="toggleCollapse('{{ $section['key'] }}')" class="flex min-w-0 flex-1 items-center gap-2.5 text-left">
                                                 <span class="shrink-0 text-eyebrow text-muted transition-transform {{ $isOpen ? 'rotate-90' : '' }}">▶</span>
                                                 <span class="w-4 shrink-0 text-center text-eyebrow font-bold text-muted">{{ $loop->iteration }}</span>
-                                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white" style="background: {{ $csolid }}"><x-icon :name="$cicon" class="h-3.5 w-3.5" /></span>
-                                                <span class="truncate text-sm font-bold text-ink">{{ $section['name'] }}</span>
-                                                <span class="shrink-0 rounded-full bg-page px-2 py-0.5 text-eyebrow font-bold text-muted">{{ $secItems->count() }} {{ str('item')->plural($secItems->count()) }}</span>
+                                                <span class="cx-cathex" style="background: {{ $csolid }}"><x-icon :name="$cicon" class="h-3.5 w-3.5" /></span>
+                                                <span class="truncate cx-catname">{{ $section['name'] }}</span>
+                                                <span class="cx-catcount">{{ $secItems->count() }} {{ str('item')->plural($secItems->count()) }}</span>
                                                 @if ($catFlagged)<span class="shrink-0 text-micro text-danger">⚑</span>@endif
                                             </button>
                                             @unless ($event->budgetLocked())
@@ -230,7 +232,7 @@
                                     </div>
                                     {{-- spend bar (track only) --}}
                                     @if ($track && $catEst > 0 && ! $isRenaming)
-                                        <div class="px-3 pb-2">
+                                        <div class="px-3.5 pb-2">
                                             <div class="flex h-1 overflow-hidden rounded-full bg-page">
                                                 <div class="bg-success" style="width: {{ $paidPctCat }}%"></div>
                                                 <div class="bg-warning" style="width: {{ max(0, $spendPct - $paidPctCat) }}%"></div>
@@ -242,7 +244,7 @@
                                 {{-- ── line items (collapsible) ── --}}
                                 @if ($isOpen)
                                     @forelse ($secItems as $item)
-                                        <div wire:key="bi-{{ $item->id }}" class="group/line relative flex items-center gap-2 border-b border-line px-3 py-1.5 pl-9 last:border-0 hover:bg-page/40 {{ $this->isSelected($item->id) ? 'bg-page/60' : 'bg-page/[0.15]' }}">
+                                        <div wire:key="bi-{{ $item->id }}" class="group/line relative cx-lrow2 last:border-0 {{ $this->isSelected($item->id) ? 'bg-page/60' : '' }}">
                                             @unless ($item->isLinked())
                                                 <button type="button" wire:click.stop="toggleSelect({{ $item->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($item->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-line text-transparent hover:border-muted' }}" title="Select">✓</button>
                                             @endunless
@@ -255,14 +257,14 @@
                                                 if ($item->due_on) $bits[] = 'due '.$item->due_on->format('j M');
                                             @endphp
                                             <button type="button" wire:click="editLine({{ $item->id }})" @disabled($event->budgetLocked() || $item->isLinked()) class="group/edit min-w-0 flex-1 text-left" title="{{ $item->isLinked() ? 'Synced — edit in the '.\Illuminate\Support\Str::headline($item->linkedTab()).' tab' : 'Click to edit this line' }}">
-                                                <p class="flex items-center gap-1.5 truncate text-xs font-medium text-ink group-hover/edit:text-gold-800">
+                                                <p class="flex items-center gap-1.5 truncate cx-lname group-hover/edit:text-gold-800">
                                                     @if ($item->isLinked())<span class="shrink-0 rounded bg-page px-1 text-eyebrow font-bold uppercase tracking-wide text-muted" title="Synced from module">🔗 {{ $item->linkedTab() === 'transportation' ? 'transport' : $item->linkedTab() }}</span>@endif
                                                     <span class="truncate">{{ $item->description ?? $item->categoryLabel() }}</span>
                                                 </p>
                                                 @if ($item->isLinked())
-                                                    <p class="truncate text-eyebrow text-muted">Synced from {{ \Illuminate\Support\Str::headline($item->linkedTab()) }}@if ($item->vendor) · {{ $item->vendor }}@endif</p>
+                                                    <p class="truncate cx-lsub">Synced from {{ \Illuminate\Support\Str::headline($item->linkedTab()) }}@if ($item->vendor) · {{ $item->vendor }}@endif</p>
                                                 @elseif ($bits)
-                                                    <p class="truncate text-eyebrow text-muted">{{ implode(' · ', $bits) }}</p>
+                                                    <p class="truncate cx-lsub">{{ implode(' · ', $bits) }}</p>
                                                 @else
                                                     <p class="truncate text-eyebrow text-gold-700/70 group-hover/edit:text-gold-800">Click to set quantity &amp; unit cost →</p>
                                                 @endif
@@ -310,12 +312,12 @@
                                             </div>
                                         </div>
                                     @empty
-                                        <button type="button" wire:click="newLine('{{ $catArg }}')" @disabled($event->budgetLocked()) class="flex w-full items-center gap-2 border-b border-line bg-page/[0.15] px-3 py-2 pl-9 text-left text-micro text-muted transition hover:bg-page/40 hover:text-gold-800 disabled:opacity-50">
+                                        <button type="button" wire:click="newLine('{{ $catArg }}')" @disabled($event->budgetLocked()) class="flex w-full items-center gap-2 border-b border-line bg-page/[0.15] px-3.5 py-2 pl-10 text-left text-micro text-muted transition hover:bg-page/40 hover:text-gold-800 disabled:opacity-50">
                                             <span class="text-gold-800">＋</span> Add a line to {{ $section['name'] }}
                                         </button>
                                     @endforelse
                                     @if ($secItems->isNotEmpty() && ! $event->budgetLocked())
-                                        <button type="button" wire:click="newLine('{{ $catArg }}')" class="flex w-full items-center gap-1.5 border-b border-line bg-page/[0.15] px-3 py-1.5 pl-9 text-left text-micro font-semibold text-gold-700 transition hover:bg-gold-50/60 hover:text-gold-800">
+                                        <button type="button" wire:click="newLine('{{ $catArg }}')" class="flex w-full items-center gap-1.5 border-b border-line bg-page/[0.15] px-3.5 py-2 pl-10 text-left text-micro font-semibold text-gold-700 transition hover:bg-gold-50/60 hover:text-gold-800">
                                             <span>＋</span> Add Line Item
                                         </button>
                                     @endif
@@ -326,13 +328,13 @@
 
                             {{-- ── add a category ── --}}
                             @unless ($event->budgetLocked())
-                                <button type="button" x-on:click="document.querySelector('[data-newcat]')?.focus()" class="flex w-full items-center gap-1.5 border-b border-line bg-page/30 px-3 py-2.5 text-left text-micro font-bold text-muted transition hover:bg-page/60 hover:text-ink">
+                                <button type="button" x-on:click="document.querySelector('[data-newcat]')?.focus()" class="flex w-full items-center gap-1.5 border-b border-line bg-page/30 px-3.5 py-2.5 text-left text-micro font-bold text-muted transition hover:bg-page/60 hover:text-ink">
                                     <span class="text-gold-800">＋</span> Add New Category
                                 </button>
                             @endunless
 
                             {{-- ── totals ── --}}
-                            <div class="flex items-center gap-2 border-t border-line bg-white px-3 py-2">
+                            <div class="flex items-center gap-2 border-t border-line bg-white px-3.5 py-2.5">
                                 <span class="flex-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Subtotal</span>
                                 <span class="{{ $money }} text-xs font-bold text-ink">{{ $fmt($estimatedTotal) }}</span>
                                 @if ($track)
@@ -341,7 +343,7 @@
                                     <span class="{{ $money }} text-xs font-bold {{ ! $hasActuals ? 'text-muted' : ($savedTotal < 0 ? 'text-danger-ink' : 'text-success-ink') }}">{{ ! $hasActuals ? '—' : ($savedTotal >= 0 ? '+' : '−').$fmt(abs($savedTotal)) }}</span>
                                 @endif
                             </div>
-                            <div class="flex items-center gap-2 border-t border-line bg-gold-50/40 px-3 py-2">
+                            <div class="flex items-center gap-2 border-t border-line bg-gold-50/40 px-3.5 py-2.5">
                                 <span class="flex min-w-0 flex-1 items-center gap-1.5">
                                     <span class="shrink-0 text-micro text-gold-800">⚑</span>
                                     <span class="truncate text-xs font-bold text-ink">Management fee</span>
@@ -356,7 +358,7 @@
                                     <span class="{{ $money }}"></span>
                                 @endif
                             </div>
-                            <div class="flex items-center gap-2 border-t-2 border-ink/10 bg-page/50 px-3 py-2.5">
+                            <div class="flex items-center gap-2 border-t-2 border-ink/10 bg-page/50 px-3.5 py-3">
                                 <span class="flex-1 text-xs font-bold uppercase tracking-wide text-ink">Grand total <span class="hidden font-normal normal-case text-muted sm:inline">(incl. {{ rtrim(rtrim(number_format($feePct, 2), '0'), '.') }}%)</span></span>
                                 <span class="{{ $money }} text-sm font-bold text-ink">{{ $fmt($grandEst) }}</span>
                                 @if ($track)

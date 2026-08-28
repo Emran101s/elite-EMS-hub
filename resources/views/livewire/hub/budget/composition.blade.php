@@ -1,11 +1,11 @@
-            {{-- ══ Where the money goes — spend composition ══
+            {{-- ══ Where the money goes — spend composition, as a honeycomb ══
                  The one read the header (budget used) and the sidebar (P&L
                  summary) don't give: how the cost splits across categories,
                  seen rather than added up from the ledger below. Read-only,
-                 off the same forecast the ledger totals — a segmented share
-                 bar plus a legend, biggest first. Each category keeps the
-                 colour it takes from its position in the ledger, so the band
-                 and the rows beneath it read as one thing. --}}
+                 off the same forecast the ledger totals — one hex per
+                 category, sized by its share, biggest first. Each keeps the
+                 colour it takes from its position in the ledger, so the
+                 honeycomb and the rows beneath it read as one thing. --}}
             @php
                 // $catSolid is hoisted to the parent's @php block so the ledger
                 // rows below share the exact same per-position colours.
@@ -23,32 +23,28 @@
                     ->sortByDesc('cost')
                     ->values();
                 $compTotal = (int) $composition->sum('cost');
+                $maxShare = $compTotal > 0 ? $composition->max('cost') / $compTotal : 1;
             @endphp
 
             @if ($compTotal > 0)
-                <div class="mb-3 rounded-lg border border-line bg-white p-4">
-                    <div class="mb-3 flex items-baseline justify-between gap-3">
-                        <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Where the money goes</p>
-                        <p class="text-[13px] font-bold tabular-nums text-ink">{{ $fmt($compTotal) }} <span class="font-semibold text-muted">forecast</span></p>
+                <div class="cx-lcard">
+                    <div class="cx-lcard-head">
+                        <span class="cx-lt">Where the money goes</span>
+                        <span class="text-[13px] font-bold tabular-nums text-ink">{{ $fmt($compTotal) }} <span class="font-semibold text-muted">forecast</span></span>
                     </div>
 
-                    {{-- segmented share bar --}}
-                    <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-page">
+                    <div class="cx-honeyband p-4">
                         @foreach ($composition as $c)
-                            <span class="h-full first:rounded-l-full last:rounded-r-full"
-                                  style="width: {{ max(1.5, round($c['cost'] / $compTotal * 100, 2)) }}%; background: {{ $c['color'] }}"
-                                  title="{{ $c['name'] }} · {{ $fmt($c['cost']) }}"></span>
-                        @endforeach
-                    </div>
-
-                    {{-- legend --}}
-                    <div class="mt-3 grid grid-cols-2 gap-x-5 gap-y-1.5 sm:grid-cols-3 xl:grid-cols-4">
-                        @foreach ($composition as $c)
-                            <div class="flex items-center gap-2 text-[11.5px]">
-                                <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $c['color'] }}"></span>
-                                <span class="min-w-0 flex-1 truncate font-semibold text-ink">{{ $c['name'] }}</span>
-                                <span class="shrink-0 tabular-nums text-muted">{{ round($c['cost'] / $compTotal * 100) }}%</span>
-                            </div>
+                            @php
+                                $share = $compTotal > 0 ? $c['cost'] / $compTotal : 0;
+                                // Hex sized 40–72px by its share relative to the largest slice,
+                                // so "where the money goes" reads at a glance, not just a legend.
+                                $size = (int) round(40 + ($maxShare > 0 ? $share / $maxShare : 0) * 32);
+                            @endphp
+                            <span class="cx-hcell" title="{{ $c['name'] }} · {{ $fmt($c['cost']) }}">
+                                <span class="cx-hcx" style="width:{{ $size }}px;height:{{ round($size * 1.1) }}px;background:{{ $c['color'] }};font-size:{{ max(10, round($size * .3)) }}px">{{ round($share * 100) }}%</span>
+                                <span class="cx-hcn">{{ $c['name'] }}</span>
+                            </span>
                         @endforeach
                     </div>
                 </div>
