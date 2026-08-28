@@ -1,22 +1,22 @@
         {{-- ══════════ RIGHT · Budget Control Center ══════════ --}}
         <div class="xl:sticky xl:top-4 xl:h-fit">
-            <div class="rounded-lg border border-line bg-white overflow-hidden">
+            <div class="cx-panel">
                 {{-- control-center header --}}
-                <div class="relative flex items-center gap-2 border-b border-line bg-page/60 px-4 py-3 text-ink">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ \App\Models\Event::moduleColor('budget') }}">
-                        <x-icon name="currency" class="h-3.5 w-3.5" />
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-cream" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ \App\Models\Event::moduleColor('budget') }}"><x-icon name="currency" class="h-3 w-3" /></span>
+                        Budget Control Center
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Budget Control Center</span>
-                    <a href="{{ route('events.budget.pdf', $event) }}" class="relative ml-auto flex items-center gap-1 rounded-lg border border-line bg-white px-2 py-1 text-3xs font-bold text-muted transition hover:border-gold-300 hover:text-gold-800 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ PDF</a>
+                    <a href="{{ route('events.budget.pdf', $event) }}" class="flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white/70 transition hover:border-gold-400/40 hover:text-gold-300 {{ $items->isEmpty() ? 'pointer-events-none opacity-40' : '' }}">↧ PDF</a>
                 </div>
 
                 {{-- mode --}}
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Mode</p>
-                    <div role="group" aria-label="Budget view" class="flex rounded-xl border border-line bg-page/40 p-0.5">
-                        <button type="button" wire:click="$set('view', 'build')" aria-pressed="{{ $view === 'build' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'build' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Build</button>
-                        <button type="button" wire:click="$set('view', 'track')" aria-pressed="{{ $view === 'track' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'track' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Track</button>
-                        <button type="button" wire:click="$set('view', 'price')" aria-pressed="{{ $view === 'price' ? 'true' : 'false' }}" class="flex-1 rounded-lg py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1 {{ $view === 'price' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink' }}">Price</button>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Mode</p>
+                    <div role="group" aria-label="Budget view" class="cx-modebar">
+                        <button type="button" wire:click="$set('view', 'build')" aria-pressed="{{ $view === 'build' ? 'true' : 'false' }}">Build</button>
+                        <button type="button" wire:click="$set('view', 'track')" aria-pressed="{{ $view === 'track' ? 'true' : 'false' }}">Track</button>
+                        <button type="button" wire:click="$set('view', 'price')" aria-pressed="{{ $view === 'price' ? 'true' : 'false' }}">Price</button>
                     </div>
                     <p class="mt-1.5 text-eyebrow leading-snug text-muted">{{ match ($view) {
                         'build' => 'Plan quantity × unit estimates.',
@@ -26,8 +26,8 @@
                 </div>
 
                 {{-- total budget + fee + currency --}}
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Total budget</p>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Total budget</p>
                     <div class="flex items-center gap-1.5">
                         <span class="text-lg font-bold text-muted">{{ $event->currencySymbol() }}</span>
                         <input type="number" min="0" step="1000" wire:model.live.debounce.500ms="budgetCap" class="h-10 flex-1 rounded-lg border border-line bg-white px-2.5 text-base font-bold text-ink focus:border-navy-300 focus:outline-none" placeholder="0">
@@ -49,8 +49,8 @@
                 </div>
 
                 {{-- summary readout --}}
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-navy-900"></span> Summary</p>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot" style="background:var(--cx-ink)"></span> Summary</p>
                     <div class="mb-1 flex justify-between text-eyebrow font-semibold text-muted">
                         <span>{{ $fmt($grandForecast) }} of {{ $fmt($cap) }}</span>
                         <span class="{{ $usedPct >= 100 ? 'text-danger-ink' : 'text-ink' }}">{{ $usedPct }}%</span>
@@ -74,8 +74,8 @@
                 </div>
 
                 {{-- profit & loss --}}
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-success"></span> Profit &amp; loss</p>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot" style="background:var(--cx-ok)"></span> Profit &amp; loss</p>
                     <div class="space-y-1 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Income (actual)</span><span class="font-bold text-success-ink">{{ $fmt($totalIncome) }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Cost to deliver</span><span class="font-bold text-ink">{{ $fmt($costToDeliver) }}</span></div>
@@ -97,8 +97,8 @@
                     [$bsLabel, $bsClass] = $bsMeta[$bs] ?? $bsMeta['draft'];
                     $approvedV = $versions->firstWhere('status', 'approved');
                 @endphp
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Approval</p>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Approval</p>
                     <div class="mb-2 flex items-center gap-2">
                         <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide {{ $bsClass }}">{{ $bsLabel }}</span>
                         @if ($bs === 'approved' && $approvedV)<span class="text-eyebrow text-muted">baseline v{{ $approvedV->version }}</span>@endif
@@ -140,7 +140,7 @@
 
                 {{-- ══ what the modules put here, and what they could not ══ --}}
                 @if ($linkedByModule->isNotEmpty() || $pendingFromModules)
-                    <div class="border-t border-line p-3">
+                    <div class="cx-panel-sec">
                         <p class="text-eyebrow font-bold uppercase tracking-[0.16em] text-muted">From the modules</p>
 
                         @foreach ($linkedByModule as $src => $m)
@@ -176,7 +176,7 @@
                 @endif
 
                 {{-- actions --}}
-                <div class="space-y-2 p-4">
+                <div class="cx-panel-sec space-y-2">
                     @unless ($event->budgetLocked())
                         <button type="button" wire:click="newLine" class="btn-gold h-10 w-full text-xs">＋ Add Line</button>
                         <button type="button" wire:click="syncModules" class="h-9 w-full rounded-xl border border-gold-300 bg-gold-50/60 text-xs font-bold text-gold-800 transition hover:bg-gold-50" title="Re-read the modules. They also sync themselves whenever a booking changes.">↺ Sync modules @if ($syncedCount)· {{ $syncedCount }} linked @endif</button>
