@@ -1,4 +1,4 @@
-<div>
+<div class="cx-canvas">
     @php
         // The old Agenda Command Header (ring + sessions/confirmed/venues/
         // days figures, built from $allSessions/$confPct/$unconfirmed/etc.)
@@ -12,25 +12,26 @@
 
     {{-- Import panel --}}
     @if ($showImport)
-        <form wire:submit="import" class="rounded-lg border border-line bg-white mb-4 flex flex-wrap items-end gap-3 !p-4">
+        <form wire:submit="import" class="cx-lcard mb-4 flex flex-wrap items-end gap-3 !p-4">
             <div class="flex-1">
                 <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="import-file">CSV file — columns: title, type, start, end, room, speaker, moderator (separate several names with ; )</label>
                 <input id="import-file" type="file" wire:model="importFile" accept=".csv,text/csv" class="h-10 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white focus:border-navy-300 focus:outline-none">
                 @error('importFile') <p class="mt-1 text-xs text-danger-ink">{{ $message }}</p> @enderror
             </div>
             <button type="button" wire:click="$set('showImport', false)" class="h-10 rounded-xl px-4 text-xs font-semibold text-muted hover:text-ink">Cancel</button>
-            <x-eo.button type="submit" size="sm" class="!h-10 !px-5" wire:loading.attr="disabled" wire:target="import,importFile">Import</x-eo.button>
+            <button type="submit" class="cx-btn cx-btn-accent" wire:loading.attr="disabled" wire:target="import,importFile">Import</button>
         </form>
     @endif
 
     @if ($days->isEmpty())
-        <x-empty icon="calendar" title="No agenda days yet"
-                 hint="Days come from the event's date range — set the dates in Settings and they appear here, or start one now and the programme builds around it.">
-            <x-slot:actions>
-                <button type="button" wire:click="addDay" class="btn-gold btn-sm">＋ Add the first day</button>
-                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="btn-ghost btn-sm">Set the event dates</a>
-            </x-slot:actions>
-        </x-empty>
+        <div class="cx-empty">
+            <h3>No agenda days yet</h3>
+            <p>Days come from the event's date range — set the dates in Settings and they appear here, or start one now and the programme builds around it.</p>
+            <div class="flex items-center justify-center gap-2">
+                <button type="button" wire:click="addDay" class="cx-btn cx-btn-accent">＋ Add the first day</button>
+                <a href="{{ route('events.hub', [$event, 'tab' => 'settings']) }}" class="cx-btn cx-btn-ghost">Set the event dates</a>
+            </div>
+        </div>
     @else
         {{-- ══════════ THE BUILDER SHELL ══════════
              Left rail (days, rooms, tracks, filters, add session) · center
@@ -39,12 +40,12 @@
              nothing is selected). The command bar runs the full width below
              — everything that acts on the whole day or the whole agenda,
              rather than on one session. --}}
-        <div class="grid items-start gap-3 xl:grid-cols-[240px_minmax(0,1fr)_296px]">
+        <div class="grid items-start gap-3 xl:grid-cols-[240px_minmax(0,1fr)_296px] cx-reveal cx-d1">
 
             @include('livewire.hub.agenda.left-rail')
             @include('livewire.hub.agenda.canvas')
             {{-- ═══ RIGHT — INSPECTOR / INSIGHTS ═══ --}}
-            <aside class="rounded-lg border border-line bg-white self-start !p-4">
+            <aside class="cx-panel self-start !p-4">
                 @if ($selectedSession)
                     @php
                         $ss = $selectedSession;
@@ -56,22 +57,22 @@
                             $ss->status === 'waiting_speaker' => 'warn',
                             default => 'pending',
                         };
+                        $ssTagCls = match ($ssTone) { 'risk' => 'tone-risk', 'ok' => 'tone-ok', 'warn' => 'tone-warn', default => 'tone-info' };
                     @endphp
                     <div class="mb-3 flex items-start justify-between gap-2">
-                        <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Inspector</p>
+                        <p class="cx-eyebrow">Inspector</p>
                         <button type="button" wire:click="selectSession(null)" class="grid h-6 w-6 place-items-center rounded-full text-muted transition hover:bg-page" title="Close">✕</button>
                     </div>
 
-                    <x-eo.status-pill :tone="$ssTone">{{ $ss->statusLabel() }}</x-eo.status-pill>
+                    <span class="cx-tag {{ $ssTagCls }}">{{ $ss->statusLabel() }}</span>
                     <h3 class="mt-2 text-[16px] font-bold leading-snug text-ink">{{ $ss->title }}</h3>
 
-                    <div class="mt-3 divide-y divide-line text-[12px]">
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Speaker{{ $ss->speakers->count() === 1 ? '' : 's' }}</span><span class="text-right text-ink">{{ $ss->speakers->isNotEmpty() ? $ss->speakers->pluck('name')->implode(', ') : '—' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Room</span><span class="text-ink">{{ $ss->room?->name ?? '—' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Start</span><span class="font-mono text-ink">{{ substr($ss->starts_at, 0, 5) }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">End</span><span class="font-mono text-ink">{{ substr($ss->ends_at, 0, 5) }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Capacity</span><span class="text-ink">{{ $ss->bookedCount() }}{{ $ss->capacity ? ' / '.number_format($ss->capacity) : '' }}</span></div>
-                        <div class="flex items-center justify-between py-2"><span class="font-semibold text-muted">Approval status</span><x-eo.status-pill :tone="$ssTone" class="!text-[9px]">{{ $ss->statusLabel() }}</x-eo.status-pill></div>
+                    <div class="mt-3">
+                        <div class="cx-field"><span class="cx-fk">Speaker{{ $ss->speakers->count() === 1 ? '' : 's' }}</span><span class="cx-fv">{{ $ss->speakers->isNotEmpty() ? $ss->speakers->pluck('name')->implode(', ') : '—' }}</span></div>
+                        <div class="cx-field"><span class="cx-fk">Room</span><span class="cx-fv">{{ $ss->room?->name ?? '—' }}</span></div>
+                        <div class="cx-field"><span class="cx-fk">Start</span><span class="cx-fv" style="font-family:var(--cx-mono)">{{ substr($ss->starts_at, 0, 5) }}</span></div>
+                        <div class="cx-field"><span class="cx-fk">End</span><span class="cx-fv" style="font-family:var(--cx-mono)">{{ substr($ss->ends_at, 0, 5) }}</span></div>
+                        <div class="cx-field"><span class="cx-fk">Capacity</span><span class="cx-fv">{{ $ss->bookedCount() }}{{ $ss->capacity ? ' / '.number_format($ss->capacity) : '' }}</span></div>
                     </div>
 
                     {{-- Dependencies — everything this session is waiting on,
@@ -119,7 +120,7 @@
                     </div>
                 @else
                     {{-- Nothing selected — the day's insights, exactly as before. --}}
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Day insights</p>
+                    <p class="cx-eyebrow">Day insights</p>
 
                     <div class="mt-2">
                         <p class="text-[13px] font-bold text-ink">Today overview</p>
@@ -210,8 +211,7 @@
                         </button>
                     @endif
 
-                    <a href="{{ route('events.run-of-show', $event) }}"
-                       class="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-navy-900 text-[12px] font-bold text-white transition hover:bg-navy-800">
+                    <a href="{{ route('events.run-of-show', $event) }}" class="cx-btn cx-btn-accent mt-3 w-full justify-center">
                         View Run of Show →
                     </a>
                 @endif
@@ -220,7 +220,7 @@
 
         {{-- ═══ BOTTOM — COMMAND BAR ═══ everything that acts on the whole
              day or the whole agenda, rather than one session. ═══ --}}
-        <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-white p-2.5 shadow-raise">
+        <div class="cx-lcard mt-3 flex flex-wrap items-center gap-2 !p-2.5">
             <span class="flex items-center gap-1.5 px-1.5 text-[11px] font-semibold text-muted" wire:loading.remove wire:target="saveSession,moveSession,toggleFlag,assignRoom,publishSession,duplicateSession,confirmDay">
                 <span class="h-1.5 w-1.5 rounded-full bg-success"></span> Autosaved
             </span>
@@ -228,7 +228,7 @@
                 <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-gold-500"></span> Saving…
             </span>
 
-            <div class="flex rounded-xl border border-line bg-white p-0.5">
+            <div class="cx-seg">
                 @foreach ([
                     ['timeline', 'Timeline', 'chart'],
                     ['rooms', 'Rooms', 'building'],
@@ -237,17 +237,16 @@
                     ['speakers', 'Speakers', 'users'],
                     ['program', 'Programme', 'calendar'],
                 ] as [$key, $label, $icon])
-                    <button type="button" wire:click="setView('{{ $key }}')" aria-pressed="{{ $view === $key ? 'true' : 'false' }}"
-                            @class(['flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $view === $key, 'text-muted hover:text-ink' => $view !== $key])>
+                    <button type="button" wire:click="setView('{{ $key }}')" aria-pressed="{{ $view === $key ? 'true' : 'false' }}" style="display:inline-flex;align-items:center;gap:5px">
                         <x-icon :name="$icon" class="h-3 w-3" aria-hidden="true" /> {{ $label }}
                     </button>
                 @endforeach
             </div>
 
             @if ($view === 'program')
-                <div role="group" aria-label="Programme audience" class="flex rounded-xl border border-line bg-white p-0.5" title="Public hides setup, press and registration">
-                    <button type="button" wire:click="setAudience('internal')" aria-pressed="{{ $audience === 'internal' ? 'true' : 'false' }}" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $audience === 'internal', 'text-muted hover:text-ink' => $audience !== 'internal'])>Internal</button>
-                    <button type="button" wire:click="setAudience('public')" aria-pressed="{{ $audience === 'public' ? 'true' : 'false' }}" @class(['rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1', 'bg-navy-900 text-white' => $audience === 'public', 'text-muted hover:text-ink' => $audience !== 'public'])>Public</button>
+                <div role="group" aria-label="Programme audience" class="cx-seg" title="Public hides setup, press and registration">
+                    <button type="button" wire:click="setAudience('internal')" aria-pressed="{{ $audience === 'internal' ? 'true' : 'false' }}">Internal</button>
+                    <button type="button" wire:click="setAudience('public')" aria-pressed="{{ $audience === 'public' ? 'true' : 'false' }}">Public</button>
                 </div>
             @endif
 
@@ -312,7 +311,7 @@
              pins, every Agenda view and the Inspector already read, just
              laid out as one list instead of scattered per-block. ═══ --}}
         @if ($showClashSummary)
-            <div class="mt-3 rounded-lg border border-line bg-white !p-0 overflow-hidden">
+            <div class="cx-lcard mt-3">
                 <div class="flex items-center justify-between border-b border-line px-4 py-3">
                     <div>
                         <p class="text-[13px] font-bold text-ink">
@@ -332,10 +331,11 @@
                                 $sevTone = match ($row['severity']) {
                                     'critical' => 'risk', 'high' => 'risk', 'medium' => 'warn', default => 'pending',
                                 };
+                                $sevCls = match ($sevTone) { 'risk' => 'tone-risk', 'warn' => 'tone-warn', default => 'tone-info' };
                             @endphp
                             <button type="button" wire:click="selectSession({{ $row['primarySessionId'] }})"
                                     class="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-page">
-                                <x-eo.status-pill :tone="$sevTone" class="mt-0.5 shrink-0 !text-[9px] uppercase">{{ $row['severity'] }}</x-eo.status-pill>
+                                <span class="cx-tag {{ $sevCls }} mt-0.5 shrink-0" style="text-transform:uppercase">{{ $row['severity'] }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         <span class="text-[11px] font-bold uppercase tracking-[0.04em] text-muted">{{ $row['typeLabel'] }}</span>

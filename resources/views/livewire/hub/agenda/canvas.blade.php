@@ -1,5 +1,5 @@
             {{-- ═══ CENTER CANVAS ═══ --}}
-            <div class="rounded-lg border border-line bg-white min-w-0 overflow-hidden !p-0">
+            <div class="cx-lcard min-w-0 !mb-0">
                 @if ($view === 'program')
                     @php $programEmpty = collect($programDays)->every(fn ($d) => \App\Services\AgendaProgram::isEmpty($d['program'])); @endphp
                     @if ($programEmpty)
@@ -39,15 +39,13 @@
                      same blocks, same drag. Use existing EventRoom data;
                      no parallel room system. ═══ --}}
                 @elseif ($view === 'rooms')
-                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line px-4 py-2.5">
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line px-4 py-2.5" style="background:var(--cx-surface-2)">
                         <span class="shrink-0 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Room</span>
-                        <button type="button" wire:click="selectRoomFilter(null)"
-                                @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-navy-900 bg-navy-900 text-white' => ! $roomsViewFilter, 'border-line bg-white text-muted hover:border-gold-300' => $roomsViewFilter])>
+                        <button type="button" wire:click="selectRoomFilter(null)" class="cx-chip {{ ! $roomsViewFilter ? 'is-on' : '' }}">
                             All Rooms
                         </button>
                         @foreach ($rooms as $room)
-                            <button type="button" wire:click="selectRoomFilter({{ $room->id }})"
-                                    @class(['rounded-full border px-2.5 py-1 text-[10.5px] font-bold transition', 'border-navy-900 bg-navy-900 text-white' => $roomsViewFilter === $room->id, 'border-line bg-white text-muted hover:border-gold-300' => $roomsViewFilter !== $room->id])>
+                            <button type="button" wire:click="selectRoomFilter({{ $room->id }})" class="cx-chip {{ $roomsViewFilter === $room->id ? 'is-on' : '' }}">
                                 {{ $room->name }}
                             </button>
                         @endforeach

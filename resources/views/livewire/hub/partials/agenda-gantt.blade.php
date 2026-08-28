@@ -19,12 +19,10 @@
     </x-empty>
 @else
     {{-- filters legend --}}
-    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-line px-4 py-2.5">
-        <span class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Legend</span>
+    <div class="cx-gantt-legend">
+        <span class="cx-glk">Legend</span>
         @foreach ($legend as [$label, $hex])
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-ink">
-                <span class="h-2 w-2 rounded-full" style="background: {{ $hex }}"></span>{{ $label }}
-            </span>
+            <span class="cx-gli"><i style="background: {{ $hex }}"></i>{{ $label }}</span>
         @endforeach
         <span class="ms-auto text-[10px] italic text-muted">dashed = not confirmed</span>
     </div>
@@ -204,14 +202,14 @@
     </div>
 
     {{-- what the warnings on the board mean, and how big to draw it --}}
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-4 py-2.5">
+    <div class="cx-zoomfoot">
         @foreach ([
             ['text-danger', 'Speaker conflict'],
             ['text-warning-ink', 'Room capacity risk'],
             ['text-muted', 'Overlapping session'],
             ['text-muted', 'Missing presentation'],
         ] as [$tone, $label])
-            <span class="flex items-center gap-1.5 text-[10.5px] text-muted"><span class="{{ $tone }}">⚠</span>{{ $label }}</span>
+            <span class="cx-zwarn"><span class="{{ $tone }}">⚠</span>{{ $label }}</span>
         @endforeach
 
         <div class="ms-auto flex items-center gap-1.5">

@@ -385,6 +385,29 @@
   .cx-modebar button { flex: 1; border-radius: 9px; padding: 7px 0; font-size: 11px; font-weight: 700; color: var(--cx-muted); background: none; border: 0; cursor: pointer; transition: .15s; }
   .cx-modebar button[aria-pressed="true"] { background: var(--cx-ink); color: #fff; }
 
+  /* ══════════ AGENDA — rail day cells, chip filters, gantt chrome ══════════ */
+  .cx-daycell { display: flex; align-items: center; gap: 9px; width: 100%; border-radius: 12px; border: 1px solid var(--cx-line); padding: 8px 10px; text-align: left; background: var(--cx-surface); transition: .15s; cursor: pointer; }
+  .cx-daycell:hover { border-color: var(--cx-accent); }
+  .cx-daycell.is-on { background: var(--cx-ink); border-color: var(--cx-ink); }
+  .cx-daycell .cx-dhex { width: 26px; height: 29px; flex: none; clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); display: grid; place-items: center; background: var(--cx-surface-2); color: var(--cx-ink); font-size: 9.5px; font-weight: 700; }
+  .cx-daycell.is-on .cx-dhex { background: var(--cx-accent); color: var(--cx-ink); }
+  .cx-daycell .cx-dname { font-size: 12px; font-weight: 700; color: var(--cx-ink); }
+  .cx-daycell.is-on .cx-dname { color: #fff; }
+  .cx-daycell .cx-dsub { font-size: 10px; color: var(--cx-muted); }
+  .cx-daycell.is-on .cx-dsub { color: rgba(255,255,255,.55); }
+
+  .cx-railsec { border-top: 1px solid var(--cx-line-soft); padding-top: 13px; margin-top: 13px; }
+  .cx-railsec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+  .cx-raillbl { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cx-muted); }
+
+  .cx-gantt-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-bottom: 1px solid var(--cx-line); padding: 10px 16px; background: var(--cx-surface-2); }
+  .cx-gantt-legend .cx-glk { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cx-muted); }
+  .cx-gantt-legend .cx-gli { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--cx-ink); }
+  .cx-gantt-legend .cx-gli i { width: 8px; height: 9px; clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); }
+
+  .cx-zoomfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; border-top: 1px solid var(--cx-line); padding: 10px 16px; background: var(--cx-surface-2); }
+  .cx-zoomfoot .cx-zwarn { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--cx-muted); }
+
   .cx-footnote { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--cx-line); font-family: var(--cx-mono); font-size: 10.5px; letter-spacing: .05em; color: var(--cx-faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 
   /* motion */
