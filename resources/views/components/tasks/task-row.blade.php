@@ -10,7 +10,7 @@
     };
 @endphp
 
-<div class="relative flex items-center gap-4 px-5 py-3.5">
+<div class="relative flex items-center gap-4 px-4 py-2.5">
     <span class="absolute inset-y-2.5 left-0 w-[3px] rounded-full" style="background: {{ $hex }}"></span>
 
     <x-user-avatar :user="$task->assignee" size="h-8 w-8" text="text-[11px]" />
