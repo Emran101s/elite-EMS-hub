@@ -1,4 +1,4 @@
-<div>
+<div class="cx-canvas">
     @php
         $moduleHex = \App\Models\Event::moduleColor('approvals');
     @endphp
@@ -8,11 +8,11 @@
          History below, so nothing is lost by dropping the strip. --}}
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p class="text-eyebrow text-muted">Budget · supplier · design · venue · agenda · client · payment · report</p>
-        <button type="button" wire:click="$toggle('showForm')" class="h-9 rounded-full bg-gold-500 px-3.5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Request Approval</button>
+        <button type="button" wire:click="$toggle('showForm')" class="cx-btn cx-btn-accent" style="height:34px">＋ Request Approval</button>
     </div>
 
     @if ($showForm)
-        <form wire:submit="save" class="mb-4 grid gap-3 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
+        <form wire:submit="save" class="cx-lcard mb-3 grid gap-3 p-3.5 sm:grid-cols-2 xl:grid-cols-4">
             <div class="sm:col-span-2">
                 <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted" for="a-title">What needs approval?</label>
                 <input id="a-title" type="text" wire:model="title" class="h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none" placeholder="e.g. Revised catering budget">
@@ -69,19 +69,21 @@
         </form>
     @endif
 
-    <div class="grid gap-4 lg:grid-cols-2">
+    <div class="grid gap-3 lg:grid-cols-2">
         {{-- Pending queue --}}
-        <div class="overflow-hidden rounded-lg border border-line bg-white">
-            <div class="flex items-center gap-2.5 border-b border-line px-4 py-2.5">
-                <span class="flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                    <x-icon name="identification" class="h-3.5 w-3.5" />
+        <div class="cx-lcard">
+            <div class="cx-lcard-head">
+              <span class="flex items-center gap-2.5">
+                <span class="cx-cathex" style="width:24px;height:26px;background: {{ $moduleHex }}">
+                    <x-icon name="identification" class="h-3 w-3" />
                 </span>
-                <h3 class="text-sm font-bold text-ink">Pending</h3>
+                <h3 class="text-[13px] font-bold text-ink">Pending</h3>
                 <span class="rounded-full bg-warning-soft px-2 py-0.5 text-eyebrow font-bold tabular-nums text-warning-ink">{{ $pending->count() }}</span>
+              </span>
             </div>
 
             @if ($pending->isEmpty())
-                <x-empty icon="check" title="Queue is clear" hint="Nothing awaiting a decision." class="!rounded-none !border-0 !shadow-none" />
+                <div class="px-4 py-8 text-center"><p class="text-[13px] font-semibold text-ink">Queue is clear</p><p class="mt-1 text-xs text-muted">Nothing awaiting a decision.</p></div>
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($pending as $approval)
@@ -196,17 +198,19 @@
         </div>
 
         {{-- History --}}
-        <div class="overflow-hidden rounded-lg border border-line bg-white">
-            <div class="flex items-center gap-2.5 border-b border-line px-4 py-2.5">
-                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-page text-muted">
-                    <x-icon name="archive" class="h-3.5 w-3.5" />
+        <div class="cx-lcard">
+            <div class="cx-lcard-head">
+              <span class="flex items-center gap-2.5">
+                <span class="cx-cathex" style="width:24px;height:26px;background: var(--cx-surface-3); color: var(--cx-muted)">
+                    <x-icon name="archive" class="h-3 w-3" />
                 </span>
-                <h3 class="text-sm font-bold text-ink">History</h3>
+                <h3 class="text-[13px] font-bold text-ink">History</h3>
                 <span class="text-eyebrow font-bold tabular-nums text-muted">{{ $decided->count() }}</span>
+              </span>
             </div>
 
             @if ($decided->isEmpty())
-                <x-empty icon="archive" title="No decisions yet" hint="Approved, rejected and revised requests will show up here." class="!rounded-none !border-0 !shadow-none" />
+                <div class="px-4 py-8 text-center"><p class="text-[13px] font-semibold text-ink">No decisions yet</p><p class="mt-1 text-xs text-muted">Approved, rejected and revised requests will show up here.</p></div>
             @else
                 <ul class="divide-y divide-line">
                     @foreach ($decided as $approval)
