@@ -63,6 +63,21 @@
                         </div>
                     @endif
 
+                    {{-- The gap, where the number is set rather than only in the
+                         control panel afterwards. If the budget charges more
+                         than income expects to collect, this is the field that
+                         decides it — so it says so here, at the moment you type
+                         the figure, not three columns away once you are done. --}}
+                    @php $chargeGap = $grandForecast - $totalTargetIncome; @endphp
+                    @if ($chargeGap > 0 && $grandForecast > 0)
+                        <p class="mt-1.5 rounded-lg px-2 py-1.5 text-[10.5px] leading-snug"
+                           style="background: var(--cx-warn-wash); color: var(--cx-warn-ink)">
+                            The budget charges {{ $fmt($grandForecast) }} — expected income is
+                            {{ $fmt(abs($chargeGap)) }} short of that. Either this target is low,
+                            or the management fee is not being billed.
+                        </p>
+                    @endif
+
                     {{-- Where it actually came from, each part linked to the place that recorded it. --}}
                     <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px]">
                         @if ($contractCollected > 0)
