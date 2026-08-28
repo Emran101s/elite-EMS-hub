@@ -1,20 +1,23 @@
-<div>
+<div class="cx-canvas">
     @if ($checkinMode)
-        {{-- ══════════ Check-in mode: the door on show day ══════════ --}}
-        <div class="relative mb-4 flex flex-wrap items-center gap-x-8 gap-y-4 overflow-hidden rounded-lg border border-white/10 bg-navy-900 px-6 py-5 text-white shadow-float">
-            <div class="pointer-events-none absolute -right-10 -top-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.22),transparent_70%)]"></div>
-            <div class="relative">
-                <p class="text-eyebrow font-bold uppercase tracking-[0.28em] text-gold-400">Check-in · {{ $event->name }}</p>
+        {{-- ══════════ Check-in mode: the door on show day ══════════
+             One dense navy strip rather than a tall banner — the arrival
+             count, the bar and the way out all sit on one line, because on
+             show day this header is something you glance at between people,
+             not something you read. --}}
+        <div class="cx-lhero flex flex-wrap items-center gap-x-6 gap-y-3 text-white">
+            <div>
+                <p class="text-eyebrow font-bold uppercase tracking-[0.28em]" style="color: var(--cx-accent-hi)">Check-in · {{ $event->name }}</p>
                 <p class="mt-0.5 flex items-baseline gap-2">
-                    <span class="text-4xl font-black leading-none text-gold-400">{{ $stats['checkedIn'] }}</span>
+                    <span class="text-3xl font-black leading-none" style="color: var(--cx-accent)">{{ $stats['checkedIn'] }}</span>
                     <span class="text-sm font-semibold text-white">of {{ $stats['confirmed'] }} arrived</span>
+                    <span class="text-eyebrow text-white/45">· {{ $lastHour }} in the last hour</span>
                 </p>
-                <p class="mt-1 text-eyebrow text-white/50">{{ $lastHour }} in the last hour</p>
             </div>
-            <div class="relative h-2 min-w-[10rem] flex-1 self-center overflow-hidden rounded-full bg-white/10">
-                <div class="h-full rounded-full bg-gold-500" style="width: {{ $stats['confirmed'] ? (int) round($stats['checkedIn'] / $stats['confirmed'] * 100) : 0 }}%"></div>
+            <div class="h-2 min-w-[10rem] flex-1 self-center overflow-hidden rounded-full bg-white/10">
+                <div class="h-full rounded-full" style="background: var(--cx-accent); width: {{ $stats['confirmed'] ? (int) round($stats['checkedIn'] / $stats['confirmed'] * 100) : 0 }}%"></div>
             </div>
-            <button type="button" wire:click="toggleCheckinMode" class="relative h-9 rounded-lg border border-white/15 bg-white/5 px-4 text-xs font-semibold text-white transition hover:bg-white/10">Exit check-in</button>
+            <button type="button" wire:click="toggleCheckinMode" class="h-9 rounded-lg border border-white/15 bg-white/5 px-4 text-xs font-semibold text-white transition hover:bg-white/10">Exit check-in</button>
         </div>
 
         {{-- The queue --}}
@@ -71,42 +74,41 @@
 
     {{-- ══ Ticket-type breakdown ══ --}}
     @if ($byTicket->isNotEmpty())
-        <div class="mb-4 flex flex-wrap gap-2">
+        <div class="mb-3 flex flex-wrap gap-1.5">
             @foreach ($byTicket as $type => $count)
                 <button type="button" wire:click="$set('filterTicket', '{{ $filterTicket === $type ? '' : $type }}')"
-                        class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition {{ $filterTicket === $type ? 'border-navy-900 bg-navy-900 text-white' : 'border-line bg-white text-ink hover:border-navy-300' }}">
-                    {{ $type }} <span class="rounded-full {{ $filterTicket === $type ? 'bg-white/20' : 'bg-page text-muted' }} px-1.5 text-eyebrow">{{ $count }}</span>
+                        class="cx-chip {{ $filterTicket === $type ? 'is-on' : '' }}">
+                    {{ $type }} <span class="ms-1 font-bold tabular-nums">{{ $count }}</span>
                 </button>
             @endforeach
         </div>
     @endif
 
     {{-- ══ Toolbar ══ --}}
-    <div class="mb-4 flex flex-wrap items-center gap-2">
-        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search name, email, org…" class="h-10 w-56 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
-        <select wire:model.live="filterStatus" class="h-10 w-40 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
+    <div class="mb-3 flex flex-wrap items-center gap-1.5">
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search name, email, org…" class="h-9 w-56 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
+        <select wire:model.live="filterStatus" class="h-9 w-40 rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
             <option value="">All statuses</option>
             @foreach (\App\Models\EventAttendee::STATUS_META as $val => $meta)<option value="{{ $val }}">{{ $meta[0] }}</option>@endforeach
         </select>
-        <div class="ml-auto flex items-center gap-2">
-            <button type="button" wire:click="toggleCheckinMode" class="flex h-10 items-center gap-1.5 rounded-lg border border-gold-300 bg-gold-50 px-3 text-xs font-bold text-gold-700 transition hover:bg-gold-100" title="Full-screen arrival flow for show day">✓ Check-in mode</button>
-            {{-- Show day: a screen for somebody standing at the door. --}}
-            <a href="{{ route('events.arrivals', $event) }}"
-               class="inline-flex h-9 items-center gap-2 rounded-lg bg-navy-900 px-3.5 text-xs font-bold text-white transition hover:bg-navy-800"
-               title="Find and admit people who arrive without a badge">
-                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span> Arrivals desk
-            </a>
+        <div class="ms-auto flex flex-wrap items-center gap-1.5">
+            {{-- The two show-day actions read as one pair, because on the day
+                 they are one decision: run the door from here, or from a
+                 screen at the door. --}}
+            <span class="cx-seg">
+                <button type="button" wire:click="toggleCheckinMode" title="Full-screen arrival flow for show day">✓ Check-in mode</button>
+                <a href="{{ route('events.arrivals', $event) }}" title="Find and admit people who arrive without a badge">
+                    <span class="h-1.5 w-1.5 animate-pulse rounded-full" style="background: var(--cx-ok)"></span> Arrivals desk
+                </a>
+            </span>
 
-            <button type="button" wire:click="$toggle('showRegistration')"
-                    @class(['flex h-10 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition',
-                            'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' => $event->registration_open,
-                            'border-line bg-white text-ink hover:border-navy-300' => ! $event->registration_open])>
-                <span class="h-1.5 w-1.5 rounded-full {{ $event->registration_open ? 'bg-emerald-500' : 'bg-line' }}"></span>
+            <button type="button" wire:click="$toggle('showRegistration')" class="cx-chip {{ $event->registration_open ? 'is-on' : '' }}" style="height:34px">
+                <span class="me-1 inline-block h-1.5 w-1.5 rounded-full align-middle" style="background: {{ $event->registration_open ? 'var(--cx-ok)' : 'var(--cx-line)' }}"></span>
                 {{ $event->registration_open ? 'Registration open' : 'Registration closed' }}
             </button>
-            <button type="button" wire:click="$toggle('showBadge')" class="flex h-10 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-ink transition hover:border-navy-300">▣ Badges</button>
-            <button type="button" wire:click="$toggle('showImport')" class="flex h-10 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-ink transition hover:border-navy-300">⇪ Import</button>
-            <button type="button" wire:click="newItem" class="flex h-10 items-center gap-1.5 rounded-lg bg-navy-900 px-4 text-xs font-bold text-white transition hover:bg-navy-800"><span class="text-gold-400">＋</span> Add attendee</button>
+            <button type="button" wire:click="$toggle('showBadge')" class="cx-btn cx-btn-ghost" style="height:34px">▣ Badges</button>
+            <button type="button" wire:click="$toggle('showImport')" class="cx-btn cx-btn-ghost" style="height:34px">⇪ Import</button>
+            <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="height:34px">＋ Add attendee</button>
         </div>
     </div>
 
@@ -327,40 +329,44 @@
     @endif
 
     {{-- ══ Table ══ --}}
-    <div class="overflow-x-auto rounded-lg border border-line bg-white">
+    <div class="cx-lcard">
+      <div class="overflow-x-auto">
         <table class="w-full min-w-[760px]">
             <thead>
-                <tr class="border-b border-line bg-page/40 text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
-                    <th class="px-4 py-2.5">Attendee</th>
-                    <th class="px-3 py-2.5">Ticket</th>
-                    <th class="px-3 py-2.5">Status</th>
-                    <th class="px-3 py-2.5 text-right">Fee</th>
-                    <th class="px-3 py-2.5 text-center">Check-in</th>
-                    <th class="px-3 py-2.5 text-right">Actions</th>
+                <tr class="border-b border-line text-left text-[10px] font-bold uppercase tracking-[0.06em] text-muted" style="background:var(--cx-surface-2)">
+                    <th class="px-4 py-2">Attendee</th>
+                    <th class="px-3 py-2">Ticket</th>
+                    <th class="px-3 py-2">Status</th>
+                    <th class="px-3 py-2 text-right">Fee</th>
+                    <th class="px-3 py-2 text-center">Check-in</th>
+                    <th class="px-3 py-2 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($attendees as $a)
                     @php [$sl, $sc] = $a->statusMeta(); @endphp
                     <tr wire:key="att-{{ $a->id }}" wire:click="edit({{ $a->id }})" class="group cursor-pointer border-b border-line last:border-0 hover:bg-page/30">
-                        <td class="px-4 py-2.5">
-                            <div class="flex items-center gap-3">
-                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-900 text-eyebrow font-bold text-gold-400">{{ $a->initials() }}</span>
+                        <td class="px-4 py-1.5">
+                            <div class="flex items-center gap-2.5">
+                                {{-- Hex initials — the same cell the nav and the
+                                     module badges use, so a person reads as one
+                                     more object in the same system. --}}
+                                <span class="cx-cathex shrink-0 text-[10px] font-bold" style="width:28px;height:31px;background:var(--cx-espresso-1);color:var(--cx-accent)">{{ $a->initials() }}</span>
                                 <div class="min-w-0">
-                                    <p class="flex items-center gap-1.5 truncate text-sm font-bold text-ink">{{ $a->name }}@if ($a->vip)<span class="text-gold-700" title="VIP">★</span>@endif</p>
+                                    <p class="flex items-center gap-1.5 truncate text-[13px] font-bold text-ink">{{ $a->name }}@if ($a->vip)<span class="text-gold-700" title="VIP">★</span>@endif</p>
                                     <p class="truncate text-micro text-muted">{{ $a->organization ?: $a->email ?: '—' }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-3 py-2.5"><span class="rounded-full bg-page px-2.5 py-0.5 text-eyebrow font-bold text-muted">{{ $a->ticket_type }}</span></td>
-                        <td class="px-3 py-2.5"><span class="rounded-full px-2.5 py-0.5 text-eyebrow font-bold {{ $sc }}">{{ $sl }}</span></td>
-                        <td class="px-3 py-2.5 text-right text-xs font-semibold text-ink">{{ $a->amount_cents ? $event->money($a->amount_cents) : '—' }}</td>
-                        <td class="px-3 py-2.5 text-center">
+                        <td class="px-3 py-1.5"><span class="rounded-full bg-page px-2 py-0.5 text-eyebrow font-bold text-muted">{{ $a->ticket_type }}</span></td>
+                        <td class="px-3 py-1.5"><span class="rounded-full px-2 py-0.5 text-eyebrow font-bold {{ $sc }}">{{ $sl }}</span></td>
+                        <td class="px-3 py-1.5 text-right text-xs font-semibold tabular-nums text-ink">{{ $a->amount_cents ? $event->money($a->amount_cents) : '—' }}</td>
+                        <td class="px-3 py-1.5 text-center">
                             <button type="button" wire:click.stop="toggleCheckIn({{ $a->id }})"
                                     class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm transition {{ $a->status === 'checked_in' ? 'bg-emerald-100 text-emerald-700' : 'bg-page text-muted hover:bg-page hover:text-muted' }}"
                                     title="{{ $a->status === 'checked_in' ? 'Undo check-in' : 'Check in' }}">✓</button>
                         </td>
-                        <td class="px-3 py-2.5">
+                        <td class="px-3 py-1.5">
                             <div class="flex items-center justify-end gap-1">
                                 <span class="text-eyebrow font-semibold text-muted opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">Edit ✎</span>
                                 <x-confirm title="Remove {{ $a->name }}?"
@@ -371,21 +377,22 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-16 text-center">
+                    <tr><td colspan="6" class="px-4 py-10 text-center">
                         <p class="text-sm font-semibold text-ink">{{ $search || $filterStatus || $filterTicket ? 'No attendees match your filters' : 'No attendees yet' }}</p>
                         @unless ($search || $filterStatus || $filterTicket)
                             <p class="mx-auto mt-1 max-w-md text-xs text-muted">Add attendees one by one, or import your registration list from Excel.</p>
-                            <div class="mt-4 flex justify-center gap-2">
-                                <button type="button" wire:click="newItem" class="h-10 rounded-lg bg-navy-900 px-5 text-xs font-bold text-white transition hover:bg-navy-800">＋ Add attendee</button>
-                                <button type="button" wire:click="$set('showImport', true)" class="h-10 rounded-lg border border-line bg-white px-4 text-xs font-semibold text-ink hover:border-navy-300">⇪ Import list</button>
+                            <div class="mt-3 flex justify-center gap-1.5">
+                                <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent">＋ Add attendee</button>
+                                <button type="button" wire:click="$set('showImport', true)" class="cx-btn cx-btn-ghost">⇪ Import list</button>
                             </div>
                         @endunless
                     </td></tr>
                 @endforelse
             </tbody>
         </table>
+      </div>
     </div>
-    <p class="mt-3 text-center text-eyebrow text-muted">{{ $attendees->count() }} shown</p>
+    <p class="mt-2 text-center text-eyebrow text-muted">{{ $attendees->count() }} shown</p>
 
     {{-- ══ Modal ══ --}}
     @if ($showForm)
