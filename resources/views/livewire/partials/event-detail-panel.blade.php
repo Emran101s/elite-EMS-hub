@@ -74,20 +74,30 @@
                     <p class="cx-dp-sub">Select a mission to inspect</p>
                 </div>
             </div>
+            {{-- Only what the masthead does not already say. It carries
+                 Portfolio health and At risk about 250px above this, so
+                 repeating all four figures here meant two of them were on
+                 screen twice. Active and Upcoming are this panel's own. --}}
+            @php $panelFigures = collect($figures)->whereIn('label', ['Active', 'Upcoming'])->values(); @endphp
             <div class="cx-dp-stats" style="grid-template-columns:1fr 1fr">
-                @foreach ($figures as $f)
+                @foreach ($panelFigures as $f)
                     <div class="cx-dp-stat">
                         <span class="cx-sv">{{ $f['value'] }}</span>
                         <span class="cx-sl">{{ $f['label'] }}</span>
+                        <span class="cx-sl" style="opacity:.7;text-transform:none;letter-spacing:0">{{ $f['note'] }}</span>
                     </div>
                 @endforeach
             </div>
 
             @if ($worst && ($worst['healthGroup'] ?? null) === 'risk')
+                {{-- That figure is the mission's health SCORE. Rendered bare
+                     beside "Needs you first" it read as a count — and the
+                     worst mission scoring 0 made the card say "0 needs you
+                     first", which is the opposite of what it means. --}}
                 <button type="button" wire:click="activate({{ $worst['id'] }})" class="cx-firstup">
                     <span class="cx-fus">{{ $worst['healthScore'] ?? '—' }}</span>
                     <span style="min-width:0">
-                        <span class="cx-fuk">Needs you first</span>
+                        <span class="cx-fuk">Needs you first · health {{ $worst['healthScore'] ?? 'unscored' }}</span>
                         <span class="cx-fut">{{ $worst['name'] }}</span>
                     </span>
                 </button>
