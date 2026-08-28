@@ -407,6 +407,23 @@
   .cx-daycell .cx-dsub { font-size: 10px; color: var(--cx-muted); }
   .cx-daycell.is-on .cx-dsub { color: rgba(255,255,255,.55); }
 
+  /* The horizontal day strip. Same cell content as .cx-daycell, laid along
+     the top instead of down a 240px rail — days are few and the schedule
+     needs the width far more than the day list does. Tabs sit on a hairline
+     grid (the parent's background shows through the 1px gaps) so the strip
+     reads as one control rather than a row of loose buttons. */
+  .cx-daytab { display: flex; align-items: center; gap: 8px; flex: 1 0 auto; min-width: 148px; padding: 9px 12px; background: var(--cx-surface); border: 0; cursor: pointer; transition: .15s; }
+  .cx-daytab:hover { background: var(--cx-surface-2); }
+  .cx-daytab.is-on { background: var(--cx-ink); }
+  .cx-daytab .cx-dhex { width: 26px; height: 29px; flex: none; clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); display: grid; place-items: center; background: var(--cx-surface-2); color: var(--cx-ink); font-size: 9.5px; font-weight: 700; }
+  .cx-daytab.is-on .cx-dhex { background: var(--cx-accent); color: var(--cx-ink); }
+  .cx-daytab .cx-dname { font-size: 12px; font-weight: 700; color: var(--cx-ink); }
+  .cx-daytab.is-on .cx-dname { color: #fff; }
+  .cx-daytab .cx-dsub { font-size: 10px; color: var(--cx-muted); }
+  .cx-daytab.is-on .cx-dsub { color: rgba(255,255,255,.55); }
+  .cx-daytab-add { flex: 0 0 auto; min-width: 0; justify-content: center; padding: 9px 14px; color: var(--cx-muted); font-size: 14px; }
+  .cx-daytab-add:hover { color: var(--cx-ink); }
+
   .cx-railsec { border-top: 1px solid var(--cx-line-soft); padding-top: 13px; margin-top: 13px; }
   .cx-railsec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
   .cx-raillbl { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cx-muted); }

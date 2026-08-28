@@ -10,7 +10,15 @@
      exactly where it would from the Timeline view, because it is the same
      markup. Included (not a component) so it shares the parent's data
      automatically — $lanes is the only value each caller passes in. ══════════ --}}
-@if ($lanes->isEmpty())
+@if ($lanes->isEmpty() && trim($venueSearch) !== '')
+    {{-- An empty board because of the room filter is not an empty day. Saying
+         "nothing scheduled" here would be a lie the filter caused. --}}
+    <div class="px-4 py-10 text-center">
+        <p class="text-[13px] font-semibold text-ink">No room matches “{{ $venueSearch }}”</p>
+        <p class="mt-1 text-xs text-muted">Only rooms with something scheduled today appear on the board.</p>
+        <button type="button" wire:click="$set('venueSearch', '')" class="cx-btn cx-btn-ghost mt-3" style="display:inline-flex">Clear the filter</button>
+    </div>
+@elseif ($lanes->isEmpty())
     <x-empty icon="chart" class="!border-0 !shadow-none" title="Nothing scheduled for this day"
              hint="Sessions plot themselves against the clock as you add them, one lane per room. Copy yesterday's running order if this day repeats it.">
         <x-slot:actions>
