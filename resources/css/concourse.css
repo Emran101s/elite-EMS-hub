@@ -84,7 +84,7 @@
   /* CONTROLS */
   .cx-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 20px 0 22px; }
   .cx-seg { display: inline-flex; background: var(--cx-surface-2); border: 1px solid var(--cx-line); border-radius: 999px; padding: 3px; }
-  .cx-seg button, .cx-seg a { font-family: var(--cx-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--cx-muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: .18s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .cx-seg button, .cx-seg a, .cx-seg span { font-family: var(--cx-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--cx-muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: .18s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
   .cx-seg [aria-pressed="true"], .cx-seg .is-on { background: var(--cx-ink); color: var(--cx-canvas); }
   .cx-seg button:not([aria-pressed="true"]):hover, .cx-seg a:not(.is-on):hover { color: var(--cx-ink); }
   .cx-seg .cx-soon { font-size: 8px; opacity: .55; letter-spacing: .1em; }

@@ -9,7 +9,7 @@
     // only everywhere else, so cost figures here format locally instead.
     $money3 = fn ($c) => $event->currencySymbol().(strlen($event->currencySymbol()) > 1 ? ' ' : '').number_format(($c ?? 0) / 100, 3);
 @endphp
-<div>
+<div class="cx-canvas">
     <datalist id="airlines">
         @foreach (['Royal Jordanian', 'Emirates', 'Qatar Airways', 'Turkish Airlines', 'EgyptAir',
                    'Saudia', 'Etihad', 'Lufthansa', 'British Airways', 'Air France', 'Pegasus', 'flydubai'] as $al)
@@ -23,13 +23,11 @@
 
             {{-- Dense toolbar --}}
             <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-xl border border-line bg-white p-0.5">
-                    <span class="rounded-lg bg-navy-900 px-2.5 py-1.5 text-eyebrow font-bold text-white">List</span>
+                <span class="cx-seg">
+                    <span aria-pressed="true">List</span>
                     <a href="{{ route('events.transport.dispatch', $event) }}"
-                       class="rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-muted transition hover:text-ink"
                        title="Lanes against a time axis — plan and catch clashes">Dispatch</a>
-                    <a href="{{ route('events.transport.live', $event) }}"
-                       class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-eyebrow font-bold text-muted transition hover:text-ink"
+                    <a href="{{ route('events.transport.live', $event) }}" style="display:inline-flex;align-items:center;gap:6px"
                        title="Event-day operations — designed for a phone">
                         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>Live
                     </a>
@@ -166,15 +164,14 @@
                 @if ($total || $days->isNotEmpty())
                     <div class="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
                         @if ($total)
-                            <div class="flex flex-wrap items-center gap-1">
-                                <button type="button" wire:click="setLeg('')"
-                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === '' ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button type="button" wire:click="setLeg('')" class="cx-chip {{ $filterLeg === '' ? 'is-on' : '' }}">
                                     All <span class="opacity-60">{{ $total }}</span>
                                 </button>
                                 @foreach ($legTabs as $tab)
                                     <button type="button" wire:click="setLeg('{{ $tab['key'] }}')"
                                             @disabled($tab['runs'] === 0)
-                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterLeg === $tab['key'] ? 'bg-navy-900 text-white' : ($tab['runs'] ? 'bg-page text-muted hover:bg-page' : 'bg-white text-muted') }}"
+                                            class="cx-chip {{ $filterLeg === $tab['key'] ? 'is-on' : '' }}"
                                             title="{{ $tab['hint'] }}">
                                         {{ $tab['label'] }} <span class="opacity-60">{{ $tab['runs'] }}</span>
                                     </button>
@@ -184,15 +181,13 @@
 
                         @if ($days->isNotEmpty())
                             @if ($total)<span class="hidden h-5 w-px bg-line sm:block" aria-hidden="true"></span>@endif
-                            <div class="flex flex-wrap items-center gap-1">
+                            <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="me-0.5 text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Day</span>
-                                <button type="button" wire:click="setDay('')"
-                                        class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === '' ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
+                                <button type="button" wire:click="setDay('')" class="cx-chip {{ $filterDay === '' ? 'is-on' : '' }}">
                                     All
                                 </button>
                                 @foreach ($days as $day => $count)
-                                    <button type="button" wire:click="setDay('{{ $day }}')"
-                                            class="rounded-full px-2.5 py-1 text-eyebrow font-bold transition {{ $filterDay === $day ? 'bg-navy-900 text-white' : 'bg-page text-muted hover:bg-page' }}">
+                                    <button type="button" wire:click="setDay('{{ $day }}')" class="cx-chip {{ $filterDay === $day ? 'is-on' : '' }}">
                                         {{ \Carbon\Carbon::parse($day)->format('D j M') }} <span class="opacity-60">{{ $count }}</span>
                                     </button>
                                 @endforeach
@@ -224,7 +219,7 @@
                                     </p>
                                 </div>
 
-                                <div class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
+                                <div class="cx-lcard !mb-0">
                                     @foreach ($group as $m)
                                         @php
                                             $stLabel = $m->statusLabel(); $stClass = $m->statusClass();
@@ -246,14 +241,14 @@
 
                                                 @if ($m->ref_no)
                                                     <span @class([
-                                                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black',
-                                                              'bg-gold-500 text-ink' => $priority,
+                                                              'flex h-9 w-8 shrink-0 items-center justify-center text-xs font-black',
+                                                              'text-ink' => $priority,
                                                               'text-white' => ! $priority,
                                                           ])
-                                                          @if (! $priority) style="background: {{ $moduleHex }}" @endif
+                                                          style="clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background: {{ $priority ? 'var(--cx-accent)' : $moduleHex }}"
                                                           title="Car {{ $m->refLabel() }}">{{ $m->ref_no }}</span>
                                                 @else
-                                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-line text-xs font-black text-muted"
+                                                    <span class="flex h-9 w-8 shrink-0 items-center justify-center text-xs font-black text-muted" style="clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); box-shadow: inset 0 0 0 1.5px var(--cx-line)"
                                                           title="No car number yet">–</span>
                                                 @endif
 
@@ -262,8 +257,8 @@
                                                     <p class="mt-0.5 text-eyebrow uppercase tracking-wide text-muted">{{ $m->depart_at?->format('D') ?? 'TBC' }}</p>
                                                 </div>
 
-                                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                                                      style="color: {{ $moduleHex }}; background: {{ $moduleHex }}18"
+                                                <span class="flex h-9 w-8 shrink-0 items-center justify-center"
+                                                      style="clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); color: {{ $moduleHex }}; background: {{ $moduleHex }}18"
                                                       title="{{ $m->vehicleType?->name ?? 'Vehicle' }}{{ $cap ? ' · max '.$cap : '' }}">
                                                     <x-icon :name="$vehicleIcon($cap)" class="h-4 w-4" />
                                                 </span>
