@@ -6,8 +6,9 @@
         'cancelled' => ['Cancelled', 'bg-page text-muted'],
     ];
     $spacesDefault = $speakers->isNotEmpty() && $speakers->count() <= 6 ? 'cards' : 'list';
+    $moduleHex = \App\Models\Event::moduleColor('speakers');
 @endphp
-<div>
+<div class="cx-canvas">
     {{-- Speakers / Confirmed / Keynotes / Speaker fees are the same figures
          the Universal Module Header already shows above this component, and
          "＋ Add Speaker" already lives in the toolbar below and the empty
@@ -21,35 +22,30 @@
                  setMode(m) { this.mode = m; localStorage.setItem('elitehub.speakers.mode', m); }
              }">
             @if ($speakers->isEmpty())
-                <x-empty icon="sparkles" title="No speakers yet"
-                         hint="Add keynotes, panellists and moderators — track invitations, confirmations and fees.">
-                    <x-slot:actions>
-                        <button type="button" wire:click="newItem" class="h-10 rounded-full bg-gold-500 px-5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add the first speaker</button>
-                    </x-slot:actions>
-                </x-empty>
+                <div class="cx-empty">
+                    <h3>No speakers yet</h3>
+                    <p>Add keynotes, panellists and moderators — track invitations, confirmations and fees.</p>
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Add the first speaker</button>
+                </div>
             @else
                 <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                     <x-bulk-bar :count="$this->selectedCount()" noun="speaker" />
                     <div class="ms-auto flex items-center gap-2">
-                        <span role="group" aria-label="Speaker layout" class="inline-flex items-center rounded-full border border-line bg-white p-0.5">
-                            <button type="button" @click="setMode('list')" :aria-pressed="mode === 'list'"
-                                    :class="mode === 'list' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1">List</button>
-                            <button type="button" @click="setMode('cards')" :aria-pressed="mode === 'cards'"
-                                    :class="mode === 'cards' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                                    class="rounded-full px-2.5 py-1.5 text-eyebrow font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-1">Cards</button>
+                        <span role="group" aria-label="Speaker layout" class="cx-seg">
+                            <button type="button" @click="setMode('list')" :aria-pressed="mode === 'list'">List</button>
+                            <button type="button" @click="setMode('cards')" :aria-pressed="mode === 'cards'">Cards</button>
                         </span>
-                        <button type="button" wire:click="newItem" class="h-8 rounded-full bg-gold-500 px-3 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Speaker</button>
+                        <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="height:32px;padding:0 12px">＋ Add Speaker</button>
                     </div>
                 </div>
 
-                <div x-show="mode === 'list'" x-cloak class="overflow-hidden rounded-lg border border-line bg-white">
+                <div x-show="mode === 'list'" x-cloak class="cx-lcard !mb-0">
                     <ul class="divide-y divide-line">
                         @foreach ($speakers as $s)
                             @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
-                            <li wire:key="sp-list-{{ $s->id }}" class="group flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-3.5 py-2 transition hover:bg-page {{ $this->isSelected($s->id) ? 'bg-page' : '' }}">
+                            <li wire:key="sp-list-{{ $s->id }}" class="group flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3.5 py-2.5 transition hover:bg-page {{ $this->isSelected($s->id) ? 'bg-page' : '' }}">
                                 <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-line text-transparent hover:border-muted' }}" title="Select">✓</button>
-                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-eyebrow font-bold text-gold-400">{{ $s->initials() }}</span>
+                                <span class="cx-cathex" style="background: {{ $moduleHex }}">{{ $s->initials() }}</span>
                                 <div class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
                                     <p class="truncate text-[13px] font-bold text-ink">
                                         {{ $s->name }}
@@ -78,12 +74,12 @@
                 <div x-show="mode === 'cards'" x-cloak class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     @foreach ($speakers as $s)
                         @php [$stLabel, $stClass] = $statusMeta[$s->status] ?? $statusMeta['invited']; @endphp
-                        <div wire:key="sp-card-{{ $s->id }}" class="group/sp flex flex-col overflow-hidden rounded-lg border border-line bg-white {{ $this->isSelected($s->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
+                        <div wire:key="sp-card-{{ $s->id }}" class="group/sp cx-lcard !mb-0 flex flex-col {{ $this->isSelected($s->id) ? '!border-navy-900 ring-2 ring-navy-900' : '' }}">
                             <div class="flex flex-1 flex-col p-3.5">
                                 <div class="flex items-start justify-between gap-2.5">
-                                    <div class="flex min-w-0 items-center gap-2.5">
+                                    <div class="flex min-w-0 items-center gap-3">
                                         <button type="button" wire:click="toggleSelect({{ $s->id }})" class="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-eyebrow {{ $this->isSelected($s->id) ? 'border-navy-900 bg-navy-900 text-white' : 'border-line text-transparent hover:border-muted' }}" title="Select">✓</button>
-                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-sm font-bold text-gold-400">{{ $s->initials() }}</span>
+                                        <span class="cx-cathex" style="width:38px;height:42px;background: {{ $moduleHex }}">{{ $s->initials() }}</span>
                                         <div class="min-w-0">
                                             <p class="flex flex-wrap items-center gap-1.5 text-sm font-bold text-ink">{{ $s->name }}
                                                 @if ($s->is_keynote)<span class="rounded-full bg-gold-50 px-2 py-0.5 text-eyebrow font-bold text-gold-700">Keynote</span>@endif
