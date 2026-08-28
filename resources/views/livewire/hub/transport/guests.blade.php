@@ -1,6 +1,6 @@
             {{-- ══ 1 · Guests ══ --}}
-            <section class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
-                <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-3.5 py-2">
+            <section class="cx-lcard !mb-0">
+                <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-3.5 py-2.5" style="background:var(--cx-surface-2)">
                     <div class="min-w-0">
                         <p class="text-[13px] font-bold text-ink">1 · Guests</p>
                         <p class="text-eyebrow text-muted">
@@ -14,16 +14,10 @@
                         </p>
                     </div>
 
-                    <div class="flex rounded-xl border border-line bg-white p-0.5">
+                    <div class="cx-seg">
                         @foreach (['arrival' => 'Arrivals', 'departure' => 'Departures'] as $leg => $label)
-                            <button type="button" wire:click="setGuestLeg('{{ $leg }}')"
-                                    @class([
-                                        'rounded-lg px-3 py-1.5 text-micro font-bold transition',
-                                        'bg-navy-900 text-white' => $guestLeg === $leg,
-                                        'text-muted hover:text-ink' => $guestLeg !== $leg,
-                                    ])>
-                                {{ $label }}
-                                <span class="ml-1 rounded-full {{ $guestLeg === $leg ? 'bg-white/20' : 'bg-page' }} px-1.5 text-eyebrow">{{ $legCounts[$leg] }}</span>
+                            <button type="button" wire:click="setGuestLeg('{{ $leg }}')" aria-pressed="{{ $guestLeg === $leg ? 'true' : 'false' }}">
+                                {{ $label }} <span class="opacity-60">{{ $legCounts[$leg] }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -52,7 +46,7 @@
                 </div>
 
                 @if ($assignTargets->isNotEmpty() && ($guests->isNotEmpty() || $unassignedCount))
-                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line bg-page/30 px-3.5 py-2">
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-line px-3.5 py-2" style="background:var(--cx-surface-2)">
                         <span class="me-1 text-eyebrow font-bold uppercase tracking-wide text-muted">Drag onto</span>
                         @foreach ($assignTargets as $t)
                             @php $full = $t->seats() > 0 && $t->manifest->count() >= $t->seats(); @endphp
@@ -63,8 +57,7 @@
                                      'border-line bg-white opacity-50' => $full,
                                  ])
                                  title="Drop guests here to put them on this run">
-                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-eyebrow font-black text-white"
-                                      style="background: {{ $moduleHex }}">{{ $t->ref_no ?: '–' }}</span>
+                                <span class="flex h-6 w-5 shrink-0 items-center justify-center text-eyebrow font-black text-white" style="clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background: {{ $moduleHex }}">{{ $t->ref_no ?: '–' }}</span>
                                 <span class="max-w-[7rem] truncate text-eyebrow font-bold text-ink">{{ $t->depart_at?->format('H:i') ?? 'TBC' }}</span>
                                 <span class="text-eyebrow text-muted">{{ $t->manifest->count() }}/{{ $t->seats() ?: '?' }}</span>
                             </div>
@@ -102,12 +95,10 @@
                 @endif
 
                 @if ($guests->isEmpty() && ! $unassignedCount && array_sum($legCounts) === 0)
-                    <div class="px-3.5 py-8 text-center">
-                        <p class="text-sm font-semibold text-ink">No guests in the pool yet</p>
-                        <p class="mx-auto mt-1 max-w-md text-eyebrow text-muted">
-                            Import a flight list, pull registered attendees, or add passengers on a movement’s manifest.
-                        </p>
-                        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <div class="cx-empty !border-0 !shadow-none">
+                        <h3>No guests in the pool yet</h3>
+                        <p>Import a flight list, pull registered attendees, or add passengers on a movement's manifest.</p>
+                        <div class="flex flex-wrap items-center justify-center gap-2">
                             <button type="button" wire:click="$set('showPlanImport', true)" class="btn-ghost btn-sm">⇪ Import guests</button>
                             @if ($attendeePull > 0)
                                 <x-confirm

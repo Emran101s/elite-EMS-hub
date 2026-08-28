@@ -1,20 +1,18 @@
         <div class="space-y-3 xl:sticky xl:top-12 xl:h-fit">
-            <div class="cc-panel bg-white/90 backdrop-blur-xl">
-                <div class="cc-head">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                        <x-icon name="truck" class="h-3.5 w-3.5" />
+            <div class="cx-panel">
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ $moduleHex }}"><x-icon name="truck" class="h-3 w-3" /></span>
+                        Transport Control
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Transport Control</span>
                 </div>
 
-                <div class="border-b border-line p-3">
-                    <button type="button" wire:click="newItem"
-                            class="h-9 w-full rounded-xl text-xs font-bold text-white transition hover:opacity-90"
-                            style="background: {{ $moduleHex }}">＋ Add Movement</button>
+                <div class="cx-panel-sec">
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent w-full justify-center" style="height:36px">＋ Add Movement</button>
                 </div>
 
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full" style="background: {{ $moduleHex }}"></span> Summary</p>
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Summary</p>
                     <div class="space-y-1 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Movements</span><span class="font-bold text-ink">{{ $total }}</span></div>
                         <div class="flex justify-between"><span class="text-muted">Seats booked</span><span class="font-bold text-ink">{{ $seatsTotal }}</span></div>
@@ -34,8 +32,8 @@
                 </div>
 
                 @if ($fleet->isNotEmpty())
-                    <div class="border-b border-line p-3">
-                        <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Vehicles required</p>
+                    <div class="cx-panel-sec">
+                        <p class="cx-panel-k"><span class="cx-hexdot"></span> Vehicles required</p>
                         <div class="space-y-1.5">
                             @foreach ($fleet as $f)
                                 <div class="flex items-baseline justify-between gap-2">
@@ -49,7 +47,7 @@
                     </div>
                 @endif
 
-                <div class="space-y-2 p-3">
+                <div class="cx-panel-sec space-y-2">
                     @if ($total)
                         <a href="{{ route('events.transport.pdf', [$event, ...$this->exportFilters()]) }}" target="_blank"
                            class="block rounded-xl border border-line bg-white px-3 py-2 text-center text-xs font-bold text-ink transition hover:border-amber-300 hover:text-ink">
