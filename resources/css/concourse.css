@@ -383,6 +383,15 @@
   .cx-panel-sec:last-child { border-bottom: 0; }
   .cx-panel-k { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cx-muted); margin-bottom: 7px; }
   .cx-panel-k .cx-hexdot { width: 7px; height: 8px; clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background: var(--cx-accent); flex: none; }
+
+  /* Standalone hex dot. The two rules above only paint inside a .cx-lhero-k
+     or .cx-panel-k, so a bare .cx-hexdot needs its own size and fill — used
+     by the risk register, where the severity marker wearing the module's
+     own shape is the point. */
+  .cx-hexdot { display: inline-block; width: 8px; height: 9px; clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background: var(--cx-accent); }
+  .cx-hexdot.is-high { background: var(--cx-risk); }
+  .cx-hexdot.is-mid { background: var(--cx-warn); }
+  .cx-hexdot.is-low { background: var(--cx-line); }
   .cx-modebar { display: flex; border-radius: 12px; background: var(--cx-surface-2); border: 1px solid var(--cx-line-soft); padding: 3px; }
   .cx-modebar button { flex: 1; border-radius: 9px; padding: 7px 0; font-size: 11px; font-weight: 700; color: var(--cx-muted); background: none; border: 0; cursor: pointer; transition: .15s; }
   .cx-modebar button[aria-pressed="true"] { background: var(--cx-ink); color: #fff; }
