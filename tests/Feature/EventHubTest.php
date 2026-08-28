@@ -370,11 +370,10 @@ class EventHubTest extends TestCase
         $this->assertSame(1, $b['budget']['count']);
         $this->assertSame('1 not costed', $b['budget']['why']);
 
-        // The Universal Module Header (hub/module-header.blade.php) used to
-        // surface each module's own Overdue/Pending stat here, but it's
-        // turned off in the chrome for now (hub.blade.php no longer renders
-        // it — pending a decision on what replaces it). The tabs still
-        // render fine without it; assert that much.
+        // The Universal Module Header (hub/module-header.blade.php) surfaces
+        // each module's own Overdue/Pending stat above the tab body — see
+        // ModuleHeaderTest for coverage of its own content. Here just assert
+        // the tabs still render fine with it in place.
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'tasks']))->assertOk();
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'approvals']))->assertOk();
     }
