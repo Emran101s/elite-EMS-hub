@@ -17,7 +17,13 @@
 <div class="cx-canvas" style="padding: 0 0 16px">
     <div class="cx-modhero">
         <div class="cx-modhero-top">
-            <span class="cx-modhero-hex" style="background: color-mix(in srgb, {{ $m['color'] }} 30%, transparent); color: {{ $m['color'] }}">
+            {{-- A light tint of the module's colour, not a transparent wash.
+                 Overview's own colour IS the hero navy (#0B1F3A), so mixing
+                 it toward transparent made the badge and its icon disappear
+                 into the background entirely. Mixing toward white instead
+                 gives every module a hex that reads on navy while keeping
+                 its own hue, with the full-strength colour as the icon. --}}
+            <span class="cx-modhero-hex" style="background: color-mix(in srgb, {{ $m['color'] }} 22%, white); color: {{ $m['color'] }}">
                 <x-icon :name="$m['icon']" class="h-[18px] w-[18px]" />
             </span>
 

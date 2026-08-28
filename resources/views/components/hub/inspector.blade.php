@@ -13,6 +13,12 @@
     $isEmpty = ! $isOverview && ($m['pct'] === null || $m['pct'] === 0) && $m['recent']->isEmpty();
 @endphp
 
+{{-- The inspector renders inside .ehx-col-panel, which is NOT inside any
+     .cx-canvas — and every --cx-* token is defined on .cx-canvas. Without
+     this wrapper the whole panel's colours resolve to nothing (navy head
+     on navy text, unfilled status pill). Padding is zeroed because the
+     canvas's own bottom padding is meant for a page, not a panel. --}}
+<div class="cx-canvas" style="padding:0">
 <div class="cx-panel">
     <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
         <span class="cx-cathex shrink-0" style="width:24px;height:26px;background: {{ $m['color'] }}">
@@ -160,4 +166,5 @@
             Open {{ $m['label'] }} →
         </a>
     @endunless
+</div>
 </div>
