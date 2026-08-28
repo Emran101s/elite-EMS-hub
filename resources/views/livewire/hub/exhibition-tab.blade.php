@@ -9,30 +9,34 @@
     $moduleHex = \App\Models\Event::moduleColor('exhibition');
     $exPct = $target > 0 ? min(100, round($revenueTotal / $target * 100)) : null;
 @endphp
-<div>
+<div class="cx-canvas">
+    {{-- Exhibitors / Confirmed / Revenue / Collected are the same figures the
+         Universal Module Header already shows above this component — this
+         panel carries only what the header doesn't: the target itself, and
+         how far it is from being met. --}}
+
     <div class="mb-3 flex flex-wrap items-center gap-2">
-        <a href="{{ route('events.exhibition-floor', $event) }}"
-           class="flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3 text-xs font-bold text-ink shadow-sm transition hover:border-navy-300">
+        <a href="{{ route('events.exhibition-floor', $event) }}" class="cx-btn cx-btn-ghost" style="height:36px">
             <x-icon name="grid" class="h-3.5 w-3.5" style="color: {{ $moduleHex }}" /> Floor plan
         </a>
-        <button type="button" wire:click="newItem" class="ms-auto h-9 rounded-full bg-gold-500 px-3.5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Exhibitor</button>
+        <button type="button" wire:click="newItem" class="ms-auto cx-btn cx-btn-accent" style="height:36px">＋ Add Exhibitor</button>
     </div>
 
     <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0">
     @if ($exhibitors->isEmpty())
-        <x-empty icon="grid" title="No exhibitors yet"
-                 hint="Manage the exhibition floor separately from sponsorship — booths, sizes, packages and booth fees.">
-            <x-slot:actions>
-                <button type="button" wire:click="newItem" class="h-10 rounded-full bg-gold-500 px-5 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add the first exhibitor</button>
-            </x-slot:actions>
-        </x-empty>
+        <div class="cx-empty">
+            <h3>No exhibitors yet</h3>
+            <p>Manage the exhibition floor separately from sponsorship — booths, sizes, packages and booth fees.</p>
+            <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Add the first exhibitor</button>
+        </div>
     @else
         <x-bulk-bar :count="$this->selectedCount()" noun="exhibitor" />
-        <div class="overflow-hidden overflow-x-auto rounded-lg border border-line bg-white">
+        <div class="cx-lcard">
+          <div class="overflow-x-auto">
             <table class="w-full min-w-[720px]">
                 <thead>
-                    <tr class="border-b border-line bg-page text-left text-eyebrow font-bold uppercase tracking-wide text-muted">
+                    <tr class="border-b border-line text-left text-[10px] font-bold uppercase tracking-[0.06em] text-muted" style="background:var(--cx-surface-2)">
                         <th class="w-8 pl-3.5"></th>
                         <th class="px-3.5 py-2">Exhibitor</th>
                         <th class="px-2.5 py-2">Booth</th>
@@ -71,36 +75,34 @@
                     @endforeach
                 </tbody>
             </table>
+          </div>
         </div>
     @endif
         </div>
 
         <div class="xl:sticky xl:top-12 xl:h-fit">
-            <div class="cc-panel">
-                <div class="cc-head">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                        <x-icon name="grid" class="h-3.5 w-3.5" />
+            <div class="cx-panel">
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ $moduleHex }}"><x-icon name="grid" class="h-3 w-3" /></span>
+                        Exhibition Control
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Exhibition Control</span>
                 </div>
-                {{-- Exhibitors / Confirmed / Revenue / Collected are the same
-                     figures the Universal Module Header already shows above
-                     this component — this panel carries only what the header
-                     doesn't: the target itself, and how far it is from being met. --}}
-                <div class="border-b border-line p-3">
-                    <p class="mb-1.5 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-gold-500"></span> Booth income target</p>
+
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Booth income target</p>
                     <div class="flex items-center gap-1.5">
                         <span class="text-sm font-bold text-muted">{{ $event->currencySymbol() }}</span>
                         <input type="number" min="0" step="1000" wire:model.live.debounce.600ms="exhibitionTarget" placeholder="0" class="h-9 flex-1 rounded-lg border border-line bg-white px-2 text-base font-bold text-ink focus:border-navy-300 focus:outline-none">
                     </div>
                     @if ($target > 0)
-                        <div class="mt-2">
+                        <div class="mt-2.5">
                             <div class="mb-1 flex justify-between text-eyebrow font-semibold text-muted">
                                 <span>{{ $event->money($revenueTotal) }} of {{ $event->money($target) }}</span>
                                 <span class="{{ ($exPct ?? 0) >= 100 ? 'text-success-ink' : 'text-ink' }}">{{ $exPct }}%</span>
                             </div>
-                            <div class="h-1.5 overflow-hidden rounded-full bg-page">
-                                <div class="h-full rounded-full {{ ($exPct ?? 0) >= 100 ? 'bg-success' : 'bg-gold-500' }}" style="width: {{ $exPct }}%"></div>
+                            <div class="cx-bar">
+                                <span class="{{ ($exPct ?? 0) >= 100 ? 'tone-ok' : '' }}" style="width: {{ $exPct }}%; {{ ($exPct ?? 0) < 100 ? 'background:var(--cx-accent)' : '' }}"></span>
                             </div>
                             @if ($revenueTotal < $target)
                                 <p class="mt-1.5 text-eyebrow text-muted">{{ $event->money($target - $revenueTotal) }} remaining to target</p>
@@ -108,9 +110,10 @@
                         </div>
                     @endif
                 </div>
-                <div class="space-y-2 p-3">
-                    <button type="button" wire:click="newItem" class="h-9 w-full rounded-full bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ Add Exhibitor</button>
-                    <a href="{{ route('events.exhibition-floor', $event) }}" class="flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-line bg-white text-xs font-bold text-ink transition hover:border-navy-300">
+
+                <div class="cx-panel-sec">
+                    <button type="button" wire:click="newItem" class="cx-btn cx-btn-accent w-full justify-center" style="height:40px">＋ Add Exhibitor</button>
+                    <a href="{{ route('events.exhibition-floor', $event) }}" class="cx-btn cx-btn-ghost mt-2 w-full justify-center">
                         <x-icon name="grid" class="h-3.5 w-3.5 text-gold-600" /> Floor plan
                     </a>
                 </div>
