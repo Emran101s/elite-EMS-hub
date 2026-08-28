@@ -1,4 +1,4 @@
-<div>
+<div class="cx-canvas">
     @php
         $settingsHex = \App\Models\Event::moduleColor('settings') !== '#0B1F3A'
             ? \App\Models\Event::moduleColor('settings')
@@ -7,28 +7,28 @@
             ? count($event->enabled_modules)
             : count(\App\Models\Event::HUB_MODULES);
     @endphp
-    <div class="mb-4 flex flex-wrap items-center gap-2">
-        <span class="inline-flex h-8 items-center gap-2 rounded-xl bg-white px-3 text-eyebrow font-bold text-ink ring-1 ring-line">
-            <span class="flex h-5 w-5 items-center justify-center rounded-md text-white" style="background: {{ $settingsHex }}">
-                <x-icon name="cog" class="h-3 w-3" />
+    <div class="mb-3 flex flex-wrap items-center gap-1.5">
+        <span class="inline-flex h-7 items-center gap-2 rounded-full bg-white px-2.5 text-eyebrow font-bold text-ink ring-1 ring-line">
+            <span class="cx-cathex" style="width:18px;height:20px;background: {{ $settingsHex }}">
+                <x-icon name="cog" class="h-2.5 w-2.5" />
             </span>
             Event settings
         </span>
-        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-ink ring-1 ring-line">
+        <span class="inline-flex h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-eyebrow font-bold text-ink ring-1 ring-line">
             <span class="text-muted">Stage</span>
             <span>{{ str($event->stage)->replace('_', ' ')->title() }}</span>
         </span>
-        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-ink ring-1 ring-line">
+        <span class="inline-flex h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-eyebrow font-bold text-ink ring-1 ring-line">
             <span class="text-muted">Modules on</span>
             <span class="tabular-nums">{{ $enabledCount }}</span>
         </span>
-        <span class="inline-flex h-8 items-center gap-1.5 rounded-xl bg-white px-3 text-eyebrow font-bold text-ink ring-1 ring-line">
+        <span class="inline-flex h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-eyebrow font-bold text-ink ring-1 ring-line">
             <span class="text-muted">Currency</span>
             <span>{{ $event->currency }}</span>
         </span>
     </div>
 
-    <div class="flex gap-6">
+    <div class="flex gap-4">
         {{-- section rail --}}
         <aside class="hidden w-52 shrink-0 lg:block">
             <nav class="sticky top-12 space-y-0.5">
@@ -66,7 +66,7 @@
     <form wire:submit="save" class="space-y-6">
 
         {{-- ── Event details ── --}}
-        <div id="s-details" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+        <div id="s-details" class="cx-lcard scroll-mt-32 p-4">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="text-xl font-bold leading-none text-line">01</span>
                 <h3 class="text-base font-bold text-ink">Event Details</h3>
@@ -163,7 +163,7 @@
         </div>
 
         {{-- ── Ownership ── --}}
-        <div id="s-ownership" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+        <div id="s-ownership" class="cx-lcard scroll-mt-32 p-4">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="text-xl font-bold leading-none text-line">02</span>
                 <h3 class="text-base font-bold text-ink">Ownership &amp; Lifecycle</h3>
@@ -196,7 +196,7 @@
         </div>
 
         {{-- ── Event Team ── --}}
-        <div id="s-team" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+        <div id="s-team" class="cx-lcard scroll-mt-32 p-4">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="text-xl font-bold leading-none text-line">03</span>
                 <h3 class="text-base font-bold text-ink">Event Team</h3>
@@ -238,7 +238,7 @@
         </div>
 
         {{-- ── Identity: avatar + theme ── --}}
-        <div id="s-theme" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+        <div id="s-theme" class="cx-lcard scroll-mt-32 p-4">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="text-xl font-bold leading-none text-line">04</span>
                 <h3 class="text-base font-bold text-ink">Identity &amp; Theme</h3>
@@ -321,7 +321,7 @@
         </div>
 
         {{-- ── Modules ── --}}
-        <div id="s-modules" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+        <div id="s-modules" class="cx-lcard scroll-mt-32 p-4">
             <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
                 <span class="text-xl font-bold leading-none text-line">05</span>
                 <h3 class="text-base font-bold text-ink">Enabled Modules</h3>
@@ -368,7 +368,7 @@
     </form>
 
     {{-- ── Danger zone ── --}}
-    <div id="s-manage" class="scroll-mt-32 rounded-lg border border-line bg-white p-6">
+    <div id="s-manage" class="cx-lcard scroll-mt-32 p-4">
         <div class="mb-5 flex items-baseline gap-2.5 border-b border-line pb-2">
             <span class="text-xl font-bold leading-none text-line">06</span>
             <h3 class="text-base font-bold text-ink">Manage Event</h3>
