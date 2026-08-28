@@ -10,16 +10,10 @@
 
 <div class="cx-canvas space-y-2.5">
 
-    {{-- "Items" is dropped — it's an exact duplicate of the Universal Module
-         Header's own count. The three money figures stay: the header shows
-         them rounded to whole units, this strip carries the full 3-decimal
-         precision these line items were built for, plus the margin's %
-         bar, neither of which the header has room to show. --}}
-    <x-stat-strip class="mb-0" :stats="[
-        ['Priced to sell', \App\Support\Money::forDocument($totals['sell'], $cur, 3), 'currency', null, null, $underwater->isNotEmpty() ? $underwater->count().' below cost' : null, $underwater->isNotEmpty() ? 'text-danger' : 'text-ink'],
-        ['Costs us', \App\Support\Money::forDocument($totals['cost'], $cur, 3), 'list', null, null, null],
-        ['Margin', ($margin < 0 ? '−' : '').\App\Support\Money::forDocument(abs($margin), $cur, 3), 'chart', $marginPct !== null ? max(0, min(100, abs($marginPct))) : null, $margin < 0 ? 'bg-danger' : 'bg-success', $marginPct !== null ? $marginPct.'%' : null, $margin < 0 ? 'text-danger' : 'text-success-ink'],
-    ]" />
+    {{-- The Priced-to-sell / Costs-us / Margin trio is gone: the Universal
+         Module Header renders those exact three figures ~90px above this,
+         and showed them first. Precision was the argument for keeping both,
+         but a duplicated summary costs more than three decimal places buy. --}}
 
     {{-- ══ the bar ══ --}}
     <div class="flex flex-wrap items-center gap-2">
@@ -260,10 +254,31 @@
             <p>Add an item, pull some from the house list, or import a filled template.</p>
         </div>
     @else
-        <div class="space-y-3">
+        {{-- ══ ONE price list, not eight ══
+             Each category used to be its own card with its own copy of the
+             column header, so a 17-item list carried eight identical
+             "CODE / ITEM / SOLD BY / COSTS US / WE CHARGE / MARGIN" rows.
+             The headings are the noise; the prices are the content. One
+             table now, headed once, with each category as a rule across it.
+
+             The columns are re-proportioned too: Item is what you read and
+             it was truncating to "Bed & breakfa…" while "Sold by" — a short
+             phrase like "Per person" — held 170px. --}}
+        {{-- The last column holds a "Retire"/"Restore" text button as well as the
+     edit and delete icons; at 58px its label overflowed into the margin
+     figure beside it. Sized to what it actually contains. --}}
+        @php $cols = 'grid-cols-[80px_minmax(0,1.5fr)_100px_84px_84px_92px_108px]'; @endphp
+        <div class="cx-lcard">
+          <div class="overflow-x-auto">
+            <div class="min-w-[720px]">
+              <div class="grid {{ $cols }} gap-3 border-b border-line px-3.5 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-muted" style="background: var(--cx-surface-2)">
+                  <span>Code</span><span>Item</span><span>Sold by</span>
+                  <span class="text-end">Costs us</span><span class="text-end">We charge</span>
+                  <span class="text-end">Margin</span><span></span>
+              </div>
             @foreach ($groups as $group => $rows)
-                <div class="cx-lcard">
-                    <div class="flex items-center gap-2 border-b border-line px-3.5 py-1.5" style="background: var(--cx-surface-2)">
+                <div>
+                    <div class="flex items-center gap-2 border-b border-line px-3.5 py-1.5" style="background: var(--cx-surface-3)">
                         <span class="text-eyebrow font-black uppercase tracking-[0.14em] text-ink">{{ $group }}</span>
                         <span class="text-eyebrow font-semibold text-muted">{{ $rows->count() }}</span>
                         {{-- Who supplies it, which the category does not say. --}}
@@ -273,16 +288,6 @@
                             </span>
                         @endforeach
                     </div>
-
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[880px]">
-                            @php $cols = 'grid-cols-[100px_1fr_170px_104px_104px_110px_86px]'; @endphp
-
-                            <div class="grid {{ $cols }} gap-3 border-b border-line/70 px-3.5 py-1.5 text-eyebrow font-bold uppercase tracking-wide text-muted">
-                                <span>Code</span><span>Item</span><span>Sold by</span>
-                                <span class="text-end">Costs us</span><span class="text-end">We charge</span>
-                                <span class="text-end">Margin</span><span></span>
-                            </div>
 
                             @foreach ($rows as $item)
                                 <div wire:key="ei-{{ $item->id }}"
@@ -332,10 +337,10 @@
                                     </span>
                                 </div>
                             @endforeach
-                        </div>
-                    </div>
                 </div>
             @endforeach
+            </div>
+          </div>
         </div>
     @endif
 </div>
