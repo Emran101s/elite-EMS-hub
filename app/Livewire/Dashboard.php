@@ -266,11 +266,36 @@ class Dashboard extends Component
      *
      * @return array<string,Collection>
      */
+    /**
+     * The severity at which an open risk becomes a Command Briefing signal.
+     * Mirrors PortfolioAdvisor::attention(); the Queue shows what falls below
+     * it, so the two columns never list the same risk twice.
+     */
+    private const BRIEFING_RISK_SEVERITY = 15;
+
     private function commandQueue(Collection $events, array $ids, Carbon $today): array
     {
         $openTasks = Task::whereIn('event_id', $ids)->whereNotIn('status', ['done', 'approved', 'cancelled']);
 
+        // ── The Queue is the backlog; the Briefing is what needs a decision ──
+        //
+        // These two columns sat side by side showing the same records. Every
+        // pending approval is already a Briefing signal, and so is every open
+        // risk scoring 15 or more — so the Queue listed them a second time,
+        // without the reason the Briefing gives ("Agenda approval waiting 41
+        // days"). Three of five briefing items were duplicates.
+        //
+        // The Briefing keeps that job. The Queue keeps the work the Briefing
+        // does not itemise: overdue tasks (the advisor summarises them as one
+        // count), what is due today, and money owed, which it does not cover
+        // at all. Approvals drop entirely — the Briefing carries all of them.
+        // Risks are filtered rather than dropped, because only severity >= 15
+        // becomes a signal: a quieter open risk lives nowhere else, and
+        // dropping the group would have hidden it.
         return [
+            // Still queried: the KPI strip counts pending approvals, which is
+            // a figure rather than a second copy of the Briefing's list. Only
+            // the rendered group is dropped, in dashboard.blade.php.
             'approvals' => EventApproval::where('status', 'pending')
                 ->whereIn('event_id', $ids)->with('event')
                 ->orderBy('created_at')->get(),
@@ -280,7 +305,8 @@ class Dashboard extends Component
                 ->with(['event', 'assignee'])->orderBy('due_on')->get(),
             // Already in memory: $events was loaded with PortfolioAdvisor::RELATIONS,
             // which includes risks.owner — filtering here costs nothing extra.
-            'risks' => $events->flatMap(fn (Event $e) => $e->risks->filter->isOpen()
+            'risks' => $events->flatMap(fn (Event $e) => $e->risks
+                ->filter(fn ($r) => $r->isOpen() && $r->severity() < self::BRIEFING_RISK_SEVERITY)
                 ->map(fn ($r) => ['risk' => $r, 'event' => $e])),
             'paymentIssues' => EventContractPayment::whereIn('event_id', $ids)
                 ->whereColumn('paid_cents', '<', 'amount_cents')

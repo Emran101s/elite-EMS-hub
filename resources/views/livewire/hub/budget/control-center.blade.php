@@ -73,20 +73,57 @@
                     </div>
                 </div>
 
-                {{-- profit & loss --}}
+                {{-- ══ MARGIN, then CASH — in that order ══
+
+                     This block used to lead with "NET LOSS −59,323" in red,
+                     which was income-received minus cost. On an event that
+                     simply has not been invoiced yet that is not a loss, it
+                     is an empty bank line, and shouting it buries the number
+                     that actually decides whether the event is worth running:
+                     what you charge minus what it costs.
+
+                     So margin leads. Cash follows, named as cash. And the gap
+                     between what the budget charges and what the income table
+                     expects — previously invisible — is called out, because a
+                     plan to charge one figure while forecasting another is
+                     exactly the thing a budget should catch. --}}
+                @php
+                    $margin = $grandForecast - $costToDeliver;
+                    $marginPct = $grandForecast > 0 ? (int) round($margin / $grandForecast * 100) : null;
+                    $outstanding = max(0, $totalTargetIncome - $totalIncome);
+                    $chargeGap = $grandForecast - $totalTargetIncome;
+                @endphp
                 <div class="cx-panel-sec">
-                    <p class="cx-panel-k"><span class="cx-hexdot" style="background:var(--cx-ok)"></span> Profit &amp; loss</p>
+                    <p class="cx-panel-k"><span class="cx-hexdot" style="background:var(--cx-ok)"></span> Margin</p>
                     <div class="space-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-muted">Income (actual)</span><span class="font-bold text-success-ink">{{ $fmt($totalIncome) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted">Cost to deliver</span><span class="font-bold text-ink">{{ $fmt($costToDeliver) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted">Charged to client</span><span class="font-bold text-ink">{{ $fmt($grandForecast) }}</span></div>
-                        <div class="flex items-center justify-between rounded-lg px-2 py-1 {{ $netResult < 0 ? 'bg-danger-soft' : 'bg-success-soft' }}">
-                            <span class="text-eyebrow font-bold uppercase tracking-wide {{ $netResult < 0 ? 'text-danger-ink' : 'text-success-ink' }}">{{ $netResult < 0 ? 'Net loss' : 'Net profit' }}</span>
-                            <span class="text-sm font-bold {{ $netResult < 0 ? 'text-danger-ink' : 'text-success-ink' }}">{{ $netResult >= 0 ? '+' : '−' }}{{ $fmt(abs($netResult)) }}</span>
+                        <div class="flex justify-between"><span class="text-muted">Cost to deliver</span><span class="font-bold tabular-nums text-ink">{{ $fmt($costToDeliver) }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Charged to client</span><span class="font-bold tabular-nums text-ink">{{ $fmt($grandForecast) }}</span></div>
+                        <div class="flex items-center justify-between rounded-lg px-2 py-1 {{ $margin < 0 ? 'bg-danger-soft' : 'bg-success-soft' }}">
+                            <span class="text-eyebrow font-bold uppercase tracking-wide {{ $margin < 0 ? 'text-danger-ink' : 'text-success-ink' }}">
+                                {{ $margin < 0 ? 'Under water' : 'Margin' }}@if ($marginPct !== null) · {{ $marginPct }}%@endif
+                            </span>
+                            <span class="text-sm font-bold tabular-nums {{ $margin < 0 ? 'text-danger-ink' : 'text-success-ink' }}">{{ $margin >= 0 ? '+' : '−' }}{{ $fmt(abs($margin)) }}</span>
                         </div>
-                        @if ($totalTargetIncome !== $totalIncome)
-                            <div class="flex justify-between border-t border-line pt-1 text-micro"><span class="text-muted">Projected (at target)</span><span class="font-bold {{ $projectedNet < 0 ? 'text-danger-ink' : 'text-ink' }}">{{ $projectedNet >= 0 ? '+' : '−' }}{{ $fmt(abs($projectedNet)) }}</span></div>
+
+                        @if ($chargeGap !== 0)
+                            <p class="rounded-lg px-2 py-1.5 text-[10.5px] leading-snug" style="background: var(--cx-warn-wash); color: var(--cx-warn-ink)">
+                                The budget charges {{ $fmt($grandForecast) }} but income only expects
+                                {{ $fmt($totalTargetIncome) }} — a {{ $fmt(abs($chargeGap)) }}
+                                {{ $chargeGap > 0 ? 'shortfall in what you have forecast collecting' : 'surplus over what you are charging' }}.
+                            </p>
                         @endif
+                    </div>
+                </div>
+
+                <div class="cx-panel-sec">
+                    <p class="cx-panel-k"><span class="cx-hexdot" style="background:var(--cx-accent)"></span> Cash</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-muted">Received so far</span><span class="font-bold tabular-nums {{ $totalIncome ? 'text-success-ink' : 'text-muted' }}">{{ $fmt($totalIncome) }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">Still to collect</span><span class="font-bold tabular-nums text-ink">{{ $fmt($outstanding) }}</span></div>
+                        <div class="flex justify-between border-t border-line pt-1">
+                            <span class="text-muted">Against cost</span>
+                            <span class="font-bold tabular-nums {{ $netResult < 0 ? 'text-warning-ink' : 'text-success-ink' }}">{{ $netResult >= 0 ? '+' : '−' }}{{ $fmt(abs($netResult)) }}</span>
+                        </div>
                     </div>
                 </div>
 

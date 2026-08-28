@@ -26,6 +26,56 @@
                 </div>
             @endif
 
+            {{-- ══ WHAT THIS MODULE IS ACTUALLY FOR ══
+                 Accommodation is a race: fill the block before the hotel takes
+                 the rooms back. Both halves of that were silent. The naming gap
+                 lived as a figure in the module header, and the release date —
+                 the deadline the whole job runs against — appeared only as a
+                 small amber word inside a collapsed row, and only if somebody
+                 had set it. A held block with no release date recorded is the
+                 real risk here, and the tool never said so.
+
+                 Both are now stated before the blocks, because they are the
+                 reason to open them. --}}
+            @php
+                $heldBlocks = $blocks->reject(fn ($b) => in_array($b->status, ['cancelled', 'released'], true));
+                $roomsHeld = $heldBlocks->sum('rooms_count');
+                $roomsNamed = $heldBlocks->sum(fn ($b) => $b->filled());
+                $toName = max(0, $roomsHeld - $roomsNamed);
+                $noCutoff = $heldBlocks->filter(fn ($b) => ! $b->cutoff_on);
+                $soonest = $heldBlocks->filter(fn ($b) => $b->cutoff_on)->sortBy('cutoff_on')->first();
+                $daysToCutoff = $soonest?->cutoff_on?->diffInDays(now()->startOfDay(), false);
+            @endphp
+            @if ($heldBlocks->isNotEmpty() && ($toName > 0 || $noCutoff->isNotEmpty()))
+                @php $tone = $noCutoff->isNotEmpty() ? 'warn' : 'accent'; @endphp
+                <div class="cx-lcard mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
+                     style="border-color: var(--cx-{{ $tone }}); background: var(--cx-{{ $tone === 'warn' ? 'warn-wash' : 'accent-wash' }})">
+                    @if ($toName > 0)
+                        <span class="flex items-center gap-2 text-[12px] font-bold" style="color: var(--cx-warn-ink)">
+                            <span class="cx-hexdot" style="background: var(--cx-{{ $tone }})"></span>
+                            {{ number_format($toName) }} of {{ number_format($roomsHeld) }} {{ str('room')->plural($roomsHeld) }} still to name
+                        </span>
+                    @endif
+
+                    @if ($noCutoff->isNotEmpty())
+                        <span class="text-[11.5px]" style="color: var(--cx-warn-ink)">
+                            {{ $noCutoff->count() }} {{ str('block')->plural($noCutoff->count()) }} with no release date —
+                            the hotel can take those rooms back without warning.
+                        </span>
+                    @elseif ($soonest && $daysToCutoff !== null)
+                        <span class="text-[11.5px]" style="color: var(--cx-warn-ink)">
+                            @if ($daysToCutoff > 0)
+                                {{ $soonest->hotel }} releases in {{ (int) $daysToCutoff }} {{ str('day')->plural((int) $daysToCutoff) }}
+                            @else
+                                {{ $soonest->hotel }} passed its release date
+                            @endif
+                        </span>
+                    @endif
+
+                    <span class="ms-auto text-[10.5px]" style="color: var(--cx-warn-ink); opacity:.75">Open a block to name its rooms.</span>
+                </div>
+            @endif
+
             {{-- ══ blocks ══ --}}
             @foreach ($blocks as $b)
                 @php
@@ -55,13 +105,19 @@
                                 @if ($b->isFull())
                                     <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-emerald-700">Full</span>
                                 @endif
+                                {{-- On the title row, not in the subtitle: that line is
+                                     truncated, and this warning was being cut to "no…". --}}
+                                @if (! $b->cutoff_on && ! in_array($b->status, ['cancelled', 'released'], true))
+                                    <span class="rounded-full px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide"
+                                          style="background: var(--cx-warn-wash); color: var(--cx-warn-ink)">No release date</span>
+                                @endif
                             </div>
                             <p class="mt-0.5 truncate text-eyebrow text-muted">
                                 {{ $b->room_type ?: 'Standard' }}@if ($b->occupancy) · {{ \App\Models\EventAccommodation::OCCUPANCIES[$b->occupancy] ?? '' }}@endif
                                 @if ($b->check_in) · {{ $b->check_in->format('j M') }} – {{ $b->check_out?->format('j M') ?? '?' }} · {{ $b->nights() }} nights @endif
                                 @if ($b->supplier) · booked via {{ $b->supplier->name }} @endif
                                 @if ($b->confirmation_number) · #{{ $b->confirmation_number }} @endif
-                                @if ($b->cutoff_on) · <span class="font-semibold text-amber-700">cut-off {{ $b->cutoff_on->format('j M') }}</span> @endif
+                                @if ($b->cutoff_on) · <span class="font-semibold text-amber-700">releases {{ $b->cutoff_on->format('j M') }}</span> @endif
                             </p>
                         </div>
 

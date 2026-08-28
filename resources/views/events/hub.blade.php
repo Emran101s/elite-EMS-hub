@@ -47,10 +47,19 @@
         // tabs get the whole width for their own layout; the inspector is
         // kept for the simple list/card/document tabs that genuinely have an
         // empty right side to fill.
+        // Agenda is deliberately not on this list. It is a builder, not a
+        // list — its board wants every pixel of width it can get, and the
+        // Inspector was spending 280px of it repeating the module header's
+        // own status and an Add Session button the toolbar already carries.
         $showPanel = in_array($tab, [
-            'overview', 'agenda', 'approvals', 'speakers',
+            'overview', 'approvals', 'speakers',
             'venue', 'pricing', 'brief', 'contract', 'files',
         ], true);
+
+        // ...and only when it actually has something to say. A panel whose
+        // whole content is "No recent activity" plus two links the module nav
+        // bar already carries does not earn 280px from the tab beside it.
+        $showPanel = $showPanel && \App\Support\HubModuleInspector::hasContent($event, $header, $tab);
     @endphp
 
     {{-- ══ Active Workspace | Inspector ══

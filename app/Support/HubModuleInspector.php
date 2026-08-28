@@ -128,6 +128,30 @@ class HubModuleInspector
         ];
     }
 
+    /**
+     * Is there anything in the Inspector worth a 280px column?
+     *
+     * On a module tab the panel carries only what the Universal Module Header
+     * above it does not: recent activity, a next action, and links to
+     * neighbouring modules. When the first two are empty the panel is a
+     * heading that says "No recent activity" and two links the module nav bar
+     * already offers — which is not worth the width it takes from the tab's
+     * own content. Overview always keeps it: its readiness gates and
+     * attention list have nothing above them.
+     */
+    public static function hasContent(Event $event, array $header, string $tab): bool
+    {
+        if ($tab === 'overview') {
+            return true;
+        }
+
+        $m = self::data($event, $header, $tab);
+
+        return $m['recent']->isNotEmpty()
+            || $m['nextAction'] !== null
+            || ! empty($m['supportsAdd']);
+    }
+
     public static function data(Event $event, array $header, string $tab): array
     {
         $modules = Event::HUB_TABS;
@@ -479,7 +503,11 @@ class HubModuleInspector
             'metrics' => $metrics,
             'owner' => $event->projectManager,
             'nextAction' => $nextAction,
-            'quickLinks' => $quickLinks,
+            // Never link to the tab you are standing on. Every module's
+            // quickLinks list names itself among its neighbours, so the
+            // panel was offering "Speakers" as a related module while you
+            // were reading the Speakers tab.
+            'quickLinks' => collect($quickLinks)->reject(fn ($l) => ($l['tab'] ?? null) === $inspectTab)->values()->all(),
             'recent' => $recent,
             'supportsAdd' => in_array($inspectTab, self::SUPPORTS_ADD_ACTION, true),
             'addLabel' => self::ADD_LABELS[$inspectTab] ?? 'Add',
