@@ -44,13 +44,13 @@
          THE DECK — the landing. Your documents, or the invitation
          to create the first one. Nothing else competes with them.
     ═════════════════════════════════════════════════════════════ --}}
-    <div x-data="{ view: 'deck' }" class="space-y-4">
+    <div x-data="{ view: 'deck' }" class="cx-canvas space-y-3">
 
         @php
             $pendingCount = $contracts->whereIn('status', ['draft', 'sent', 'partially_signed'])->count();
         @endphp
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
             <div>
                 <p class="text-eyebrow font-bold uppercase tracking-[0.28em] text-gold-700">Contract Studio</p>
                 <h2 class="text-h1 font-bold leading-tight text-ink">Documents</h2>
@@ -69,22 +69,21 @@
                     </span>
                 </div>
 
-                <div class="ml-auto flex rounded-xl border border-line bg-white p-0.5">
+                <div class="cx-seg ml-auto">
                     @foreach (['deck' => 'The Deck', 'pipe' => 'Pipeline'] as $v => $vl)
                         <button type="button" @click="view = '{{ $v }}'"
-                                :class="view === '{{ $v }}' ? 'bg-navy-900 text-white' : 'text-muted hover:text-ink'"
-                                class="rounded-lg px-3 py-1.5 text-eyebrow font-bold transition">{{ $vl }}</button>
+                                :class="view === '{{ $v }}' ? 'is-on' : ''">{{ $vl }}</button>
                     @endforeach
                 </div>
                 @can('manage-contract')
-                    <button type="button" wire:click="$toggle('showNew')" class="rounded-full bg-navy-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-navy-800">＋ New document</button>
+                    <button type="button" wire:click="$toggle('showNew')" class="cx-btn cx-btn-accent" style="height:34px">＋ New document</button>
                 @endcan
             @endif
         </div>
 
         {{-- new-document panel --}}
         @if ($showNew)
-            <div class="flex flex-wrap items-end gap-2 rounded-lg border border-gold-200 bg-gold-50 p-4">
+            <div class="cx-lcard flex flex-wrap items-end gap-2 p-3.5" style="border-color: var(--cx-accent); background: var(--cx-accent-wash)">
                 <div>
                     <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Type</label>
                     <select wire:model.live="newType" class="h-10 w-auto rounded-lg border border-line bg-white px-2.5 text-sm text-ink focus:border-navy-300 focus:outline-none">
@@ -100,8 +99,8 @@
                         </select>
                     </div>
                 @endif
-                <button type="button" wire:click="createContract" class="rounded-full bg-navy-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-navy-800">Create &amp; open</button>
-                <button type="button" wire:click="$set('showNew', false)" class="rounded-full border border-line bg-white px-3.5 py-2 text-xs font-semibold text-ink transition hover:border-navy-300">Cancel</button>
+                <button type="button" wire:click="createContract" class="cx-btn cx-btn-accent" style="height:36px">Create &amp; open</button>
+                <button type="button" wire:click="$set('showNew', false)" class="cx-btn cx-btn-ghost" style="height:36px">Cancel</button>
             </div>
         @endif
 
@@ -228,10 +227,10 @@
 
             {{-- ══ THE PIPELINE: the same table, ruled into three neutrally-numbered
                  stages. Documents are white paper slips you slide along it. ══ --}}
-            <div x-show="view === 'pipe'" x-cloak class="strip-dark relative !rounded-2xl p-5 sm:p-6" data-pipeline>
+            <div x-show="view === 'pipe'" x-cloak class="strip-dark relative !rounded-2xl p-4 sm:p-5" data-pipeline>
                 <span aria-hidden="true" class="pointer-events-none absolute -top-28 left-1/2 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(212,175,55,0.12),transparent_65%)]"></span>
 
-                <div class="relative grid gap-6 sm:grid-cols-3">
+                <div class="relative grid gap-5 sm:grid-cols-3">
                     @foreach (['draft' => 'Draft', 'sent' => 'Sent for signature', 'signed' => 'Signed'] as $col => $colLabel)
                         @php $inCol = $contracts->filter(fn ($c) => $c->pipelineColumn() === $col); @endphp
                         <div data-col="{{ $col }}" @class(['sm:border-r sm:border-white/10 sm:pr-6' => ! $loop->last])>
