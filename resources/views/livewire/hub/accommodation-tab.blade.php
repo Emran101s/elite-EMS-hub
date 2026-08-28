@@ -2,7 +2,7 @@
     $blockStatuses = \App\Models\EventRoomBlock::STATUSES;
     $moduleHex = \App\Models\Event::moduleColor('accommodation');
 @endphp
-<div>
+<div class="cx-canvas">
     <datalist id="room-categories">
         @foreach (\App\Support\Taxonomy::values('room_category') as $c)<option value="{{ $c }}"></option>@endforeach
     </datalist>
@@ -19,12 +19,11 @@
         <div class="min-w-0 space-y-3">
 
             @if ($blocks->isEmpty())
-                <x-empty icon="home" title="No room blocks yet"
-                         hint="Start with the deal you struck with the hotel — “50 rooms at the Fairmont, these dates, this rate”. Names go in afterwards, one room at a time, until the block is full.">
-                    <x-slot:actions>
-                        <button type="button" wire:click="newBlock" class="rounded-full bg-navy-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-navy-800">＋ Create the first block</button>
-                    </x-slot:actions>
-                </x-empty>
+                <div class="cx-empty">
+                    <h3>No room blocks yet</h3>
+                    <p>Start with the deal you struck with the hotel — “50 rooms at the Fairmont, these dates, this rate”. Names go in afterwards, one room at a time, until the block is full.</p>
+                    <button type="button" wire:click="newBlock" class="cx-btn cx-btn-accent" style="display:inline-flex">＋ Create the first block</button>
+                </div>
             @endif
 
             {{-- ══ blocks ══ --}}
@@ -34,12 +33,19 @@
                     $named = $b->filled();
                     $hex = $b->statusHex();
                 @endphp
-                <div wire:key="blk-{{ $b->id }}" class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
+                <div wire:key="blk-{{ $b->id }}" class="cx-lcard">
 
                     {{-- header --}}
-                    <div class="group/blk flex flex-wrap cursor-pointer items-center gap-x-4 gap-y-2 px-5 py-4 hover:bg-page/30"
+                    <div class="group/blk flex flex-wrap cursor-pointer items-center gap-x-4 gap-y-2 px-5 py-4 transition hover:bg-[var(--cx-surface-2)]"
                          wire:click="toggleExpand({{ $b->id }})">
                         <span class="text-muted transition group-hover/blk:text-muted {{ $open ? 'rotate-90' : '' }}">▸</span>
+
+                        {{-- hex block badge — the honeycomb signature, in the
+                             block's own status colour --}}
+                        <span class="cx-cathex flex shrink-0 items-center justify-center text-white"
+                              style="width:30px;height:33px;background:{{ $hex }}">
+                            <x-icon name="{{ \App\Models\Event::moduleIcon('accommodation') }}" class="h-3.5 w-3.5" />
+                        </span>
 
                         <div class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
                             <div class="flex flex-wrap items-center gap-2">
@@ -65,8 +71,8 @@
                                 <span class="text-sm font-bold text-ink">{{ $named }}<span class="text-muted"> / {{ $b->rooms_count }}</span></span>
                                 <span class="text-eyebrow text-muted">{{ $b->fillPct() }}%</span>
                             </div>
-                            <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-page">
-                                <div class="h-full rounded-full transition-all {{ $b->isFull() ? 'bg-success' : 'bg-gold-500' }}" style="width: {{ $b->fillPct() }}%"></div>
+                            <div class="cx-bar mt-1">
+                                <span class="{{ $b->isFull() ? 'tone-ok' : '' }}" style="width: {{ $b->fillPct() }}%; {{ $b->isFull() ? '' : 'background:var(--cx-accent)' }}"></span>
                             </div>
                         </div>
 
@@ -297,8 +303,8 @@
 
             {{-- ══ pre-block bookings, if any survived ══ --}}
             @if ($loose->isNotEmpty())
-                <div class="overflow-hidden rounded-lg border border-line bg-white/90 backdrop-blur-xl">
-                    <div class="border-b border-line px-5 py-2.5">
+                <div class="cx-lcard">
+                    <div class="border-b border-line px-5 py-2.5" style="background:var(--cx-surface-2)">
                         <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Not in a block</p>
                         <p class="mt-0.5 text-eyebrow text-muted">Bookings made before blocks existed. Convert one to start naming its guests.</p>
                     </div>
@@ -322,18 +328,21 @@
 
         {{-- ══ control rail ══ --}}
         <div class="xl:sticky xl:top-12 xl:h-fit">
-            <div class="cc-panel bg-white/90 backdrop-blur-xl">
-                <div class="cc-head">
-                    <span class="relative flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm" style="background: {{ $moduleHex }}">
-                        <x-icon name="{{ \App\Models\Event::moduleIcon('accommodation') }}" class="h-3.5 w-3.5" />
+            <div class="cx-panel">
+                <div class="cx-lcard-head" style="background: var(--cx-espresso-1); border-bottom-color: transparent;">
+                    <span class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="color:#F0E7D5">
+                        <span class="cx-cathex" style="width:22px;height:24px;background:{{ $moduleHex }}">
+                            <x-icon name="{{ \App\Models\Event::moduleIcon('accommodation') }}" class="h-3 w-3" />
+                        </span>
+                        Stay Control
                     </span>
-                    <span class="relative text-2xs font-bold uppercase tracking-[0.18em] text-ink">Stay Control</span>
                 </div>
-                <div class="border-b border-line p-4">
+
+                <div class="cx-panel-sec">
                     {{-- Blocks / Rooms named / Room-nights are the same figures the
                          Universal Module Header already shows above this component;
                          only what the header doesn't carry stays here. --}}
-                    <p class="mb-2 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted"><span class="h-1.5 w-1.5 rounded-full bg-line"></span> Summary</p>
+                    <p class="cx-panel-k"><span class="cx-hexdot"></span> Summary</p>
                     <div class="space-y-1.5 text-xs">
                         <div class="flex justify-between"><span class="text-muted">Estimated cost</span><span class="font-bold text-ink">{{ $event->money($costTotal) }}</span></div>
 
@@ -344,8 +353,9 @@
                     </div>
                     <p class="mt-2 text-eyebrow leading-relaxed text-muted">Rates are internal — the rooming list PDF never shows them.</p>
                 </div>
-                <div class="p-4">
-                    <button type="button" wire:click="newBlock" class="h-10 w-full rounded-lg bg-gold-500 text-xs font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">＋ New Room Block</button>
+
+                <div class="cx-panel-sec">
+                    <button type="button" wire:click="newBlock" class="cx-btn cx-btn-accent w-full justify-center" style="height:40px">＋ New Room Block</button>
                 </div>
             </div>
         </div>
