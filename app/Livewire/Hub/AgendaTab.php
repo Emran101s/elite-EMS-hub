@@ -846,7 +846,25 @@ class AgendaTab extends Component
      */
     private function buildTimeline($sessions): ?array
     {
-        return app(AgendaTimeline::class)->forSessions($sessions);
+        $timeline = app(AgendaTimeline::class)->forSessions($sessions);
+
+        // The room search used to filter a list of rooms in a side rail. The
+        // rooms are the board's own lanes now, so it filters those instead —
+        // same question ("show me this room"), asked of the thing you are
+        // actually looking at. An empty result still returns the timeline so
+        // the board can say nothing matched, rather than collapsing.
+        $needle = trim($this->venueSearch);
+
+        if ($needle !== '' && $timeline) {
+            $timeline['lanes'] = collect($timeline['lanes'])
+                ->filter(fn ($lane) => str_contains(
+                    mb_strtolower((string) ($lane['room'] ?? '')),   // AgendaTimeline keys lanes by room NAME
+                    mb_strtolower($needle),
+                ))
+                ->values();
+        }
+
+        return $timeline;
     }
 
     public function render()

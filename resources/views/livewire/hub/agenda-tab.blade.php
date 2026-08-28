@@ -40,13 +40,53 @@
              nothing is selected). The command bar runs the full width below
              — everything that acts on the whole day or the whole agenda,
              rather than on one session. --}}
-        <div class="grid items-start gap-3 xl:grid-cols-[240px_minmax(0,1fr)_296px] cx-reveal cx-d1">
+        @include('livewire.hub.agenda.day-strip')
 
-            @include('livewire.hub.agenda.left-rail')
+        {{-- ═══ THE TOOLBAR ═══
+             The status filters and the Add Session button used to live at the
+             bottom of a 240px rail, below Days, Rooms and Tracks — three
+             scrolling lists you had to get past to reach the one button you
+             press most. They belong on the same line as the board they act on. --}}
+        <div class="mb-2 flex flex-wrap items-center gap-2">
+            <span class="cx-eyebrow">Show</span>
+            @foreach (\App\Models\EventAgendaSession::STATUS_META as $key => [$label, $settledMeta, $hex])
+                @php $on = in_array($key, $statusFilter, true); @endphp
+                <button type="button" wire:click="toggleStatusFilter('{{ $key }}')"
+                        class="cx-chip {{ $on ? 'is-on' : '' }}"
+                        style="{{ $on ? 'background:'.$hex.'; border-color:'.$hex.'; color:#fff' : '' }}">{{ $label }}</button>
+            @endforeach
+            @if ($statusFilter)
+                <span class="text-[10.5px] text-muted">Others dimmed on the board</span>
+            @endif
+
+            <span class="ms-auto flex items-center gap-2">
+                {{-- Filters the board's own lanes, not a separate room list. --}}
+                <span class="cx-search" style="height:34px">
+                    <x-icon name="search" class="h-3.5 w-3.5 text-muted" />
+                    <input type="search" wire:model.live.debounce.250ms="venueSearch"
+                           placeholder="Filter rooms…" aria-label="Filter rooms" style="width:130px">
+                </span>
+                <button type="button" wire:click="$toggle('showImport')" class="cx-btn cx-btn-ghost" style="height:34px">⇪ Import CSV</button>
+                <button type="button" wire:click="newSession" class="cx-btn cx-btn-accent" style="height:34px">＋ Add Session</button>
+            </span>
+        </div>
+
+        {{-- The canvas runs full width while you are building. It gives up
+             room for the session inspector only once a session is actually
+             selected — and takes it straight back when you close it. The
+             schedule is what this screen is for; nothing else holds a
+             column open just in case. --}}
+        <div class="grid items-start gap-3 cx-reveal cx-d1 {{ $selectedSession ? 'xl:grid-cols-[minmax(0,1fr)_300px]' : 'xl:grid-cols-1' }}">
+
             @include('livewire.hub.agenda.canvas')
             {{-- ═══ RIGHT — INSPECTOR / INSIGHTS ═══ --}}
+            {{-- ═══ RIGHT — THE SELECTED SESSION ═══
+                 Only rendered when a session is actually selected. Its old
+                 "day insights" fallback (a readiness ring and three cards that
+                 usually read 0, 0, 0) now lives as one line in the day strip,
+                 so nothing holds this column open when there is nothing in it. --}}
+            @if ($selectedSession)
             <aside class="cx-panel self-start !p-4">
-                @if ($selectedSession)
                     @php
                         $ss = $selectedSession;
                         $ssTone = match (true) {
@@ -118,104 +158,8 @@
                             <button type="button" wire:click="publishSession({{ $ss->id }})" class="rounded-xl border border-gold-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gold-700 transition hover:bg-gold-50">Publish</button>
                         @endif
                     </div>
-                @else
-                    {{-- Nothing selected — the day's insights, exactly as before. --}}
-                    <p class="cx-eyebrow">Day insights</p>
-
-                    <div class="mt-2">
-                        <p class="text-[13px] font-bold text-ink">Today overview</p>
-                        <p class="mt-0.5 text-[11px] text-muted">{{ $day?->date?->format('l, j M') ?? 'No day selected' }}</p>
-
-                        @php $r = 2 * M_PI * 26; $done = 0; @endphp
-                        <div class="mt-3 flex items-center gap-3.5">
-                            <span class="relative grid h-[74px] w-[74px] shrink-0 place-items-center">
-                                <svg class="h-[74px] w-[74px] -rotate-90" viewBox="0 0 60 60" aria-hidden="true">
-                                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-page)" stroke-width="7" />
-                                    @foreach ($insights['byStatus'] as $row)
-                                        @php
-                                            $slice = $insights['total'] ? $row['count'] / $insights['total'] : 0;
-                                            $offset = $r - ($r * $slice);
-                                        @endphp
-                                        <circle cx="30" cy="30" r="26" fill="none" stroke="{{ $row['hex'] }}" stroke-width="7"
-                                                stroke-dasharray="{{ $r }}" stroke-dashoffset="{{ $offset }}"
-                                                transform="rotate({{ $done * 360 }} 30 30)" />
-                                        @php $done += $slice; @endphp
-                                    @endforeach
-                                </svg>
-                                <span class="absolute text-center">
-                                    <span class="block text-[15px] font-black leading-none text-ink">{{ $insights['total'] }}</span>
-                                </span>
-                            </span>
-
-                            <ul class="min-w-0 flex-1 space-y-1">
-                                @forelse ($insights['byStatus'] as $row)
-                                    <li class="flex items-center gap-1.5 text-[11px]">
-                                        <span class="h-2 w-2 shrink-0 rounded-full" style="background: {{ $row['hex'] }}"></span>
-                                        <span class="w-4 shrink-0 font-bold tabular-nums text-ink">{{ $row['count'] }}</span>
-                                        <span class="truncate text-muted">{{ $row['label'] }}</span>
-                                    </li>
-                                @empty
-                                    <li class="text-[11px] text-muted">Nothing scheduled.</li>
-                                @endforelse
-                            </ul>
-                        </div>
-                    </div>
-
-                    {{-- Three things that each need a person to do something. --}}
-                    <div class="mt-3 space-y-1.5">
-                        @foreach ([
-                            ['count' => $insights['awaitingSpeakers'], 'label' => 'Awaiting speakers', 'tone' => 'navy'],
-                            ['count' => $insights['capacityRisks'], 'label' => 'Capacity risks', 'tone' => 'warn'],
-                            ['count' => $insights['doubleBookings'], 'label' => 'Double bookings', 'tone' => 'risk'],
-                        ] as $alert)
-                            @php
-                                [$ring, $ink] = $alert['count'] === 0
-                                    ? ['ring-line', 'text-muted']
-                                    : match ($alert['tone']) {
-                                        'risk' => ['ring-danger/30 bg-danger-soft/40', 'text-danger-ink'],
-                                        'warn' => ['ring-warning/30 bg-warning-soft/40', 'text-warning-ink'],
-                                        default => ['ring-line', 'text-ink'],
-                                    };
-                            @endphp
-                            <div class="flex items-center gap-3 rounded-xl px-2.5 py-2 ring-1 {{ $ring }}">
-                                <span class="text-[18px] font-black leading-none {{ $ink }}">{{ $alert['count'] }}</span>
-                                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold text-ink">{{ $alert['label'] }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-3 rounded-xl bg-page p-3">
-                        <div class="flex items-baseline justify-between">
-                            <span class="text-[18px] font-black leading-none text-ink">{{ $insights['pct'] }}%</span>
-                            <span class="text-[11px] font-semibold text-muted">Agenda complete</span>
-                        </div>
-                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-page">
-                            <div class="h-full rounded-full bg-success" style="width: {{ $insights['pct'] }}%"></div>
-                        </div>
-                        <p class="mt-1.5 text-[10.5px] text-muted">{{ $insights['settled'] }} of {{ $insights['total'] }} confirmed on this day</p>
-                    </div>
-
-                    {{-- What is on next, but only on the day that is actually today. --}}
-                    @if ($insights['next'])
-                        <p class="mt-3 mb-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Up next</p>
-                        @php $n = $insights['next']; [$nLegend, $nHex] = \App\Livewire\Hub\AgendaTab::PALETTE[$n->type] ?? ['Session', '#3B82F6']; @endphp
-                        <button type="button" wire:click="selectSession({{ $n->id }})" class="block w-full rounded-xl bg-page p-3 text-left transition hover:-translate-y-px hover:shadow-sm">
-                            <div class="flex items-center gap-2">
-                                @if ($insights['nextIn'] !== null && $insights['nextIn'] > 0)
-                                    <span class="text-[10px] font-bold uppercase tracking-wide text-muted">In {{ $insights['nextIn'] }} min</span>
-                                @endif
-                                <span class="ms-auto inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background: {{ $nHex }}">{{ $nLegend }}</span>
-                            </div>
-                            <p class="mt-1.5 text-[13px] font-bold leading-snug text-ink">{{ $n->title }}</p>
-                            <p class="mt-1 text-[11px] text-muted">{{ substr($n->starts_at, 0, 5) }}–{{ substr($n->ends_at, 0, 5) }}@if ($n->room) · {{ $n->room->name }}@endif</p>
-                        </button>
-                    @endif
-
-                    <a href="{{ route('events.run-of-show', $event) }}" class="cx-btn cx-btn-accent mt-3 w-full justify-center">
-                        View Run of Show →
-                    </a>
-                @endif
             </aside>
+            @endif
         </div>
 
         {{-- ═══ BOTTOM — COMMAND BAR ═══ everything that acts on the whole

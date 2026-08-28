@@ -311,19 +311,25 @@ class AgendaConflictTest extends TestCase
         $this->assertSame($venue->id, $event->fresh()->venue_id);
     }
 
-    public function test_the_venue_rail_can_be_searched(): void
+    public function test_the_room_filter_narrows_the_board_to_one_lane(): void
     {
         [$event, $user] = $this->ctx();
 
-        $rooms = $event->rooms()->orderBy('name')->pluck('name');
-        $this->assertGreaterThan(1, $rooms->count(), 'needs at least two rooms to prove the filter');
+        // The room search used to filter a list of every room in a side rail.
+        // That rail is gone: rooms are the board's own lanes now, and the
+        // search filters those. So the rooms this asserts on are the ones
+        // actually scheduled today — a room with nothing in it has no lane to
+        // show or hide, and lives on the Venue tab instead.
+        $day = $event->agendaDays()->with('sessions.room')->orderBy('date')->first();
+        $scheduled = $day->sessions->pluck('room.name')->filter()->unique()->values();
+        $this->assertGreaterThan(1, $scheduled->count(), 'needs two rooms in use today to prove the filter');
 
         Livewire::actingAs($user)->test(AgendaTab::class, ['event' => $event])
-            ->assertSee($rooms->first())
-            ->assertSee($rooms->last())
-            ->set('venueSearch', $rooms->first())
-            ->assertSee($rooms->first())
-            ->assertDontSee($rooms->last());
+            ->assertSee($scheduled->first())
+            ->assertSee($scheduled->last())
+            ->set('venueSearch', $scheduled->first())
+            ->assertSee($scheduled->first())
+            ->assertDontSee($scheduled->last());
     }
 
     public function test_a_search_that_matches_no_room_says_so(): void
