@@ -9,6 +9,7 @@ use App\Models\EventBudgetItem;
 use App\Models\EventContract;
 use App\Models\EventContractPayment;
 use App\Models\EventIncomeItem;
+use App\Models\Invoice;
 use App\Models\User;
 use App\Services\CurrencyService;
 use App\Services\PortfolioFinance;
@@ -200,6 +201,47 @@ class PortfolioFinanceTest extends TestCase
 
         $this->assertFalse($finance->isMixed());
         $this->assertSame(100_000, $finance->totals()['cost'], 'no conversion to do');
+    }
+
+    /**
+     * Billing and collecting are different questions.
+     *
+     * "Billed" used to be read off client income, so a book with real sent
+     * invoices on it and nothing yet paid announced that it had billed
+     * nothing — beside an "Owed to you" figure of 350,000, which cannot both
+     * be true. Anyone acting on that would raise the invoices a second time.
+     */
+    public function test_an_invoice_that_is_sent_counts_as_billed_even_with_nothing_collected(): void
+    {
+        $event = $this->eventWithCost(estimated: 100_000);
+        $event->update(['management_fee_pct' => 0]);
+
+        $invoice = Invoice::create([
+            'event_id' => $event->id,
+            'number' => 'TEST-001',
+            'status' => 'sent',
+            'currency' => $event->currency,
+            'issued_on' => now(),
+            'paid_cents' => 0,
+        ]);
+        $invoice->lines()->create(['description' => 'Stage build', 'qty' => 1, 'unit_cents' => 60_000]);
+
+        // A draft is the office deciding not to bill yet. It must not count.
+        $draft = Invoice::create([
+            'event_id' => $event->id,
+            'number' => 'TEST-002',
+            'status' => 'draft',
+            'currency' => $event->currency,
+            'issued_on' => now(),
+            'paid_cents' => 0,
+        ]);
+        $draft->lines()->create(['description' => 'Catering', 'qty' => 1, 'unit_cents' => 25_000]);
+
+        $row = app(PortfolioFinance::class)->statement()->first();
+
+        $this->assertSame(60_000, $row['billed'], 'the sent invoice is billed; the draft is not');
+        $this->assertSame(0, $row['collected'], 'and none of it has been collected');
+        $this->assertSame(40_000, $row['notInvoiced'], '100,000 priced, 60,000 on a document');
     }
 
     /**

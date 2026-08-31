@@ -6,6 +6,7 @@ use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventBudgetItem;
 use App\Models\EventContractPayment;
+use App\Models\Invoice;
 use Illuminate\Support\Collection;
 
 /**
@@ -88,7 +89,7 @@ class PortfolioFinance
     private function events(): Collection
     {
         return $this->eventsMemo ??= Event::whereNull('archived_at')
-            ->with(['budgetItems', 'incomeItems', 'sponsors', 'exhibitors', 'client', 'invoices',
+            ->with(['budgetItems', 'incomeItems', 'sponsors', 'exhibitors', 'client', 'invoices.lines',
                 'contract.payments', 'contracts.payments'])
             ->orderBy('starts_at')
             ->get();
@@ -112,6 +113,10 @@ class PortfolioFinance
             // until then. Spending you have agreed to counts even unpaid.
             $cost = $in($priced['cost']);
             $paid = $in((int) $event->budgetItems->sum('paid_cents'));
+
+            $billed = $in((int) round($event->invoices
+                ->reject(fn (Invoice $i) => in_array($i->status, ['draft', 'void'], true))
+                ->sum(fn (Invoice $i) => $i->totalCents())));
 
             $booked = $in($income['total']);
             $charged = $in($priced['sell']);
@@ -149,6 +154,17 @@ class PortfolioFinance
                 // income would say you had over-billed by 300%.
                 'clientIncome' => $in($income['client']),
                 'unbilled' => max(0, $charged - $in($income['client'])),
+                // What has actually been invoiced, read off the invoices
+                // themselves. This is NOT clientIncome: money can be billed
+                // and not collected — that gap is the whole reason a
+                // receivable exists — and reading collection as billing told
+                // the finance page "billed 0" while four sent invoices worth
+                // 53,000 sat in the drawer. Draft and void are the office
+                // deciding not to bill, so they are not billing.
+                'billed' => $billed,
+                // The invoice nobody has raised yet: priced work, minus what
+                // has actually gone out on a document.
+                'notInvoiced' => max(0, $charged - $billed),
                 'estimated' => $estimated,
                 'actual' => $actual,
                 'cost' => $cost,
@@ -194,6 +210,8 @@ class PortfolioFinance
             'receivable' => (int) $rows->sum('receivable'),
             'charged' => $charged,
             'unbilled' => (int) $rows->sum('unbilled'),
+            'billed' => (int) $rows->sum('billed'),
+            'notInvoiced' => (int) $rows->sum('notInvoiced'),
             'cost' => $cost,
             'paid' => (int) $rows->sum('paid'),
             'payable' => (int) $rows->sum('payable'),

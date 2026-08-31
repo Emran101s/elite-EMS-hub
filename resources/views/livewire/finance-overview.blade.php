@@ -1,7 +1,7 @@
 @php
     $money = fn (int $cents, ?string $cur = null) => \App\Support\Money::abbreviated($cents, $cur ?? $totals['currency']);
     $t = $totals;
-    $billedPct = $t['charged'] > 0 ? (int) round($t['clientIncome'] / $t['charged'] * 100) : 0;
+    $billedPct = $t['charged'] > 0 ? (int) round($t['billed'] / $t['charged'] * 100) : 0;
     $sel = $selected;
     $selEvent = $sel['event'] ?? null;
 @endphp
@@ -19,8 +19,13 @@
     </x-cc.header>
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <x-cc.kpi-tile label="Charged" :value="$money($t['charged'])" :hint="$t['unbilled'] > 0 ? $money($t['unbilled']).' not yet billed' : $t['events'].' active events'" />
-        <x-cc.kpi-tile label="Billed to client" :value="$money($t['clientIncome'])" :hint="$billedPct.'% of what is priced'" tone="live" />
+        <x-cc.kpi-tile label="Charged" :value="$money($t['charged'])" :hint="$t['notInvoiced'] > 0 ? $money($t['notInvoiced']).' not yet invoiced' : $t['events'].' active events'" />
+        {{-- Invoiced, not collected. This tile read money COLLECTED and called
+             it "Billed to client", so a book with four sent invoices on it
+             announced "JD 0 · 0% of what is priced" — next to an Owed figure
+             of 350K, which cannot be true at once. It reads the invoices now,
+             and says what has been collected against them in its hint. --}}
+        <x-cc.kpi-tile label="Invoiced" :value="$money($t['billed'])" :hint="$billedPct.'% of what is priced · '.$money($t['clientIncome']).' in'" tone="live" />
         <x-cc.kpi-tile label="Owed to you" :value="$money($t['receivable'])" :hint="$money($t['collected']).' collected'" :tone="$t['receivable'] ? 'warn' : 'ok'" />
         {{-- Distinct from "Owed to you": this is only the slice of it that is
              past its due date — including an instalment part-paid but still

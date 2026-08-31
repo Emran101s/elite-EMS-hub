@@ -104,7 +104,7 @@
                     ['Contracted', $totals['income'], 'Signed and booked'],
                     ['Cost', $totals['cost'], 'Committed to suppliers'],
                     ['Net', $totals['net'], 'What you keep'],
-                    ['Unbilled', $totals['unbilled'], 'Priced, not invoiced'],
+                    ['Not invoiced', $totals['notInvoiced'], 'Priced, not invoiced'],
                 ] as [$label, $value, $note])
                     <div class="px-3.5 py-3">
                         <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">{{ $label }}</p>
