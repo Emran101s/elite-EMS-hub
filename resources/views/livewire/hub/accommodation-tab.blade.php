@@ -490,13 +490,35 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Status</label>
-                        <select wire:model="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
+                        <select wire:model.live="status" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
                             @foreach ($blockStatuses as $slug => [$label, $hex])<option value="{{ $slug }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
+                    {{-- The one field in this form that is a deadline rather than a
+                         detail: on this date the hotel takes back whatever is not
+                         named. It sat among ten identical inputs with nothing
+                         saying so, and on the event I checked both held blocks —
+                         150 rooms — had been saved without it.
+
+                         Not a hard requirement. "Held, cut-off not agreed yet" is
+                         a real state, and refusing the save would make the tool
+                         wrong in the other direction. It asks, and says why. --}}
+                    @php $needsCutoff = $status === 'held' && trim($cutoff_on) === ''; @endphp
                     <div>
-                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Release / cut-off date</label>
-                        <input type="date" wire:model="cutoff_on" class="w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:border-navy-300 focus:outline-none h-10 text-sm">
+                        <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] {{ $needsCutoff ? '' : 'text-muted' }}"
+                               style="{{ $needsCutoff ? 'color: var(--color-warning-ink)' : '' }}">
+                            Release / cut-off date
+                        </label>
+                        <input type="date" wire:model="cutoff_on"
+                               class="w-full rounded-lg bg-white px-3 text-[13px] text-ink placeholder:text-muted focus:outline-none h-10 text-sm border {{ $needsCutoff ? 'border-warning' : 'border-line focus:border-navy-300' }}">
+                        @if ($needsCutoff)
+                            <p class="mt-1 text-[11px] leading-snug" style="color: var(--color-warning-ink)">
+                                This block is <b>held</b>. Without this date nobody knows when the hotel
+                                releases the rooms — you can still save, but it will be flagged on the tab.
+                            </p>
+                        @else
+                            <p class="mt-1 text-[11px] text-muted">The hotel takes back any unnamed rooms on this date.</p>
+                        @endif
                     </div>
                     <div>
                         <label class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Confirmation #</label>
