@@ -27,7 +27,16 @@
         </span>
 
         <span class="mt-2.5 flex items-baseline justify-between gap-2">
-            <span class="text-[15px] font-bold text-ink">{{ $money($deal->value_cents, $deal->currency) }}</span>
+            @if ($deal->value_cents > 0)
+                <span class="text-[15px] font-bold text-ink">{{ $money($deal->value_cents, $deal->currency) }}</span>
+            @else
+                {{-- A deal with no figure on it is not a deal worth nothing.
+                     Printing the currency and a zero in the card's loudest slot
+                     said exactly that, on every card, because no deal has ever
+                     carried a value — so a board with a live deal at 75% read
+                     as an empty pipeline. Say the figure is missing instead. --}}
+                <span class="text-[11px] font-semibold text-warning-ink">Value not set</span>
+            @endif
             <span class="text-[10.5px] font-bold tabular-nums text-muted">{{ $deal->probability }}%</span>
         </span>
         <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-page">
