@@ -18,9 +18,9 @@
 
         <div class="mt-4 space-y-2 text-[13px]">
             @foreach ([
-                ['Billed', $money($selected['clientIncome'])],
+                ['Invoiced', $money($selected['billed'] ?? 0)],
                 ['Receivable', $money($selected['receivable'])],
-                ['Unbilled', $money($selected['unbilled'] ?? 0)],
+                ['Not invoiced', $money($selected['notInvoiced'] ?? 0)],
                 ['Margin', ($selected['pricedMargin'] ?? $selected['margin']) === null ? '—' : ($selected['pricedMargin'] ?? $selected['margin']).'%'],
             ] as [$k, $v])
                 <div class="flex justify-between gap-3 border-b border-line/70 pb-2 last:border-0">
