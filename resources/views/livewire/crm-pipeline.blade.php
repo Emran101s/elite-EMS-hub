@@ -1,6 +1,7 @@
 @php
     $money = fn (int $cents, string $cur = 'JOD') => \App\Support\Money::abbreviated($cents, $cur);
     $f = $forecast;
+    $unpriced = $f['count'] > 0 && $f['value'] === 0;
     $offer = $selected?->acceptedProposal() ?? $selected?->liveProposal();
     $mayOffer = auth()->user()?->can('manage-contract') ?? false;
 @endphp
@@ -24,8 +25,16 @@
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <x-cc.kpi-tile label="Open deals" :value="$f['count']" hint="still in play" tone="live" />
-        <x-cc.kpi-tile label="Pipeline value" :value="$money($f['value'])" hint="if every one lands" />
-        <x-cc.kpi-tile label="Weighted" :value="$money($f['weighted'])" hint="by chance of winning" tone="ok" />
+        {{-- "JD 0 · if every one lands" is a forecast, and a forecast of zero
+             reads as "no pipeline". With deals open and none of them priced,
+             the honest answer is that there is no figure to forecast from —
+             which also says what to do about it. --}}
+        <x-cc.kpi-tile label="Pipeline value" :value="$unpriced ? '—' : $money($f['value'])"
+                       :hint="$unpriced ? 'no open deal carries a figure' : 'if every one lands'"
+                       :tone="$unpriced ? 'warn' : null" />
+        <x-cc.kpi-tile label="Weighted" :value="$unpriced ? '—' : $money($f['weighted'])"
+                       :hint="$unpriced ? 'needs a value to weigh' : 'by chance of winning'"
+                       :tone="$unpriced ? 'warn' : 'ok'" />
         <x-cc.kpi-tile label="Won this month" :value="$f['wonThisMonth']" hint="became events" tone="ok" />
         <x-cc.kpi-tile label="Going stale" :value="$f['stale']" :hint="$f['stale'] ? 'nobody has touched them' : 'everything is moving'" :tone="$f['stale'] ? 'risk' : 'ok'" />
     </div>

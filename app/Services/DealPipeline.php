@@ -143,7 +143,12 @@ class DealPipeline
             'value' => (int) $open->sum('value_cents'),
             'weighted' => (int) $open->sum(fn (Deal $d) => $d->weightedCents()),
             'stale' => $open->filter(fn (Deal $d) => $d->isStale())->count(),
-            'wonThisMonth' => Deal::where('stage', 'won')->whereMonth('won_at', now()->month)->count(),
+            // whereMonth alone matches the month in ANY year, so a deal won
+            // last August counted towards "won this month".
+            'wonThisMonth' => Deal::where('stage', 'won')
+                ->whereMonth('won_at', now()->month)
+                ->whereYear('won_at', now()->year)
+                ->count(),
         ];
     }
 }

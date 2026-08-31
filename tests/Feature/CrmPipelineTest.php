@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\ClientRecord;
 use App\Livewire\CrmPipeline;
 use App\Models\Client;
 use App\Models\Contact;
@@ -119,6 +120,25 @@ class CrmPipelineTest extends TestCase
         $this->assertSame(Deal::STAGES['negotiation'][1], $deal->fresh()->probability);
     }
 
+    /**
+     * "Won this month" matched on the month NUMBER, with no year, so a deal
+     * won in the same month of any previous year was counted again — the
+     * figure quietly grew by one every anniversary.
+     */
+    public function test_won_this_month_does_not_count_the_same_month_of_an_earlier_year(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $thisMonth = $this->deal();
+        app(DealPipeline::class)->win($thisMonth->fresh());
+
+        $lastYear = $this->deal();
+        app(DealPipeline::class)->win($lastYear->fresh());
+        $lastYear->fresh()->update(['won_at' => now()->subYear()]);
+
+        $this->assertSame(1, app(DealPipeline::class)->forecast()['wonThisMonth']);
+    }
+
     public function test_the_forecast_weights_the_open_pipeline(): void
     {
         $this->actingAs(User::factory()->create());
@@ -190,7 +210,7 @@ class CrmPipelineTest extends TestCase
         $client = $deal->client;
         Contact::create(['client_id' => $client->id, 'name' => 'Layla Haddad', 'title' => 'Head of Events', 'is_primary' => true]);
 
-        Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+        Livewire::actingAs($user)->test(ClientRecord::class, ['client' => $client])
             ->assertSee('Layla Haddad')
             ->assertSee('Head of Events')
             ->assertSee('Regional Summit 2027')
@@ -205,12 +225,12 @@ class CrmPipelineTest extends TestCase
         $deal = $this->deal();
 
         $event = app(DealPipeline::class)->win($deal->fresh());
-        $live = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $deal->client]);
+        $live = Livewire::actingAs($user)->test(ClientRecord::class, ['client' => $deal->client]);
         $this->assertSame(1, $live->viewData('stats')['events']);
 
         // Archiving it means it was not delivered — the record must stop counting it.
         $event->update(['archived_at' => now()]);
-        $after = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $deal->client]);
+        $after = Livewire::actingAs($user)->test(ClientRecord::class, ['client' => $deal->client]);
         $this->assertSame(0, $after->viewData('stats')['events']);
         $this->assertSame(0, $after->viewData('stats')['lifetime']);
     }
@@ -220,7 +240,7 @@ class CrmPipelineTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create(['name' => 'Deep Root']);
 
-        $record = Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+        $record = Livewire::actingAs($user)->test(ClientRecord::class, ['client' => $client])
             ->set('c_name', 'Mustafa Sultan')->call('saveContact');
 
         $first = $client->contacts()->firstOrFail();
@@ -240,7 +260,7 @@ class CrmPipelineTest extends TestCase
         $user = User::factory()->create();
         $client = Client::create(['name' => 'World People Assembly']);
 
-        Livewire::actingAs($user)->test(\App\Livewire\ClientRecord::class, ['client' => $client])
+        Livewire::actingAs($user)->test(ClientRecord::class, ['client' => $client])
             ->set('a_type', 'meeting')
             ->set('a_subject', 'Coffee with the new director')
             ->call('logActivity');
