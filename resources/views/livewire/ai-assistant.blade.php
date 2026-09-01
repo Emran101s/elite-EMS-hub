@@ -2,7 +2,8 @@
 
     <x-eo.intelligence-header active="briefing" title="Command Briefing"
         subtitle="What needs a person today, across every event — and where to find it."
-        :attentionCount="$counts['critical'] + $counts['warning']" />
+        :attentionCount="$counts['critical'] + $counts['warning']"
+        :attentionHint="$counts['info'] ? 'Critical and warning · '.$counts['info'].' more to note' : 'Critical and warning'" />
 
     {{-- ══ The briefing ══
          The one dark plate on this page, because this is the one line you are

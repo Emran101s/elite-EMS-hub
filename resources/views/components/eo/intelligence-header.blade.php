@@ -1,4 +1,4 @@
-@props(['active', 'title', 'subtitle', 'attentionCount' => null])
+@props(['active', 'title', 'subtitle', 'attentionCount' => null, 'attentionHint' => 'Rule-based, worst first'])
 
 @php
     use App\Models\Event;
@@ -30,7 +30,11 @@
     <div class="grid grid-cols-2 gap-3 {{ $attentionCount === null ? 'sm:max-w-xs' : 'sm:grid-cols-2 sm:max-w-md' }}">
         <x-eo.metric-pill label="Events in book" :value="number_format($eventsInBook)" hint="Active portfolio" />
         @if ($attentionCount !== null)
-            <x-eo.metric-pill label="Attention items" :value="number_format($attentionCount)" hint="Rule-based, worst first" :tone="$attentionCount > 0 ? 'warn' : 'ok'" />
+            {{-- The hint says what the figure counts, because the briefing
+                 below it lists MORE than this: informational notes are in the
+                 list and not in this number, so "10" sat above "14 of 14
+                 shown" with nothing to explain the gap. --}}
+            <x-eo.metric-pill label="Needs action" :value="number_format($attentionCount)" :hint="$attentionHint" :tone="$attentionCount > 0 ? 'warn' : 'ok'" />
         @endif
     </div>
 
