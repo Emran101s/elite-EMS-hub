@@ -36,7 +36,12 @@
         </div>
     </div>
 
-    <div class="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+    {{-- grid-cols-1 (= repeat(1, minmax(0,1fr))) as the base. With only the
+         2xl column definition, every narrower width fell back to an IMPLICIT
+         track, which is auto-sized and so cannot go below its content's
+         min-content width — the column grew to 425px inside a 351px page and
+         the briefing scrolled sideways on a phone. --}}
+    <div class="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <div class="min-w-0 space-y-4">
 
             {{-- how much noise you want --}}
