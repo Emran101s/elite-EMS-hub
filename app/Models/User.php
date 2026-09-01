@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -140,6 +141,18 @@ class User extends Authenticatable
     public function planItems(): BelongsToMany
     {
         return $this->belongsToMany(PlanItem::class, 'plan_item_user');
+    }
+
+    /**
+     * Tasks this person is on the hook for.
+     *
+     * Task::assignee() has always pointed here; nothing pointed back, so
+     * "how loaded is this person" could only be answered one query at a
+     * time. The roster counts through this.
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
     }
 
     public function favoriteEvents(): BelongsToMany
