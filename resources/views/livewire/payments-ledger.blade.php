@@ -56,8 +56,11 @@
     @if ($rows->isEmpty())
         <x-eo.empty-state title="No installment matches" hint="Clear filters, or open an event Contract tab to build a schedule." icon="currency" />
     @else
+        {{-- min-w-0 per column: a grid item defaults to min-width:auto, so a
+             column holding long instalment wording grew the track instead of
+             wrapping, and the ledger scrolled sideways on a phone. --}}
         <div class="grid gap-4 xl:grid-cols-12">
-            <div class="xl:col-span-4">
+            <div class="min-w-0 xl:col-span-4">
                 <x-billing.queue title="Payment queue">
                     @foreach ($rows as $p)
                         @php
@@ -81,7 +84,7 @@
                 </x-billing.queue>
             </div>
 
-            <div class="xl:col-span-5">
+            <div class="min-w-0 xl:col-span-5">
                 @if ($sel)
                     <x-cc.briefing-panel :title="$sel->label" :subtitle="($sel->event?->name ?? '—').' · '.($sel->event?->client?->name ?? 'No client')">
                         <x-slot:header>
@@ -113,7 +116,7 @@
                 @endif
             </div>
 
-            <div class="xl:col-span-3">
+            <div class="min-w-0 xl:col-span-3">
                 <x-billing.action-panel title="Reconciliation Panel">
                     @if ($sel)
                         @if ($sel->event)
