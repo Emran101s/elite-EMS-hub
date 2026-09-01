@@ -91,6 +91,30 @@ class VenuesManagerTest extends TestCase
             ->assertDontSee('Dead Sea Resort');
     }
 
+    /**
+     * A venue with no type used to belong to no tab at all.
+     *
+     * The "not a hotel" filter was NOT (type LIKE '%Hotel%'), and in SQL that
+     * is NULL — not true — when type is NULL. So an untyped venue was dropped
+     * from the Halls & sites list AND from its count, and could only be found
+     * under "All venues". Half this directory was untyped.
+     */
+    public function test_a_venue_with_no_type_still_belongs_to_halls_and_sites(): void
+    {
+        Venue::create(['name' => 'Fairmont Amman', 'city' => 'Amman', 'type' => 'Hotel']);
+        Venue::create(['name' => 'City Conference Centre', 'city' => 'Amman', 'type' => 'Conference Centre']);
+        Venue::create(['name' => 'Untyped Hall', 'city' => 'Amman']);
+
+        $screen = Livewire::actingAs($this->actor())->test(VenuesManager::class)
+            ->set('filter', 'other');
+
+        $screen->assertSee('Untyped Hall')
+            ->assertSee('City Conference Centre')
+            ->assertDontSee('Fairmont Amman');
+
+        $this->assertSame(2, $screen->viewData('counts')['other'], 'the untyped venue is counted, not dropped');
+    }
+
     public function test_a_viewer_cannot_add_or_delete(): void
     {
         $viewer = User::create(['name' => 'Vic', 'email' => 'v@ebh.test',
