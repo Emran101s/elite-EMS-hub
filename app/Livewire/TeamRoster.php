@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TeamInvite;
 use Illuminate\Support\Facades\Gate;
@@ -124,8 +125,18 @@ class TeamRoster extends Component
 
     public function render()
     {
+        // What a roster is actually for: who is carrying work, and who is
+        // behind on it. The card used to spend that line repeating the role
+        // pill sitting directly above it. Counted in the query, not per row.
+        $openStatuses = collect(Task::STAGES)->filter(fn ($s) => $s[2] ?? true)->keys()->all();
+
         $members = User::when($this->search !== '', fn ($q) => $q
             ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')->orWhere('email', 'like', '%'.$this->search.'%')))
+            ->withCount([
+                'assignedTasks as open_tasks_count' => fn ($q) => $q->whereIn('status', $openStatuses),
+                'assignedTasks as overdue_tasks_count' => fn ($q) => $q->whereIn('status', $openStatuses)
+                    ->whereNotNull('due_on')->whereDate('due_on', '<', now()->toDateString()),
+            ])
             ->orderBy('name')->get();
 
         return view('livewire.team-roster', [

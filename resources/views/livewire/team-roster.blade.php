@@ -41,9 +41,24 @@
                 </button>
 
                 {{-- light footer --}}
+                {{-- The role pill is already on the card, directly above this
+                     line — printing roleLabel() again here told you nothing
+                     twice. This is the question a roster exists to answer:
+                     what is this person carrying, and are they behind. --}}
                 <div class="mt-auto flex items-center gap-2 border-t border-line bg-page px-3.5 py-2">
-                    <x-icon name="users" class="h-3 w-3 shrink-0 text-gold-600" />
-                    <span class="truncate text-[11px] font-semibold text-muted">{{ $m->roleLabel() }}</span>
+                    <x-icon name="clipboard" class="h-3 w-3 shrink-0 text-gold-600" />
+                    @if ($m->open_tasks_count)
+                        <span class="truncate text-[11px] font-semibold text-ink">
+                            {{ $m->open_tasks_count }} open {{ str('task')->plural($m->open_tasks_count) }}
+                        </span>
+                        @if ($m->overdue_tasks_count)
+                            <span class="shrink-0 rounded-full bg-danger-soft px-1.5 py-0.5 text-[9.5px] font-bold uppercase text-danger-ink">
+                                {{ $m->overdue_tasks_count }} overdue
+                            </span>
+                        @endif
+                    @else
+                        <span class="truncate text-[11px] font-semibold text-muted">Nothing assigned</span>
+                    @endif
                     <div class="ml-auto flex items-center gap-1">
                         <button type="button" wire:click="edit({{ $m->id }})" class="rounded-md bg-page px-1.5 py-1 text-[10px] font-bold text-muted opacity-0 transition hover:bg-line group-hover:opacity-100" title="Edit">✎</button>
                         @unless ($m->id === auth()->id())
