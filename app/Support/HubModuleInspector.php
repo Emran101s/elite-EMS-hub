@@ -46,6 +46,19 @@ use App\Models\Task;
  */
 class HubModuleInspector
 {
+    /**
+     * What each module's headline percentage measures.
+     *
+     * Only where "Progress" would be wrong or vague — a budget is not
+     * "85% progressed", it is 85% of its cap.
+     */
+    private const PCT_LABELS = [
+        'budget' => 'Of cap',
+        'transportation' => 'Readiness',
+        'venue' => 'Readiness',
+        'suppliers' => 'Readiness',
+    ];
+
     private const PURPOSES = [
         'agenda' => 'Programme planning, sessions, speakers and timeline control.',
         'budget' => 'Costs, forecast, margin and commercial control.',
@@ -230,7 +243,6 @@ class HubModuleInspector
                     return [
                         ['icon' => 'currency', 'value' => $event->money($cost['forecast']), 'label' => 'Forecast'],
                         ['icon' => 'currency', 'value' => $event->money($committed), 'label' => 'Committed'],
-                        ['icon' => 'chart', 'value' => $cost['cap'] > 0 ? $cost['pct'].'%' : '—', 'label' => 'Of cap'],
                         ['icon' => 'currency', 'value' => $cost['over'] > 0 ? $event->money($cost['over']) : $event->money(0), 'label' => 'Over cap'],
                     ];
                 })(),
@@ -302,7 +314,10 @@ class HubModuleInspector
                         ['icon' => 'clipboard', 'value' => $all->count(), 'label' => 'Total tasks'],
                         ['icon' => 'bell', 'value' => $open->filter(fn (Task $t) => $t->isOverdue())->count(), 'label' => 'Overdue'],
                         ['icon' => 'clock', 'value' => $all->where('status', 'review')->count(), 'label' => 'In review'],
-                        ['icon' => 'chart', 'value' => $all->where('status', 'done')->count().'/'.$all->count(), 'label' => 'Done'],
+                        // Same denominator the headline percentage uses — a
+                        // cancelled task is not work still to do, so counting
+                        // it here made the fraction and the % disagree.
+                        ['icon' => 'chart', 'value' => $all->where('status', 'done')->count().'/'.$all->where('status', '!=', 'cancelled')->count(), 'label' => 'Done'],
                     ];
                 })(),
                 [['label' => 'Tasks', 'tab' => 'tasks', 'icon' => 'clipboard'], ['label' => 'Risks', 'tab' => 'risks', 'icon' => 'bell']],
@@ -498,6 +513,12 @@ class HubModuleInspector
             'icon' => $icon,
             'color' => $color,
             'pct' => $pct,
+            // What that percentage actually measures. It was labelled
+            // "Readiness" on every module, which is a different, event-level
+            // figure with its own gates — so the Budget header announced
+            // "100% Readiness" directly beneath a pulse strip reading
+            // "Readiness 17%". Each module now names its own number.
+            'pctLabel' => self::PCT_LABELS[$inspectTab] ?? 'Progress',
             'statusWord' => $statusWord,
             'purpose' => self::PURPOSES[$inspectTab] ?? null,
             'metrics' => $metrics,
