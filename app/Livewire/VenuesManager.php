@@ -121,7 +121,8 @@ class VenuesManager extends Component
     public function render()
     {
         $venues = Venue::when($this->filter === 'hotels', fn ($q) => $q->hotels())
-            ->when($this->filter === 'other', fn ($q) => $q->whereNot(fn ($w) => $w->where('type', 'like', '%Hotel%')))
+            ->when($this->filter === 'other', fn ($q) => $q->where(fn ($w) => $w
+                ->whereNull('type')->orWhere('type', 'not like', '%Hotel%')))
             ->when($this->search !== '', fn ($q) => $q
                 ->where(fn ($w) => $w->where('name', 'like', '%'.$this->search.'%')
                     ->orWhere('city', 'like', '%'.$this->search.'%')
@@ -135,7 +136,12 @@ class VenuesManager extends Component
             'counts' => [
                 'all' => Venue::count(),
                 'hotels' => Venue::hotels()->count(),
-                'other' => Venue::whereNot(fn ($w) => $w->where('type', 'like', '%Hotel%'))->count(),
+                // NULL-safe on purpose. NOT (type LIKE '%Hotel%') is NULL —
+                // not true — for a venue with no type, so SQL dropped it from
+                // this count AND from the filter above: half the directory
+                // belonged to neither tab and could only be found under "All".
+                'other' => Venue::where(fn ($w) => $w
+                    ->whereNull('type')->orWhere('type', 'not like', '%Hotel%'))->count(),
             ],
         ]);
     }
