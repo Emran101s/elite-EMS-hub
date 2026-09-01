@@ -87,7 +87,7 @@ class EventCommandHeader
             // count, not a state — "over budget" is prose and belongs in the
             // alert feed, where it can say by how much.
             'budget' => [
-                count(app(\App\Services\BudgetSync::class)->pending($event)),
+                count(app(BudgetSync::class)->pending($event)),
                 'wait', 'not costed',
             ],
             // Issued and waiting on a pen — a draft is not waiting on anyone.
@@ -309,14 +309,24 @@ class EventCommandHeader
     {
         $components = $health['components'];
 
-        $spent = $event->budgetItems->sum('actual_cents');
-        // budgetItems->sum('estimate_cents') — the column is estimated_cents, and
-        // summing a key that does not exist gives 0 in silence, so every event
-        // without a budget cap reported a budget of nothing and a spend of
-        // 100%. Seven events in the book were on that path.
-        $budget = (int) ($event->budget_cents ?: $event->budgetItems->sum('estimated_cents'));
+        // The same figures the Event Pulse strip and the Budget module header
+        // already show, from the same helper, so the three cannot disagree.
+        // This used to read actual_cents — a column nobody fills — so the
+        // meter reported "JD0 / JD350K" beside a pulse strip saying
+        // "JD 296,551 / JD 350,000" for the same event, on the same screen.
+        $cost = $event->costForecast();
 
-        $tasksDone = $event->tasks->whereIn('status', ['done', 'approved'])->count();
+        // An event with no agreed cap is measured against the sum of its own
+        // lines — costForecast()['cap'] is budget_cents alone, and seven
+        // events in the book have never had one. Dropping this fallback made
+        // every one of them read "No budget set" beside a real forecast.
+        $cap = $cost['cap'] > 0 ? $cost['cap'] : (int) $event->budgetItems->sum('estimated_cents');
+        $capPct = $cap > 0 ? (int) round($cost['forecast'] / $cap * 100) : null;
+
+        // Done is done. 'approved' is approved to proceed — Task::STAGES marks
+        // it open — and counting it here made the detail disagree with its own
+        // percentage, the same split the Tasks page carried until recently.
+        $tasksDone = $event->tasks->where('status', 'done')->count();
         $tasksTotal = $event->tasks->where('status', '!=', 'cancelled')->count();
 
         $sessions = $event->agendaSessions;
@@ -331,14 +341,21 @@ class EventCommandHeader
             ->filter(fn ($v) => $v !== null);
 
         return [
+            // Every meter is "how far along, with the count behind the %" — the
+            // contract this class documents. Budget and Tasks alone took their
+            // percentage from the HEALTH score instead, so the number and the
+            // count beneath it measured different things and disagreed:
+            // Budget read 100% above "JD0 / JD350K", Tasks read 13% above
+            // "6 / 30". Health is unchanged and still drives the Health score;
+            // it is simply no longer shown as if it were progress.
             ['key' => 'budget', 'label' => 'Budget', 'icon' => 'currency',
-                'pct' => $components['budget'],
-                'detail' => $budget > 0
-                    ? $this->money($spent, $event->currency).' / '.$this->money($budget, $event->currency)
+                'pct' => $capPct,
+                'detail' => $cap > 0
+                    ? $this->money($cost['forecast'], $event->currency).' / '.$this->money($cap, $event->currency)
                     : 'No budget set'],
 
             ['key' => 'tasks', 'label' => 'Tasks', 'icon' => 'clipboard',
-                'pct' => $components['tasks'],
+                'pct' => $tasksTotal ? (int) round($tasksDone / $tasksTotal * 100) : null,
                 'detail' => $tasksTotal ? $tasksDone.' / '.$tasksTotal : 'No tasks yet'],
 
             ['key' => 'agenda', 'label' => 'Agenda', 'icon' => 'calendar',

@@ -60,7 +60,7 @@
             @if ($m['pct'] !== null)
                 <div class="cx-modstat">
                     <span class="cx-msv" style="color: {{ $statusValueColor }}">{{ $m['pct'] }}%</span>
-                    <span class="cx-msl">Readiness</span>
+                    <span class="cx-msl">{{ $m['pctLabel'] ?? 'Progress' }}</span>
                 </div>
             @endif
 
