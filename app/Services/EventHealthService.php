@@ -223,8 +223,18 @@ class EventHealthService
         $scores = [];
 
         // Delivery: is what we are spending landing where we said it would?
-        if ($estimated > 0) {
-            $actual = (int) $event->budgetItems->sum('actual_cents');
+        //
+        // Only once something has actually been recorded. EventBudgetItem::
+        // varianceCents() already sets this rule — "an uncosted line has not
+        // saved or overspent anything yet" — and this leg broke it: with no
+        // actuals, 0 <= estimate scored a clean 100. actual_cents is filled on
+        // one event in the whole book, so for an event with no agreed cap
+        // (where the commitment leg cannot run either) that vacuous 100 was
+        // the ONLY leg, and the score reported perfect budget health for an
+        // event nobody had measured at all.
+        $actual = (int) $event->budgetItems->sum('actual_cents');
+
+        if ($estimated > 0 && $actual > 0) {
             $scores[] = $actual <= $estimated
                 ? 100
                 : max(0, 100 - (int) round(($actual - $estimated) / $estimated * 200));
