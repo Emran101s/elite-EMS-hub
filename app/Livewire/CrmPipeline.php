@@ -263,7 +263,12 @@ class CrmPipeline extends Component
 
     public function render()
     {
-        $deals = Deal::with(['client', 'contact', 'owner', 'event', 'proposals'])
+        // The won deal's event is counted, not just loaded: "Recently closed"
+        // says whether the win was actually set up, and asking each row for
+        // its own counts would be one query per closed deal.
+        $deals = Deal::with(['client', 'contact', 'owner', 'proposals',
+            'event' => fn ($e) => $e->withCount(['budgetItems', 'incomeItems', 'attendees']),
+        ])
             ->when($this->q !== '', fn ($query) => $query->where(function ($w) {
                 $w->where('title', 'like', "%{$this->q}%")
                     ->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%{$this->q}%"));
