@@ -41,8 +41,11 @@
             :tone="$t['pricedNet'] < 0 ? 'risk' : 'ok'" />
     </div>
 
+    {{-- min-w-0 per column: a grid item defaults to min-width:auto, so a
+         column holding non-wrapping content grows the track instead of
+         letting it truncate, and the page scrolls sideways on a phone. --}}
     <div class="grid gap-4 xl:grid-cols-12">
-        <div class="space-y-4 xl:col-span-8">
+        <div class="min-w-0 space-y-4 xl:col-span-8">
             <x-finance.pnl-queue :rows="$rows" :sort="$sort" :currency="$t['currency']" :selected-event-id="$selEvent?->id" />
 
             @if ($categories->isNotEmpty())
@@ -50,7 +53,7 @@
             @endif
         </div>
 
-        <div class="space-y-4 xl:col-span-4">
+        <div class="min-w-0 space-y-4 xl:col-span-4">
             <x-finance.mission-panel :selected="$sel" :event="$selEvent" :currency="$t['currency']" />
 
             @if ($selEvent)

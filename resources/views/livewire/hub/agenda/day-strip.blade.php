@@ -10,7 +10,10 @@
      cards that used to sit in their own 296px column (usually reading 0, 0
      and 0) become one sentence you can read without moving your eyes. --}}
 <div class="cx-lcard !mb-2">
-    <div class="flex items-stretch gap-px overflow-x-auto scrollbar-none" style="background: var(--cx-line-soft)">
+    {{-- min-w-0: overflow-x-auto only scrolls if the box is allowed to be
+         narrower than its contents. Without it the strip widened to fit every
+         day tab and took the whole page sideways with it. --}}
+    <div class="flex min-w-0 items-stretch gap-px overflow-x-auto scrollbar-none" style="background: var(--cx-line-soft)">
         @foreach ($dayCards as $card)
             @php $d = $card['model']; $on = $day && $day->id === $d->id; @endphp
             <button type="button" wire:click="selectDay({{ $d->id }})"

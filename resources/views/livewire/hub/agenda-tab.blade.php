@@ -59,7 +59,11 @@
                 <span class="text-[10.5px] text-muted">Others dimmed on the board</span>
             @endif
 
-            <span class="ms-auto flex items-center gap-2">
+            {{-- flex-wrap: the row it sits in already wraps, but this group did
+                 not, so search + Import CSV + Add Session held a 458px line on
+                 a 375px phone and took the page sideways. It still sits on one
+                 right-aligned line wherever there is room for one. --}}
+            <span class="ms-auto flex flex-wrap items-center justify-end gap-2">
                 {{-- Filters the board's own lanes, not a separate room list. --}}
                 <span class="cx-search" style="height:34px">
                     <x-icon name="search" class="h-3.5 w-3.5 text-muted" />
