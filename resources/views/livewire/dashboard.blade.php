@@ -59,10 +59,15 @@
     @endif
 
     {{-- ══════════ 3 · MAIN GRID ══════════ --}}
+    {{-- min-w-0 on each column: a grid item defaults to min-width:auto, and the
+         queue rows use `truncate`, whose min-content width is the WHOLE unbroken
+         string. So the track grew to fit the longest task title instead of
+         truncating it, and the home page scrolled sideways on a phone —
+         605px of content in a 375px viewport. --}}
     <div class="grid gap-4 xl:grid-cols-12">
 
         {{-- LEFT — Today's Command Queue --}}
-        <div class="space-y-3 xl:col-span-4">
+        <div class="min-w-0 space-y-3 xl:col-span-4">
             <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Today's Command Queue</p>
             <div class="space-y-3">
                 @php
@@ -114,7 +119,7 @@
         </div>
 
         {{-- CENTER — Nearest Missions --}}
-        <div class="space-y-3 xl:col-span-4">
+        <div class="min-w-0 space-y-3 xl:col-span-4">
             <div class="flex items-center justify-between gap-2">
                 <p class="text-eyebrow font-bold uppercase tracking-[0.14em] text-muted">Nearest missions</p>
                 <a href="{{ route('events.index') }}" class="text-[12px] font-semibold text-gold-700 hover:underline">Event Portfolio →</a>
@@ -131,7 +136,7 @@
         </div>
 
         {{-- RIGHT — Executive Intelligence --}}
-        <div class="space-y-4 xl:col-span-4" id="live-alerts">
+        <div class="min-w-0 space-y-4 xl:col-span-4" id="live-alerts">
             <x-cc.briefing-panel title="Command Briefing" subtitle="Rule-based advisor — what needs a person, worst first">
                 <x-slot:header>
                     <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $signalCount ? 'bg-warning-soft text-warning-ink' : 'bg-success-soft text-success-ink' }}">{{ $signalCount }}</span>
