@@ -38,7 +38,7 @@ class EventScopeOfWorkTest extends TestCase
             ->call('newItem')
             ->set('title', 'Full event management')
             ->set('body', 'Planning, suppliers and on-site supervision.')
-            ->set('area', 'management')
+            ->set('type', 'management')
             ->call('save');
 
         $item = $event->scopeItems()->firstOrFail();
@@ -54,12 +54,39 @@ class EventScopeOfWorkTest extends TestCase
         $this->assertSame(1, $event->scopeItems()->count(), 'revising edits the line, it does not add another');
     }
 
+    public function test_a_line_can_carry_a_quantity_and_an_accountable_owner(): void
+    {
+        [$user, $event] = $this->make();
+        $owner = User::factory()->create(['name' => 'Omar Nassar']);
+
+        Livewire::actingAs($user)->test(ScopeTab::class, ['event' => $event])
+            ->call('newItem')
+            ->set('title', 'Delegate badges')
+            ->set('quantity', '200 badges')
+            ->set('owner_id', $owner->id)
+            ->call('save');
+
+        $item = $event->scopeItems()->firstOrFail();
+        $this->assertSame('200 badges', $item->quantity);
+        $this->assertSame($owner->id, $item->owner_id);
+        $this->assertSame('Omar Nassar', $item->owner->name);
+
+        // Both are optional — a line with neither must save cleanly, not
+        // silently require what nobody asked to be required.
+        Livewire::actingAs($user)->test(ScopeTab::class, ['event' => $event])
+            ->call('newItem')->set('title', 'Client reporting throughout')->call('save');
+
+        $bare = $event->scopeItems()->where('title', 'Client reporting throughout')->firstOrFail();
+        $this->assertNull($bare->quantity);
+        $this->assertNull($bare->owner_id);
+    }
+
     public function test_exclusions_are_kept_apart_from_what_we_are_delivering(): void
     {
         [$user, $event] = $this->make();
 
-        $event->scopeItems()->create(['area' => 'management', 'title' => 'Event management']);
-        $event->scopeItems()->create(['area' => 'general', 'title' => 'Interpretation', 'is_exclusion' => true]);
+        $event->scopeItems()->create(['type' => 'management', 'title' => 'Event management']);
+        $event->scopeItems()->create(['type' => 'general', 'title' => 'Interpretation', 'is_exclusion' => true]);
 
         $screen = Livewire::actingAs($user)->test(ScopeTab::class, ['event' => $event]);
 
@@ -75,7 +102,7 @@ class EventScopeOfWorkTest extends TestCase
         [$user, $event] = $this->make();
 
         $event->scopeItems()->create([
-            'area' => 'management',
+            'type' => 'management',
             'title' => 'Full event management',
             'body' => 'Planning, suppliers and on-site supervision.',
         ]);
@@ -96,7 +123,7 @@ class EventScopeOfWorkTest extends TestCase
     public function test_revising_the_scope_changes_what_the_brief_shows(): void
     {
         [$user, $event] = $this->make();
-        $item = $event->scopeItems()->create(['area' => 'management', 'title' => 'Original wording']);
+        $item = $event->scopeItems()->create(['type' => 'management', 'title' => 'Original wording']);
 
         $this->actingAs($user)->get(route('events.hub', [$event, 'tab' => 'brief']))->assertSee('Original wording');
 

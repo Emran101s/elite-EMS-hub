@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * disagrees with itself the first time one of them is revised, and this
  * platform has been corrected for exactly that more than once.
  *
- * Each line is a written statement, grouped by area. is_exclusion marks the
+ * Each line is a written statement, grouped by type. is_exclusion marks the
  * ones that say what is NOT included, which is half of what a scope of work is
  * for: "client supplies the interpreter" is the line that settles the argument
  * later.
@@ -28,12 +28,21 @@ return new class extends Migration
             $table->unsignedBigInteger('tenant_id')->nullable();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
 
-            // Taxonomy-backed (scope_area), so the grouping is editable in
+            // Taxonomy-backed (scope_type), so the grouping is editable in
             // Settings rather than baked into a class constant.
-            $table->string('area', 40)->default('general');
+            $table->string('type', 40)->default('general');
 
             $table->string('title');
             $table->text('body')->nullable();
+
+            // Free text, not qty+unit split into two columns: nothing here is
+            // computed on, it is a written line ("3 rooms", "200 badges"), and
+            // a document does not need the rigidity a spreadsheet would.
+            $table->string('quantity', 60)->nullable();
+
+            // One accountable person. Nullable — plenty of lines (a policy,
+            // an assumption) belong to no one in particular.
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
 
             // A line that states what is not included.
             $table->boolean('is_exclusion')->default(false);
@@ -42,7 +51,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('tenant_id');
-            $table->index(['event_id', 'area']);
+            $table->index(['event_id', 'type']);
+            $table->index(['event_id', 'owner_id']);
         });
 
         // Event::moduleEnabled() treats a stored enabled_modules list as

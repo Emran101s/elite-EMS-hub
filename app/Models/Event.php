@@ -1213,7 +1213,7 @@ class Event extends Model
     /** The Scope of Work — what the client asked us to deliver, written out. */
     public function scopeItems(): HasMany
     {
-        return $this->hasMany(EventScopeItem::class)->orderBy('area')->orderBy('position')->orderBy('id');
+        return $this->hasMany(EventScopeItem::class)->orderBy('type')->orderBy('position')->orderBy('id');
     }
 
     public function approvals(): HasMany

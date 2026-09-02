@@ -10,9 +10,9 @@
         </p>
     @else
         <div class="space-y-3">
-            @foreach ($scope->where('is_exclusion', false)->groupBy('area') as $key => $rows)
+            @foreach ($scope->where('is_exclusion', false)->groupBy('type') as $key => $rows)
                 <div>
-                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">{{ $rows->first()->areaLabel() }}</p>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">{{ $rows->first()->typeLabel() }}</p>
                     <ul class="mt-1 space-y-1.5">
                         @foreach ($rows as $item)
                             <li class="text-[13px] leading-snug text-ink">

@@ -20,12 +20,13 @@ class EventScopeItem extends Model
     use BelongsToTenant, HasFactory;
 
     /**
-     * The seed for the scope_area taxonomy. Editable in Settings, so a company
-     * that groups its scope differently is not stuck with these.
+     * The seed for the scope_type taxonomy — a starting list, not a fixed
+     * one. Editable in Settings → Types & Lists, so a company that groups its
+     * scope differently is never stuck with these.
      *
      * @var array<string,array{0:string,1:string}> key => [label, colour]
      */
-    public const AREAS = [
+    public const TYPES = [
         'management' => ['Event Management', '#1F4B99'],
         'venue_build' => ['Venue & Production', '#B45309'],
         'programme' => ['Programme & Content', '#0E9488'],
@@ -37,7 +38,8 @@ class EventScopeItem extends Model
     ];
 
     protected $fillable = [
-        'tenant_id', 'event_id', 'area', 'title', 'body', 'is_exclusion', 'position',
+        'tenant_id', 'event_id', 'type', 'title', 'body', 'quantity',
+        'owner_id', 'is_exclusion', 'position',
     ];
 
     protected function casts(): array
@@ -53,13 +55,18 @@ class EventScopeItem extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function areaLabel(): string
+    public function owner(): BelongsTo
     {
-        return self::AREAS[$this->area][0] ?? ucfirst($this->area);
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function areaColor(): string
+    public function typeLabel(): string
     {
-        return self::AREAS[$this->area][1] ?? '#64748B';
+        return self::TYPES[$this->type][0] ?? ucfirst($this->type);
+    }
+
+    public function typeColor(): string
+    {
+        return self::TYPES[$this->type][1] ?? '#64748B';
     }
 }

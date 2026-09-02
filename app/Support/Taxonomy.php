@@ -82,10 +82,10 @@ class Taxonomy
             'note' => 'The part of the operation a task belongs to.',
             'color' => true, 'stores' => 'key', 'on' => ['tasks', 'area'],
         ],
-        'scope_area' => [
-            'label' => 'Scope areas', 'group' => 'Events',
-            'note' => 'How an event\'s Scope of Work is grouped — the services a client asks for.',
-            'color' => true, 'stores' => 'key', 'on' => ['event_scope_items', 'area'],
+        'scope_type' => [
+            'label' => 'Scope types', 'group' => 'Events',
+            'note' => 'How an event\'s Scope of Work is grouped — the kinds of service a client asks for.',
+            'color' => true, 'stores' => 'key', 'on' => ['event_scope_items', 'type'],
         ],
 
         // ── Programme ─────────────────────────────────────────────────────
@@ -203,8 +203,8 @@ class Taxonomy
             'risk_category' => self::fromKeys(EventRisk::CATEGORIES),
             'task_area' => self::fromKeys(Task::AREAS),
             // defaults() is key => label; the colour lives on the term row,
-            // and EventScopeItem::AREAS carries the seed colour for it.
-            'scope_area' => collect(EventScopeItem::AREAS)->map(fn (array $a) => $a[0])->all(),
+            // and EventScopeItem::TYPES carries the seed colour for it.
+            'scope_type' => collect(EventScopeItem::TYPES)->map(fn (array $t) => $t[0])->all(),
 
             'session_type' => self::fromKeys(EventAgendaSession::TYPES),
             'session_format' => EventAgendaSession::FORMATS,

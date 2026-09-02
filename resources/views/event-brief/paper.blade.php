@@ -68,9 +68,9 @@
                 @if ($type === 'sourced')
                     @php $scope = $event->scopeItems; @endphp
                     <div class="mt-2 space-y-3">
-                        @foreach ($scope->where('is_exclusion', false)->groupBy('area') as $rows)
+                        @foreach ($scope->where('is_exclusion', false)->groupBy('type') as $rows)
                             <div class="break-inside-avoid">
-                                <p class="text-4xs font-black uppercase tracking-[0.14em] text-gold-700">{{ $rows->first()->areaLabel() }}</p>
+                                <p class="text-4xs font-black uppercase tracking-[0.14em] text-gold-700">{{ $rows->first()->typeLabel() }}</p>
                                 <ul class="mt-1 space-y-1">
                                     @foreach ($rows as $item)
                                         <li class="text-3xs leading-relaxed text-navy-700">

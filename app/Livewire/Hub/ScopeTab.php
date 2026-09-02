@@ -3,6 +3,7 @@
 namespace App\Livewire\Hub;
 
 use App\Models\Event;
+use App\Models\User;
 use App\Support\Taxonomy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -24,9 +25,13 @@ class ScopeTab extends Component
 
     public string $title = '';
 
-    public string $area = 'general';
+    public string $type = 'general';
 
     public string $body = '';
+
+    public string $quantity = '';
+
+    public ?int $owner_id = null;
 
     public bool $is_exclusion = false;
 
@@ -35,11 +40,22 @@ class ScopeTab extends Component
         $this->showForm = request('action') === 'add';
     }
 
-    public function newItem(bool $exclusion = false): void
+    /**
+     * $presetType comes from a group card's own "+ Add to this type" button —
+     * starting the form already scoped to the type you were just reading, so
+     * adding a second line to the same one is a one-click affair rather than
+     * a trip back through a generic picker.
+     */
+    public function newItem(bool $exclusion = false, ?string $presetType = null): void
     {
         Gate::authorize('write');
         $this->resetForm();
         $this->is_exclusion = $exclusion;
+
+        if ($presetType && array_key_exists($presetType, Taxonomy::options('scope_type'))) {
+            $this->type = $presetType;
+        }
+
         $this->showForm = true;
     }
 
@@ -50,8 +66,10 @@ class ScopeTab extends Component
 
         $this->editingId = $item->id;
         $this->title = $item->title;
-        $this->area = $item->area;
+        $this->type = $item->type;
         $this->body = (string) $item->body;
+        $this->quantity = (string) $item->quantity;
+        $this->owner_id = $item->owner_id;
         $this->is_exclusion = $item->is_exclusion;
         $this->showForm = true;
     }
@@ -62,14 +80,18 @@ class ScopeTab extends Component
 
         $this->validate([
             'title' => ['required', 'string', 'max:200'],
-            'area' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('scope_area')))],
+            'type' => ['required', 'in:'.implode(',', array_keys(Taxonomy::options('scope_type')))],
             'body' => ['nullable', 'string', 'max:2000'],
+            'quantity' => ['nullable', 'string', 'max:60'],
+            'owner_id' => ['nullable', 'exists:users,id'],
         ]);
 
         $data = [
             'title' => trim($this->title),
-            'area' => $this->area,
+            'type' => $this->type,
             'body' => trim($this->body) ?: null,
+            'quantity' => trim($this->quantity) ?: null,
+            'owner_id' => $this->owner_id,
             'is_exclusion' => $this->is_exclusion,
         ];
 
@@ -77,40 +99,54 @@ class ScopeTab extends Component
             $this->event->scopeItems()->findOrFail($this->editingId)->update($data);
         } else {
             $this->event->scopeItems()->create($data + [
-                'position' => (int) $this->event->scopeItems()->where('area', $this->area)->max('position') + 1,
+                'position' => (int) $this->event->scopeItems()->where('type', $this->type)->max('position') + 1,
             ]);
         }
 
+        $wasEdit = (bool) $this->editingId;
+        $savedTitle = $data['title'];
+
         $this->resetForm();
         $this->showForm = false;
+
+        // A modal that closes is not, on its own, confirmation that anything
+        // happened — the row it affected may be off-screen or hard to spot
+        // among a dozen others. This is a browser event so the toast can
+        // dismiss itself on a timer without a round trip back to the server.
+        $this->dispatch('scope-item-saved', title: $savedTitle, wasEdit: $wasEdit);
     }
 
     public function delete(int $id): void
     {
         Gate::authorize('write');
-        $this->event->scopeItems()->findOrFail($id)->delete();
+        $item = $this->event->scopeItems()->findOrFail($id);
+        $title = $item->title;
+        $item->delete();
+
+        $this->dispatch('scope-item-deleted', title: $title);
     }
 
     private function resetForm(): void
     {
-        $this->reset(['editingId', 'title', 'body', 'is_exclusion']);
-        $this->area = 'general';
+        $this->reset(['editingId', 'title', 'body', 'quantity', 'owner_id', 'is_exclusion']);
+        $this->type = 'general';
     }
 
     public function render()
     {
-        $items = $this->event->scopeItems()->get();
-        $labels = Taxonomy::options('scope_area');
+        $items = $this->event->scopeItems()->with('owner')->get();
+        $labels = Taxonomy::options('scope_type');
 
         return view('livewire.hub.scope-tab', [
-            // In scope reads as the body of the document, grouped by area.
+            // In scope reads as the body of the document, grouped by type.
             // Exclusions are gathered at the end, where a scope of work puts
             // them, rather than mixed in with what we are doing.
             'groups' => $items->where('is_exclusion', false)
-                ->groupBy('area')
+                ->groupBy('type')
                 ->map(fn ($g, $k) => ['label' => $labels[$k] ?? ucfirst($k), 'rows' => $g]),
             'exclusions' => $items->where('is_exclusion', true),
-            'areas' => $labels,
+            'types' => $labels,
+            'users' => User::orderBy('name')->get(),
             'total' => $items->count(),
         ]);
     }
