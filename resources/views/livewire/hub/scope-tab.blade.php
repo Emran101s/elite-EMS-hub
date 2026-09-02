@@ -219,12 +219,22 @@
 
             <div class="cx-drawer-head">
                 <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="cx-eyebrow">{{ $editingId ? 'Revise this line' : ($is_exclusion ? 'Add an exclusion' : 'Add a deliverable') }}</p>
-                        <p class="mt-0.5 text-[12px] text-muted">The Brief reads whatever is written here.</p>
+                    {{-- The same hex-badge + big serif title the app's own
+                         detail panels use elsewhere (.cx-dp-name, on the
+                         Risks register's own side card) — reused here rather
+                         than the eyebrow-only label this drawer opened with,
+                         which had no real visual weight of its own. --}}
+                    <div class="flex min-w-0 items-start gap-3">
+                        <span class="cx-cathex" style="width:34px;height:37px;flex:none;background: color-mix(in srgb, {{ \App\Models\Event::moduleColor('scope') }} 16%, white); color: {{ \App\Models\Event::moduleColor('scope') }}">
+                            <x-icon name="{{ $is_exclusion ? 'bell' : 'clipboard' }}" class="h-4 w-4" />
+                        </span>
+                        <div class="min-w-0 pt-0.5">
+                            <p class="cx-dp-name" style="font-size:18px">{{ $editingId ? 'Revise this line' : ($is_exclusion ? 'Add an exclusion' : 'Add a deliverable') }}</p>
+                            <p class="mt-0.5 text-[11.5px] text-muted">The Brief reads whatever is written here.</p>
+                        </div>
                     </div>
                     <button type="button" x-on:click="open = false"
-                            class="-me-1 shrink-0 rounded-lg p-1.5 text-muted transition hover:bg-page hover:text-ink"
+                            class="-me-1 -mt-0.5 shrink-0 rounded-lg p-1.5 text-muted transition hover:bg-page hover:text-ink"
                             aria-label="Close">✕</button>
                 </div>
 
@@ -232,7 +242,7 @@
                      what every field below is even asking. A checkbox at the
                      bottom of the old form let this go unnoticed until after
                      something was typed; stated up top, it cannot be missed. --}}
-                <div class="mt-3.5 grid grid-cols-2 gap-1.5 rounded-lg bg-page p-1">
+                <div class="mt-4 grid grid-cols-2 gap-1.5 rounded-lg bg-page p-1">
                     <button type="button" wire:click="$set('is_exclusion', false)"
                             class="rounded-md px-3 py-1.5 text-[12.5px] font-bold transition {{ ! $is_exclusion ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink' }}">
                         Deliverable
@@ -263,29 +273,38 @@
                               placeholder="{{ $is_exclusion ? 'The client contracts interpreters directly and supplies the booths.' : 'Planning, supplier coordination, run-of-show and an on-site team for the full event period.' }}"></textarea>
                 </div>
 
-                <div>
-                    <label for="scope-type" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Type</label>
-                    <select id="scope-type" wire:model="type" class="eo-select">
-                        @foreach ($types as $k => $label)
-                            <option value="{{ $k }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 text-[11px] text-muted">Editable in Settings → Types &amp; Lists → Scope types.</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
+                {{-- Where it belongs — a distinct block from what it says
+                     above, on its own light ground with the same hexdot the
+                     register groups by, so the form visibly previews which
+                     card this line will land in before you save it. --}}
+                <div class="rounded-lg border border-line bg-page/60 p-3.5 space-y-3.5">
                     <div>
-                        <label for="scope-quantity" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Quantity</label>
-                        <input id="scope-quantity" type="text" wire:model="quantity" class="eo-input" placeholder="e.g. 3 rooms, 200 badges">
-                    </div>
-                    <div>
-                        <label for="scope-owner" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Owner</label>
-                        <select id="scope-owner" wire:model="owner_id" class="eo-select">
-                            <option value="">Nobody yet</option>
-                            @foreach ($users as $u)
-                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                        <label for="scope-type" class="mb-1 flex items-center gap-1.5 text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">
+                            <span class="cx-hexdot" style="background: {{ \App\Models\EventScopeItem::TYPES[$type][1] ?? 'var(--cx-muted)' }}"></span>
+                            Type
+                        </label>
+                        <select id="scope-type" wire:model.live="type" class="eo-select">
+                            @foreach ($types as $k => $label)
+                                <option value="{{ $k }}">{{ $label }}</option>
                             @endforeach
                         </select>
+                        <p class="mt-1 text-[11px] text-muted">Editable in Settings → Types &amp; Lists → Scope types.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="scope-quantity" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Quantity</label>
+                            <input id="scope-quantity" type="text" wire:model="quantity" class="eo-input" placeholder="e.g. 3 rooms, 200 badges">
+                        </div>
+                        <div>
+                            <label for="scope-owner" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">Owner</label>
+                            <select id="scope-owner" wire:model="owner_id" class="eo-select">
+                                <option value="">Nobody yet</option>
+                                @foreach ($users as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
