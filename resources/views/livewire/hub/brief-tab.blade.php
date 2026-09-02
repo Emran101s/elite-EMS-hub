@@ -128,6 +128,9 @@
                 @php
                     $summary = match ($type) {
                         'text' => trim((string) ($data[$key] ?? '')) !== '' ? 'Written' : 'Empty — write it',
+                        'sourced' => $event->scopeItems->count()
+                            ? $event->scopeItems->where('is_exclusion', false)->count().' in scope, from the Scope tab'
+                            : 'Nothing written on the Scope tab yet',
                         'kv' => collect($data['event_info'] ?? [])->filter(fn ($v) => trim((string) $v) !== '')->count().' of '.count($infoFields).' fields',
                         default => count($data[$key] ?? []).' '.\Illuminate\Support\Str::plural('row', count($data[$key] ?? [])),
                     };
@@ -136,7 +139,7 @@
                                      :num="str_pad($num, 2, '0', STR_PAD_LEFT)"
                                      :title="$title" :summary="$summary">
                     @include('livewire.hub.partials.brief-section', ['type' => $type, 'key' => $key])
-                    @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true))
+                    @if (in_array($type, ['bullets', 'kpi', 'twocol', 'approval'], true) && $type !== 'sourced')
                         <button type="button" wire:click="addRow('{{ $key }}')" class="mt-3 rounded-full border border-line bg-white px-3 py-1.5 text-[11px] font-bold text-ink transition hover:border-navy-300">＋ Add row</button>
                     @endif
 

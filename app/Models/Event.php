@@ -59,7 +59,7 @@ class Event extends Model
      */
     public const HUB_MODULES = [
         'brief' => ['Event Brief', 'Plan', 'clipboard'],
-        'scope' => ['Delivery Scope', 'Plan', 'list'],
+        'scope' => ['Scope of Work', 'Plan', 'list'],
         'contract' => ['Contract', 'Plan', 'identification'],
         'planning' => ['Planning', 'Plan', 'list'],
         'agenda' => ['Agenda', 'Programme', 'calendar'],
@@ -95,10 +95,9 @@ class Event extends Model
     public const HUB_TABS = [
         'overview' => ['Overview', 'Command centre', 'home'],
         'brief' => ['Brief', 'Scope & objectives', 'clipboard'],
-        // What we are committing to deliver, who owns each part, and what
-        // "done" means. Sits between Brief (client intent) and Contract
-        // (terms) because that is what it is: the commitment in between.
-        'scope' => ['Scope', 'Deliverables & owners', 'list'],
+        // What the client asked us to deliver, written once. The Brief reads
+        // it from here rather than keeping its own copy.
+        'scope' => ['Scope', 'What we will deliver', 'list'],
         'contract' => ['Contract', 'Terms & signatures', 'identification'],
         'planning' => ['Planning', 'Strategy & timeline', 'list'],
         'tasks' => ['Tasks', 'Work & execution', 'clipboard'],
@@ -1211,10 +1210,10 @@ class Event extends Model
         return $this->hasMany(EventRisk::class);
     }
 
-    /** The Delivery Scope register — deliverables, owners, acceptance criteria. */
+    /** The Scope of Work — what the client asked us to deliver, written out. */
     public function scopeItems(): HasMany
     {
-        return $this->hasMany(EventScopeItem::class)->orderBy('workstream')->orderBy('position')->orderBy('id');
+        return $this->hasMany(EventScopeItem::class)->orderBy('area')->orderBy('position')->orderBy('id');
     }
 
     public function approvals(): HasMany

@@ -6,22 +6,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * The Delivery Scope register: what this event commits to deliver, who is
- * accountable for each part, and what "done" means.
+ * The event's Scope of Work: what the client has asked us to deliver, written
+ * out and kept current.
  *
- * Two columns are deliberately absent.
+ * It is authored here and nowhere else. The Event Brief renders it rather than
+ * holding a second copy — a scope typed into two places is a scope that
+ * disagrees with itself the first time one of them is revised, and this
+ * platform has been corrected for exactly that more than once.
  *
- * There is no status column. A deliverable's state is read from the module
- * that already owns the answer — the supplier pivot, the agenda's settled
- * sessions, an approval chain, or a linked task. Storing it here would make
- * this the second place a truth lives, and this codebase has repeatedly shown
- * what that costs: a Finance page that read "Billed 0" beside "Owed 350K", a
- * hub header that printed "100% Readiness" above "Readiness 17%". A scope
- * people are held to is the worst possible place for that.
- *
- * There is no due date either — offset_days holds T-minus, so moving the event
- * re-dates the whole scope and a scope can be copied to next year's event
- * without every date being wrong.
+ * Each line is a written statement, grouped by area. is_exclusion marks the
+ * ones that say what is NOT included, which is half of what a scope of work is
+ * for: "client supplies the interpreter" is the line that settles the argument
+ * later.
  */
 return new class extends Migration
 {
@@ -32,45 +28,26 @@ return new class extends Migration
             $table->unsignedBigInteger('tenant_id')->nullable();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
 
-            // Taxonomy-backed (scope_workstream), so the grouping is yours to
-            // edit in Settings rather than baked into a class constant.
-            $table->string('workstream', 40)->default('delivery');
+            // Taxonomy-backed (scope_area), so the grouping is editable in
+            // Settings rather than baked into a class constant.
+            $table->string('area', 40)->default('general');
 
             $table->string('title');
-            $table->text('definition_of_done')->nullable();
+            $table->text('body')->nullable();
 
-            // The exclusions. Half of what a scope of work is for: "client
-            // supplies the interpreter" is the line that ends the argument.
-            $table->text('out_of_scope')->nullable();
-
-            // One accountable person. Contributors are consulted/informed and
-            // deliberately cannot be accountable — that is what one owner means.
-            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->json('contributor_ids')->nullable();
-
-            // T-minus, in days from the event start. Negative is before.
-            $table->integer('offset_days')->default(-14);
-
-            // Where status is derived from. source_type is a key in
-            // App\Support\ScopeStatus::SOURCES; source_id points at the row
-            // when the source needs one (a task, an approval).
-            $table->string('source_type', 32)->nullable();
-            $table->unsignedBigInteger('source_id')->nullable();
+            // A line that states what is not included.
+            $table->boolean('is_exclusion')->default(false);
 
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
 
-            // Every query filters on tenant_id first — the composite indexes
-            // below lead with event_id, which does not serve that.
             $table->index('tenant_id');
-            $table->index(['event_id', 'workstream']);
-            $table->index(['event_id', 'owner_id']);
+            $table->index(['event_id', 'area']);
         });
 
         // Event::moduleEnabled() treats a stored enabled_modules list as
         // exhaustive, so a module added after an event was created is off for
-        // it. Nobody chose to disable something that did not exist yet, so
-        // append rather than leave every existing event without the tab.
+        // it. Nobody chose to disable something that did not exist yet.
         foreach (DB::table('events')->whereNotNull('enabled_modules')->get(['id', 'enabled_modules']) as $event) {
             $modules = json_decode($event->enabled_modules, true);
 
