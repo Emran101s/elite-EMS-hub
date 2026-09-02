@@ -13,6 +13,7 @@ use App\Models\EventExhibitor;
 use App\Models\EventIncomeItem;
 use App\Models\EventRisk;
 use App\Models\EventRoom;
+use App\Models\EventScopeItem;
 use App\Models\EventTransportPassenger;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
@@ -80,6 +81,11 @@ class Taxonomy
             'label' => 'Task areas', 'group' => 'Events',
             'note' => 'The part of the operation a task belongs to.',
             'color' => true, 'stores' => 'key', 'on' => ['tasks', 'area'],
+        ],
+        'scope_workstream' => [
+            'label' => 'Scope workstreams', 'group' => 'Events',
+            'note' => 'How an event\'s Delivery Scope is grouped — the strands of work you organise a team around.',
+            'color' => true, 'stores' => 'key', 'on' => ['event_scope_items', 'workstream'],
         ],
 
         // ── Programme ─────────────────────────────────────────────────────
@@ -196,6 +202,9 @@ class Taxonomy
             'approval_type' => self::fromKeys(EventApproval::TYPES),
             'risk_category' => self::fromKeys(EventRisk::CATEGORIES),
             'task_area' => self::fromKeys(Task::AREAS),
+            // defaults() is key => label; the colour lives on the term row,
+            // and EventScopeItem::WORKSTREAMS carries the seed colour for it.
+            'scope_workstream' => collect(EventScopeItem::WORKSTREAMS)->map(fn (array $w) => $w[0])->all(),
 
             'session_type' => self::fromKeys(EventAgendaSession::TYPES),
             'session_format' => EventAgendaSession::FORMATS,

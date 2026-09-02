@@ -19,6 +19,7 @@ use App\Models\EventInvoiceItem;
 use App\Models\EventRisk;
 use App\Models\EventRoom;
 use App\Models\EventRoomBlock;
+use App\Models\EventScopeItem;
 use App\Models\EventSpeaker;
 use App\Models\EventSponsor;
 use App\Models\EventTransport;
@@ -60,6 +61,7 @@ class HubModuleInspector
     ];
 
     private const PURPOSES = [
+        'scope' => 'What we are delivering, who owns it, and what done means.',
         'agenda' => 'Programme planning, sessions, speakers and timeline control.',
         'budget' => 'Costs, forecast, margin and commercial control.',
         'transportation' => 'Movements, vehicles, drivers and VIP transfer readiness.',
@@ -188,6 +190,16 @@ class HubModuleInspector
         // The rest of these have no EventCommandHeader meter either — each
         // fallback is the same figure that module's own stat strip already
         // shows and trusts, not a new computation invented for the panel.
+        // Scope: met over total, the same figure its own summary strip shows.
+        // Without this the module header announced "not started" above a body
+        // listing seven deliverables — the exact self-contradiction this file
+        // has had to be corrected for twice already.
+        if ($pct === null && $inspectTab === 'scope') {
+            $scope = $event->scopeItems;
+            $pct = $scope->isNotEmpty()
+                ? (int) round($scope->filter(fn ($i) => ScopeStatus::isMet($i))->count() / $scope->count() * 100)
+                : null;
+        }
         if ($pct === null && $inspectTab === 'risks') {
             $risks = $event->risks;
             $resolved = $risks->whereIn('status', ['mitigated', 'closed'])->count();
@@ -322,6 +334,21 @@ class HubModuleInspector
                 })(),
                 [['label' => 'Tasks', 'tab' => 'tasks', 'icon' => 'clipboard'], ['label' => 'Risks', 'tab' => 'risks', 'icon' => 'bell']],
                 [Task::class],
+            ],
+            'scope' => [
+                (function () use ($event) {
+                    $scope = $event->scopeItems;
+                    $met = $scope->filter(fn ($i) => ScopeStatus::isMet($i))->count();
+
+                    return [
+                        ['icon' => 'clipboard', 'value' => $scope->count(), 'label' => 'Deliverables'],
+                        ['icon' => 'check', 'value' => $met, 'label' => 'Met'],
+                        ['icon' => 'users', 'value' => $scope->whereNull('owner_id')->count(), 'label' => 'No owner'],
+                        ['icon' => 'bell', 'value' => $scope->filter->isOverdue()->count(), 'label' => 'Overdue'],
+                    ];
+                })(),
+                [['label' => 'Brief', 'tab' => 'brief', 'icon' => 'clipboard'], ['label' => 'Tasks', 'tab' => 'tasks', 'icon' => 'clipboard'], ['label' => 'Contract', 'tab' => 'contract', 'icon' => 'identification']],
+                [EventScopeItem::class],
             ],
             'risks' => [
                 (function () use ($event) {
