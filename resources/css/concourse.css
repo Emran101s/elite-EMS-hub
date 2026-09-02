@@ -476,18 +476,37 @@
      .ehx-utilities-drawer), reused rather than reinvented so every edge
      panel in the app behaves identically. min(…, 92vw) is what keeps this
      safe on a phone without a separate breakpoint — the exact class of bug
-     that cost a whole afternoon on other pages earlier today. */
-  .cx-panel-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(6, 20, 38, .45); }
-  .cx-panel {
-    position: fixed; top: 0; bottom: 0; right: 0; z-index: 50;
+     that cost a whole afternoon on other pages earlier today.
+
+     Named .cx-drawer, not .cx-panel: .cx-panel already exists above (a
+     static, in-flow card — the Universal Inspector's own root class, used
+     on nine other tabs) and reusing the name meant this rule's
+     position:fixed silently applied to every one of them, each rendering as
+     a full-height drawer covering two-thirds of the screen. Caught before
+     merge by checking a tab OTHER than the one just built — the one check
+     "does my new thing work" always skips. */
+  .cx-drawer-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(6, 20, 38, .45); }
+  .cx-drawer {
+    position: fixed; top: 0; right: 0; z-index: 50;
     width: min(480px, 92vw);
+    max-height: 100vh;
     display: flex; flex-direction: column;
     background: var(--cx-surface);
-    box-shadow: -24px 0 60px -24px rgba(6, 20, 38, .5);
+    border-radius: 0 0 0 var(--cx-radius-lg);
+    /* A shadow on the left (flush top/right edges) AND below: unlike the
+       old bottom:0 version, this panel is only as tall as its content, so
+       its bottom edge floats mid-screen for a short form and needs to read
+       as a real edge, not a hard clip. */
+    box-shadow: -24px 0 60px -24px rgba(6, 20, 38, .5), 0 24px 50px -20px rgba(6, 20, 38, .35);
   }
-  .cx-panel-head { flex: none; padding: 18px 22px; border-bottom: 1px solid var(--cx-line); background: var(--cx-surface-2); }
-  .cx-panel-body { flex: 1 1 auto; overflow-y: auto; padding: 20px 22px; }
-  .cx-panel-foot { flex: none; display: flex; align-items: center; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--cx-line); background: var(--cx-surface-2); }
+  .cx-drawer-head { flex: none; padding: 18px 22px; border-bottom: 1px solid var(--cx-line); background: var(--cx-surface-2); }
+  /* No flex-grow: a short form should not be stretched to fill whatever is
+     left of the viewport, which is what forced the footer down to a huge
+     empty gap below the last field. min-height:0 is what lets this still
+     shrink and scroll correctly on the rare form long enough to hit
+     max-height, rather than blowing out the flex column. */
+  .cx-drawer-body { flex: 0 1 auto; min-height: 0; overflow-y: auto; padding: 20px 22px; }
+  .cx-drawer-foot { flex: none; display: flex; align-items: center; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--cx-line); background: var(--cx-surface-2); }
 
   /* motion */
   @keyframes cx-rise { from { opacity: 0; transform: translateY(14px); } }

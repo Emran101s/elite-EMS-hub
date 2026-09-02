@@ -209,15 +209,15 @@
         <div x-show="open" x-cloak
              x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             x-on:click="open = false" class="cx-panel-backdrop"></div>
+             x-on:click="open = false" class="cx-drawer-backdrop"></div>
 
         <div x-show="open" x-cloak
              x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
              x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
              role="dialog" aria-modal="true" aria-label="{{ $editingId ? 'Revise this line' : 'Write a scope line' }}"
-             class="cx-panel">
+             class="cx-drawer">
 
-            <div class="cx-panel-head">
+            <div class="cx-drawer-head">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="cx-eyebrow">{{ $editingId ? 'Revise this line' : ($is_exclusion ? 'Add an exclusion' : 'Add a deliverable') }}</p>
@@ -244,7 +244,7 @@
                 </div>
             </div>
 
-            <div class="cx-panel-body space-y-4">
+            <div class="cx-drawer-body space-y-4">
                 <div>
                     <label for="scope-title" class="mb-1 block text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">
                         {{ $is_exclusion ? 'What is not included' : 'What we will deliver' }}
@@ -290,7 +290,7 @@
                 </div>
             </div>
 
-            <div class="cx-panel-foot">
+            <div class="cx-drawer-foot">
                 <button type="button" x-on:click="open = false" class="cx-btn cx-btn-ghost">Cancel</button>
                 <button type="button" wire:click="save" class="cx-btn cx-btn-accent ms-auto">{{ $editingId ? 'Save changes' : 'Add to scope' }}</button>
             </div>
