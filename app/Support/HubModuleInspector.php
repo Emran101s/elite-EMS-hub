@@ -19,6 +19,7 @@ use App\Models\EventInvoiceItem;
 use App\Models\EventRisk;
 use App\Models\EventRoom;
 use App\Models\EventRoomBlock;
+use App\Models\EventScopeItem;
 use App\Models\EventSpeaker;
 use App\Models\EventSponsor;
 use App\Models\EventTransport;
@@ -60,6 +61,7 @@ class HubModuleInspector
     ];
 
     private const PURPOSES = [
+        'scope' => 'What the client asked us to deliver, written once and read by the Brief.',
         'agenda' => 'Programme planning, sessions, speakers and timeline control.',
         'budget' => 'Costs, forecast, margin and commercial control.',
         'transportation' => 'Movements, vehicles, drivers and VIP transfer readiness.',
@@ -218,6 +220,15 @@ class HubModuleInspector
             default => 'At Risk',
         };
 
+        // Scope has no honest completion percentage — it is a document, not
+        // a progress bar — which is why $pct is left null for it above. But
+        // the generic word for a null percentage is "Not started", and that
+        // is a lie the moment a single line has been written. The header
+        // announced "NOT STARTED" over a scope carrying six real lines.
+        if ($inspectTab === 'scope') {
+            $statusWord = $event->scopeItems->isNotEmpty() ? 'Written' : 'Not started';
+        }
+
         $critical = $header['critical'];
         // A module's own Next Action, when EventCommandHeader's single
         // event-wide critical() item happens to belong to this tab — never
@@ -322,6 +333,28 @@ class HubModuleInspector
                 })(),
                 [['label' => 'Tasks', 'tab' => 'tasks', 'icon' => 'clipboard'], ['label' => 'Risks', 'tab' => 'risks', 'icon' => 'bell']],
                 [Task::class],
+            ],
+            'scope' => [
+                (function () use ($event) {
+                    $scope = $event->scopeItems;
+
+                    // Nothing to report is not the same as three zeros to
+                    // report. An empty array folds the whole stats band away
+                    // (module-header.blade.php's $hasStats) rather than
+                    // spending a navy band on "0 / 0 / 0" directly above a
+                    // card that already says "No scope written yet".
+                    if ($scope->isEmpty()) {
+                        return [];
+                    }
+
+                    return [
+                        ['icon' => 'clipboard', 'value' => $scope->where('is_exclusion', false)->count(), 'label' => 'In scope'],
+                        ['icon' => 'bell', 'value' => $scope->where('is_exclusion', true)->count(), 'label' => 'Excluded'],
+                        ['icon' => 'grid', 'value' => $scope->where('is_exclusion', false)->pluck('type')->unique()->count(), 'label' => 'Types'],
+                    ];
+                })(),
+                [['label' => 'Brief', 'tab' => 'brief', 'icon' => 'clipboard'], ['label' => 'Tasks', 'tab' => 'tasks', 'icon' => 'clipboard'], ['label' => 'Contract', 'tab' => 'contract', 'icon' => 'identification']],
+                [EventScopeItem::class],
             ],
             'risks' => [
                 (function () use ($event) {

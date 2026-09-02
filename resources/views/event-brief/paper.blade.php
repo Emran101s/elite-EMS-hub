@@ -8,8 +8,10 @@
 --}}
 @php
     $meta = $data['meta'] ?? [];
-    $hasContent = function (string $key, string $type) use ($data) {
+    $hasContent = function (string $key, string $type) use ($data, $event) {
         return match ($type) {
+            // The scope lives on its own tab, not in the brief's data blob.
+            'sourced' => $event->scopeItems->isNotEmpty(),
             'text' => trim((string) ($data[$key] ?? '')) !== '',
             'kv' => collect($data['event_info'] ?? [])->filter(fn ($v) => trim((string) $v) !== '')->isNotEmpty(),
             default => collect($data[$key] ?? [])->filter(fn ($row) => is_array($row)
@@ -63,7 +65,37 @@
                     <h3 class="pf text-sm font-black text-navy-900">{{ $title }}</h3>
                 </div>
 
-                @if ($type === 'text')
+                @if ($type === 'sourced')
+                    @php $scope = $event->scopeItems; @endphp
+                    <div class="mt-2 space-y-3">
+                        @foreach ($scope->where('is_exclusion', false)->groupBy('type') as $rows)
+                            <div class="break-inside-avoid">
+                                <p class="text-4xs font-black uppercase tracking-[0.14em] text-gold-700">{{ $rows->first()->typeLabel() }}</p>
+                                <ul class="mt-1 space-y-1">
+                                    @foreach ($rows as $item)
+                                        <li class="text-3xs leading-relaxed text-navy-700">
+                                            <span class="font-bold text-navy-900">{{ $item->title }}</span>@if ($item->body) — {{ $item->body }}@endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+
+                        @if ($scope->where('is_exclusion', true)->isNotEmpty())
+                            <div class="break-inside-avoid border-l-2 border-gold-300 pl-4">
+                                <p class="text-4xs font-black uppercase tracking-[0.14em] text-navy-900">Not included in this scope</p>
+                                <ul class="mt-1 space-y-1">
+                                    @foreach ($scope->where('is_exclusion', true) as $item)
+                                        <li class="text-3xs leading-relaxed text-navy-700">
+                                            <span class="font-bold text-navy-900">{{ $item->title }}</span>@if ($item->body) — {{ $item->body }}@endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    </div>
+
+                @elseif ($type === 'text')
                     <div class="mt-2 border-l-2 border-gold-300 pl-4">
                         <p class="whitespace-pre-line text-3xs leading-relaxed text-navy-700">{{ $data[$key] }}</p>
                     </div>

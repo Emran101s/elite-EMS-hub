@@ -59,6 +59,7 @@ class Event extends Model
      */
     public const HUB_MODULES = [
         'brief' => ['Event Brief', 'Plan', 'clipboard'],
+        'scope' => ['Scope of Work', 'Plan', 'list'],
         'contract' => ['Contract', 'Plan', 'identification'],
         'planning' => ['Planning', 'Plan', 'list'],
         'agenda' => ['Agenda', 'Programme', 'calendar'],
@@ -94,6 +95,9 @@ class Event extends Model
     public const HUB_TABS = [
         'overview' => ['Overview', 'Command centre', 'home'],
         'brief' => ['Brief', 'Scope & objectives', 'clipboard'],
+        // What the client asked us to deliver, written once. The Brief reads
+        // it from here rather than keeping its own copy.
+        'scope' => ['Scope', 'What we will deliver', 'list'],
         'contract' => ['Contract', 'Terms & signatures', 'identification'],
         'planning' => ['Planning', 'Strategy & timeline', 'list'],
         'tasks' => ['Tasks', 'Work & execution', 'clipboard'],
@@ -127,7 +131,7 @@ class Event extends Model
      * green — rather than eighteen unrelated hues. Risks keeps a semantic red.
      */
     public const MODULE_COLORS = [
-        'brief' => '#3B6FD4', 'contract' => '#2E5AA8', 'planning' => '#4C7FE0',
+        'brief' => '#3B6FD4', 'scope' => '#2C63C4', 'contract' => '#2E5AA8', 'planning' => '#4C7FE0',
         'tasks' => '#5B8DEF', 'budget' => '#1F4B99', 'risks' => '#E2574C', 'approvals' => '#7C6BD9',
         'agenda' => '#0E9488', 'speakers' => '#14B8A6',
         'suppliers' => '#C2761E', 'venue' => '#B45309', 'transportation' => '#D97706', 'accommodation' => '#A16207', 'catering' => '#92400E',
@@ -1204,6 +1208,12 @@ class Event extends Model
     public function risks(): HasMany
     {
         return $this->hasMany(EventRisk::class);
+    }
+
+    /** The Scope of Work — what the client asked us to deliver, written out. */
+    public function scopeItems(): HasMany
+    {
+        return $this->hasMany(EventScopeItem::class)->orderBy('type')->orderBy('position')->orderBy('id');
     }
 
     public function approvals(): HasMany

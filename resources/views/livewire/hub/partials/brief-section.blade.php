@@ -1,4 +1,49 @@
-@if ($type === 'kv')
+{{-- 'sourced': the Scope of Work, written on the Scope tab and read here.
+     Deliberately not editable in the brief — one authored home, one copy. --}}
+@if ($type === 'sourced')
+    @php $scope = $event->scopeItems; @endphp
+
+    @if ($scope->isEmpty())
+        <p class="text-[13px] text-muted">
+            Nothing has been written on the <a href="{{ route('events.hub', [$event, 'tab' => 'scope']) }}" class="font-semibold text-gold-700 hover:underline">Scope tab</a> yet.
+            The scope of work lives there, and this section reads it.
+        </p>
+    @else
+        <div class="space-y-3">
+            @foreach ($scope->where('is_exclusion', false)->groupBy('type') as $key => $rows)
+                <div>
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em] text-muted">{{ $rows->first()->typeLabel() }}</p>
+                    <ul class="mt-1 space-y-1.5">
+                        @foreach ($rows as $item)
+                            <li class="text-[13px] leading-snug text-ink">
+                                <span class="font-semibold">{{ $item->title }}</span>
+                                @if ($item->body)<span class="block text-[12px] text-muted">{{ $item->body }}</span>@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+
+            @if ($scope->where('is_exclusion', true)->isNotEmpty())
+                <div class="rounded-lg px-3 py-2" style="background: var(--color-warning-soft)">
+                    <p class="text-eyebrow font-bold uppercase tracking-[0.12em]" style="color: var(--color-warning-ink)">Not included</p>
+                    <ul class="mt-1 space-y-1">
+                        @foreach ($scope->where('is_exclusion', true) as $item)
+                            <li class="text-[12.5px] leading-snug text-ink">
+                                <span class="font-semibold">{{ $item->title }}</span>@if ($item->body) — <span class="text-muted">{{ $item->body }}</span>@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+        </div>
+
+        <p class="mt-3 text-[11px] text-muted">
+            Written on the <a href="{{ route('events.hub', [$event, 'tab' => 'scope']) }}" class="font-semibold text-gold-700 hover:underline">Scope tab</a> — revise it there and this follows.
+        </p>
+    @endif
+
+@elseif ($type === 'kv')
     {{-- Definition list --}}
     <dl class="divide-y divide-line/70">
         @foreach ($infoFields as $fkey => $flabel)
