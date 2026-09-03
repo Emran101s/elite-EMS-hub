@@ -40,9 +40,7 @@ class BriefSectionsTest extends TestCase
 
         $this->assertSame(array_keys(EventBrief::SECTIONS), array_keys($this->tab($a)->viewData('sections')));
         $this->assertSame(array_keys(EventBrief::SECTIONS), array_keys($this->tab($b)->viewData('sections')));
-        // 13 since the Scope of Work joined the spine as a 'sourced' section:
-        // written on the Scope tab, rendered here, never copied.
-        $this->assertCount(13, EventBrief::SECTIONS);
+        $this->assertCount(12, EventBrief::SECTIONS);
     }
 
     public function test_a_section_can_be_taken_off_this_brief_only(): void

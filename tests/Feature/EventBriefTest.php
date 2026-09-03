@@ -73,16 +73,7 @@ class EventBriefTest extends TestCase
         foreach (array_keys(BriefTemplates::TEMPLATES) as $key) {
             $data = EventBrief::defaultData($event, $key);
 
-            foreach (EventBrief::SECTIONS as $section => [, , $type]) {
-                // A 'sourced' section is rendered from its own module and
-                // deliberately keeps nothing in the brief's data — that
-                // absence is the point, not a gap in the template.
-                if ($type === 'sourced') {
-                    $this->assertArrayNotHasKey($section, $data, "[$key] a sourced section must not be seeded: $section");
-
-                    continue;
-                }
-
+            foreach (array_keys(EventBrief::SECTIONS) as $section) {
                 $this->assertArrayHasKey($section, $data, "[$key] missing section: $section");
                 $this->assertNotEmpty($data[$section], "[$key] empty section: $section");
             }
