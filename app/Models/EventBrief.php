@@ -26,21 +26,17 @@ class EventBrief extends Model
      */
     public const SECTIONS = [
         'overview' => ['1', 'Event Overview', 'text'],
-        // 'sourced': written on the Scope tab, rendered here. The brief holds
-        // no copy of it — a scope typed into two places disagrees with itself
-        // the first time one of them is revised.
-        'scope' => ['2', 'Scope of Work', 'sourced'],
-        'event_info' => ['3', 'Event Details', 'kv'],
-        'stakeholders' => ['4', 'Stakeholders', 'twocol'],
-        'audience' => ['5', 'Audience & Participants', 'bullets'],
-        'components' => ['6', 'Event Components', 'twocol'],
-        'venue' => ['7', 'Venue Requirements', 'twocol'],
-        'branding' => ['8', 'Branding & Production', 'twocol'],
-        'registration' => ['9', 'Registration & Participants', 'twocol'],
-        'sponsors' => ['10', 'Sponsors & Partners', 'twocol'],
-        'budget' => ['11', 'Budget Overview', 'twocol'],
-        'risks' => ['12', 'Risks & Special Requirements', 'twocol'],
-        'success' => ['13', 'Success Criteria', 'kpi'],
+        'event_info' => ['2', 'Event Details', 'kv'],
+        'stakeholders' => ['3', 'Stakeholders', 'twocol'],
+        'audience' => ['4', 'Audience & Participants', 'bullets'],
+        'components' => ['5', 'Event Components', 'twocol'],
+        'venue' => ['6', 'Venue Requirements', 'twocol'],
+        'branding' => ['7', 'Branding & Production', 'twocol'],
+        'registration' => ['8', 'Registration & Participants', 'twocol'],
+        'sponsors' => ['9', 'Sponsors & Partners', 'twocol'],
+        'budget' => ['10', 'Budget Overview', 'twocol'],
+        'risks' => ['11', 'Risks & Special Requirements', 'twocol'],
+        'success' => ['12', 'Success Criteria', 'kpi'],
     ];
 
     /** Event Information fields: slug => label. */
