@@ -56,14 +56,16 @@ class CommandPalette extends Component
                 ->map(fn ($s) => [
                     'label' => $s->name,
                     'sub' => str($s->category ?? '')->replace('_', ' ')->title()->toString() ?: null,
-                    'href' => route('suppliers.index'),
+                    // Pre-filtered to this supplier, not the whole directory
+                    // left for the user to search a second time.
+                    'href' => route('suppliers.index', ['q' => $s->name]),
                 ]),
 
             'Venues' => Venue::where('name', 'like', $like)->limit(4)->get()
-                ->map(fn ($v) => ['label' => $v->name, 'sub' => $v->city, 'href' => route('venues.index')]),
+                ->map(fn ($v) => ['label' => $v->name, 'sub' => $v->city, 'href' => route('venues.show', $v)]),
 
             'Team' => User::where('name', 'like', $like)->limit(4)->get()
-                ->map(fn ($u) => ['label' => $u->name, 'sub' => $u->title ?? $u->roleLabel(), 'href' => route('team.index')]),
+                ->map(fn ($u) => ['label' => $u->name, 'sub' => $u->title ?? $u->roleLabel(), 'href' => route('team.index', ['q' => $u->name])]),
         ];
 
         return collect($groups)->filter(fn ($g) => $g->isNotEmpty())->map->all()->all();

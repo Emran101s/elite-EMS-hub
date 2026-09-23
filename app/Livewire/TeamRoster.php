@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -34,6 +35,8 @@ class TeamRoster extends Component
     /** Uploaded profile photo (optional). */
     public $photo = null;
 
+    /** In the URL so the command palette can open the roster on one person. */
+    #[Url(as: 'q')]
     public string $search = '';
 
     public function newItem(): void

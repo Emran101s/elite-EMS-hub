@@ -25,7 +25,11 @@
     <x-cc.header eyebrow="New mission · Event Studio" title="Event Studio" subtitle="Define your event. The platform builds everything around it.">
         <x-slot:actions>
             <span class="chip-gold">Mission Builder</span>
-            <a href="{{ route('events.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Start from existing</a>
+            {{-- Duplicate lives on each row of the Table view, not on the
+                 default Mission Board — land there, not on a view without it. --}}
+            @can('duplicate', \App\Models\Event::class)
+                <a href="{{ route('events.index', ['view' => 'list']) }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">Start from existing</a>
+            @endcan
             <a href="{{ route('events.index') }}" class="rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-ink transition hover:-translate-y-0.5 hover:border-navy-300">← Portfolio</a>
         </x-slot:actions>
     </x-cc.header>

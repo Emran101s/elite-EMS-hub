@@ -109,9 +109,15 @@
                                 <div class="absolute end-0 z-30 mt-1 w-44 overflow-hidden rounded-lg border border-line bg-white py-1 shadow-float">
                                     <a href="{{ route('events.hub', $m['event']) }}" wire:navigate class="block px-3 py-2 text-[11.5px] font-semibold text-ink transition hover:bg-page">Open event</a>
                                     <button type="button" wire:click="toggleFavorite({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-ink transition hover:bg-page">{{ in_array($m['id'], $favoriteIds, true) ? 'Unstar' : 'Star' }}</button>
-                                    <button type="button" wire:click="duplicate({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-ink transition hover:bg-page">Duplicate</button>
-                                    <x-confirm title="Archive “{{ $m['name'] }}”?" body="It leaves every board and list." confirm="Archive" tone="warn" run="$wire.archive({{ $m['id'] }})"
-                                               class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-danger-ink transition hover:bg-danger-soft">Archive</x-confirm>
+                                    {{-- Manager-only per EventPolicy — offered only to
+                                         people it will work for, instead of a 403. --}}
+                                    @can('duplicate', \App\Models\Event::class)
+                                        <button type="button" wire:click="duplicate({{ $m['id'] }})" class="block w-full px-3 py-2 text-start text-[11.5px] font-semibold text-ink transition hover:bg-page">Duplicate</button>
+                                    @endcan
+                                    @can('archive', \App\Models\Event::class)
+                                        <x-confirm title="Archive “{{ $m['name'] }}”?" body="It leaves every board and list." confirm="Archive" tone="warn" run="$wire.archive({{ $m['id'] }})"
+                                                   class="block w-full border-t border-line px-3 py-2 text-start text-[11.5px] font-semibold text-danger-ink transition hover:bg-danger-soft">Archive</x-confirm>
+                                    @endcan
                                     @can('manage-events')
                                         <x-confirm
                                                 title="Delete “{{ $m['name'] }}” permanently?"

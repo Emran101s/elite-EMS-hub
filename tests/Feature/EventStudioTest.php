@@ -38,6 +38,18 @@ class EventStudioTest extends TestCase
             ->assertSee('Identity');
     }
 
+    public function test_start_from_existing_leads_to_the_view_that_can_duplicate(): void
+    {
+        $this->actingAs($this->actor())->get(route('events.create'))
+            ->assertSee(route('events.index', ['view' => 'list']), false);
+
+        // Duplicating is manager-only, so a coordinator is not offered it.
+        $coordinator = User::where('role', 'coordinator')->firstOrFail();
+        $this->actingAs($coordinator)->get(route('events.create'))
+            ->assertOk()
+            ->assertDontSee('Start from existing');
+    }
+
     public function test_a_room_is_checked_when_you_leave_it(): void
     {
         $user = $this->actor();
