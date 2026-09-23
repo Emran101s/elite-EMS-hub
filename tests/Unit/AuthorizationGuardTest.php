@@ -117,7 +117,7 @@ class AuthorizationGuardTest extends TestCase
                 // quirk for trait-inserted methods) — but the source lives in
                 // vendor/, so it is framework machinery, not app code this
                 // test can hold responsible.
-                if (str_contains($method->getFileName(), '/vendor/')) {
+                if (str_contains(str_replace('\\', '/', $method->getFileName()), '/vendor/')) {
                     continue;
                 }
 
@@ -158,7 +158,7 @@ class AuthorizationGuardTest extends TestCase
             // Concerns are traits mixed into components, not components themselves —
             // a class using one is scanned, and the trait's own methods are skipped
             // above (declaringClass check), so nothing here is left unchecked.
-            if (str_contains($file->getPathname(), '/Concerns/')) {
+            if (str_contains(str_replace('\\', '/', $file->getPathname()), '/Concerns/')) {
                 continue;
             }
 
