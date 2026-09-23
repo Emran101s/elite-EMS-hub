@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\TaskNotifier;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -200,8 +201,16 @@ class TasksTab extends Component
             return;
         }
 
-        $this->event->tasks()->whereKey($this->openId)->firstOrFail()
-            ->update([$field => $value === '' ? null : $value]);
+        $task = $this->event->tasks()->whereKey($this->openId)->firstOrFail();
+        $before = $task->assignee_id;
+
+        $task->update([$field => $value === '' ? null : $value]);
+
+        // The panel posts the id as a string; compare as strings so picking
+        // the same person again is not news to them.
+        if ($field === 'assignee_id' && (string) $task->assignee_id !== (string) $before) {
+            app(TaskNotifier::class)->assigned($task, $task->assignee, auth()->user());
+        }
     }
 
     /* ── Checklist ── */

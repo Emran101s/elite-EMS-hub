@@ -68,6 +68,14 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | The wall clock people's morning happens on — the task digest goes out
+    | at 07:00 here, not 07:00 UTC. Matches CompanyProfile's default_timezone;
+    | read from config rather than the database because routes/console.php
+    | runs on every artisan call, including the migrate before any table exists.
+    */
+    'office_timezone' => env('OFFICE_TIMEZONE', 'Asia/Amman'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

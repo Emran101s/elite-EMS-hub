@@ -6,6 +6,7 @@ use App\Livewire\Concerns\BulkSelectable;
 use App\Models\Event;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\TaskNotifier;
 use App\Support\Workflow;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -76,7 +77,15 @@ class TasksIndex extends Component
     {
         Gate::authorize('write');
 
-        Task::findOrFail($taskId)->update(['assignee_id' => $this->assigneeId($userId)]);
+        $task = Task::findOrFail($taskId);
+        $to = $this->assigneeId($userId);
+
+        if ($task->assignee_id === $to) {
+            return;
+        }
+
+        $task->update(['assignee_id' => $to]);
+        app(TaskNotifier::class)->assigned($task, $task->assignee, auth()->user());
     }
 
     /* ── The selection ── */
@@ -95,8 +104,18 @@ class TasksIndex extends Component
         Gate::authorize('write');
 
         $assignee = $this->assigneeId($userId);
+
+        // Only the rows that actually change hands are news to anybody.
+        $handedOver = Task::whereKey($this->selectedIds())
+            ->where(fn ($q) => $q->whereNull('assignee_id')->orWhere('assignee_id', '!=', $assignee))
+            ->get();
+
         $n = Task::whereKey($this->selectedIds())->update(['assignee_id' => $assignee]);
-        $this->finishBulk($n, $assignee ? 'assigned to '.User::find($assignee)?->name : 'unassigned');
+
+        $to = $assignee ? User::find($assignee) : null;
+        app(TaskNotifier::class)->assigned($handedOver, $to, auth()->user());
+
+        $this->finishBulk($n, $to ? 'assigned to '.$to->name : 'unassigned');
     }
 
     private function finishBulk(int $n, string $what): void
