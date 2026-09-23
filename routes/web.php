@@ -41,6 +41,7 @@ use App\Http\Controllers\VenueDocumentController;
 use App\Http\Controllers\VenueStudioController;
 use App\Http\Controllers\VipTransferSheetPdfController;
 use App\Livewire\AiAssistant;
+use App\Livewire\ApprovalsInbox;
 use App\Livewire\ArrivalsDesk;
 use App\Livewire\CatalogueSettings;
 use App\Livewire\CheckInScan;
@@ -301,6 +302,9 @@ Route::middleware('auth')->group(function () {
     // What is on my plate, across every event — declared before /tasks so the
     // two never compete, and named tasks.* so it lights the Tasks rail.
     Route::get('/tasks/mine', MyWork::class)->name('tasks.mine');
+
+    // Every decision waiting on you, across events, decided in place.
+    Route::get('/approvals', ApprovalsInbox::class)->name('approvals.index');
 
     Route::get('/tasks', fn () => view('modules.tasks', [
         'statusFilter' => request('status'),

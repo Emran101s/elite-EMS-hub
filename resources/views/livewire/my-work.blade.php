@@ -83,7 +83,7 @@
                     </div>
                     <div class="divide-y divide-line">
                         @forelse ($waitingOnMe as $approval)
-                            <a href="{{ route('events.hub', [$approval->event, 'tab' => 'approvals']) }}" wire:navigate wire:key="wait-{{ $approval->id }}"
+                            <a href="{{ route('approvals.index') }}" wire:navigate wire:key="wait-{{ $approval->id }}"
                                class="block px-4 py-2.5 transition hover:bg-page">
                                 <span class="block truncate text-[13px] font-semibold text-ink">{{ $approval->title }}</span>
                                 <span class="mt-0.5 block truncate text-[11.5px] text-muted">
@@ -105,7 +105,7 @@
                     </div>
                     <div class="divide-y divide-line">
                         @foreach ($waitingOnOthers as $approval)
-                            <a href="{{ route('events.hub', [$approval->event, 'tab' => 'approvals']) }}" wire:navigate wire:key="mine-{{ $approval->id }}"
+                            <a href="{{ route('approvals.index', ['show' => 'raised']) }}" wire:navigate wire:key="mine-{{ $approval->id }}"
                                class="block px-4 py-2.5 transition hover:bg-page">
                                 <span class="block truncate text-[13px] font-semibold text-ink">{{ $approval->title }}</span>
                                 <span class="mt-0.5 block truncate text-[11.5px] text-muted">

@@ -45,7 +45,7 @@ class NavPanel
         ],
         'tasks' => [
             'label' => 'Tasks', 'icon' => 'clipboard', 'route' => 'tasks.index',
-            'match' => ['tasks.*'],
+            'match' => ['tasks.*', 'approvals.*'],
         ],
         // Key stays 'crm' — only the label changes. Renaming the key would
         // touch every route-independent place that keys off it (primaryAction,
@@ -275,6 +275,7 @@ class NavPanel
             'tasks' => [
                 ['Tasks', [
                     ['My work', 'tasks.mine', 'users', self::myOpenTasks()],
+                    ['Approvals', 'approvals.index', 'identification', null],
                     ['Everything', 'tasks.index', 'clipboard', self::openTasks()],
                 ]],
             ],

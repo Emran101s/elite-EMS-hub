@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Event;
 use App\Models\EventApproval;
 use App\Models\Task;
+use App\Services\ApprovalDecisions;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -20,9 +21,8 @@ use Livewire\Component;
  * simple moves (start it, finish it) happen right here instead of three
  * clicks deep in each event's board.
  *
- * Approvals are listed, not decided, here: the decision carries a chain,
- * delegation and notifications that live in ApprovalsTab::decide(), and a
- * second copy of that logic is exactly how two screens start disagreeing.
+ * Approvals are listed here and decided in the Approvals inbox, which runs
+ * the same ApprovalDecisions the event tab does.
  */
 #[Layout('components.layouts.app', ['title' => 'My work', 'hideTitleRow' => true])]
 class MyWork extends Component
@@ -82,20 +82,9 @@ class MyWork extends Component
      */
     private function waitingOnMe(): Collection
     {
-        $me = auth()->user();
-
-        if (! Gate::allows('decide-approvals')) {
-            return collect();
-        }
-
-        return EventApproval::with(['event', 'requester', 'steps'])
-            ->where('status', 'pending')
-            ->where(fn ($q) => $q->whereNull('requested_by')->orWhere('requested_by', '!=', $me->id))
-            ->whereHas('event', fn ($q) => $q->whereNull('archived_at'))
-            ->oldest()
-            ->get()
-            ->filter(fn (EventApproval $a) => $a->currentStep()?->decidableBy($me))
-            ->values();
+        return Gate::allows('decide-approvals')
+            ? app(ApprovalDecisions::class)->waitingOn(auth()->user())
+            : collect();
     }
 
     /** Requests I raised that are still with somebody else. */

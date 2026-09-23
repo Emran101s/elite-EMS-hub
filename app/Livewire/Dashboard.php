@@ -9,6 +9,7 @@ use App\Models\EventApproval;
 use App\Models\EventContractPayment;
 use App\Models\EventTransport;
 use App\Models\Task;
+use App\Services\ApprovalDecisions;
 use App\Services\EventCommandHeader;
 use App\Services\EventHealthService;
 use App\Services\EventMission;
@@ -18,6 +19,7 @@ use App\Support\Money;
 use App\Support\Workflow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -251,13 +253,23 @@ class Dashboard extends Component
                 'icon' => 'currency', 'tone' => $money['receivable'] > 0 ? 'red' : 'green', 'href' => route('finance.index')],
             ['label' => 'Pending Payments', 'note' => 'Instalments outstanding', 'value' => $queue['paymentIssues']->count(),
                 'icon' => 'card', 'tone' => $queue['paymentIssues']->isNotEmpty() ? 'amber' : 'green', 'href' => route('payments.index')],
-            ['label' => 'Pending Approvals', 'note' => 'Awaiting your review', 'value' => $queue['approvals']->count(),
-                'icon' => 'identification', 'tone' => $queue['approvals']->isNotEmpty() ? 'amber' : 'green', 'href' => route('events.index', ['queue' => 'awaiting_approval'])],
+            // "Awaiting your review" is a promise about *you*: count what the
+            // inbox it opens will actually list, not every pending approval
+            // in the company — that read "3" beside an inbox holding none.
+            ['label' => 'Pending Approvals', 'note' => 'Awaiting your review', 'value' => $mine = $this->approvalsWaitingOnMe(),
+                'icon' => 'identification', 'tone' => $mine > 0 ? 'amber' : 'green', 'href' => route('approvals.index')],
             ['label' => 'Operational Risks', 'note' => $atRisk ? 'Needs attention' : 'All clear', 'value' => $atRisk,
                 'icon' => 'bell', 'tone' => $atRisk ? 'red' : 'green', 'href' => route('reports.index')],
             ['label' => 'Team Pressure', 'note' => 'Avg. open tasks per person carrying one', 'value' => $this->teamPressure($events),
                 'icon' => 'users', 'tone' => 'blue', 'href' => route('tasks.index')],
         ];
+    }
+
+    private function approvalsWaitingOnMe(): int
+    {
+        return Gate::allows('decide-approvals')
+            ? app(ApprovalDecisions::class)->waitingOn(auth()->user())->count()
+            : 0;
     }
 
     /**
