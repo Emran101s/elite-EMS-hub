@@ -76,7 +76,7 @@
                                 <span class="block truncate text-[12.5px] font-bold text-ink">{{ $deal->title }}</span>
                                 <span class="block truncate text-[11px] text-muted">{{ $deal->client?->name ?? 'No client' }}</span>
                             </span>
-                            <span class="text-[13px] font-bold tabular-nums text-ink">JD{{ number_format($deal->value_cents / 100) }}</span>
+                            <span class="text-[13px] font-bold tabular-nums text-ink">{{ \App\Support\Money::forScreen($deal->value_cents, $deal->currency ?: \App\Models\CompanyProfile::currency()) }}</span>
                             @if ($may)
                                 <button type="button" wire:click="draftFor({{ $deal->id }})" class="rounded-full bg-gold-500 px-3 py-1.5 text-[11.5px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Draft offer</button>
                             @endif
@@ -106,7 +106,7 @@
                                 :eyebrow="$p->number"
                                 :title="$p->title"
                                 :subtitle="$p->client?->name ?? '—'"
-                                :amount="($active ? 'JD' : '').number_format($p->totalCents() / 100)"
+                                :amount="$active ? \App\Support\Money::forScreen($p->totalCents(), $p->currency ?: \App\Models\CompanyProfile::currency()) : number_format($p->totalCents() / 100)"
                                 :badge-label="$active ? $p->stateLabel() : null"
                                 badge-tone="live"
                             />
@@ -127,7 +127,7 @@
                             eyebrow="Commercial"
                             title="Offer total"
                             :subtitle="$sel->lines->count().' '.str('line')->plural($sel->lines->count())"
-                            :value="'JD'.number_format($sel->totalCents() / 100)"
+                            :value="\App\Support\Money::forScreen($sel->totalCents(), $sel->currency ?: \App\Models\CompanyProfile::currency())"
                             :meta="$sel->valid_until ? ('Valid until '.$sel->valid_until->format('j M Y')) : 'No validity date'"
                             :tone="$selState === 'accepted' ? 'ok' : ($selState === 'expired' ? 'warn' : 'premium')"
                         />

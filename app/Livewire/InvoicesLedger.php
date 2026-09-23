@@ -6,6 +6,7 @@ use App\Models\CompanyProfile;
 use App\Models\EventContractPayment;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -279,12 +280,6 @@ class InvoicesLedger extends Component
 
     private function money(int $cents): string
     {
-        $v = $cents / 100;
-
-        return 'JD'.match (true) {
-            abs($v) >= 1_000_000 => round($v / 1_000_000, 1).'M',
-            abs($v) >= 1_000 => round($v / 1_000).'K',
-            default => number_format($v),
-        };
+        return Money::abbreviated($cents, CompanyProfile::currency());
     }
 }

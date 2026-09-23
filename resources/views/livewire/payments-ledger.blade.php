@@ -75,7 +75,7 @@
                                 :eyebrow-danger="! $active && $state === 'overdue'"
                                 :title="$p->label"
                                 :subtitle="$p->event?->name ?? '—'"
-                                :amount="($active ? 'JD' : '').number_format(($active ? $p->amount_cents : $p->outstandingCents()) / 100)"
+                                :amount="$active ? \App\Support\Money::forScreen($p->amount_cents, $p->event?->currency ?: \App\Models\CompanyProfile::currency()) : number_format($p->outstandingCents() / 100)"
                                 :badge-label="$active ? $label : null"
                                 :badge-tone="$state === 'overdue' ? 'risk' : ($state === 'paid' ? 'ok' : 'warn')"
                             />
@@ -95,8 +95,8 @@
                             eyebrow="Reconciliation"
                             title="Still due"
                             :subtitle="$sel->contract?->reference ?: ($sel->contract?->displayTitle() ?? 'Contract')"
-                            :value="'JD'.number_format($out / 100)"
-                            :meta="'Received JD'.number_format($sel->paid_cents / 100).' of JD'.number_format($sel->amount_cents / 100)"
+                            :value="\App\Support\Money::forScreen($out, $sel->event?->currency ?: \App\Models\CompanyProfile::currency())"
+                            :meta="'Received '.\App\Support\Money::forScreen($sel->paid_cents, $sel->event?->currency ?: \App\Models\CompanyProfile::currency()).' of '.\App\Support\Money::forScreen($sel->amount_cents, $sel->event?->currency ?: \App\Models\CompanyProfile::currency())"
                             :tone="$selState === 'overdue' ? 'warn' : ($selState === 'paid' ? 'ok' : 'premium')"
                         />
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventAgendaSession;
 use App\Models\EventApproval;
@@ -13,6 +14,7 @@ use App\Services\EventHealthService;
 use App\Services\EventMission;
 use App\Services\PortfolioAdvisor;
 use App\Services\PortfolioFinance;
+use App\Support\Money;
 use App\Support\Workflow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -238,12 +240,14 @@ class Dashboard extends Component
     private function kpis(Collection $events, EventHealthService $health, array $queue, array $money): array
     {
         $atRisk = $events->filter(fn (Event $e) => in_array($health->breakdown($e)['status'], ['at_risk', 'behind'], true))->count();
-        $moneySym = Event::CURRENCIES[$money['currency'] ?? 'JOD'][0] ?? '';
-
         return [
             ['label' => 'Active Events', 'note' => 'Not archived', 'value' => $events->count(),
                 'icon' => 'calendar', 'tone' => 'navy', 'href' => route('events.index')],
-            ['label' => 'Revenue at Risk', 'note' => 'Contracted, not yet collected', 'value' => $moneySym.number_format($money['receivable'] / 100),
+            // PortfolioFinance's receivable is the client's unpaid instalments
+            // PLUS sponsor and exhibitor money agreed but not received — so
+            // "contracted" undersold it: with no client contracts at all the
+            // tile still (correctly) shows sponsorship owed.
+            ['label' => 'Revenue at Risk', 'note' => 'Agreed, not yet collected', 'value' => Money::forScreen($money['receivable'], $money['currency'] ?? CompanyProfile::currency()),
                 'icon' => 'currency', 'tone' => $money['receivable'] > 0 ? 'red' : 'green', 'href' => route('finance.index')],
             ['label' => 'Pending Payments', 'note' => 'Instalments outstanding', 'value' => $queue['paymentIssues']->count(),
                 'icon' => 'card', 'tone' => $queue['paymentIssues']->isNotEmpty() ? 'amber' : 'green', 'href' => route('payments.index')],

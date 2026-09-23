@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\CompanyProfile;
 use App\Models\Event;
 use App\Models\EventContract;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -179,12 +181,6 @@ class ContractsRegister extends Component
     /** Short money: a register has no room for 35,000,000.00. */
     private function money(int $cents): string
     {
-        $v = $cents / 100;
-
-        return 'JD'.match (true) {
-            abs($v) >= 1_000_000 => round($v / 1_000_000, 1).'M',
-            abs($v) >= 1_000 => round($v / 1_000).'K',
-            default => number_format($v),
-        };
+        return Money::abbreviated($cents, CompanyProfile::currency());
     }
 }

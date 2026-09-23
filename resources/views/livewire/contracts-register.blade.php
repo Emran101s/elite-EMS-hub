@@ -95,7 +95,7 @@
                         <x-billing.stat-card
                             eyebrow="Commercial"
                             title="Contract value"
-                            :value="$sel->valueCents() ? 'JD'.number_format($sel->valueCents() / 100) : '—'"
+                            :value="$sel->valueCents() ? \App\Support\Money::forScreen($sel->valueCents(), $sel->event?->currency ?: \App\Models\CompanyProfile::currency()) : '—'"
                             :meta="$signed.'/'.$totalSig.' signatures · next due '.($due?->format('j M Y') ?? '—')"
                         />
                     </x-cc.briefing-panel>
@@ -122,7 +122,7 @@
                                 :eyebrow="$doc->reference ?: '—'"
                                 :title="$doc->displayTitle()"
                                 :subtitle="$doc->event?->name"
-                                :amount="$doc->valueCents() ? ($active ? 'JD' : '').number_format($doc->valueCents() / 100) : '—'"
+                                :amount="$doc->valueCents() ? ($active ? \App\Support\Money::forScreen($doc->valueCents(), $doc->event?->currency ?: \App\Models\CompanyProfile::currency()) : number_format($doc->valueCents() / 100)) : '—'"
                                 :badge-label="$active ? $label : null"
                                 badge-tone="live"
                             />
@@ -143,7 +143,7 @@
                             eyebrow="Commercial"
                             title="Agreement value"
                             :subtitle="$sel->party?->name ?? 'Counterparty'"
-                            :value="$sel->valueCents() ? 'JD'.number_format($sel->valueCents() / 100) : '—'"
+                            :value="$sel->valueCents() ? \App\Support\Money::forScreen($sel->valueCents(), $sel->event?->currency ?: \App\Models\CompanyProfile::currency()) : '—'"
                             :meta="'Next due '.($due?->format('j M Y') ?? '—')"
                         />
 

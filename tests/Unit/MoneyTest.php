@@ -33,6 +33,19 @@ class MoneyTest extends TestCase
         $this->assertSame('JD 2.5K', Money::abbreviated(250000, 'JOD'));
     }
 
+    public function test_abbreviated_switches_to_m_past_a_million_units(): void
+    {
+        $this->assertSame('$1.2M', Money::abbreviated(120_000_000, 'USD'));
+        $this->assertSame('JD 35M', Money::abbreviated(3_500_000_000, 'JOD'));
+    }
+
+    public function test_a_negative_sum_puts_the_minus_before_the_symbol(): void
+    {
+        $this->assertSame('-$262K', Money::abbreviated(-26_200_000, 'USD'));
+        $this->assertSame('-JD 1,250', Money::forScreen(-125000, 'JOD'));
+        $this->assertSame('-$850', Money::abbreviated(-85000, 'USD'));
+    }
+
     public function test_an_unknown_currency_code_falls_back_to_itself_as_the_symbol(): void
     {
         $this->assertSame('XYZ 10.00', Money::forDocument(1000, 'XYZ'));

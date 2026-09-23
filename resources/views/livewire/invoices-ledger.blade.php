@@ -77,7 +77,7 @@
                                 <span class="block truncate text-[12.5px] font-bold text-ink">{{ $p->label }}</span>
                                 <span class="block truncate text-[11px] text-muted">{{ $p->event?->name }}</span>
                             </span>
-                            <span class="text-[13px] font-bold tabular-nums text-ink">JD{{ number_format($p->amount_cents / 100) }}</span>
+                            <span class="text-[13px] font-bold tabular-nums text-ink">{{ \App\Support\Money::forScreen($p->amount_cents, $p->event?->currency ?: \App\Models\CompanyProfile::currency()) }}</span>
                             @if ($may)
                                 <button type="button" wire:click="raise({{ $p->id }})" class="rounded-full bg-gold-500 px-3 py-1.5 text-[11.5px] font-bold text-navy-900 shadow-raise transition hover:bg-gold-400">Raise</button>
                             @endif
@@ -103,7 +103,7 @@
                                 :title="$inv->bill_to ?: ($inv->client?->name ?: 'No client')"
                                 :subtitle="$active ? ($inv->event?->name ?? 'No event') : ($inv->due_on?->format('j M') ?? '—')"
                                 :subtitle-danger="! $active && $s === 'overdue'"
-                                :amount="($active ? 'JD' : '').number_format($inv->totalCents() / 100)"
+                                :amount="$active ? \App\Support\Money::forScreen($inv->totalCents(), $inv->currency ?: \App\Models\CompanyProfile::currency()) : number_format($inv->totalCents() / 100)"
                                 :badge-label="$active ? $inv->stateLabel() : null"
                                 :badge-tone="$s === 'overdue' ? 'risk' : ($s === 'paid' ? 'ok' : 'live')"
                                 :dimmed="$s === 'void'"
@@ -124,8 +124,8 @@
                             eyebrow="Collection"
                             title="Collection posture"
                             subtitle="Outstanding vs billed"
-                            :value="'JD'.number_format($out / 100)"
-                            :meta="'Received JD'.number_format($sel->paid_cents / 100).' of JD'.number_format($sel->totalCents() / 100)"
+                            :value="\App\Support\Money::forScreen($out, $sel->currency ?: \App\Models\CompanyProfile::currency())"
+                            :meta="'Received '.\App\Support\Money::forScreen($sel->paid_cents, $sel->currency ?: \App\Models\CompanyProfile::currency()).' of '.\App\Support\Money::forScreen($sel->totalCents(), $sel->currency ?: \App\Models\CompanyProfile::currency())"
                             :tone="$selState === 'overdue' ? 'warn' : ($selState === 'paid' ? 'ok' : 'premium')"
                         />
 

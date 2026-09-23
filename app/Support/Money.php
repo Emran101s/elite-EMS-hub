@@ -39,10 +39,9 @@ class Money
      */
     public static function forScreen(int|float|null $cents, string $currency): string
     {
-        $symbol = Event::CURRENCIES[$currency][0] ?? $currency;
-        $sep = strlen($symbol) > 1 ? ' ' : '';
+        $cents ??= 0;
 
-        return $symbol.$sep.number_format(($cents ?? 0) / 100);
+        return self::sign($cents).self::prefix($currency).number_format(abs($cents) / 100);
     }
 
     /**
@@ -61,14 +60,32 @@ class Money
      */
     public static function abbreviated(int|float|null $cents, string $currency): string
     {
+        $abs = abs($cents ?? 0);
+        $short = fn (float $v) => rtrim(rtrim(number_format($v, 1), '0'), '.');
+
+        $body = match (true) {
+            $abs >= 100_000_000 => $short($abs / 100_000_000).'M',
+            $abs >= 100_000 => $short($abs / 100_000).'K',
+            default => number_format($abs / 100),
+        };
+
+        return self::sign($cents ?? 0).self::prefix($currency).$body;
+    }
+
+    /**
+     * The minus goes in front of the symbol — "-$262K", never "$-262K",
+     * which reads as a typo on exactly the figures (losses) people check.
+     */
+    private static function sign(int|float $cents): string
+    {
+        return $cents < 0 ? '-' : '';
+    }
+
+    /** "$" hugs the digits; a multi-letter symbol ("JD") gets a space. */
+    private static function prefix(string $currency): string
+    {
         $symbol = Event::CURRENCIES[$currency][0] ?? $currency;
-        $sep = strlen($symbol) > 1 ? ' ' : '';
-        $cents ??= 0;
 
-        $body = abs($cents) >= 100_000
-            ? rtrim(rtrim(number_format($cents / 100_000, 1), '0'), '.').'K'
-            : number_format($cents / 100);
-
-        return $symbol.$sep.$body;
+        return $symbol.(strlen($symbol) > 1 ? ' ' : '');
     }
 }
