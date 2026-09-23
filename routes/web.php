@@ -70,6 +70,7 @@ use App\Livewire\RequirementsCatalog;
 use App\Livewire\RoomLayoutBuilder;
 use App\Livewire\SponsorPackagesSettings;
 use App\Livewire\SuppliersManager;
+use App\Livewire\TasksIndex;
 use App\Livewire\TaxonomySettings;
 use App\Livewire\TeamRoster;
 use App\Livewire\TransportDispatch;
@@ -86,7 +87,6 @@ use App\Models\RegistrationTemplate;
 use App\Models\Requirement;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
-use App\Models\Task;
 use App\Models\TaxonomyTerm;
 use App\Models\TransportDriver;
 use App\Models\TransportVehicle;
@@ -306,15 +306,8 @@ Route::middleware('auth')->group(function () {
     // Every decision waiting on you, across events, decided in place.
     Route::get('/approvals', ApprovalsInbox::class)->name('approvals.index');
 
-    Route::get('/tasks', fn () => view('modules.tasks', [
-        'statusFilter' => request('status'),
-        'tasks' => Task::with(['event', 'assignee'])
-            ->when(request('status'), fn ($q, $s) => $q->where('status', $s))
-            ->orderByRaw("status = 'done'")->orderBy('due_on')->paginate(25)->withQueryString(),
-        // Keyed by the model's own stages, so a new status can never vanish here.
-        'counts' => Task::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status')
-            ->pipe(fn ($by) => collect(Task::statuses())->mapWithKeys(fn ($s) => [$s => (int) ($by[$s] ?? 0)])),
-    ]))->name('tasks.index');
+    // Filterable, and worked in place — ?status= links from before still resolve.
+    Route::get('/tasks', TasksIndex::class)->name('tasks.index');
 
     Route::get('/suppliers', SuppliersManager::class)->name('suppliers.index');
 
