@@ -1,0 +1,1169 @@
+<title>Elite EMS Nova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --canvas:#F7F8FA; --surface:#FFFFFF; --sunk:#F0F2F6;
+  --ink:#0B1F3A; --ink-2:#34445E; --muted:#66748A; --line:#E2E6ED; --line-2:#CFD6E1;
+  --navy:#0B1F3A; --navy-soft:#EEF2F8; --on-navy:#F4F6FA;
+  --gold:#D4AF37; --gold-text:#83650F; --gold-soft:#FBF5E3;
+  --ok:#1E7F55; --ok-soft:#E7F4EE; --warn:#9A6200; --warn-soft:#FDF3E1; --crit:#B42318; --crit-soft:#FDECEA; --info:#2F5DA8; --info-soft:#EAF0FA;
+  --display:"Playfair Display", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --r-panel:12px; --r-ctl:8px;
+  --shadow-float:0 12px 32px rgb(11 31 58 / .10), 0 1px 2px rgb(11 31 58 / .06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --canvas:#0B111C; --surface:#111A29; --sunk:#0E1624;
+    --ink:#E9EEF6; --ink-2:#C3CCDA; --muted:#8E9BB0; --line:#1F2B40; --line-2:#2B3A55;
+    --navy:#1A2B47; --navy-soft:#16223A; --on-navy:#F4F6FA;
+    --gold:#D9B64A; --gold-text:#E2C467; --gold-soft:#2A2412;
+    --ok:#4CC08A; --ok-soft:#10261D; --warn:#E3A73B; --warn-soft:#2B2210; --crit:#F0766B; --crit-soft:#2E1614; --info:#7EA6E8; --info-soft:#132139;
+    --shadow-float:0 12px 32px rgb(0 0 0 / .45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --canvas:#0B111C; --surface:#111A29; --sunk:#0E1624;
+  --ink:#E9EEF6; --ink-2:#C3CCDA; --muted:#8E9BB0; --line:#1F2B40; --line-2:#2B3A55;
+  --navy:#1A2B47; --navy-soft:#16223A; --on-navy:#F4F6FA;
+  --gold:#D9B64A; --gold-text:#E2C467; --gold-soft:#2A2412;
+  --ok:#4CC08A; --ok-soft:#10261D; --warn:#E3A73B; --warn-soft:#2B2210; --crit:#F0766B; --crit-soft:#2E1614; --info:#7EA6E8; --info-soft:#132139;
+  --shadow-float:0 12px 32px rgb(0 0 0 / .45);
+}
+*{box-sizing:border-box}
+body{background:var(--canvas);color:var(--ink);font:15px/1.6 var(--sans);padding-inline:16px;padding-block:0 64px;-webkit-font-smoothing:antialiased}
+a{color:var(--info)}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px;border-radius:4px}
+.shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px}
+@media (max-width:980px){.shell{grid-template-columns:1fr;gap:0}.toc{display:none}}
+.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow:auto;padding-block:40px 24px}
+.toc .brand{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.01em}
+.toc .brand small{display:block;font:500 11px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.toc ol{list-style:none;padding:0;margin:20px 0 0;counter-reset:t;display:grid;gap:1px}
+.toc li{counter-increment:t}
+.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-size:13px;line-height:1.35}
+.toc a::before{content:counter(t,decimal-leading-zero);font:500 11px/1.6 var(--mono);color:var(--muted)}
+.toc a:hover{background:var(--navy-soft);color:var(--ink)}
+main{min-width:0;padding-block:40px 0}
+header.hero{padding-block:24px 40px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:500 11px/1.4 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(40px,6vw,64px);line-height:1.02;letter-spacing:-.02em;margin:12px 0 8px;text-wrap:balance}
+h1 em{font-style:italic;color:var(--gold-text)}
+.lede{font-size:19px;line-height:1.5;color:var(--ink-2);max-width:62ch;margin:0}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:24px;font-size:13px;color:var(--muted)}
+.meta-row b{color:var(--ink);font-weight:600}
+section{padding-block:48px 8px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.15;letter-spacing:-.01em;margin:6px 0 16px;text-wrap:balance}
+h3{font-size:18px;font-weight:600;margin:32px 0 8px;line-height:1.3}
+h4{font-size:14px;font-weight:600;margin:20px 0 6px;letter-spacing:.01em}
+p,ul,ol{max-width:72ch}
+p{margin:0 0 12px}
+ul,ol{padding-inline-start:20px;margin:0 0 12px}
+li{margin:3px 0}
+li::marker{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--sunk);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.callout{border-inline-start:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:0 var(--r-ctl) var(--r-ctl) 0;margin:16px 0;max-width:72ch}
+[dir="rtl"] .callout,.callout:dir(rtl){border-radius:var(--r-ctl) 0 0 var(--r-ctl)}
+.callout.info{border-color:var(--info);background:var(--info-soft)}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout p:last-child{margin:0}
+.callout b.t{display:block;font-size:13px;letter-spacing:.02em;margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:16px 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:18px 20px}
+.panel h4{margin-top:0}
+.panel p:last-child,.panel ul:last-child{margin-bottom:0}
+.tag{display:inline-flex;align-items:center;gap:6px;font:500 12px/1 var(--sans);padding:5px 9px;border-radius:999px;background:var(--navy-soft);color:var(--ink-2);white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.warn{background:var(--warn-soft);color:var(--warn)} .tag.crit{background:var(--crit-soft);color:var(--crit)} .tag.gold{background:var(--gold-soft);color:var(--gold-text)}
+.tag i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.tbl{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:start;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sunk);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n{font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
+td code{white-space:nowrap}
+.area{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:22px 24px;margin:16px 0}
+.area-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;margin-bottom:8px}
+.area-head h3{margin:0;font-family:var(--display);font-size:24px;font-weight:600}
+.area-head .q{color:var(--muted);font-style:italic}
+.area dl{display:grid;grid-template-columns:150px 1fr;gap:8px 20px;margin:12px 0 0}
+.area dt{font:500 11px/1.8 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.area dd{margin:0}
+@media (max-width:640px){.area dl{grid-template-columns:1fr;gap:2px}.area dd{margin-bottom:10px}}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:16px;overflow-x:auto;margin:16px 0}
+pre.code{background:var(--sunk);border:1px solid var(--line);border-radius:var(--r-panel);padding:14px 16px;overflow-x:auto;font:13px/1.55 var(--mono);color:var(--ink-2);margin:12px 0}
+/* Wireframes */
+.wf{background:var(--sunk);border:1px dashed var(--line-2);border-radius:var(--r-panel);padding:14px;margin:16px 0;overflow-x:auto}
+.wf-cap{font:500 11px/1.4 var(--mono);color:var(--muted);margin:0 0 10px;letter-spacing:.02em}
+.wf-frame{min-width:720px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;font-size:12px}
+.wf-frame.phone{min-width:0;max-width:340px;margin-inline:auto}
+.b{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--surface);min-width:0}
+.b.s{background:var(--sunk)}
+.b.n{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.b.g{border-color:var(--gold);box-shadow:inset 3px 0 0 var(--gold)}
+.b .h{font-weight:600;font-size:12px;margin-bottom:4px}
+.b .l{height:6px;border-radius:3px;background:var(--line);margin:5px 0}
+.b.n .l{background:rgb(255 255 255 / .18)}
+.row{display:flex;gap:10px;flex-wrap:nowrap;align-items:stretch}
+.row>*{flex:1}
+.lane{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+.track{position:relative;height:26px;background:var(--sunk);border-radius:6px}
+.cap{position:absolute;top:3px;height:20px;border-radius:999px;background:var(--navy-soft);border:1px solid var(--line-2);font-size:10px;line-height:18px;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.cap.attn{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-text)}
+.cap.risk{border-color:var(--crit);background:var(--crit-soft);color:var(--crit)}
+.big{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.btnwf{display:inline-block;border:1px solid var(--line-2);border-radius:8px;padding:4px 10px;font-size:11px;background:var(--surface)}
+.btnwf.p{background:var(--gold);border-color:var(--gold);color:#1B1604;font-weight:600}
+/* swatches */
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:16px 0}
+.sw div{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);font-size:12px}
+.sw span{display:block;height:48px}
+.sw p{margin:0;padding:8px 10px;line-height:1.35}
+.sw p b{display:block;font-weight:600}
+.typescale{display:grid;gap:10px;margin:16px 0}
+.typescale div{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px}
+.typescale small{font:12px/1.4 var(--mono);color:var(--muted)}
+.ratio{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:12px 0 6px;max-width:520px;border:1px solid var(--line)}
+.ratio span:nth-child(1){flex:85;background:var(--surface)} .ratio span:nth-child(2){flex:10;background:var(--navy)} .ratio span:nth-child(3){flex:5;background:var(--gold)}
+.roadmap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+@media (max-width:900px){.roadmap{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.roadmap{grid-template-columns:1fr}}
+.q4{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:16px}
+.q4 .eyebrow{color:var(--gold-text)}
+.q4 h4{margin:4px 0 8px;font-size:16px}
+.q4 ul{padding-inline-start:18px;font-size:14px}
+.q4 .exit{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;font-size:13px;color:var(--muted)}
+.persona{display:grid;gap:4px}
+.persona .who{font-family:var(--display);font-size:20px;font-weight:600}
+.persona .role{font-size:13px;color:var(--muted)}
+.ar{font-family:"IBM Plex Sans Arabic",var(--sans)}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.toc a{transition:background .15s ease}}
+</style>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <div class="brand">Elite EMS Nova<small>The Operating System for Events</small></div>
+  <ol>
+    <li><a href="#vision">Product vision</a></li>
+    <li><a href="#ux">UX strategy</a></li>
+    <li><a href="#ia">Information architecture</a></li>
+    <li><a href="#nav">Navigation &amp; command palette</a></li>
+    <li><a href="#space">Event Space</a></li>
+    <li><a href="#today">Today Command</a></li>
+    <li><a href="#ai">AI architecture</a></li>
+    <li><a href="#data">Data model</a></li>
+    <li><a href="#ds">Design system</a></li>
+    <li><a href="#responsive">Responsive strategy</a></li>
+    <li><a href="#mobile">Mobile experience</a></li>
+    <li><a href="#a11y">Accessibility &amp; RTL</a></li>
+    <li><a href="#personas">Personas</a></li>
+    <li><a href="#workflows">Business workflows</a></li>
+    <li><a href="#wireframes">Wireframes</a></li>
+    <li><a href="#screens">Screen inventory</a></li>
+    <li><a href="#components">Component inventory</a></li>
+    <li><a href="#db">Database architecture</a></li>
+    <li><a href="#laravel">Laravel architecture</a></li>
+    <li><a href="#react">React architecture</a></li>
+    <li><a href="#api">API architecture</a></li>
+    <li><a href="#roadmap">12-month roadmap</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Product blueprint · v1 · September 2026</div>
+  <h1>Elite EMS <em>Nova</em></h1>
+  <p class="lede">The operating system for events. Nova is organised around running an event, not around modules. Each event is a live operation with a phase, a health score, a critical path and a team, and every screen serves one question: what does this event need from me now?</p>
+  <div class="meta-row">
+    <span><b>For</b> Elite Business Hub leadership, product, design &amp; engineering</span>
+    <span><b>Markets</b> Jordan · GCC · MENA</span>
+    <span><b>Languages</b> English (LTR) · العربية (RTL)</span>
+    <span><b>Base currency</b> JOD, three decimals</span>
+  </div>
+  <div class="callout info" style="margin-top:24px">
+    <b class="t">How this relates to today's Elite EMS</b>
+    <p>This is a reinvention on paper. The current codebase is still an asset: 10 state machines, 6 permission gates, 17 print documents, bilingual contracts, token-based registration and check-in, the Arrivals Desk, and 1,137 passing tests all carry over into Nova's domain layer. The roadmap in §22 ships Nova gradually alongside the current app, one surface at a time, rather than as a big-bang rewrite. Two current project rules are consciously set aside here: "don't redesign screens" (because Nova is a new product surface) and "multi-tenant is deferred" (Nova keeps it deferred, but builds the tenant key in from day one).</p>
+  </div>
+</header>
+
+<!-- 1 -->
+<section id="vision">
+  <div class="eyebrow">01 · Product vision</div>
+  <h2>An event is a live operation, not a record</h2>
+  <p>Event software has usually been a filing cabinet: one drawer for suppliers, one for attendees, one for the budget. Planners keep the actual operation in their heads and in WhatsApp, and the software only finds out afterwards. Nova reverses that. The software holds the operation (what has to happen, in what order, who is blocking whom, what it costs and what changed overnight) and people step in where judgement is needed.</p>
+  <div class="grid3">
+    <div class="panel"><h4>Operations, not modules</h4><p>Nobody "goes to the supplier module". They open the ICFT event, and its production gap is in front of them with the supplier who caused it.</p></div>
+    <div class="panel"><h4>Phase-aware by default</h4><p>An event in Procurement looks different from one in Live. The Event Space re-orders itself around what that phase needs.</p></div>
+    <div class="panel"><h4>Evidence over opinion</h4><p>Every score, alert and AI recommendation can be traced to the records behind it. No black boxes, and no number without a definition.</p></div>
+    <div class="panel"><h4>One truth for money</h4><p>Each financial figure states what it measures, how it's calculated and where it comes from. Dashboard, event and client portal all show the same number.</p></div>
+    <div class="panel"><h4>Calm by design</h4><p>85% light, 10% navy, 5% gold. Gold is used for one thing only: the one action or event that needs you. Everything else stays quiet.</p></div>
+    <div class="panel"><h4>Bilingual from the start</h4><p>Arabic RTL is built in from day one, not translated later. Contracts, briefs, badges and the client portal are written for both directions.</p></div>
+  </div>
+  <h3>North-star metric</h3>
+  <p><b>Decisions resolved per operator-hour.</b> We track the time from a signal ("the stage supplier missed the rigging drawing") to its resolution (reassigned, chased, accepted) across the company. Supporting metrics: time to first useful action after login (target under 10 seconds), events delivered without a Readiness-gate miss, invoice-to-cash days, and the share of AI recommendations accepted without edits.</p>
+  <h3>What Nova is not</h3>
+  <ul>
+    <li>Not a project tracker with an event skin: tasks exist, but they hang off deliverables, milestones and the critical path.</li>
+    <li>Not an accounting system: Nova owns event economics (quote → contract → invoice → collection → cost → margin) and hands the ledger to the company's accounting package.</li>
+    <li>Not a chatbot with a CRM: AI is an operations partner with evidence, not a text box in the corner.</li>
+  </ul>
+</section>
+
+<!-- 2 -->
+<section id="ux">
+  <div class="eyebrow">02 · UX strategy</div>
+  <h2>Six principles every screen is checked against</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Principle</th><th>What it means in practice</th><th>How we'll know</th></tr></thead>
+    <tbody>
+      <tr><td><b>Attention is the product</b></td><td>Every surface is ranked by "needs a person" first. Things that are fine collapse into a single line ("11 suppliers on track").</td><td>The first viewport of any screen contains its most urgent item.</td></tr>
+      <tr><td><b>Act where you see it</b></td><td>Approve, chase, reassign, record payment and snooze work in place: on the card, in the stack, in the palette. You never have to navigate somewhere else to finish.</td><td>More than 70% of Priority Stack items resolved without leaving Today Command.</td></tr>
+      <tr><td><b>One object, one home</b></td><td>A supplier has one page. An event's supplier view is a lens on that page, not a copy.</td><td>No duplicate editors for the same record.</td></tr>
+      <tr><td><b>Explain every number</b></td><td>Every metric has an ⓘ with: measures, calculation, source, last updated.</td><td>Zero metrics without definitions, enforced by a linter on the metric registry.</td></tr>
+      <tr><td><b>Progressive depth</b></td><td>Summary, then list, then record, then raw evidence. First-time users stay on the first two levels; power users jump straight to the last with the keyboard.</td><td>New-user task completion without help above 85%.</td></tr>
+      <tr><td><b>Phase shapes the space</b></td><td>The same event shows Commercial first in Negotiation, Production first in Production, and Live controls on show day.</td><td>Navigation depth to the phase's primary task is one click or less.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The three working modes</h3>
+  <div class="grid3">
+    <div class="panel"><h4>Brief (read)</h4><p>Morning brief, weekly client report, post-event analysis. Narrative first, with linked evidence. Mostly executives and clients.</p></div>
+    <div class="panel"><h4>Operate (work)</h4><p>The Event Space and work surfaces: dense, keyboard-first, inline editing, split views. Mostly producers and coordinators.</p></div>
+    <div class="panel"><h4>Live (react)</h4><p>Live Event Mode on show day: big targets, a single column, incident-first, works offline, one-handed on a phone.</p></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="ia">
+  <div class="eyebrow">03 · Information architecture</div>
+  <h2>Four levels, one spine</h2>
+  <p>Everything hangs off one spine: Company, then Event, then Work Surface, with the AI layer spanning all three. Company-level objects (clients, suppliers, venues, people, catalogues) live once in the Company Workspace. Events hold <i>engagements</i> with them, never copies.</p>
+  <pre class="mermaid">
+flowchart TB
+  subgraph L1["Level 1 · Company Workspace"]
+    TC["Today Command"]
+    EH["Event Horizon<br/>(portfolio)"]
+    PIPE["Pipeline<br/>(opportunities)"]
+    DIR["Directory<br/>clients · suppliers · venues · people"]
+    MONEY["Money<br/>receivables · payables · P&amp;L"]
+    LIB["Library<br/>catalogues · templates · settings"]
+  end
+  subgraph L2["Level 2 · Event Space"]
+    CMD["Command"] --- PLAN["Plan"] --- PROG["Program"] --- PPL["People"] --- EXP["Experience"]
+    PROD["Production"] --- COM["Commercial"] --- LOG["Logistics"] --- LIVE["Live"] --- INT["Intelligence"]
+  end
+  subgraph L3["Level 3 · Work Surfaces"]
+    WS["Record · Board · Timeline · Sheet · Canvas · Document"]
+  end
+  subgraph L4["Level 4 · AI Operations Layer"]
+    AI["Explain · Detect · Recommend · Prepare · Forecast · Summarize"]
+  end
+  TC --> EH --> L2
+  PIPE -- "won → opens" --> L2
+  DIR -. "engaged by" .-> L2
+  L2 --> L3
+  L4 -. "reads everything the user may see" .-> L1
+  L4 -.-> L2
+  L4 -.-> L3
+  </pre>
+  <h3>Level 1 · Company Workspace</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Space</th><th>Answers</th><th>Contains</th></tr></thead>
+    <tbody>
+      <tr><td><b>Today</b></td><td>What needs me now?</td><td>Today Command (§6), My Work, Approvals inbox</td></tr>
+      <tr><td><b>Events</b></td><td>How is the book of events doing?</td><td>Event Horizon, archive, templates ("event blueprints")</td></tr>
+      <tr><td><b>Pipeline</b></td><td>What's coming?</td><td>Opportunities → Proposal → Negotiation. Winning one creates the Event Space, carrying across its scope and quote.</td></tr>
+      <tr><td><b>Directory</b></td><td>Who do we work with?</td><td>Clients (with contacts), Suppliers (with scorecards), Venues (with spaces and floor plans), People (staff, freelancers, speakers, VIPs)</td></tr>
+      <tr><td><b>Money</b></td><td>Are we getting paid and paying on time?</td><td>Receivables, payables, cash forecast, cross-event P&amp;L</td></tr>
+      <tr><td><b>Library</b></td><td>What do we start from?</td><td>Price catalogue, sponsor packages, registration forms, document templates, statuses, roles &amp; permissions</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Level 3 · Work Surfaces</h3>
+  <p>Six reusable surface types render any object set. Users switch views, not screens: the same deliverables show as a <b>Board</b>, a <b>Timeline</b> (Gantt with dependencies) or a <b>Sheet</b> (bulk editing), and the same booths show as a <b>Canvas</b> (floor plan). A <b>Record</b> opens as a side sheet over the current surface (Linear-style peek) and can be expanded to full page. A <b>Document</b> is any printable output (contract, rooming list, run of show) with a live preview beside its data.</p>
+  <h3>Client Portal: a separate front door, same spine</h3>
+  <p>Clients sign in to <code>portal.</code> and see a filtered Event Space built from the same records, through a <b>disclosure policy</b> rather than hand-made copies:</p>
+  <div class="grid2">
+    <div class="panel"><h4>Clients see</h4><ul><li>Timeline &amp; milestones (client-facing labels)</li><li>Deliverables awaiting their input</li><li>Approvals: one-tap approve, or request changes with a comment</li><li>Budget at <i>client price</i> (quote, contracted, invoiced, paid)</li><li>Weekly report (AI-drafted, human-approved)</li><li>Documents flagged "client-shareable"</li></ul></div>
+    <div class="panel"><h4>Clients never see</h4><ul><li>Cost, supplier price, margin, management-fee math</li><li>Internal notes, comments, @mentions</li><li>Risk register entries marked internal</li><li>Supplier identities where "white-label" is set</li><li>AI recommendations meant for staff</li></ul><p style="margin-top:8px;color:var(--muted);font-size:13px">Enforced in the API through field-level disclosure policies, not by hiding things in the UI. See §21.</p></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="nav">
+  <div class="eyebrow">04 · Navigation architecture</div>
+  <h2>No sidebar. A command bar, a context bar and a palette.</h2>
+  <p>Sidebars exist because modules exist. Nova has spaces and operations, so navigation has three layers:</p>
+  <div class="grid3">
+    <div class="panel"><h4>1 · Command bar (top, 52px)</h4><p>Workspace switcher · <b>Today</b> · <b>Events</b> · <b>Pipeline</b> · <b>Directory</b> · <b>Money</b> · palette field (⌘K) · Live indicator (appears only when an event is live) · notifications · profile. Frosted glass. It's the only persistent chrome.</p></div>
+    <div class="panel"><h4>2 · Context bar (inside an event)</h4><p>Event name, phase chip, health ring and the ten areas as a horizontal segmented bar. The current phase's primary area is marked with a gold underline. Areas that aren't relevant to this event type fold into "More".</p></div>
+    <div class="panel"><h4>3 · Command palette (⌘K / Ctrl K)</h4><p>Universal: open, create, do, ask. It handles the keyboard, and on mobile a long-press on the command bar opens it. It's the fastest way to anything.</p></div>
+  </div>
+  <h3>Command palette grammar</h3>
+  <p>The palette understands <b>verb + object + scope</b> and resolves partial input with ranked suggestions. Every result has a <kbd>↵</kbd> action and a <kbd>⇥</kbd> secondary action. Anything that sends to the outside world or moves money shows a confirmation card inside the palette before it runs.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>User types</th><th>Palette resolves to</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><code>Open ICFT Budget</code></td><td>navigate · event=ICFT 2026 · area=Commercial · view=Budget</td><td>Opens directly. <kbd>⇥</kbd> opens it in a side sheet instead.</td></tr>
+      <tr><td><code>Create Supplier</code></td><td>create · Supplier</td><td>Inline mini-form (name, category, contact). Duplicate check runs while you type.</td></tr>
+      <tr><td><code>Generate Client Report</code></td><td>prepare · ClientReport · scope = current event (or asks which)</td><td>AI drafts it and shows a preview. Approve → send to the portal.</td></tr>
+      <tr><td><code>Outstanding Invoices</code></td><td>query · Invoice where status ∈ {sent, part-paid, overdue}</td><td>Result list inside the palette, with totals in JOD and "Record payment" on each row.</td></tr>
+      <tr><td><code>Open Live Mode</code></td><td>navigate · Live · event = the one live today (or picker)</td><td>Switches to Live Event Mode.</td></tr>
+      <tr><td><code>Why is Tech Expo yellow?</code></td><td>ask · explain(health, Tech Expo 2026)</td><td>Explanation card with Reason · Evidence · Impact · Confidence.</td></tr>
+      <tr><td><code>Assign AV rehearsal to Khalid</code></td><td>act · Task.assign</td><td>Done immediately, with Undo for 8 seconds.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Keyboard map (power users)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Keys</th><th>Action</th><th>Keys</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>⌘K</kbd></td><td>Palette</td><td><kbd>G</kbd> <kbd>T</kbd></td><td>Go to Today</td></tr>
+      <tr><td><kbd>G</kbd> <kbd>E</kbd></td><td>Go to Event Horizon</td><td><kbd>G</kbd> <kbd>A</kbd></td><td>Approvals inbox</td></tr>
+      <tr><td><kbd>1</kbd>…<kbd>0</kbd></td><td>Event area 1–10 (inside an event)</td><td><kbd>C</kbd></td><td>Create (context-aware)</td></tr>
+      <tr><td><kbd>J</kbd> / <kbd>K</kbd></td><td>Next / previous item in any list</td><td><kbd>A</kbd> / <kbd>R</kbd></td><td>Approve / request changes</td></tr>
+      <tr><td><kbd>Space</kbd></td><td>Peek record in side sheet</td><td><kbd>⇧</kbd><kbd>L</kbd></td><td>Toggle Live Mode (live events only)</td></tr>
+      <tr><td><kbd>?</kbd></td><td>Show all shortcuts</td><td><kbd>⌘</kbd><kbd>.</kbd></td><td>Ask AI about what's selected</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 5 -->
+<section id="space">
+  <div class="eyebrow">05 · Event Space architecture</div>
+  <h2>Ten areas, one operation</h2>
+  <p>An Event Space is one operating environment. Its ten areas are lenses on the same event graph (deliverables, people, commitments, money, schedule), so a change in one shows up everywhere at once. A late stage-drawing deliverable in Production moves the critical path in Plan, raises a risk in Command, and puts a line in the client's weekly report.</p>
+  <h3>Lifecycle phases and gates</h3>
+  <p>Phases are sequential with explicit <b>exit criteria</b>. Readiness is the percentage of the current phase's exit criteria that are met, so it always has a precise, checkable meaning.</p>
+  <pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> Opportunity
+  Opportunity --> Proposal: qualified
+  Proposal --> Negotiation: proposal sent
+  Negotiation --> Confirmed: contract signed + deposit invoiced
+  Confirmed --> Planning: kickoff held
+  Planning --> Procurement: scope frozen · budget v1 approved
+  Procurement --> Production: critical suppliers contracted
+  Production --> Readiness: T−7 · all deliverables in review or done
+  Readiness --> Live: go/no-go signed
+  Live --> Closing: last session ends
+  Closing --> Archived: final invoice paid · costs reconciled · lessons logged
+  Opportunity --> Archived: lost
+  Negotiation --> Archived: lost
+  </pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Phase</th><th>Leading area</th><th>Exit criteria (examples)</th><th>Maps from today's <code>event_stage</code> / <code>deal_stage</code></th></tr></thead>
+    <tbody>
+      <tr><td>Opportunity</td><td>Commercial</td><td>Client, date window, pax estimate, budget band</td><td><code>enquiry</code>, <code>qualified</code></td></tr>
+      <tr><td>Proposal</td><td>Commercial</td><td>Priced proposal sent; validity date set</td><td><code>proposal</code></td></tr>
+      <tr><td>Negotiation</td><td>Commercial</td><td>Contract drafted; payment schedule agreed</td><td><code>negotiation</code></td></tr>
+      <tr><td>Confirmed</td><td>Command</td><td>Signed contract; deposit invoice issued; team assigned</td><td><code>won</code> → <code>confirmed</code></td></tr>
+      <tr><td>Planning</td><td>Plan</td><td>Scope, objectives, milestone plan, budget v1 approved</td><td><code>planning</code></td></tr>
+      <tr><td>Procurement</td><td>Production · Logistics</td><td>Critical suppliers contracted; venue/hotel blocks held</td><td><i>new</i></td></tr>
+      <tr><td>Production</td><td>Production · Program</td><td>Agenda final; creative approved; print files sent</td><td><code>production</code></td></tr>
+      <tr><td>Readiness</td><td>Command</td><td>Go/no-go checklist; run of show locked; rooming final</td><td><i>new</i></td></tr>
+      <tr><td>Live</td><td>Live</td><td>n/a (time-bound)</td><td><code>live</code></td></tr>
+      <tr><td>Closing</td><td>Commercial · Intelligence</td><td>Final invoice; supplier costs reconciled; post-event report</td><td><code>completed</code></td></tr>
+      <tr><td>Archived</td><td>Intelligence</td><td>n/a</td><td><code>closed</code>, <code>cancelled</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b class="t">Health vs Readiness: defined once, used everywhere</b>
+    <p><b>Readiness</b> (0–100%) = exit criteria met ÷ exit criteria in the current phase. It answers "can we move on?"<br><b>Health</b> (0–100) = 100 − weighted penalties: schedule slip on the critical path (35%), budget variance vs approved version (25%), open risk exposure, i.e. likelihood × impact (20%), decision latency, meaning approvals pending past their SLA (20%). It answers "is it going well?"<br>Both show as a single ring and a single bar, in the same place on every screen. Today's app shows readiness three different ways; Nova shows it once.</p></div>
+
+  <div class="area" id="area-command">
+    <div class="area-head"><h3>1 · Command</h3><span class="q">"Is this event OK, and what's next?"</span></div>
+    <p>The event's cockpit. Nothing here is edited directly: every tile is a summary that opens the area that owns it.</p>
+    <dl>
+      <dt>Event Health</dt><dd>Ring (0–100) with the four penalty drivers as a horizontal breakdown. Clicking a driver shows the records behind it. Trend sparkline over 14 days.</dd>
+      <dt>Readiness</dt><dd>Current phase's exit criteria as a checklist. Unmet criteria show owner, due date and a link. "Advance phase" is only available when all are met, or by manager override with a reason (audited).</dd>
+      <dt>Risks</dt><dd>Top 5 by exposure (likelihood × impact, 1–25), each with owner, mitigation, trigger date. Internal vs client-visible flag.</dd>
+      <dt>Critical Path</dt><dd>A compact chain of the milestones that determine the event date, with float in days. Any milestone with less than 2 days float is marked. This view doesn't exist anywhere in today's app, and it's the single most valuable addition.</dd>
+      <dt>Budget Status</dt><dd>One line: Approved budget · Committed · Actual · Forecast at completion · Variance, each with a definition popover. Links to Commercial.</dd>
+      <dt>Upcoming Decisions</dt><dd>Approvals waiting (internal and client), with SLA timers and approve/request-changes inline for whoever holds the gate.</dd>
+      <dt>AI Summary</dt><dd>Three sentences, regenerated when material facts change. Each clause cites its evidence. "Last generated 07:02 from 214 records."</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-plan">
+    <div class="area-head"><h3>2 · Plan</h3><span class="q">"What are we delivering, by when, and who owns it?"</span></div>
+    <p>One work model replaces today's parallel Tasks / Plan items / approvals: <b>Objective → Deliverable → Task</b>, with milestones and dependencies as first-class objects.</p>
+    <dl>
+      <dt>Scope</dt><dd>A structured scope statement (in scope, out of scope, assumptions), versioned. Changes after Planning create a <i>change request</i> that shows its cost and schedule impact before approval.</dd>
+      <dt>Objectives</dt><dd>2–5 measurable outcomes (e.g. "600 qualified delegates", "3 ministerial speakers"). Intelligence reports against them after the event.</dd>
+      <dt>Deliverables</dt><dd>The unit of accountability: owner, due date, acceptance criteria, reviewer, client-visible flag. Status: <span class="tag">Not started</span> <span class="tag">In progress</span> <span class="tag warn"><i></i>In review</span> <span class="tag ok"><i></i>Accepted</span>. "Needs approval" is a <i>gate</i> on a deliverable, not a task status.</dd>
+      <dt>Timeline</dt><dd>Gantt with drag-to-reschedule, dependency lines, a "today" rule and the event date as a fixed anchor. Baseline vs current overlay shows slip.</dd>
+      <dt>Milestones</dt><dd>Zero-duration checkpoints (e.g. "Agenda frozen", "Print files to vendor"). Phase exit criteria are built from milestones.</dd>
+      <dt>Dependencies</dt><dd>Finish-to-start, with lag. Cross-area: "Badge print" depends on "Registration closes" (People) and "Branding approved" (Experience).</dd>
+      <dt>Risks</dt><dd>The full register (Command shows the top 5). Each risk can create a mitigation deliverable.</dd>
+      <dt>Team Assignments</dt><dd>Event roles (Producer, Commercial lead, Logistics lead, Program lead) plus a load view: hours assigned per person per week against capacity, across all events, so the planner sees overload before assigning.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-program">
+    <div class="area-head"><h3>3 · Program</h3><span class="q">"What happens on stage, where and when?"</span></div>
+    <dl>
+      <dt>Agenda</dt><dd>Multi-day grid by room (columns) × time (rows), drag to move, conflict detection (speaker double-booked, room over capacity, changeover under 10 minutes). Bilingual session titles.</dd>
+      <dt>Tracks</dt><dd>Colour-free by default (named, patterned chips) so they don't compete with status colour.</dd>
+      <dt>Sessions</dt><dd>Status: draft → awaiting speaker → in review → confirmed → final. Each session has format, room, AV needs (feeds Production), interpretation needs (feeds Logistics).</dd>
+      <dt>Speakers &amp; Moderators</dt><dd>Engagements with People records: bio, headshot, deck due date, travel/hotel (feeds Logistics), fee (feeds Commercial), briefing call.</dd>
+      <dt>Venues &amp; Room Allocations</dt><dd>Rooms come from the venue's spaces in the Directory. Allocation shows capacity vs expected attendance per session, with seating layout links (Room Layout canvas).</dd>
+      <dt>Run of Show</dt><dd>A cue-level timeline per room, generated from sessions and editable to the second: walk-in music, VO, lights, video roll, mic hand-offs. Locked at Readiness. It becomes the Live Mode's show caller view.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-people">
+    <div class="area-head"><h3>4 · People</h3><span class="q">"Who is coming, and what does each of them need?"</span></div>
+    <p>One people table with <b>roles</b>, not eight separate lists. A person can be both speaker and VIP. Each role adds its own fields and workflows.</p>
+    <dl>
+      <dt>Delegates</dt><dd>Registration source, ticket type, status (registered → confirmed → checked-in / no-show / cancelled), badge, dietary needs, session sign-ups.</dd>
+      <dt>VIPs</dt><dd>Protocol tier, escort, arrival plan (feeds Logistics), seating, gift, "do not photograph" flag.</dd>
+      <dt>Sponsors &amp; Exhibitors</dt><dd>Organisation-level engagements: package, entitlements checklist (logo placements, passes, booth, speaking slot) with delivery proof. Feeds the sponsor delivery report.</dd>
+      <dt>Speakers</dt><dd>Mirrors Program, seen from the person's side (everything they're in, need, owe).</dd>
+      <dt>Media</dt><dd>Accreditation, embargo, interview requests.</dd>
+      <dt>Staff &amp; Volunteers</dt><dd>Shifts, posts, radios, briefing acknowledgement. Staff load feeds Team Capacity.</dd>
+      <dt>Bulk power</dt><dd>Sheet view, XLSX import with column mapping and a preview of changes before commit, segment builder ("VIPs arriving 11 Nov without transfer").</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-experience">
+    <div class="area-head"><h3>5 · Experience</h3><span class="q">"What will it feel like to be there?"</span></div>
+    <dl>
+      <dt>Creative Concept</dt><dd>Moodboard, narrative, key visual. Versions with client approval gates.</dd>
+      <dt>Branding</dt><dd>Brand kit for the event (logo lockups, colours, fonts), used by badges, signage and the registration page.</dd>
+      <dt>Stage Design</dt><dd>Renders and technical drawings, linked to Production items (LED, set build).</dd>
+      <dt>Exhibitions</dt><dd>Floor-plan canvas (booths, aisles, sizes in metres), with sold/reserved/available states and pricing, linked to exhibitor engagements.</dd>
+      <dt>Registration</dt><dd>Public page builder (bilingual), forms from templates, ticket types, capacity, waitlist. Preview as delegate.</dd>
+      <dt>Signage</dt><dd>A sign schedule (location × message × size × language × quantity), exported to the print vendor.</dd>
+      <dt>Catering Experience</dt><dd>Menus and service style per meal; dietary counts come from People automatically.</dd>
+      <dt>Awards</dt><dd>Categories, nominees, judging, envelope order, linked to the run of show.</dd>
+      <dt>Guest Journey</dt><dd>A timeline of touchpoints from invitation to thank-you email, with an owner per step. It's where experience gaps become visible.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-production">
+    <div class="area-head"><h3>6 · Production</h3><span class="q">"Will every physical thing be there, working, on time?"</span></div>
+    <p>A single <b>production schedule</b>: every physical item with spec, quantity, supplier, delivery window, install/strike times and status (<i>specified → quoted → ordered → confirmed → delivered → installed → tested</i>).</p>
+    <dl>
+      <dt>AV · LED · Lighting · Sound</dt><dd>Per-room technical riders generated from session needs. Conflicts flagged ("Hall B needs 3 wireless handhelds; 2 ordered").</dd>
+      <dt>Printing</dt><dd>Files → proof → approved → printed → delivered, with version control on artwork.</dd>
+      <dt>Booths &amp; Equipment</dt><dd>Linked to the Exhibition canvas and Room Layouts. Pulls the equipment list per room.</dd>
+      <dt>Logistics Readiness</dt><dd>Load-in/load-out schedule by dock and time slot. The build-day Gantt.</dd>
+      <dt>Supplier signal</dt><dd>Each supplier's on-time rate, open issues and response time roll up into their Directory scorecard. This is what powers "which supplier is causing delays?"</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-commercial">
+    <div class="area-head"><h3>7 · Commercial</h3><span class="q">"Will this event make money, and are we collecting it?"</span></div>
+    <p>One money chain, reading left to right. Every figure has a <b>definition card</b>: what it measures, how it's calculated, source of truth, and when it was last updated.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Figure</th><th>Measures</th><th>Calculation</th><th>Source of truth</th></tr></thead>
+      <tbody>
+        <tr><td><b>Quoted</b></td><td>What we offered</td><td>Σ accepted proposal lines at client price</td><td>Latest accepted Proposal</td></tr>
+        <tr><td><b>Contracted revenue</b></td><td>What the client is obliged to pay</td><td>Contract value + signed change orders</td><td>Contract &amp; ChangeOrder records</td></tr>
+        <tr><td><b>Invoiced</b></td><td>What we've asked for</td><td>Σ issued invoices (excl. void)</td><td>Invoice ledger</td></tr>
+        <tr><td><b>Collected</b></td><td>Cash received</td><td>Σ payments allocated to this event</td><td>Payment ledger (reconciled)</td></tr>
+        <tr><td><b>Receivable</b></td><td>Owed to us now</td><td>Invoiced − Collected</td><td>Derived</td></tr>
+        <tr><td><b>Committed cost</b></td><td>What we've promised suppliers</td><td>Σ confirmed purchase orders</td><td>PurchaseOrder records</td></tr>
+        <tr><td><b>Actual cost</b></td><td>Supplier bills received</td><td>Σ supplier bills</td><td>Bill ledger</td></tr>
+        <tr><td><b>Forecast at completion</b></td><td>Where cost will land</td><td>max(Committed, Actual) + remaining budget on unordered lines</td><td>Derived</td></tr>
+        <tr><td><b>Gross margin</b></td><td>What the event earns</td><td>(Contracted − Forecast at completion) ÷ Contracted</td><td>Derived · internal only</td></tr>
+      </tbody>
+    </table></div>
+    <dl>
+      <dt>Revenue</dt><dd>Contract, change orders, sponsorship, exhibition, registration fees, grants, each attributed to a revenue line.</dd>
+      <dt>Quotations &amp; Proposals</dt><dd>Built from the price catalogue with event-specific overrides. Proposal versions are compared side by side.</dd>
+      <dt>Invoices &amp; Payments</dt><dd>Invoices are generated from the payment schedule. Payments are recorded against invoices (partial allowed). Overdue chasing is drafted by AI and sent by a person.</dd>
+      <dt>Costs &amp; Supplier Commitments</dt><dd>Budget lines → POs → bills, three-way matched. Over-commitment is flagged the moment a PO would take a line past its approved amount.</dd>
+      <dt>Profitability</dt><dd>Margin waterfall from Contracted to Net, with the management fee shown separately. Internal only, and excluded from the portal by policy.</dd>
+      <dt>Currency</dt><dd>Stored in transaction currency with a locked FX rate. Displayed in the event currency with base-currency (JOD, three decimals) totals. One currency per view, never mixed on one screen.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-logistics">
+    <div class="area-head"><h3>8 · Logistics</h3><span class="q">"Can every person and thing get where it needs to be?"</span></div>
+    <dl>
+      <dt>Venue</dt><dd>Contracted spaces, access times, venue contacts, house rules, floor plans (from Directory).</dd>
+      <dt>Hotels</dt><dd>Room blocks (rate, release date, attrition terms), rooming list generated from People, and a hotel-facing PDF with no money shown.</dd>
+      <dt>Flights</dt><dd>Itineraries for speakers/VIPs/staff, with arrival and departure feeding Transport automatically.</dd>
+      <dt>Transportation</dt><dd>Movements (who, from, to, when, vehicle, driver), a dispatch board with lanes against time, and the six-document suite (daily schedule, driver trip sheets, VIP sheets, master plan, supplier order, manifest).</dd>
+      <dt>Security &amp; Protocol</dt><dd>Access zones, accreditation levels, VIP protocol sequences (arrival → greeting → holding room → stage), government liaison contacts.</dd>
+      <dt>Shipments</dt><dd>Inbound and outbound freight, customs status for international exhibitors, and the delivery calendar.</dd>
+      <dt>Catering Logistics</dt><dd>Headcounts per meal from registration, final guarantees with deadlines, service times.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-live">
+    <div class="area-head"><h3>9 · Live: Live Event Mode</h3><span class="q">"What is happening right now, and what's wrong?"</span></div>
+    <p>A different interface, on purpose. When an event is live, the command bar shows a pulsing Live indicator and <kbd>⇧</kbd><kbd>L</kbd> switches into it. Live Mode is <b>works offline, runs as a PWA, uses 48px targets, and puts incidents first</b>.</p>
+    <dl>
+      <dt>Layout</dt><dd>One column on a phone, three columns on a tablet or ops-room screen (Now · Incidents · Arrivals). No secondary navigation. The screen stays awake (wake lock).</dd>
+      <dt>Registration</dt><dd>Live check-in count vs expected, by gate. The walk-in desk is a big search field that reads badge references and names, with Arabic transliteration matching. It's today's Arrivals Desk, promoted.</dd>
+      <dt>Speaker Readiness</dt><dd>Each upcoming session: speaker arrived · in green room · mic'd · slides loaded. One tap per state, visible to the show caller.</dd>
+      <dt>Session Status</dt><dd>Per room: on time / running +7 min / changeover. Overruns ripple into the next sessions and notify affected speakers and the transport lead.</dd>
+      <dt>Production Status</dt><dd>Room tech checks (AV, LED, lighting, sound) as green/amber/red with the responsible technician.</dd>
+      <dt>VIP Arrivals</dt><dd>Next VIP movements with ETA from the driver's app. "Arrived" triggers the protocol sequence.</dd>
+      <dt>Incident Reports</dt><dd>Two taps to log (category, location, severity), optional photo, auto-assigned by category. Critical incidents page the event lead. Every incident has a timeline and a closure note.</dd>
+      <dt>Real-Time Updates</dt><dd>A single feed with filters (All · Mine · Critical), pushed over WebSockets, with a visible "last synced" time and an offline queue that syncs automatically on reconnect.</dd>
+    </dl>
+  </div>
+
+  <div class="area" id="area-intel">
+    <div class="area-head"><h3>10 · Intelligence</h3><span class="q">"What did we learn, and what will happen?"</span></div>
+    <dl>
+      <dt>Reports</dt><dd>Templated, AI-drafted: client weekly, sponsor delivery, post-event, board summary. All human-approved before sending.</dd>
+      <dt>Analytics</dt><dd>Attendance funnel, session attendance heat, cost per attendee, margin by cost category, supplier on-time rate.</dd>
+      <dt>Lessons Learned</dt><dd>A structured retro (keep / change / risk) tagged by area and supplier. Tags are surfaced automatically when a similar event is planned.</dd>
+      <dt>Post-Event Analysis</dt><dd>Objectives vs actual, budget vs actual, schedule baseline vs actual.</dd>
+      <dt>Sponsor Performance</dt><dd>Entitlements delivered, leads scanned, session attendance at sponsored slots. Feeds renewal proposals.</dd>
+      <dt>Event History &amp; Comparisons</dt><dd>"Compare with ICFT 2025": same metrics side by side, with deltas explained.</dd>
+      <dt>AI Insights</dt><dd>Forecasts (readiness at T−7, final pax, cost at completion) with confidence ranges and the drivers behind them.</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="today">
+  <div class="eyebrow">06 · Today Command architecture</div>
+  <h2>A morning briefing, not a dashboard</h2>
+  <p>Today Command reads top to bottom like an executive briefing. Within 10 seconds a user knows their priorities, risks, deadlines, approvals, cash position and event readiness. It's personalised by role: a CEO, a producer and a finance lead see the same seven blocks, filtered and ranked to their responsibilities.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>Block</th><th>Question it answers</th><th>Content &amp; interaction</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Morning Brief</b></td><td>What changed and what matters?</td><td>A 3–5 sentence narrative in the user's language, generated at 06:30 local time and refreshed when material facts change. Each clause links to evidence. Below it: "Since yesterday: 4 approvals cleared · 1 new risk · JOD 18,450.000 collected."</td></tr>
+      <tr><td class="n">2</td><td><b>Priority Stack</b></td><td>What should I do first?</td><td>Up to 7 items ranked by <code>severity × proximity × blast radius</code>. Each item: a verb-first title ("Approve Hall B LED quote"), why it's here, what it blocks, and 1–2 inline actions. Resolving an item removes it with an Undo. "Show ranking" explains the score.</td></tr>
+      <tr><td class="n">3</td><td><b>Event Horizon</b></td><td>Which event needs executive attention?</td><td>The portfolio as operational objects on a time axis (see below).</td></tr>
+      <tr><td class="n">4</td><td><b>Financial Pulse</b></td><td>Is cash OK?</td><td>Five figures, each with a definition card: Collected (month to date) · Receivable due in 30 days · Overdue · Payables due in 30 days · Net 30-day cash position. One sparkline, and the top 3 overdue invoices with "Chase", which drafts a message for a person to send.</td></tr>
+      <tr><td class="n">5</td><td><b>Upcoming Operations</b></td><td>What happens in the next 7 days?</td><td>A day-by-day strip: site visits, deliveries, load-ins, sessions, movements, deadlines. Filterable to "mine".</td></tr>
+      <tr><td class="n">6</td><td><b>Team Capacity</b></td><td>Who is overloaded?</td><td>Per person: assigned hours next 14 days vs capacity, stacked by event. People over 110% are flagged, with "Rebalance" suggesting reassignments (AI, with a reason).</td></tr>
+      <tr><td class="n">7</td><td><b>AI Recommendations</b></td><td>What should we do next?</td><td>2–4 cards, each with <b>Reason · Evidence · Impact · Confidence</b> and actions: Accept (does it or drafts it) · Prepare (drafts for review) · Dismiss (asks for a reason, which the system learns from).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Event Horizon, the visual system</h3>
+  <p>Event Horizon replaces charts, widgets and hexagon islands with one legible object per event. Events are <b>lanes on a shared time axis</b> (today → +120 days). Each event is a capsule spanning its dates, and its left edge carries the "operational object" readout:</p>
+  <div class="grid2">
+    <div class="panel"><h4>Each event object shows</h4><ul>
+      <li>Event name and client</li>
+      <li>Days remaining (T−26)</li>
+      <li>Health ring (0–100) and Readiness bar (phase %)</li>
+      <li>Phase chip: Opportunity … Archived</li>
+      <li>Budget status: on / at risk / over (text + icon)</li>
+      <li>Approvals: count waiting, oldest age</li>
+      <li>Risk level: highest open exposure (1–25)</li>
+    </ul></div>
+    <div class="panel"><h4>Sorting &amp; attention encoding</h4><ul>
+      <li>Default sort is the <b>attention score</b>, not the date: health drop × proximity × money at stake.</li>
+      <li>Events needing executive attention get the <b>one gold marker</b> in the system (a 3px gold edge and "Needs you" label). Shape and text carry state, never colour alone.</li>
+      <li>Critical risk uses the red capsule outline <i>plus</i> a ⚠ glyph.</li>
+      <li>Hover or focus opens a peek card with the AI one-liner and the top 3 open issues.</li>
+      <li>Zoom: 30 / 90 / 365 days. Group by phase, client or producer.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="ai">
+  <div class="eyebrow">07 · AI architecture</div>
+  <h2>An operations partner that shows its work</h2>
+  <p>The AI layer is a pipeline, not a chat window. Deterministic <b>signals</b> find facts from records. An <b>evidence graph</b> links facts to records. The <b>reasoner</b> (Claude) explains, ranks, drafts and forecasts from that evidence. <b>Actions</b> are proposed and a person commits them. <b>Feedback</b> tunes ranking.</p>
+  <pre class="mermaid">
+flowchart LR
+  R[("Records<br/>events · deliverables · POs<br/>invoices · risks · people")] --> S["Signals engine<br/>(deterministic rules)"]
+  S --> E["Evidence graph<br/>fact → record refs"]
+  E --> Q["Reasoner<br/>Claude · structured output"]
+  P["Permission scope<br/>(what this user may see)"] --> E
+  Q --> C["Recommendation card<br/>Reason · Evidence · Impact · Confidence"]
+  C --> H{"Person<br/>accepts?"}
+  H -- "accept / prepare" --> A["Action service<br/>(same gates as the UI)"]
+  H -- "dismiss + reason" --> F["Feedback store"]
+  F --> S
+  A --> R
+  </pre>
+  <h3>Capabilities</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Verb</th><th>Example</th><th>Mechanism</th></tr></thead>
+    <tbody>
+      <tr><td><b>Explain</b></td><td>Why is this event yellow?</td><td>Health penalties decomposed, then the top records per driver, then a narrative.</td></tr>
+      <tr><td><b>Detect</b></td><td>Which supplier is causing risk? Which milestones are delayed? What's overdue?</td><td>Signals: slip on critical path, supplier on-time rate &lt; 80%, invoice past due, approval past SLA.</td></tr>
+      <tr><td><b>Recommend</b></td><td>Recommend next actions</td><td>Ranked candidate actions from signals, explained by the reasoner.</td></tr>
+      <tr><td><b>Prepare</b></td><td>Today's executive briefing · sponsor delivery report · client weekly report</td><td>Template + evidence pack, then a draft with citations, then human approval.</td></tr>
+      <tr><td><b>Forecast</b></td><td>Predict event readiness at T−7</td><td>Burn-down of exit criteria, historical velocity of similar events, reported as a range with confidence.</td></tr>
+      <tr><td><b>Summarize</b></td><td>What happened on ICFT this week?</td><td>Activity log + changes, then a narrative.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The recommendation contract</h3>
+  <pre class="code">{
+  "claim":      "Move Hall B LED order to Lumen Arabia",
+  "reason":     "Current supplier has missed 2 of 3 milestones; LED install is on the critical path with 1 day float.",
+  "evidence":   [{"type":"deliverable","id":8812,"label":"LED rig drawing — 6 days late"},
+                 {"type":"supplier","id":44,"label":"On-time rate 58% (last 90 days)"}],
+  "impact":     {"schedule_days": 3, "cost_jod": "2150.000", "events": ["ICFT 2026"]},
+  "confidence": {"level":"medium","score":0.68,"why":"2 of 3 signals strong; supplier quote not yet received"},
+  "actions":    [{"verb":"prepare","label":"Draft RFQ to Lumen Arabia"},
+                 {"verb":"open","label":"Open Production › LED"}]
+}</pre>
+  <p><b>Confidence</b> is calibrated from signal coverage (how many independent signals agree), data freshness (age of the newest evidence) and historical acceptance of that recommendation type. It's shown as High / Medium / Low with the reason, never as an unexplained percentage.</p>
+  <h3>Models and platform</h3>
+  <ul>
+    <li><b>Reasoner:</b> Claude Opus 5 (<code>claude-opus-5</code>) with adaptive thinking for briefings, explanations and forecasts. Structured outputs (<code>output_config.format</code>) enforce the recommendation contract above.</li>
+    <li><b>Workers:</b> Claude Haiku 4.5 (<code>claude-haiku-4-5</code>) for high-volume classification (incident category, email-to-deliverable matching, document tagging).</li>
+    <li><b>Prompt caching</b> on the stable system prompt and the event's evidence pack, so repeated questions about the same event are cheap. <b>Message Batches</b> for the nightly per-user briefings (asynchronous, half cost).</li>
+    <li><b>Tool use</b>: the reasoner calls read-only tools (<code>get_event_health</code>, <code>list_overdue_invoices</code>, <code>supplier_scorecard</code>…) that run under the requesting user's permissions.</li>
+    <li>Handle the <code>refusal</code> stop reason and enable server-side fallbacks, so a declined request degrades to a plain summary rather than an error.</li>
+  </ul>
+  <h3>Guardrails</h3>
+  <ul>
+    <li><b>Permission-scoped retrieval:</b> the evidence graph is filtered by the user's policies before the model sees anything. The AI can never tell a coordinator what a manager-only record says.</li>
+    <li><b>Portal redaction:</b> anything drafted for a client passes through the same disclosure policy as the portal API. Margin and cost fields are removed before generation.</li>
+    <li><b>Human-in-the-loop</b> for anything external (emails, portal posts) or financial (payments, POs). The AI prepares; a person commits.</li>
+    <li><b>Audit:</b> every AI output stores its prompt version, evidence IDs, model, and the user's decision.</li>
+    <li><b>Evaluation:</b> a golden set of 200 real historical situations (anonymised) is scored on each prompt change: evidence precision, recommendation usefulness, Arabic output quality.</li>
+  </ul>
+</section>
+
+<!-- 8 -->
+<section id="data">
+  <div class="eyebrow">08 · Full data model</div>
+  <h2>The event graph</h2>
+  <p>Core idea: <b>company-level entities</b> (Client, Supplier, Venue, Person, CatalogueItem) are engaged by <b>event-level engagements</b>. Work, money and schedule all hang off the Event. Everything carries <code>tenant_id</code> (dormant until multi-tenancy ships).</p>
+  <pre class="mermaid">
+erDiagram
+  TENANT ||--o{ EVENT : owns
+  CLIENT ||--o{ OPPORTUNITY : has
+  OPPORTUNITY ||--o{ PROPOSAL : versions
+  OPPORTUNITY ||--o| EVENT : "won → opens"
+  EVENT ||--o{ PHASE_GATE : "exit criteria"
+  EVENT ||--o{ OBJECTIVE : targets
+  EVENT ||--o{ DELIVERABLE : delivers
+  DELIVERABLE ||--o{ TASK : "broken into"
+  DELIVERABLE }o--o{ DELIVERABLE : "depends on"
+  EVENT ||--o{ MILESTONE : schedules
+  EVENT ||--o{ RISK : registers
+  EVENT ||--o{ APPROVAL : gates
+  EVENT ||--o{ SESSION : programs
+  SESSION }o--|| SPACE : "held in"
+  VENUE ||--o{ SPACE : contains
+  PERSON ||--o{ PARTICIPATION : "takes part as"
+  EVENT ||--o{ PARTICIPATION : includes
+  PARTICIPATION ||--o{ MOVEMENT : travels
+  PARTICIPATION ||--o{ ROOM_NIGHT : stays
+  EVENT ||--o{ PRODUCTION_ITEM : builds
+  SUPPLIER ||--o{ PURCHASE_ORDER : receives
+  EVENT ||--o{ BUDGET_LINE : budgets
+  BUDGET_LINE ||--o{ PURCHASE_ORDER : commits
+  PURCHASE_ORDER ||--o{ SUPPLIER_BILL : billed
+  EVENT ||--|| CONTRACT : "governed by"
+  CONTRACT ||--o{ INSTALLMENT : schedules
+  INSTALLMENT ||--o| INVOICE : raises
+  INVOICE ||--o{ PAYMENT_ALLOCATION : settled
+  EVENT ||--o{ INCIDENT : "live log"
+  EVENT ||--o{ AI_INSIGHT : explains
+  AI_INSIGHT ||--o{ EVIDENCE_REF : cites
+  </pre>
+  <h3>Entity catalogue</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Domain</th><th>Entities</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Identity</td><td>Tenant, User, Role, Policy, TeamMembership, EventRole</td><td>Roles are company-wide (Viewer → Owner). EventRole grants per-event responsibility (Producer, Commercial lead…).</td></tr>
+      <tr><td>Directory</td><td>Client, Contact, Supplier, SupplierScorecard, Venue, Space, Person, Organisation</td><td>A Person is unique company-wide and gets deduplicated on email/phone with Arabic name transliteration.</td></tr>
+      <tr><td>Pipeline</td><td>Opportunity, Proposal, ProposalLine, ProposalVersion</td><td>Proposal lines reference CatalogueItems at a locked price.</td></tr>
+      <tr><td>Event core</td><td>Event, Phase, PhaseGate, Objective, Scope, ScopeVersion, ChangeRequest</td><td>Event.phase is a state machine with audited transitions.</td></tr>
+      <tr><td>Work</td><td>Deliverable, Task, Milestone, Dependency, Approval, Comment, Mention, Attachment</td><td>Replaces today's Task + PlanItem + EventApproval split.</td></tr>
+      <tr><td>Program</td><td>AgendaDay, Track, Session, SessionRole, Cue (run of show)</td><td>Cue has an offset in seconds from session start.</td></tr>
+      <tr><td>People</td><td>Participation (role: delegate, vip, speaker, sponsor_rep, exhibitor, media, staff, volunteer), Registration, Badge, CheckIn, Entitlement</td><td>One person, many participations.</td></tr>
+      <tr><td>Experience</td><td>CreativeAsset, BrandKit, SignItem, Menu, AwardCategory, JourneyStep, Booth, FloorPlan</td><td></td></tr>
+      <tr><td>Production</td><td>ProductionItem, Rider, DeliveryWindow, LoadSlot</td><td>Status chain specified → tested.</td></tr>
+      <tr><td>Logistics</td><td>RoomBlock, RoomNight, Flight, Movement, Vehicle, Driver, Shipment, AccessZone, ProtocolSequence</td><td></td></tr>
+      <tr><td>Money</td><td>BudgetVersion, BudgetLine, PurchaseOrder, SupplierBill, Contract, ChangeOrder, Installment, Invoice, InvoiceLine, Payment, PaymentAllocation, FxRate</td><td>Money stored as integer <b>millimes</b> (1/1000 JOD) plus a currency code. The FX rate is locked per document.</td></tr>
+      <tr><td>Live</td><td>Incident, StatusPing, LiveUpdate</td><td>Append-only.</td></tr>
+      <tr><td>Intelligence</td><td>Signal, AiInsight, EvidenceRef, Recommendation, RecommendationDecision, Lesson, MetricDefinition</td><td>MetricDefinition backs every ⓘ card (measures / calculation / source).</td></tr>
+      <tr><td>Platform</td><td>ActivityLog, Notification, Document (rendered output), Translation</td><td></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 9 -->
+<section id="ds">
+  <div class="eyebrow">09 · Design system: "Nova Command"</div>
+  <h2>Calm, premium, executive</h2>
+  <p>This evolves the live navy/gold/Playfair identity rather than replacing it. The previous "ORBIT" attempt was reverted, and Nova keeps the brand people already trust. The discipline is in the <b>ratio</b>:</p>
+  <div class="ratio" role="img" aria-label="85% light, 10% navy, 5% gold"><span></span><span></span><span></span></div>
+  <p style="font-size:13px;color:var(--muted)">85% light surfaces · 10% navy (ink, the Live bar, primary text) · 5% gold (one primary action per view, and the executive-attention marker)</p>
+
+  <h3>Color tokens</h3>
+  <div class="sw">
+    <div><span style="background:#F7F8FA"></span><p><b>canvas</b>#F7F8FA · page</p></div>
+    <div><span style="background:#FFFFFF"></span><p><b>surface</b>#FFFFFF · panels</p></div>
+    <div><span style="background:#0B1F3A"></span><p><b>navy-900 / ink</b>#0B1F3A · text, Live</p></div>
+    <div><span style="background:#34445E"></span><p><b>ink-2</b>#34445E · secondary</p></div>
+    <div><span style="background:#66748A"></span><p><b>muted</b>#66748A · labels (4.7:1)</p></div>
+    <div><span style="background:#E2E6ED"></span><p><b>line</b>#E2E6ED · hairlines</p></div>
+    <div><span style="background:#D4AF37"></span><p><b>gold-500</b>#D4AF37 · fills only</p></div>
+    <div><span style="background:#83650F"></span><p><b>gold-text</b>#83650F · gold on white (5.4:1)</p></div>
+    <div><span style="background:#1E7F55"></span><p><b>ok</b>#1E7F55</p></div>
+    <div><span style="background:#9A6200"></span><p><b>warn</b>#9A6200 · amber, not gold</p></div>
+    <div><span style="background:#B42318"></span><p><b>crit</b>#B42318</p></div>
+    <div><span style="background:#2F5DA8"></span><p><b>info / focus</b>#2F5DA8</p></div>
+  </div>
+  <div class="callout warn"><b class="t">Accessibility fix built into the tokens</b><p>Brand gold <code>#D4AF37</code> on white is about 2.1:1 and fails WCAG for text. Nova uses it only for <i>fills</i> (primary button with navy-900 text at about 8:1, markers, rules) and uses <code>gold-text #83650F</code> whenever gold must be read as text. Warning uses amber <code>#9A6200</code>, never gold, so "attention" and "warning" can't be confused.</p></div>
+  <h4>Semantic roles (tokens reference these, never raw hex)</h4>
+  <pre class="code">--color-bg-canvas   --color-bg-surface   --color-bg-sunken   --color-bg-glass (white/72 + blur 16)
+--color-text        --color-text-2       --color-text-muted  --color-text-on-navy
+--color-border      --color-border-strong
+--color-action-primary (gold-500)  --color-action-primary-text (navy-900)
+--color-attention (gold-500)       --color-focus (info)
+--color-state-ok | warn | crit | info  (+ -soft backgrounds)</pre>
+
+  <h3>Typography scale</h3>
+  <p>Display: <b>Playfair Display</b> (existing brand, headings only). UI and body: <b>IBM Plex Sans</b> paired with <b class="ar">IBM Plex Sans Arabic</b>, a type family designed as a matched Latin/Arabic pair, so both scripts share weight and rhythm. Data: <b>IBM Plex Mono</b> for IDs and tabular figures.</p>
+  <div class="typescale">
+    <div><small>display · 40/44</small><span style="font-family:var(--display);font-size:40px;line-height:1.1;font-weight:600">ICFT 2026</span></div>
+    <div><small>title · 28/34</small><span style="font-family:var(--display);font-size:28px;font-weight:600">Commercial</span></div>
+    <div><small>heading · 18/24 · 600</small><span style="font-size:18px;font-weight:600">Supplier commitments</span></div>
+    <div><small>body · 15/24</small><span>LED install is on the critical path with one day of float.</span></div>
+    <div><small>ui · 13/20 · 500</small><span style="font-size:13px;font-weight:500">Approve · Request changes</span></div>
+    <div><small>label · 11/16 · caps +.08em</small><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Collected · month to date</span></div>
+    <div><small>figure · 28 · tabular</small><span class="num" style="font-size:28px;font-weight:600">JOD 184,250.000</span></div>
+    <div><small>arabic body · 16/28</small><span class="ar" dir="rtl" lang="ar">تركيب شاشات LED على المسار الحرج مع يوم واحد من المرونة.</span></div>
+  </div>
+  <p>Arabic runs at +1px size and 1.75 line-height to match Latin optical size. Numerals default to Western Arabic (0–9) in both languages for finance, with a per-user option for Eastern Arabic (٠–٩) in narrative text.</p>
+
+  <h3>Spacing, radius, elevation</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>space-1…9</code></td><td>4 · 8 · 12 · 16 · 20 · 24 · 32 · 48 · 64</td><td>4-pt grid. Components use 8/12/16; sections 32/48.</td></tr>
+      <tr><td><code>radius-ctl</code></td><td>8px</td><td>Inputs, buttons, chips</td></tr>
+      <tr><td><code>radius-panel</code></td><td>12px</td><td>Panels, sheets, cards</td></tr>
+      <tr><td><code>radius-pill</code></td><td>999px</td><td>Status pills, phase chips</td></tr>
+      <tr><td><code>elev-0</code></td><td>none + 1px hairline</td><td>All static content</td></tr>
+      <tr><td><code>elev-float</code></td><td>0 12 32 navy/10 + 0 1 2 navy/6</td><td>Palette, popovers, side sheets only</td></tr>
+      <tr><td><code>glass</code></td><td>white/72 · blur 16 · inner 1px white/60</td><td>Command bar on scroll, palette, peek card. Never on content panels.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Component library (core 32)</h3>
+  <p>Grouped by role. Every component ships LTR and RTL, light and dark, comfortable (40px rows) and compact (32px rows).</p>
+  <div class="grid3">
+    <div class="panel"><h4>Foundations</h4><p>Button (primary · secondary · tertiary · destructive) · IconButton (tooltip + shortcut required) · Input · Select · Combobox · DatePicker (Gregorian + Hijri display) · MoneyInput (currency, millimes) · Checkbox · Switch · SegmentedControl</p></div>
+    <div class="panel"><h4>Status &amp; data</h4><p>StatusPill · PhaseChip · HealthRing · ReadinessBar · MetricFigure (with DefinitionCard) · Sparkline · DataTable (sort, group, inline edit, bulk bar) · EmptyState</p></div>
+    <div class="panel"><h4>Operational objects</h4><p>EventObject (Horizon lane) · PriorityItem · DeliverableRow · RiskRow · ApprovalCard · RecommendationCard · IncidentCard · PersonChip</p></div>
+    <div class="panel"><h4>Surfaces</h4><p>CommandBar · ContextBar · CommandPalette · SideSheet (peek) · Board · Timeline · Sheet · Canvas · DocumentPreview · Toast (with Undo)</p></div>
+  </div>
+
+  <h3>Interaction patterns</h3>
+  <ul>
+    <li><b>Optimistic + Undo</b> for reversible actions (assign, move, status). Confirm card for irreversible or external actions (send, pay, delete).</li>
+    <li><b>Peek, then open:</b> <kbd>Space</kbd> or click opens a side sheet. <kbd>↵</kbd> or "Expand" goes full page. Back always returns to the same scroll position.</li>
+    <li><b>Inline edit</b> on any field with an edit affordance on hover or focus. <kbd>Esc</kbd> reverts, <kbd>↵</kbd> commits.</li>
+    <li><b>Bulk bar</b> appears when 2 or more rows are selected: assign, status, date shift, export.</li>
+    <li><b>Explain anywhere:</b> <kbd>⌘.</kbd> on any selected object asks the AI "explain this" with that object as scope.</li>
+    <li><b>Presence:</b> avatars of teammates viewing the same record, and soft locks on fields being edited.</li>
+  </ul>
+
+  <h3>Motion system</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Token</th><th>Duration</th><th>Easing</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>motion-instant</code></td><td class="n">80ms</td><td>linear</td><td>Hover, press</td></tr>
+      <tr><td><code>motion-quick</code></td><td class="n">160ms</td><td>cubic-bezier(.2,.8,.2,1)</td><td>Popover, chip, toast</td></tr>
+      <tr><td><code>motion-sheet</code></td><td class="n">240ms</td><td>cubic-bezier(.2,.8,.2,1)</td><td>Side sheet, palette</td></tr>
+      <tr><td><code>motion-reorder</code></td><td class="n">320ms</td><td>spring (stiff, no bounce)</td><td>Priority Stack re-rank, Horizon re-sort</td></tr>
+    </tbody>
+  </table></div>
+  <p>Motion explains change (an item moving up the stack), never decorates. Under <code>prefers-reduced-motion</code> all motion becomes 0ms cross-fades. The Live indicator pulse stops and becomes a static dot.</p>
+</section>
+
+<!-- 10 -->
+<section id="responsive">
+  <div class="eyebrow">10 · Responsive strategy</div>
+  <h2>Designed per job, not per breakpoint</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Width</th><th>Class</th><th>Primary jobs</th><th>Layout rules</th></tr></thead>
+    <tbody>
+      <tr><td class="n">&lt; 600</td><td>Phone</td><td>Today, approvals, Live Mode, check-in, incident logging</td><td>Single column; bottom tab bar (Today · Events · Live · Search); sheets become full-screen; tables become stacked rows with 2 key fields.</td></tr>
+      <tr><td class="n">600–1023</td><td>Tablet</td><td>Live ops room, site visits, run of show</td><td>Two panes (list + detail); Live Mode 2–3 columns; floor-plan canvas pinch-zoom.</td></tr>
+      <tr><td class="n">1024–1439</td><td>Laptop</td><td>Full operate mode</td><td>Content max 1200; side sheet overlays at 480px.</td></tr>
+      <tr><td class="n">≥ 1440</td><td>Desktop / ops wall</td><td>Planning, commercial, multi-event control</td><td>Side sheet docks (doesn't overlay); Horizon shows 120 days; optional 3-pane Event Space.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Canvases (floor plan, room layout, timeline) are the only horizontally scrollable surfaces. Everything else reflows. Density is a user setting independent of screen size.</p>
+</section>
+
+<!-- 11 -->
+<section id="mobile">
+  <div class="eyebrow">11 · Mobile experience</div>
+  <h2>The phone is a field instrument</h2>
+  <p>Mobile isn't a shrunken desktop. It's for the four things people do away from a desk: <b>decide, check, log, find</b>.</p>
+  <div class="grid2">
+    <div class="panel"><h4>Decide</h4><p>The approvals inbox with swipe-right to approve and swipe-left to request changes (with a required comment). The evidence is shown before the buttons. Biometric confirmation for financial approvals above a threshold.</p></div>
+    <div class="panel"><h4>Check</h4><p>Today Command compressed: Morning Brief, top 3 priorities, and your events' health. Push notifications only for items in <i>your</i> Priority Stack. There is no firehose.</p></div>
+    <div class="panel"><h4>Log</h4><p>Incident in two taps plus a photo, site-visit notes with voice-to-text (typed transcript saved, audio optional), and delivery confirmation with a photo.</p></div>
+    <div class="panel"><h4>Find</h4><p>Universal search and the palette ("who is driving the Minister at 14:00?"). It works offline for the live event's people, movements and run of show.</p></div>
+  </div>
+  <p>Delivered as an installable PWA first (one codebase, offline via service worker, web push). A native wrapper is considered in Q4 only if wake lock, NFC badge scanning or background location prove essential.</p>
+</section>
+
+<!-- 12 -->
+<section id="a11y">
+  <div class="eyebrow">12 · Accessibility strategy</div>
+  <h2>WCAG 2.2 AA, in both reading directions</h2>
+  <h3>Standards we commit to</h3>
+  <ul>
+    <li><b>Contrast:</b> 4.5:1 text, 3:1 UI components and focus indicators, validated for every token pair in both themes by CI.</li>
+    <li><b>Not by colour alone:</b> every status carries text and an icon or shape. Horizon capsules use outline style plus glyphs.</li>
+    <li><b>Focus (2.4.11, 2.4.13):</b> a 2px focus ring that is never obscured by the sticky command bar. Scroll padding equals the bar's height.</li>
+    <li><b>Target size (2.5.8):</b> at least 24×24 everywhere; 44×44 in Live Mode and on mobile.</li>
+    <li><b>Dragging (2.5.7):</b> every drag (board, timeline, floor plan, agenda) has a keyboard and menu alternative ("Move to…", arrow keys with ⇧ for larger steps).</li>
+    <li><b>Accessible authentication (3.3.8):</b> passkeys and magic links, no cognitive puzzles. The client portal supports magic links.</li>
+    <li><b>Redundant entry (3.3.7):</b> data typed once is reused. Speaker travel details flow to Logistics, not re-asked.</li>
+    <li><b>Consistent help (3.2.6):</b> "Ask" (AI) and the human support contact are in the same place on every screen.</li>
+    <li><b>Live regions:</b> Priority Stack changes, Live updates and toasts are announced politely. Critical incidents are announced assertively.</li>
+    <li><b>Reduced motion and forced-colours</b> modes are supported and tested.</li>
+  </ul>
+  <h3>Arabic RTL as a first-class direction</h3>
+  <ul>
+    <li>CSS logical properties only (<code>margin-inline-start</code>, <code>inset-inline-end</code>). A stylelint rule bans physical left/right.</li>
+    <li>Directional icons (arrows, chevrons, progress) mirror. Clocks, media controls, logos and charts' time axes do not. Time flows right-to-left in RTL on Horizon and Timeline.</li>
+    <li>Mixed-direction content (Latin supplier names inside Arabic sentences, phone numbers, JOD amounts) is wrapped with <code>&lt;bdi&gt;</code> and <code>unicode-bidi: isolate</code>.</li>
+    <li>Names are stored in both scripts where known. Search matches across transliterations (محمد ↔ Mohammad/Muhammad).</li>
+    <li>Documents (contracts, briefs) support true bilingual side-by-side layout, and an Arabic-first variant for government clients.</li>
+    <li>Every screen is tested in AR before release. Pseudo-localisation (+35% string length) runs in CI.</li>
+  </ul>
+</section>
+
+<!-- 13 -->
+<section id="personas">
+  <div class="eyebrow">13 · User personas</div>
+  <h2>Who Nova is for</h2>
+  <div class="grid2">
+    <div class="panel persona"><span class="who">Rania · Managing Director</span><span class="role">Owner role · 12 events a year, 3 at once · reads on phone at 07:00</span><p>Needs to know in 10 seconds whether anything is on fire and whether cash is OK. Hates chasing people for status.<br><b>Nova gives her:</b> the Morning Brief, Event Horizon sorted by attention, Financial Pulse, one-swipe approvals.</p></div>
+    <div class="panel persona"><span class="who">Omar · Senior Producer</span><span class="role">Manager role · leads 2 events · desktop all day, tablet on site</span><p>Owns delivery end to end. Juggles 40 suppliers and a client who changes the agenda weekly.<br><b>Nova gives him:</b> the Event Space with critical path, change requests with impact, the keyboard palette, and a run of show that becomes Live Mode.</p></div>
+    <div class="panel persona"><span class="who">Dana · Coordinator</span><span class="role">Coordinator role · 3 events · new to the company</span><p>Wants to know what's hers today and how to do it right the first time.<br><b>Nova gives her:</b> My Work, phase checklists that explain themselves, safe defaults, and "blocked" messages that say who can help.</p></div>
+    <div class="panel persona"><span class="who">Sara · Finance Lead</span><span class="role">Manager (finance) · month-end is her Live Mode</span><p>Needs contracted vs invoiced vs collected to reconcile, per event and across the book, in JOD with three decimals.<br><b>Nova gives her:</b> Money workspace, definition cards on every figure, three-way match, AI-drafted chasers.</p></div>
+    <div class="panel persona"><span class="who">Khalid · Logistics Lead (on the day)</span><span class="role">Coordinator · phone in one hand, radio in the other</span><p>Needs to know where every VIP and vehicle is, and to log a problem in seconds.<br><b>Nova gives him:</b> Live Mode, movements with driver ETAs, two-tap incidents, and offline sync.</p></div>
+    <div class="panel persona"><span class="who">Ms. Haddad · Client (EY MENA)</span><span class="role">Portal user · approves creative and budget · weekly check-in</span><p>Wants confidence without detail overload, and never wants to hunt through email for the latest version.<br><b>Nova gives her:</b> the portal timeline, approvals with previews, the weekly report, and documents in one place.</p></div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section id="workflows">
+  <div class="eyebrow">14 · Business workflows</div>
+  <h2>Six end-to-end flows</h2>
+  <h3>1 · Opportunity to confirmed event</h3>
+  <pre class="mermaid">
+sequenceDiagram
+  actor MD as Rania (MD)
+  actor CL as Client
+  participant N as Nova
+  MD->>N: Create opportunity (client, window, pax, band)
+  N->>N: Suggest blueprint from similar past events
+  MD->>N: Build proposal from catalogue
+  N->>CL: Proposal link (portal, bilingual)
+  CL->>N: Accept v2
+  N->>N: Draft contract + payment schedule from proposal
+  MD->>N: Approve contract (manage-contract gate)
+  CL->>N: Sign (e-sign)
+  N->>N: Opportunity won → Event Space opens in Confirmed phase
+  N->>MD: Deposit invoice drafted — review & send
+  </pre>
+  <h3>2 · Planning to procurement</h3>
+  <p>Producer freezes the scope → budget v1 is submitted → manager approves → phase gate "Scope frozen · budget v1 approved" turns green → Procurement opens. Budget lines marked critical create RFQ deliverables → supplier quotes are compared side by side → PO issued (checked against the budget line) → the supplier confirms through a portal link → the deliverable is accepted.</p>
+  <h3>3 · Change request</h3>
+  <p>The client asks for a second breakout room → a ChangeRequest is logged with scope delta → Nova computes the impact (+JOD 3,400.000 cost, +JOD 4,420.000 price, +2 production items, no critical-path effect) → internal approval → client approval in the portal → a change order is added to the contract and the invoice schedule updates. Everything is linked, so there's no side email trail.</p>
+  <h3>4 · Approval loop (internal and client)</h3>
+  <p>Any deliverable with a gate sends an approval request to the gate holder with an SLA (default 48h). Reminders go out at 50% and 100% of the SLA. At 150% it escalates to the event lead and shows in their Priority Stack. Decisions are captured with comment and version. Every approval shows the evidence it was based on.</p>
+  <h3>5 · Readiness to live to closing</h3>
+  <p>At T−7, Nova opens the go/no-go checklist (run of show locked, rooming final, riders met, VIP plans confirmed) → the event lead signs → on the first session day the event switches to Live and Live Mode activates for staff on shift → incidents and updates stream in → after the last session, Closing opens with final invoice, supplier bill matching, a lessons retro prompt and the post-event report draft.</p>
+  <h3>6 · Collections</h3>
+  <p>Installment due → invoice auto-drafted 7 days before → finance reviews and sends → at 1 day overdue, a chaser is drafted in the client's language for a person to send → payment recorded and allocated → receivable clears → Financial Pulse updates for everyone at once.</p>
+</section>
+
+<!-- 15 -->
+<section id="wireframes">
+  <div class="eyebrow">15 · Wireframes</div>
+  <h2>Low-fidelity layouts</h2>
+  <p>Structure only, with example data. Gold appears once per screen, exactly as the ratio rule requires.</p>
+
+  <div class="wf">
+    <p class="wf-cap">W1 · Today Command · desktop 1440</p>
+    <div class="wf-frame">
+      <div class="b s row" style="align-items:center"><span class="h" style="flex:0 0 auto">Elite · Nova</span><span>Today · Events · Pipeline · Directory · Money</span><span class="b" style="flex:2">⌘K  Search or run a command…</span><span style="flex:0 0 auto">● Live: GJU Career Fair · 🔔 · RA</span></div>
+      <div class="b"><div class="h">Good morning, Rania. Wednesday 23 September</div><p style="margin:0">Tech Expo 2026 slipped to health 55: the booth contractor has missed two milestones and the production budget is 12% over. ICFT is on track but waits on your approval of the Hall B LED quote. JOD 18,450.000 collected yesterday; JOD 42,100.000 falls due this week.</p></div>
+      <div class="row">
+        <div class="b" style="flex:1.2"><div class="h">Priority Stack · 5</div>
+          <div class="b g" style="margin:4px 0"><b>Approve Hall B LED quote</b> · ICFT · blocks install · <span class="btnwf p">Approve</span> <span class="btnwf">Open</span></div>
+          <div class="b" style="margin:4px 0"><b>Replace booth contractor?</b> · Tech Expo · 2 missed milestones · <span class="btnwf">Review</span></div>
+          <div class="b" style="margin:4px 0"><b>Chase INV-2026-031</b> · EY · 9 days overdue · <span class="btnwf">Draft chaser</span></div>
+          <div class="l"></div><div class="l" style="width:60%"></div></div>
+        <div class="b" style="flex:1"><div class="h">Financial Pulse</div>
+          <div class="row"><div><div class="big">184,250</div><small>Collected MTD</small></div><div><div class="big">42,100</div><small>Due 30d</small></div><div><div class="big" style="color:var(--crit)">16,800</div><small>Overdue</small></div></div>
+          <div class="l"></div><small>JOD · ⓘ definitions on each figure</small></div>
+      </div>
+      <div class="b"><div class="h">Event Horizon · sorted by attention · 90 days</div>
+        <div class="lane"><span><b>Tech Expo 2026</b><br><small>T−78 · Production · ⚠ 55</small></span><div class="track"><span class="cap risk" style="inset-inline-start:72%;width:10%">Tech Expo · ⚠ health 55 · over budget</span></div></div>
+        <div class="lane"><span><b>ICFT 2026</b><br><small>T−26 · Production · 67</small></span><div class="track"><span class="cap attn" style="inset-inline-start:26%;width:5%">Needs you</span></div></div>
+        <div class="lane"><span><b>EY Annual Gala</b><br><small>T−50 · Planning · 71</small></span><div class="track"><span class="cap" style="inset-inline-start:50%;width:2%">Gala</span></div></div>
+        <div class="lane"><span><b>GJU Career Fair</b><br><small>Live · 65</small></span><div class="track"><span class="cap" style="inset-inline-start:0;width:3%">● Live</span></div></div>
+      </div>
+      <div class="row">
+        <div class="b"><div class="h">Next 7 days</div><div class="l"></div><div class="l" style="width:80%"></div><div class="l" style="width:65%"></div></div>
+        <div class="b"><div class="h">Team capacity</div><small>Layla 128% · Omar 96% · Dana 74%</small><div class="l"></div></div>
+        <div class="b"><div class="h">Recommendations</div><small>Rebalance Layla → Dana (3 tasks) · Reason · Evidence · Impact · Confidence: High</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf">
+    <p class="wf-cap">W2 · Event Space › Command · desktop</p>
+    <div class="wf-frame">
+      <div class="b row" style="align-items:center"><span style="flex:2"><b style="font-size:15px">ICFT 2026</b> · ICFT Global Committee · 19–21 Oct · Amman</span><span class="tag">Production</span><span>Health 67 ◔</span><span>Readiness 62%</span><span class="btnwf p" style="flex:0 0 auto">Approve LED quote</span></div>
+      <div class="b s"><small><u>Command</u> · Plan · Program · People · Experience · <b>Production</b> · Commercial · Logistics · Live · Intelligence</small></div>
+      <div class="row">
+        <div class="b" style="flex:1.4"><div class="h">Critical path · float</div>
+          <small>Agenda frozen ✓ → Print files (2d) → <b style="color:var(--crit)">LED install (1d ⚠)</b> → Tech rehearsal (0d) → Doors</small><div class="l"></div>
+          <div class="h" style="margin-top:8px">Phase exit criteria · 5 of 8</div><div class="l"></div><div class="l" style="width:70%"></div></div>
+        <div class="b" style="flex:1"><div class="h">AI summary</div><small>On track except LED: supplier 6 days late on rig drawing [evidence ×2]. Approving the alternate quote recovers 3 days.</small></div>
+      </div>
+      <div class="row">
+        <div class="b"><div class="h">Budget</div><small>Approved 215,000 · Committed 188,400 · FAC 219,800 · <b>+2.2%</b></small></div>
+        <div class="b"><div class="h">Decisions · 2</div><small>LED quote (you, 20h left) · Creative v3 (client, 2d)</small></div>
+        <div class="b"><div class="h">Top risks</div><small>Keynote visa · 16 · Sponsor logos · 9</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="wf">
+      <p class="wf-cap">W3 · Live Event Mode · phone</p>
+      <div class="wf-frame phone">
+        <div class="b n row"><span><b>● LIVE · GJU Career Fair</b></span><span style="flex:0 0 auto">10:42 · synced 4s</span></div>
+        <div class="row"><div class="b"><div class="big">1,284</div><small>checked in / 1,600</small></div><div class="b"><div class="big" style="color:var(--crit)">2</div><small>open incidents</small></div></div>
+        <div class="b"><div class="h">Now · Hall A</div><small>Panel: Future of Work · +6 min · speakers 3/3 mic'd</small></div>
+        <div class="b"><div class="h">Next VIP</div><small>H.E. Minister · ETA 11:05 · Gate 2 · escort Omar</small></div>
+        <div class="b" style="text-align:center;padding:14px"><b>＋ Log incident</b></div>
+        <div class="row"><span class="btnwf" style="text-align:center">Arrivals</span><span class="btnwf" style="text-align:center">Rooms</span><span class="btnwf" style="text-align:center">Feed</span></div>
+      </div>
+    </div>
+    <div class="wf">
+      <p class="wf-cap">W4 · Command palette · overlay</p>
+      <div class="wf-frame phone" style="max-width:420px">
+        <div class="b"><b>⌘K</b>  outstanding inv|</div>
+        <div class="b s"><small>QUERY</small><br><b>Outstanding invoices</b> · 7 · JOD 58,900.000</div>
+        <div class="b"><small>INV-2026-031 · EY · 9d overdue · 16,800.000 · <span class="btnwf">Record payment</span></small></div>
+        <div class="b"><small>INV-2026-044 · ICFT · due 30 Sep · 24,000.000</small></div>
+        <div class="b s"><small>ACTIONS</small><br>Create invoice… · Generate client report…</div>
+        <div class="b s"><small>ASK</small><br>Why is EY's invoice overdue?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section id="screens">
+  <div class="eyebrow">16 · Screen inventory</div>
+  <h2>52 screens, grouped by where people work</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Space</th><th>Screens</th><th class="n">Count</th></tr></thead>
+    <tbody>
+      <tr><td>Today</td><td>Today Command · My Work · Approvals inbox · Notifications</td><td class="n">4</td></tr>
+      <tr><td>Events</td><td>Event Horizon · Archive · Blueprints · New event (from blueprint)</td><td class="n">4</td></tr>
+      <tr><td>Pipeline</td><td>Pipeline board · Opportunity · Proposal builder · Proposal compare</td><td class="n">4</td></tr>
+      <tr><td>Event Space</td><td>Command · Plan (scope, deliverables, timeline, risks) · Program (agenda, sessions, run of show) · People (list, person-in-event, check-in) · Experience (concept, registration builder, floor plan, signage) · Production (schedule, riders) · Commercial (money chain, budget, POs, invoices) · Logistics (hotels, flights, transport dispatch, shipments) · Live · Intelligence (reports, retro, compare)</td><td class="n">24</td></tr>
+      <tr><td>Directory</td><td>Clients · Client · Suppliers · Supplier (scorecard) · Venues · Venue (spaces, plans) · People</td><td class="n">7</td></tr>
+      <tr><td>Money</td><td>Receivables · Payables · Cash forecast · Cross-event P&amp;L</td><td class="n">4</td></tr>
+      <tr><td>Library</td><td>Catalogue · Templates · Roles &amp; permissions · Workspace settings</td><td class="n">4</td></tr>
+      <tr><td>Client portal</td><td>Home (timeline) · Approvals · Documents · Budget &amp; invoices · Reports</td><td class="n">5</td></tr>
+      <tr><td>Public</td><td>Registration page · Check-in scan · Supplier confirmation link</td><td class="n">3</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:13px;color:var(--muted)">Screens counted once even where they have multiple views (board / timeline / sheet). Print documents (≈17) are listed with the Document component, not as screens.</p>
+</section>
+
+<!-- 17 -->
+<section id="components">
+  <div class="eyebrow">17 · Component inventory</div>
+  <h2>What gets built, and where it's used</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>Purpose</th><th>Used in</th><th>Key states</th></tr></thead>
+    <tbody>
+      <tr><td><code>EventObject</code></td><td>One event as an operational object</td><td>Horizon, Pipeline, Directory › Client</td><td>normal · needs-you · critical · live · archived</td></tr>
+      <tr><td><code>PriorityItem</code></td><td>Ranked actionable item</td><td>Today, My Work, mobile</td><td>open · resolving · resolved (undo) · snoozed</td></tr>
+      <tr><td><code>RecommendationCard</code></td><td>AI claim + Reason / Evidence / Impact / Confidence</td><td>Today, Command, palette</td><td>proposed · preparing · accepted · dismissed</td></tr>
+      <tr><td><code>MetricFigure</code></td><td>Number + unit + definition card</td><td>Everywhere money or scores appear</td><td>fresh · stale (&gt;24h) · unavailable</td></tr>
+      <tr><td><code>HealthRing</code> / <code>ReadinessBar</code></td><td>The only encodings for health and readiness</td><td>Horizon, Command, context bar</td><td>0–100 with bands</td></tr>
+      <tr><td><code>PhaseChip</code></td><td>Lifecycle phase</td><td>Everywhere events appear</td><td>11 phases</td></tr>
+      <tr><td><code>ApprovalCard</code></td><td>Decision with evidence and SLA</td><td>Inbox, Command, portal, mobile</td><td>pending · due soon · overdue · decided</td></tr>
+      <tr><td><code>DataTable</code></td><td>Sort, group, inline edit, bulk bar, density</td><td>All lists</td><td>loading · empty · error · selected</td></tr>
+      <tr><td><code>Timeline</code></td><td>Gantt with dependencies, baseline</td><td>Plan, Production, Logistics</td><td>edit · read · print</td></tr>
+      <tr><td><code>Canvas</code></td><td>Floor plan / room layout editor</td><td>Experience, Program</td><td>edit · present · print</td></tr>
+      <tr><td><code>CommandPalette</code></td><td>Open / create / do / ask</td><td>Global</td><td>idle · results · confirm · running · done</td></tr>
+      <tr><td><code>SideSheet</code></td><td>Peek any record</td><td>Global</td><td>overlay · docked · expanded</td></tr>
+      <tr><td><code>IncidentCard</code></td><td>Live issue</td><td>Live Mode</td><td>new · assigned · resolved · critical</td></tr>
+      <tr><td><code>DocumentPreview</code></td><td>Printable output with live data</td><td>Contracts, rooming, run of show, badges…</td><td>draft · approved · sent · bilingual</td></tr>
+      <tr><td><code>DefinitionCard</code></td><td>Measures · Calculation · Source · Updated</td><td>Attached to every MetricFigure</td><td>n/a</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 18 -->
+<section id="db">
+  <div class="eyebrow">18 · Database architecture</div>
+  <h2>PostgreSQL, one schema, audited everything</h2>
+  <ul>
+    <li><b>Engine:</b> PostgreSQL 17 (production already targets Postgres per the cutover plan). SQLite stays for local development and tests.</li>
+    <li><b>Keys:</b> <code>bigint</code> identity internally, ULIDs as public IDs in URLs and the API (so URLs don't reveal volumes, following today's token rationale).</li>
+    <li><b>Tenancy:</b> <code>tenant_id</code> on every table from day one, plus Postgres row-level security policies (disabled until multi-tenant launches). This follows the "deferred" decision without closing the door.</li>
+    <li><b>Money:</b> <code>amount_minor bigint</code> + <code>currency char(3)</code> + <code>fx_rate numeric(18,8)</code> locked per document. JOD minor unit = 1/1000.</li>
+    <li><b>State machines:</b> each state column is paired with a <code>*_transitions</code> table (from, to, actor, reason, at). Phase changes and approvals are fully audited.</li>
+    <li><b>Activity log:</b> an append-only <code>activity</code> table (subject, verb, actor, diff jsonb), partitioned monthly. It powers the "Since yesterday" brief and AI summaries.</li>
+    <li><b>Bilingual fields:</b> <code>jsonb</code> translation columns (<code>{"en": "...", "ar": "..."}</code>) for user-authored names and titles, with a generated column for search.</li>
+    <li><b>Search:</b> Postgres full-text with an Arabic-aware configuration plus a trigram index for fuzzy names. Meilisearch is optional later for the palette at scale.</li>
+    <li><b>Read models:</b> materialised tables for health, readiness, attention score and money chain, recomputed by queued jobs on domain events. Screens read these, so they never recalculate on page load.</li>
+    <li><b>AI store:</b> <code>ai_insights</code> + <code>evidence_refs</code> (polymorphic record references) + <code>recommendation_decisions</code>. Nothing that's been shown to a user is deleted.</li>
+    <li><b>Backups:</b> PITR on managed Postgres, nightly logical dumps, and a quarterly restore drill.</li>
+  </ul>
+</section>
+
+<!-- 19 -->
+<section id="laravel">
+  <div class="eyebrow">19 · Laravel architecture</div>
+  <h2>A modular monolith organised by domain</h2>
+  <p>Laravel 13 remains the backbone. The existing models, gates, state machines and PDF pipeline are the seed of the domain layer. Code is organised by <b>domain</b>, not by Laravel's default folders:</p>
+  <pre class="code">app/
+  Domains/
+    Events/        Event, Phase, PhaseGate · Actions/AdvancePhase · Policies · Events/PhaseAdvanced
+    Work/          Deliverable, Task, Milestone, Dependency, Approval · Actions/Approve · Rules/CriticalPath
+    Program/       Session, Cue, Track · Actions/ScheduleSession · Rules/Conflicts
+    People/        Person, Participation, Registration, CheckIn
+    Production/    ProductionItem, Rider, LoadSlot
+    Logistics/     RoomBlock, Movement, Flight, Shipment
+    Money/         Contract, Invoice, Payment, PurchaseOrder, BudgetVersion · Money (value object)
+    Live/          Incident, LiveUpdate · Broadcasting
+    Intelligence/  Signals/*, Metrics/MetricRegistry, Reports/*
+    Ai/            Reasoner, EvidencePack, Tools/*, Prompts/* (versioned), Evals/
+    Directory/     Client, Supplier, Venue, Space
+  Http/Api/V1/     thin controllers → Domain Actions
+  Http/Web/        Inertia pages (React)
+  Support/         Tenancy, Disclosure (portal field policies), Localisation</pre>
+  <ul>
+    <li><b>Actions</b> (single-purpose classes) hold every mutation. Each calls its gate, the same way <code>AuthorizationGuardTest</code> enforces today, and emits a domain event.</li>
+    <li><b>Domain events → listeners → read-model jobs</b> keep health, readiness and money-chain tables current (Horizon queues on Redis).</li>
+    <li><b>Policies</b> extend today's 6 gates with event-scoped roles, plus a <b>Disclosure</b> layer that removes internal fields for portal and AI contexts.</li>
+    <li><b>Broadcasting</b> via Laravel Reverb (WebSockets) for Live Mode, presence and Priority Stack updates.</li>
+    <li><b>Documents:</b> keep the Browsershot/headless-Chrome pipeline (already producing 17 documents) and add bilingual templates.</li>
+    <li><b>AI:</b> the official Anthropic PHP SDK, called only from <code>Domains/Ai</code>. Prompts are versioned files, evidence packs are built by domain services, and outputs are validated against the recommendation schema before storage.</li>
+    <li><b>Testing:</b> Pest/PHPUnit per domain, the architecture guard tests carried over, plus new ones: "every MetricFigure has a MetricDefinition", "no portal response contains a disclosure-restricted field".</li>
+  </ul>
+</section>
+
+<!-- 20 -->
+<section id="react">
+  <div class="eyebrow">20 · React architecture</div>
+  <h2>Inertia + React for Nova surfaces</h2>
+  <div class="callout info"><b class="t">Why React here, when today's app is Livewire</b><p>Nova's key surfaces (palette, Horizon, timeline, canvases, Live Mode offline, optimistic updates) are client-state-heavy. Livewire remains excellent for forms and settings. The plan: new Nova surfaces ship as <b>Inertia React pages</b> inside the same Laravel app, sharing auth, routes and policies. Existing Livewire screens are replaced one by one. There's no separate SPA and no second backend.</p></div>
+  <pre class="code">resources/js/
+  app.tsx                 Inertia bootstrap · theme · direction (ltr/rtl) · i18n
+  design-system/          tokens.css · primitives (Button, Input, MoneyInput…) · Storybook stories
+  surfaces/               Board · Timeline · Sheet · Canvas · SideSheet · DocumentPreview
+  features/
+    today/                MorningBrief · PriorityStack · EventHorizon · FinancialPulse…
+    event-space/          ContextBar · areas/* (command, plan, program…)
+    live/                 LiveShell (PWA, offline queue) · IncidentComposer · ArrivalsSearch
+    palette/              parser (verb+object+scope) · providers (navigate, create, query, ask)
+    portal/               PortalShell · Approvals · Reports
+  lib/                    api client (typed from OpenAPI) · query cache (TanStack Query) · realtime (Echo/Reverb)</pre>
+  <ul>
+    <li><b>Language:</b> TypeScript strict. Types for API payloads are generated from the OpenAPI spec (§21).</li>
+    <li><b>State:</b> server state in TanStack Query (optimistic mutations + Undo); local UI state in component state; no global store until it's proven necessary.</li>
+    <li><b>Accessibility primitives:</b> React Aria (keyboard, focus management, RTL-aware) under Nova's own styling. There's no Material or Bootstrap anywhere.</li>
+    <li><b>Styling:</b> Tailwind v4 (already in the stack) driven by Nova tokens as CSS variables, with logical-property utilities only.</li>
+    <li><b>Performance:</b> route-level code splitting, virtualised lists over 200 rows, and canvases in their own chunks. Budget: under 200KB JS on Today Command.</li>
+    <li><b>Offline:</b> Live Mode uses a service worker plus an IndexedDB outbox. Mutations queue with idempotency keys and sync on reconnect.</li>
+  </ul>
+</section>
+
+<!-- 21 -->
+<section id="api">
+  <div class="eyebrow">21 · API architecture</div>
+  <h2>One API, three audiences</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Surface</th><th>Consumers</th><th>Auth</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/v1</code> (internal)</td><td>Nova web &amp; PWA</td><td>Sanctum session cookies</td><td>Full domain, policy-filtered</td></tr>
+      <tr><td><code>/portal/api/v1</code></td><td>Client portal</td><td>Magic link / passkey · client-scoped tokens</td><td>Disclosure policies remove cost, margin and internal notes <i>server-side</i></td></tr>
+      <tr><td><code>/public/v1</code></td><td>Registration pages, check-in, supplier confirmation links</td><td>Unguessable tokens (carried over from today's design)</td><td>Rate-limited, write-only where possible</td></tr>
+      <tr><td>Webhooks (out)</td><td>Accounting, CRM, e-sign</td><td>HMAC-signed</td><td><code>invoice.issued</code>, <code>payment.recorded</code>, <code>event.phase_advanced</code>…</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Conventions</h3>
+  <ul>
+    <li>REST resources nested by event (<code>/events/{id}/deliverables</code>), plus <b>action endpoints</b> for state changes (<code>POST /deliverables/{id}/approve</code>), so the UI, palette and AI all call the same audited actions.</li>
+    <li>JSON:API-style sparse fieldsets and includes. Cursor pagination. ULIDs in URLs.</li>
+    <li>Money is always <code>{"amount_minor": 16800000, "currency": "JOD", "display": "16,800.000"}</code>. Clients never do their own currency formatting.</li>
+    <li>Metrics endpoints return values <i>with</i> their definition ID, so any client can render the definition card.</li>
+    <li><code>Idempotency-Key</code> is required on every POST from Live Mode and the palette.</li>
+    <li>Realtime: private channels per event (<code>event.{id}</code>) and per user (<code>user.{id}.priority</code>) over Reverb.</li>
+    <li>AI endpoints: <code>POST /ai/explain</code>, <code>/ai/prepare</code>, <code>/ai/recommendations/{id}/decision</code>, streaming for long drafts.</li>
+    <li>OpenAPI 3.1 spec generated from code, used for typed clients and contract tests.</li>
+  </ul>
+</section>
+
+<!-- 22 -->
+<section id="roadmap">
+  <div class="eyebrow">22 · 12-month roadmap</div>
+  <h2>Ship Nova alongside the current app, one surface at a time</h2>
+  <p>Every quarter ends with something people use every day. The current app keeps running, and its screens are retired as Nova's replacements reach parity.</p>
+  <div class="roadmap">
+    <div class="q4"><div class="eyebrow">Q4 2026 · Months 1–3</div><h4>Foundations &amp; Today</h4><ul>
+      <li>Postgres cutover · tenant_id + ULIDs</li>
+      <li>Nova tokens, 20 core components, RTL from day one</li>
+      <li>Inertia React shell, command bar, palette (navigate + query)</li>
+      <li>Metric registry + definition cards; money chain read model</li>
+      <li><b>Today Command</b> v1 (brief is rule-based), My Work, Approvals inbox</li>
+    </ul><p class="exit">Exit: MD and producers start their day in Today Command; money numbers match across all screens.</p></div>
+    <div class="q4"><div class="eyebrow">Q1 2027 · Months 4–6</div><h4>Event Space core</h4><ul>
+      <li>Phase model + gates; Health &amp; Readiness v1</li>
+      <li>Unified work model: Deliverable → Task, dependencies, critical path</li>
+      <li>Event Space: Command, Plan, Commercial</li>
+      <li>Event Horizon; palette create + act</li>
+      <li>AI v1: Explain + Morning Brief with evidence (Claude)</li>
+    </ul><p class="exit">Exit: two live client events run end to end from Nova's Plan and Commercial areas.</p></div>
+    <div class="q4"><div class="eyebrow">Q2 2027 · Months 7–9</div><h4>Operations depth &amp; Live</h4><ul>
+      <li>Program, People, Logistics, Production areas (migrating agenda, transport, rooming, badges)</li>
+      <li><b>Live Event Mode</b> PWA, offline, incidents, Reverb realtime</li>
+      <li>Supplier scorecards; change requests with impact</li>
+      <li>AI v2: Detect + Recommend with confidence</li>
+    </ul><p class="exit">Exit: one event's show day run entirely in Live Mode; legacy hub tabs retired.</p></div>
+    <div class="q4"><div class="eyebrow">Q3 2027 · Months 10–12</div><h4>Client portal &amp; Intelligence</h4><ul>
+      <li>Client Portal (timeline, approvals, budgets, reports, docs) with disclosure policies</li>
+      <li>Experience area; Intelligence (retro, compare, sponsor performance)</li>
+      <li>AI v3: Prepare (client weekly, sponsor report) + Forecast (readiness at T−7)</li>
+      <li>Accessibility audit (external) · AR usability study</li>
+    </ul><p class="exit">Exit: clients approve in the portal; legacy app switched to read-only.</p></div>
+  </div>
+  <h3>Risks to this plan</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>Two UI stacks (Livewire + React) for about 9 months</td><td>Shared tokens, strict "new surfaces only in React", and a retirement list reviewed monthly.</td></tr>
+      <tr><td>Unified work model migration (Task + PlanItem + Approval)</td><td>Dual-write for one quarter, a migration script with reconciliation report, and a pilot on one event first.</td></tr>
+      <tr><td>AI trust: one bad recommendation can sink adoption</td><td>Evidence required on every card, a golden eval set, and rule-based signals before any generative ranking.</td></tr>
+      <tr><td>Scope: ten areas is a lot</td><td>Areas ship behind phase relevance; empty areas stay hidden per event type.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  <p>Elite EMS Nova · product blueprint v1 · prepared 23 September 2026 from a review of the current Elite EMS Hub codebase, its documentation and its live screens. Figures in examples are illustrative.</p>
+</footer>
+</main>
+</div>
