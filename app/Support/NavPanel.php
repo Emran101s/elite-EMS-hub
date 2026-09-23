@@ -101,6 +101,7 @@ class NavPanel
         ]],
         ['Planning', [
             ['Planning board', 'planning.index', 'grid'],
+            ['My work', 'tasks.mine', 'users'],
             ['Tasks', 'tasks.index', 'clipboard'],
         ]],
         ['Business', [
@@ -273,6 +274,7 @@ class NavPanel
             ],
             'tasks' => [
                 ['Tasks', [
+                    ['My work', 'tasks.mine', 'users', self::myOpenTasks()],
                     ['Everything', 'tasks.index', 'clipboard', self::openTasks()],
                 ]],
             ],
@@ -375,6 +377,14 @@ class NavPanel
         static $count = null;
 
         return $count ??= Task::whereNotIn('status', ['done', 'cancelled'])->count();
+    }
+
+    private static function myOpenTasks(): int
+    {
+        static $count = null;
+
+        return $count ??= Task::where('assignee_id', auth()->id())
+            ->whereNotIn('status', ['done', 'cancelled'])->count();
     }
 
     private static function liveEvents(): int

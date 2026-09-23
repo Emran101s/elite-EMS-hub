@@ -57,6 +57,7 @@ use App\Livewire\ExhibitionFloorPlan;
 use App\Livewire\FinanceOverview;
 use App\Livewire\InvoiceEditor;
 use App\Livewire\InvoicesLedger;
+use App\Livewire\MyWork;
 use App\Livewire\PaymentsLedger;
 use App\Livewire\PlanningBoard;
 use App\Livewire\ProposalEditor;
@@ -296,6 +297,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects', fn () => view('modules.projects', [
         'projects' => Project::withCount('events')->orderBy('name')->get(),
     ]))->name('projects.index');
+
+    // What is on my plate, across every event — declared before /tasks so the
+    // two never compete, and named tasks.* so it lights the Tasks rail.
+    Route::get('/tasks/mine', MyWork::class)->name('tasks.mine');
 
     Route::get('/tasks', fn () => view('modules.tasks', [
         'statusFilter' => request('status'),
