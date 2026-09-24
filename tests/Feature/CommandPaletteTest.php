@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\CommandPalette;
 use App\Livewire\TeamRoster;
+use App\Models\Event;
 use App\Models\User;
 use App\Models\Venue;
 use Database\Seeders\DemoDataSeeder;
@@ -64,6 +65,72 @@ class CommandPaletteTest extends TestCase
             ->actingAs($this->actor())
             ->test(TeamRoster::class)
             ->assertSet('search', 'Layla');
+    }
+
+    public function test_the_empty_palette_suggests_where_to_go(): void
+    {
+        Livewire::actingAs($this->actor())->test(CommandPalette::class)
+            ->assertSee('Suggested')
+            ->assertSee(route('tasks.mine'), false)
+            ->assertSee(route('approvals.index'), false)
+            ->assertSee(route('events.create'), false);
+    }
+
+    public function test_an_event_and_a_tab_jump_straight_into_that_tab(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        Livewire::actingAs($user)->test(CommandPalette::class)
+            ->set('q', 'icft budget')
+            ->assertSee('ICFT 2026 › Budget')
+            ->assertSee(route('events.hub', [$event, 'tab' => 'budget']), false)
+            ->set('q', 'icft hotel')
+            ->assertSee(route('events.hub', [$event, 'tab' => 'accommodation']), false);
+    }
+
+    public function test_new_task_on_an_event_opens_its_board_with_the_form_started(): void
+    {
+        $user = $this->actor();
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+
+        Livewire::actingAs($user)->test(CommandPalette::class)
+            ->set('q', 'new task on icft')
+            ->assertSee(route('events.hub', [$event, 'tab' => 'tasks', 'action' => 'add']));   // escaped: & is &amp; in the href
+    }
+
+    public function test_places_are_found_by_what_people_call_them(): void
+    {
+        Livewire::actingAs($this->actor())->test(CommandPalette::class)
+            ->set('q', 'overdue invoices')
+            ->assertSee(route('invoices.index', ['state' => 'overdue']), false)
+            ->set('q', 'approve')
+            ->assertSee(route('approvals.index'), false);
+    }
+
+    public function test_it_never_offers_an_event_you_cannot_open(): void
+    {
+        $this->actor();   // seeds the book
+        $outsider = User::factory()->create(['role' => 'coordinator']);
+        $event = Event::where('name', 'ICFT 2026')->firstOrFail();
+        $this->assertFalse($outsider->can('view', $event));
+
+        Livewire::actingAs($outsider)->test(CommandPalette::class)
+            ->set('q', 'ICFT')
+            ->assertDontSee(route('events.hub', $event), false)
+            ->set('q', 'icft budget')
+            ->assertDontSee('ICFT 2026 › Budget');
+    }
+
+    public function test_a_viewer_is_not_offered_new_event(): void
+    {
+        $this->actor();
+        $viewer = User::factory()->create(['role' => 'viewer']);
+
+        Livewire::actingAs($viewer)->test(CommandPalette::class)
+            ->assertDontSee(route('events.create'), false)
+            ->set('q', 'new event')
+            ->assertDontSee(route('events.create'), false);
     }
 
     public function test_short_queries_return_nothing(): void
