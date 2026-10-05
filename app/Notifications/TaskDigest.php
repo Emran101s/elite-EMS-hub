@@ -28,11 +28,18 @@ class TaskDigest extends Notification
     {
         $overdue = $this->buckets['overdue']->count();
         $today = $this->buckets['today']->count();
+        $tomorrow = $this->buckets['tomorrow']->count();
 
         $subject = collect([
             $overdue ? "{$overdue} overdue" : null,
             $today ? "{$today} due today" : null,
-        ])->filter()->join(', ') ?: 'Tasks due tomorrow';
+        ])->filter()->join(', ');
+
+        if ($subject === '' && $tomorrow > 0) {
+            $subject = "{$tomorrow} due tomorrow";
+        }
+
+        $subject = $subject ?: 'Tasks due tomorrow';
 
         $mail = (new MailMessage)
             ->subject('Your tasks: '.$subject)

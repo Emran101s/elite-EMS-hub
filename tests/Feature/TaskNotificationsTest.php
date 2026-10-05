@@ -120,6 +120,22 @@ class TaskNotificationsTest extends TestCase
         });
     }
 
+    public function test_the_digest_subject_mentions_tomorrow_only_tasks_by_count(): void
+    {
+        $today = Carbon::parse('2026-10-01');
+        $user = $this->person();
+        $event = Event::factory()->create();
+
+        Task::factory()->for($event)->create(['assignee_id' => $user->id, 'title' => 'Next up', 'status' => 'todo', 'due_on' => '2026-10-02']);
+        Task::factory()->for($event)->create(['assignee_id' => $user->id, 'title' => 'Also tomorrow', 'status' => 'doing', 'due_on' => '2026-10-02']);
+
+        app(TaskNotifier::class)->digest($today);
+
+        Notification::assertSentTo($user, TaskDigest::class, function (TaskDigest $n) use ($user) {
+            return $n->toMail($user)->subject === 'Your tasks: 2 due tomorrow';
+        });
+    }
+
     public function test_the_command_dry_run_sends_nothing(): void
     {
         $user = $this->person();
